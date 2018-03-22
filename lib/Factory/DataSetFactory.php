@@ -25,14 +25,15 @@ namespace Xibo\Factory;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Slim\Helper\Set;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -58,6 +59,9 @@ class DataSetFactory extends BaseFactory
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var DateServiceInterface */
+    private $date;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -70,8 +74,9 @@ class DataSetFactory extends BaseFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
+     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -80,6 +85,7 @@ class DataSetFactory extends BaseFactory
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->date = $date;
     }
 
     /**
@@ -104,7 +110,8 @@ class DataSetFactory extends BaseFactory
             $this,
             $this->dataSetColumnFactory,
             $this->permissionFactory,
-            $this->displayFactory
+            $this->displayFactory,
+            $this->date
         );
     }
 
@@ -173,35 +180,22 @@ class DataSetFactory extends BaseFactory
             dataset.description,
             dataset.userId,
             dataset.lastDataEdit,
-        ';
-
-        if (DBVERSION > 122) {
-            $select .= '
-                dataset.`code`,
-                dataset.`isLookup`,
-            ';
-        }
-
-        if (DBVERSION > 134) {
-            $select .= '
-                dataset.`isRemote`,
-                dataset.`method`,
-                dataset.`uri`,
-                dataset.`postData`,
-                dataset.`authentication`,
-                dataset.`username`,
-                dataset.`password`,
-                dataset.`refreshRate`,
-                dataset.`clearRate`,
-                dataset.`runsAfter`,
-                dataset.`dataRoot`,
-                dataset.`summarize`,
-                dataset.`summarizeField`,
-                dataset.`lastSync`,
-            ';
-        }
-
-        $select .= '
+            dataset.`code`,
+            dataset.`isLookup`,
+            dataset.`isRemote`,
+            dataset.`method`,
+            dataset.`uri`,
+            dataset.`postData`,
+            dataset.`authentication`,
+            dataset.`username`,
+            dataset.`password`,
+            dataset.`refreshRate`,
+            dataset.`clearRate`,
+            dataset.`runsAfter`,
+            dataset.`dataRoot`,
+            dataset.`summarize`,
+            dataset.`summarizeField`,
+            dataset.`lastSync`,
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -315,7 +309,7 @@ class DataSetFactory extends BaseFactory
         $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
 
         // Record our max memory
-        $maxMemory = $this->config->getMemoryLimitBytes() / 2;
+        $maxMemory = Environment::getMemoryLimitBytes() / 2;
 
         // Guzzle for this and add proxy support.
         $client = new Client($this->config->getGuzzleProxy());

@@ -27,7 +27,7 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+                <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
@@ -63,7 +63,20 @@
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
-                        {{ forms.dropdown("dayPartId", "single", title, "", dayParts, "dayPartId", "name", helpText, "day-part-control") }}
+                        <div class="form-group day-part-control">
+                            <label class="col-sm-2 control-label" for="dayPartId">{{ title }}</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" name="dayPartId" id="dayPartId">
+                                    {% for dayPart in dayParts %}
+                                        <option {% if dayPart.isCustom == 1 %}selected{% endif %}
+                                                value="{{ dayPart.dayPartId }}"
+                                                data-is-always="{{ dayPart.isAlways }}"
+                                                data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}

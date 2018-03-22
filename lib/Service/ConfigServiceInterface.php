@@ -39,6 +39,9 @@ interface ConfigServiceInterface
      */
     public function getDatabaseConfig();
 
+    /** @return array */
+    public function getSettings();
+
     /**
      * Gets the requested setting from the DB object given
      * @param $setting string
@@ -53,20 +56,6 @@ interface ConfigServiceInterface
      * @param mixed $value
      */
     public function ChangeSetting($setting, $value);
-
-    /**
-     * Defines the Version and returns it
-     * @param $object string[optional]
-     * @return array|string
-     * @throws \Exception
-     */
-    public function Version($object = '');
-
-    /**
-     * Is an upgrade pending?
-     * @return bool
-     */
-    public function isUpgradePending();
 
     /**
      * Should the host be considered a proxy exception
@@ -118,12 +107,6 @@ interface ConfigServiceInterface
     public function rootUri();
 
     /**
-     * Check ZeroMQ support
-     * @return bool
-     */
-    public static function checkZmq();
-
-    /**
      * Get cache drivers
      * @return array
      */
@@ -134,10 +117,4 @@ interface ConfigServiceInterface
      * @return string
      */
     public function getCacheNamespace();
-
-    /**
-     * Get the memory limit in bytes
-     * @return int
-     */
-    public function getMemoryLimitBytes();
 }

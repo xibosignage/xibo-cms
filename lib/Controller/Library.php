@@ -26,6 +26,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -1000,7 +1001,10 @@ class Library extends Base
             $widget = $this->moduleFactory->createWithMedia($media);
         }
 
-        $widget->getResource();
+        if ($widget->getModule()->regionSpecific == 1)
+            throw new NotFoundException('Cannot download region specific module');
+
+        $widget->getResource(0);
 
         $this->setNoOutput(true);
     }
@@ -1032,9 +1036,6 @@ class Library extends Base
      */
     public function fontCKEditorConfig()
     {
-        if (DBVERSION < 125)
-            return null;
-
         // Regenerate the CSS for fonts
         $css = $this->installFonts(['invalidateCache' => false]);
 
@@ -1426,8 +1427,6 @@ class Library extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row->setDayPartFactory($this->dayPartFactory);
-
             // Assess the date?
             if ($mediaDate !== null) {
                 try {

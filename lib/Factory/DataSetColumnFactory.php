@@ -102,7 +102,9 @@ class DataSetColumnFactory extends BaseFactory
                 listContent,
                 columnOrder,
                 formula,
-                remoteField
+                remoteField, 
+                showFilter, 
+                showSort
             ';
 
         $body = '
@@ -144,7 +146,7 @@ class DataSetColumnFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['showFilter', 'showSort']]);
         }
 
         // Paging

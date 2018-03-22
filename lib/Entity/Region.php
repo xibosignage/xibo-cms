@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
@@ -97,12 +98,6 @@ class Region implements \JsonSerializable
     public $zIndex;
 
     /**
-     * @SWG\Property(description="An array of Playlists assigned")
-     * @var Playlist[]
-     */
-    public $playlists = [];
-
-    /**
      * @SWG\Property(description="An array of Region Options")
      * @var RegionOption[]
      */
@@ -113,12 +108,6 @@ class Region implements \JsonSerializable
      * @var Permission[]
      */
     public $permissions = [];
-
-    /**
-     * @SWG\Property(description="When linked from a Playlist, what is the display order of that link")
-     * @var int
-     */
-    public $displayOrder;
 
     /**
      * @var int
@@ -134,6 +123,15 @@ class Region implements \JsonSerializable
      */
     public $tempId = null;
 
+    /**
+     * @var Playlist|null
+     * @SWG\Property(
+     *   description="This Regions Playlist - null if getPlaylist() has not been called."
+     * )
+     */
+    public $regionPlaylist = null;
+
+    //<editor-fold desc="Factories and Dependencies">
     /**  @var DateServiceInterface */
     private $dateService;
 
@@ -156,6 +154,7 @@ class Region implements \JsonSerializable
      * @var PlaylistFactory
      */
     private $playlistFactory;
+    //</editor-fold>
 
     /**
      * Entity constructor.
@@ -177,22 +176,32 @@ class Region implements \JsonSerializable
         $this->playlistFactory = $playlistFactory;
     }
 
+    /**
+     * Clone this object
+     */
     public function __clone()
     {
-        // Clear the IDs and clone the playlist
+        // Clear the regionId, clone the Playlist
         $this->regionId = null;
         $this->hash = null;
         $this->permissions = [];
 
-        $this->playlists = array_map(function ($object) { return clone $object; }, $this->playlists);
+        $this->regionPlaylist = clone $this->regionPlaylist;
+
         $this->regionOptions = array_map(function ($object) { return clone $object; }, $this->regionOptions);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return sprintf('Region %s - %d x %d (%d, %d). RegionId = %d, LayoutId = %d. OwnerId = %d. Duration = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId, $this->layoutId, $this->ownerId, $this->duration);
     }
 
+    /**
+     * @return string
+     */
     private function hash()
     {
         return md5($this->name . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
@@ -220,6 +229,7 @@ class Region implements \JsonSerializable
      * Sets the Owner
      * @param int $ownerId
      * @param bool $cascade Cascade ownership change down to Playlist records
+     * @throws XiboException
      */
     public function setOwner($ownerId, $cascade = false)
     {
@@ -228,10 +238,8 @@ class Region implements \JsonSerializable
         $this->ownerId = $ownerId;
 
         if ($cascade) {
-            foreach ($this->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                $playlist->setOwner($ownerId);
-            }
+            $playlist = $this->getPlaylist();
+            $playlist->setOwner($ownerId);
         }
     }
 
@@ -239,7 +247,7 @@ class Region implements \JsonSerializable
      * Get Option
      * @param string $option
      * @return RegionOption
-     * @throws NotFoundException
+     * @throws XiboException
      */
     public function getOption($option)
     {
@@ -251,7 +259,7 @@ class Region implements \JsonSerializable
                 return $regionOption;
         }
 
-        $this->getLog()->debug('RegionOption %s not found', $option);
+        $this->getLog()->debug('RegionOption ' . $option . ' not found');
 
         throw new NotFoundException('Region Option not found');
     }
@@ -261,6 +269,7 @@ class Region implements \JsonSerializable
      * @param string $option
      * @param mixed $default
      * @return mixed
+     * @throws XiboException
      */
     public function getOptionValue($option, $default = null)
     {
@@ -279,6 +288,7 @@ class Region implements \JsonSerializable
      * Set Region Option Value
      * @param string $option
      * @param mixed $value
+     * @throws XiboException
      */
     public function setOptionValue($option, $value)
     {
@@ -291,63 +301,43 @@ class Region implements \JsonSerializable
     }
 
     /**
-     * Assign this Playlist to a Region
-     * @param Playlist $playlist
+     * @return Playlist
+     * @throws NotFoundException
      */
-    public function assignPlaylist($playlist)
+    public function getPlaylist()
     {
-        $this->load();
+        if ($this->regionPlaylist === null)
+            $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load();
 
-        $playlist->displayOrder = ($playlist->displayOrder == null || $playlist->displayOrder == 0) ? count($this->playlists) + 1 : $playlist->displayOrder ;
-        $this->playlists[] = $playlist;
-    }
-
-    /**
-     * Unassign a Playlist
-     * @param $playlist
-     */
-    public function unassignPlaylist($playlist)
-    {
-        $this->load();
-
-        $this->playlists = array_udiff($this->playlists, [$playlist], function($a, $b) {
-            /**
-             * @var Playlist $a
-             * @var Playlist $b
-             */
-            return $a->getId() - $b->getId() + $a->displayOrder - $b->displayOrder;
-        });
+        return $this->regionPlaylist;
     }
 
     /**
      * Load
      * @param array $options
+     * @throws XiboException
      */
     public function load($options = [])
     {
         if ($this->loaded || $this->regionId == 0)
             return;
 
-        $options = array_merge(['regionIncludePlaylists' => true], $options);
+        $options = array_merge([
+            'loadPlaylists' => false
+        ], $options);
 
-        $this->getLog()->debug('Load Region with %s', json_encode($options));
+        $this->getLog()->debug('Load Region with ' . json_encode($options));
 
         // Load permissions
         $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->regionId);
 
-        // Load all playlists
-        if ($options['regionIncludePlaylists']) {
-            $this->playlists = $this->playlistFactory->getByRegionId($this->regionId);
-
-            foreach ($this->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                $playlist->setChildObjectDependencies($this->regionFactory);
-                $playlist->load($options);
-            }
-        }
-
         // Get region options
         $this->regionOptions = $this->regionOptionFactory->getByRegionId($this->regionId);
+
+        // Load the Playlist?
+        if ($options['loadPlaylists']) {
+            $this->getPlaylist();
+        }
 
         $this->hash = $this->hash();
         $this->loaded = true;
@@ -355,11 +345,12 @@ class Region implements \JsonSerializable
 
     /**
      * Validate the region
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
         if ($this->width <= 0 || $this->height <= 0)
-            throw new \InvalidArgumentException(__('The Region dimensions cannot be empty or negative'));
+            throw new InvalidArgumentException(__('The Region dimensions cannot be empty or negative'), 'width/height');
 
         // Check zindex is positive
         if ($this->zIndex < 0)
@@ -369,24 +360,36 @@ class Region implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
         $options = array_merge([
             'saveRegionOptions' => true,
-            'manageRegionAssignments' => true,
             'validate' => true,
             'audit' => true
         ], $options);
 
-        $this->getLog()->debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
+        $this->getLog()->debug('Saving ' . $this . '. Options = ' . json_encode($options, JSON_PRETTY_PRINT));
 
         if ($options['validate'])
             $this->validate();
 
         if ($this->regionId == null || $this->regionId == 0) {
+            // We are adding
             $this->add();
 
+            // Add and save a region specific playlist
+            if ($this->regionPlaylist === null) {
+                $this->regionPlaylist = $this->playlistFactory->create($this->name, $this->ownerId, $this->regionId);
+            } else {
+                // assert the region id
+                $this->regionPlaylist->regionId = $this->regionId;
+                $this->regionPlaylist->setOwner($this->ownerId);
+            }
+            $this->regionPlaylist->save();
+
+            // Audit
             if ($options['audit'])
                 $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'details' => (string)$this]);
         }
@@ -406,21 +409,16 @@ class Region implements \JsonSerializable
                 $regionOption->save();
             }
         }
-
-        if ($options['manageRegionAssignments']) {
-            // Manage the assignments to regions
-            $this->manageAssignments();
-        }
     }
 
     /**
      * Delete Region
      * @param array $options
+     * @throws XiboException
      */
     public function delete($options = [])
     {
         $options = array_merge([
-            'deleteOrphanedPlaylists' => true,
             'notify' => true
         ], $options);
 
@@ -442,29 +440,8 @@ class Region implements \JsonSerializable
             $regionOption->delete();
         }
 
-        // Store the playlists locally for use after unlink
-        $playlists = $this->playlists;
-
-        // Unlink playlists
-        $this->playlists = [];
-        $this->unlinkPlaylists();
-
-        // Should we delete orphaned playlists?
-        if ($options['deleteOrphanedPlaylists']) {
-            $this->getLog()->debug('We should delete orphaned playlists, checking %d playlists.', count($playlists));
-
-            // Delete
-            foreach ($playlists as $playlist) {
-                /* @var Playlist $playlist */
-                if (!$playlist->hasLayouts()) {
-                    $this->getLog()->debug('Deleting orphaned playlist: %d', $playlist->playlistId);
-                    $playlist->delete();
-                }
-                else {
-                    $this->getLog()->debug('Playlist still linked to Layouts, skipping playlist delete');
-                }
-            }
-        }
+        // Delete the region specific playlist
+        $this->getPlaylist()->delete(['regionDelete' => true]);
 
         // Delete this region
         $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
@@ -474,7 +451,6 @@ class Region implements \JsonSerializable
             $this->notifyLayout();
     }
 
-    // Add / Update
     /**
      * Add
      */
@@ -482,7 +458,10 @@ class Region implements \JsonSerializable
     {
         $this->getLog()->debug('Adding region to LayoutId ' . $this->layoutId);
 
-        $sql = 'INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)';
+        $sql = '
+            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) 
+              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)
+        ';
 
         $this->regionId = $this->getStore()->insert($sql, array(
             'layoutId' => $this->layoutId,
@@ -497,11 +476,11 @@ class Region implements \JsonSerializable
     }
 
     /**
-     * Update Database
+     * Update
      */
     private function update()
     {
-        $this->getLog()->debug('Editing %s', $this);
+        $this->getLog()->debug('Editing ' . $this);
 
         $sql = '
           UPDATE `region` SET
@@ -529,61 +508,9 @@ class Region implements \JsonSerializable
         ));
     }
 
-    private function manageAssignments()
-    {
-        $this->linkPlaylists();
-        $this->unlinkPlaylists();
-    }
-
     /**
-     * Link regions
+     * Notify the Layout (set to building)
      */
-    private function linkPlaylists()
-    {
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-
-            // The playlist might be new
-            if ($playlist->playlistId == 0)
-                $playlist->save();
-
-            $this->getStore()->insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = regionId', array(
-                'regionId' => $this->regionId,
-                'playlistId' => $playlist->playlistId,
-                'displayOrder' => $playlist->displayOrder
-            ));
-        }
-    }
-
-    /**
-     * Unlink all Regions
-     */
-    private function unlinkPlaylists()
-    {
-        // Unlink any media that is NOT in the collection
-        $params = ['regionId' => $this->regionId];
-
-        $sql = '
-          DELETE FROM `lkregionplaylist` WHERE regionId = :regionId
-        ';
-
-        $i = 0;
-        foreach ($this->playlists as $playlist) {
-            /* @var Playlist $playlist */
-
-            $sql .= ' AND ( ';
-
-            $i++;
-            $sql .= ' (playlistId <> :playlistId' . $i . ' AND displayOrder <> :displayOrder' . $i . '))';
-            $params['playlistId' . $i] = $playlist->playlistId;
-            $params['displayOrder' . $i] = $playlist->displayOrder;
-        }
-
-
-
-        $this->getStore()->update($sql, $params);
-    }
-
     public function notifyLayout()
     {
         $this->getStore()->update('

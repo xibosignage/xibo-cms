@@ -552,10 +552,10 @@ class DisplayGroup implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->displayGroup))
+        if (!v::stringType()->notEmpty()->validate($this->displayGroup))
             throw new InvalidArgumentException(__('Please enter a display group name'), 'displayGroup');
 
-        if (!empty($this->description) && !v::string()->length(null, 254)->validate($this->description))
+        if (!empty($this->description) && !v::stringType()->length(null, 254)->validate($this->description))
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
 
         if ($this->isDisplaySpecific == 0) {
@@ -674,7 +674,13 @@ class DisplayGroup implements \JsonSerializable
 
         foreach ($this->events as $event) {
             /* @var Schedule $event */
-            $event->delete();
+            $event->unassignDisplayGroup($this);
+            $event->save([
+                'audit' => false,
+                'validate' => false,
+                'deleteOrphaned' => true,
+                'notify' => false
+            ]);
         }
 
         // Delete assignments
@@ -885,19 +891,40 @@ class DisplayGroup implements \JsonSerializable
             return $a->getId() - $b->getId();
         });
 
-        $this->getLog()->debug('Unlinking %d display groups to Display Group %s', count($links), $this->displayGroup);
+        $this->getLog()->debug('Unlinking ' . count($links) . ' display groups to Display Group ' . $this->displayGroup);
 
         foreach ($links as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $this->getStore()->update('
-                DELETE link
-                  FROM `lkdgdg` p, `lkdgdg` link, `lkdgdg` c
-                 WHERE p.parentId = link.parentId AND c.childId = link.childId
-                   AND p.childId = :parentId AND c.parentId = :childId
-            ', [
+            // Only ever delete 1 because if there are more than 1, we can assume that it is linked at that level from
+            // somewhere else
+            // https://github.com/xibosignage/xibo/issues/1417
+            $linksToDelete = $this->getStore()->select('
+                SELECT DISTINCT link.parentId, link.childId, link.depth
+                  FROM `lkdgdg` p
+                    INNER JOIN `lkdgdg` link
+                    ON p.parentId = link.parentId
+                    INNER JOIN `lkdgdg` c
+                    ON c.childId = link.childId
+                 WHERE p.childId = :parentId 
+                    AND c.parentId = :childId
+                ', [
                 'parentId' => $this->displayGroupId,
                 'childId' => $displayGroup->displayGroupId
             ]);
+
+            foreach ($linksToDelete as $linkToDelete) {
+                $this->getStore()->update('
+                  DELETE FROM `lkdgdg` 
+                   WHERE parentId = :parentId 
+                    AND childId = :childId 
+                    AND depth = :depth 
+                  LIMIT 1
+                ', [
+                    'parentId' => $linkToDelete['parentId'],
+                    'childId' => $linkToDelete['childId'],
+                    'depth' => $linkToDelete['depth']
+                ]);
+            }
         }
     }
 

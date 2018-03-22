@@ -171,9 +171,6 @@ class LocalWebTestCase extends WebTestCase
 
         $container->configService->setDependencies($container->store, '/');
 
-        // Define versions, etc.
-        $container->configService->Version();
-
         // Register the sanitizer
         $container->singleton('sanitizerService', function($container) {
             return new SanitizeService($container);
@@ -302,6 +299,7 @@ class LocalWebTestCase extends WebTestCase
         // Create if necessary
         if (self::$logger === null) {
             self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+            //self::$logger = new NullLogger();
         }
 
         return self::$logger;

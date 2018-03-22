@@ -94,7 +94,7 @@
         $(document).ready(function() {
             table = $("#libraryItems").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true,
+                serverSide: true, stateSave: true, stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
                     var data;
                     $.ajax({
@@ -339,7 +339,7 @@
             var usageTable = $("#usageReportTable").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
-                stateSave: true,
+                stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
@@ -380,7 +380,7 @@
             var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
-                stateSave: true,
+                stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],

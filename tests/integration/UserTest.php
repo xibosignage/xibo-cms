@@ -17,7 +17,7 @@ class UserTest extends LocalWebTestCase
 {
     /**
      * Show me
-        * @group broken
+     * @group broken
      */
     public function testGetMe()
     {
@@ -33,7 +33,7 @@ class UserTest extends LocalWebTestCase
 
 	/**
 	* Show all users
-        * @group broken
+    * @group broken
 	*/
     public function testGetUsers()
     {
@@ -51,11 +51,9 @@ class UserTest extends LocalWebTestCase
 	* Add new user
 	* @group broken
 	*/
-
     public function testAdd()
     {
         // Wrapper, get Users Group
-        
 
         $this->client->post('/user', [
             'userName' => 'Alex',

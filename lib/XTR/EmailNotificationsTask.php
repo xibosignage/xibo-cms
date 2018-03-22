@@ -9,8 +9,9 @@
 namespace Xibo\XTR;
 
 
+use Slim\View;
 use Xibo\Entity\UserNotification;
-use Xibo\Exception\ConfigurationException;
+use Xibo\Factory\UserNotificationFactory;
 
 /**
  * Class EmailNotificationsTask
@@ -19,6 +20,20 @@ use Xibo\Exception\ConfigurationException;
 class EmailNotificationsTask implements TaskInterface
 {
     use TaskTrait;
+
+    /** @var View */
+    private $view;
+
+    /** @var UserNotificationFactory */
+    private $userNotificationFactory;
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->view = $container->get('view');
+        $this->userNotificationFactory = $container->get('userNotificationFactory');
+        return $this;
+    }
 
     /** @inheritdoc */
     public function run()
@@ -34,7 +49,8 @@ class EmailNotificationsTask implements TaskInterface
         // Handle queue of notifications to email.
         $this->runMessage .= '## ' . __('Email Notifications') . PHP_EOL;
 
-        $msgFrom = $this->config->GetSetting("mail_from");
+        $msgFrom = $this->config->GetSetting('mail_from');
+        $msgFromName = $this->config->GetSetting('mail_from_name');
 
         $this->log->debug('Notification Queue sending from ' . $msgFrom);
 
@@ -52,9 +68,14 @@ class EmailNotificationsTask implements TaskInterface
                 $this->log->debug('Sending Notification email to ' . $notification->email);
 
                 // Send them an email
-                $mail = new \PHPMailer();
+                $mail = new \PHPMailer\PHPMailer\PHPMailer();
+                $mail->CharSet = 'UTF-8';
+                $mail->Encoding = 'base64';
                 $mail->From = $msgFrom;
-                $mail->FromName = $this->config->getThemeConfig('theme_name');
+
+                if ($msgFromName != null)
+                    $mail->FromName = $msgFromName;
+
                 $mail->Subject = $notification->subject;
                 $mail->addAddress($notification->email);
 
@@ -88,7 +109,6 @@ class EmailNotificationsTask implements TaskInterface
      * @param $subject
      * @param $body
      * @return string
-     * @throws ConfigurationException
      */
     private function generateEmailBody($subject, $body)
     {
@@ -97,7 +117,7 @@ class EmailNotificationsTask implements TaskInterface
         ob_start();
 
         // Render the template
-        $this->app->render('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
+        $this->view->display('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
 
         $body = ob_get_contents();
 

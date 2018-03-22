@@ -31,10 +31,10 @@ class LocalVideo extends ModuleWidget
     public function validate()
     {
         // Validate
-        if (!v::string()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+        if (!v::stringType()->notEmpty()->validate(urldecode($this->getOption('uri'))))
             throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
 
-        if ($this->getUseDuration() == 1 && !v::int()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
             throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
@@ -149,5 +149,12 @@ class LocalVideo extends ModuleWidget
     public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
+    }
+
+    /** @inheritdoc */
+    public function getResource($displayId)
+    {
+        // Get resource isn't required for this module.
+        return null;
     }
 }

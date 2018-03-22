@@ -35,9 +35,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class DayPartFactory extends BaseFactory
 {
-    /** @var  ScheduleFactory */
-    private $scheduleFactory;
-
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -45,13 +42,11 @@ class DayPartFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $scheduleFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
-        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -62,8 +57,7 @@ class DayPartFactory extends BaseFactory
     {
         return new DayPart(
             $this->getStore(),
-            $this->getLog(),
-            $this->scheduleFactory
+            $this->getLog()
         );
     }
 
@@ -84,16 +78,42 @@ class DayPartFactory extends BaseFactory
     }
 
     /**
+     * Get the Always DayPart
+     * @return DayPart
+     * @throws NotFoundException
+     */
+    public function getAlwaysDayPart()
+    {
+        $dayParts = $this->query(null, ['disableUserCheck' => 1, 'isAlways' => 1]);
+
+        if (count($dayParts) <= 0)
+            throw new NotFoundException();
+
+        return $dayParts[0];
+    }
+
+    /**
+     * Get the Custom DayPart
+     * @return DayPart
+     * @throws NotFoundException
+     */
+    public function getCustomDayPart()
+    {
+        $dayParts = $this->query(null, ['disableUserCheck' => 1, 'isCustom' => 1]);
+
+        if (count($dayParts) <= 0)
+            throw new NotFoundException();
+
+        return $dayParts[0];
+    }
+
+    /**
      * Get all dayparts with the system entries (always and custom)
      * @return DayPart[]
      */
     public function allWithSystem()
     {
-        $dayParts = $this->query();
-
-        // Add system and custom
-        array_unshift($dayParts, ['dayPartId' => 1, 'name' => __('Always')]);
-        array_unshift($dayParts, ['dayPartId' => 0, 'name' => __('Custom')]);
+        $dayParts = $this->query(['isAlways DESC', 'isCustom DESC', 'name']);
 
         return $dayParts;
     }
@@ -111,7 +131,7 @@ class DayPartFactory extends BaseFactory
             $sortOrder = ['name'];
 
         $params = array();
-        $select = 'SELECT `daypart`.dayPartId, `name`, `description`, `isRetired`, `userId`, `startTime`, `endTime`, `exceptions`';
+        $select = 'SELECT `daypart`.dayPartId, `name`, `description`, `isRetired`, `userId`, `startTime`, `endTime`, `exceptions`, `isCustom`, `isAlways` ';
 
         $body = ' FROM `daypart` ';
 
@@ -123,6 +143,16 @@ class DayPartFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('dayPartId', $filterBy) !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';
             $params['dayPartId'] = $this->getSanitizer()->getInt('dayPartId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isAlways', $filterBy) !== null) {
+            $body .= ' AND `daypart`.isAlways = :isAlways ';
+            $params['isAlways'] = $this->getSanitizer()->getInt('isAlways', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('isCustom', $filterBy) !== null) {
+            $body .= ' AND `daypart`.isCustom = :isCustom ';
+            $params['isCustom'] = $this->getSanitizer()->getInt('isCustom', $filterBy);
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
@@ -144,7 +174,9 @@ class DayPartFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $dayPart = $this->createEmpty()->hydrate($row);
+            $dayPart = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isAlways', 'isCustom']
+            ]);
             $dayPart->exceptions = json_decode($dayPart->exceptions, true);
 
             $entries[] = $dayPart;

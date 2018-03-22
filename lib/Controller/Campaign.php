@@ -212,7 +212,15 @@ class Campaign extends Base
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
                     'url' => $this->urlFor('campaign.delete.form', ['id' => $campaign->campaignId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('campaign.delete', ['id' => $campaign->campaignId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'campaign_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $campaign->campaign)
+                    )
                 );
             }
 
@@ -222,7 +230,7 @@ class Campaign extends Base
 
                 // Permissions for Campaign
                 $campaign->buttons[] = array(
-                    'id' => 'campaign_button_delete',
+                    'id' => 'campaign_button_permissions',
                     'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
                     'text' => __('Permissions')
                 );
@@ -436,10 +444,25 @@ class Campaign extends Base
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
+        $layouts = [];
+        foreach ($this->layoutFactory->getByCampaignId($campaignId, false) as $layout) {
+            if (!$this->getUser()->checkViewable($layout)) {
+                // Hide all layout details from the user
+                $emptyLayout = $this->layoutFactory->createEmpty();
+                $emptyLayout->layoutId = $layout->layoutId;
+                $emptyLayout->layout = __('Layout');
+                $emptyLayout->locked = true;
+
+                $layouts[] = $emptyLayout;
+            } else {
+                $layouts[] = $layout;
+            }
+        }
+
         $this->getState()->template = 'campaign-form-layouts';
         $this->getState()->setData([
             'campaign' => $campaign,
-            'layouts' => $this->layoutFactory->getByCampaignId($campaignId),
+            'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Layouts')
         ]);
     }
@@ -532,7 +555,9 @@ class Campaign extends Base
 
             $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
 
-            if (!$this->getUser()->checkViewable($layout))
+            // Check to see if this layout is already assigned
+            // if it is, then we have permission to move it around
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Set the Display Order
@@ -554,7 +579,7 @@ class Campaign extends Base
 
             $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
 
-            if (!$this->getUser()->checkViewable($layout))
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Set the Display Order
@@ -636,7 +661,7 @@ class Campaign extends Base
         foreach ($layouts as $object) {
             $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
 
-            if (!$this->getUser()->checkViewable($layout))
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Set the Display Order

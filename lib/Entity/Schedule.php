@@ -35,8 +35,6 @@ class Schedule implements \JsonSerializable
     public static $LAYOUT_EVENT = 1;
     public static $COMMAND_EVENT = 2;
     public static $OVERLAY_EVENT = 3;
-    public static $DAY_PART_CUSTOM = 0;
-    public static $DAY_PART_ALWAYS = 1;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -180,6 +178,18 @@ class Schedule implements \JsonSerializable
     public $dayPartId;
 
     /**
+     * @SWG\Property(description="Is this event an always on event?")
+     * @var int
+     */
+    public $isAlways;
+
+    /**
+     * @SWG\Property(description="Does this event have custom from/to date times?")
+     * @var int
+     */
+    public $isCustom;
+
+    /**
      * Last Recurrence Watermark
      * @var int
      */
@@ -226,14 +236,16 @@ class Schedule implements \JsonSerializable
      * @param PoolInterface $pool
      * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
         $this->pool = $pool;
         $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->dayPartFactory = $dayPartFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
     }
@@ -250,16 +262,6 @@ class Schedule implements \JsonSerializable
     public function setDisplayFactory($displayFactory)
     {
         $this->displayFactory = $displayFactory;
-        return $this;
-    }
-
-    /**
-     * @param DayPartFactory $dayPartFactory
-     * @return $this
-     */
-    public function setDayPartFactory($dayPartFactory)
-    {
-        $this->dayPartFactory = $dayPartFactory;
         return $this;
     }
 
@@ -314,10 +316,11 @@ class Schedule implements \JsonSerializable
     /**
      * Are the provided dates within the schedule look ahead
      * @return bool
+     * @throws XiboException
      */
     private function inScheduleLookAhead()
     {
-        if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS)
+        if ($this->isAlwaysDayPart())
             return true;
 
         // From Date and To Date are in UNIX format
@@ -333,7 +336,7 @@ class Schedule implements \JsonSerializable
             // If we are a recurring schedule and our recurring date is out after the required files lookahead
             $this->getLog()->debug('Checking look ahead based on recurrence');
             return ($this->fromDt <= $currentDate->format('U') && ($this->recurrenceRange == 0 || $this->recurrenceRange > $rfLookAhead->format('U')));
-        } else if ($this->dayPartId != self::$DAY_PART_CUSTOM || $this->eventTypeId == self::$COMMAND_EVENT) {
+        } else if (!$this->isCustomDayPart() || $this->eventTypeId == self::$COMMAND_EVENT) {
             // Day parting event (non recurring) or command event
             // only test the from date.
             $this->getLog()->debug('Checking look ahead based from date ' . $currentDate->toRssString());
@@ -391,6 +394,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * Validate
+     * @throws XiboException
      */
     public function validate()
     {
@@ -401,10 +405,10 @@ class Schedule implements \JsonSerializable
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
             // Validate layout
-            if (!v::int()->notEmpty()->validate($this->campaignId))
+            if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
 
-            if ($this->dayPartId == Schedule::$DAY_PART_CUSTOM) {
+            if ($this->isCustomDayPart()) {
                 // validate the dates
                 if ($this->toDt <= $this->fromDt)
                     throw new InvalidArgumentException(__('Can not have an end time earlier than your start time'), 'start/end');
@@ -414,7 +418,7 @@ class Schedule implements \JsonSerializable
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
-            if (!v::int()->notEmpty()->validate($this->commandId))
+            if (!v::intType()->notEmpty()->validate($this->commandId))
                 throw new InvalidArgumentException(__('Please select a Command for this event.'), 'command');
 
             $this->campaignId = null;
@@ -426,7 +430,7 @@ class Schedule implements \JsonSerializable
         }
 
         // Make sure we have a sensible recurrence setting
-        if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
+        if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
             throw new InvalidArgumentException(__('Repeats selection is invalid for Always or Daypart events'), 'recurrencyType');
 
         // Check display order is positive
@@ -445,19 +449,22 @@ class Schedule implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws XiboException
      */
     public function save($options = [])
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'deleteOrphaned' => false,
+            'notify' => true
         ], $options);
 
         if ($options['validate'])
             $this->validate();
 
         // Handle "always" day parts
-        if ($this->dayPartId == self::$DAY_PART_ALWAYS) {
+        if ($this->isAlwaysDayPart()) {
             $this->fromDt = self::$DATE_MIN;
             $this->toDt = self::$DATE_MAX;
         }
@@ -468,8 +475,15 @@ class Schedule implements \JsonSerializable
             $this->loaded = true;
         }
         else {
-            $this->edit();
-            $auditMessage = 'Saved';
+            // If this save action means there aren't any display groups assigned
+            // and if we're set to deleteOrphaned, then delete
+            if ($options['deleteOrphaned'] && count($this->displayGroups) <= 0) {
+                $this->delete();
+                return;
+            } else {
+                $this->edit();
+                $auditMessage = 'Saved';
+            }
         }
 
         // Manage display assignments
@@ -479,15 +493,17 @@ class Schedule implements \JsonSerializable
         }
 
         // Notify
-        // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->inScheduleLookAhead()) {
-            $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
-            foreach ($this->displayGroups as $displayGroup) {
-                /* @var DisplayGroup $displayGroup */
-                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+        if ($options['notify']) {
+            // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
+            if ($this->inScheduleLookAhead()) {
+                $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
+                foreach ($this->displayGroups as $displayGroup) {
+                    /* @var DisplayGroup $displayGroup */
+                    $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                }
+            } else {
+                $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
             }
-        } else {
-            $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
         }
 
         if ($options['audit'])
@@ -682,7 +698,7 @@ class Schedule implements \JsonSerializable
         );
 
         // Events scheduled "always" will return one event
-        if ($this->dayPartId == Schedule::$DAY_PART_ALWAYS) {
+        if ($this->isAlwaysDayPart()) {
             // Create events with min/max dates
             $this->addDetail(Schedule::$DATE_MIN, Schedule::$DATE_MAX);
             return;
@@ -708,7 +724,7 @@ class Schedule implements \JsonSerializable
             return;
 
         // Detect invalid recurrences and quit early
-        if ($this->dayPartId !== self::$DAY_PART_CUSTOM && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
+        if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
             return;
 
         // Check the cache
@@ -936,12 +952,13 @@ class Schedule implements \JsonSerializable
      * Calculate the DayPart times
      * @param Date $start
      * @param Date $end
+     * @throws XiboException
      */
     private function calculateDayPartTimes($start, $end)
     {
         $dayOfWeekLookup = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-        if ($this->dayPartId != Schedule::$DAY_PART_ALWAYS && $this->dayPartId != Schedule::$DAY_PART_CUSTOM) {
+        if (!$this->isAlwaysDayPart() && !$this->isCustomDayPart()) {
 
             // End is always based on Start
             $end->setTimestamp($start->format('U'));
@@ -1039,5 +1056,29 @@ class Schedule implements \JsonSerializable
         $sql .= ')';
 
         $this->getStore()->update($sql, $params);
+    }
+
+    /**
+     * Is this event an always daypart event
+     * @return bool
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function isAlwaysDayPart()
+    {
+        $dayPart = $this->dayPartFactory->getById($this->dayPartId);
+
+        return $dayPart->isAlways === 1;
+    }
+
+    /**
+     * Is this event a custom daypart event
+     * @return bool
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function isCustomDayPart()
+    {
+        $dayPart = $this->dayPartFactory->getById($this->dayPartId);
+
+        return $dayPart->isCustom === 1;
     }
 }

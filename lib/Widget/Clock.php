@@ -43,7 +43,7 @@ class Clock extends ModuleWidget
     public function validate()
     {
         // Validate
-        if ($this->getUseDuration() == 1 && !v::int()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
             throw new \InvalidArgumentException(__('Please enter a duration.'));
     }
 
@@ -333,5 +333,12 @@ class Clock extends ModuleWidget
         // 1 = Valid
         // 2 = Unknown
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        // We have a long cache interval because we don't depend on any external data.
+        return 86400 * 365;
     }
 }

@@ -165,6 +165,8 @@ echo __('Display Screenshot Default Size');
 echo __('Latest News URL');
 echo __('RSS/Atom Feed to be displayed on the Status Dashboard');
 echo __('Lock the Display Name to the device name provided by the Player?');
+echo __('Sending email name');
+echo __('Mail will be sent under this name');
 
 // Transitions
 echo __('Fade In');
@@ -237,6 +239,9 @@ echo __('Twitter Metro');
 echo __('Twitter Metro Search Module');
 echo __('Weather');
 echo __('Weather Powered by DarkSky');
+
+echo __('Sub-Playlist');
+echo __('Embed a Sub-Playlist');
 
 
 echo __('Media will be created with these settings. If public everyone will be able to view and use this media.');

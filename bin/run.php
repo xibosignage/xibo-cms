@@ -31,6 +31,9 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
+if (\Xibo\Helper\Environment::migrationPending())
+    die('Upgrade pending');
+
 // convert all the command line arguments into a URL
 $argv = $GLOBALS['argv'];
 array_shift($GLOBALS['argv']);

@@ -7,6 +7,7 @@ use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 
@@ -266,6 +267,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->fileSize = $media->fileSize;
             $file->md5 = $media->md5;
 
+            // Test to ensure the final file size is the same as the file size we're expecting
+            if ($file->fileSize != $file->size)
+                throw new InvalidArgumentException(__('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'), 'size');
+
             // Fonts, then install
             if ($module->getModuleType() == 'font') {
                 $controller->installFonts();
@@ -278,7 +283,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Get the Playlist
                 $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
-                $playlist->setChildObjectDependencies($controller->getRegionFactory());
 
                 // Create a Widget and add it to our region
                 $widget = $controller->getWidgetFactory()->create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);

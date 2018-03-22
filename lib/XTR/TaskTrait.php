@@ -1,24 +1,15 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
+ * Copyright (C) 2016-2018 Spring Signage Ltd
  * (TaskTrait.php)
  */
 
-
 namespace Xibo\XTR;
-use Slim\Slim;
+
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\NotificationFactory;
-use Xibo\Factory\UpgradeFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
-use Xibo\Factory\UserNotificationFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -31,9 +22,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 trait TaskTrait
 {
-    /** @var  Slim */
-    private $app;
-
     /** @var  LogServiceInterface */
     private $log;
 
@@ -55,30 +43,6 @@ trait TaskTrait
     /** @var  User */
     private $user;
 
-    /** @var  UserFactory */
-    private $userFactory;
-
-    /** @var  UserGroupFactory */
-    private $userGroupFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  UpgradeFactory */
-    private $upgradeFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
-    /** @var  NotificationFactory */
-    private $notificationFactory;
-
-    /** @var  UserNotificationFactory */
-    private $userNotificationFactory;
-
     /** @var  Task */
     private $task;
 
@@ -87,13 +51,6 @@ trait TaskTrait
 
     /** @var  string */
     private $runMessage;
-
-    /** @inheritdoc */
-    public function setApp($app)
-    {
-        $this->app = $app;
-        return $this;
-    }
 
     /** @inheritdoc */
     public function setConfig($config)
@@ -154,20 +111,6 @@ trait TaskTrait
     public function setUser($user)
     {
         $this->user = $user;
-        return $this;
-    }
-
-    /** @inheritdoc */
-    public function setFactories($userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
-    {
-        $this->userGroupFactory = $userGroupFactory;
-        $this->userFactory = $userFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->displayFactory = $displayFactory;
-        $this->upgradeFactory = $upgradeFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->notificationFactory = $notificationFactory;
-        $this->userNotificationFactory = $userNotificationFactory;
         return $this;
     }
 

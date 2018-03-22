@@ -31,7 +31,7 @@
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}
-                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-default">{{ item.layout }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-default">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} <span class="glyphicon glyphicon-minus-sign"></span></li>
                         {% endfor %}
                     </ul>
                 </div>

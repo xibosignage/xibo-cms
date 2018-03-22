@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2016 Daniel Garner
+ * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -108,6 +108,7 @@ class Session implements \SessionHandlerInterface
      */
     public function open($savePath, $sessionName)
     {
+        //$this->log->debug('Session open');
         $this->maxLifetime = ini_get('session.gc_maxlifetime');
         return true;
     }
@@ -117,6 +118,8 @@ class Session implements \SessionHandlerInterface
      */
     public function close()
     {
+        //$this->log->debug('Session close');
+
         try {
             // Commit
             $this->commit();
@@ -162,7 +165,9 @@ class Session implements \SessionHandlerInterface
      */
     function read($key)
     {
-        $empty = '';
+        //$this->log->debug('Session read');
+
+        $data = '';
         $this->key = $key;
 
         $userAgent = substr($_SERVER['HTTP_USER_AGENT'], 0, 253);
@@ -174,39 +179,47 @@ class Session implements \SessionHandlerInterface
             $this->beginTransaction();
 
             // Get this session
-            $sth = $dbh->getConnection()->prepare('SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` FROM `session` WHERE `session_id` = :session_id');
-            $sth->execute(array('session_id' => $key));
+            $sth = $dbh->getConnection()->prepare('
+                SELECT `session_data`, `isexpired`, `useragent`, `session_expiration`, `userId` 
+                  FROM `session`
+                 WHERE `session_id` = :session_id
+            ');
+            $sth->execute(['session_id' => $key]);
 
             if (!$row = $sth->fetch()) {
-                // Key doesn't exist yet
+                // New session.
+                $this->insertSession($key, '', time(), time() + $this->maxLifetime);
+
                 $this->expired = false;
-                return settype($empty, "string");
+
+            } else {
+                // Existing session
+                // Check the session hasn't expired
+                if ($row['session_expiration'] < time())
+                    $this->expired = true;
+                else
+                    $this->expired = $row['isexpired'];
+
+                // What happens if the UserAgent has changed?
+                if ($row['useragent'] != $userAgent) {
+                    // Force delete this session
+                    $this->expired = 1;
+                    $this->pruneKey = true;
+                }
+
+                $this->userId = $row['userId'];
+                $this->sessionExpiry = $row['session_expiration'];
+
+                // Set the session data (expired or not)
+                $data = $row['session_data'];
             }
 
-            // Check the session hasn't expired
-            if ($row['session_expiration'] < time())
-                $this->expired = true;
-            else
-                $this->expired = $row['isexpired'];
-
-            // What happens if the UserAgent has changed?
-            if ($row['useragent'] != $userAgent) {
-                // Force delete this session
-                $this->expired = 1;
-                $this->pruneKey = true;
-
-                throw new \Exception('Different UserAgent');
-            }
-
-            $this->userId = $row['userId'];
-            $this->sessionExpiry = $row['session_expiration'];
-
-            return ($row['session_data']);
+            return (string)$data;
 
         } catch (\Exception $e) {
             $this->log->error('Error reading session: %s', $e->getMessage());
 
-            return settype($empty, "string");
+            return (string)$data;
         }
     }
 
@@ -215,41 +228,13 @@ class Session implements \SessionHandlerInterface
      */
     public function write($key, $val)
     {
-        $newExp = time() + $this->maxLifetime;
+        //$this->log->debug('Session write');
 
-        $lastAccessed = date("Y-m-d H:i:s");
+        // What should we do with expiry?
+        $expiry = ($this->refreshExpiry) ? time() + $this->maxLifetime : $this->sessionExpiry;
 
         try {
-            $sql = '
-                  INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
-                    VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :userId, :expired, :useragent, :remoteaddr)
-                    ON DUPLICATE KEY UPDATE
-                      `session_data` = :session_data2,
-                      `userId` = :userId2,
-                      `session_expiration` = :session_expiration2,
-                      `isExpired` = :expired2,
-                      `lastaccessed` = :lastAccessed2
-                ';
-
-            $params = [
-                'session_id' => $key,
-                'session_data' => $val,
-                'session_data2' => $val,
-                'session_expiration' => $newExp,
-                'session_expiration2' => ($this->refreshExpiry) ? $newExp : $this->sessionExpiry,
-                'lastAccessed' => $lastAccessed,
-                'lastAccessed2' => $lastAccessed,
-                'userId' => $this->userId,
-                'userId2' => $this->userId,
-                'expired' => ($this->expired) ? 1 : 0,
-                'expired2' => ($this->expired) ? 1 : 0,
-                'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
-                'remoteaddr' => $_SERVER['REMOTE_ADDR']
-            ];
-
-            //
-
-            $this->getDb()->update($sql, $params);
+            $this->updateSession($key, $val, time(), $expiry);
 
         } catch (\PDOException $e) {
             $this->log->error('Error writing session data: %s', $e->getMessage());
@@ -264,8 +249,9 @@ class Session implements \SessionHandlerInterface
      */
     public function destroy($key)
     {
+        //$this->log->debug('Session destroy');
         try {
-            $this->getDb()->update('DELETE FROM `session` WHERE session_id = :session_id', array('session_id', $key));
+            $this->getDb()->update('DELETE FROM `session` WHERE session_id = :session_id', ['session_id' => $key]);
         } catch (\PDOException $e) {
             $this->log->error('Error destroying session: %s', $e->getMessage());
         }
@@ -278,6 +264,7 @@ class Session implements \SessionHandlerInterface
      */
     public function gc($maxLifetime)
     {
+        //$this->log->debug('Session gc');
         $this->gcCalled = true;
         return true;
     }
@@ -288,7 +275,7 @@ class Session implements \SessionHandlerInterface
      */
     public function setUser($userId)
     {
-        $this->log->debug('Setting user Id to %d', $userId);
+        //$this->log->debug('Setting user Id to %d', $userId);
         $_SESSION['userid'] = $userId;
         $this->userId = $userId;
     }
@@ -298,21 +285,15 @@ class Session implements \SessionHandlerInterface
      */
     public function regenerateSessionId()
     {
-        session_regenerate_id(false);
+        //$this->log->debug('Session regenerate');
+        session_regenerate_id(true);
 
-        $newKey = session_id();
+        $this->key = session_id();
 
-        try {
-            // Swap the ID's
-            $this->getDb()->update('UPDATE `session` SET session_id = :new_session_id WHERE session_id = :session_id', array('session_id' => $this->key, 'new_session_id' => $newKey));
-
-            $this->key = $newKey;
-
-            return true;
-
-        } catch (\PDOException $e) {
-            $this->log->error('Error regenerating session: %s', $e->getMessage());
-            return false;
+        // PHP7 calls open/close on regenerate
+        // PHP5 does neither
+        if (version_compare(phpversion(), '7.0') === -1) {
+            $this->insertSession($this->key, '', time(), time() + $this->maxLifetime);
         }
     }
 
@@ -395,7 +376,7 @@ class Session implements \SessionHandlerInterface
      */
     private function beginTransaction()
     {
-        if (!$this->getDb()->getConnection()->inTransaction() && DBVERSION > 122) {
+        if (!$this->getDb()->getConnection()->inTransaction()) {
             try {
                 $this->getDb()->getConnection()->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
             } catch (\PDOException $e) {
@@ -415,6 +396,67 @@ class Session implements \SessionHandlerInterface
         if ($this->getDb()->getConnection()->inTransaction())
             $this->getDb()->getConnection()->commit();
     }
-}
 
-?>
+    /**
+     * Insert session
+     * @param $key
+     * @param $data
+     * @param $lastAccessed
+     * @param $expiry
+     */
+    private function insertSession($key, $data, $lastAccessed, $expiry)
+    {
+        //$this->log->debug('Session insert');
+
+        $sql = '
+          INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
+            VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :userId, :expired, :useragent, :remoteaddr)
+        ';
+
+        $params = [
+            'session_id' => $key,
+            'session_data' => $data,
+            'session_expiration' => $expiry,
+            'lastAccessed' => date('Y-m-d H:i:s', $lastAccessed),
+            'userId' => $this->userId,
+            'expired' => ($this->expired) ? 1 : 0,
+            'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
+            'remoteaddr' => $_SERVER['REMOTE_ADDR']
+        ];
+
+        $this->getDb()->update($sql, $params);
+    }
+
+    /**
+     * Update Session
+     * @param $key
+     * @param $data
+     * @param $lastAccessed
+     * @param $expiry
+     */
+    private function updateSession($key, $data, $lastAccessed, $expiry)
+    {
+        //$this->log->debug('Session update');
+
+        $sql = '
+            UPDATE `session` SET
+              session_data = :session_data,
+              session_expiration = :session_expiration,
+              LastAccessed = :lastAccessed,
+              userID = :userId,
+              IsExpired = :expired
+            WHERE session_id = :session_id
+        ';
+
+        $params = [
+            'session_data' => $data,
+            'session_expiration' => $expiry,
+            'lastAccessed' => date('Y-m-d H:i:s', $lastAccessed),
+            'userId' => $this->userId,
+            'expired' => ($this->expired) ? 1 : 0,
+            'session_id' => $key
+        ];
+
+        $this->getDb()->update($sql, $params);
+    }
+}

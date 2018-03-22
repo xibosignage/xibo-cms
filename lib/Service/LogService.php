@@ -86,10 +86,6 @@ class LogService implements LogServiceInterface
     {
         $this->debug(sprintf('Audit Trail message recorded for %s with id %d. Message: %s', $entity, $entityId, $message));
 
-        // Audit log didn't exist pre-1.7.4
-        if (DBVERSION < 88)
-            return;
-
         if ($this->_auditLogStatement == null) {
             $dbh = PdoStorageService::newConnection();
             $this->_auditLogStatement = $dbh->prepare('

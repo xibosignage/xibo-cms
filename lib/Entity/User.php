@@ -28,6 +28,7 @@ use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
@@ -490,7 +491,7 @@ class User implements \JsonSerializable
         if ($this->userId == 0)
             throw new NotFoundException(__('User not found'));
 
-        if ($this->CSPRNG == 0 || $this->configService->Version('DBVersion') < 62) {
+        if ($this->CSPRNG == 0) {
             // Password is tested using a plain MD5 check
             if ($this->password != md5($password))
                 throw new AccessDeniedException();
@@ -655,16 +656,17 @@ class User implements \JsonSerializable
 
     /**
      * Validate
+     * @throws XiboException
      */
     public function validate()
     {
         if (!v::alnum('_.-')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
 
-        if (!v::string()->notEmpty()->validate($this->password))
+        if (!v::stringType()->notEmpty()->validate($this->password))
             throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
 
-        if (!v::int()->validate($this->libraryQuota))
+        if (!v::intType()->validate($this->libraryQuota))
             throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
 
         if (!empty($this->email) && !v::email()->validate($this->email))
@@ -716,7 +718,7 @@ class User implements \JsonSerializable
         if ($options['saveUserOptions']) {
             // Save all Options
             foreach ($this->userOptions as $userOption) {
-                /* @var RegionOption $userOption */
+                /* @var UserOption $userOption */
                 $userOption->save();
             }
         }

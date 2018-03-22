@@ -1,21 +1,35 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (ClockWidgetTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboClock;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 class ClockWidgetTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
+
 	protected $startLayouts;
     /**
      * setUp - called before every test automatically
@@ -58,12 +72,11 @@ class ClockWidgetTest extends LocalWebTestCase
      */
 	public function testAdd($name, $duration, $useDuration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
 	{
-		# Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock add Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
-		$response = $this->client->post('/playlist/widget/clock/' . $region->playlists[0]['playlistId'], [
+		$response = $this->client->post('/playlist/widget/clock/' . $playlistId, [
         	'name' => $name,
         	'duration' => $duration,
             'useDuration' => $useDuration,
@@ -78,7 +91,7 @@ class ClockWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $clockOptions = (new XiboClock($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $clockOptions = (new XiboClock($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($name, $clockOptions->name);
         $this->assertSame($duration, $clockOptions->duration);
         
@@ -122,12 +135,12 @@ class ClockWidgetTest extends LocalWebTestCase
 
     public function testEdit()
     {
-    	# Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock edit Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        # Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
     	# Create a clock with wrapper
-    	$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
+    	$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, 1, NULL, NULL, NULL, NULL, $playlistId);
     	$nameNew = 'Edited Name';
     	$durationNew = 80;
     	$clockTypeIdNew = 3;
@@ -145,7 +158,7 @@ class ClockWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $clockOptions = (new XiboClock($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $clockOptions = (new XiboClock($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($nameNew, $clockOptions->name);
         $this->assertSame($durationNew, $clockOptions->duration);
         foreach ($clockOptions->widgetOptions as $option) {
@@ -156,12 +169,12 @@ class ClockWidgetTest extends LocalWebTestCase
     }
     public function testDelete()
     {
-    	# Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock delete Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        # Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
     	# Create a clock with wrapper
-		$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, 1, NULL, NULL, NULL, NULL, $region->playlists[0]['playlistId']);
+		$clock = (new XiboClock($this->getEntityProvider()))->create('Api Analogue clock', 20, 1, 1, 1, NULL, NULL, NULL, NULL, $playlistId);
 		# Delete it
 		$this->client->delete('/playlist/widget/' . $clock->widgetId);
         $response = json_decode($this->client->response->body());

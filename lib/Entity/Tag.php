@@ -52,6 +52,12 @@ class Tag implements \JsonSerializable
      * @var int[]
      */
     public $layoutIds = [];
+
+    /**
+     * @SWG\Property(description="An array of playlistIDs with this Tag")
+     * @var int[]
+     */
+    public $playlistIds = [];
     
     /**
      * @SWG\Property(description="An array of campaignIDs with this Tag")
@@ -72,6 +78,7 @@ class Tag implements \JsonSerializable
     public $displayGroupIds = [];
 
     private $originalLayoutIds = [];
+    private $originalPlaylistIds = [];
     private $originalMediaIds = [];
     private $originalCampaignIds = [];
     private $originalDisplayGroupIds = [];
@@ -112,6 +119,29 @@ class Tag implements \JsonSerializable
         $this->load();
 
         $this->layoutIds = array_diff($this->layoutIds, [$layoutId]);
+    }
+
+    /**
+     * Assign Playlist
+     * @param int $playlistId
+     */
+    public function assignPlaylist($playlistId)
+    {
+        $this->load();
+
+        if (!in_array($playlistId, $this->playlistIds))
+            $this->playlistIds[] = $playlistId;
+    }
+
+    /**
+     * Unassign Playlist
+     * @param int $playlistId
+     */
+    public function unassignPlaylist($playlistId)
+    {
+        $this->load();
+
+        $this->playlistIds = array_diff($this->playlistIds, [$playlistId]);
     }
 
     /**
@@ -196,11 +226,14 @@ class Tag implements \JsonSerializable
             $this->layoutIds[] = $row['layoutId'];
         }
 
-        if (DBVERSION >= 129) {
-            $this->campaignIds = [];
-            foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
-                $this->campaignIds[] = $row['campaignId'];
-            }
+        $this->campaignIds = [];
+        foreach ($this->getStore()->select('SELECT campaignId FROM `lktagcampaign` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->campaignIds[] = $row['campaignId'];
+        }
+
+        $this->playlistIds = [];
+        foreach ($this->getStore()->select('SELECT playlistId FROM `lktagplaylist` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+            $this->playlistIds[] = $row['playlistId'];
         }
 
         $this->mediaIds = [];
@@ -215,6 +248,7 @@ class Tag implements \JsonSerializable
 
         // Set the originals
         $this->originalLayoutIds = $this->layoutIds;
+        $this->originalPlaylistIds = $this->playlistIds;
         $this->originalCampaignIds = $this->campaignIds;
         $this->originalMediaIds = $this->mediaIds;
         $this->originalDisplayGroupIds = $this->displayGroupIds;
@@ -233,6 +267,7 @@ class Tag implements \JsonSerializable
 
         // Manage the links to layouts and media
         $this->linkLayouts();
+        $this->linkPlaylists();
         $this->linkCampaigns();
         $this->linkMedia();
         $this->linkDisplayGroups();
@@ -247,6 +282,7 @@ class Tag implements \JsonSerializable
     public function removeAssignments()
     {
         $this->unlinkLayouts();
+        $this->unlinkPlaylists();
         $this->unlinkCampaigns();
         $this->unlinkMedia();
         $this->unlinkDisplayGroups();
@@ -310,6 +346,54 @@ class Tag implements \JsonSerializable
 
         $this->getStore()->update($sql, $params);
     }
+
+    /**
+     * Link all assigned playlists
+     */
+    private function linkPlaylists()
+    {
+        $playlistsToLink = array_diff($this->playlistIds, $this->originalLayoutIds);
+
+        $this->getLog()->debug('Linking %d playlists to Tag %s', count($playlistsToLink), $this->tag);
+
+        // Playlists that are in playlistIds but not in originalLayoutIds
+        foreach ($playlistsToLink as $playlistId) {
+            $this->getStore()->update('INSERT INTO `lktagplaylist` (tagId, playlistId) VALUES (:tagId, :playlistId) ON DUPLICATE KEY UPDATE playlistId = playlistId', array(
+                'tagId' => $this->tagId,
+                'playlistId' => $playlistId
+            ));
+        }
+    }
+
+    /**
+     * Unlink all assigned Playlists
+     */
+    private function unlinkPlaylists()
+    {
+        // Playlists that are in the originalLayoutIds but not in the current playlistIds
+        $playlistsToUnlink = array_diff($this->originalLayoutIds, $this->playlistIds);
+
+        $this->getLog()->debug('Unlinking %d playlists from Tag %s', count($playlistsToUnlink), $this->tag);
+
+        if (count($playlistsToUnlink) <= 0)
+            return;
+
+        // Unlink any playlists that are NOT in the collection
+        $params = ['tagId' => $this->tagId];
+
+        $sql = 'DELETE FROM `lktagplaylist` WHERE tagId = :tagId AND playlistId IN (0';
+
+        $i = 0;
+        foreach ($playlistsToUnlink as $playlistId) {
+            $i++;
+            $sql .= ',:playlistId' . $i;
+            $params['playlistId' . $i] = $playlistId;
+        }
+
+        $sql .= ')';
+
+        $this->getStore()->update($sql, $params);
+    }
     
     
     /**
@@ -317,10 +401,6 @@ class Tag implements \JsonSerializable
      */
     private function linkCampaigns()
     {
-        // Didn't exist before 129
-        if (DBVERSION < 129)
-            return;
-
         $campaignsToLink = array_diff($this->campaignIds, $this->originalCampaignIds);
 
         $this->getLog()->debug('Linking %d campaigns to Tag %s', count($campaignsToLink), $this->tag);
@@ -339,10 +419,6 @@ class Tag implements \JsonSerializable
      */
     private function unlinkCampaigns()
     {
-        // Didn't exist before 129
-        if (DBVERSION < 129)
-            return;
-
         // Campaigns that are in the originalCampaignIds but not in the current campaignIds
         $campaignsToUnlink = array_diff($this->originalCampaignIds, $this->campaignIds);
 
@@ -424,10 +500,6 @@ class Tag implements \JsonSerializable
      */
     private function linkDisplayGroups()
     {
-        // Didn't exist before 134
-        if (DBVERSION < 134)
-            return;
-
         $displayGroupsToLink = array_diff($this->displayGroupIds, $this->originalDisplayGroupIds);
 
         $this->getLog()->debug('Linking ' . count($displayGroupsToLink) . ' displayGroups to Tag ' . $this->tag);
@@ -446,10 +518,6 @@ class Tag implements \JsonSerializable
      */
     private function unlinkDisplayGroups()
     {
-        // Didn't exist before 134
-        if (DBVERSION < 134)
-            return;
-
         // DisplayGroups that are in the $this->originalDisplayGroupIds but not in the current $this->displayGroupIds
         $displayGroupsToUnlink = array_diff($this->originalDisplayGroupIds, $this->displayGroupIds);
 

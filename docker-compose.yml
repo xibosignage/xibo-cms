@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 services:
   db:
@@ -6,12 +6,13 @@ services:
     ports:
       - 3315:3306
     volumes:
-     - ./library/containers/db:/var/lib/mysql
+     - ./containers/db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "cms"
 
   xmr:
-    image: xibosignage/xibo-xmr:latest
+    image: xibosignage/xibo-xmr:release-0.7
     ports:
      - "9505:9505"
     environment:
@@ -20,15 +21,20 @@ services:
       IPV6PUBSUPPORT: "false"
 
   web:
-    depends_on:
-      - db
-    image: xibosignage/xibo-cms-dev:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     volumes:
      - ./:/var/www/cms
     ports:
      - "80:80"
     environment:
-      XIBO_DEV_MODE: "true"
-    links:
-      - db:mysql
-      - xmr:50001
+      CMS_DEV_MODE: "true"
+      MYSQL_DATABASE: "cms"
+
+  swagger:
+      image: swaggerapi/swagger-ui:latest
+      ports:
+       - "8080:8080"
+      environment:
+        - API_URL=http://localhost/swagger.json

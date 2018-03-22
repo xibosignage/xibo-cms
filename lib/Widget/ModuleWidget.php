@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -32,6 +32,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -41,6 +42,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -99,7 +101,7 @@ abstract class ModuleWidget implements ModuleInterface
     private $cacheKeyPrefix = null;
 
     //
-    // Injected Factory Classes and Services Follow
+    // <editor-fold desc="Injected Factory Classes and Services Follow">
     //
 
     /**
@@ -186,6 +188,11 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
 
+    /** @var PlaylistFactory */
+    protected $playlistFactory;
+
+    // </editor-fold>
+
     /**
      * ModuleWidget constructor.
      * @param Slim $app
@@ -206,8 +213,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param ScheduleFactory $scheduleFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -228,6 +236,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->scheduleFactory = $scheduleFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->playlistFactory = $playlistFactory;
 
         $this->init();
     }
@@ -363,41 +372,6 @@ abstract class ModuleWidget implements ModuleInterface
         $this->getPool()->deleteItem($this->getCacheKeyPrefix());
     }
 
-    // <editor-fold desc="request locking">
-
-    /** @var  Item */
-    private $lock;
-
-    /**
-     * Hold a lock on concurrent requests
-     *  blocks if the request is locked
-     * @param $ttl
-     * @param $wait
-     * @param $tries
-     */
-    public function concurrentRequestLock($ttl = 30, $wait = 5000, $tries = 3)
-    {
-        $this->lock = $this->getPool()->getItem('locks/widget/' . $this->widget->widgetId);
-        $this->lock->setInvalidationMethod(Invalidation::SLEEP, $wait, $tries);
-
-        $this->lock->get();
-        $this->lock->lock($ttl);
-    }
-
-    /**
-     * Release a lock on concurrent requests
-     */
-    public function concurrentRequestRelease()
-    {
-        $this->lock->set(time());
-        $this->lock->expiresAfter(1); // Expire straight away
-
-        // Release lock
-        $this->getPool()->saveDeferred($this->lock);
-    }
-
-    // </editor-fold>
-
     /**
      * Set the Widget
      * @param \Xibo\Entity\Widget $widget
@@ -459,6 +433,14 @@ abstract class ModuleWidget implements ModuleInterface
     final protected function setUseDuration($useDuration)
     {
         $this->widget->useDuration = $useDuration;
+    }
+
+    /**
+     * @return \Xibo\Entity\Playlist[]
+     */
+    final public function getAssignablePlaylists()
+    {
+        return $this->playlistFactory->query(null, ['regionSpecific' => 0, 'notPlaylistId' => $this->widget->playlistId]);
     }
 
     /**
@@ -552,15 +534,16 @@ abstract class ModuleWidget implements ModuleInterface
      * Clear Media
      * should only be used on media items that do not automatically assign new media from the feed
      */
-    final protected function clearMedia()
+    private function clearMedia()
     {
         $this->widget->clearCachedMedia();
     }
 
     /**
-     *
+     * Has the Media changes
+     * @return bool
      */
-    final protected function hasMediaChanged()
+    private function hasMediaChanged()
     {
         return $this->widget->hasMediaChanged();
     }
@@ -643,7 +626,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final public function getCalculatedDurationForGetResource()
     {
-        return ($this->widget->calculatedDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->calculatedDuration;
+        return ($this->widget->useDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->duration;
     }
 
     /**
@@ -651,7 +634,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function saveWidget()
     {
-        $this->widget->save();
+        $this->widget->calculateDuration($this)->save();
     }
 
     /**
@@ -679,8 +662,28 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function delete()
     {
-        // By default this doesn't do anything
-        // Module specific delete functionality should go here in the super class
+        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
+            . 'widget'
+            . DIRECTORY_SEPARATOR
+            . $this->getWidgetId()
+            . DIRECTORY_SEPARATOR;
+
+        // Drop the cache
+        // there is a chance this may not yet exist
+        try {
+            $it = new \RecursiveDirectoryIterator($cachePath, \RecursiveDirectoryIterator::SKIP_DOTS);
+            $files = new \RecursiveIteratorIterator($it, \RecursiveIteratorIterator::CHILD_FIRST);
+            foreach ($files as $file) {
+                if ($file->isDir()) {
+                    rmdir($file->getRealPath());
+                } else {
+                    unlink($file->getRealPath());
+                }
+            }
+            rmdir($cachePath);
+        } catch (\UnexpectedValueException $unexpectedValueException) {
+            $this->getLog()->debug('HTML cache doesn\'t exist yet or cannot be deleted. ' . $unexpectedValueException->getMessage());
+        }
     }
 
     /**
@@ -765,17 +768,6 @@ abstract class ModuleWidget implements ModuleInterface
         $output .= '</div>';
 
         return $output;
-    }
-
-    /**
-     * Default Get Resource
-     * @param int $displayId
-     * @return mixed
-     * @throws ControllerNotImplemented
-     */
-    public function getResource($displayId = 0)
-    {
-        throw new ControllerNotImplemented();
     }
 
     /**
@@ -1033,6 +1025,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function getMediaId()
     {
+        $this->getLog()->debug('Getting Primary MediaId for ' . $this->getWidgetId());
         return $this->widget->getPrimaryMediaId();
     }
 
@@ -1159,11 +1152,17 @@ abstract class ModuleWidget implements ModuleInterface
             foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
                 // Read the contents, json_decode and add to the array
                 $template = json_decode(file_get_contents($template), true);
-                $template['fileName'] = $template['image'];
 
-                if ($loadImage) {
-                    // We ltrim this because the control is expecting a relative URL
-                    $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                if (isset($template['image'])) {
+                    $template['fileName'] = $template['image'];
+
+                    if ($loadImage) {
+                        // We ltrim this because the control is expecting a relative URL
+                        $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                    }
+                } else {
+                    $template['fileName'] = '';
+                    $template['image'] = '';
                 }
 
                 $this->module->settings['templates'][] = $template;
@@ -1280,15 +1279,240 @@ abstract class ModuleWidget implements ModuleInterface
         return $this->statusMessage;
     }
 
-    /**
-     * Get the modified date of this Widget
-     * @param int $displayId
-     * @return null|int
-     */
-    public function getModifiedTimestamp($displayId)
+    //<editor-fold desc="Get Resource and cache">
+
+    /** @inheritdoc */
+    public function getCacheDuration()
     {
-        return null;
+        // Default update interval is 15 minutes
+        return 15 * 60;
     }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        // Default is the widgetId
+        return $this->getWidgetId();
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // Default is the widgetId
+        return $this->getWidgetId();
+    }
+
+    /** @inheritdoc */
+    public function getModifiedDate($displayId)
+    {
+        // Default behaviour is to assume we use the widget modified date
+        return $this->getDate()->parse($this->widget->modifiedDt, 'U');
+    }
+
+    /** @inheritdoc */
+    public final function getCacheDate($displayId)
+    {
+        $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
+        $date = $item->get();
+
+        // If not cached set it to have cached a long time in the past
+        if ($date === null)
+            return $this->getDate()->parse()->subYear(1);
+
+        // Parse the date
+        return $this->getDate()->parse($date, 'Y-m-d H:i:s');
+    }
+
+    /** @inheritdoc */
+    public final function setCacheDate($displayId, $overrideDuration = null)
+    {
+        $now = $this->getDate()->parse();
+        $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
+
+        $item->set($now->format('Y-m-d H:i:s'));
+        $item->expiresAt($now->addYear(1));
+
+        $this->getPool()->save($item);
+    }
+
+    /** @inheritdoc */
+    public final function getResourceOrCache($displayId)
+    {
+        $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
+
+        // End game - we will return this.
+        $resource = null;
+
+        // Have we changed since we last cached this widget
+        $now = $this->getDate()->parse();
+        $modifiedDt = $this->getModifiedDate($displayId);
+        $cachedDt = $this->getCacheDate($displayId);
+        $cacheDuration = $this->getCacheDuration();
+        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
+            . 'widget'
+            . DIRECTORY_SEPARATOR
+            . $this->getWidgetId()
+            . DIRECTORY_SEPARATOR;
+
+        $cacheFile = $this->getCacheKey($displayId);
+
+        $this->getLog()->debug('Cache details - modifiedDt: ' . (($modifiedDt === null) ? 'layoutDt' : $modifiedDt->format('Y-m-d H:i:s'))
+            . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
+            . ', cacheDuration: ' . $cacheDuration
+            . ', cacheFile: ' . $cacheFile);
+
+        if (!file_exists($cachePath))
+            mkdir($cachePath, 0777, true);
+
+        if ( ($modifiedDt !== null && $modifiedDt->greaterThan($cachedDt))
+                || $cachedDt->addSeconds($cacheDuration)->lessThan($now)
+                || !file_exists($cachePath . $cacheFile) ) {
+
+            $this->getLog()->debug('We will need to regenerate');
+
+            try {
+                // Get and hold a lock
+                $this->concurrentRequestLock();
+
+                // We need to generate and cache this resource
+                try {
+                    // Clear the resources widget content
+                    $this->clearMedia();
+
+                    // Generate the resource
+                    $resource = $this->getResource($displayId);
+
+                    // Cache to the library
+                    $hash = null;
+                    if (file_exists($cachePath . $cacheFile)) {
+                        // get a md5 of the file
+                        $hash = md5_file($cachePath . $cacheFile);
+
+                        $this->getLog()->debug('Cache file ' . $cachePath . $cacheFile . ' already existed with hash ' . $hash);
+                    }
+
+                    file_put_contents($cachePath . $cacheFile, $resource);
+
+                    // Should we notify this display of this widget changing?
+                    if ($hash !== md5_file($cachePath . $cacheFile) || $this->hasMediaChanged()) {
+                        $this->getLog()->debug('Cache file was different, we will need to notify the display');
+
+                        // Notify
+                        $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
+                    } else {
+                        $this->getLog()->debug('Cache file identical no need to notify the display');
+                    }
+
+                    // Update the cache date
+                    $this->setCacheDate($displayId);
+
+                    $this->getLog()->debug('Regenerate complete');
+
+                } catch (\Exception $e) {
+                    $this->getLog()->error('Problem with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $e->getMessage());
+                    $this->getLog()->debug($e->getTraceAsString());
+
+                    // Update the cache date
+                    // error scenario so drop the duration by 1/3rd
+                    $this->setCacheDate($cacheDuration / 3);
+                }
+
+                // Unlock
+                $this->concurrentRequestRelease();
+
+            } catch (\Exception $exception) {
+                // Unlock
+                $this->concurrentRequestRelease();
+
+                throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
+            }
+        } else {
+            $resource = file_get_contents($cachePath . $cacheFile);
+        }
+
+        // Return the resource
+        return $resource;
+    }
+
+    //</editor-fold>
+
+    // <editor-fold desc="Request locking">
+
+    /** @var  Item */
+    private $lock;
+
+    /**
+     * Hold a lock on concurrent requests
+     *  blocks if the request is locked
+     * @param int $ttl seconds
+     * @param int $wait seconds
+     * @param int $tries
+     * @throws XiboException
+     */
+    private function concurrentRequestLock($ttl = 300, $wait = 2, $tries = 5)
+    {
+        $key = $this->getLockKey();
+
+        $this->lock = $this->getPool()->getItem('locks/widget/' . $key);
+
+        // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
+        // isMiss() returns false if the item is missing or expired, no exceptions.
+        $this->lock->setInvalidationMethod(Invalidation::NONE);
+
+        // Get the lock
+        // other requests will wait here until we're done, or we've timed out
+        $locked = $this->lock->get();
+
+        // Did we get a lock?
+        // if we're a miss, then we're not already locked
+        if ($this->lock->isMiss() || $locked === false) {
+            $this->getLog()->debug('Lock miss or false. Locking for ' . $ttl . ' seconds. $locked is '. var_export($locked, true) . ', widgetId = ' . $this->widget->widgetId);
+
+            // so lock now
+            $this->lock->set(true);
+            $this->lock->expiresAfter($ttl);
+            $this->lock->save();
+
+            //sleep(30);
+        } else {
+            // We are a hit - we must be locked
+            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format('Y-m-d H:i:s') . ', created ' . $this->lock->getCreation()->format('Y-m-d H:i:s'));
+
+            // Try again?
+            $tries--;
+
+            if ($tries <= 0) {
+                // We've waited long enough
+                throw new XiboException('Concurrent record locked, time out.');
+            } else {
+                $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
+
+                // Hang about waiting for the lock to be released.
+                sleep($wait);
+
+                // Recursive request (we've decremented the number of tries)
+                $this->concurrentRequestLock($ttl, $wait, $tries);
+            }
+        }
+    }
+
+    /**
+     * Release a lock on concurrent requests
+     */
+    private function concurrentRequestRelease()
+    {
+        if ($this->lock !== null) {
+            $this->getLog()->debug('Releasing lock ' . $this->lock->getKey() . ' widgetId ' . $this->widget->widgetId);
+
+            // Release lock
+            $this->lock->set(false);
+            $this->lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
+
+            $this->getPool()->save($this->lock);
+        }
+    }
+
+    // </editor-fold>
 
     //<editor-fold desc="GetResource Helpers">
 
@@ -1369,8 +1593,12 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function appendCss($css)
     {
-        if (!empty($css))
-            $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
+        if (!empty($css)) {
+            if (stripos($css, '<style') !== false)
+                $this->data['styleSheet'] .= $css . PHP_EOL;
+            else
+                $this->data['styleSheet'] .= '<style type="text/css">' . $css . '</style>' . PHP_EOL;
+        }
 
         return $this;
     }

@@ -428,10 +428,10 @@ class Media implements \JsonSerializable
      */
     public function validate($options)
     {
-        if (!v::string()->notEmpty()->validate($this->mediaType))
+        if (!v::stringType()->notEmpty()->validate($this->mediaType))
             throw new InvalidArgumentException(__('Unknown Module Type'), 'type');
 
-        if (!v::string()->notEmpty()->length(1, 100)->validate($this->name))
+        if (!v::stringType()->notEmpty()->length(1, 100)->validate($this->name))
             throw new InvalidArgumentException(__('The name must be between 1 and 100 characters'), 'name');
 
         // Check the naming of this item to ensure it doesn't conflict
@@ -718,7 +718,9 @@ class Media implements \JsonSerializable
                 isEdited = :isEdited,
                 userId = :userId,
                 released = :released,
-                apiRef = :apiRef
+                apiRef = :apiRef,
+                modifiedDt = :modifiedDt
+           WHERE mediaId = :mediaId
         ';
 
         $params = [
@@ -731,15 +733,9 @@ class Media implements \JsonSerializable
             'userId' => $this->ownerId,
             'released' => $this->released,
             'apiRef' => $this->apiRef,
-            'mediaId' => $this->mediaId
+            'mediaId' => $this->mediaId,
+            'modifiedDt' => date('Y-m-d H:i:s')
         ];
-
-        if (DBVERSION >= 134) {
-            $sql .= ', modifiedDt = :modifiedDt ';
-            $params['modifiedDt'] = date('Y-m-d H:i:s');
-        }
-
-        $sql .= ' WHERE mediaId = :mediaId ';
 
         $this->getStore()->update($sql, $params);
     }

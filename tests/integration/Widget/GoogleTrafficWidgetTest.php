@@ -1,21 +1,34 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (GoogleTrafficWidgetTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboGoogleTraffic;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 class GoogleTrafficWidgetTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
+
 	protected $startLayouts;
     /**
      * setUp - called before every test automatically
@@ -58,12 +71,11 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
      */
 	public function testAdd($name, $duration, $useDisplayLocation, $longitude, $latitude, $zoom)
 	{
-		# Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Traffic add Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
-		$response = $this->client->post('/playlist/widget/googleTraffic/' . $region->playlists[0]['playlistId'], [
+		$response = $this->client->post('/playlist/widget/googleTraffic/' . $playlistId, [
         	'name' => $name,
         	'duration' => $duration,
         	'useDisplayLocation' => $useDisplayLocation,
@@ -75,7 +87,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboGoogleTraffic($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboGoogleTraffic($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($name, $widgetOptions->name);
         $this->assertSame($duration, $widgetOptions->duration);
         
@@ -117,12 +129,12 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
      */
     public function testAddFailure($name, $duration, $useDisplayLocation, $longitude, $latitude, $zoom)
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Traffic failure add Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create Google traffic widgets with arguments from provideFailureCases
-        $response = $this->client->post('/playlist/widget/googleTraffic/' . $region->playlists[0]['playlistId'], [
+        $response = $this->client->post('/playlist/widget/googleTraffic/' . $playlistId, [
             'name' => $name,
             'duration' => $duration,
             'useDisplayLocation' => $useDisplayLocation,
@@ -154,12 +166,12 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     */
     public function testEdit()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Traffic failure add Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
-        # Create Google traffic widget 
-        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 1, 0, 7.640974, 45.109612, 80, $region->playlists[0]['playlistId']);     
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
+        # Create Google traffic widget
+        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 1, 0, 7.640974, 45.109612, 80, $playlistId);
         $nameNew = 'Edited Widget';
         $durationNew = 100;
         $longNew = 23.1223;
@@ -178,7 +190,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboGoogleTraffic($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboGoogleTraffic($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($nameNew, $widgetOptions->name);
         $this->assertSame($durationNew, $widgetOptions->duration);
         
@@ -201,12 +213,12 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     */
     public function testDelete()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock delete Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
-        # Create Google traffic widget 
-        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 1, 0, 7.640974, 45.109612, 80, $region->playlists[0]['playlistId']);    
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
+        # Create Google traffic widget
+        $googleTraffic = (new XiboGoogleTraffic($this->getEntityProvider()))->create('Traffic with custom location - Italy', 45, 1, 0, 7.640974, 45.109612, 80, $playlistId);
         # Delete it
         $this->client->delete('/playlist/widget/' . $googleTraffic->widgetId);
         $response = json_decode($this->client->response->body());

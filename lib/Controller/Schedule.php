@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -153,7 +154,7 @@ class Schedule extends Base
      *  operationId="scheduleCalendarData",
      *  tags={"schedule"},
      *  @SWG\Parameter(
-     *      name="DisplayGroupIds",
+     *      name="displayGroupIds",
      *      description="The DisplayGroupIds to return the schedule for. Empty for All.",
      *      in="formData",
      *      type="array",
@@ -239,8 +240,6 @@ class Schedule extends Base
             /* @var \Xibo\Entity\Schedule $row */
 
             // Generate this event
-            $row->setDayPartFactory($this->dayPartFactory);
-
             try {
                 $scheduleEvents = $row->getEvents($start, $end);
             } catch (XiboException $e) {
@@ -343,7 +342,7 @@ class Schedule extends Base
      * @param $displayGroupId
      *
      * @SWG\Get(
-     *  path="/schedule/:displayGroupId/events",
+     *  path="/schedule/{displayGroupId}/events",
      *  operationId="scheduleCalendarData",
      *  tags={"schedule"},
      *  @SWG\Parameter(
@@ -418,9 +417,7 @@ class Schedule extends Base
 
             // Assess schedules
             $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
-            $schedule
-                ->setDayPartFactory($this->dayPartFactory)
-                ->load();
+            $schedule->load();
 
             $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
 
@@ -753,10 +750,15 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add()
     {
         $this->getLog()->debug('Add Schedule');
+
+        // Get the custom day part to use as a default day part
+        $customDayPart = $this->dayPartFactory->getCustomDayPart();
 
         $schedule = $this->scheduleFactory->createEmpty();
         $schedule->userId = $this->getUser()->userId;
@@ -765,7 +767,12 @@ class Schedule extends Base
         $schedule->commandId = $this->getSanitizer()->getInt('commandId');
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
-        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', 0);
+        $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $customDayPart->dayPartId);
+
+        // Workaround for cases where we're supplied 0 as the dayPartId (legacy custom dayPart)
+        if ($schedule->dayPartId === 0)
+            $schedule->dayPartId = $customDayPart->dayPartId;
+
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
@@ -776,7 +783,7 @@ class Schedule extends Base
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
-        if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if (!$schedule->isAlwaysDayPart()) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
@@ -787,7 +794,7 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+            if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
                 // expect only a start date (no time)
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
@@ -847,7 +854,7 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Fix the event dates for display
-        if ($schedule->dayPartId == \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if ($schedule->isAlwaysDayPart()) {
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
@@ -1019,6 +1026,8 @@ class Schedule extends Base
      *      @SWG\Schema(ref="#/definitions/Schedule")
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function edit($eventId)
     {
@@ -1045,7 +1054,7 @@ class Schedule extends Base
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
         }
 
-        if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+        if (!$schedule->isAlwaysDayPart()) {
             // Handle the dates
             $fromDt = $this->getSanitizer()->getDate('fromDt');
             $toDt = $this->getSanitizer()->getDate('toDt');
@@ -1056,14 +1065,12 @@ class Schedule extends Base
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
-            if ($schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_CUSTOM && $schedule->dayPartId != \Xibo\Entity\Schedule::$DAY_PART_ALWAYS) {
+            if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
                 // expect only a start date (no time)
                 $schedule->fromDt = $fromDt->startOfDay()->format('U');
                 $schedule->toDt = null;
-
-                if ($recurrenceRange != null)
-                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->format('U');
 
             } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
@@ -1076,16 +1083,14 @@ class Schedule extends Base
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
 
-                if ($recurrenceRange != null)
-                    $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
                 if ($toDt !== null)
                     $schedule->toDt = $toDt->format('U');
 
-                if ($recurrenceRange != null)
-                    $schedule->recurrenceRange = $recurrenceRange->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->format('U');
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
@@ -1194,6 +1199,8 @@ class Schedule extends Base
      * Schedule Now Form
      * @param string $from The object that called this form
      * @param int $id The Id
+     *
+     * @throws NotFoundException
      */
     public function scheduleNowForm($from, $id)
     {
@@ -1222,6 +1229,8 @@ class Schedule extends Base
             'displays' => $displays,
             'displayGroups' => $groups,
             'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
+            'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
     }

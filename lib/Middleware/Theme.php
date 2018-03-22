@@ -12,6 +12,7 @@ namespace Xibo\Middleware;
 use Slim\Middleware;
 use Slim\Slim;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
 
 /**
@@ -54,10 +55,7 @@ class Theme extends Middleware
             $twig->prependPath(str_replace_first('..', PROJECT_ROOT, $app->configService->getThemeConfig('view_path')));
         }
 
-        $settings = [];
-        foreach ($app->settingsFactory->query() as $setting) {
-            $settings[$setting['setting']] = $setting['value'];
-        }
+        $settings = $app->configService->getSettings();
 
         // Date format
         $settings['DATE_FORMAT_JS'] = $app->dateService->convertPhpToMomentFormat($settings['DATE_FORMAT']);
@@ -87,13 +85,13 @@ class Theme extends Middleware
             ],
             'translations' => '{}',
             'libraryUpload' => [
-                'maxSize' => ByteFormatter::toBytes($app->configService->getMaxUploadSize()),
-                'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), $app->configService->getMaxUploadSize()),
+                'maxSize' => ByteFormatter::toBytes(Environment::getMaxUploadSize()),
+                'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize()),
                 'validExt' => implode('|', $app->moduleFactory->getValidExtensions()),
                 'validImageExt' => implode('|', $app->moduleFactory->getValidExtensions(['type' => 'image']))
             ],
             'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->setApp($app, false)->fontCKEditorConfig(),
-            'version' => VERSION
+            'version' => Environment::$WEBSITE_VERSION_NAME
         ));
     }
 }

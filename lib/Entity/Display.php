@@ -463,10 +463,10 @@ class Display implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::string()->notEmpty()->validate($this->display))
+        if (!v::stringType()->notEmpty()->validate($this->display))
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
 
-        if (!v::string()->notEmpty()->validate($this->license))
+        if (!v::stringType()->notEmpty()->validate($this->license))
             throw new InvalidArgumentException(__('Can not have a display without a hardware key'), 'license');
 
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
@@ -586,11 +586,14 @@ class Display implements \JsonSerializable
 
     /**
      * Delete
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
      */
     public function delete()
     {
         $this->load();
+
+        // Delete incidential references
+        $this->getStore()->update('DELETE FROM `requiredfile` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
 
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
@@ -632,10 +635,14 @@ class Display implements \JsonSerializable
             'macAddress' => $this->macAddress
         ]);
 
-        $displayGroup = $this->displayGroupFactory->createEmpty();
+
+        $displayGroup = $this->displayGroupFactory->create();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->tags = $this->tags;
         $displayGroup->setDisplaySpecificDisplay($this);
+
+        $this->getLog()->debug('Creating display specific group with userId ' . $displayGroup->userId);
+
         $displayGroup->save();
     }
 
@@ -653,6 +660,7 @@ class Display implements \JsonSerializable
                     alert_timeout = :alertTimeout,
                     WakeOnLan = :wakeOnLanEnabled,
                     WakeOnLanTime = :wakeOnLanTime,
+                    lastWakeOnLanCommandSent = :lastWakeOnLanCommandSent,
                     BroadCastAddress = :broadCastAddress,
                     SecureOn = :secureOn,
                     Cidr = :cidr,
@@ -689,12 +697,13 @@ class Display implements \JsonSerializable
             'alertTimeout' => $this->alertTimeout,
             'wakeOnLanEnabled' => $this->wakeOnLanEnabled,
             'wakeOnLanTime' => $this->wakeOnLanTime,
+            'lastWakeOnLanCommandSent' => $this->lastWakeOnLanCommandSent,
             'broadCastAddress' => $this->broadCastAddress,
             'secureOn' => $this->secureOn,
             'cidr' => $this->cidr,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'displayProfileId' => $this->displayProfileId,
+            'displayProfileId' => ($this->displayProfileId == null) ? null : $this->displayProfileId,
             'lastAccessed' => $this->lastAccessed,
             'loggedIn' => $this->loggedIn,
             'clientAddress' => $this->clientAddress,
@@ -804,10 +813,11 @@ class Display implements \JsonSerializable
 
     /**
      * @param PoolInterface $pool
+     * @return int|null
      */
-    public function setCurrentLayoutId($pool)
+    public function getCurrentLayoutId($pool)
     {
-        $item = $pool->getItem($this->getCacheKey() . '/currentLayoutId');
+        $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
 
         $data = $item->get();
 
@@ -823,5 +833,26 @@ class Display implements \JsonSerializable
         } else {
             $this->getLog()->debug('Cache miss for setCurrentLayoutId on display ' . $this->display);
         }
+
+        return $this->currentLayoutId;
+    }
+
+    /**
+     * @param PoolInterface $pool
+     * @param int $currentLayoutId
+     * @return $this
+     */
+    public function setCurrentLayoutId($pool, $currentLayoutId)
+    {
+        // Cache it
+        $this->getLog()->debug('Caching currentLayoutId with Pool');
+
+        $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
+        $item->set($currentLayoutId);
+        $item->expiresAfter(new \DateInterval('P1W'));
+
+        $pool->saveDeferred($item);
+
+        return $this;
     }
 }

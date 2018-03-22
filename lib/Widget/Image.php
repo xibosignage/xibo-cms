@@ -24,6 +24,7 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 
 class Image extends ModuleWidget
 {
@@ -33,7 +34,7 @@ class Image extends ModuleWidget
     public function validate()
     {
         // Validate
-        if (!v::int()->min(1, true)->validate($this->getDuration()))
+        if (!v::intType()->min(1, true)->validate($this->getDuration()))
             throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
@@ -129,7 +130,7 @@ class Image extends ModuleWidget
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
-        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional ;
+        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional;
 
         $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
@@ -151,8 +152,15 @@ class Image extends ModuleWidget
         $output = parent::hoverPreview();
 
         try {
+            // We might not have a regionId here (we could be previewing on the Playlist page)
+            if ($this->region == null) {
+                $url = $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]);
+            } else {
+                $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+            }
+
             $output .= '<div class="hoverPreview">';
-            $output .= '    <img src="' . $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=100&height=56&proportional=1&cache=1" alt="Hover Preview">';
+            $output .= '    <img src="' . $url . '?preview=1&width=100&height=56&proportional=1&cache=1" alt="Hover Preview">';
             $output .= '</div>';
         } catch (NotFoundException $e) {
             $this->getLog()->error('Cannot find image to show in HoverPreview. WidgetId: %d', $this->getWidgetId());
@@ -161,11 +169,7 @@ class Image extends ModuleWidget
         return $output;
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());

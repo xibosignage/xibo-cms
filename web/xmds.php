@@ -46,7 +46,7 @@ $app = new \Slim\Slim(array(
     'log.writer' => $logger
 ));
 $app->setName('api');
-$app->startTime = microtime();
+$app->startTime = microtime(true);
 
 // Load the config
 $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
@@ -78,7 +78,7 @@ $version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
 
 // Version Request?
 if (isset($_GET['what']))
-    die($app->configService->Version('XmdsVersion'));
+    die(\Xibo\Helper\Environment::$XMDS_VERSION);
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
@@ -258,7 +258,7 @@ try {
 
     // Get the stats for this connection
     $stats = $app->store->stats();
-    $stats['length'] = microtime() - $app->startTime;
+    $stats['length'] = microtime(true) - $app->startTime;
 
     $app->logService->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 

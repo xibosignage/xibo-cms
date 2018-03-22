@@ -181,7 +181,7 @@ class DataSetView extends ModuleWidget
             if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
                 throw new \InvalidArgumentException(__('Upper limit must be higher than lower limit'));
 
-            if (!v::int()->min(0)->validate($this->getOption('updateInterval')))
+            if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
 
             // Make sure we haven't entered a silly value in the filter
@@ -478,9 +478,6 @@ class DataSetView extends ModuleWidget
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        // Clear all linked media.
-        $this->clearMedia();
-
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
     
@@ -540,10 +537,6 @@ class DataSetView extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
-
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
@@ -855,5 +848,25 @@ class DataSetView extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        // DataSetViews are display specific
+        return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
+        return $this->getOption('dataSetId');
     }
 }

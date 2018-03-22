@@ -1,75 +1,92 @@
 # Introduction
-Xibo - Digital Signage - http://www.xibo.org.uk
-Copyright (C) 2006-2017 Daniel Garner and Contributors.
+Xibo - Digital Signage - https://xibo.org.uk
+Copyright (C) 2006-2018 Spring Signage Ltd and Contributors.
 
-This is the **development branch** and represents the next generation of the Xibo CMS.
+
+
+#### Branches
+
+- develop: Work in progress toward 2.0
+- master: Currently 1.8
+- release18: Work in progress toward the next 1.8
+- release17: Work in progress toward the next 1.7
+- release1.6.4: Archive of 1.6
+
+
 
 ## Licence
-Xibo is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
+Xibo is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or
 any later version.
 
-Xibo is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
+Xibo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU Affero General Public License
-along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+
+
 
 # Installation
 
-Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the
-official release notes of each release.
+Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the release notes of each release.
+
+
 
 # Developing
 
-** Please only install a Development environment if you intend make code changes to
-Xibo. Installing from the repository is not suitable for a production installation. **
+**Please only install a Development environment if you intend make code changes to Xibo. Installing from the repository is not suitable for a production installation.**
 
-Xibo uses Vagrant and Docker to ensure all contributers have a repeatable development environment which is easy to get
-up and running.
+Xibo uses Docker to ensure all contributers have a repeatable development environment which is easy to get up and running.
 
-The very same Docker containers are used in our recommended end user installation to promote consistency from development
-to deployment.
+The very same Docker containers are used in our recommended end user installation to promote consistency from development to deployment.
 
-To these ends this repository includes a `Vagrantfile` to spin up an environment.
+To these ends this repository includes a `docker-compose.yml` file to spin up a model development environment.
+
+
 
 ## Prerequisites
 
+The development Docker containers do not automatically build vendor files for PHP or JS, this is left as a developer responsibility. Therefore you will need the following tools:
+
  - Git
  - [Composer](http://getcomposer.org)
- - Vagrant
+ - NPM (coming in 2.0)
+ - Docker
+
+
+
+
 
 ## Clone the repository
 
-Create a folder in your development workspace and clone the repository. If you intend to make changes and submit pull
-requests please Fork us first and create a new branch.
+Create a folder in your development workspace and clone the repository. If you intend to make changes and submit pull requests please Fork us first and create a new branch.
 
+```sh
+git clone git@github.com:<your_id>/xibo-cms.git xibo-cms
 ```
-git clone git@github.com:xibosignage/xibo-cms.git xibo-cms
-```
+
+
 
 ## Install dependencies
 
 Change into your new folder
 
-```
+```sh
 cd xibo-cms
 ```
 
-Install the external dependencies with Composer. Your local machine is unlikely to have the necessary dependencies
-to install the packages, hence the `--ignore` switch.
+Install the external dependencies with Composer. Your local machine is unlikely to have the necessary dependencies to install the packages, hence the `--ignore` switch.
 
-```
+```sh
 php composer.phar install --ignore-platform-reqs
 ```
 
-## Start Vagrant
 
-```
-vagrant up
+
+## Bring up the Containers
+
+Use Docker Compose to bring up the containers.
+
+```sh
+docker-compose up --build -d
 ```
 
 ## Installation Wizard
@@ -122,46 +139,16 @@ over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
 
 # Application Structure
 
-The Xibo CMS now follows MVC and is PSR-4 compliant.
+To find out more about the application code and how everything fits together, please refer to the [advanced section of the manual](https://xibo.org.uk/manual/en/advanced.html).
 
-The folder structure is as follows:
 
- - /bin - CLI entry point
- - /custom - A location for custom files, such as modules and middleware. Autoloaded as the `\Xibo\Custom` namespace
- - /install - Files related to install/upgrade
- - /lib/Controller - Controllers
- - /lib/Entity - Models
- - /lib/Exception - Exceptions
- - /lib/Factory - Factories for creating Models
- - /lib/Helper - Helper Classes
- - /lib/Middleware - Slim Application Middleware
- - /lib/Storage - Storage Interfaces
- - /lib/Widget - Controllers for Modules
- - /lib/Xmds - Xibo Media Distribution SOAP Service
- - /locale - Translations
- - /modules - Twig Views for Modules and other Module resources
- - /tests - PHPUnit Tests
- - /views - Twig Views
- - /web - Web Document Root
- - /web/index.php - Entry point for the WEB GUI
- - /web/api/index.php - Entry point for the API
- - /web/maintenance/index.php - Entry point for Maintenance
- - /web/modules - Web Serviceable Resources for modules
- - /web/theme/default - Web Portal Default Theme Files
- - /web/theme/compact - Web Portal Compact Menu Theme Override
- - /web/theme/custom - User Themes (overrides files in default theme)
- - /web/xmds.php - XMDS SOAP Service
 
 # Contributing
 
 The standard licence for Xibo is the [AGPLv3](LICENSE). For more information please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-# Repository
 
-This folder contains the Xibo CMS application.
 
 # Reporting Problems
 
-Support requests can be reported on the [Xibo Community
-Forum](https://community.xibo.org.uk/c/dev). Verified, re-producable bugs with this repository can be reported in
-the [Xibo parent repository](https://github.com/xibosignage/xibo/issues).
+Support requests can be reported on the [Xibo Community Forum](https://community.xibo.org.uk/c/dev). Verified, re-producable bugs with this repository can be reported in the [Xibo parent repository](https://github.com/xibosignage/xibo/issues).

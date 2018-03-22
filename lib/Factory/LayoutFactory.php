@@ -182,6 +182,8 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string $tags
      * @return Layout
+     *
+     * @throws XiboException
      */
     public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
     {
@@ -218,7 +220,7 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string $tags
      * @return Layout
-     * @throws NotFoundException
+     * @throws XiboException
      */
     public function createFromTemplate($layoutId, $ownerId, $name, $description, $tags)
     {
@@ -241,15 +243,8 @@ class LayoutFactory extends BaseFactory
 
         // Ensure we have Playlists for each region
         foreach ($layout->regions as $region) {
-
             // Set the ownership of this region to the user creating from template
             $region->setOwner($ownerId, true);
-
-            if (count($region->playlists) <= 0) {
-                // Create a Playlist for this region
-                $playlist = $this->playlistFactory->create($name, $ownerId);
-                $region->assignPlaylist($playlist);
-            }
         }
 
         // Fresh layout object, entirely new and ready to be saved
@@ -296,7 +291,7 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by OwnerId
      * @param int $ownerId
-     * @return array[Layout]
+     * @return Layout[]
      * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
@@ -324,7 +319,8 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by Display Group Id
      * @param int $displayGroupId
-     * @return array[Media]
+     * @return Layout[]
+     * @throws XiboException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -334,7 +330,8 @@ class LayoutFactory extends BaseFactory
     /**
      * Get by Background Image Id
      * @param int $backgroundImageId
-     * @return array[Media]
+     * @return Layout[]
+     * @throws XiboException
      */
     public function getByBackgroundImageId($backgroundImageId)
     {
@@ -400,8 +397,7 @@ class LayoutFactory extends BaseFactory
                 $region->name = count($layout->regions) + 1;
 
             // Populate Playlists (XLF doesn't contain any playlists)
-            $playlist = $region->playlists[0];
-            $playlist->ownerId = $regionOwnerId;
+            $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
@@ -418,9 +414,11 @@ class LayoutFactory extends BaseFactory
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
                 $widget->useDuration = ($widget->useDuration == '') ? 1 : 0;
                 $widget->tempId = $mediaNode->getAttribute('fileId');
+                $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
+                $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('toDt');
                 $widgetId = $mediaNode->getAttribute('id');
 
-                $this->getLog()->debug('Adding Widget to object model. %s', $widget);
+                $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
                 // Does this module type exist?
                 if (!array_key_exists($widget->type, $modules)) {
@@ -517,8 +515,10 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
             }
 
-            $region->playlists[] = $playlist;
+            // Assign Playlist to the Region
+            $region->regionPlaylist = $playlist;
 
+            // Assign the region to the Layout
             $layout->regions[] = $region;
         }
 
@@ -575,11 +575,11 @@ class LayoutFactory extends BaseFactory
         // Construct the Layout
         $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
 
-        $this->getLog()->debug('Layout Loaded: ' . $layout);
-
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        $this->getLog()->debug('Layout Loaded: ' . $layout);
 
         // Check that the resolution we have in this layout exists, and if not create it.
         try {
@@ -592,7 +592,7 @@ class LayoutFactory extends BaseFactory
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
             $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, $layout->width, $layout->height);
-            $resolution->userId = $this->getUser()->userId;
+            $resolution->userId = $userId;
             $resolution->save();
         }
 
@@ -627,7 +627,7 @@ class LayoutFactory extends BaseFactory
         $fontsAdded = false;
 
         $widgets = $layout->getWidgets();
-        $this->getLog()->debug('Layout has %d widgets', count($widgets));
+        $this->getLog()->debug('Layout has ' . count($widgets) . ' widgets');
 
         $this->getLog()->debug('Process mapping.json file.');
 
@@ -946,10 +946,9 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
 
-        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
-        }
-        else {
+        } else {
             $select .= ' NULL as displayOrder, ';
         }
 
@@ -973,10 +972,14 @@ class LayoutFactory extends BaseFactory
         $body .= "       AND campaign.IsLayoutSpecific = 1";
         $body .= "   INNER JOIN `user` ON `user`.userId = `campaign`.userId ";
 
-        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             // Join Campaign back onto it again
-            $body .= " INNER JOIN `lkcampaignlayout` lkcl ON lkcl.layoutid = layout.layoutid AND lkcl.CampaignID = :campaignId ";
-            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', 0, $filterBy);
+            $body .= " 
+                INNER JOIN `lkcampaignlayout` lkcl 
+                ON lkcl.layoutid = layout.layoutid 
+                    AND lkcl.CampaignID = :campaignId 
+            ";
+            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
@@ -1146,10 +1149,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `lkregionplaylist`
-                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                  WHERE `lkwidgetmedia`.mediaId = :mediaId
                 )
             ';
@@ -1164,10 +1167,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `lkregionplaylist`
-                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                     INNER JOIN `media` 
                     ON `lkwidgetmedia`.mediaId = `media`.mediaId
                  WHERE `media`.name LIKE :mediaLike

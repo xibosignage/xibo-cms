@@ -486,19 +486,24 @@ var processScheduleFormElements = function(el) {
 
             if (!el.is(":visible"))
                 return;
-            
-            var endTimeControlDisplay = (fieldVal != 0) ? "none" : "block";
-            var startTimeControlDisplay = (fieldVal == 1) ? "none" : "block";
 
+            var meta = el.find('option[value=' + fieldVal + ']').data();
+
+            var endTimeControlDisplay = (meta.isCustom === 0) ? "none" : "block";
+            var startTimeControlDisplay = (meta.isAlways === 1) ? "none" : "block";
+            var repeatsControlDisplay = (meta.isAlways === 1) ? "none" : "block";
+            
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
+            var $repeats = $("li.repeats");
 
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);
             $endTime.css('display', endTimeControlDisplay);
+            $repeats.css('display', repeatsControlDisplay);
 
             // Dayparts only show the start control
-            if (fieldVal != 0 && fieldVal != 1) {
+            if (meta.isAlways === 0 && meta.isCustom === 0) {
                 // We need to update the date/time controls to only accept the date element
                 $startTime.find("input[name=fromDt_Link2]").hide();
                 $startTime.find(".help-block").html($startTime.closest("form").data().notDaypartMessage);
@@ -551,14 +556,15 @@ var setupScheduleNowForm = function(form) {
 
     $(form).find("#always").on("change", function() {
         var always = $(form).find("#always").is(':checked');
+        var dayPartId = (always) ? $(form).find("#alwaysDayPartId").val() : $(form).find("#customDayPartId").val();
 
-        $(form).find("#dayPartId").val(always ? 1 : 0);
+        $(form).find("#dayPartId").val(dayPartId);
 
         $(form).find(".duration-part").toggle();
         if (dateFormat.indexOf("s") <= -1) {
             $(form).find(".schedule-now-seconds-field").hide();
         }
-    })
+    });
 
     var evaluateDates = $.debounce(500, function() {
       scheduleNowFormEvaluateDates(form);

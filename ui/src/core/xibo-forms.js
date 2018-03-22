@@ -25,7 +25,7 @@ var text_callback = function(dialog, extraData) {
             "transform-origin: 0 0; }" +
             "h1, h2, h3, h4, p { margin-top: 0;}" +
             "</style>");
-    }
+    };
 
     var applyTemplateContentIfNecessary = function(data, extra) {
         // Check to see if the override template check box is unchecked
@@ -52,7 +52,20 @@ var text_callback = function(dialog, extraData) {
         }
 
         return data;
-    }
+    };
+
+    var convertLibraryReferences = function(data) {
+        // We need to convert any library references [123] to their full URL counterparts
+        // we leave well alone non-library references.
+        var regex = /\[[0-9]+]/gi;
+
+        data = data.replace(regex, function (match) {
+            var inner = match.replace("]", "").replace("[", "");
+            return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
+        });
+
+        return data;
+    };
 
     // Conjure up a text editor
     CKEDITOR.replace("ta_text", CKEDITOR_DEFAULT_CONFIG);
@@ -75,17 +88,7 @@ var text_callback = function(dialog, extraData) {
 
         // Handle initial template set up
         data = applyTemplateContentIfNecessary(data, extra);
-
-        // We need to convert any library references [123] to their full URL counterparts
-        // we leave well alone non-library references.
-        var regex = /\[[0-9]+]/gi;
-
-        data = data.replace(regex, function (match) {
-            var inner = match.replace("]", "").replace("[", "");
-            var replacement = CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
-            //console.log("match = " + match + ". replacement = " + replacement);
-            return replacement;
-        });
+        data = convertLibraryReferences(data);
 
         CKEDITOR.instances["ta_text"].setData(data);
     });
@@ -104,6 +107,15 @@ var text_callback = function(dialog, extraData) {
 
             // Reapply the background style after switching to source view and back to the normal editing view
             CKEDITOR.instances["noDataMessage"].on('contentDom', applyContentsToIframe);
+
+            // Get the template data
+            var data = CKEDITOR.instances["noDataMessage"].getData();
+
+            // Handle initial template set up
+            data = applyTemplateContentIfNecessary(data, extra);
+            data = convertLibraryReferences(data);
+
+            CKEDITOR.instances["noDataMessage"].setData(data);
         });
     }
 
@@ -144,7 +156,7 @@ var text_callback = function(dialog, extraData) {
     });
 
     // Do we have a media selector?
-    $("#ckeditor_library_select").selectpicker({
+    $(".ckeditor_library_select").selectpicker({
         liveSearch: true
     }).on('changed.bs.select', function (e) {
         var select = $(e.target);

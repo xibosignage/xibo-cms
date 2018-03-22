@@ -169,7 +169,7 @@ class TwitterMetro extends TwitterBase
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new \InvalidArgumentException(__('Please enter a duration'));
 
-        if (!v::string()->notEmpty()->validate($this->getOption('searchTerm')))
+        if (!v::stringType()->notEmpty()->validate($this->getOption('searchTerm')))
             throw new \InvalidArgumentException(__('Please enter a search term'));
     }
 
@@ -420,7 +420,7 @@ class TwitterMetro extends TwitterBase
                         break;
 
                     case 'User':
-                        $replace = $tweet->user->name;
+                        $replace = $emoji->toImage($tweet->user->name);
                         break;
 
                     case 'ScreenName':
@@ -557,9 +557,6 @@ class TwitterMetro extends TwitterBase
             return '';
         }
 
-        // Lock the request
-        $this->concurrentRequestLock();
-
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
         
@@ -576,8 +573,9 @@ class TwitterMetro extends TwitterBase
         $templateData = $this->getTemplateData();
         
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
+        if (count($items) == 0) {
             return '';
+        }
 
         $options = array(
             'type' => $this->getModuleType(),
@@ -658,12 +656,6 @@ class TwitterMetro extends TwitterBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        $this->concurrentRequestRelease();
-
         return $this->renderTemplate($data);
     }
 
@@ -687,5 +679,32 @@ class TwitterMetro extends TwitterBase
                 && count($tweet->entities->media) > 0)
             || (isset($tweet->retweeted_status->entities->media)
                 && count($tweet->retweeted_status->entities->media) > 0));
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getOption('updateInterval', 60) * 60;
+        return max($updateInterval, $cachePeriod);
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        if ($this->getOption('tweetDistance', 0) > 0) {
+            // We use the display to fence in the tweets to our location
+            return $this->getWidgetId() . '_' . $displayId;
+        } else {
+            // Non-display specific
+            return $this->getWidgetId();
+        }
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // What is the minimum likely lock we can get to prevent concurrent access - probably search term
+        return $this->getOption('searchTerm');
     }
 }

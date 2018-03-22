@@ -1,21 +1,34 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (CurrenciesWidgetTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboCurrencies;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
+use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 class CurrenciesWidgetTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
 
 	protected $startLayouts;
     /**
@@ -52,19 +65,19 @@ class CurrenciesWidgetTest extends LocalWebTestCase
         }
         parent::tearDown();
     }
+
     /**
      * @dataProvider provideSuccessCases
      * @group broken
      */
     public function testAdd($isOverride, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerPage, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
     {
-        # Create layout
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies layout add', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
         
         if ($isOverride) {
-            $response = $this->client->post('/playlist/widget/currencies/' . $region->playlists[0]['playlistId'], [
+            $response = $this->client->post('/playlist/widget/currencies/' . $playlistId, [
                 'templateId' => $templateId,
                 'name' => $name,
                 'duration' => $duration,
@@ -89,7 +102,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
                 'javaScript' => $javaScript
             ]);
         } else {
-            $response = $this->client->post('/playlist/widget/currencies/' . $region->playlists[0]['playlistId'], [
+            $response = $this->client->post('/playlist/widget/currencies/' . $playlistId, [
                 'templateId' => $templateId,
                 'name' => $name,
                 'duration' => $duration,
@@ -108,7 +121,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
             ]);
         }
 
-        $widgetOptions = (new XiboCurrencies($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboCurrencies($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($name, $widgetOptions->name);
         $this->assertSame($duration, $widgetOptions->duration);
         foreach ($widgetOptions->widgetOptions as $option) {
@@ -154,12 +167,12 @@ class CurrenciesWidgetTest extends LocalWebTestCase
      */
     public function testEdit()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies edit Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create a currencies with wrapper
-        $currencies = (new XiboCurrencies($this->getEntityProvider()))->create('currencies2', 'Unedited widget', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 50, 1, $region->playlists[0]['playlistId']);
+        $currencies = (new XiboCurrencies($this->getEntityProvider()))->create('currencies2', 'Unedited widget', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 50, 1, $playlistId);
         $nameNew = 'Edited widget';
         $durationNew = 80;
         $templateNew = 'currencies1';
@@ -186,7 +199,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboCurrencies($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboCurrencies($this->getEntityProvider()))->getById($playlistId);
         # check if changes were correctly saved
         $this->assertSame($nameNew, $widgetOptions->name);
         $this->assertSame($durationNew, $widgetOptions->duration);
@@ -208,12 +221,12 @@ class CurrenciesWidgetTest extends LocalWebTestCase
      */
     public function testDelete()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Currencies delete Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create a currencies with wrapper
-        $currencies = (new XiboCurrencies($this->getEntityProvider()))->create('currencies2', 'Unedited widget', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 50, 1, $region->playlists[0]['playlistId']);
+        $currencies = (new XiboCurrencies($this->getEntityProvider()))->create('currencies2', 'Unedited widget', 120, 1, 'GBP', 'EUR', 1, NULL, NULL, NULL, 'No messages', NULL, 50, 1, $playlistId);
         # Delete it
         $this->client->delete('/playlist/widget/' . $currencies->widgetId);
         $response = json_decode($this->client->response->body());

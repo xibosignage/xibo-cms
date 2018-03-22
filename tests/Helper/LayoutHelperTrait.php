@@ -11,6 +11,7 @@ namespace Xibo\Tests\Helper;
 
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboResolution;
 use Xibo\OAuth2\Client\Exception\XiboApiException;
 
 /**
@@ -31,7 +32,7 @@ trait LayoutHelperTrait
                 Random::generateString(),
                 'Layout to test Cache Invalidation',
                 '',
-                9
+                $this->getResolutionId('landscape')
             );
 
         $this->getLogger()->debug('Layout created with name ' . $layout->layout);
@@ -93,5 +94,31 @@ trait LayoutHelperTrait
             return false;
         }
 
+    }
+
+    /**
+     * @param $type
+     * @return int
+     */
+    protected function getResolutionId($type)
+    {
+        if ($type === 'landscape') {
+            $width = 1920;
+            $height = 1080;
+        } else if ($type === 'portrait') {
+            $width = 1080;
+            $height = 1920;
+        } else {
+            return -10;
+        }
+
+        //$this->getLogger()->debug('Querying for ' . $width . ', ' . $height);
+
+        $resolutions = (new XiboResolution($this->getEntityProvider()))->get(['width' => $width, 'height' => $height]);
+
+        if (count($resolutions) <= 0)
+            return -10;
+
+        return $resolutions[0]->resolutionId;
     }
 }

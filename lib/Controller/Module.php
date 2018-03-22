@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Entity\Permission;
+use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
@@ -407,6 +408,8 @@ class Module extends Base
         // Create a module to use
         $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
 
+        $this->getLog()->debug('Module created, passing back to Twig');
+
         // Pass to view
         $this->getState()->template = $module->addForm();
         $this->getState()->setData($module->setTemplateData([
@@ -434,10 +437,10 @@ class Module extends Base
             throw new ConfigurationException(__('Sorry there is an error with this request, cannot set inherited permissions'));
 
         // Load some information about this playlist
-        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
-            'loadWidgets' => false
+            'loadWidgets' => false,
+            'loadTags' => false
         ]);
 
         // Create a module to use
@@ -975,7 +978,15 @@ class Module extends Base
 
         // Call module GetResource
         $module->setUser($this->getUser());
-        echo $module->getResource();
+
+        if ($module->getModule()->regionSpecific == 0) {
+            // Non region specific module - no caching required as this is only ever called via preview.
+            echo $module->getResource(0);
+        } else {
+            // Region-specific module, need to handle caching and locking.
+            echo $module->getResourceOrCache(0);
+        }
+
         $this->setNoOutput(true);
     }
 
@@ -1093,6 +1104,108 @@ class Module extends Base
 
         $this->getState()->hydrate([
             'message' => sprintf(__('Cleared the Cache'))
+        ]);
+    }
+
+    /**
+     * Widget Expiry Form
+     * @param int $widgetId
+     * @throws XiboException
+     */
+    public function widgetExpiryForm($widgetId)
+    {
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkEditable($module->widget))
+            throw new AccessDeniedException();
+
+        // Pass to view
+        $this->getState()->template = 'module-form-expiry';
+        $this->getState()->setData([
+            'module' => $module,
+            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : $this->getDate()->getLocalDate($module->widget->fromDt),
+            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : $this->getDate()->getLocalDate($module->widget->toDt)
+        ]);
+    }
+
+    /**
+     * Edit an Expiry Widget
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}/expiry",
+     *  operationId="WidgetAssignedExpiryEdit",
+     *  tags={"widget"},
+     *  summary="Parameters for edting/adding audio file to a specific widget",
+     *  description="Parameters for edting/adding audio file to a specific widget",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of a widget to which you want to add audio or edit existing audio",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="formData",
+     *      description="The From Date",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="formData",
+     *      description="The To Date",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param int $widgetId
+     */
+    public function widgetExpiry($widgetId)
+    {
+        $widget = $this->widgetFactory->getById($widgetId);
+
+        if (!$this->getUser()->checkEditable($widget))
+            throw new AccessDeniedException();
+
+        $widget->load();
+
+        // Pull in the parameters we are expecting from the form.
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
+
+        if ($fromDt !== null)
+            $widget->fromDt = $fromDt->format('U');
+
+        if ($toDt !== null)
+            $widget->toDt = $this->getSanitizer()->getDate('toDt')->format('U');
+
+        // Save
+        $widget->save([
+            'saveWidgetOptions' => false,
+            'saveWidgetAudio' => false,
+            'saveWidgetMedia' => false,
+            'notify' => true,
+            'notifyPlaylists' => true,
+            'notifyDisplays' => false,
+            'audit' => true
+        ]);
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited Expiry')),
+            'id' => $widget->widgetId,
+            'data' => $widget
         ]);
     }
 }

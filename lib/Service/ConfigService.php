@@ -22,6 +22,7 @@ namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Helper\Environment;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -30,11 +31,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ConfigService implements ConfigServiceInterface
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.4';
-    public static $WEBSITE_VERSION = 135;
-    public static $VERSION_REQUIRED = '5.5';
-    public static $VERSION_UNSUPPORTED = '7.0';
-
     /**
      * @var StorageServiceInterface
      */
@@ -44,6 +40,15 @@ class ConfigService implements ConfigServiceInterface
      * @var PoolInterface
      */
     public $pool;
+
+    /** @var string Setting Cache Key */
+    private $settingCacheKey = 'settings';
+
+    /** @var bool Has the settings cache been dropped this request? */
+    private $settingsCacheDropped = false;
+
+    /** @var array */
+    private $settings = null;
 
     /**
      * @var string
@@ -284,104 +289,78 @@ class ConfigService implements ConfigServiceInterface
         }
     }
 
-    /**
-     * Gets the requested setting from the DB object given
-     * @param $setting string
-     * @param string[optional] $default
-     * @return string
-     */
-    public function GetSetting($setting, $default = NULL)
+    /** @inheritdoc */
+    public function getSettings()
     {
         $item = null;
 
-        if ($this->getPool() != null) {
-            $item = $this->getPool()->getItem('config/' . $setting);
+        if ($this->settings === null) {
+            // We need to load in our settings
+            if ($this->getPool() !== null) {
+                // Try the cache
+                $item = $this->getPool()->getItem($this->settingCacheKey);
 
-            $data = $item->get();
+                $data = $item->get();
 
-            if ($item->isHit()) {
-                return $data;
+                if ($item->isHit())
+                    $this->settings = $data;
+            }
+
+            // Are we still null?
+            if ($this->settings === null) {
+                // Load from the database
+                $results = $this->getStore()->select('SELECT `setting`, `value` FROM `setting`', []);
+
+                foreach ($results as $setting) {
+                    $this->settings[$setting['setting']] = $setting['value'];
+                }
             }
         }
 
-        $sth = $this->getStore()->getConnection()->prepare('SELECT `value` FROM `setting` WHERE `setting` = :setting');
-        $sth->execute(array('setting' => $setting));
+        // We should have our settings by now, so cache them if we can/need to
+        if ($item !== null && $item->isMiss()) {
+            $item->set($this->settings);
 
-        if (!$result = $sth->fetch())
-            $data = $default;
-        else
-            $data = $result['value'];
-
-        if ($this->getPool() != null) {
-
-            if ($setting == 'ELEVATE_LOG_UNTIL' && intval($data) > time())
-                $item->expiresAfter(intval($data) - time());
-            else if ($setting == 'LIBRARY_SIZE_LIMIT_KB' || $setting == 'MONTHLY_XMDS_TRANSFER_LIMIT_KB' || $setting == 'MAX_LICENSED_DISPLAYS')
+            // Do we have an elevated log level request? If so, then expire the cache sooner
+            if (isset($this->settings['ELEVATE_LOG_UNTIL']) && intval($this->settings['ELEVATE_LOG_UNTIL']) > time())
+                $item->expiresAfter(intval($this->settings['ELEVATE_LOG_UNTIL']));
+            else
                 $item->expiresAfter(60 * 5);
 
-            $this->getPool()->saveDeferred($item->set($data));
+            $this->getPool()->saveDeferred($item);
         }
 
-        return $data;
+        return $this->settings;
     }
 
-    /**
-     * Change Setting
-     * @param string $setting
-     * @param mixed $value
-     */
+    /** @inheritdoc */
+    public function GetSetting($setting, $default = NULL)
+    {
+        $this->getSettings();
+
+        return (isset($this->settings[$setting])) ? $this->settings[$setting] : $default;
+    }
+
+    /** @inheritdoc */
     public function ChangeSetting($setting, $value)
     {
-        $sth = $this->getStore()->getConnection()->prepare('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting');
-        $sth->execute(array('setting' => $setting, 'value' => $value));
+        $this->getSettings();
 
-        if (self::getPool() != null) {
-            $item = self::getPool()->getItem('config/' . $setting);
-            self::getPool()->saveDeferred($item->set($value));
+        if (isset($this->settings[$setting])) {
+            // Update in memory cache
+            $this->settings[$setting] = $value;
+
+            // Update in database
+            $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
+                'setting' => $setting, 'value' => $value
+            ]);
+
+            // Drop the cache if we've not already done so this time around
+            if (!$this->settingsCacheDropped && $this->getPool() !== null) {
+                $this->getPool()->deleteItem($this->settingCacheKey);
+                $this->settingsCacheDropped = true;
+            }
         }
-    }
-
-    /**
-     * Defines the Version and returns it
-     * @param $object string[optional]
-     * @return array|string
-     * @throws \Exception
-     */
-    public function Version($object = '')
-    {
-        try {
-
-            $sth = $this->getStore()->getConnection()->prepare('SELECT app_ver, XlfVersion, XmdsVersion, DBVersion FROM version');
-            $sth->execute();
-
-            if (!$row = $sth->fetch(\PDO::FETCH_ASSOC))
-                throw new \Exception('No results returned');
-
-            $appVer = $row['app_ver'];
-            $dbVer = intval($row['DBVersion']);
-
-            if (!defined('VERSION'))
-                define('VERSION', $appVer);
-
-            if (!defined('DBVERSION'))
-                define('DBVERSION', $dbVer);
-
-            if ($object != '')
-                return $row[$object];
-
-            return $row;
-        } catch (\Exception $e) {
-            throw new \Exception(__('No Version information - please contact technical support'));
-        }
-    }
-
-    /**
-     * Is an upgrade pending?
-     * @return bool
-     */
-    public function isUpgradePending()
-    {
-        return DBVERSION < ConfigService::$WEBSITE_VERSION;
     }
 
     /**
@@ -449,346 +428,145 @@ class ConfigService implements ConfigServiceInterface
         return $httpOptions;
     }
 
+    private function testItem(&$results, $item, $result, $advice, $fault = true)
+    {
+        // 1=OK, 0=Failure, 2=Warning
+        $status = ($result) ? 1 : (($fault) ? 0 : 2);
+
+        // Set fault flag
+        if (!$result && $fault)
+            $this->envFault = true;
+
+        // Set warning flag
+        if (!$result && !$fault)
+            $this->envWarning = true;
+
+        $results[] = [
+            'item' => $item,
+            'status' => $status,
+            'advice' => $advice
+        ];
+    }
+
     /**
      * Checks the Environment and Determines if it is suitable
-     * @return string
+     * @return array
      */
     public function CheckEnvironment()
     {
         $rows = array();
 
-        // Check for PHP version
-        $advice = sprintf(__("PHP version %s or later required."), ConfigService::$VERSION_REQUIRED) . ' Detected ' . phpversion();
-        if ($this->CheckPHP()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('PHP Version'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('PHP Version'),
+            Environment::checkPHP(),
+            sprintf(__("PHP version %s or later required."), Environment::$VERSION_REQUIRED) . ' Detected ' . phpversion()
         );
 
-        // Check for file system permissions
-        $advice = __("Write access required for settings.php and install.php");
-        if ($this->CheckFsPermissions()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('File System Permissions'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('File System Permissions'),
+            Environment::checkFsPermissions(),
+            __('Write permissions are required for web/settings.php and cache/')
         );
 
-        // Check for PDO
-        $advice = __('PDO support with MySQL drivers must be enabled in PHP.');
-        if ($this->CheckPDO()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('MySQL database (PDO MySql)'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('MySQL database (PDO MySql)'),
+            Environment::checkPDO(),
+            __('PDO support with MySQL drivers must be enabled in PHP.')
         );
 
-        // Check for JSON
-        $advice = __('PHP JSON extension required to function.');
-        if ($this->CheckJson()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('JSON Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('JSON Extension'),
+            Environment::checkJson(),
+            __('PHP JSON extension required to function.')
         );
 
-        // Check for SOAP
-        $advice = __('PHP SOAP extension required to function.');
-        if ($this->CheckSoap()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('SOAP Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('SOAP Extension'),
+            Environment::checkSoap(),
+            __('PHP SOAP extension required to function.')
         );
 
-        // Check for GD (graphics)
-        $advice = __('PHP GD extension to function.');
-        if ($this->CheckGd()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('GD Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('GD Extension'),
+            Environment::checkGd(),
+            __('PHP GD extension required to function.')
         );
 
-        // Check for PHP Session
-        $advice = __('PHP session support to function.');
-        if ($this->CheckSession()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('Session'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('Session'),
+            Environment::checkGd(),
+            __('PHP session support required to function.')
         );
 
-        // Check for PHP FileInfo
-        $advice = __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.');
-        if ($this->CheckFileInfo()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('FileInfo'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('FileInfo'),
+            Environment::checkFileInfo(),
+            __('Requires PHP FileInfo support to function. If you are on Windows you need to enable the php_fileinfo.dll in your php.ini file.')
         );
 
-        // Check for PHP PCRE
-        $advice = __('PHP PCRE support to function.');
-        if ($this->CheckPCRE()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('PCRE'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('PCRE'),
+            Environment::checkPCRE(),
+            __('PHP PCRE support to function.')
         );
 
-        // Check for PHP Gettext
-        $advice = __('PHP Gettext support to function.');
-        if ($this->CheckGettext()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('Gettext'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('Gettext'),
+            Environment::checkPCRE(),
+            __('PHP Gettext support to function.')
         );
 
-        // Check for Calendar
-        $advice = __('PHP Calendar extension to function.');
-        if ($this->CheckCal()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('Calendar Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('DOM Extension'),
+            Environment::checkDom(),
+            __('PHP DOM core functionality enabled.')
         );
 
-        // Check for DOM
-        $advice = __('PHP DOM core functionality enabled.');
-        if ($this->CheckDom()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('DOM Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('DOM XML Extension'),
+            Environment::checkDomXml(),
+            __('PHP DOM XML extension to function.')
         );
 
-        // Check for DOM XML
-        $advice = __('PHP DOM XML extension to function.');
-        if ($this->CheckDomXml()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('DOM XML Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('Mcrypt Extension'),
+            Environment::checkMcrypt(),
+            __('PHP Mcrypt extension to function.')
         );
 
-        // Check for Mcrypt
-        $advice = __('PHP Mcrypt extension to function.');
-        if ($this->CheckMcrypt()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-
-            $status = 0;
-        }
-
-        $rows[] = array(
-            'item' => __('Mcrypt Extension'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('Allow PHP to open external URLs'),
+            Environment::checkAllowUrlFopen(),
+            __('You must have allow_url_fopen = On in your PHP.ini file for RSS Feeds / Anonymous statistics gathering to function.'),
+            false
         );
 
-        // Check to see if we are allowed to open remote URLs (home call will not work otherwise)
-        $advice = __('You must have allow_url_fopen = On in your PHP.ini file for RSS Feeds / Anonymous statistics gathering to function.');
-        if (ini_get('allow_url_fopen')) {
-            $status = 1;
-        } else {
-            // Not a fault as this will not block installation / upgrade. Informational.
-            $this->envWarning = true;
-            $status = 2;
-        }
-
-        $rows[] = array(
-            'item' => __('Allow PHP to open external URLs'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('DateTimeZone'),
+            Environment::checkTimezoneIdentifiers(),
+            __('This enables us to get a list of time zones supported by the hosting server.'),
+            false
         );
 
-        // Check to see if timezone_identifiers_list exists
-        $advice = __('This enables us to get a list of time zones supported by the hosting server.');
-        if (function_exists('timezone_identifiers_list')) {
-            $status = 1;
-        } else {
-            $status = 2;
-            $this->envWarning = true;
-        }
-
-        $rows[] = array(
-            'item' => __('DateTimeZone'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('ZIP'),
+            Environment::checkZip(),
+            __('This enables import / export of layouts.')
         );
 
-        // Check to see if Zip support exists
-        $advice = __('This enables import / export of layouts.');
-        if ($this->CheckZip()) {
-            $status = 1;
-        } else {
-            $status = 0;
-            $this->envFault = true;
-        }
-
-        $rows[] = array(
-            'item' => __('ZIP'),
-            'status' => $status,
-            'advice' => $advice
-        );
-
-        // Check to see if large file uploads enabled
         $advice = __('Support for uploading large files is recommended.');
-        if ($this->CheckPHPUploads()) {
-            $status = 1;
-        } else {
-            $this->envWarning = true;
-            $status = 2;
-            $advice = __('You probably want to allow larger files to be uploaded than is currently available with your PHP configuration.');
-            $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
-        }
+        $advice .= __('We suggest setting your PHP post_max_size and upload_max_filesize to at least 128M, and also increasing your max_execution_time to at least 120 seconds.');
 
-        $rows[] = array(
-            'item' => __('Large File Uploads'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('Large File Uploads'),
+            Environment::checkPHPUploads(),
+            $advice,
+            false
         );
 
-        // Check to see if cURL is installed
-        $advice = __('cURL is used to fetch data from the Internet or Local Network');
-        if ($this->checkCurlInstalled()) {
-            $status = 1;
-        } else {
-            $this->envFault = true;
-            $status = 0;
-            $advice .= __(' and is required.');
-        }
-
-        $rows[] = array(
-            'item' => __('cURL'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('cURL'),
+            Environment::checkCurlInstalled(),
+            __('cURL is used to fetch data from the Internet or Local Network')
         );
 
-        // Check to see if ZMQ is installed
-        $advice = __('ZeroMQ is used to send messages to XMR which allows push communications with player');
-        if ($this->checkZmq()) {
-            $status = 1;
-        } else {
-            $this->envWarning = true;
-            $status = 2;
-            $advice .= __(' and is recommended.');
-        }
-
-        $rows[] = array(
-            'item' => __('ZeroMQ'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('ZeroMQ'),
+            Environment::checkZmq(),
+            __('ZeroMQ is used to send messages to XMR which allows push communications with player'),
+            false
         );
 
-        // Check to see if OpenSSL is installed
-        $advice = __('OpenSSL is used to seal and verify messages sent to XMR');
-        if ($this->checkOpenSsl()) {
-            $status = 1;
-        } else {
-            $this->envWarning = true;
-            $status = 2;
-            $advice .= __(' and is recommended.');
-        }
+        $this->testItem($rows, __('OpenSSL'),
+            Environment::checkOpenSsl(),
+            __('OpenSSL is used to seal and verify messages sent to XMR'),
+            false
+        );
 
-        $rows[] = array(
-            'item' => __('OpenSSL'),
-            'status' => $status,
-            'advice' => $advice
+        $this->testItem($rows, __('SimpleXML'),
+            Environment::checkSimpleXml(),
+            __('SimpleXML is used to parse RSS feeds and other XML data sources')
         );
 
         $this->envTested = true;
@@ -798,12 +576,12 @@ class ConfigService implements ConfigServiceInterface
 
     /**
      * Is there an environment fault
-     * @return
+     * @return bool
      */
     public function EnvironmentFault()
     {
         if (!$this->envTested) {
-            $this->CheckEnvironment();
+            $this->checkEnvironment();
         }
 
         return $this->envFault;
@@ -811,224 +589,15 @@ class ConfigService implements ConfigServiceInterface
 
     /**
      * Is there an environment warning
-     * @return
+     * @return bool
      */
     public function EnvironmentWarning()
     {
         if (!$this->envTested) {
-            $this->CheckEnvironment();
+            $this->checkEnvironment();
         }
 
         return $this->envWarning;
-    }
-
-
-    /**
-     * Check FileSystem Permissions
-     * @return
-     */
-    function CheckFsPermissions()
-    {
-        return (is_writable("install.php") && (is_writable("settings.php")) || is_writable("."));
-    }
-
-    /**
-     * Check PHP version > 5 < 7
-     * @return bool
-     */
-    function CheckPHP()
-    {
-        return (version_compare(phpversion(), ConfigService::$VERSION_REQUIRED) != -1) && (version_compare(phpversion(), ConfigService::$VERSION_UNSUPPORTED) != 1);
-    }
-
-    /**
-     * Check PHP has the PDO module installed (with MySQL driver)
-     */
-    function CheckPDO()
-    {
-        return extension_loaded("pdo_mysql");
-    }
-
-    /**
-     * Check PHP has the GetText module installed
-     * @return
-     */
-    function CheckGettext()
-    {
-        return extension_loaded("gettext");
-    }
-
-    /**
-     * Check PHP has JSON module installed
-     * @return
-     */
-    function CheckJson()
-    {
-        return extension_loaded("json");
-    }
-
-    /**
-     *
-     * Check PHP has SOAP module installed
-     * @return
-     */
-    function CheckSoap()
-    {
-        return extension_loaded("soap");
-    }
-
-    /**
-     * Check PHP has JSON module installed
-     * @return
-     */
-    function CheckGd()
-    {
-        return extension_loaded("gd");
-    }
-
-    /**
-     * Check PHP has JSON module installed
-     * @return
-     */
-    function CheckCal()
-    {
-        return extension_loaded("calendar");
-    }
-
-    /**
-     * Check PHP has the DOM XML functionality installed
-     * @return
-     */
-    function CheckDomXml()
-    {
-        return extension_loaded("dom");
-    }
-
-    /**
-     * Check PHP has the Mcrypt functionality installed
-     * @return
-     */
-    function CheckMcrypt()
-    {
-        return extension_loaded("mcrypt");
-    }
-
-    /**
-     * Check PHP has the DOM functionality installed
-     * @return
-     */
-    function CheckDom()
-    {
-        return class_exists("DOMDocument");
-    }
-
-    /**
-     * Check PHP has session functionality installed
-     * @return
-     */
-    function CheckSession()
-    {
-        return extension_loaded("session");
-    }
-
-    /**
-     * Check PHP has PCRE functionality installed
-     * @return
-     */
-    function CheckPCRE()
-    {
-        return extension_loaded("pcre");
-    }
-
-    /**
-     * Check PHP has FileInfo functionality installed
-     * @return
-     */
-    function CheckFileInfo()
-    {
-        return extension_loaded("fileinfo");
-    }
-
-    function CheckZip()
-    {
-        return extension_loaded('zip');
-    }
-
-    static function CheckIntlDateFormat()
-    {
-        return class_exists('IntlDateFormatter');
-    }
-
-
-     /**
-      * Check to see if curl is installed
-      */
-     static function checkCurlInstalled()
-     {
-         return function_exists('curl_version');
-     }
-
-    /**
-     * Check PHP is setup for large file uploads
-     * @return
-     */
-    function CheckPHPUploads()
-    {
-        # Consider 0 - 128M warning / < 120 seconds
-        # Variables to check:
-        #    post_max_size
-        #    upload_max_filesize
-        #    max_execution_time
-
-        $minSize = $this->return_bytes('128M');
-
-        if ($this->return_bytes(ini_get('post_max_size')) < $minSize)
-            return false;
-
-        if ($this->return_bytes(ini_get('upload_max_filesize')) < $minSize)
-            return false;
-
-        if (ini_get('max_execution_time') < 120)
-            return false;
-
-        // All passed
-        return true;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public static function checkZmq()
-    {
-        return class_exists('ZMQSocket');
-    }
-
-    /**
-     * Helper function to convert strings like 8M or 3G into bytes
-     * by Stas Trefilov. Assumed Public Domain.
-     * Taken from the PHP Manual (http://www.php.net/manual/en/function.ini-get.php#96996)
-     * @return
-     */
-    function return_bytes($size_str)
-    {
-        switch (substr($size_str, -1)) {
-            case 'M':
-            case 'm':
-                return (int)$size_str * 1048576;
-            case 'K':
-            case 'k':
-                return (int)$size_str * 1024;
-            case 'G':
-            case 'g':
-                return (int)$size_str * 1073741824;
-            default:
-                return $size_str;
-        }
-    }
-
-    public static function getMaxUploadSize()
-    {
-        return ini_get('upload_max_filesize');
     }
 
     /**
@@ -1037,6 +606,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function checkBinLogEnabled()
     {
+        //TODO: move this into storage interface
         $results = $this->getStore()->select('show variables like \'log_bin\'', []);
 
         if (count($results) <= 0)
@@ -1051,29 +621,12 @@ class ConfigService implements ConfigServiceInterface
      */
     public function checkBinLogFormat()
     {
+        //TODO: move this into storage interface
         $results = $this->getStore()->select('show variables like \'binlog_format\'', []);
 
         if (count($results) <= 0)
             return false;
 
         return ($results[0]['Value'] != 'STATEMENT');
-    }
-
-    /**
-     * Check open ssl is available
-     * @return bool
-     */
-    public function checkOpenSsl()
-    {
-        return extension_loaded('openssl');
-    }
-
-    /**
-     * @inheritdoc
-     * https://stackoverflow.com/a/45767760
-     */
-    public function getMemoryLimitBytes()
-    {
-        return intval(str_replace(array('G', 'M', 'K'), array('000000000', '000000', '000'), ini_get('memory_limit')));
     }
 }
