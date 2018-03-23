@@ -33,7 +33,7 @@
         start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-default btn-success' data-role='next'>Get started with the basics</button><button class='btn btn-default' data-role='end'>{% trans "Skip this tutorial" %}</button>";
 
         tour = new Tour({
-            debug: true,
+            debug: false,
             onEnd: function () {
                 hasSeenNewUserWizard = 1;
 
@@ -171,7 +171,7 @@
                 }, {
                     title: "",
                     content: "{% trans "Your Region Timeline will now update and show that one item has been added to the playlist, click <b>Close</b>." %}",
-                    element: "button:contains('" + translations.close + "')",
+                    element: "button#dialog_btn_2",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template,

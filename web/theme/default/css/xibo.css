@@ -934,3 +934,11 @@ ul li.active.tab-design:hover a {
 .template-override-controls .well {
     min-height: 100px;
 }
+
+.module-selector-well {
+    margin-bottom: 0;
+}
+
+.module-selector-well .nav>li>a {
+    padding-bottom: 5px;
+}
