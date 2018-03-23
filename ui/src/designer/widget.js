@@ -20,6 +20,9 @@ var Widget = function(id, regionId, data) {
     this.loop = false;
     this.extend = false;
 
+    this.widgetDurationNotSet = false;
+    this.widgetDefaultDuration = 10; // in the case of the duration has not being calculated
+
     //TODO: check if we need to maintain the "pure" data object
     this.data = data; 
 
@@ -80,56 +83,16 @@ var Widget = function(id, regionId, data) {
      * @
      */
     this.getDuration = function(recalculate = false) {
-        
-        //TODO: Open create rules for special widgets ( Twitter, Video ) -> Read Document
 
         if(recalculate || this.duration == null){
 
-            var calculatedDuration = 0;
+            var calculatedDuration = parseFloat(this.data.calculatedDuration);
             var options = this.getOptions();
 
-            console.log(' ');
-            console.log('0 Widget.getDuration ' + this.data.type + ' ' + this.id + '(' + this.regionId + ')');
-            
-            // Find item duration
-            if(this.data.useDuration) {
-                console.log('  0.1 use duration given');
-                calculatedDuration = this.data.duration
-            } else {
-                console.log('  0.2 get default duration by module');
-                console.log('    Type: ' + this.data.type);
-
-                console.log('    Loop enabled: ' + this.loop);
-                console.log('    Single widget:' + this.singleWidget);
-
-                console.log(options);
-
-                //TODO: calculate based on type
+            // if calculated duration is not calculated, see it to the default duration 
+            if(calculatedDuration == 0) {
+                calculatedDuration = this.widgetDefaultDuration;
             }
-
-            console.log('1 calculatedDuration: ' + calculatedDuration);
-
-            // If duratons is per item, multiply it by the number of items ( or items divided by the items per page )
-            if(options['durationIsPerItem'] == 1) {
-
-                console.log('  1.1 Durations is per item...');
-                if(options['numItems'] != null) {
-                    if(options['itemsPerPage'] != null) {
-                        var numPages = (options['numItems'] / options['itemsPerPage']);
-                        console.log('    1.1.1 Multiply by the number of pages: ' + numPages + ' (' + options['numItems'] + '/' + options['itemsPerPage'] + ')');
-                        calculatedDuration = calculatedDuration * numPages;
-                    } else {
-                        console.log('    1.1.2 Multiply by the number of items: ' + options['numItems']);
-                        calculatedDuration = calculatedDuration * options['numItems'];
-                    }
-
-                } else {
-                    console.log('    1.1.3 Item number is not defined!!!');
-                    //TODO: use a best guess for this?
-                }
-            }
-
-            console.log('2 Final calculatedDuration FE : ' + calculatedDuration + ' BE: ' + this.data.calculatedDuration);
             
             // set the duration to the widget
             this.duration = calculatedDuration

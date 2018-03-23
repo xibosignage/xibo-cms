@@ -11,3 +11,4 @@ custom
 web/theme/custom
 node_modules
 containers/
+web/dist

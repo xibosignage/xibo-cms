@@ -13,7 +13,7 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
 
     //this.data = data; //TODO: check if we need to maintain the "pure" data object
 
-    this.playlists = data.playlists[0]; //TODO: Change the way to get the data from the API
+    this.playlists = data.regionPlaylist;
 
     this.backgroundColor = backgroundColor;
     this.selected = false;
