@@ -1173,6 +1173,21 @@ class User extends Base
     /**
      * Update the User Welcome Tutorial to Seen
      */
+    public function userWelcomeSetUnSeen()
+    {
+        $this->getUser()->newUserWizard = 0;
+        $this->getUser()->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser()->userName)
+        ]);
+    }
+
+    /**
+     * Update the User Welcome Tutorial to Seen
+     */
     public function userWelcomeSetSeen()
     {
         $this->getUser()->newUserWizard = 1;
