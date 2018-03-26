@@ -765,7 +765,7 @@ function XiboFormRender(sourceObj, data) {
                         response.buttons,
                         function(index, value) {
                             i++;
-                            var extrabutton = $('<button class="btn">').html(index);
+                            var extrabutton = $('<button id="dialog_btn_' + i + '" class="btn">').html(index);
 
                             if (i == count) {
                                 extrabutton.addClass('btn-primary save-button');
