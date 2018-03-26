@@ -56,7 +56,7 @@ class LibraryReviseTest extends LocalWebTestCase
             ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
 
         // Add it to the Layout
-        (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $this->layout->regions[0]->regionPlaylist['playlistId']);
+        (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $this->layout->regions[0]->playlists[0]['playlistId']);
 
         $this->setLayoutStatus($this->layout, 1);
 

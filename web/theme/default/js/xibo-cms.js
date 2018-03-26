@@ -706,7 +706,7 @@ function XiboFormRender(sourceObj, data) {
     bootbox.hideAll();
 
     // Store the last form?
-    if (formUrl.indexOf("region/form/timeline") > -1 || formUrl.indexOf("playlist/form/timeline") > -1) {
+    if (formUrl.indexOf("region/form/timeline") > -1) {
         timelineForm = {
             url: formUrl,
             data: data
@@ -765,7 +765,7 @@ function XiboFormRender(sourceObj, data) {
                         response.buttons,
                         function(index, value) {
                             i++;
-                            var extrabutton = $('<button class="btn">').html(index);
+                            var extrabutton = $('<button id="dialog_btn_' + i + '" class="btn">').html(index);
 
                             if (i == count) {
                                 extrabutton.addClass('btn-primary save-button');

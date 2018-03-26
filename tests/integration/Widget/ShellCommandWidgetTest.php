@@ -1,36 +1,20 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (ShellCommandWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
 use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboShellCommand;
-use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 class ShellCommandWidgetTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
-
 	protected $startLayouts;
     protected $startCommands;
     /**
@@ -95,12 +79,12 @@ class ShellCommandWidgetTest extends LocalWebTestCase
     public function testAdd($name, $duration, $useDuration, $windowsCommand, $linuxCommand, $launchThroughCmd, $terminateCommand, $useTaskkill, $commandCode)
     {
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
+        # Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('ShellCommand add Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
 
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        $response = $this->client->post('/playlist/widget/shellCommand/' . $playlistId, [
+        $response = $this->client->post('/playlist/widget/shellCommand/' . $region->playlists[0]['playlistId'], [
             'name' => $name,
             'duration' => $duration,
             'useDuration' => $useDuration,
@@ -115,7 +99,7 @@ class ShellCommandWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboShellCommand($this->getEntityProvider()))->getById($playlistId);
+        $widgetOptions = (new XiboShellCommand($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($name, $widgetOptions->name);
         $this->assertSame($duration, $widgetOptions->duration);        
     }
@@ -137,14 +121,14 @@ class ShellCommandWidgetTest extends LocalWebTestCase
 
      public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('ShellCommand edit Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a command with wrapper
         $command = (new XiboCommand($this->getEntityProvider()))->create('phpunit command', 'phpunit description', 'phpunitcode');
         # Create a shell command widget with wrapper
-        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'test code', $playlistId);
+        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'test code', $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $commandCode = $command->code;
@@ -163,7 +147,7 @@ class ShellCommandWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboShellCommand($this->getEntityProvider()))->getById($playlistId);
+        $widgetOptions = (new XiboShellCommand($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($nameNew, $widgetOptions->name);
         $this->assertSame($durationNew, $widgetOptions->duration);    
         foreach ($widgetOptions->widgetOptions as $option) {
@@ -175,12 +159,12 @@ class ShellCommandWidgetTest extends LocalWebTestCase
 
     public function testDelete()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Shell Command delete Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a shell command widget with wrapper
-        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'phpunit code', $playlistId);
+        $shellCommand = (new XiboShellCommand($this->getEntityProvider()))->create('Api shell command', 0, 1, null, null, 1, 1, 1, 'phpunit code', $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $shellCommand->widgetId);
         $response = json_decode($this->client->response->body());

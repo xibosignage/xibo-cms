@@ -9,13 +9,15 @@
             <th>{% trans "Duration" %}</th>
         </thead>
         <tbody>
-        {% for widget in region.tempPlaylist.widgets %}
-            <tr>
-                <td>{{ region.tempPlaylist.name }}</td>
-                <td>{{ widget.module.getName() }}</td>
-                <td>{{ widget.module.getModuleName() }}</td>
-                <td>{{ widget.calculatedDuration }}</td>
-            </tr>
+        {% for playlist in region.playlists %}
+            {% for widget in playlist.widgets %}
+                <tr>
+                    <td>{{ playlist.name }}</td>
+                    <td>{{ widget.module.getName() }}</td>
+                    <td>{{ widget.module.getModuleName() }}</td>
+                    <td>{{ widget.calculatedDuration }}</td>
+                </tr>
+            {% endfor %}
         {% endfor %}
         </tbody>
     </table>

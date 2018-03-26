@@ -78,7 +78,7 @@ $version = $app->sanitizerService->getInt('v', 3, $_REQUEST);
 
 // Version Request?
 if (isset($_GET['what']))
-    die(\Xibo\Helper\Environment::$XMDS_VERSION);
+    die($app->configService->Version('XmdsVersion'));
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {

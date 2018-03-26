@@ -102,45 +102,46 @@ class MediaManager extends Base
                     continue;
 
                 // Playlists
-                $playlist = $region->getPlaylist();
-
-                if (!$this->getUser()->checkEditable($playlist))
-                    continue;
-
-                // Get all the widgets in the playlist
-                foreach ($playlist->widgets as $widget) {
-                    /* @var \Xibo\Entity\Widget $widget */
-
-                    // Check we've not filtered this out
-                    if ($filterMedia != '' && !stristr($widget->getOptionValue('name', $widget->type), $filterMedia))
+                foreach($region->playlists as $playlist) {
+                    /* @var \Xibo\Entity\Playlist $playlist */
+                    if (!$this->getUser()->checkEditable($playlist))
                         continue;
 
-                    if ($filterType != '' && $widget->type != strtolower($filterType))
-                        continue;
+                    // Get all the widgets in the playlist
+                    foreach ($playlist->widgets as $widget) {
+                        /* @var \Xibo\Entity\Widget $widget */
 
-                    // Check editable
-                    if (!$this->getUser()->checkEditable($widget))
-                        continue;
+                        // Check we've not filtered this out
+                        if ($filterMedia != '' && !stristr($widget->getOptionValue('name', $widget->type), $filterMedia))
+                            continue;
 
-                    // Create a module
-                    $module = $this->moduleFactory->createWithWidget($widget);
+                        if ($filterType != '' && $widget->type != strtolower($filterType))
+                            continue;
 
-                    // We are good to go
-                    $rows[] = [
-                        'layout' => $layout,
-                        'region' => $region->name,
-                        'playlist' => $playlist->name,
-                        'widget' => $module->getName(),
-                        'type' => $module->getModuleName(),
-                        'displayOrder' => $widget->displayOrder,
-                        'buttons' => [
-                            [
-                                'id' => 'WidgetEditForm',
-                                'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
-                                'text' => __('Edit')
+                        // Check editable
+                        if (!$this->getUser()->checkEditable($widget))
+                            continue;
+
+                        // Create a module
+                        $module = $this->moduleFactory->createWithWidget($widget);
+
+                        // We are good to go
+                        $rows[] = [
+                            'layout' => $layout,
+                            'region' => $region->name,
+                            'playlist' => $playlist->name,
+                            'widget' => $module->getName(),
+                            'type' => $module->getModuleName(),
+                            'displayOrder' => $widget->displayOrder,
+                            'buttons' => [
+                                [
+                                    'id' => 'WidgetEditForm',
+                                    'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
+                                    'text' => __('Edit')
+                                ]
                             ]
-                        ]
-                    ];
+                        ];
+                    }
                 }
             }
         }

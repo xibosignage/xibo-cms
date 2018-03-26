@@ -14,6 +14,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\TaskFactory;
+use Xibo\Factory\UpgradeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
@@ -22,6 +23,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XTR\MaintenanceDailyTask;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -51,6 +53,9 @@ class Task extends Base
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var  UpgradeFactory */
+    private $upgradeFactory;
+
     /** @var  MediaFactory */
     private $mediaFactory;
 
@@ -76,11 +81,12 @@ class Task extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
+     * @param UpgradeFactory $upgradeFactory
      * @param MediaFactory $mediaFactory
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->taskFactory = $taskFactory;
@@ -90,6 +96,7 @@ class Task extends Base
         $this->userFactory = $userFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
+        $this->upgradeFactory = $upgradeFactory;
         $this->mediaFactory = $mediaFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
@@ -315,17 +322,47 @@ class Task extends Base
      */
     public function run($taskId)
     {
+        // Handle cases where we arrive from older versions of the application.
+        // that is versions without tasks
+        if (DBVERSION < 128) {
+            // We need to manually create and run task 1 so that we trigger an upgrade.
+            $task = new MaintenanceDailyTask();
+            $task->setApp($this->getApp())
+                ->setSanitizer($this->getSanitizer())
+                ->setUser($this->getUser())
+                ->setConfig($this->getConfig())
+                ->setLogger($this->getLog())
+                ->setDate($this->getDate())
+                ->setPool($this->pool)
+                ->setStore($this->store)
+                ->setFactories(
+                    $this->userFactory,
+                    $this->userGroupFactory,
+                    $this->layoutFactory,
+                    $this->displayFactory,
+                    $this->upgradeFactory,
+                    $this->mediaFactory,
+                    $this->notificationFactory,
+                    $this->userNotificationFactory
+                )
+                ->setTask($task)
+                ->run();
+
+            if ($taskId == 1)
+                return;
+        }
+
         // Get this task
         $task = $this->taskFactory->getById($taskId);
 
         // Set to running
-        $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . '], Class = ' . $task->class);
+        $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . ']');
 
         // Run
         try {
             // Instantiate
             if (!class_exists($task->class))
-                throw new NotFoundException('Task with class name ' . $task->class . ' not found');
+                throw new NotFoundException();
 
             /** @var TaskInterface $taskClass */
             $taskClass = new $task->class();
@@ -334,6 +371,7 @@ class Task extends Base
             $start = time();
 
             $taskClass
+                ->setApp($this->getApp())
                 ->setSanitizer($this->getSanitizer())
                 ->setUser($this->getUser())
                 ->setConfig($this->getConfig())
@@ -341,7 +379,16 @@ class Task extends Base
                 ->setDate($this->getDate())
                 ->setPool($this->pool)
                 ->setStore($this->store)
-                ->setFactories($this->getApp()->container)
+                ->setFactories(
+                    $this->userFactory,
+                    $this->userGroupFactory,
+                    $this->layoutFactory,
+                    $this->displayFactory,
+                    $this->upgradeFactory,
+                    $this->mediaFactory,
+                    $this->notificationFactory,
+                    $this->userNotificationFactory
+                )
                 ->setTask($task)
                 ->run();
 
@@ -394,11 +441,14 @@ class Task extends Base
         $db = $this->store->getConnection('xtr');
 
         // This queries for all enabled tasks, because we need to assess the schedule in code
-        $pollSth = $db->prepare('SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY runNow DESC, lastRunDuration');
+        $pollSth = $db->prepare('SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration');
 
         // Update statements
         $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
-        $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
+        if (DBVERSION < 133)
+            $updateStartSth = null;
+        else
+            $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
 
         $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
 
@@ -422,17 +472,23 @@ class Task extends Base
                 // Is the next run date of this event earlier than now, or is the task set to runNow
                 $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
 
-                if ($task['runNow'] == 1 || $nextRunDt <= time()) {
+                if ($task['runNow'] == 1 || $nextRunDt < time()) {
 
                     $this->getLog()->info('Running Task ' . $taskId);
 
                     // Set to running
-                    $updateStartSth->execute([
-                        'taskId' => $taskId,
-                        'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-                        'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
-                    ]);
-
+                    if (DBVERSION < 133) {
+                        $updateSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_RUNNING
+                        ]);
+                    } else {
+                        $updateStartSth->execute([
+                            'taskId' => $taskId,
+                            'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
+                            'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
+                        ]);
+                    }
                     $this->store->incrementStat('xtr', 'update');
 
                     // Pass to run.
@@ -475,6 +531,10 @@ class Task extends Base
     private function pollProcessTimeouts()
     {
         $db = $this->store->getConnection('xtr');
+
+        // Not available before 133 (1.8.2)
+        if (DBVERSION < 133)
+            return;
 
         // Get timed out tasks and deal with them
         $command = $db->prepare('

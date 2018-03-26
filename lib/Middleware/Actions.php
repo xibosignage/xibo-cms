@@ -46,7 +46,7 @@ class Actions extends Middleware
         $app->hook('slim.before.dispatch', function() use ($app) {
 
             // Process Actions
-            if (!Environment::migrationPending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
+            if (!$app->configService->isUpgradePending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
                 $folder = PROJECT_ROOT . '/web/' . $app->configService->uri('layouts', true);
 
@@ -54,12 +54,12 @@ class Actions extends Middleware
                     if (stripos($file, '.zip')) {
                         try {
                             /** @var \Xibo\Entity\Layout $layout */
-                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, $app->container->get('userFactory')->getSystemUser()->getId(), false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
+                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, 1, false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
                             $layout->save([
                                 'audit' => false
                             ]);
                         } catch (\Exception $e) {
-                            $app->logService->error('Unable to import layout: ' . $file . '. E = ' . $e->getMessage());
+                            $app->logService->error('Unable to import layout: ' . $file);
                             $app->logService->debug($e->getTraceAsString());
                         }
                     }
@@ -84,14 +84,14 @@ class Actions extends Middleware
 
             // Does the version in the DB match the version of the code?
             // If not then we need to run an upgrade.
-            if (Environment::migrationPending() && !in_array($resource, $excludedRoutes)) {
+            if ($app->configService->isUpgradePending() && !in_array($resource, $excludedRoutes)) {
                 $app->logService->debug('%s not in excluded routes, redirecting. ', $resource);
                 $app->redirectTo('upgrade.view');
                 return;
             }
 
             // Do not proceed unless we have completed an upgrade
-            if (Environment::migrationPending())
+            if ($app->configService->isUpgradePending())
                 return;
 
             // Only process notifications if we are a full request

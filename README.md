@@ -1,18 +1,8 @@
 # Introduction
-Xibo - Digital Signage - https://xibo.org.uk
+Xibo - Digital Signage - http://www.xibo.org.uk
 Copyright (C) 2006-2018 Spring Signage Ltd and Contributors.
 
-
-
-#### Branches
-
-- develop: Work in progress toward 2.0
-- master: Currently 1.8
-- release18: Work in progress toward the next 1.8
-- release17: Work in progress toward the next 1.7
-- release1.6.4: Archive of 1.6
-
-
+This is the **development branch** and represents the next generation of the Xibo CMS.
 
 ## Licence
 Xibo is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or
@@ -26,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License along w
 
 # Installation
 
-Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the release notes of each release.
+Installing an official release is [described in the manual](http://xibo.org.uk/manual/en/install_cms.html) and in the official release notes of each release.
 
 
 

@@ -52,23 +52,6 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
-     * @param int|null $userId
-     * @return DisplayGroup
-     */
-    public function create($userId = null)
-    {
-        $displayGroup = $this->createEmpty();
-
-        if ($userId === null) {
-            $userId = $this->getUserFactory()->getSystemUser()->userId;
-        }
-
-        $displayGroup->userId = $userId;
-
-        return $displayGroup;
-    }
-
-    /**
      * Create Empty
      * @return DisplayGroup
      */

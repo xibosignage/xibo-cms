@@ -39,7 +39,6 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -253,8 +252,6 @@ class Layout extends Base
      *      )
      *  )
      * )
-     *
-     * @throws XiboException
      */
     function add()
     {
@@ -284,18 +281,19 @@ class Layout extends Base
                 $permission->save();
             }
 
-            $playlist = $region->getPlaylist();
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
+                }
+
+                foreach ($playlist->widgets as $widget) {
+                    /* @var Widget $widget */
+                    foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                        /* @var Permission $permission */
+                        $permission->save();
+                    }
                 }
             }
         }
@@ -717,9 +715,13 @@ class Layout extends Base
                 // Load in the entire object model - creating module objects so that we can get the name of each
                 // widget and its items.
                 foreach ($layout->regions as $region) {
-                    foreach ($region->getPlaylist()->widgets as $widget) {
-                        /* @var Widget $widget */
-                        $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                    foreach ($region->playlists as $playlist) {
+                        /* @var Playlist $playlist */
+
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var Widget $widget */
+                            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                        }
                     }
                 }
 
@@ -969,8 +971,6 @@ class Layout extends Base
      *      )
      *  )
      * )
-     *
-     * @throws XiboException
      */
     public function copy($layoutId)
     {
@@ -1032,18 +1032,19 @@ class Layout extends Base
                 $permission->save();
             }
 
-            $playlist = $region->getPlaylist();
-            /* @var Playlist $playlist */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($region->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
+                }
+
+                foreach ($playlist->widgets as $widget) {
+                    /* @var Widget $widget */
+                    foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                        /* @var Permission $permission */
+                        $permission->save();
+                    }
                 }
             }
         }
@@ -1339,9 +1340,6 @@ class Layout extends Base
      *      description="successful operation"
      *  )
      * )
-     *
-     * @throws XiboException
-     * @throws \Exception
      */
     public function import()
     {
@@ -1429,50 +1427,52 @@ class Layout extends Base
                 // We need to get every widget that might have some date/time related stuff on it
                 // pull out the widget content
                 // run a regex over it to try and adjust its size
-                $saveRequired = false;
-                foreach ($region->getPlaylist()->widgets as $widget) {
-                    foreach ($widget->widgetOptions as $widgetOption) {
+                foreach ($region->playlists as $playlist) {
+                    $saveRequired = false;
+                    foreach ($playlist->widgets as $widget) {
+                        foreach ($widget->widgetOptions as $widgetOption) {
 
-                        if ($widgetOption->option == 'text' ||
-                            $widgetOption->option == 'styleSheet' ||
-                            $widgetOption->option == 'css' ||
-                            $widgetOption->option == 'embedHtml' ||
-                            $widgetOption->option == 'embedScript' ||
-                            $widgetOption->option == 'embedStyle'
-                        ) {
+                            if ($widgetOption->option == 'text' ||
+                                $widgetOption->option == 'styleSheet' ||
+                                $widgetOption->option == 'css' ||
+                                $widgetOption->option == 'embedHtml' ||
+                                $widgetOption->option == 'embedScript' ||
+                                $widgetOption->option == 'embedStyle'
+                            ) {
 
-                            // Replace widths
-                            $widgetOption->value = preg_replace_callback(
-                                '/width:(.*?)/',
-                                function ($matches) use ($ratio) {
-                                    return "width:" . $matches[1] * $ratio;
-                                }, $widgetOption->value);
+                                // Replace widths
+                                $widgetOption->value = preg_replace_callback(
+                                    '/width:(.*?)/',
+                                    function ($matches) use ($ratio) {
+                                        return "width:" . $matches[1] * $ratio;
+                                    }, $widgetOption->value);
 
-                            // Replace heights
-                            $widgetOption->value = preg_replace_callback(
-                                '/height:(.*?)/',
-                                function ($matches) use ($ratio) {
-                                    return "height:" . $matches[1] * $ratio;
-                                }, $widgetOption->value);
+                                // Replace heights
+                                $widgetOption->value = preg_replace_callback(
+                                    '/height:(.*?)/',
+                                    function ($matches) use ($ratio) {
+                                        return "height:" . $matches[1] * $ratio;
+                                    }, $widgetOption->value);
 
-                            // Replace fonts
-                            $widgetOption->value = preg_replace_callback(
-                                '/font-size:(.*?)px;/',
-                                function ($matches) use ($ratio) {
-                                    return "font-size:" . $matches[1] * $ratio . "px;";
-                                }, $widgetOption->value);
+                                // Replace fonts
+                                $widgetOption->value = preg_replace_callback(
+                                    '/font-size:(.*?)px;/',
+                                    function ($matches) use ($ratio) {
+                                        return "font-size:" . $matches[1] * $ratio . "px;";
+                                    }, $widgetOption->value);
 
-                            $saveRequired = true;
+                                $saveRequired = true;
+                            }
                         }
                     }
-                }
 
-                if ($saveRequired)
-                    $region->getPlaylist()->save();
+                    if ($saveRequired)
+                        $playlist->save();
+                }
             }
         }
 
-        $layout->schemaVersion = Environment::$XLF_VERSION;
+        $layout->schemaVersion = $this->getConfig()->Version('XlfVersion');
         $layout->save(['validate' => false, 'notify' => $scaleContent]);
 
         // Return

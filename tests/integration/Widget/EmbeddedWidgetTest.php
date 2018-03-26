@@ -1,35 +1,21 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (EmbeddedWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboEmbedded;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\Tests\Helper\LayoutHelperTrait;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
+use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 
 class EmbeddedWidgetTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
-
 	protected $startLayouts;
     /**
      * setUp - called before every test automatically
@@ -68,11 +54,11 @@ class EmbeddedWidgetTest extends LocalWebTestCase
 
     public function testAdd()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        $response = $this->client->post('/playlist/widget/embedded/' . $playlistId, [
+        # Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('embedded add', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        $response = $this->client->post('/playlist/widget/embedded/' . $region->playlists[0]['playlistId'], [
             'name' => 'API Embedded widget',
             'duration' => 60,
             'transparency' => 0,
@@ -85,20 +71,20 @@ class EmbeddedWidgetTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
-        $embeddedOptions = (new XiboEmbedded($this->getEntityProvider()))->getById($playlistId);
+        $embeddedOptions = (new XiboEmbedded($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame('API Embedded widget', $embeddedOptions->name);       
         $this->assertSame(60, $embeddedOptions->duration);
     }
 
     public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('embedded edit', '', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         $durationNew = 80;
         # Create embedded widget
-        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 1, 0, 0, null, null, null, $playlistId);
+        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 1, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
         $response = $this->client->put('/playlist/widget/' . $embedded->widgetId, [
             'name' => 'EDITED Name',
             'duration' => $durationNew,
@@ -112,19 +98,19 @@ class EmbeddedWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $embeddedOptions = (new XiboEmbedded($this->getEntityProvider()))->getById($playlistId);
+        $embeddedOptions = (new XiboEmbedded($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame('EDITED Name', $embeddedOptions->name);       
         $this->assertSame($durationNew, $embeddedOptions->duration);
     }
 
     public function testDelete()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('embedded delete', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create embedded widget
-        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 1, 0, 0, null, null, null, $playlistId);
+        $embedded = (new XiboEmbedded($this->getEntityProvider()))->create('API embedded', 60, 1, 0, 0, null, null, null, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $embedded->widgetId);
         $response = json_decode($this->client->response->body());

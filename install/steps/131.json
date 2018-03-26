@@ -1,0 +1,18 @@
+{
+  "dbVersion": 131,
+  "appVersion": "1.8.0",
+  "steps": [
+    {
+      "step": "Add extra options for defaults on Display Profiles",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES    ('DISPLAY_PROFILE_STATS_DEFAULT', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Default setting for Statistics Enabled?', '', 70, '0', 1, 'checkbox'),('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', '1', 'checkbox', NULL, NULL, 'displays', 1, 'Enable the option to report the current layout status?', '', 80, '0', 1, 'checkbox'),('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', '1', 'checkbox', NULL, NULL, 'displays', 1, 'Enable the option to set the screenshot interval?', '', 90, '0', 1, 'checkbox'),('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', '200', 'number', 'The default size in pixels for the Display Screenshots', NULL, 'displays', 1, 'Display Screenshot Default Size', '', 100, '200', 1, 'int'),('LATEST_NEWS_URL', 'http://xibo.org.uk/feed', 'text', 'RSS/Atom Feed to be displayed on the Status Dashboard', '', 'general', 0, 'Latest News URL', '', 111, '', 0, 'string');"
+    },
+    {
+      "step": "Remove the current layout column from Display",
+      "action": "ALTER TABLE `display` DROP COLUMN currentLayoutId;"
+    },
+    {
+      "step": "Add Display Permission Entity",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, 'Xibo\\\\Entity\\\\Display');"
+    }
+  ]
+}

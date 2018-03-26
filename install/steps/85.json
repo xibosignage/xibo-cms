@@ -1,0 +1,10 @@
+{
+  "dbVersion": 85,
+  "appVersion": "1.7.1",
+  "steps" : [
+    {
+      "step": "Add Storage Columns to the Display Table",
+      "action": "ALTER TABLE  `display` ADD  `storageAvailableSpace` BIGINT NULL, ADD  `storageTotalSpace` BIGINT NULL;"
+    }
+  ]
+}

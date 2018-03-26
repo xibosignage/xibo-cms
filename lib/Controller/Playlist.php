@@ -12,17 +12,13 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
-use Xibo\Factory\TagFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -76,12 +72,6 @@ class Playlist extends Base
      */
     private $userGroupFactory;
 
-    /** @var UserFactory */
-    private $userFactory;
-
-    /** @var TagFactory */
-    private $tagFactory;
-
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -99,11 +89,9 @@ class Playlist extends Base
      * @param WidgetFactory $widgetFactory
      * @param ModuleFactory $moduleFactory
      * @param UserGroupFactory $userGroupFactory
-     * @param UserFactory $userFactory
-     * @param TagFactory $tagFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory)
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -115,24 +103,6 @@ class Playlist extends Base
         $this->widgetFactory = $widgetFactory;
         $this->moduleFactory = $moduleFactory;
         $this->userGroupFactory = $userGroupFactory;
-        $this->userFactory = $userFactory;
-        $this->tagFactory = $tagFactory;
-    }
-
-    /**
-     * Display Page
-     */
-    public function displayPage()
-    {
-        $moduleFactory = $this->moduleFactory;
-
-        // Call to render the template
-        $this->getState()->template = 'playlist-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query(),
-            'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
-        ]);
     }
 
     /**
@@ -142,237 +112,50 @@ class Playlist extends Base
     {
         $this->getState()->template = 'grid';
 
-        // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'name' => $this->getSanitizer()->getString('name'),
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
-            'regionSpecific' => 0
-        ]));
-
-        foreach ($playlists as $playlist) {
-
-            if ($this->isApi())
-                continue;
-
-            $playlist->includeProperty('buttons');
-            $playlist->includeProperty('requiresDurationUpdate');
-
-            // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($playlist)) {
-
-                if ($playlist->isDynamic === 0) {
-                    // Timeline edit
-                    $playlist->buttons[] = array(
-                        'id' => 'playlist_timeline_button_edit',
-                        'url' => $this->urlFor('playlist.timeline.form', ['id' => $playlist->playlistId]),
-                        'text' => __('Timeline')
-                    );
-
-                    $playlist->buttons[] = ['divider' => true];
-                }
-
-                // Edit Button
-                $playlist->buttons[] = array(
-                    'id' => 'playlist_button_edit',
-                    'url' => $this->urlFor('playlist.edit.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Edit')
-                );
-
-                // Copy Button
-                $playlist->buttons[] = array(
-                    'id' => 'playlist_button_copy',
-                    'url' => $this->urlFor('playlist.copy.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Copy')
-                );
-
-                $playlist->buttons[] = ['divider' => true];
-            }
-
-            // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($playlist)) {
-                // Delete Button
-                $playlist->buttons[] = array(
-                    'id' => 'playlist_button_delete',
-                    'url' => $this->urlFor('playlist.delete.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('playlist.delete', ['id' => $playlist->playlistId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'playlist_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $playlist->name)
-                    )
-                );
-
-                $playlist->buttons[] = ['divider' => true];
-            }
-
-            // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($playlist)) {
-                // Permissions button
-                $playlist->buttons[] = array(
-                    'id' => 'playlist_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
-                    'text' => __('Permissions')
-                );
-            }
-        }
+        $playlists = [];
 
         $this->getState()->setData($playlists);
     }
 
-    //<editor-fold desc="CRUD">
-
-    /**
-     * Add Form
-     */
-    public function addForm()
-    {
-        $this->getState()->template = 'playlist-form-add';
-    }
-
     /**
      * Add
-     *
-     * @SWG\Post(
-     *  path="/playlist",
-     *  operationId="playlistAdd",
-     *  tags={"playlist"},
-     *  summary="Add a Playlist",
-     *  description="Add a new Playlist",
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name for this Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Is this Playlist Dynamic?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaName",
-     *      in="formData",
-     *      description="Add Library Media matching the name filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaTag",
-     *      in="formData",
-     *      description="Add Library Media matching the tag filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     *
-     * @throws XiboException
      */
     public function add()
     {
-        $playlist = $this->playlistFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->getId());
-        $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
-        $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
-
-        // Do we have a tag or name filter?
-        $nameFilter = $this->getSanitizer()->getString('filterMediaName');
-        $tagFilter = $this->getSanitizer()->getString('filterMediaTag');
-
-        // Capture these as dynamic filter criteria
-        if ($playlist->isDynamic === 1) {
-            $playlist->filterMediaName = $nameFilter;
-            $playlist->filterMediaTags = $tagFilter;
-        }
-
+        $playlist = $this->playlistFactory->createEmpty();
+        $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->save();
 
-        // Default permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
+        // Assign to a region?
+        if ($this->getSanitizer()->getInt('regionId') !== null) {
+            $region = $this->regionFactory->getById($this->getSanitizer()->getInt('regionId'));
+
+            // Assert the provided display order
+            $playlist->displayOrder = $this->getSanitizer()->getInt('displayOrder');
+
+            // Assign to a region
+            $region->assignPlaylist($playlist);
+            $region->save();
+
+            if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+                // Apply permissions from the Parent
+                foreach ($region->permissions as $permission) {
+                    /* @var Permission $permission */
+                    $permission = $this->permissionFactory->create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission->save();
+                }
+            }
         }
 
-        // Should we assign any existing media
-        if ($playlist->isDynamic === 0 && (!empty($nameFilter) || !empty($tagFilter))) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter]);
+        // Notify
+        $playlist->notifyLayouts();
 
-            if (count($media) > 0) {
-                $widgets = [];
-
-                foreach ($media as $item) {
-                    // Create a module
-                    $module = $this->moduleFactory->create($item->mediaType);
-
-                    // Determine the duration
-                    $itemDuration = ($item->duration == 0) ? $module->determineDuration() : $item->duration;
-
-                    // Create a widget
-                    $widget = $this->widgetFactory->create($this->getUser()->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
-                    $widget->assignMedia($item->mediaId);
-
-                    // Assign the widget to the module
-                    $module->setWidget($widget);
-
-                    // Set default options (this sets options on the widget)
-                    $module->setDefaultWidgetOptions();
-
-                    // Calculate the duration
-                    $widget->calculateDuration($module);
-
-                    // Assign the widget to the playlist
-                    $playlist->assignWidget($widget);
-
-                    // Add to a list of new widgets
-                    $widgets[] = $widget;
-                }
-
-                // Save the playlist
-                $playlist->save();
-
-                // Handle permissions
-                foreach ($widgets as $widget) {
-                    /* @var Widget $widget */
-                    if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                        // Apply permissions from the Parent
-                        foreach ($playlist->permissions as $permission) {
-                            /* @var Permission $permission */
-                            $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                            $permission->save();
-                        }
-                    } else {
-                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                            /* @var Permission $permission */
-                            $permission->save();
-                        }
-                    }
-                }
+        // Permissions
+        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS' == 0)) {
+            // Default permissions
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
             }
         }
 
@@ -386,81 +169,11 @@ class Playlist extends Base
     }
 
     /**
+     * Edit
      * @param $playlistId
      * @throws \Xibo\Exception\NotFoundException
-     */
-    public function editForm($playlistId)
-    {
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        if (!$this->getUser()->checkEditable($playlist))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'playlist-form-edit';
-        $this->getState()->setData([
-            'playlist' => $playlist
-        ]);
-    }
-
-    /**
-     * Edit
      *
-     * @SWG\Put(
-     *  path="/playlist/{playlistId}",
-     *  operationId="playlistEdit",
-     *  tags={"playlist"},
-     *  summary="Edit a Playlist",
-     *  description="Edit a Playlist",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The PlaylistId to Edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The Name for this Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="tags",
-     *      in="formData",
-     *      description="Tags",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isDynamic",
-     *      in="formData",
-     *      description="Is this Playlist Dynamic?",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaName",
-     *      in="formData",
-     *      description="Add Library Media matching the name filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="filterMediaTag",
-     *      in="formData",
-     *      description="Add Library Media matching the tag filter provided",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
      *
-     * @param int $playlistId
-     * @throws XiboException
      */
     public function edit($playlistId)
     {
@@ -470,16 +183,7 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         $playlist->name = $this->getSanitizer()->getString('name');
-        $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
-        $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
-
-        // Do we have a tag or name filter?
-        // Capture these as dynamic filter criteria
-        if ($playlist->isDynamic === 1) {
-            $playlist->filterMediaName = $this->getSanitizer()->getString('filterMediaName');
-            $playlist->filterMediaTags = $this->getSanitizer()->getString('filterMediaTag');
-        }
-
+        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->save();
 
         // Success
@@ -491,27 +195,11 @@ class Playlist extends Base
         ]);
     }
 
-    /**
-     * @param $playlistId
-     * @throws \Xibo\Exception\NotFoundException
-     */
-    public function deleteForm($playlistId)
-    {
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        if (!$this->getUser()->checkDeleteable($playlist))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'playlist-form-delete';
-        $this->getState()->setData([
-            'playlist' => $playlist
-        ]);
-    }
 
     /**
      * Delete
      * @param $playlistId
-     * @throws \Xibo\Exception\XiboException
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function delete($playlistId)
     {
@@ -520,6 +208,8 @@ class Playlist extends Base
         if (!$this->getUser()->checkDeleteable($playlist))
             throw new AccessDeniedException();
 
+        $playlist->setChildObjectDependencies($this->regionFactory);
+
         // Issue the delete
         $playlist->delete();
 
@@ -527,160 +217,6 @@ class Playlist extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $playlist->name)
-        ]);
-    }
-
-    /**
-     * Copy playlist form
-     * @param int $playlistId
-     * @throws NotFoundException
-     */
-    public function copyForm($playlistId)
-    {
-        // Get the playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'playlist-form-copy';
-        $this->getState()->setData([
-            'playlist' => $playlist
-        ]);
-    }
-
-    /**
-     * Copies a playlist
-     * @param int $playlistId
-     *
-     * @SWG\Post(
-     *  path="/playlist/copy/{playlistId}",
-     *  operationId="playlistCopy",
-     *  tags={"playlist"},
-     *  summary="Copy Playlist",
-     *  description="Copy a Playlist, providing a new name if applicable",
-     *  @SWG\Parameter(
-     *      name="playlistId",
-     *      in="path",
-     *      description="The Playlist ID to Copy",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="The name for the new Playlist",
-     *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="copyMediaFiles",
-     *      in="formData",
-     *      description="Flag indicating whether to make new Copies of all Media Files assigned to the Playlist being Copied",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Playlist"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
-     *  )
-     * )
-     * @throws XiboException
-     */
-    public function copy($playlistId)
-    {
-        // Get the playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
-            throw new AccessDeniedException();
-
-        // Load the playlist for Copy
-        $playlist->load();
-        $playlist = clone $playlist;
-
-        $playlist->name = $this->getSanitizer()->getString('name');
-
-        // Copy the media on the playlist and change the assignments.
-        if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
-            foreach ($playlist->widgets as $widget) {
-                // Copy the media
-                $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                $media = clone $oldMedia;
-                $media->setOwner($this->getUser()->userId);
-                $media->save();
-
-                $widget->unassignMedia($oldMedia->mediaId);
-                $widget->assignMedia($media->mediaId);
-
-                // Update the widget option with the new ID
-                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
-            }
-        }
-
-        // Save the new playlist
-        $playlist->save();
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-        }
-
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Copied as %s'), $playlist->name),
-            'id' => $playlist->playlistId,
-            'data' => $playlist
-        ]);
-    }
-    //</editor-fold>
-
-    /**
-     * Timeline Form
-     * @param int $playlistId
-     * @throws XiboException
-     */
-    public function timelineForm($playlistId)
-    {
-        // Get a complex object of playlists and widgets
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        if (!$this->getUser()->checkEditable($playlist))
-            throw new AccessDeniedException();
-
-        $playlist->load();
-
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            $widget->module = $this->moduleFactory->createWithWidget($widget);
-        }
-
-        // Pass to view
-        $this->getState()->template = 'region-form-timeline';
-        $this->getState()->setData([
-            'region' => ['regionId' => -1],
-            'playlist' => $playlist,
-            'modules' => $this->moduleFactory->getAssignableModules(),
-            'transitions' => $this->transitionData(),
-            'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
     }
 
@@ -858,8 +394,6 @@ class Playlist extends Base
      *      @SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
-     *
-     * @throws XiboException
      */
     public function libraryAssign($playlistId)
     {
@@ -868,8 +402,7 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
-        if ($playlist->isDynamic === 1)
-            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        $playlist->setChildObjectDependencies($this->regionFactory);
 
         // Expect a list of mediaIds
         $media = $this->getSanitizer()->getIntArray('media');
@@ -910,9 +443,6 @@ class Playlist extends Base
             // If a duration is provided, then we want to use it
             if ($duration !== null)
                 $widget->useDuration = 1;
-
-            // Calculate the duration
-            $widget->calculateDuration($module);
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget);
@@ -993,6 +523,7 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         // Load the widgets
+        $playlist->setChildObjectDependencies($this->regionFactory);
         $playlist->load();
 
         // Get our list of widget orders
@@ -1019,26 +550,5 @@ class Playlist extends Base
             'message' => __('Order Changed'),
             'data' => $playlist
         ]);
-    }
-
-    /**
-     * @return array
-     */
-    private function transitionData()
-    {
-        return [
-            'in' => $this->transitionFactory->getEnabledByType('in'),
-            'out' => $this->transitionFactory->getEnabledByType('out'),
-            'compassPoints' => array(
-                array('id' => 'N', 'name' => __('North')),
-                array('id' => 'NE', 'name' => __('North East')),
-                array('id' => 'E', 'name' => __('East')),
-                array('id' => 'SE', 'name' => __('South East')),
-                array('id' => 'S', 'name' => __('South')),
-                array('id' => 'SW', 'name' => __('South West')),
-                array('id' => 'W', 'name' => __('West')),
-                array('id' => 'NW', 'name' => __('North West'))
-            )
-        ];
     }
 }

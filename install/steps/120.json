@@ -1,0 +1,373 @@
+{
+  "dbVersion": 120,
+  "appVersion": "1.8.0-alpha",
+  "steps": [
+    {
+      "step": "Alter the Log Table - Part 1",
+      "action": "ALTER TABLE `log` DROP `scheduleID`,DROP `layoutID`,DROP `mediaID`,DROP `RequestUri`,DROP `RemoteAddr`,DROP `UserAgent`;"
+    },
+    {
+      "step": "Alter the Log Table - Part 2",
+      "action": "ALTER TABLE  `log` CHANGE  `type`  `type` VARCHAR( 254 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;"
+    },
+    {
+      "step": "Alter the Log Table - Part 3",
+      "action": "ALTER TABLE  `log` ADD  `channel` VARCHAR( 5 ) NOT NULL AFTER  `logdate`, ADD  `runNo` VARCHAR( 10 ) NOT NULL AFTER  `logid`;"
+    },
+    {
+      "step": "Alter the Module Table",
+      "action": "ALTER TABLE  `module` ADD  `viewPath` VARCHAR( 254 ) NOT NULL DEFAULT  '../modules', ADD  `class` VARCHAR( 254 ) NOT NULL;"
+    },
+    {
+      "step": "Add Permissions Table",
+      "action": "CREATE TABLE IF NOT EXISTS `permission` (`permissionId` int(11) NOT NULL AUTO_INCREMENT,`entityId` int(11) NOT NULL,`groupId` int(11) NOT NULL,`objectId` int(11) NOT NULL,`view` tinyint(4) NOT NULL,`edit` tinyint(4) NOT NULL,`delete` tinyint(4) NOT NULL,PRIMARY KEY (`permissionId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;"
+    },
+    {
+      "step": "Add Permission Entity Table",
+      "action": "CREATE TABLE IF NOT EXISTS `permissionentity` (`entityId` int(11) NOT NULL AUTO_INCREMENT,`entity` varchar(50) NOT NULL,PRIMARY KEY (`entityId`),UNIQUE KEY `entity` (`entity`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=10 ;"
+    },
+    {
+      "step": "Populate Permission Entities",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES(5, 'Xibo\\\\Entity\\\\Campaign'),(9, 'Xibo\\\\Entity\\\\DataSet'),(3, 'Xibo\\\\Entity\\\\DisplayGroup'),(4, 'Xibo\\\\Entity\\\\Media'),(1, 'Xibo\\\\Entity\\\\Page'),(8, 'Xibo\\\\Entity\\\\Playlist'),(7, 'Xibo\\\\Entity\\\\Region'),(6, 'Xibo\\\\Entity\\\\Widget');"
+    },
+    {
+      "step": "Convert Page Permissions",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 1, pageId, 1, 0, 0 FROM `lkpagegroup`;"
+    },
+    {
+      "step": "Remove Page Permissions table",
+      "action": "DROP TABLE `lkpagegroup`;"
+    },
+    {
+      "step": "Remove Menu Permissions table",
+      "action": "DROP TABLE `lkmenuitemgroup`;"
+    },
+    {
+      "step": "Convert Campaign/Layout Permissions",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 5, campaignId, view, edit, del FROM `lkcampaigngroup`;"
+    },
+    {
+      "step": "Remove old Campaign/Layout Permissions table",
+      "action": "DROP TABLE `lkcampaigngroup`;"
+    },
+    {
+      "step": "Convert Media Permissions",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 4, mediaId, view, edit, del FROM `lkmediagroup`;"
+    },
+    {
+      "step": "Remove old Media Permissions table",
+      "action": "DROP TABLE `lkmediagroup`;"
+    },
+    {
+      "step": "Convert DataSet Permissions",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 9, dataSetId, view, edit, del FROM `lkdatasetgroup`;"
+    },
+    {
+      "step": "Remove old DataSet Permissions table",
+      "action": "DROP TABLE `lkdatasetgroup`;"
+    },
+    {
+      "step": "Convert Display Group Permissions",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT groupId, 3, displayGroupId, view, edit, del FROM `lkdisplaygroupgroup`;"
+    },
+    {
+      "step": "Remove old Display Group Permissions table",
+      "action": "DROP TABLE `lkdisplaygroupgroup`;"
+    },
+    {
+      "step": "Alter page table - part 1",
+      "action": "ALTER TABLE `pages` DROP FOREIGN KEY  `pages_ibfk_1` ;"
+    },
+    {
+      "step": "Alter page table - part 2",
+      "action": "ALTER TABLE `pages` DROP `pagegroupID`;"
+    },
+    {
+      "step": "Alter page table - part 3",
+      "action": "ALTER TABLE  `pages` ADD  `title` VARCHAR( 50 ) NOT NULL, ADD  `asHome` TINYINT NOT NULL DEFAULT '0';"
+    },
+    {
+      "step": "Add New Pages",
+      "action": "INSERT INTO `pages` (`pageID`, `name`, `title`) VALUES (NULL, 'region', ''), (NULL, 'playlist', ''), (NULL, 'maintenance', '');"
+    },
+    {
+      "step": "Link Region Page",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT `groupId`, 1, (SELECT pageId FROM `pages` WHERE `name` = 'region'), `view`, `edit`, `delete` FROM `permission` WHERE `objectId` = (SELECT pageId FROM `pages` WHERE `name` = 'layout') AND `entityId` = 1;"
+    },
+    {
+      "step": "Link Playlist Page",
+      "action": "INSERT INTO `permission` (`groupId`, `entityId`, `objectId`, `view`, `edit`, `delete`) SELECT `groupId`, 1, (SELECT pageId FROM `pages` WHERE `name` = 'playlist'), `view`, `edit`, `delete` FROM `permission` WHERE `objectId` = (SELECT pageId FROM `pages` WHERE `name` = 'layout') AND `entityId` = 1;"
+    },
+    {
+      "step": "Set Page Names",
+      "action": "UPDATE `pages` SET title = CONCAT(UCASE(LEFT(name, 1)), SUBSTRING(name, 2)), asHome = 1;"
+    },
+    {
+      "step": "Change audit log page name",
+      "action": "UPDATE `pages` SET `name` = 'audit' WHERE `name` = 'auditlog';"
+    },
+    {
+      "step": "Set Page Home Flag",
+      "action": "UPDATE `pages` SET asHome = 0 WHERE `name` IN ('update','admin','manual','help','clock','preview','region','playlist','maintenance');"
+    },
+    {
+      "step": "Remove menu and menu items",
+      "action": "DROP TABLE `menuitem`, `menu`, `pagegroup`;"
+    },
+    {
+      "step": "Rename the Library page",
+      "action": "UPDATE  `pages` SET  `name` =  'library', `title` = 'Library' WHERE  `pages`.`name` = 'content';"
+    },
+    {
+      "step": "Rename the Applications page",
+      "action": "UPDATE  `pages` SET  `name` =  'applications', `title` = 'Applications' WHERE  `pages`.`name` = 'oauth';"
+    },
+    {
+      "step": "Rename the Media Dashboard page",
+      "action": "UPDATE  `pages` SET `title` = 'Media Dashboard' WHERE  `pages`.`name` = 'mediamanager';"
+    },
+    {
+      "step": "Rename the Status Dashboard page",
+      "action": "UPDATE  `pages` SET `title` = 'Status Dashboard' WHERE  `pages`.`name` = 'statusdashboard';"
+    },
+    {
+      "step": "Rename the Display Profile page",
+      "action": "UPDATE  `pages` SET `title` = 'Display Profiles' WHERE  `pages`.`name` = 'displayprofile';"
+    },
+    {
+      "step": "Rename the Display Group page",
+      "action": "UPDATE  `pages` SET `title` = 'Display Groups' WHERE  `pages`.`name` = 'displaygroup';"
+    },
+    {
+      "step": "Rename the Home page",
+      "action": "UPDATE  `pages` SET `title` = 'Home' WHERE  `pages`.`name` = 'index';"
+    },
+    {
+      "step": "Rename the Audit Trail page",
+      "action": "UPDATE  `pages` SET `title` = 'Audit Trail' WHERE  `pages`.`name` = 'auditlog';"
+    },
+    {
+      "step": "Add new attributes to the Layout Structure",
+      "action": "ALTER TABLE  `layout` ADD  `width` DECIMAL NOT NULL ,ADD  `height` DECIMAL NOT NULL ,ADD  `backgroundColor` VARCHAR( 25 ) NULL ,ADD `backgroundzIndex` INT NOT NULL DEFAULT  '1',ADD  `schemaVersion` TINYINT NOT NULL;"
+    },
+    {
+      "step": "Set all Users Home page - Part 1",
+      "action": "UPDATE `user` SET homepage = IFNULL((SELECT pageId FROM `pages` WHERE pages.name = `user`.homepage LIMIT 1), 1);"
+    },
+    {
+      "step": "Update Users Home page - Part 2",
+      "action": "ALTER TABLE  `user` CHANGE  `homepage`  `homePageId` INT NOT NULL DEFAULT  '1' COMMENT  'The users homepage';"
+    },
+    {
+      "step": "Remove the Counter Module",
+      "action": "DELETE FROM module WHERE module = 'counter';"
+    },
+    {
+      "step": "Upgrade Layouts - Ensure Layout XML field is nullable",
+      "action": "ALTER TABLE layout MODIFY xml longtext;"
+    },
+    {
+      "step": "Add Layout status message column",
+      "action": "ALTER TABLE `layout` ADD `statusMessage` TEXT NULL;"
+    },
+    {
+      "step": "Upgrade Layouts - Convert existing Layouts",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\LayoutStructureStep"
+    },
+    {
+      "step": "Upgrade Layouts - Clean up",
+      "action": "DROP TABLE `lklayoutmedia`;"
+    },
+    {
+      "step": "Upgrade Layouts - Clean up",
+      "action": "ALTER TABLE `layout` DROP `xml`;"
+    },
+    {
+      "step": "Upgrade API - Part 1",
+      "action": "DROP TABLE `oauth_log`, `oauth_server_nonce`, `oauth_server_token`, `oauth_server_registry`;"
+    },
+    {
+      "step": "Upgrade API - Part 2",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\OAuthServerInstallStep"
+    },
+    {
+      "step": "Upgrade API - Drop the File Table",
+      "action": "DROP TABLE  `file`;"
+    },
+    {
+      "step": "Removal all old XMDS nonces",
+      "action": "TRUNCATE TABLE `xmdsnonce`;"
+    },
+    {
+      "step": "Upgrade XMDS - Part 1",
+      "action": "RENAME TABLE `xmdsnonce` TO `requiredfile`;"
+    },
+    {
+      "step": "Upgrade XMDS - Part 2",
+      "action": "ALTER TABLE  `requiredfile` ADD  `requestKey` VARCHAR( 10 ) NOT NULL, ADD  `bytesRequested` BIGINT NOT NULL, ADD  `complete` TINYINT NOT NULL;"
+    },
+    {
+      "step": "Upgrade XMDS - Part 3",
+      "action": "ALTER TABLE  `requiredfile` CHANGE  `nonceId`  `rfId` BIGINT( 20 ) NOT NULL AUTO_INCREMENT;"
+    },
+    {
+      "step": "Upgrade XMDS - Part 4",
+      "action": "ALTER TABLE  `requiredfile` CHANGE  `regionId`  `regionId` INT NULL;"
+    },
+    {
+      "step": "Upgrade XMDS - Part 5",
+      "action": "ALTER TABLE `requiredfile` DROP `fileId`;"
+    },
+    {
+      "step": "Remove Media Inventory from the Display Table",
+      "action": "ALTER TABLE `display` DROP `MediaInventoryXml`;"
+    },
+    {
+      "step": "Remove international date format setting",
+      "action": "DELETE FROM `setting` WHERE setting = 'USE_INTL_DATEFORMAT';"
+    },
+    {
+      "step": "Update audit setting with new levels",
+      "action": "UPDATE `setting` SET options = 'Emergency|Alert|Critical|Error|Warning|Notice|Info|Debug', value = 'Error' WHERE setting = 'audit';"
+    },
+    {
+      "step": "Update default permission setting options",
+      "action": "UPDATE  `setting` SET  `options` =  'private|group|public' WHERE  `setting`.`setting` IN ('MEDIA_DEFAULT', 'LAYOUT_DEFAULT');"
+    },
+    {
+      "step": "Add new settings",
+      "action": "INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES (NULL, 'INSTANCE_SUSPENDED', '0', 'checkbox', 'Is this instance suspended?', NULL, 'general', '0', 'Instance Suspended', '', '120', '0', '0', 'checkbox'),(NULL, 'INHERIT_PARENT_PERMISSIONS', '1', 'checkbox', 'Inherit permissions from Parent when adding a new item?', NULL, 'permissions', '1', 'Inherit permissions', '', '50', '1', '1', 'checkbox');"
+    },
+    {
+      "step": "Add new DataType for DataSets",
+      "action": "INSERT INTO `datatype` (`DataTypeID`, `DataType`) VALUES ('5', 'Library Image');"
+    },
+    {
+      "step": "Update existing DataType",
+      "action": "UPDATE  `datatype` SET  `DataType` =  'External Image' WHERE  `datatype`.`DataTypeID` =4 AND  `datatype`.`DataType` =  'Image' LIMIT 1 ;"
+    },
+    {
+      "step": "Convert existing DataSets",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\DataSetConvertStep"
+    },
+    {
+      "step": "Remove Layout/DataSet Link Table",
+      "action": "DROP TABLE `lkdatasetlayout`;"
+    },
+    {
+      "step": "De-dupe any Media/Display Group Assignments",
+      "action": "CREATE TABLE `temp_lkmediadisplaygroup` AS SELECT `mediaid` ,`displaygroupid` FROM `lkmediadisplaygroup` WHERE 1 GROUP BY `mediaid` ,`displaygroupid`; DROP TABLE `lkmediadisplaygroup`; RENAME TABLE `temp_lkmediadisplaygroup` TO `lkmediadisplaygroup`;"
+    },
+    {
+      "step": "Add Unique Key to Media/Display Group Assignments",
+      "action": "ALTER TABLE  `lkmediadisplaygroup` ADD UNIQUE (`mediaid` ,`displaygroupid`);"
+    },
+    {
+      "step": "Add Unique Key to Campaign/Layout assignments",
+      "action": "ALTER TABLE  `lkcampaignlayout` ADD UNIQUE (`CampaignID` ,`LayoutID` ,`DisplayOrder`);"
+    },
+    {
+      "step": "Upgrade Schedule - Part 1",
+      "action": "CREATE TABLE IF NOT EXISTS `lkscheduledisplaygroup` (`eventId` int(11) NOT NULL,`displayGroupId` int(11) NOT NULL,PRIMARY KEY (`eventId`,`displayGroupId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Upgrade Schedule - Part 2",
+      "action": "ALTER TABLE `schedule_detail` DROP FOREIGN KEY  `schedule_detail_ibfk_8` ;"
+    },
+    {
+      "step": "Upgrade Schedule - Part 3",
+      "action": "ALTER TABLE `schedule_detail` DROP `DisplayGroupID`;"
+    },
+    {
+      "step": "Upgrade Schedule - Part 4",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\ScheduleConvertStep"
+    },
+    {
+      "step": "Upgrade Schedule - Part 5",
+      "action": "ALTER TABLE `schedule` DROP `DisplayGroupIDs`;"
+    },
+    {
+      "step": "Upgrade Image Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Image' WHERE module = 'Image';"
+    },
+    {
+      "step": "Upgrade Video Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Video' WHERE module = 'Video';"
+    },
+    {
+      "step": "Upgrade Flash Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Flash' WHERE module = 'Flash';"
+    },
+    {
+      "step": "Upgrade PowerPoint Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\PowerPoint' WHERE module = 'PowerPoint';"
+    },
+    {
+      "step": "Upgrade WebPage Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\WebPage' WHERE module = 'Webpage';"
+    },
+    {
+      "step": "Upgrade Ticker Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Ticker' WHERE module = 'Ticker';"
+    },
+    {
+      "step": "Upgrade Text Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Text' WHERE module = 'Text';"
+    },
+    {
+      "step": "Upgrade Embedded Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Embedded' WHERE module = 'Embedded';"
+    },
+    {
+      "step": "Upgrade DataSet View Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\DataSetView' WHERE module = 'datasetview';"
+    },
+    {
+      "step": "Upgrade Shell Command Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\ShellCommand' WHERE module = 'shellcommand';"
+    },
+    {
+      "step": "Upgrade Local Video Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\LocalVideo' WHERE module = 'localvideo';"
+    },
+    {
+      "step": "Upgrade Generic File Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\GenericFile' WHERE module = 'genericfile';"
+    },
+    {
+      "step": "Upgrade Clock Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Clock' WHERE module = 'Clock';"
+    },
+    {
+      "step": "Upgrade Font Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Font' WHERE module = 'Font';"
+    },
+    {
+      "step": "Upgrade Twitter Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Twitter' WHERE module = 'Twitter';"
+    },
+    {
+      "step": "Upgrade Forecast Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\ForecastIo' WHERE module = 'forecastio';"
+    },
+    {
+      "step": "Upgrade Finance Module",
+      "action": "UPDATE `module` SET `class` = '\\\\Xibo\\\\Widget\\\\Finance' WHERE module = 'Finance';"
+    },
+    {
+      "step": "Set db version so that changes to Users are activated",
+      "action": "UPDATE `version` SET `DBVersion` = 120;"
+    }
+  ]
+}
+
+
+
+
+
+
+

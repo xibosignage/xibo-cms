@@ -1,5 +1,0 @@
-{
-  "name": "Update Empty Video Durations",
-  "class": "\\Xibo\\XTR\\UpdateEmptyVideoDurations",
-  "options": {}
-}

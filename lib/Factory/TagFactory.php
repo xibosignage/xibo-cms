@@ -126,7 +126,7 @@ class TagFactory extends BaseFactory
     /**
      * Gets tags for a layout
      * @param $layoutId
-     * @return Tag[]
+     * @return array[Tag]
      */
     public function loadByLayoutId($layoutId)
     {
@@ -147,32 +147,9 @@ class TagFactory extends BaseFactory
     }
 
     /**
-     * Gets tags for a playlist
-     * @param $playlistId
-     * @return Tag[]
-     */
-    public function loadByPlaylistId($playlistId)
-    {
-        $tags = array();
-
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
-
-        foreach ($this->getStore()->select($sql, array('playlistId' => $playlistId)) as $row) {
-            $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignPlaylist($playlistId);
-
-            $tags[] = $tag;
-        }
-
-        return $tags;
-    }
-
-    /**
      * Gets tags for a campaign
      * @param $campaignId
-     * @return Tag[]
+     * @return array[Tag]
      */
     public function loadByCampaignId($campaignId)
     {
@@ -195,7 +172,7 @@ class TagFactory extends BaseFactory
     /**
      * Gets tags for media
      * @param $mediaId
-     * @return Tag[]
+     * @return array[Tag]
      */
     public function loadByMediaId($mediaId)
     {
@@ -218,7 +195,7 @@ class TagFactory extends BaseFactory
     /**
      * Gets tags for displayGroupId
      * @param $displayGroupId
-     * @return Tag[]
+     * @return array[Tag]
      */
     public function loadByDisplayGroupId($displayGroupId)
     {

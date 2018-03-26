@@ -7,33 +7,15 @@
 
 
 namespace Xibo\Helper;
-use Phinx\Console\PhinxApplication;
-use Phinx\Wrapper\TextWrapper;
 
-/**
- * Class Environment
- * @package Xibo\Helper
- */
+
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '2.0.0-alpha1';
-    public static $XMDS_VERSION = '5';
-    public static $XLF_VERSION = '2';
+    public static $WEBSITE_VERSION_NAME = '1.8.8';
+    public static $WEBSITE_VERSION = 139;
+
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '8.0';
-
-    /**
-     * Is there a migration pending
-     * @return bool
-     */
-    public static function migrationPending()
-    {
-        // Use a Phinx text wrapper to work out what the current status is
-        $phinx = new TextWrapper(new PhinxApplication(), ['configuration' => PROJECT_ROOT . '/phinx.php']);
-        $phinx->getStatus();
-
-        return ($phinx->getExitCode() != 0);
-    }
 
     /**
      * Check FileSystem Permissions
@@ -41,7 +23,7 @@ class Environment
      */
     public static function checkFsPermissions()
     {
-        return (is_writable(PROJECT_ROOT . "/web/settings.php") && is_writable(PROJECT_ROOT . "/cache"));
+        return (is_writable(PROJECT_ROOT . "/web/settings.php") || is_writable(PROJECT_ROOT . "/cache"));
     }
 
     /**

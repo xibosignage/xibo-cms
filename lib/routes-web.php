@@ -27,29 +27,12 @@ $app->get('/', function () use ($app) {
     $user = $app->user;
     /* @var \Xibo\Entity\User $user */
 
-    if ($user->newUserWizard == 0) {
-        /** @var \Xibo\Controller\Login $controller */
-        $controller = $app->container->get('\Xibo\Controller\Login');
-        $controller->setApp($app);
-        $controller->userWelcome();
+    $app->logService->debug('Showing the homepage: %s', $user->homePageId);
 
-        // We've seen it
-        $user->newUserWizard = 1;
-        $user->save(['validate' => false, 'saveUserOptions' => false]);
-    }
-    else {
-        $app->logService->debug('Showing the homepage: %s', $user->homePageId);
+    /** @var \Xibo\Entity\Page $page */
+    $page = $app->container->get('pageFactory')->getById($user->homePageId);
 
-        /** @var \Xibo\Entity\Page $page */
-        $page = $app->container->get('pageFactory')->getById($user->homePageId);
-
-        $app->redirectTo($page->getName() . '.view');
-    }
-
-    if ($controller == null)
-        throw new InvalidArgumentException(__('Homepage not set correctly'));
-
-    $controller->render();
+    $app->redirectTo($page->getName() . '.view');
 
 })->setName('home');
 
@@ -127,13 +110,6 @@ $app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->
 //
 // playlists
 //
-$app->get('/playlist/view', '\Xibo\Controller\Playlist:displayPage')->name('playlist.view');
-$app->get('/playlist/form/add', '\Xibo\Controller\Playlist:addForm')->name('playlist.add.form');
-$app->get('/playlist/form/edit/:id', '\Xibo\Controller\Playlist:editForm')->name('playlist.edit.form');
-$app->get('/playlist/form/copy/:id', '\Xibo\Controller\Playlist:copyForm')->name('playlist.copy.form');
-$app->get('/playlist/form/delete/:id', '\Xibo\Controller\Playlist:deleteForm')->name('playlist.delete.form');
-$app->get('/playlist/form/timeline/:id', '\Xibo\Controller\Playlist:timelineForm')->name('playlist.timeline.form');
-// Designer
 $app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
 // Module functions
 $app->get('/playlist/widget/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
@@ -141,7 +117,6 @@ $app->get('/playlist/widget/form/edit/:id', '\Xibo\Controller\Module:editWidgetF
 $app->get('/playlist/widget/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
 $app->get('/playlist/widget/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
 $app->get('/playlist/widget/form/audio/:id', '\Xibo\Controller\Module:widgetAudioForm')->name('module.widget.audio.form');
-$app->get('/playlist/widget/form/expiry/:id', '\Xibo\Controller\Module:widgetExpiryForm')->name('module.widget.expiry.form');
 // Outputs
 $app->get('/playlist/widget/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
 $app->get('/playlist/widget/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
@@ -175,7 +150,8 @@ $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLa
 // user
 //
 $app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('user.view');
-$app->get('/user/welcome', '\Xibo\Controller\Login:userWelcome')->name('welcome.wizard');
+$app->post('/user/welcome', '\Xibo\Controller\User:userWelcomeSetUnseen')->name('welcome.wizard.unseen');
+$app->put('/user/welcome', '\Xibo\Controller\User:userWelcomeSetSeen')->name('welcome.wizard.seen');
 $app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('user.applications');
 $app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->name('user.change.password.form');
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');

@@ -1,35 +1,21 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (TextWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboText;
-use Xibo\Tests\Helper\LayoutHelperTrait;
+use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 
 class TextWidgetTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
-
 	protected $startLayouts;
     /**
      * setUp - called before every test automatically
@@ -72,11 +58,12 @@ class TextWidgetTest extends LocalWebTestCase
     public function testAdd($name, $duration, $useDuration, $effect, $speed, $backgroundColor, $marqueeInlineSelector, $text, $javaScript)
     {
         //parent::setupEnv();
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Text add Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
 
-        $response = $this->client->post('/playlist/widget/text/' . $playlistId, [
+        $response = $this->client->post('/playlist/widget/text/' . $region->playlists[0]['playlistId'], [
             'name' => $name,
             'duration' => $duration,
             'useDuration' => $useDuration,
@@ -91,7 +78,7 @@ class TextWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $textOptions = (new XiboText($this->getEntityProvider()))->getById($playlistId);
+        $textOptions = (new XiboText($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($name, $textOptions->name);
         $this->assertSame($duration, $textOptions->duration);
         foreach ($textOptions->widgetOptions as $option) {
@@ -121,15 +108,14 @@ class TextWidgetTest extends LocalWebTestCase
             'text with background Colour' => ['text item 3', 5, 1, null, 0, '#d900000', null, 'red background', null]
         ];
     }
-
     public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Text edit Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a text widget with wrapper
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $playlistId);
+        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
         $nameNew = 'Edited Name';
         $durationNew = 80;
         $textNew = 'Edited Text';
@@ -148,7 +134,7 @@ class TextWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $textOptions = (new XiboText($this->getEntityProvider()))->getById($playlistId);
+        $textOptions = (new XiboText($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($nameNew, $textOptions->name);
         $this->assertSame($durationNew, $textOptions->duration);
                 foreach ($textOptions->widgetOptions as $option) {
@@ -160,12 +146,12 @@ class TextWidgetTest extends LocalWebTestCase
 
     public function testDelete()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('text delete Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a text widget with wrapper
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $playlistId);
+        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $text->widgetId);
         $response = json_decode($this->client->response->body());
