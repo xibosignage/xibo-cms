@@ -29,6 +29,22 @@ fi
 echo "MySQL started"
 sleep 1
 
+# Check to see if we have a settings.php file in this container
+# if we don't, then we will need to create one here (it only contains the $_SERVER environment
+# variables we've already set
+if [ ! -f "/var/www/cms/web/settings.php" ]
+then
+  # Write settings.php
+  echo "Updating settings.php"
+
+  # We won't have a settings.php in place, so we'll need to copy one in
+  cp /tmp/settings.php-template /var/www/cms/web/settings.php
+  chown apache.apache -R /var/www/cms/web/settings.php
+
+  SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
+fi
+
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
@@ -57,7 +73,7 @@ fi
 
 DB_EXISTS=0
 # Check if the database exists already
-if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT DBVersion from version"
+if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT settingId FROM \`setting\` LIMIT 1"
 then
   # Database exists.
   DB_EXISTS=1
@@ -69,10 +85,10 @@ fi
 if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Existing Database, checking if we need to upgrade it"
-  # Get the currently installed schema version number
-  CURRENT_DB_VERSION=$(mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -se 'SELECT DBVersion from version')
+  # Determine if there are any migrations to be run
+  /var/www/cms/vendor/bin/phinx status -c /var/www/cms/phinx.php
 
-  if [ ! "$CURRENT_DB_VERSION"  == "$CMS_DB_VERSION" ]
+  if [ ! "$?" == 0 ]
   then
     echo "We will upgrade it, take a backup"
 
@@ -81,6 +97,10 @@ then
 
     # Drop app cache on upgrade
     rm -rf /var/www/cms/cache/*
+
+    # Upgrade
+    echo 'Running database migrations'
+    /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
   fi
 fi
 
@@ -91,10 +111,9 @@ then
   echo "New install"
 
   echo "Provisioning Database"
+
   # Populate the database
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/structure.sql"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/data.sql"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/constraints.sql"
+  php /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
 
   CMS_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
 
@@ -124,22 +143,6 @@ then
 
   MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
-fi
-
-if [ -e /CMS-FLAG ]
-then
-  # Remove the CMS-FLAG so we don't run this block each time we're started
-  rm /CMS-FLAG
-
-  # Write settings.php
-  echo "Updating settings.php"
-
-  # We won't have a settings.php in place, so we'll need to copy one in
-  cp /tmp/settings.php-template /var/www/cms/web/settings.php
-  chown apache.apache -R /var/www/cms/web/settings.php
-
-  SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
-  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 fi
 
 if [ "$CMS_DEV_MODE" == "false" ]
@@ -217,10 +220,6 @@ sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7
 sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
 sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
 sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
-
-echo "Running maintenance"
-cd /var/www/cms
-su -s /bin/bash -c 'cd /var/www/cms && /usr/bin/php bin/run.php 1' apache
 
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]

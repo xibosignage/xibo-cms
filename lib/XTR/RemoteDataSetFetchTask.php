@@ -23,11 +23,12 @@
 
 namespace Xibo\XTR;
 
-use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 
 /**
  * Class RemoteDataSetFetchTask
@@ -36,6 +37,28 @@ use Xibo\Factory\NotificationFactory;
 class RemoteDataSetFetchTask implements TaskInterface
 {
     use TaskTrait;
+
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+
+    /** @var NotificationFactory */
+    private $notificationFactory;
+
+    /** @var UserFactory */
+    private $userFactory;
+
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->dataSetFactory = $container->get('dataSetFactory');
+        $this->notificationFactory = $container->get('notificationFactory');
+        $this->userFactory = $container->get('userFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
+        return $this;
+    }
 
     /**
      * @inheritdoc
@@ -46,17 +69,11 @@ class RemoteDataSetFetchTask implements TaskInterface
 
         $runTime = $this->date->getLocalDate(null, 'U');
 
-        /** @var DataSetFactory $dataSetFactory */
-        $dataSetFactory = $this->app->container->get('dataSetFactory');
-
-        /** @var PoolInterface $pool */
-        $pool = $this->app->container->get('pool');
-
         /** @var DataSet $dataSet */
         $dataSet = null;
 
         // Process all Remote DataSets (and their dependants)
-        $dataSets = $this->orderDataSetsByDependency($dataSetFactory->query(null, ['isRemote' => 1]));
+        $dataSets = $this->orderDataSetsByDependency($this->dataSetFactory->query(null, ['isRemote' => 1]));
 
         // Log the order.
         $this->log->debug('Order of processing: ' . json_encode(array_map(function($element) {
@@ -71,7 +88,7 @@ class RemoteDataSetFetchTask implements TaskInterface
 
             try {
                 // Has this dataSet been accessed recently?
-                $cache = $pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+                $cache = $this->pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
                 if ($cache->isMiss()) {
                     // Skipping dataSet due to it not being accessed recently
                     $this->log->info('Skipping dataSet ' . $dataSet->dataSetId . ' due to it not being accessed recently');
@@ -85,12 +102,12 @@ class RemoteDataSetFetchTask implements TaskInterface
                     // Getting the dependant DataSet to process the current DataSet on
                     $dependant = null;
                     if ($dataSet->runsAfter != $dataSet->dataSetId) {
-                        $dependant = $dataSetFactory->getById($dataSet->dataSetId);
+                        $dependant = $this->dataSetFactory->getById($dataSet->dataSetId);
                     }
 
                     $this->log->debug('Fetch and process ' . $dataSet->dataSet);
 
-                    $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
+                    $results = $this->dataSetFactory->callRemoteService($dataSet, $dependant);
 
                     if ($results->number > 0) {
 
@@ -100,7 +117,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                             $dataSet->deleteData();
                         }
 
-                        $dataSetFactory->processResults($dataSet, $results);
+                        $this->dataSetFactory->processResults($dataSet, $results);
 
                         // notify here
                         $dataSet->notify();
@@ -121,9 +138,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $this->log->debug($e->getTraceAsString());
 
                 // Send a notification to the dataSet owner, informing them of the failure.
-                /** @var NotificationFactory $notificationFactory */
-                $notificationFactory = $this->app->container->get('notificationFactory');
-                $notification = $notificationFactory->createEmpty();
+                $notification = $this->notificationFactory->createEmpty();
                 $notification->subject = __('Remote DataSet %s failed to synchronise', $dataSet->dataSet);
                 $notification->body = 'The error is: ' . $e->getMessage();
                 $notification->createdDt = $this->date->getLocalDate(null, 'U');

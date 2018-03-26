@@ -34,7 +34,8 @@
   ],
   "config": {
       "platform": {
-          "php": "5.5.9"
+          "php": "5.6",
+          "ext-zmq": "0"
       }
   },
   "require": {
@@ -66,12 +67,12 @@
     "symfony/event-dispatcher": "^3.1",
     "illuminate/database": "5.2.*",
     "illuminate/cache": "5.2.*",
-    "xibosignage/oauth2-xibo-cms": "^1.1",
+    "xibosignage/oauth2-xibo-cms": "dev-feature/swift",
     "mtdowling/cron-expression": "^1.1",
-    "ralouphie/mimey": "^1.0"
+    "ralouphie/mimey": "^1.0",
+    "robmorgan/phinx": "^0.9.2"
   },
   "require-dev": {
-    "php": ">=7",
     "phpunit/phpunit": "~5.0",
     "zircote/swagger-php": "~2.0",
     "umpirsky/twig-gettext-extractor": "dev-dev-xibo-extractors",

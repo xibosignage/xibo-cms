@@ -47,7 +47,7 @@ class PlaylistReorderTest extends LocalWebTestCase
         $this->layout = $this->createLayout();
 
         // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->playlists[0]['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1,
@@ -56,7 +56,7 @@ class PlaylistReorderTest extends LocalWebTestCase
 
         $this->widget1 = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->playlists[0]['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget B',
             'duration' => 100,
             'useDuration' => 1,
@@ -107,7 +107,7 @@ class PlaylistReorderTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Edit region
-        $this->client->post('/playlist/order/' . $this->layout->regions[0]->playlists[0]['playlistId'], [
+        $this->client->post('/playlist/order/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
             'widgets' => [
                 $this->widget1->widgetId => 2,
                 $this->widget2->widgetId => 1

@@ -29,8 +29,12 @@
             {% endif %}
         {% endif %}
 
-        {% if currentUser.routeViewable("/library") or currentUser.routeViewable("/dataset") %}
+        {% if currentUser.routeViewable("/library") or currentUser.routeViewable("/playlist")  or currentUser.routeViewable("/dataset") %}
             <li class="sidebar-title"><a>{% trans "Library" %}</a></li>
+            {% if currentUser.routeViewable("/playlist") %}
+                <li class="sidebar-list"><a href="{{ urlFor("playlist.view") }}">{% trans "Playlists" %}</a></li>
+            {% endif %}
+
             {% if currentUser.routeViewable("/library") %}
                 <li class="sidebar-list"><a href="{{ urlFor("library.view") }}">{% trans "Media" %}</a></li>
             {% endif %}

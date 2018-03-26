@@ -137,6 +137,7 @@ $app->get('/playlist', '\Xibo\Controller\Playlist:grid')->name('playlist.search'
 $app->post('/playlist', '\Xibo\Controller\Playlist:add')->name('playlist.add');
 $app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edit');
 $app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
+$app->post('/playlist/copy/:id', '\Xibo\Controller\Playlist:copy')->name('playlist.copy');
 // Widgets Order
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
@@ -154,6 +155,7 @@ $app->delete('/playlist/widget/:id', '\Xibo\Controller\Module:deleteWidget')->na
 $app->put('/playlist/widget/transition/:type/:id', '\Xibo\Controller\Module:editWidgetTransition')->name('module.widget.transition.edit');
 $app->put('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudio')->name('module.widget.audio');
 $app->delete('/playlist/widget/:id/audio', '\Xibo\Controller\Module:widgetAudioDelete');
+$app->put('/playlist/widget/:id/expiry', '\Xibo\Controller\Module:widgetExpiry')->name('module.widget.expiry');
 
 /**
  * Campaign

@@ -102,13 +102,7 @@ class TaskFactory extends BaseFactory
         $sql = '
           SELECT `taskId`, `name`, `status`, `pid`, `configFile`, `class`, `options`, `schedule`, 
               `lastRunDt`, `lastRunStatus`, `lastRunMessage`, `lastRunDuration`, `lastRunExitCode`,
-              `isActive`, `runNow`
-        ';
-
-        if (DBVERSION >= 133)
-            $sql .= ', `lastRunStartDt` ';
-
-        $sql .= '
+              `isActive`, `runNow`, `lastRunStartDt`
             FROM `task` 
            WHERE 1 = 1 
         ';

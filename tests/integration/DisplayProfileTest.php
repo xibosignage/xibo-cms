@@ -41,7 +41,7 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
             }
             if ($flag) {
                 try {
-                    $DisplayProfile->delete();
+                    $displayProfile->delete();
                 } catch (\Exception $e) {
                     fwrite(STDERR, 'Unable to delete ' . $displayProfile->displayProfileId . '. E:' . $e->getMessage());
                 }

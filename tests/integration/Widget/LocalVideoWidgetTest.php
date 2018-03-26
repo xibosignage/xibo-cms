@@ -1,22 +1,35 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (LocalVideoWidgetTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboPlaylist;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboLocalVideo;
-use Xibo\OAuth2\Client\Entity\XiboWidget;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 class LocalVideoWidgetTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
+
 	protected $startLayouts;
     /**
      * setUp - called before every test automatically
@@ -59,12 +72,11 @@ class LocalVideoWidgetTest extends LocalWebTestCase
      */
     public function testAdd($uri, $duration, $useDuration, $scaleTypeId, $mute)
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Local Video add Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
-        $response = $this->client->post('/playlist/widget/localVideo/' . $region->playlists[0]['playlistId'], [
+        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId, [
             'uri' => $uri,
             'duration' => $duration,
             'useDuration' => $useDuration,
@@ -75,7 +87,7 @@ class LocalVideoWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboLocalVideo($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboLocalVideo($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($duration, $widgetOptions->duration);
         
         foreach ($widgetOptions->widgetOptions as $option) {
@@ -107,12 +119,12 @@ class LocalVideoWidgetTest extends LocalWebTestCase
 
     public function testEdit()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Local Video edit Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Add local video widget
-        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $region->playlists[0]['playlistId']);
+        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $playlistId);
         $duration = 80;
         $scaleTypeId = 'stretch';
         $mute = 1;
@@ -128,7 +140,7 @@ class LocalVideoWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboLocalVideo($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboLocalVideo($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($duration, $widgetOptions->duration);
         foreach ($widgetOptions->widgetOptions as $option) {
             if ($option['option'] == 'uri') {
@@ -145,12 +157,12 @@ class LocalVideoWidgetTest extends LocalWebTestCase
 
     public function testDelete()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Local Video delete Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Add local video widget
-        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $region->playlists[0]['playlistId']);
+        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $playlistId);
         # Delete it
         $this->client->delete('/playlist/widget/' . $localVideo->widgetId);
         $response = json_decode($this->client->response->body());

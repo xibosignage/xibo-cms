@@ -1,23 +1,36 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (TickerWidgetTest.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
 use Xibo\Entity\DataSet;
 use Xibo\Entity\Layout;
-use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboTicker;
 use Xibo\OAuth2\Client\Exception\XiboApiException;
 use Xibo\Tests\Helper\DisplayHelperTrait;
+use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -27,6 +40,8 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class TickerWidgetTest extends LocalWebTestCase
 {
+    use LayoutHelperTrait;
+
     use DisplayHelperTrait;
 
     /** @var Layout[] */
@@ -137,14 +152,12 @@ class TickerWidgetTest extends LocalWebTestCase
      */
     public function testAdd($isFeed, $uri, $duration, $useDuration)
     {
-        # Create layout
-        $name = Random::generateString();
-        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
         
         if ($isFeed) {
-            $this->client->post('/playlist/widget/ticker/' . $region->playlists[0]['playlistId'], [
+            $this->client->post('/playlist/widget/ticker/' . $playlistId, [
                 'uri' => $uri,
                 'duration' => $duration,
                 'useDuration' => $useDuration,
@@ -154,7 +167,7 @@ class TickerWidgetTest extends LocalWebTestCase
             # Create a new dataset
             $dataSet = (new XiboDataSet($this->getEntityProvider()))->create('phpunit dataset', 'phpunit description');
 
-            $this->client->post('/playlist/widget/ticker/' . $region->playlists[0]['playlistId'], [
+            $this->client->post('/playlist/widget/ticker/' . $playlistId, [
                 'dataSetId' => $dataSet->dataSetId,
                 'duration' => $duration,
                 'useDuration' => $useDuration,
@@ -167,7 +180,7 @@ class TickerWidgetTest extends LocalWebTestCase
 
         // Get the Ticker we created back out.
         // TODO: why are we getting this out by its Playlist ID?!
-        $widgetOptions = (new XiboTicker($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboTicker($this->getEntityProvider()))->getById($playlistId);
         $this->assertSame($duration, $widgetOptions->duration);
     }
 
@@ -309,11 +322,14 @@ class TickerWidgetTest extends LocalWebTestCase
      */
     public function testEditFeed($newWidgetOptions, $expectedDuration)
     {
-        # Create layout
-        $name = Random::generateString();
-        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
+        $this->getLogger()->debug('Create ticker for ' . $playlistId);
+
         # Create a ticker with wrapper
-        $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://xibo.org.uk/feed', null, 70, 1, $layout->regions[0]->playlists[0]['playlistId']);
+        $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://xibo.org.uk/feed', null, 70, 1, $playlistId);
 
         // Edit ticker widget
         $this->client->put('/playlist/widget/' . $ticker->widgetId, $newWidgetOptions, ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
@@ -325,7 +341,7 @@ class TickerWidgetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
 
         // Get the edited ticker back out again.
-        $editedTicker = (new XiboTicker($this->getEntityProvider()))->getById($layout->regions[0]->playlists[0]['playlistId']);
+        $editedTicker = (new XiboTicker($this->getEntityProvider()))->getById($playlistId);
 
         // check if changes were correctly saved
         $this->assertSame('Edited widget', $editedTicker->name);
@@ -409,14 +425,14 @@ class TickerWidgetTest extends LocalWebTestCase
      */
     public function testEditDataset()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Ticker edit Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create dataset
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create('phpunit dataset', 'phpunit description');
         # Create a ticker with wrapper
-        $ticker = (new XiboTicker($this->getEntityProvider()))->create(2, null, $dataSet->dataSetId, 30, 1, $region->playlists[0]['playlistId']);
+        $ticker = (new XiboTicker($this->getEntityProvider()))->create(2, null, $dataSet->dataSetId, 30, 1, $playlistId);
         # Edit ticker widget
         $noDataMessage = 'no records found';
         $response = $this->client->put('/playlist/widget/' . $ticker->widgetId, [
@@ -440,7 +456,7 @@ class TickerWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboTicker($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
+        $widgetOptions = (new XiboTicker($this->getEntityProvider()))->getById($playlistId);
         # check if changes were correctly saved
         $this->assertSame('Edited widget', $widgetOptions->name);
         $this->assertSame(90, $widgetOptions->duration);
@@ -479,12 +495,12 @@ class TickerWidgetTest extends LocalWebTestCase
     }
     public function testDelete()
     {
-        # Create layout 
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('Ticker delete Layout', 'phpunit description', '', 9);
-        # Add region to our layout
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        // Create layout
+        $layout = $this->createLayout();
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
         # Create a ticker with wrapper
-        $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://localhost/rss/feed.xml', null, 70, 1, $region->playlists[0]['playlistId']);
+        $ticker = (new XiboTicker($this->getEntityProvider()))->create(1, 'http://localhost/rss/feed.xml', null, 70, 1, $playlistId);
         # Delete it
         $this->client->delete('/playlist/widget/' . $ticker->widgetId);
         $response = json_decode($this->client->response->body());

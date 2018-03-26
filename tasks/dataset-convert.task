@@ -1,0 +1,5 @@
+{
+  "name": "DataSet Convert",
+  "class": "\\Xibo\\XTR\\DataSetConvertTask",
+  "options": {}
+}

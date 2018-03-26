@@ -718,7 +718,9 @@ class Media implements \JsonSerializable
                 isEdited = :isEdited,
                 userId = :userId,
                 released = :released,
-                apiRef = :apiRef
+                apiRef = :apiRef,
+                modifiedDt = :modifiedDt
+           WHERE mediaId = :mediaId
         ';
 
         $params = [
@@ -731,15 +733,9 @@ class Media implements \JsonSerializable
             'userId' => $this->ownerId,
             'released' => $this->released,
             'apiRef' => $this->apiRef,
-            'mediaId' => $this->mediaId
+            'mediaId' => $this->mediaId,
+            'modifiedDt' => date('Y-m-d H:i:s')
         ];
-
-        if (DBVERSION >= 134) {
-            $sql .= ', modifiedDt = :modifiedDt ';
-            $params['modifiedDt'] = date('Y-m-d H:i:s');
-        }
-
-        $sql .= ' WHERE mediaId = :mediaId ';
 
         $this->getStore()->update($sql, $params);
     }

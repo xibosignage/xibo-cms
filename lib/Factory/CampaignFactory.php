@@ -165,20 +165,14 @@ class CampaignFactory extends BaseFactory
                 FROM lkcampaignlayout
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
             ) AS numberLayouts,
-            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired
+            MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired,
+            (
+                SELECT GROUP_CONCAT(DISTINCT tag) 
+                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
+                WHERE lktagcampaign.campaignId = campaign.CampaignID 
+                GROUP BY lktagcampaign.campaignId
+            ) AS tags
         ';
-
-        // Didn't exist before 129
-        if (DBVERSION >= 129) {
-            $select .= ',
-                (
-                    SELECT GROUP_CONCAT(DISTINCT tag) 
-                    FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                    WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                    GROUP BY lktagcampaign.campaignId
-                ) AS tags
-            ';
-        }
 
         $body  = '
             FROM `campaign`

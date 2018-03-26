@@ -23,6 +23,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Environment;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -73,7 +74,7 @@ class Login extends Base
         $this->getLog()->debug($this->getApp()->flashData());
         // Template
         $this->getState()->template = 'login';
-        $this->getState()->setData(['version' => VERSION]);
+        $this->getState()->setData(['version' => Environment::$WEBSITE_VERSION_NAME]);
     }
 
     /**
@@ -207,6 +208,6 @@ class Login extends Base
             $response->template = 'about-page';
         }
 
-        $response->setData(['version' => VERSION, 'sourceUrl' => $this->getConfig()->getThemeConfig('cms_source_url')]);
+        $response->setData(['version' => Environment::$WEBSITE_VERSION_NAME, 'sourceUrl' => $this->getConfig()->getThemeConfig('cms_source_url')]);
     }
 }

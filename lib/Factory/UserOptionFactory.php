@@ -75,9 +75,6 @@ class UserOptionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if (DBVERSION < 122)
-            return [];
-
         $entries = array();
 
         $sql = 'SELECT * FROM `useroption` WHERE userId = :userId';

@@ -586,11 +586,14 @@ class Display implements \JsonSerializable
 
     /**
      * Delete
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
      */
     public function delete()
     {
         $this->load();
+
+        // Delete incidential references
+        $this->getStore()->update('DELETE FROM `requiredfile` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
 
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
@@ -632,10 +635,14 @@ class Display implements \JsonSerializable
             'macAddress' => $this->macAddress
         ]);
 
-        $displayGroup = $this->displayGroupFactory->createEmpty();
+
+        $displayGroup = $this->displayGroupFactory->create();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->tags = $this->tags;
         $displayGroup->setDisplaySpecificDisplay($this);
+
+        $this->getLog()->debug('Creating display specific group with userId ' . $displayGroup->userId);
+
         $displayGroup->save();
     }
 
@@ -696,7 +703,7 @@ class Display implements \JsonSerializable
             'cidr' => $this->cidr,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'displayProfileId' => $this->displayProfileId,
+            'displayProfileId' => ($this->displayProfileId == null) ? null : $this->displayProfileId,
             'lastAccessed' => $this->lastAccessed,
             'loggedIn' => $this->loggedIn,
             'clientAddress' => $this->clientAddress,
