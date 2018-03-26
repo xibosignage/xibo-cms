@@ -1,0 +1,42 @@
+{
+  "dbVersion": 134,
+  "appVersion": "1.8.3",
+  "steps": [
+    {
+      "step": "Add Xibo for webOS display profile",
+      "action": "INSERT INTO displayprofile (name, type, config, isdefault, userId) VALUES ('webOS', 'lg', '{}', 1, 1)"
+    },
+    {
+      "step": "Add Notification Module",
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\\\Widget\\\\NotificationView', 10);"
+    },
+    {
+      "step": "Add isDisplayNotification setting to Groups",
+      "action": "ALTER TABLE `group` ADD isDisplayNotification TINYINT DEFAULT 0 NULL;"
+    },
+    {
+      "step": "Remove MAINTENANCE_ALERTS_FOR_VIEW_USERS setting",
+      "action": "DELETE FROM `setting` WHERE setting = 'MAINTENANCE_ALERTS_FOR_VIEW_USERS';"
+    },
+    {
+      "step": "Create Tag Display Group Link Table",
+      "action": "create table lktagdisplaygroup (lkTagDisplayGroupId int auto_increment primary key,tagId int not null,displayGroupId int not null, constraint tagId unique (tagId, displayGroupId)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "CreatedDt/ModifiedDt for Library Media",
+      "action": "ALTER TABLE media ADD createdDt DATETIME NULL, ADD modifiedDt DATETIME NULL;"
+    },
+    {
+      "step": "Add IPK to generic file module",
+      "action": "UPDATE `module` SET validextensions = CONCAT(validextensions, ',ipk') WHERE module = 'genericfile' LIMIT 1;"
+    },
+    {
+      "step": "Update the Currencies Module description",
+      "action": "UPDATE `module` SET description = 'A module for showing Currency pairs and exchange rates' WHERE module = 'currencies';"
+    },
+    {
+      "step": "Update the Stocks Module description",
+      "action": "UPDATE `module` SET description = 'A module for showing Stock quotes' WHERE module = 'stocks';"
+    }
+  ]
+}

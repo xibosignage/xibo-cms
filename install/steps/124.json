@@ -1,0 +1,52 @@
+{
+  "dbVersion": 124,
+  "appVersion": "1.8.0-alpha3",
+  "steps": [
+    {
+      "step": "Add flag to user groups for receving system notifications",
+      "action": "ALTER TABLE  `group` ADD  `isSystemNotification` TINYINT NOT NULL DEFAULT  '0';"
+    },
+    {
+      "step": "Add notification group",
+      "action": "INSERT INTO `group` (`group`, `isUserSpecific`, `isSystemNotification`) VALUES ('System Notifications', 0, 1);"
+    },
+    {
+      "step": "Add Notification Tables",
+      "action": "CREATE TABLE IF NOT EXISTS `notification` (`notificationId` int(11) NOT NULL AUTO_INCREMENT,`subject` varchar(255) NOT NULL,`body` longtext NOT NULL,`createDt` int(11) NOT NULL,`releaseDt` int(11) NOT NULL,`isEmail` tinyint(4) NOT NULL,`isInterrupt` tinyint(4) NOT NULL,`isSystem` tinyint(4) NOT NULL,`userId` int(11) NOT NULL,PRIMARY KEY (`notificationId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add Notification Tables",
+      "action": "CREATE TABLE IF NOT EXISTS `lknotificationdg` (`lkNotificationDgId` int(11) NOT NULL AUTO_INCREMENT,`notificationId` int(11) NOT NULL,`displayGroupId` int(11) NOT NULL,PRIMARY KEY (`lkNotificationDgId`),UNIQUE KEY `notificationId` (`notificationId`,`displayGroupId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add Notification Tables",
+      "action": "CREATE TABLE IF NOT EXISTS `lknotificationgroup` (`lkNotificationGroupId` int(11) NOT NULL AUTO_INCREMENT,`notificationId` int(11) NOT NULL,`groupId` int(11) NOT NULL,PRIMARY KEY (`lkNotificationGroupId`),UNIQUE KEY `notificationId` (`notificationId`,`groupId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add Notification Tables",
+      "action": "CREATE TABLE IF NOT EXISTS `lknotificationuser` (`lkNotificationUserId` int(11) NOT NULL AUTO_INCREMENT,`notificationId` int(11) NOT NULL,`userId` int(11) NOT NULL,`read` tinyint(4) NOT NULL,`readDt` int(11) NOT NULL,`emailDt` int(11) NOT NULL,PRIMARY KEY (`lkNotificationUserId`),UNIQUE KEY `notificationId` (`notificationId`,`userId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add Notification Page",
+      "action": "INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES (NULL, 'notification', 'Notifications', '0'), (NULL, 'drawer', 'Notification Drawer', '0');"
+    },
+    {
+      "step": "Add Notification Permission Entity",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, '\\Xibo\\Entity\\Notification');"
+    },
+    {
+      "step": "Adjust super admins to have system notifications send to them",
+      "action": "UPDATE `group` SET isSystemNotification = 1 WHERE isUserSpecific = 1 AND `groupId` IN (SELECT `groupId` FROM `lkusergroup` INNER JOIN `user` ON `user`.userId = `lkusergroup`.userId WHERE `user`.userTypeId = 1);"
+    },
+    {
+      "step": "Increase the size of the list content field",
+      "action": "ALTER TABLE  `datasetcolumn` CHANGE  `ListContent`  `ListContent` VARCHAR( 1000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;",
+      "fixedIn": 92
+    },
+    {
+      "step": "Indexing on the Stat Table",
+      "action": "ALTER TABLE `stat` ADD INDEX Type (`displayID`, `end`, `Type`);",
+      "fixedIn": 92
+    }
+  ]
+}

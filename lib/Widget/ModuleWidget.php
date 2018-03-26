@@ -42,7 +42,6 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -100,9 +99,7 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var string|null Cache Key Prefix */
     private $cacheKeyPrefix = null;
 
-    //
-    // <editor-fold desc="Injected Factory Classes and Services Follow">
-    //
+    //<editor-fold desc="Injected Factory Classes and Services ">
 
     /**
      * @var StorageServiceInterface
@@ -188,10 +185,7 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
 
-    /** @var PlaylistFactory */
-    protected $playlistFactory;
-
-    // </editor-fold>
+    //</editor-fold>
 
     /**
      * ModuleWidget constructor.
@@ -213,9 +207,8 @@ abstract class ModuleWidget implements ModuleInterface
      * @param ScheduleFactory $scheduleFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
-     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory)
+    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
     {
         $this->app = $app;
         $this->store = $store;
@@ -236,7 +229,6 @@ abstract class ModuleWidget implements ModuleInterface
         $this->scheduleFactory = $scheduleFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
-        $this->playlistFactory = $playlistFactory;
 
         $this->init();
     }
@@ -436,14 +428,6 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * @return \Xibo\Entity\Playlist[]
-     */
-    final public function getAssignablePlaylists()
-    {
-        return $this->playlistFactory->query(null, ['regionSpecific' => 0, 'notPlaylistId' => $this->widget->playlistId]);
-    }
-
-    /**
      * Save the Module
      */
     protected final function saveSettings()
@@ -634,7 +618,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function saveWidget()
     {
-        $this->widget->calculateDuration($this)->save();
+        $this->widget->save();
     }
 
     /**
@@ -660,7 +644,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Delete Widget
      */
-    public function delete()
+    public final function delete()
     {
         $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
             . 'widget'

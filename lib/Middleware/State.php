@@ -30,7 +30,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
@@ -51,6 +50,9 @@ class State extends Middleware
 
         // Set state
         State::setState($app);
+
+        // Define versions, etc.
+        $app->configService->Version();
 
         // Attach a hook to log the route
         $this->app->hook('slim.before.dispatch', function() use ($app) {
@@ -89,7 +91,7 @@ class State extends Middleware
                 throw new InstanceSuspendedException();
 
             // Get to see if upgrade is pending
-            if (Environment::migrationPending())
+            if ($app->configService->isUpgradePending() && $app->getName() != 'web')
                 throw new UpgradePendingException();
 
             // Reset the ETAGs for GZIP
@@ -183,6 +185,9 @@ class State extends Middleware
 
         // Setup the translations for gettext
         Translate::InitLocale($app->configService);
+
+        // Config Version
+        $app->configService->Version();
 
         // Default timezone
         date_default_timezone_set($app->configService->GetSetting("defaultTimezone"));
@@ -774,9 +779,7 @@ class State extends Middleware
                 $container->transitionFactory,
                 $container->widgetFactory,
                 $container->moduleFactory,
-                $container->userGroupFactory,
-                $container->userFactory,
-                $container->tagFactory
+                $container->userGroupFactory
             );
         });
 
@@ -927,6 +930,7 @@ class State extends Middleware
                 $container->userGroupFactory,
                 $container->layoutFactory,
                 $container->displayFactory,
+                $container->upgradeFactory,
                 $container->mediaFactory,
                 $container->notificationFactory,
                 $container->userNotificationFactory
@@ -957,6 +961,20 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->transitionFactory
+            );
+        });
+
+        $app->container->singleton('\Xibo\Controller\Upgrade', function($container) {
+            return new \Xibo\Controller\Upgrade(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->upgradeFactory
             );
         });
 
@@ -1280,12 +1298,9 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
-                $container->user,
-                $container->userFactory,
                 $container->dateService,
                 $container->permissionFactory,
-                $container->widgetFactory,
-                $container->tagFactory
+                $container->widgetFactory
             );
         });
 
@@ -1376,6 +1391,17 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService
+            );
+        });
+
+        $container->singleton('upgradeFactory', function($container) {
+            return new \Xibo\Factory\UpgradeFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container,
+                $container->dateService,
+                $container->configService
             );
         });
 

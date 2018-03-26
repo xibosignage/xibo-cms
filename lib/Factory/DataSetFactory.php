@@ -180,22 +180,35 @@ class DataSetFactory extends BaseFactory
             dataset.description,
             dataset.userId,
             dataset.lastDataEdit,
-            dataset.`code`,
-            dataset.`isLookup`,
-            dataset.`isRemote`,
-            dataset.`method`,
-            dataset.`uri`,
-            dataset.`postData`,
-            dataset.`authentication`,
-            dataset.`username`,
-            dataset.`password`,
-            dataset.`refreshRate`,
-            dataset.`clearRate`,
-            dataset.`runsAfter`,
-            dataset.`dataRoot`,
-            dataset.`summarize`,
-            dataset.`summarizeField`,
-            dataset.`lastSync`,
+        ';
+
+        if (DBVERSION > 122) {
+            $select .= '
+                dataset.`code`,
+                dataset.`isLookup`,
+            ';
+        }
+
+        if (DBVERSION > 134) {
+            $select .= '
+                dataset.`isRemote`,
+                dataset.`method`,
+                dataset.`uri`,
+                dataset.`postData`,
+                dataset.`authentication`,
+                dataset.`username`,
+                dataset.`password`,
+                dataset.`refreshRate`,
+                dataset.`clearRate`,
+                dataset.`runsAfter`,
+                dataset.`dataRoot`,
+                dataset.`summarize`,
+                dataset.`summarizeField`,
+                dataset.`lastSync`,
+            ';
+        }
+
+        $select .= '
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)

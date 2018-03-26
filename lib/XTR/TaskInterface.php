@@ -7,10 +7,18 @@
 
 
 namespace Xibo\XTR;
-use Slim\Helper\Set;
+use Slim\Slim;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\UpgradeFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\UserNotificationFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -74,10 +82,23 @@ interface TaskInterface
     public function setUser($user);
 
     /**
-     * @param Set $container
+     * @param Slim $app
      * @return $this
      */
-    public function setFactories($container);
+    public function setApp($app);
+
+    /**
+     * @param UserFactory $userFactory
+     * @param UserGroupFactory $userGroupFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayFactory $displayFactory
+     * @param UpgradeFactory $upgradeFactory
+     * @param MediaFactory $mediaFactory
+     * @param NotificationFactory $notificationFactory
+     * @param UserNotificationFactory $userNotificationFactory
+     * @return $this
+     */
+    public function setFactories($userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $upgradeFactory, $mediaFactory, $notificationFactory, $userNotificationFactory);
 
     /**
      * @return $this

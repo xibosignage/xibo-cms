@@ -1,34 +1,21 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (FinanceWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\OAuth2\Client\Entity\XiboFinance;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\Tests\Helper\LayoutHelperTrait;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
+use Xibo\OAuth2\Client\Entity\XiboFinance;
+use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 
 class FinanceWidgetTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
 
 	protected $startLayouts;
     /**
@@ -71,12 +58,13 @@ class FinanceWidgetTest extends LocalWebTestCase
      */
     public function testAdd($isOverride, $templateId, $name, $duration, $useDuration, $item, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerItem, $javaScript, $template, $styleSheet, $yql, $resultIdentifier)
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+        # Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Finance layout add', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         
         if ($isOverride) {
-            $response = $this->client->post('/playlist/widget/finance/' . $playlistId, [
+            $response = $this->client->post('/playlist/widget/finance/' . $region->playlists[0]['playlistId'], [
                 'templateId' => $templateId,
                 'name' => $name,
                 'duration' => $duration,
@@ -97,7 +85,7 @@ class FinanceWidgetTest extends LocalWebTestCase
                 'resultIdentifier' => $resultIdentifier
             ]);
         } else {
-            $response = $this->client->post('/playlist/widget/finance/' . $playlistId, [
+            $response = $this->client->post('/playlist/widget/finance/' . $region->playlists[0]['playlistId'], [
                 'templateId' => $templateId,
                 'name' => $name,
                 'duration' => $duration,
@@ -115,7 +103,7 @@ class FinanceWidgetTest extends LocalWebTestCase
             ]);
         }
 
-        $widgetOptions = (new XiboFinance($this->getEntityProvider()))->getById($playlistId);
+        $widgetOptions = (new XiboFinance($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($name, $widgetOptions->name);
         $this->assertSame($duration, $widgetOptions->duration);
         foreach ($widgetOptions->widgetOptions as $option) {
@@ -152,12 +140,12 @@ class FinanceWidgetTest extends LocalWebTestCase
      */
     public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Finance edit Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a finance with wrapper
-        $finance = (new XiboFinance($this->getEntityProvider()))->create('currency-simple', 'Currency', 6, 1, 'EURUSD,GBPUSD', NULL, NULL, NULL, 'No messages', NULL, 12, 1, $playlistId);
+        $finance = (new XiboFinance($this->getEntityProvider()))->create('currency-simple', 'Currency', 6, 1, 'EURUSD,GBPUSD', NULL, NULL, NULL, 'No messages', NULL, 12, 1, $region->playlists[0]['playlistId']);
         $nameNew = 'Edited widget';
         $durationNew = 80;
         $templateNew = 'stock-simple';
@@ -182,7 +170,7 @@ class FinanceWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboFinance($this->getEntityProvider()))->getById($playlistId);
+        $widgetOptions = (new XiboFinance($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         # check if changes were correctly saved
         $this->assertSame($nameNew, $widgetOptions->name);
         $this->assertSame($durationNew, $widgetOptions->duration);
@@ -200,12 +188,12 @@ class FinanceWidgetTest extends LocalWebTestCase
      */
     public function testDelete()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Finance delete Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create a finance with wrapper
-        $finance = (new XiboFinance($this->getEntityProvider()))->create('currency-simple', 'Currency', 6, 1, 'EURUSD,GBPUSD', NULL, NULL, NULL, 'No messages', NULL, 12, 1, $playlistId);
+        $finance = (new XiboFinance($this->getEntityProvider()))->create('currency-simple', 'Currency', 6, 1, 'EURUSD,GBPUSD', NULL, NULL, NULL, 'No messages', NULL, 12, 1, $region->playlists[0]['playlistId']);
         # Delete it
         $this->client->delete('/playlist/widget/' . $finance->widgetId);
         $response = json_decode($this->client->response->body());

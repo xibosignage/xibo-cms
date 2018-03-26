@@ -11,8 +11,6 @@ use Jenssegers\Date\Date;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TaskRunException;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\UserFactory;
 
 /**
  * Class StatsArchiveTask
@@ -24,20 +22,6 @@ class AuditLogArchiveTask implements TaskInterface
 
     /** @var  User */
     private $archiveOwner;
-
-    /** @var UserFactory */
-    private $userFactory;
-
-    /** @var MediaFactory */
-    private $mediaFactory;
-
-    /** @inheritdoc */
-    public function setFactories($container)
-    {
-        $this->mediaFactory = $container->get('mediaFactory');
-        $this->userFactory = $container->get('userFactory');
-        return $this;
-    }
 
     /** @inheritdoc */
     public function run()

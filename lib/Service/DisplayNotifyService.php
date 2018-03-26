@@ -327,10 +327,10 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
                INNER JOIN `region`
                ON `region`.layoutId = `lkcampaignlayout`.layoutId
-               INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
+               INNER JOIN `lkregionplaylist`
+               ON `lkregionplaylist`.regionId = `region`.regionId
                INNER JOIN `widget`
-               ON `widget`.playlistId = `playlist`.playlistId
+               ON `widget`.playlistId = `lkregionplaylist`.playlistId
                INNER JOIN `widgetoption`
                ON `widgetoption`.widgetId = `widget`.widgetId
                     AND `widgetoption`.type = \'attrib\'
@@ -359,10 +359,10 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
                INNER JOIN `region`
                ON `region`.layoutId = `lkcampaignlayout`.layoutId
-               INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
+               INNER JOIN `lkregionplaylist`
+               ON `lkregionplaylist`.regionId = `region`.regionId
                INNER JOIN `widget`
-               ON `widget`.playlistId = `playlist`.playlistId
+               ON `widget`.playlistId = `lkregionplaylist`.playlistId
                INNER JOIN `widgetoption`
                ON `widgetoption`.widgetId = `widget`.widgetId
                     AND `widgetoption`.type = \'attrib\'
@@ -388,10 +388,10 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
                 INNER JOIN `region`
                 ON `region`.layoutId = `lkcampaignlayout`.layoutId
-                INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
+                INNER JOIN `lkregionplaylist`
+               ON `lkregionplaylist`.regionId = `region`.regionId
                 INNER JOIN `widget`
-                ON `widget`.playlistId = `playlist`.playlistId
+                ON `widget`.playlistId = `lkregionplaylist`.playlistId
                 INNER JOIN `widgetoption`
                 ON `widgetoption`.widgetId = `widget`.widgetId
                     AND `widgetoption`.type = \'attrib\'
@@ -463,9 +463,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
                INNER JOIN `region`
                ON `lkcampaignlayout`.layoutId = region.layoutId
-               INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
-             WHERE `playlist`.playlistId = :playlistId
+               INNER JOIN `lkregionplaylist`
+               ON `lkregionplaylist`.regionId = `region`.regionId
+             WHERE `lkregionplaylist`.playlistId = :playlistId
               AND (
                   (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
@@ -489,9 +489,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
                INNER JOIN `region`
                ON `lkcampaignlayout`.layoutId = region.layoutId
-               INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
-             WHERE `playlist`.playlistId = :playlistId
+               INNER JOIN `lkregionplaylist`
+               ON `lkregionplaylist`.regionId = `region`.regionId
+             WHERE `lkregionplaylist`.playlistId = :playlistId
             UNION
             SELECT `lkdisplaydg`.displayId,
                 0 AS eventId, 
@@ -510,9 +510,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
                 INNER JOIN `region`
                 ON `lkcampaignlayout`.layoutId = region.layoutId
-                INNER JOIN `playlist`
-                ON `playlist`.regionId = `region`.regionId
-             WHERE `playlist`.playlistId = :playlistId
+                INNER JOIN `lkregionplaylist`
+                ON `lkregionplaylist`.regionId = `region`.regionId
+             WHERE `lkregionplaylist`.playlistId = :playlistId
         ';
 
         $currentDate = $this->dateService->parse();

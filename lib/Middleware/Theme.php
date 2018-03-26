@@ -91,7 +91,7 @@ class Theme extends Middleware
                 'validImageExt' => implode('|', $app->moduleFactory->getValidExtensions(['type' => 'image']))
             ],
             'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->setApp($app, false)->fontCKEditorConfig(),
-            'version' => Environment::$WEBSITE_VERSION_NAME
+            'version' => VERSION
         ));
     }
 }

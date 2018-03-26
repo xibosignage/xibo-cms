@@ -1,0 +1,79 @@
+{
+  "dbVersion": 122,
+  "appVersion": "1.8.0-alpha3",
+  "steps" : [
+    {
+      "step": "Convert MyISAM tables to InnoDB",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\MyIsamToInnoDbStep"
+    },
+    {
+      "step": "Allow system actions to be recorded in the Audit Trail",
+      "action": "ALTER TABLE  `auditlog` CHANGE  `userId`  `userId` INT( 11 ) NULL;"
+    },
+    {
+      "step": "Flags for DataSets to be used as Lookup Tables for Module Settings",
+      "action": "ALTER TABLE  `dataset` ADD  `code` VARCHAR( 50 ) NULL , ADD  `isLookup` TINYINT( 4 ) NOT NULL DEFAULT  '0';"
+    },
+    {
+      "step": "Add Module Default Duration Column",
+      "action": "ALTER TABLE  `module` ADD  `defaultDuration` INT NOT NULL;"
+    },
+    {
+      "step": "Set Module Default Duration",
+      "action": "UPDATE `module` SET defaultDuration = 10;"
+    },
+    {
+      "step": "Set Image Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'jpg_length') WHERE `module` = 'image';"
+    },
+    {
+      "step": "Set Flash Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'swf_length') WHERE `module` = 'flash';"
+    },
+    {
+      "step": "Set PowerPoint Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = (SELECT MAX(value) FROM `setting` WHERE setting = 'ppt_length') WHERE `module` = 'powerpoint';"
+    },
+    {
+      "step": "Set Video Module Duration",
+      "action": "UPDATE `module` SET defaultDuration = 0 WHERE `module` = 'video';"
+    },
+    {
+      "step": "Delete old settings durations",
+      "action": "DELETE FROM `setting` WHERE setting IN ('ppt_length', 'jpg_length', 'swf_length');"
+    },
+    {
+      "step": "Set Calculated Duration on Widget",
+      "action": "UPDATE `widget` SET `calculatedDuration` = `duration`;"
+    },
+    {
+      "step": "Create user preferences table",
+      "action": "CREATE TABLE IF NOT EXISTS `useroption` (`userId` int(11) NOT NULL,`option` varchar(50) NOT NULL,`value` text NOT NULL,UNIQUE KEY `userId` (`userId`,`option`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Dynamic Display Groups Flag",
+      "action": "ALTER TABLE  `displaygroup` ADD  `isDynamic` TINYINT( 4 ) NOT NULL DEFAULT  '0', ADD  `dynamicCriteria` VARCHAR( 2000 ) NULL;"
+    },
+    {
+      "step": "Remove unnecessary columns from the Sessions Table",
+      "action": "ALTER TABLE `session`DROP `LastPage`,DROP `SecurityToken`;"
+    },
+    {
+      "step": "Table Structure for Closure Table",
+      "action": "CREATE TABLE IF NOT EXISTS `lkdgdg` (`parentId` int(11) NOT NULL,`childId` int(11) NOT NULL,`depth` int(11) NOT NULL,UNIQUE KEY `parentId` (`parentId`,`childId`,`depth`),UNIQUE KEY `childId` (`childId`,`parentId`,`depth`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Add Closure Links for existing Display Groups",
+      "action": "INSERT INTO `lkdgdg` (parentId, childId, depth) SELECT displayGroupId, displayGroupId, 0 FROM `displaygroup` WHERE `displayGroupID` NOT IN (SELECT `parentId` FROM `lkdgdg` WHERE depth = 0);"
+    },
+    {
+      "step": "Add Display Group Owner Column",
+      "action": "ALTER TABLE  `displaygroup` ADD  `userId` INT NOT NULL;"
+    },
+    {
+      "step": "Default owner to the first super admin",
+      "action": "UPDATE `displaygroup` SET userId = (SELECT userId FROM `user` WHERE usertypeid = 1 LIMIT 1) WHERE userId = 0;"
+    }
+  ]
+}

@@ -1,35 +1,21 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (HlsWidgetTest.php)
  */
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\OAuth2\Client\Entity\XiboHls;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\Tests\Helper\LayoutHelperTrait;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
+use Xibo\OAuth2\Client\Entity\XiboHls;
+use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 
 class HlsWidgetTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
-
 	protected $startLayouts;
     /**
      * setUp - called before every test automatically
@@ -72,11 +58,12 @@ class HlsWidgetTest extends LocalWebTestCase
      */
 	public function testAdd($name, $useDuration, $duration, $uri, $mute, $transparency)
 	{
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+		# Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Hls add Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
 
-		$response = $this->client->post('/playlist/widget/hls/' . $playlistId, [
+		$response = $this->client->post('/playlist/widget/hls/' . $region->playlists[0]['playlistId'], [
         	'name' => $name,
             'useDuration' => $useDuration,
         	'duration' => $duration,
@@ -88,7 +75,7 @@ class HlsWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboHls($this->getEntityProvider()))->getById($playlistId);
+        $widgetOptions = (new XiboHls($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($name, $widgetOptions->name);
         $this->assertSame($duration, $widgetOptions->duration);
         
@@ -120,12 +107,12 @@ class HlsWidgetTest extends LocalWebTestCase
      */
     public function testAddFailure($name, $useDuration, $duration, $uri, $mute, $transparency)
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Traffic failure add Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
         # Create Google traffic widgets with arguments from provideFailureCases
-        $response = $this->client->post('/playlist/widget/hls/' . $playlistId, [
+        $response = $this->client->post('/playlist/widget/hls/' . $region->playlists[0]['playlistId'], [
             'name' => $name,
             'useDuration' => $useDuration,
             'duration' => $duration,
@@ -157,12 +144,12 @@ class HlsWidgetTest extends LocalWebTestCase
     */
     public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Create Google traffic widget
-        $hls = (new XiboHls($this->getEntityProvider()))->create('HLS stream', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_master.m3u8', 0, 0, $playlistId);
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Traffic failure add Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        # Create Google traffic widget 
+        $hls = (new XiboHls($this->getEntityProvider()))->create('HLS stream', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_master.m3u8', 0, 0, $region->playlists[0]['playlistId']);     
         $nameNew = 'Edited Widget';
         $durationNew = 100;
         $uriNew = 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8';
@@ -178,7 +165,7 @@ class HlsWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboHls($this->getEntityProvider()))->getById($playlistId);
+        $widgetOptions = (new XiboHls($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($nameNew, $widgetOptions->name);
         $this->assertSame($durationNew, $widgetOptions->duration);
         
@@ -195,12 +182,12 @@ class HlsWidgetTest extends LocalWebTestCase
     */
     public function testDelete()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Create Google traffic widget
-        $hls = (new XiboHls($this->getEntityProvider()))->create('HLS stream', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_master.m3u8', 0, 0, $playlistId);
+        # Create layout 
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Clock delete Layout', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+        # Create Google traffic widget 
+        $hls = (new XiboHls($this->getEntityProvider()))->create('HLS stream', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_master.m3u8', 0, 0, $region->playlists[0]['playlistId']);   
         # Delete it
         $this->client->delete('/playlist/widget/' . $hls->widgetId);
         $response = json_decode($this->client->response->body());

@@ -1,33 +1,21 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (WebpageWidgetTest.php)
  */
+
 namespace Xibo\Tests\Integration\Widget;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboWebpage;
-use Xibo\Tests\Helper\LayoutHelperTrait;
+use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\Tests\LocalWebTestCase;
 
 class WebpageWidgetTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
 
 	protected $startLayouts;
     /**
@@ -71,11 +59,13 @@ class WebpageWidgetTest extends LocalWebTestCase
      */
 	public function testAdd($name, $duration, $useDuration, $transparency, $uri, $scaling, $offsetLeft, $offsetTop, $pageWidth, $pageHeight, $modeId)
 	{
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+		//parent::setupEnv();
+		# Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Webpage add', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
 
-		$response = $this->client->post('/playlist/widget/webpage/' . $playlistId, [
+		$response = $this->client->post('/playlist/widget/webpage/' . $region->playlists[0]['playlistId'], [
         	'name' => $name,
         	'duration' => $duration,
             'useDuration' => $useDuration,
@@ -92,7 +82,7 @@ class WebpageWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $webpageOptions = (new XiboWebpage($this->getEntityProvider()))->getById($playlistId);
+        $webpageOptions = (new XiboWebpage($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($name, $webpageOptions->name);
         $this->assertSame($duration, $webpageOptions->duration);
         foreach ($webpageOptions->widgetOptions as $option) {
@@ -124,12 +114,12 @@ class WebpageWidgetTest extends LocalWebTestCase
 
     public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Create a webpage with wrapper
-    	$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $playlistId);
+    	# Create layout
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('Webpage edit', 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+    	# Create a webpage with wrapper
+    	$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
     	$nameNew = 'Edited Name';
     	$durationNew = 80;
     	$modeIdNew = 3;
@@ -151,7 +141,7 @@ class WebpageWidgetTest extends LocalWebTestCase
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $webpageOptions = (new XiboWebpage($this->getEntityProvider()))->getById($playlistId);
+        $webpageOptions = (new XiboWebpage($this->getEntityProvider()))->getById($region->playlists[0]['playlistId']);
         $this->assertSame($nameNew, $webpageOptions->name);
         $this->assertSame($durationNew, $webpageOptions->duration);
         foreach ($webpageOptions->widgetOptions as $option) {
@@ -166,12 +156,13 @@ class WebpageWidgetTest extends LocalWebTestCase
 
     public function testDelete()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Create a clock with wrapper
-		$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $playlistId);
+    	# Create layout
+        $name = Random::generateString(8, 'phpunit');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
+        # Add region to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 1000,1000,200,200);
+    	# Create a clock with wrapper
+		$webpage = (new XiboWebpage($this->getEntityProvider()))->create('Open natively webpage widget', 60, 1, NULL, 'http://xibo.org.uk/', NULL, NULL, NULL, NULL, NULL, 1, $region->playlists[0]['playlistId']);
 		# Delete it
 		$this->client->delete('/playlist/widget/' . $webpage->widgetId);
         # This should return 204 for success

@@ -1,22 +1,8 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (StatisticsTest.php)
  */
 
 namespace Xibo\Tests\Integration;
@@ -29,7 +15,6 @@ use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\OAuth2\Client\Entity\XiboText;
-use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -38,7 +23,7 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class StatisticsTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
+
 
     protected $startMedias;
     protected $startLayouts;
@@ -159,28 +144,22 @@ class StatisticsTest extends LocalWebTestCase
         if ($display === null) {
             $this->fail('Display was not added correctly');
         }
-
-        // Create layout with random name
-        $layout = $this->createLayout();
-
-        // Add another region
-        $region = $layout->regions[0];
+        # Create layout with random name
+        $name = Random::generateString(8, 'phpunit');
+        $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', 9);
+        # Add two regions to our layout
+        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
         $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 100,100,475,425);
-
         # Upload three media files
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 2', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
-
         # Create and assign new text widget
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region2->regionPlaylist->playlistId);
-
+        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region2->playlists[0]['playlistId']);
         # Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], 10, $region->regionPlaylist['playlistId']);
-
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], 10, $region->playlists[0]['playlistId']);
         # Get Widget Id
         $widget = $playlist->widgets[0];
         $widget2 = $playlist->widgets[1];
-
         # Set start and date time
         /*
         $fromDt =  '2017-02-12 00:00:00';

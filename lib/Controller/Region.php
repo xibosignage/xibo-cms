@@ -101,7 +101,6 @@ class Region extends Base
     /**
      * Timeline Form
      * @param int $regionId
-     * @throws XiboException
      */
     public function timelineForm($regionId)
     {
@@ -115,20 +114,22 @@ class Region extends Base
         $this->session->set('timeLineView', $this->getSanitizer()->getString('view', $this->session->get('timeLineView')));
 
         // Load the region
-        $region->load();
+        $region->load(['playlistIncludeRegionAssignments' => false]);
 
         // Loop through everything setting permissions
-        $playlist = $region->getPlaylist();
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+        foreach ($region->playlists as $playlist) {
+            /* @var \Xibo\Entity\Playlist $playlist */
+
+            foreach ($playlist->widgets as $widget) {
+                /* @var Widget $widget */
+                $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+            }
         }
 
         // Pass to view
         $this->getState()->template = ($this->session->get('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
         $this->getState()->setData([
             'region' => $region,
-            'playlist' => $playlist,
             'modules' => $this->moduleFactory->getAssignableModules(),
             'transitions' => $this->transitionData(),
             'help' => $this->getHelp()->link('Layout', 'RegionOptions')
@@ -138,7 +139,6 @@ class Region extends Base
     /**
      * Edit Form
      * @param int $regionId
-     * @throws XiboException
      */
     public function editForm($regionId)
     {
@@ -159,7 +159,6 @@ class Region extends Base
     /**
      * Delete Form
      * @param int $regionId
-     * @throws XiboException
      */
     public function deleteForm($regionId)
     {
@@ -232,8 +231,6 @@ class Region extends Base
      *      )
      *  )
      * )
-     *
-     * @throws XiboException
      */
     public function add($layoutId)
     {
@@ -250,13 +247,8 @@ class Region extends Base
         ]);
 
         // Add a new region
-        $region = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
-            $this->getSanitizer()->getInt('width', 250),
-            $this->getSanitizer()->getInt('height', 250),
-            $this->getSanitizer()->getInt('top', 50),
-            $this->getSanitizer()->getInt('left', 50)
-        );
+        $region = $this->regionFactory->create($this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $this->getSanitizer()->getInt('width', 250), $this->getSanitizer()->getInt('height', 250), $this->getSanitizer()->getInt('top', 50), $this->getSanitizer()->getInt('left', 50));
 
         $layout->regions[] = $region;
         $layout->save([
@@ -266,13 +258,19 @@ class Region extends Base
         // Permissions
         if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
 
-            $this->getLog()->debug('Applying permissions from parent, there are ' . count($layout->permissions));
+            $this->getLog()->debug('Applying permissions from parent, there are %d', count($layout->permissions));
 
             // Apply permissions from the Parent
             foreach ($layout->permissions as $permission) {
                 /* @var Permission $permission */
                 $permission = $this->permissionFactory->create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
                 $permission->save();
+
+                foreach ($region->playlists as $playlist) {
+                    /* @var \Xibo\Entity\Playlist $playlist */
+                    $permission = $this->permissionFactory->create($permission->groupId, get_class($playlist), $playlist->getId(), $permission->view, $permission->edit, $permission->delete);
+                    $permission->save();
+                }
             }
         }
         else {
@@ -282,6 +280,14 @@ class Region extends Base
             foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
+            }
+
+            foreach ($region->playlists as $playlist) {
+                /* @var \Xibo\Entity\Playlist $playlist */
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                    /* @var Permission $permission */
+                    $permission->save();
+                }
             }
         }
 
@@ -449,8 +455,6 @@ class Region extends Base
      *      description="successful operation"
      *  )
      * )
-     *
-     * @throws XiboException
      */
     public function delete($regionId)
     {
@@ -501,8 +505,6 @@ class Region extends Base
      *      @SWG\Schema(ref="#/definitions/Layout")
      *  )
      * )
-     *
-     * @throws XiboException
      */
     function positionAll($layoutId)
     {
@@ -586,12 +588,14 @@ class Region extends Base
             $region->load();
 
             // Get the first playlist we can find
-            $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
+            if (count($region->playlists) <= 0)
+                throw new NotFoundException(__('No playlists to preview'));
 
-            // Expand this Playlist out to its individual Widgets
-            $widgets = $playlist->expandWidgets();
+            // TODO: implement playlists
+            $playlist = $region->playlists[0];
+            /* @var \Xibo\Entity\Playlist $playlist */
 
-            $countWidgets = count($widgets);
+            $countWidgets = count($playlist->widgets);
 
             // We want to load the widget in the given sequence
             if ($countWidgets <= 0) {
@@ -599,10 +603,10 @@ class Region extends Base
                 throw new NotFoundException(__('No widgets to preview'));
             }
 
-            $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
+            $this->getLog()->debug('There are %d widgets.', count($playlist->widgets));
 
             // Select the widget at the required sequence
-            $widget = $playlist->getWidgetAt($seq, $widgets);
+            $widget = $playlist->getWidgetAt($seq);
             /* @var \Xibo\Entity\Widget $widget */
             $widget->load();
 
@@ -625,6 +629,77 @@ class Region extends Base
             $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Empty Region');
         }
+    }
+
+    /**
+     * Order a region and its playlists
+     * *** COMMENTED OUT - NOT SURE HOW TO DOCUMENT ***
+     * @param int $regionId
+     *
+     * SWG\Post(
+     *  path="/region/order/{regionId}",
+     *  operationId="regionOrder",
+     *  tags={"region"},
+     *  summary="Order Playlists",
+     *  description="Set the order of Playlists in a Region",
+     *  SWG\Parameter(
+     *      name="regionId",
+     *      in="path",
+     *      description="The Region ID to Order",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  SWG\Parameter(
+     *      name="playlists",
+     *      in="formData",
+     *      description="Array of playlistIds and positions",
+     *      type="array",
+     *      required=true,
+     *      SWG\Items(
+     *          ref="#/definitions/RegionPlaylistList"
+     *      )
+     *   ),
+     *  SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      SWG\Schema(ref="#/definitions/Region")
+     *  )
+     * )
+     */
+    function order($regionId)
+    {
+        $region = $this->regionFactory->getById($regionId);
+
+        if (!$this->getUser()->checkEditable($region))
+            throw new AccessDeniedException();
+
+        // Load the playlists
+        $region->load(['loadWidgets' => false]);
+
+        // Get our list of widget orders
+        $playlists = $this->getSanitizer()->getParam('playlists', null);
+
+        // Go through each one and move it
+        foreach ($playlists as $playlistId => $position) {
+
+            // Find this item in the existing list and add it to our new order
+            foreach ($region->playlists as $playlist) {
+                /* @var \Xibo\Entity\Widget $playlist */
+                if ($playlist->getId() == $playlistId) {
+                    $this->getLog()->debug('Setting Display Order ' . $position . ' on playlistId ' . $playlistId);
+                    $playlist->displayOrder = $position;
+                    break;
+                }
+            }
+        }
+
+        $region->save();
+
+        // Success
+        $this->getState()->hydrate([
+            'message' => __('Order Changed'),
+            'data' => $region
+        ]);
     }
 
     /**

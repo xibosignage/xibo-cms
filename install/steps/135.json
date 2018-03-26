@@ -1,0 +1,22 @@
+{
+  "dbVersion": 135,
+  "appVersion": "1.8.4",
+  "steps": [
+    {
+      "step": "Add new columns for Remote DataSets",
+      "action": "ALTER TABLE `dataset` ADD COLUMN `isRemote` TINYINT(4) NOT NULL DEFAULT 0;ALTER TABLE `dataset` ADD COLUMN `method` ENUM('GET','POST') DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `uri` varchar(250) DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `postData` TEXT DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `authentication` ENUM('none','plain','basic','digest') DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `username` varchar(100) DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `password` varchar(250) DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `refreshRate` int(11) DEFAULT 86400;ALTER TABLE `dataset` ADD COLUMN `clearRate` int(11) DEFAULT 0;ALTER TABLE `dataset` ADD COLUMN `runsAfter` int(11) DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `dataRoot` varchar(250) DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `lastSync` int(11) NOT NULL DEFAULT 0;ALTER TABLE `dataset` ADD COLUMN `summarize` varchar(10) DEFAULT NULL;ALTER TABLE `dataset` ADD COLUMN `summarizeField` varchar(250) DEFAULT NULL;"
+    },
+    {
+      "step": "Add a column type for remote DataSets",
+      "action": "INSERT INTO `datasetcolumntype` SET dataSetColumnTypeId=3, dataSetColumnType='Remote';"
+    },
+    {
+      "step": "Add a new column to the DataSet column table for remote DataSets",
+      "action": "ALTER TABLE `datasetcolumn` ADD `RemoteField` VARCHAR(250) DEFAULT NULL AFTER `formula`;"
+    },
+    {
+      "step": "Create a Task for fetching all remote DataSets automatically",
+      "action": "INSERT INTO `task` SET `name`='Fetch Remote DataSets', `class`='\\\\Xibo\\\\XTR\\\\RemoteDataSetFetchTask', `status`=2, `isActive`=1, `configFile`='/tasks/remote-dataset.task', `options`='{}', `schedule`='30 * * * * *';"
+    }
+  ]
+}

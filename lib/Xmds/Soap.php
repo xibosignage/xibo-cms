@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
+ * Copyright (C) 2015 Spring Signage Ltd
  * (Soap.php)
  */
 
@@ -16,6 +16,8 @@ use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Entity\Playlist;
+use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
@@ -39,7 +41,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -455,10 +456,10 @@ class Soap
                    ON `lkwidgetmedia`.mediaID = media.MediaID
                    INNER JOIN `widget`
                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                   INNER JOIN `playlist`
-                   ON `playlist`.playlistId = `widget`.playlistId
+                   INNER JOIN `lkregionplaylist`
+                   ON `lkregionplaylist`.playlistId = `widget`.playlistId
                    INNER JOIN `region`
-                   ON `region`.regionId = `playlist`.regionId
+                   ON `region`.regionId = `lkregionplaylist`.regionId
                    INNER JOIN layout
                    ON layout.LayoutID = region.layoutId
                  WHERE layout.layoutId IN (%s)
@@ -556,7 +557,7 @@ class Soap
             try {
                 $layout = $this->layoutFactory->loadById($layoutId);
                 $layout->loadPlaylists();
-            } catch (XiboException $e) {
+            } catch (NotFoundException $e) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
                 continue;
             }
@@ -611,37 +612,41 @@ class Soap
 
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
-                foreach ($region->getPlaylist()->expandWidgets() as $widget) {
-                    /* @var Widget $widget */
-                    if ($widget->type == 'ticker' ||
-                        $widget->type == 'text' ||
-                        $widget->type == 'datasetview' ||
-                        $widget->type == 'webpage' ||
-                        $widget->type == 'embedded' ||
-                        $modules[$widget->type]->renderAs == 'html'
-                    ) {
-                        // Add nonce
-                        $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
-                        $newRfIds[] = $getResourceRf->rfId;
+                /* @var Region $region */
+                foreach ($region->playlists as $playlist) {
+                    /* @var Playlist $playlist */
+                    foreach ($playlist->widgets as $widget) {
+                        /* @var Widget $widget */
+                        if ($widget->type == 'ticker' ||
+                            $widget->type == 'text' ||
+                            $widget->type == 'datasetview' ||
+                            $widget->type == 'webpage' ||
+                            $widget->type == 'embedded' ||
+                            $modules[$widget->type]->renderAs == 'html'
+                        ) {
+                            // Add nonce
+                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                            $newRfIds[] = $getResourceRf->rfId;
 
-                        // Make me a module from the widget, so I can ask it whether it has an updated last accessed
-                        // date or not.
-                        $module = $this->moduleFactory->createWithWidget($widget);
+                            // Make me a module from the widget, so I can ask it whether it has an updated last accessed
+                            // date or not.
+                            $module = $this->moduleFactory->createWithWidget($widget);
 
-                        // Get the widget modified date
-                        // we will use the later of this vs the layout modified date as the updated attribute on
-                        // required files
-                        $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
+                            // Get the widget modified date
+                            // we will use the later of this vs the layout modified date as the updated attribute on
+                            // required files
+                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
 
-                        // Append this item to required files
-                        $file = $requiredFilesXml->createElement("file");
-                        $file->setAttribute('type', 'resource');
-                        $file->setAttribute('id', $widget->widgetId);
-                        $file->setAttribute('layoutid', $layoutId);
-                        $file->setAttribute('regionid', $region->regionId);
-                        $file->setAttribute('mediaid', $widget->widgetId);
-                        $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
-                        $fileElements->appendChild($file);
+                            // Append this item to required files
+                            $file = $requiredFilesXml->createElement("file");
+                            $file->setAttribute('type', 'resource');
+                            $file->setAttribute('id', $widget->widgetId);
+                            $file->setAttribute('layoutid', $layoutId);
+                            $file->setAttribute('regionid', $region->regionId);
+                            $file->setAttribute('mediaid', $widget->widgetId);
+                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
+                            $fileElements->appendChild($file);
+                        }
                     }
                 }
             }
@@ -829,10 +834,10 @@ class Soap
                     ON `lkwidgetmedia`.MediaID = `media`.MediaID
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
+                    INNER JOIN `lkregionplaylist`
+                    ON `lkregionplaylist`.playlistId = `widget`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
+                    ON `region`.regionId = `lkregionplaylist`.regionId
                  WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
                   AND media.type <> \'module\'
             ';
@@ -1633,7 +1638,7 @@ class Soap
                     $PHONE_HOME_CLIENTS = $sth->fetchColumn();
 
                     // Retrieve version number
-                    $PHONE_HOME_VERSION = Environment::$WEBSITE_VERSION_NAME;
+                    $PHONE_HOME_VERSION = $this->getConfig()->Version('app_ver');
 
                     $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 

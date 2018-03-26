@@ -706,7 +706,7 @@ function XiboFormRender(sourceObj, data) {
     bootbox.hideAll();
 
     // Store the last form?
-    if (formUrl.indexOf("region/form/timeline") > -1 || formUrl.indexOf("playlist/form/timeline") > -1) {
+    if (formUrl.indexOf("region/form/timeline") > -1) {
         timelineForm = {
             url: formUrl,
             data: data

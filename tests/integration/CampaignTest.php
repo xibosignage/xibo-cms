@@ -1,29 +1,14 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (CampaignTest.php)
  */
 
 namespace Xibo\Tests\Integration;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboResolution;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -92,32 +77,6 @@ class CampaignTest extends LocalWebTestCase
         }
         
         parent::tearDown();
-    }
-
-    /**
-     * @param $type
-     * @return int
-     */
-    private function getResolutionId($type)
-    {
-        if ($type === 'landscape') {
-            $width = 1920;
-            $height = 1080;
-        } else if ($type === 'portrait') {
-            $width = 1080;
-            $height = 1920;
-        } else {
-            return -10;
-        }
-
-        //$this->getLogger()->debug('Querying for ' . $width . ', ' . $height);
-
-        $resolutions = (new XiboResolution($this->getEntityProvider()))->get(['width' => $width, 'height' => $height]);
-
-        if (count($resolutions) <= 0)
-            return -10;
-
-        return $resolutions[0]->resolutionId;
     }
 
     /**
@@ -216,18 +175,10 @@ class CampaignTest extends LocalWebTestCase
     {
         // Make a campaign with a known name
         $name = Random::generateString(8, 'phpunit');
-
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
-
         // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->create(
-            Random::generateString(8, 'phpunit'),
-            'phpunit description',
-            '',
-            $this->getResolutionId('landscape')
-        );
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Call assign on the default layout
         $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, [
@@ -258,15 +209,8 @@ class CampaignTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
-
         // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->create(
-            Random::generateString(8, 'phpunit'),
-            'phpunit description',
-            '',
-            $this->getResolutionId('landscape')
-        );
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Assign layout to campaign
         $campaign->assignLayout($layout->layoutId);
@@ -289,13 +233,7 @@ class CampaignTest extends LocalWebTestCase
     public function testAssignLayoutFailure()
     {
         // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->create(
-            Random::generateString(8, 'phpunit'),
-            'phpunit description',
-            '',
-            $this->getResolutionId('landscape')
-        );
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Call assign on the layout specific campaignId
         $this->client->post('/campaign/layout/assign/' . $layout->campaignId, [

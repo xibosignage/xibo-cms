@@ -465,6 +465,6 @@ class Base
      */
     public function renderTemplateToString($template, $data)
     {
-        return $this->getApp()->view()->fetch($template . '.twig', $data);
+        return $this->getApp()->view()->render($template . '.twig', $data);
     }
 }

@@ -23,17 +23,13 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\TagFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Widget\SubPlaylist;
 
 /**
  * Class Playlist
@@ -64,63 +60,16 @@ class Playlist implements \JsonSerializable
     public $name;
 
     /**
-     * @SWG\Property(description="The RegionId if this Playlist is specific to a Region")
-     * @var int
-     */
-    public $regionId;
-
-    /**
-     * @SWG\Property(description="Flag indicating if this is a dynamic Playlist")
-     * @var int
-     */
-    public $isDynamic;
-
-    /**
-     * @SWG\Property(description="Filter Name for a Dynamic Playlist")
-     * @var string
-     */
-    public $filterMediaName;
-
-    /**
-     * @SWG\Property(description="Filter Tags for a Dynamic Playlist")
-     * @var string
-     */
-    public $filterMediaTags;
-
-    /**
-     * @var string
-     * @SWG\Property(
-     *  description="The datetime the Layout was created"
-     * )
-     */
-    public $createdDt;
-
-    /**
-     * @var string
-     * @SWG\Property(
-     *  description="The datetime the Layout was last modified"
-     * )
-     */
-    public $modifiedDt;
-
-    /**
-     * @var int
-     * @SWG\Property(
-     *  description="A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2."
-     * )
-     */
-    public $duration = 0;
-
-    /**
-     * @var int Flag indicating whether this Playlists requires a duration update
-     */
-    public $requiresDurationUpdate;
-
-    /**
      * @SWG\Property(description="An array of Tags")
      * @var Tag[]
      */
     public $tags = [];
+
+    /**
+     * @SWG\Property(description="An array of Regions this Playlist is assigned to")
+     * @var Region[]
+     */
+    public $regions = [];
 
     /**
      * @SWG\Property(description="An array of Widgets assigned to this Playlist")
@@ -134,12 +83,12 @@ class Playlist implements \JsonSerializable
      */
     public $permissions = [];
 
-    // Read only properties
-    public $owner;
-    public $groupsWithPermissions;
-    private $unassignTags = [];
+    /**
+     * @SWG\Property(description="The display order of the Playlist when assigned to a Region")
+     * @var int
+     */
+    public $displayOrder;
 
-    //<editor-fold desc="Factories and Dependencies">
     /**
      * @var DateServiceInterface
      */
@@ -156,18 +105,9 @@ class Playlist implements \JsonSerializable
     private $widgetFactory;
 
     /**
-     * @var TagFactory
+     * @var RegionFactory
      */
-    private $tagFactory;
-
-    /**
-     * @var PlaylistFactory
-     */
-    private $playlistFactory;
-
-    /** @var ModuleFactory */
-    private $moduleFactory;
-    //</editor-fold>
+    private $regionFactory;
 
     /**
      * Entity constructor.
@@ -175,59 +115,47 @@ class Playlist implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
-     * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
-     * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $date, $permissionFactory, $widgetFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
-        $this->playlistFactory = $playlistFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->tagFactory = $tagFactory;
+
+        $this->excludeProperty('regions');
     }
 
     /**
-     * @param ModuleFactory $moduleFactory
+     * @param $regionFactory
      * @return $this
      */
-    public function setModuleFactory($moduleFactory)
+    public function setChildObjectDependencies($regionFactory)
     {
-        $this->moduleFactory = $moduleFactory;
+        $this->regionFactory = $regionFactory;
         return $this;
     }
 
-    /**
-     * Clone this Playlist
-     */
     public function __clone()
     {
         $this->hash = null;
         $this->playlistId = null;
-        $this->regionId = null;
+        $this->regions = [];
         $this->permissions = [];
-        $this->tags = [];
 
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
 
-    /**
-     * @return string
-     */
     public function __toString()
     {
-        return sprintf('Playlist %s. Widgets = %d. PlaylistId = %d. RegionId = %d', $this->name, count($this->widgets), $this->playlistId, $this->regionId);
+        return sprintf('Playlist %s. Widgets = %d. PlaylistId = %d', $this->name, count($this->widgets), $this->playlistId);
     }
 
-    /**
-     * @return string
-     */
     private function hash()
     {
-        return md5($this->regionId . $this->playlistId . $this->ownerId . $this->name . $this->duration . $this->requiresDurationUpdate);
+        return md5($this->playlistId . $this->ownerId . $this->name);
     }
 
     /**
@@ -265,19 +193,15 @@ class Playlist implements \JsonSerializable
     /**
      * Get Widget at Index
      * @param int $index
-     * @param Widget[]|null $widgets
      * @return Widget
      * @throws NotFoundException
      */
-    public function getWidgetAt($index, $widgets = null)
+    public function getWidgetAt($index)
     {
-        if ($widgets === null)
-            $widgets = $this->widgets;
-
-        if ($index <= count($widgets)) {
+        if ($index <= count($this->widgets)) {
             $zeroBased = $index - 1;
-            if (isset($widgets[$zeroBased])) {
-                return $widgets[$zeroBased];
+            if (isset($this->widgets[$zeroBased])) {
+                return $this->widgets[$zeroBased];
             }
         }
 
@@ -296,53 +220,26 @@ class Playlist implements \JsonSerializable
     }
 
     /**
-     * @param Tag[] $tags
-     */
-    public function replaceTags($tags = [])
-    {
-        if (!is_array($this->tags) || count($this->tags) <= 0)
-            $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
-
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
-
-        $this->getLog()->debug('Tags to be removed: ' . json_encode($this->unassignTags));
-
-        // Replace the arrays
-        $this->tags = $tags;
-
-        $this->getLog()->debug('Tags remaining: ' . json_encode($this->tags));
-    }
-
-    /**
      * Load
      * @param array $loadOptions
-     * @return $this
      */
     public function load($loadOptions = [])
     {
         if ($this->playlistId == null || $this->loaded)
-            return $this;
+            return;
 
         // Options
         $options = array_merge([
+            'playlistIncludeRegionAssignments' => true,
             'loadPermissions' => true,
-            'loadWidgets' => true,
-            'loadTags' => true
+            'loadWidgets' => true
         ], $loadOptions);
 
-        $this->getLog()->debug('Load Playlist with ' . json_encode($options));
+        $this->getLog()->debug('Load Playlist with %s', json_encode($options));
 
         // Load permissions
         if ($options['loadPermissions'])
             $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
-
-        // Load all tags
-        if ($options['loadTags'])
-            $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
 
         // Load the widgets
         if ($options['loadWidgets']) {
@@ -353,126 +250,62 @@ class Playlist implements \JsonSerializable
             }
         }
 
+        if ($options['playlistIncludeRegionAssignments']) {
+            // Load the region assignments
+            foreach ($this->regionFactory->getByPlaylistId($this->playlistId) as $region) {
+                /* @var Region $region */
+                $this->regions[] = $region;
+            }
+        }
+
         $this->hash = $this->hash();
         $this->loaded = true;
-
-        return $this;
     }
 
     /**
      * Save
-     * @param array $options
      */
-    public function save($options = [])
+    public function save()
     {
-        // Default options
-        $options = array_merge([
-            'saveTags' => true,
-            'saveWidgets' => true
-        ], $options);
-
         if ($this->playlistId == null || $this->playlistId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
             $this->update();
 
-        // Save the widgets?
-        if ($options['saveWidgets']) {
-            // Sort the widgets by their display order
-            usort($this->widgets, function ($a, $b) {
-                /**
-                 * @var Widget $a
-                 * @var Widget $b
-                 */
-                return $a->displayOrder - $b->displayOrder;
-            });
+        // Sort the widgets by their display order
+        usort($this->widgets, function($a, $b) {
+            /**
+             * @var Widget $a
+             * @var Widget$b
+             */
+            return $a->displayOrder - $b->displayOrder;
+        });
 
-            // Assert the Playlist on all widgets and apply a display order
-            // this keeps the widgets in numerical order on each playlist
-            $i = 0;
-            foreach ($this->widgets as $widget) {
-                /* @var Widget $widget */
-                $i++;
+        // Assert the Playlist on all widgets and apply a display order
+        // this keeps the widgets in numerical order on each playlist
+        $i = 0;
+        foreach ($this->widgets as $widget) {
+            /* @var Widget $widget */
+            $i++;
 
-                // Assert the playlistId
-                $widget->playlistId = $this->playlistId;
-                // Assert the displayOrder
-                $widget->displayOrder = $i;
-                $widget->save();
-            }
-        }
-
-        // Save the tags?
-        if ($options['saveTags']) {
-            $this->getLog()->debug('Saving tags on ' . $this);
-
-            // Save the tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-
-                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
-
-                    $tag->assignPlaylist($this->playlistId);
-                    $tag->save();
-                }
-            }
-
-            // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignPlaylist($this->playlistId);
-                    $tag->save();
-                }
-            }
+            // Assert the playlistId
+            $widget->playlistId = $this->playlistId;
+            // Assert the displayOrder
+            $widget->displayOrder = $i;
+            $widget->save();
         }
     }
 
     /**
      * Delete
-     * @param array $options
-     * @throws InvalidArgumentException
      */
-    public function delete($options = [])
+    public function delete()
     {
-        $options = array_merge([
-            'regionDelete' => false
-        ], $options);
-
         // We must ensure everything is loaded before we delete
         if (!$this->loaded)
             $this->load();
 
         $this->getLog()->debug('Deleting ' . $this);
-
-        if (!$options['regionDelete'] && $this->regionId != 0)
-            throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
-
-        // Notify we're going to delete
-        // we do this here, because once we've deleted we lose the references for the storage query
-        $this->notifyLayouts();
-
-        // Delete me from any other Playlists using me as a sub-playlist
-        // i'll need to find these widgets at this point and remove them?
-        foreach ($this->playlistFactory->query(null, ['childId' => $this->playlistId, 'depth' => 1]) as $parent) {
-            // $parent is a playlist to which we belong.
-            // find out widget and delete it
-            $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . ' we will need to remove it');
-            $parent->load();
-
-            foreach($parent->widgets as $widget) {
-                if ($widget->type === 'subplaylist' && $widget->getOptionValue('subPlaylistId', 0) == $this->playlistId) {
-                    $this->getLog()->debug('Found sub-playlist widget to delete, widgetId ' . $widget->widgetId);
-                    $widget->delete(['notify' => false]);
-                }
-            }
-        }
-
-        // Delete my closure table records
-        $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);
 
         // Delete Permissions
         foreach ($this->permissions as $permission) {
@@ -483,9 +316,17 @@ class Playlist implements \JsonSerializable
         // Delete widgets
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
+
             // Assert the playlistId
             $widget->playlistId = $this->playlistId;
             $widget->delete();
+        }
+
+        // Unlink regions
+        foreach ($this->regions as $region) {
+            /* @var Region $region */
+            $region->unassignPlaylist($this);
+            $region->save();
         }
 
         // Delete this playlist
@@ -499,28 +340,11 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Playlist ' . $this->name);
 
-        $time = date('Y-m-d H:i:s');
-
-        $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt)
-        ';
+        $sql = 'INSERT INTO `playlist` (`name`, `ownerId`) VALUES (:name, :ownerId)';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
-            'ownerId' => $this->ownerId,
-            'regionId' => $this->regionId == 0 ? null : $this->regionId,
-            'isDynamic' => $this->isDynamic,
-            'filterMediaName' => $this->filterMediaName,
-            'filterMediaTags' => $this->filterMediaTags,
-            'createdDt' => $time,
-            'modifiedDt' => $time,
+            'ownerId' => $this->ownerId
         ));
-
-        // Insert my self link
-        $this->getStore()->insert('INSERT INTO `lkplaylistplaylist` (`parentId`, `childId`, `depth`) VALUES (:parentId, :childId, 0)', [
-            'parentId' => $this->playlistId,
-            'childId' => $this->playlistId
-        ]);
     }
 
     /**
@@ -530,29 +354,10 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
-        $sql = '
-            UPDATE `playlist` SET 
-                `name` = :name, 
-                `regionId` = :regionId, 
-                `modifiedDt` = :modifiedDt, 
-                `duration` = :duration,
-                `isDynamic` = :isDynamic,
-                `filterMediaName` = :filterMediaName,
-                `filterMediaTags` = :filterMediaTags,
-                `requiresDurationUpdate` = :requiresDurationUpdate
-             WHERE `playlistId` = :playlistId
-        ';
-
+        $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
         $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
-            'name' => $this->name,
-            'regionId' => $this->regionId == 0 ? null : $this->regionId,
-            'duration' => $this->duration,
-            'isDynamic' => $this->isDynamic,
-            'filterMediaName' => $this->filterMediaName,
-            'filterMediaTags' => $this->filterMediaTags,
-            'modifiedDt' => date('Y-m-d H:i:s'),
-            'requiresDurationUpdate' => $this->requiresDurationUpdate
+            'name' => $this->name
         ));
     }
 
@@ -565,21 +370,13 @@ class Playlist implements \JsonSerializable
      */
     public function notifyLayouts()
     {
-        // Notify the Playlist
-        $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
-            'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->dateService->getLocalDate()
-        ]);
-
         $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId IN (
               SELECT `region`.layoutId
-                FROM `lkplaylistplaylist`
-                  INNER JOIN `playlist`
-                  ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
+                FROM `lkregionplaylist`
                   INNER JOIN `region`
-                  ON `region`.regionId = `playlist`.regionId 
-               WHERE `lkplaylistplaylist`.childId = :playlistId
+                  ON region.regionId = `lkregionplaylist`.regionId
+               WHERE `lkregionplaylist`.playlistId = :playlistId
             )
         ', [
             'playlistId' => $this->playlistId,
@@ -588,93 +385,13 @@ class Playlist implements \JsonSerializable
     }
 
     /**
-     * Expand this Playlists widgets according to any sub-playlists that are present
-     * @return Widget[]
-     * @throws NotFoundException
+     * Has layouts
+     * @return bool
      */
-    public function expandWidgets()
+    public function hasLayouts()
     {
-        $this->load();
+        $results = $this->getStore()->select('SELECT COUNT(*) AS qty FROM `lkregionplaylist` WHERE playlistId = :playlistId', ['playlistId' => $this->playlistId]);
 
-        $widgets = [];
-
-        // Start with our own Widgets
-        foreach ($this->widgets as $widget) {
-
-            // some basic checking on whether this widets date/time are conductive to it being added to the
-            // list. This is really an "expires" check, because we will rely on the player otherwise
-            if ($widget->isExpired())
-                continue;
-
-            // If we're a standard widget, add right away
-            if ($widget->type !== 'subplaylist') {
-                $widgets[] = $widget;
-            } else {
-                /** @var SubPlaylist $module */
-                $module = $this->moduleFactory->createWithWidget($widget);
-                $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets());
-            }
-        }
-
-        return $widgets;
-    }
-
-    /**
-     * Update Playlist Duration
-     *  this is called by the system maintenance task to keep all Playlists durations updated
-     *  we should edit this playlist duration (noting the delta) and then find all Playlists of which this is
-     *  a sub-playlist and update their durations also (cascade upward)
-     * @return $this
-     * @throws NotFoundException
-     */
-    public function updateDuration()
-    {
-        // Update this Playlists Duration - get a SUM of all widget durations
-        $this->load([
-            'loadPermissions' => false,
-            'loadWidgets' => true,
-            'loadTags' => false
-        ]);
-
-        $duration = 0;
-
-        foreach ($this->widgets as $widget) {
-            // If we're a standard widget, add right away
-            if ($widget->type !== 'subplaylist') {
-                $duration += $widget->calculatedDuration;
-            } else {
-                // Add the sub playlist duration
-                /** @var SubPlaylist $module */
-                $module = $this->moduleFactory->createWithWidget($widget);
-                $duration += $module->getSubPlaylistResolvedDuration();
-            }
-        }
-
-        // Set our "requires duration"
-        $delta = $duration - $this->duration;
-
-        $this->getLog()->debug('Delta duration after updateDuration ' . $delta);
-
-        $this->duration = $duration;
-        $this->requiresDurationUpdate = 0;
-
-        $this->save(['saveTags' => false, 'saveWidgets' => false]);
-
-        if ($delta !== 0) {
-            // Use the closure table to update all parent playlists (including this one).
-            $this->getStore()->update('
-                UPDATE `playlist` SET duration = duration + :delta WHERE playlistId IN (
-                    SELECT DISTINCT parentId
-                      FROM `lkplaylistplaylist`
-                     WHERE childId = :playlistId
-                      AND parentId <> :playlistId
-                )
-            ', [
-                'delta' => $delta,
-                'playlistId' => $this->playlistId
-            ]);
-        }
-
-        return $this;
+        return ($results[0]['qty'] > 0);
     }
 }

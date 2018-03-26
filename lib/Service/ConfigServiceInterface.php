@@ -58,6 +58,20 @@ interface ConfigServiceInterface
     public function ChangeSetting($setting, $value);
 
     /**
+     * Defines the Version and returns it
+     * @param $object string[optional]
+     * @return array|string
+     * @throws \Exception
+     */
+    public function Version($object = '');
+
+    /**
+     * Is an upgrade pending?
+     * @return bool
+     */
+    public function isUpgradePending();
+
+    /**
      * Should the host be considered a proxy exception
      * @param $host
      * @return bool

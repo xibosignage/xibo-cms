@@ -1,0 +1,62 @@
+{
+  "dbVersion": 127,
+  "appVersion": "1.8.0-rc1",
+  "steps": [
+    {
+      "step": "Add support for recurrence by week day",
+      "action": "ALTER TABLE `schedule` ADD `recurrenceRepeatsOn` VARCHAR(14) NULL;"
+    },
+    {
+      "step": "Add setting for resting log level",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('RESTING_LOG_LEVEL', 'Error', 'dropdown', 'Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems \"error\" is recommended.', 'Emergency|Alert|Critical|Error', 'troubleshooting', 1, 'Resting Log Level', '', 19, 'error', 1, 'word');"
+    },
+    {
+      "step": "Fix DataSet Code field type",
+      "action": "ALTER TABLE `dataset` MODIFY code VARCHAR(50) NULL;"
+    },
+    {
+      "step": "Add Daypart Page",
+      "action": "INSERT INTO `pages` (`name`, `Title`, `asHome`) VALUES ('daypart', 'Dayparting', 0);"
+    },
+    {
+      "step": "Add Daypart database structure",
+      "action": "CREATE TABLE `daypart` (`dayPartId` INT(11) NOT NULL AUTO_INCREMENT,`name` VARCHAR(50) NOT NULL,`description` VARCHAR(1000),`isRetired` TINYINT(4) DEFAULT 0,`userid` INT(11) NOT NULL,`startTime` VARCHAR(8) DEFAULT '00:00:00',`endTime` VARCHAR(8) DEFAULT '00:00:00',`exceptions` TEXT NULL,PRIMARY KEY (`dayPartId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;"
+    },
+    {
+      "step": "Add Daypart Permission Entity",
+      "action": "INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES (NULL, 'Xibo\\\\Entity\\\\DayPart');"
+    },
+    {
+      "step": "Increase user password hash field size",
+      "action": "ALTER TABLE `user` MODIFY `UserPassword` VARCHAR(255) NOT NULL;"
+    },
+    {
+      "step": "Tasks page",
+      "action": "INSERT INTO pages (name, title, asHome) VALUES ('task', 'Task', 1);"
+    },
+    {
+      "step": "Setting to lock task config",
+      "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('TASK_CONFIG_LOCKED_CHECKB', 'Unchecked', 'dropdown', 'Is the task config locked? Useful for Service providers.', 'Checked|Unchecked', 'defaults', 0, 'Lock Task Config', '', 30, 'Unchecked', 0, 'word');"
+    },
+    {
+      "step": "Tasks Data Model",
+      "action": "CREATE TABLE `task` (taskId INT(11) NOT NULL AUTO_INCREMENT,name VARCHAR(254) NOT NULL,class VARCHAR(254) NOT NULL,status TINYINT(4) DEFAULT '2' NOT NULL,pid INT(11),options TEXT,schedule VARCHAR(254),lastRunDt INT(11),lastRunMessage VARCHAR(254),lastRunStatus TINYINT(4) DEFAULT '0' NOT NULL,lastRunDuration SMALLINT(6),lastRunExitCode SMALLINT(6),isActive TINYINT(4) DEFAULT '1' NOT NULL,runNow TINYINT(4) DEFAULT '1' NOT NULL,configFile VARCHAR(254) NOT NULL,PRIMARY KEY (`taskId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6;"
+    },
+    {
+      "step": "Tasks - insert defaults",
+      "action": "INSERT INTO `task` (taskId, name, class, status, options, schedule, isActive, configFile) VALUES(1, 'Daily Maintenance', '\\\\Xibo\\\\XTR\\\\MaintenanceDailyTask', 2, '[]', '0 0 * * * *', 1, '/tasks/maintenance-daily.task'),(2, 'Regular Maintenance', '\\\\Xibo\\\\XTR\\\\MaintenanceRegularTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/maintenance-regular.task'),(3, 'Email Notifications', '\\\\Xibo\\\\XTR\\\\EmailNotificationsTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/email-notifications.task'),(4, 'Stats Archive', '\\\\Xibo\\\\XTR\\\\StatsArchiveTask', 2, '{\"periodSizeInDays\":\"7\",\"maxPeriods\":\"4\"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),(5, 'Remove old Notifications', '\\\\Xibo\\\\XTR\\\\NotificationTidyTask', 2, '{\"maxAgeDays\":\"7\",\"systemOnly\":\"1\",\"readOnly\":\"0\"}', '15 0 * * *', 1, '/tasks/notification-tidy.task');"
+    },
+    {
+      "step": "Load Balancer White List Setting",
+      "action": "INSERT INTO `setting` (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('WHITELIST_LOAD_BALANCERS', '', 'text', 'If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited.', '', 'network', 1, 'Whitelist Load Balancers', '', 100, '', 1, 'string');"
+    },
+    {
+      "step": "Default Layout Setting",
+      "action": "INSERT INTO `setting` (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES('DEFAULT_LAYOUT', '1', 'text', 'The default layout to assign for new displays and displays which have their current default deleted.', '1', 'displays', 1, 'Default Layout', '', 4, '', 1, 'int');"
+    },
+    {
+      "step": "Device name on Display",
+      "action": "ALTER TABLE `display` ADD deviceName VARCHAR(254) NULL;"
+    }
+  ]
+}

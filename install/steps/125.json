@@ -1,0 +1,58 @@
+{
+  "dbVersion": 125,
+  "appVersion": "1.8.0-beta",
+  "steps": [
+    {
+      "step": "Allow integer priorities",
+      "action": "ALTER TABLE schedule MODIFY is_priority INT NOT NULL"
+    },
+    {
+      "step": "Add Audio Module",
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 1, 1, null, null, '../modules', 'Xibo\\\\Widget\\\\Audio', 0);"
+    },
+    {
+      "step": "Create Widget/Audio Link table",
+      "action": "CREATE TABLE lkwidgetaudio (widgetId int NOT NULL,mediaId int NOT NULL,volume tinyint DEFAULT 100,`loop` tinyint DEFAULT 0);"
+    },
+    {
+      "step": "Create Widget/Audio Unique Key",
+      "action": "CREATE UNIQUE INDEX lkwidgetaudio_widgetId_mediaId_uindex ON lkwidgetaudio (widgetId, mediaId);"
+    },
+    {
+      "step": "Add PDF Module",
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\\\Widget\\\\Pdf', 60);"
+    },
+    {
+      "step": "Add oAuth Client/Scope link table",
+      "action": "CREATE TABLE oauth_client_scopes(clientId varchar(254) NOT NULL,scopeId varchar(254) NOT NULL,id int PRIMARY KEY AUTO_INCREMENT) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Add oAuth Client/Scope unique key",
+      "action": "CREATE UNIQUE INDEX oauth_client_scopes_clientId_scopeId_uindex ON oauth_client_scopes (clientId, scopeId);"
+    },
+    {
+      "step": "Add oAuth Scope/Route table",
+      "action": "CREATE TABLE oauth_scope_routes(scopeId varchar(254) NOT NULL,route varchar(1000) NOT NULL,method varchar(8) NOT NULL,id int PRIMARY KEY AUTO_INCREMENT) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Add scopes",
+      "action": "INSERT INTO oauth_scopes (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');"
+    },
+    {
+      "step": "Add module install name",
+      "action": "ALTER TABLE `module` ADD `installName` varchar(254) NULL;"
+    },
+    {
+      "step": "Add MCAAS Routes to Scope",
+      "action": "INSERT INTO `oauth_scope_routes` (scopeId, route, id, method) VALUES ('mcaas', '/', 1, 'GET'),('mcaas', '/library/download/:id(/:type)', 2, 'GET'),('mcaas', '/library/mcaas/:id', 3, 'POST');"
+    },
+    {
+      "step": "Change display is auditing to be date based",
+      "action": "ALTER TABLE display CHANGE isAuditing auditingUntil int NOT NULL DEFAULT '0' COMMENT 'Is this display auditing';"
+    },
+    {
+      "step": "Add elevate log level setting",
+      "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('ELEVATE_LOG_UNTIL', '1463396415', 'datetime', 'Elevate the log level until this date.', null, 'troubleshooting', 1, 'Elevate Log Until', ' ', 25, '', 1, 'datetime');"
+    }
+  ]
+}

@@ -1,22 +1,8 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
- *
- * This file is part of Xibo.
- *
- * Xibo is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * any later version.
- *
- * Xibo is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (DisplayGroupTest.php)
  */
 
 namespace Xibo\Tests\Integration;
@@ -27,7 +13,6 @@ use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
-use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -36,8 +21,6 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class DisplayGroupTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
-
     protected $startDisplayGroups;
     protected $startDisplays;
 
@@ -752,14 +735,11 @@ class DisplayGroupTest extends LocalWebTestCase
     {
         # Create new random name
         $name = Random::generateString(8, 'phpunit');
-
         # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
-
         # Create new layouts
-        $layout = $this->createLayout();
-        $layout2 = $this->createLayout();
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('test layout', 'test description', '', 9);
+        $layout2 = (new XiboLayout($this->getEntityProvider()))->create('test layout 2', 'test description 2', '', 9);
         # Assign both layouts to display group then unassign the second layout from it
         $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/layout/assign', [
         	'layoutId' => [$layout->layoutId, $layout2->layoutId],
@@ -783,10 +763,8 @@ class DisplayGroupTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
-
         # Create new layout
-        $layout = $this->createLayout();
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('test layout', 'test description', '', 9);
         # assign layout to display group
         $displayGroup->assignLayout([$layout->layoutId]);
 		# unassign layout from display group
@@ -851,10 +829,8 @@ class DisplayGroupTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         # Create new display group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
-
         # Create new layout
-        $layout = $this->createLayout();
-
+        $layout = (new XiboLayout($this->getEntityProvider()))->create('test layout', 'test description', '', 9);
         # Call changeLayout
         $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/action/changeLayout', [
 		'layoutId' => $layout->layoutId,

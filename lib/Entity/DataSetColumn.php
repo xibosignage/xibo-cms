@@ -309,10 +309,7 @@ class DataSetColumn implements \JsonSerializable
             'columnOrder' => $this->columnOrder,
             'dataSetColumnTypeId' => $this->dataSetColumnTypeId,
             'formula' => $this->formula,
-            'dataSetColumnId' => $this->dataSetColumnId,
-            'remoteField' => $this->remoteField,
-            'showFilter' => $this->showFilter,
-            'showSort' => $this->showSort
+            'dataSetColumnId' => $this->dataSetColumnId
         ];
 
         $sql = '
@@ -323,12 +320,21 @@ class DataSetColumn implements \JsonSerializable
             ColumnOrder = :columnOrder,
             DataTypeID = :dataTypeId,
             DataSetColumnTypeID = :dataSetColumnTypeId,
-            Formula = :formula,
-            RemoteField = :remoteField, 
-            `showFilter` = :showFilter, 
-            `showSort` = :showSort
-         WHERE dataSetColumnId = :dataSetColumnId 
+            Formula = :formula
         ';
+
+        if (DBVERSION >= 135) {
+            $sql .= ', RemoteField = :remoteField ';
+            $params['remoteField'] = $this->remoteField;
+        }
+
+        if (DBVERSION >= 138) {
+            $sql .= ', `showFilter` = :showFilter, `showSort` = :showSort ';
+            $params['showFilter'] = $this->showFilter;
+            $params['showSort'] = $this->showSort;
+        }
+
+        $sql .= ' WHERE dataSetColumnId = :dataSetColumnId ';
 
         $this->getStore()->update($sql, $params);
 

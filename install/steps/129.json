@@ -1,0 +1,39 @@
+{
+  "dbVersion": 129,
+  "appVersion": "1.8.0-rc2",
+  "steps": [
+    {
+      "step": "Create New Required File Table",
+      "action": "CREATE TABLE IF NOT EXISTS `requiredfile` (`rfId` bigint(20) NOT NULL AUTO_INCREMENT,`displayId` int(11) NOT NULL,`type` varchar(1) NOT NULL,`itemId` int(11) DEFAULT NULL,`bytesRequested` bigint(20) NOT NULL,`complete` tinyint(1) DEFAULT 0 NOT NULL,`path` varchar(255) NULL,`size` BIGINT(20) DEFAULT 0 NOT NULL,PRIMARY KEY (`rfId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;"
+    },
+    {
+      "step": "Create New Index on Required File Table",
+      "action": "CREATE INDEX requiredfile_displayId_type_index ON requiredfile (displayId, type);"
+    },
+    {
+      "step": "Drop player caches",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\DropPlayerCache"
+    },
+    {
+      "step": "Add owner to Resolution",
+      "action": "ALTER TABLE `resolution` ADD userId INT NOT NULL;"
+    },
+    {
+      "step": "Set owner of existing resolutions to 0",
+      "action": "UPDATE `resolution` SET userId = 0;"
+    },
+    {
+      "step": "Update permissions defaults to include group write / public write options",
+      "action": "UPDATE `setting` SET `options` = 'private|group|group write|public|public write' WHERE setting IN ('MEDIA_DEFAULT', 'LAYOUT_DEFAULT');"
+    },
+    {
+      "step": "Add new Campaign Tag link table",
+      "action": "CREATE TABLE IF NOT EXISTS `lktagcampaign` (`lkTagCampaignId` int(11) NOT NULL AUTO_INCREMENT,`tagId` int(11) NOT NULL,`campaignId` int(11) NOT NULL,PRIMARY KEY (`lkTagCampaignId`),UNIQUE KEY `tagId` (`tagId`,`campaignId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add display timezone",
+      "action": "ALTER TABLE `display` ADD timeZone VARCHAR(254) NULL;"
+    }
+  ]
+}
