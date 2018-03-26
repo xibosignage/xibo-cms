@@ -166,23 +166,6 @@ class Login extends Base
     }
 
     /**
-     * User Welcome
-     */
-    public function userWelcome()
-    {
-        $this->getState()->template = 'user-welcome-page';
-        $this->getState()->setData([
-            'help' => [
-                'dashboard' => $this->getHelp()->link('Dashboard', 'General'),
-                'display' => $this->getHelp()->link('Display', 'General'),
-                'layout' => $this->getHelp()->link('Layout', 'General'),
-                'schedule' => $this->getHelp()->link('Schedule', 'General'),
-                'windows' => $this->getHelp()->address('install_windows_client')
-            ]
-        ]);
-    }
-
-    /**
      * Ping Pong
      */
     public function PingPong()
