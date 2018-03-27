@@ -100,8 +100,6 @@ class Login extends Base
                 // Check password
                 $user->checkPassword($password);
 
-                // We are logged in!
-                $user->loggedIn = 1;
                 $user->touch();
 
                 $this->getLog()->info('%s user logged in.', $user->userName);
@@ -150,7 +148,6 @@ class Login extends Base
      */
     public function logout($redirect = true)
     {
-        $this->getUser()->loggedIn = 0;
         $this->getUser()->touch();
 
         // to log out a user we need only to clear out some session vars

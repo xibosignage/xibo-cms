@@ -209,7 +209,6 @@ class UserFactory extends BaseFactory
             SELECT `user`.userId,
                 userName,
                 userTypeId,
-                loggedIn,
                 email,
                 lastAccessed,
                 newUserWizard,
