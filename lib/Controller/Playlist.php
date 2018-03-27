@@ -533,6 +533,9 @@ class Playlist extends Base
         // Get our list of widget orders
         $widgets = $this->getSanitizer()->getParam('widgets', null);
 
+        if ($widgets == null)
+                throw new InvalidArgumentException(__('Cannot Save empty region playlist. Please add widgets'), 'widgets');
+
         // Go through each one and move it
         foreach ($widgets as $widgetId => $position) {
 
