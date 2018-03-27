@@ -524,6 +524,20 @@ class MediaFactory extends BaseFactory
             $body .= ' AND media.type <> \'module\' ';
         }
 
+        if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) == 1) {
+            $body .= '
+                AND media.type <> \'genericfile\'
+                AND media.type <> \'font\'
+            ';
+        }
+
+        if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) == 0) {
+            $body .= '
+                AND (media.type = \'genericfile\'
+                OR media.type = \'font\')
+            ';
+        }
+
         // Unused only?
         if ($this->getSanitizer()->getInt('unusedOnly', $filterBy) !== null) {
 

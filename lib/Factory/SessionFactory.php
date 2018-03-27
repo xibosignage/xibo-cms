@@ -65,6 +65,17 @@ class SessionFactory extends BaseFactory
     }
 
     /**
+     * @param int $userId
+     * @return int loggedIn
+     */
+    public function getActiveSessionsForUser($userId)
+    {
+        $userSession = $this->query(null, ['userId' => $userId, 'type' => 'active']);
+
+        return (count($userSession) > 0) ? 1 : 0;
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return Session[]
@@ -83,6 +94,7 @@ class SessionFactory extends BaseFactory
                 session.lastAccessed, 
                 remoteAddr AS remoteAddress, 
                 userAgent, 
+                user.userId AS userId,
                 `session`.session_expiration AS expiresAt
         ';
 
@@ -115,6 +127,11 @@ class SessionFactory extends BaseFactory
             if ($this->getSanitizer()->getString('type', $filterBy) == 'guest') {
                 $body .= ' AND IFNULL(session.userID, 0) = 0 ';
             }
+        }
+
+        if ($this->getSanitizer()->getString('userId', $filterBy) != null) {
+            $body .= ' AND user.userID = :userId ';
+            $params['userId'] = $this->getSanitizer()->getString('userId', $filterBy);
         }
 
         // Sorting?
