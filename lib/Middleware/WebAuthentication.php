@@ -105,7 +105,6 @@ class WebAuthentication extends Middleware
                     $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
 
                     if ($user->hasIdentity()) {
-                        $user->loggedIn = 0;
                         $user->touch();
                     }
 
@@ -119,7 +118,6 @@ class WebAuthentication extends Middleware
                 if ($app->session->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
 
                     if ($user->hasIdentity()) {
-                        $user->loggedIn = 0;
                         $user->touch();
                     }
 

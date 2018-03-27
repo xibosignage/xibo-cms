@@ -257,9 +257,6 @@ class SAMLAuthentication extends Middleware
                     $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
                     $user->load();
 
-                    // We are logged in!
-                    $user->loggedIn = 1;
-
                     // Overwrite our stored user with this new object.
                     $this->app->user = $user;
 

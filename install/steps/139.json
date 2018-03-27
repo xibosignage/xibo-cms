@@ -17,6 +17,10 @@
     {
       "step": "Update help text on MAINTENANCE_STAT_MAXAGE",
       "action": "UPDATE `setting` SET helpText = 'Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely.' WHERE setting = 'MAINTENANCE_STAT_MAXAGE' LIMIT 1"
+    },
+    {
+      "step": "Remove loggedin column from user table",
+      "action": "ALTER TABLE user DROP COLUMN loggedin;"
     }
   ]
 }

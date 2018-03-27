@@ -829,7 +829,6 @@ class User implements \JsonSerializable
                   Email = :email,
                   Retired = :retired,
                   userTypeId = :userTypeId,
-                  loggedIn = :loggedIn,
                   newUserWizard = :newUserWizard,
                   CSPRNG = :CSPRNG,
                   `UserPassword` = :password,
@@ -849,7 +848,6 @@ class User implements \JsonSerializable
             'email' => $this->email,
             'homePageId' => $this->homePageId,
             'retired' => $this->retired,
-            'loggedIn' => $this->loggedIn,
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
             'password' => $this->password,
@@ -902,9 +900,8 @@ class User implements \JsonSerializable
     public function touch()
     {
         // This needs to happen on a separate connection
-        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time, loggedIn = :loggedIn  WHERE userId = :userId', [
+        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
             'userId' => $this->userId,
-            'loggedIn' => $this->loggedIn,
             'time' => date("Y-m-d H:i:s")
         ]);
     }
