@@ -109,6 +109,9 @@ class SAMLAuthentication extends Middleware
             // Assertion Consumer Endpoint
             $app = $this->getApplication();
 
+            // Log some interesting things
+            $app->getLog()->debug('Arrived at the ACS route with own URL: ' . \OneLogin_Saml2_Utils::getSelfRoutedURLNoQuery());
+
             // Inject the POST parameters required by the SAML toolkit
             $_POST = $this->app->request->post();
 

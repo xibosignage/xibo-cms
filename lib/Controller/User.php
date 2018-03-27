@@ -29,6 +29,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
@@ -853,7 +854,7 @@ class User extends Base
      *
      * @param string $entity
      * @param int $objectId
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     public function permissions($entity, $objectId)
     {
@@ -937,6 +938,15 @@ class User extends Base
                 $layout->load();
 
                 $updatePermissionsOnLayout($layout);
+            }
+        } else if ($object->permissionsClass() == 'Xibo\Entity\Region') {
+            // We always cascade region permissions down to the Playlist
+            // TODO: we should change this to $object->regionPlaylist in 2.0
+            $object->load();
+
+            foreach ($object->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
             }
         }
 

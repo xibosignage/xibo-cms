@@ -160,7 +160,7 @@
                     <div class="tab-pane" id="template">
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, "image") }}
 
                         {% set title %}{% trans "Items" %}{% endset %}
                         {% set helpText %}{% trans "The items wanted, can be comma separated." %}{% endset %}

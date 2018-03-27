@@ -296,13 +296,11 @@
                     <div class="pull-right">
                         <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
                         <div class="col-sm-10">
-                            <select class="ckeditor_library_select" class="form-control" data-linked-to="noDataMessage">
-                                <option></option>
-                                {% for item in media %}
-                                    {% if item.mediaType == "image" %}
-                                        <option value="{{ item.mediaId }}" data-image-url="{{ urlFor("library.download", {id: item.mediaId}) }}?preview=1">{{ item.name }}</option>
-                                    {% endif %}
-                                {% endfor %}
+                            <select id="ckeditor_library_select"
+                                    class="ckeditor_library_select form-control"
+                                    data-linked-to="noDataMessage"
+                                    data-search-url="{{ urlFor("library.search") }}"
+                                    data-image-url="{{ urlFor("library.download") }}?preview=1">
                             </select>
                         </div>
                     </div>
@@ -326,7 +324,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "title-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, baseUrl, "image") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "title-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
@@ -351,15 +349,13 @@
                             </div>
                             <div class="col-sm-6">
                                 <div class="form-group well">
-                                    <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
+                                    <label class="col-sm-2 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
                                     <div class="col-sm-10">
-                                        <select class="ckeditor_library_select" class="form-control" data-linked-to="ta_text">
-                                            <option></option>
-                                            {% for item in media %}
-                                                {% if item.mediaType == "image" %}
-                                                    <option value="{{ item.mediaId }}" data-image-url="{{ urlFor("library.download", {id: item.mediaId}) }}?preview=1">{{ item.name }}</option>
-                                                {% endif %}
-                                            {% endfor %}
+                                        <select id="ckeditor_library_select2"
+                                                class="ckeditor_library_select form-control"
+                                                data-linked-to="ta_text"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
                                         </select>
                                     </div>
                                 </div>
@@ -458,15 +454,13 @@
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group well">
-                                <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
+                                <label class="col-sm-2 control-label" for="ckeditor_library_select3">{% trans "Library" %}</label>
                                 <div class="col-sm-10">
-                                    <select class="ckeditor_library_select" class="form-control" data-linked-to="ta_text">
-                                        <option></option>
-                                        {% for item in media %}
-                                            {% if item.mediaType == "image" %}
-                                                <option value="{{ item.mediaId }}" data-image-url="{{ urlFor("library.download", {id: item.mediaId}) }}?preview=1">{{ item.name }}</option>
-                                            {% endif %}
-                                        {% endfor %}
+                                    <select id="ckeditor_library_select3"
+                                            class="ckeditor_library_select form-control"
+                                            data-linked-to="ta_text"
+                                            data-search-url="{{ urlFor("library.search") }}"
+                                            data-image-url="{{ urlFor("library.download") }}?preview=1">
                                     </select>
                                 </div>
                             </div>

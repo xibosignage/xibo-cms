@@ -465,7 +465,7 @@ class MediaFactory extends BaseFactory
                media.md5,
                media.retired,
                media.isEdited,
-               IFNULL((SELECT parentmedia.mediaid FROM media parentmedia WHERE parentmedia.editedmediaid = media.mediaid),0) AS parentId,
+               IFNULL(parentmedia.mediaId, 0) AS parentId,
         ';
 
         if (DBVERSION >= 125) {
@@ -500,7 +500,7 @@ class MediaFactory extends BaseFactory
 
         $body = " FROM media ";
         $body .= "   LEFT OUTER JOIN media parentmedia ";
-        $body .= "   ON parentmedia.MediaID = media.MediaID ";
+        $body .= "   ON parentmedia.editedMediaId = media.mediaId ";
 
         // Media might be linked to the system user (userId 0)
         $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ";

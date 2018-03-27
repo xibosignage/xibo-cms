@@ -124,3 +124,4 @@ CREATE INDEX lkdgdg_parentId_childId_depth_index ON lkdgdg (parentId, childId, d
 
 CREATE INDEX lkdgdg_childId_parentId_depth_index ON lkdgdg (childId, parentId, depth);
 
+CREATE INDEX media_editedMediaID_index ON media (editedMediaID);
