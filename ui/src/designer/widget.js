@@ -13,12 +13,14 @@ var Widget = function(id, regionId, data) {
     // widget type
     this.subType = data.type;
 
-    this.layoutDuration = 0;
     this.selected = false;
 
     this.singleWidget = false;
     this.loop = false;
     this.extend = false;
+
+    // by default, the widget duration is null ( to be calculated )
+    this.duration = null;
 
     this.widgetDurationNotSet = false;
     this.widgetDefaultDuration = 10; // in the case of the duration has not being calculated
@@ -33,13 +35,13 @@ var Widget = function(id, regionId, data) {
     this.durationPercentage = function() {
 
         // Get duration percentage based on the layout
-        var duration = (this.getDuration() / this.layoutDuration) * 100;
+        var duration = (this.getDuration() / lD.layout.duration) * 100;
         
         // If the widget doesn't have the loop flag and is a single widget, extend it
         if(!this.loop && this.singleWidget){
             
             // Verify if the widget duration is less than the layout duration 
-            if(parseFloat(this.getDuration()) < parseFloat(this.layoutDuration)) {
+            if(parseFloat(this.getDuration()) < parseFloat(lD.layout.duration)) {
                 this.extend = true;
                 this.extendSize = 100 - duration; // Extend size is the rest of the region width
             }
@@ -60,7 +62,7 @@ var Widget = function(id, regionId, data) {
         for(option in this.data.widgetOptions) {
             let currOption = this.data.widgetOptions[option];
 
-            if(currOption.type == 'attrib'){
+            if(currOption.type === 'attrib'){
                 options[currOption.option] = currOption.value;
             }
         }
@@ -84,13 +86,13 @@ var Widget = function(id, regionId, data) {
      */
     this.getDuration = function(recalculate = false) {
 
-        if(recalculate || this.duration == null){
+        if(recalculate || this.duration === null){
 
             var calculatedDuration = parseFloat(this.data.calculatedDuration);
             var options = this.getOptions();
 
             // if calculated duration is not calculated, see it to the default duration 
-            if(calculatedDuration == 0) {
+            if(calculatedDuration === 0) {
                 calculatedDuration = this.widgetDefaultDuration;
             }
             
@@ -104,7 +106,6 @@ var Widget = function(id, regionId, data) {
 
 /**
  * Create clone from widget
- * @param  {number} layoutScale Layout scaling from the container to the actual layout dimensions
  */
 Widget.prototype.createClone = function() {
     
@@ -113,9 +114,8 @@ Widget.prototype.createClone = function() {
         subType: this.subType,
         duration: this.getDuration(),
         regionId: this.regionId,
-        layoutDuration: this.layoutDuration,
         durationPercentage: function() { // so that can be calculated on template rendering time
-            return (this.duration / this.layoutDuration) * 100;
+            return (this.duration / lD.layout.duration) * 100;
         }
     };
 

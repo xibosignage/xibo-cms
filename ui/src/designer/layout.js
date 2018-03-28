@@ -33,7 +33,7 @@ var Layout = function(id, data) {
     };
 
     this.backgroundCss = function() {
-        if(this.backgroundImage == null) {
+        if(this.backgroundImage === null) {
             return this.backgroundColor;
         } else {
             return "url('/layout/background/" + this.layoutId + "?preview=1&width=" + this.containerProperties.width + "&height=" + this.containerProperties.height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
@@ -114,12 +114,12 @@ Layout.prototype.calculateTimeValues = function() {
         var singleWidget = false;
 
         // If there is only one widget in the playlist, check the loop option for that region
-        if(widgets.length == 1) {
+        if(widgets.length === 1) {
 
             singleWidget = true;
             // Check the loop option
             for(var option in currRegion.options) {
-                if(currRegion.options[option].option == 'loop' && currRegion.options[option].value == '1') {
+                if(currRegion.options[option].option === 'loop' && currRegion.options[option].value === '1') {
                     currRegion.loop = true;
                     loopSingleWidget = true;
                     break;
@@ -136,8 +136,6 @@ Layout.prototype.calculateTimeValues = function() {
             // If the widget needs to be extended
             currWidget.singleWidget = singleWidget;
             currWidget.loop = loopSingleWidget;
-            currWidget.layoutDuration = this.duration;
-            
         }
     }
 };

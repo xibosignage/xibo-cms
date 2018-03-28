@@ -50,7 +50,18 @@ Navigator.prototype.render = function(layout) {
         disabled: !this.editMode
     }).on("resizestop dragstop",
         function(event, ui) {
-            layout.regions[$(this).attr('id')].saveTransformation($(this).width(), $(this).height(), $(this).position().top, $(this).position().left, layout.containerProperties.scaleToTheOriginal);
+
+            var scale = layout.containerProperties.scaleToTheOriginal;
+
+            layout.regions[$(this).attr('id')].saveTransformation(
+                "transform",
+                {
+                    width: $(this).width() / scale,
+                    height: $(this).height() / scale,
+                    top: $(this).position().top / scale,
+                    left: $(this).position().left / scale
+                }
+            );
         }
     );
 
@@ -58,7 +69,7 @@ Navigator.prototype.render = function(layout) {
     if(!this.editMode) {
         this.DOMObject.find('.selectable').click(function(e) {
             e.stopPropagation();
-            selectObject($(this));
+            lD.selectObject($(this));
         });
     }
 };

@@ -7,11 +7,9 @@ const timelineTemplate = require('../templates/timeline.hbs');
  * Timeline contructor
  * @param {object} container - the container to render the timeline to
  * @param {object =} [options] - Timeline options
- * @param {number} layoutDuration - total duration of the layout
  */
-var Timeline = function(container, layoutDuration) {
+var Timeline = function(container) {
     this.DOMObject = container;
-    this.layoutDuration = layoutDuration;
 
     this.scrollPercent = {
         left: 0,
@@ -23,11 +21,12 @@ var Timeline = function(container, layoutDuration) {
         zoom: -1, // Zoom by default is -1 so that can be calculated based on the widgets of the regions
         startingZoom: -1,
         minTime: 0,
-        maxTime: layoutDuration,
-        deltatime: layoutDuration,
+        maxTime: lD.layout.duration,
+        deltatime: lD.layout.duration,
         zoomInDisable: '',
         zoomOutDisable: '',
         scrollPosition: 0, // scroll position
+        scrollWidth: 0, // To fix the double scroll reseting to 0 bug
         widgetMinimumVisibleRatio: 4, // Minimum % value so that the region details are shown
         widgetMinimumDurationOnStart: 10 // % of the shortest widget to be used to calculate the default zoom 
     };
@@ -40,7 +39,7 @@ var Timeline = function(container, layoutDuration) {
 Timeline.prototype.changeZoom = function(zoom) {
     
     // Reset to starting zoom
-    if(zoom == 0){
+    if(zoom === 0) {
         this.properties.scrollPosition = 0;
         this.properties.zoom = this.properties.startingZoom;
         return;
@@ -82,8 +81,8 @@ Timeline.prototype.changeZoom = function(zoom) {
  */
 Timeline.prototype.calculateTimeValues = function() {
 
-    this.properties.deltatime = Math.round(10 * (this.layoutDuration / (this.properties.zoom / 100))) / 10;
-    this.properties.minTime = Math.round(10 * (this.properties.scrollPosition * this.layoutDuration)) / 10;
+    this.properties.deltatime = Math.round(10 * (lD.layout.duration / (this.properties.zoom / 100))) / 10;
+    this.properties.minTime = Math.round(10 * (this.properties.scrollPosition * lD.layout.duration)) / 10;
     this.properties.maxTime = this.properties.minTime + this.properties.deltatime;
 };
 
@@ -107,14 +106,14 @@ Timeline.prototype.calculateStartingZoom = function(regions) {
     var smallerWidgetDuration = -1;
     for(region in regions) {
         for(widget in regions[region].widgets) {
-            if(regions[region].widgets[widget].getDuration() < smallerWidgetDuration || smallerWidgetDuration == -1){
+            if(regions[region].widgets[widget].getDuration() < smallerWidgetDuration || smallerWidgetDuration === -1) {
                 smallerWidgetDuration = regions[region].widgets[widget].getDuration();
             }
         }
     }
 
     // Calculate zoom and limit its minimum to 100%
-    this.properties.zoom = Math.floor(this.properties.widgetMinimumDurationOnStart / (smallerWidgetDuration / this.layoutDuration));
+    this.properties.zoom = Math.floor(this.properties.widgetMinimumDurationOnStart / (smallerWidgetDuration / lD.layout.duration));
     
     if(this.properties.zoom <= 100 ) {
         this.properties.zoom = this.properties.startingZoom = 100;
@@ -132,7 +131,7 @@ Timeline.prototype.calculateStartingZoom = function(regions) {
  */
 Timeline.prototype.checkRegionsVisibility = function(regions) {
 
-    var visibleDuration = this.layoutDuration * (100 / this.properties.zoom); //this.properties.maxTime - this.properties.minTime;
+    var visibleDuration = lD.layout.duration * (100 / this.properties.zoom); //this.properties.maxTime - this.properties.minTime;
     
     for(region in regions) {
         // Reset the region visibility flag
@@ -206,8 +205,8 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
                     var ghost = currentRegion.widgets[widget].createClone();
 
                     // if the ghost goes after the layout ending, crop it
-                    if(auxTime + ghost.duration > this.layoutDuration) {
-                        var cropDuration = ghost.duration - ((auxTime + ghost.duration) - this.layoutDuration);
+                    if(auxTime + ghost.duration > lD.layout.duration) {
+                        var cropDuration = ghost.duration - ((auxTime + ghost.duration) - lD.layout.duration);
                         ghost.duration = cropDuration;
                     }
 
@@ -231,7 +230,7 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
         currentRegion.ghostWidgetsHavePadding = (paddingLeft > 0);
     
         // Calulate padding in percentage ( related to the duration )
-        currentRegion.ghostWidgetsPadding = (paddingLeft / this.layoutDuration) * 100;
+        currentRegion.ghostWidgetsPadding = (paddingLeft / lD.layout.duration) * 100;
 
         // add ghost object array to the region
         currentRegion.ghostWidgetsObject = ghostWidgetsObject;
@@ -245,7 +244,7 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
 Timeline.prototype.render = function(layout) {
 
     // If starting zoom is not defined, calculate its value based on minimum widget duration
-    if(this.properties.zoom == -1) {
+    if(this.properties.zoom === -1) {
         this.calculateStartingZoom(layout.regions);
     }
 
@@ -270,7 +269,9 @@ Timeline.prototype.render = function(layout) {
     // Load region container
     var regionsContainer = this.DOMObject.find('#regions-container');
 
-    console.log('Render timeline: ' + this.properties.scrollPosition);
+
+    // Save regions size to guarantee that when the scroll event is called, the region don't reset to 0 ( bugfix )
+    this.properties.scrollWidth = regionsContainer.find("#regions").width();
 
     // Maintain the previous scroll position
     regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
@@ -281,7 +282,7 @@ Timeline.prototype.render = function(layout) {
     // Enable hover and select for each layout/region
     this.DOMObject.find('.selectable').click(function(e) {
         e.stopPropagation();
-        selectObject($(this));
+        lD.selectObject($(this));
     });
 
     // Button actions
@@ -302,6 +303,14 @@ Timeline.prototype.render = function(layout) {
     });
     
     regionsContainer.scroll($.debounce(500, function() {
+
+        /**
+         * To avoid reseting to 0 when the debounce causes the position set to fail
+         * compare regions width with the rendered value before the trigger
+        */
+        if(self.properties.scrollWidth != $(this).find("#regions").width()) {
+            return;
+        }
 
         // Get new scroll position
         var newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();

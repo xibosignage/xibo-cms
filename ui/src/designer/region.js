@@ -11,8 +11,6 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
 
-    //this.data = data; //TODO: check if we need to maintain the "pure" data object
-
     this.playlists = data.regionPlaylist;
 
     this.backgroundColor = backgroundColor;
@@ -24,7 +22,7 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
 
     this.options = data.regionOptions;
 
-    // set default dimentions
+    // set real dimentions
     this.dimensions = {
         width: data.width,
         height: data.height,
@@ -45,7 +43,7 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
      */
     this.selectedFlag = function() {
         for(widget in this.widgets) {
-            if (this.widgets[widget].selected == true) {
+            if (this.widgets[widget].selected === true) {
                 return 'selected-widget';
             }
         }
@@ -70,19 +68,31 @@ Region.prototype.scaleTo = function(layoutScale) {
 
 /**
  * Transform a region using the new values and the layout's scaling and save the values to the structure
- * @param  {number} width Region new width
- * @param  {number} height Region new height
- * @param  {number} top Region new top
- * @param  {number} left Region new left
- * @param  {number} layoutScale Layout scaling from the container to the actual layout dimensions
+ * @param {string} type Type of transformation
+ * @param {object=} [values] - Transformation values
+ * @param {number} [values.width] - New width ( for resize tranformation )
+ * @param {number} [values.height] - New height ( for resize tranformation )
+ * @param {number} [values.top] - New top position ( for move tranformation )
+ * @param {number} [values.left] - New left position ( for move tranformation )
+ * @param {bool=} saveToHistory - Flag to save or not to the changes history
  */
-Region.prototype.saveTransformation = function(width, height, top, left, layoutScale) {
+Region.prototype.saveTransformation = function(type, values, saveToHistory = true) {
 
-    // Change data structure properties
-    this.width = width / layoutScale;
-    this.height = height / layoutScale;
-    this.top = top / layoutScale;
-    this.left = left / layoutScale;
+    console.log('saveTransformation: ' + type);
+    console.log(values);
+    
+    var currentValues = {
+        width: this.dimensions.width,
+        height: this.dimensions.height,
+        top: this.dimensions.top,
+        left: this.dimensions.left
+    };
+
+    // Apply changes to the region ( updating values )
+    this.dimensions.width = values.width;
+    this.dimensions.height = values.height;
+    this.dimensions.top = values.top;
+    this.dimensions.left = values.left;
 };
 
 module.exports = Region;
