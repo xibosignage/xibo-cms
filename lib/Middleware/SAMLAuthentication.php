@@ -128,50 +128,69 @@ class SAMLAuthentication extends Middleware
                     'SAML SSO failed: '.implode(', ', $errors) . '. Last Reason: ' . $auth->getLastErrorReason()
                 );
             } else {
+                // Pull out the SAML attributes
                 $samlAttrs = $auth->getAttributes();
 
-                if (empty($samlAttrs)) {
+                // How should we look up the user?
+                $identityField = (isset($samlSettings['workflow']['field_to_identify'])) ? $samlSettings['workflow']['field_to_identify'] : 'UserName';
+
+                if ($identityField !== 'nameId' && empty($samlAttrs)) {
+                    // We will need some attributes
                     throw new AccessDeniedException(__('No attributes retrieved from the IdP'));
                 }
 
-                // Convert the SAML Attributes into userData mapped against the workflow mappings.
-                $userData = array();
+                // If appropriate convert the SAML Attributes into userData mapped against the workflow mappings.
+                $userData = [];
                 if (isset($samlSettings['workflow']) && isset($samlSettings['workflow']['mapping'])) {
                     foreach ($samlSettings['workflow']['mapping'] as $key => $value) {
                         if (!empty($value) && isset($samlAttrs[$value]) ) {
                             $userData[$key] = $samlAttrs[$value];
                         }
                     }
+
+                    // If we can't map anything, then we better throw an error
+                    if (empty($userData)) {
+                        throw new AccessDeniedException(__('No attributes could be mapped'));
+                    }
                 }
 
-                if (empty($userData)) {
-                    throw new AccessDeniedException(__('No attributes could be mapped'));
-                }
-
-                if (!isset($samlSettings['workflow']['field_to_identify'])) {
-                    $identityField = 'UserName';
+                // If we're using the nameId as the identity, then we should populate our userData with that value
+                if ($identityField === 'nameId') {
+                    $userData[$identityField] = $auth->getNameId();
                 } else {
-                    $identityField = $samlSettings['workflow']['field_to_identify'];
+                    // Check to ensure that our identity has been populated from attributes successfully
+                    if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
+                        throw new AccessDeniedException(__('%s not retrieved from the IdP and required since is the field to identify the user', $identityField));
+                    }
                 }
 
-                if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
-                    throw new AccessDeniedException(__('%s not retrieved from the IdP and required since is the field to identify the user', $identityField));
-                }
-
-                if (!in_array($identityField, array('UserID', 'UserName', 'email'))) {
-                    throw new AccessDeniedException(__('Invalid field_to_identify value. Review settings.'));
-                }
+                // Try and get the user record.
+                $user = null;
 
                 try {
-                    if ($identityField == 'UserID') {
-                        $user = $app->userFactory->getById($userData[$identityField][0]);
-                    } else if ($identityField == 'UserName') {
-                        $user = $app->userFactory->getByName($userData[$identityField][0]);
-                    } else {
-                        $user = $app->userFactory->getByEmail($userData[$identityField][0]);
+                    switch ($identityField) {
+                        case 'nameId':
+                            $user = $app->userFactory->getByName($userData[$identityField]);
+                            break;
+
+                        case 'UserId':
+                            $user = $app->userFactory->getById($userData[$identityField][0]);
+                            break;
+
+                        case 'UserName':
+                            $user = $app->userFactory->getByName($userData[$identityField][0]);
+                            break;
+
+                        case 'email':
+                            $user = $app->userFactory->getByEmail($userData[$identityField][0]);
+                            break;
+
+                        default:
+                            throw new AccessDeniedException(__('Invalid field_to_identify value. Review settings.'));
                     }
+
                 } catch (NotFoundException $e) {
-                    $user = null;
+                    // User does not exist - this is valid as we might create them JIT.
                 }
 
                 if (!isset($user)) {
