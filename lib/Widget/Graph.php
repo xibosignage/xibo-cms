@@ -15,6 +15,15 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with This Xibo-Module.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
+/**
+ * This module depends on RGraph <https://www.rgraph.net/>
+ * For later releases see <https://www.rgraph.net/demos/index.html#canvas>
+ *  - Options for the different chart types
+ *  - Effects for the different chart types
+ *  - Combine multiple graphs: Line and Line, Line and Bar, Pie and Donut and Donut, ...
  */
 namespace Xibo\Widget;
 
@@ -28,6 +37,7 @@ use Xibo\Factory\ModuleFactory;
 class Graph extends ModuleWidget
 {
     const DEFAULT_COLORS = '#7293CB, #E1974C, #84BA5B, #D35E60, #808585, #9067A7, #AB6857, #CCC210, #396AB1, #DA7C30, #3E9651, #CC2529, #535154, #6B4C9A, #922428, #948B3D';
+    const SERIES_IDENTIFIER_SEPARATOR = ': ';
     
     public $codeSchemaVersion = 1;
 
@@ -95,6 +105,14 @@ class Graph extends ModuleWidget
     {
         return 'graph-form-settings';
     }
+    
+    /**
+     * @return string
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'graph-designer-javascript';
+    }
 
     /**
      * Process any module settings
@@ -111,25 +129,76 @@ class Graph extends ModuleWidget
      * Used by the TWIG template to show a list of available dataSets
      * @return DataSet[]
      */
-    public function dataSets() {
-        $result = $this->dataSetFactory->query();
-        array_unshift($result, []);
-        return $result;
-    }
-
-    /**
-     * Get the currently selected DataSetIds
-     * @return int[]
-     */
-    public function dataSetIds()
+    public function dataSets()
     {
-        $ids = unserialize($this->getOption('dataSetIds'));
-        $labels = unserialize($this->getOption('dataSetLabels'));
-        $result = [];
-        foreach ($ids as $k => $v) {
-            $result[] = ['selected' => $v, 'label' => $labels[$k]];
+        return $this->dataSetFactory->query();
+    }
+    
+    public function getTab($name)
+    {
+        if ($name == 'columns') {
+          $id = $this->getSanitizer()->getInt('changed', 0);
+          $columns = [];
+          $labels = [];
+          try {
+              $columns = $this->valueColumns($id, []);
+              $labels = $this->labelColumns($id);
+          } catch(NotFoundException $ex) { }
+          return [ 'columns' => $columns, 'labels' => $labels ];
         }
-        return $result;
+    }
+    
+    /**
+     * Returns a List of all Columns which can be used to plot
+     * @param int $dataSetId the dataset to get all columns from this can be used for the values
+     * @return array
+     */
+    public function selectedValueColumns($dataSetId)
+    {
+        $data = $this->valueColumns($dataSetId, []);
+        $selected = explode(',', $this->getOption('columns', ''));
+        return array_intersect($data, $selected);
+    }
+    
+    /**
+     * Returns a List of all Columns which can be used to plot
+     * @param int $dataSetId the dataset to get all columns from this can be used for the values
+     * @param array $selected List of all selected columns which should not be in the resulting list
+     * @return array
+     */
+    public function valueColumns($dataSetId, $selected)
+    {
+        $data = [];
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        
+        // @var DataSetColumn $column
+        foreach ($dataSet->getColumn() as $column) {
+            // Only selected columns and DataSetColumn->dataTypeId "2" (Number) and "3" (Date) can be processed
+            if (($column->dataTypeId == 2) || ($column->dataTypeId == 3)) {
+                array_push($data, $column->heading);
+            }
+        }
+        return array_diff($data, $selected);
+    }
+    
+    /**
+     * Returns a List of all Columns which can be used for the Labels
+     * @return array
+     */
+    public function labelColumns($dataSetId)
+    {
+        $data = [];
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        
+        // @var DataSetColumn $column
+        foreach ($dataSet->getColumn() as $column) {
+            // Only selected columns and DataSetColumn->dataTypeId "1" (String), "2" (Number) and "3" (Date) can be processed
+            if (($column->dataTypeId == 1) || ($column->dataTypeId == 2) || ($column->dataTypeId == 3)) {
+                array_push($data, $column->heading);
+            }
+        }
+        array_unshift($data, '');
+        return $data;
     }
 
     /**
@@ -178,19 +247,10 @@ class Graph extends ModuleWidget
         $this->setOption('rendering', $this->getSanitizer()->getString('rendering'));
         $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-
-        $ids = $this->getSanitizer()->getIntArray('dataSetIds');
-        $labels = $this->getSanitizer()->getStringArray('dataSetLabels');
-        foreach ($ids as $k => $v) {
-            if (empty($v)) {
-                unset($ids[$k]);
-                unset($labels[$k]);
-            }
-        }
-        $this->setOption('dataSetIds', serialize($ids));
-        $this->setOption('dataSetLabels', serialize($labels));
-        $this->setOption('maxdata', $this->getSanitizer()->getInt('maxdata', 180));
-        $this->setOption('groupLabel', $this->getSanitizer()->getCheckbox('groupLabel', 0));
+        $this->setOption('labelColumn', $this->getSanitizer()->getString('labelColumn', ''));
+        $this->setOption('seriesColumn', $this->getSanitizer()->getString('seriesColumn', ''));
+        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId', 0));
+        $this->setOption('columns', implode(',', $this->getSanitizer()->getStringArray('columns', '')));
 
         $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
         $this->setOption('legendCenter', $this->getSanitizer()->getCheckbox('legendCenter', 0));
@@ -214,12 +274,14 @@ class Graph extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $data = [];
+        $graphOptions = [];
+        $jsObject = '';
         $containerId = 'graph-' . $displayId;
-        $dataSetIds = unserialize($this->getOption('dataSetIds'));
-        $dataLabels = unserialize($this->getOption('dataSetLabels'));
-        $maxData = $this->getOption('maxdata', 180);
-        $switchRowsCols = $this->getOption('groupLabel', 0) == 1;
-        $graphData = $this->getDataSetContentForRGraph($dataSetIds, $dataLabels, $maxData, $switchRowsCols);
+        $labelColumn = $this->getOption('labelColumn');
+        $seriesColumn = $this->getOption('seriesColumn');
+        $dataSetId = $this->getOption('dataSetId');
+        $selected = explode(',', $this->getOption('columns', ''));
+        $graphData = $this->getDataSetContentForRGraph($dataSetId, $selected, $labelColumn, $seriesColumn, "");
 
         // Replace the View Port Width if we are in Preview-Mode
         $data['viewPortWidth'] = ($this->getSanitizer()->getCheckbox('preview') == 1) ? $this->region->width : '[[ViewPortWidth]]';
@@ -243,58 +305,62 @@ class Graph extends ModuleWidget
         $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.dynamic.js') . '"></script>';
         $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.effects.js') . '"></script>';
 
+        // Options for the rendering.
+        // May be overriden by the various chart types
+        // In future releases this options may be configured by the user
+        $graphOptions['shadowBlur'] = '5';
+        $graphOptions['shadowOffsetX'] = '10';
+        $graphOptions['shadowOffsetY'] = '10';
+        $graphOptions['shadowColor'] = '#aaa';
+        
         // Processing dependent on the Graph Type
         switch ($this->getOption('graphType')) {
+            case 'donut_chart':
+                $graphOptions['variant'] = 'donut';
+                
             case 'pie_chart':
                 $jsObject = 'RGraph.Pie';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.pie.js') . '"></script>';
-                $graphData->data = $graphData->data[0];
+                $this->regroupData($graphData->data);
+                $this->summarizeData($graphData->data);
+                
+                $graphOptions['exploded'] = '10';
                 break;
 
             case 'bar_chart':
                 $jsObject = 'RGraph.Bar';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.bar.js') . '"></script>';
-                $this->swapLabelAndLegend($graphData);
+                $this->regroupData($graphData->data);
                 break;
 
             case 'horizontal_bar_chart':
                 $jsObject = 'RGraph.HBar';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.hbar.js') . '"></script>';
-                $this->swapLabelAndLegend($graphData);
+                $this->regroupData($graphData->data);
                 break;
 
             case 'waterfall_chart':
                 $jsObject = 'RGraph.Waterfall';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.waterfall.js') . '"></script>';
-                $graphData->data = $graphData->data[0];
-                break;
-
-            case 'circular_progress':
-                $jsObject = 'RGraph.SemiCircularProgress';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.semicircularprogress.js') . '"></script>';
-                $this->swapLabelAndLegend($graphData);
+                $this->regroupData($graphData->data);
+                $this->summarizeData($graphData->data);
                 break;
 
             case 'vertical_progress':
                 $jsObject = 'RGraph.Bar';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.bar.js') . '"></script>';
-                $this->swapLabelAndLegend($graphData);
+                $this->regroupData($graphData->data);
                 break;
 
             case 'horizontal_progress':
                 $jsObject = 'RGraph.HBar';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.hbar.js') . '"></script>';
-                $this->swapLabelAndLegend($graphData);
+                $this->regroupData($graphData->data);
                 break;
 
             case 'radar_chart':
                 $jsObject = 'RGraph.Radar';
                 $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.radar.js') . '"></script>';
-                break;
-
-            case 'scatter_chart':
-                $jsObject = 'RGraph.Scatter';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.scatter.js') . '"></script>';
                 break;
 
             case 'line_chart':
@@ -333,7 +399,8 @@ class Graph extends ModuleWidget
         
         // Preparing the Legend
         $legend = '';
-        if ($this->getOption('showLegend') == 1) {
+        $javaScriptLegend = '';
+        if (((int)$this->getOption('showLegend') > 0) && !empty($graphData->legend)) {
             $legendStyle = '';
             
             // Horizontal alignment
@@ -354,6 +421,13 @@ class Graph extends ModuleWidget
             if ($this->getOption('legendCenter') == 1) {
                 $legend = '<div class="legendWrapper">' . $legend . '</div>';
             }
+            
+            $javaScriptLegend = '
+                  if (typeof data.legend == "object") {
+                      for (var i = 0; i < data.legend.length; i++) {
+                          $("#' . $containerId . '_legend").append("<div style=\'color:" + graphOptions.colors[i%graphOptions.colors.length] + ";\'>" + data.legend[i] + "</div>");
+                      }
+                  }';
         }
 
         // Body content
@@ -364,45 +438,37 @@ class Graph extends ModuleWidget
             </div>
         ';
 
-        // After body content - mostly XIBO-Stuff for scaling and so on
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        if (!empty($graphData->data)) {
+          // After body content - mostly XIBO-Stuff for scaling and so on
+          $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+          $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
 
-        // Add all Chart Javascript
-        $javaScriptContent .= '<script>
-            $(document).ready(function() {
-                var options = ' . json_encode($options) . '
-                $("#' . $containerId . '").xiboLayoutScaler(options);
+          // Add all Chart Javascript
+          $javaScriptContent .= '<script>
+              $(document).ready(function() {
+                  var options = ' . json_encode($options) . '
+                  $("#' . $containerId . '").xiboLayoutScaler(options);
 
-                var graphOptions = ' . json_encode($this->getSanitizer()->getParam($jsObject, (object) array())) . ';
-                graphOptions.colors = ["' . str_replace(',', '","', $this->getOption('defaultColors', self::DEFAULT_COLORS)) . '"];
+                  var graphOptions = ' . json_encode((object)$graphOptions) . ';
+                  graphOptions.colors = ["' . str_replace(',', '","', $this->getOption('defaultColors', self::DEFAULT_COLORS)) . '"];
 
-                var data = ' . json_encode( $graphData ) . ';';
+                  var data = ' . json_encode($graphData) . ';
+                  ' . $javaScriptLegend . '
+                  graphOptions.xaxisLabels = data.labels;
+                  graphOptions.yaxisLabels = data.labels;
+                  graphOptions.labels = data.labels;
+                  graphOptions.title = "' . $this->getOption('name') . '";
 
-        if ((int)$this->getOption('showLegend') > 0) {
-            $javaScriptContent .= '
-                if (typeof data.legend == "object") {
-                    for (var i = 0; i < data.legend.length; i++) {
-                        $("#' . $containerId . '_legend").append("<div style=\'color:" + graphOptions.colors[i%graphOptions.colors.length] + ";\'>" + data.legend[i] + "</div>");
-                    }
-                }';
+                  new ' . $jsObject . '({
+                      id: "' . $containerId . '_graph",
+                      data: data.data,
+                      options: graphOptions
+                  }).draw();
+              });</script>';
+
+          // Replace the After body Content
+          $data['body'] .= $javaScriptContent;
         }
-
-        $javaScriptContent .= '
-                graphOptions.xaxisLabels = data.labels;
-                graphOptions.yaxisLabels = data.labels;
-                graphOptions.labels = data.labels;
-                graphOptions.title = "' . $this->getOption('name') . '";
-
-                var line = new ' . $jsObject . '({
-                    id: "' . $containerId . '_graph",
-                    data: data.data,
-                    options: graphOptions
-                }).draw();
-            });</script>';
-
-        // Replace the After body Content
-        $data['body'] .= $javaScriptContent;
 
         return $this->renderTemplate($data);
     }
@@ -410,72 +476,29 @@ class Graph extends ModuleWidget
     /**
      * Load all possible Columns and data from the selected DataSet
      * 
-     * @param array $dataSetIds The IDs of the Datasets to visualize
-     * @param array $labelCols The Column where the Labels for the X-Axis are saved in
-     * @param int $maxData Maximum Datapoints to read
-     * @param bool $switchRowsCols Switch Rows and Columns for a different grouping
+     * @param int $dataSetId The ID of the Dataset to visualize
+     * @param array $columns The Columns where the values are in
+     * @param string $labelCol The Column where the Labels for the X-Axis are saved in
+     * @param string $seriesCol The Column where to group the data by
+     * @param string $orderBy Order by this column - may be null
      * @return Object { data: [], labels: [], legend: [] }
      */
-    protected function getDataSetContentForRGraph($dataSetIds, $labelCols, $maxData, $switchRowsCols)
+    protected function getDataSetContentForRGraph($dataSetId, $columns = [], $labelCol = "", $seriesCol = "", $orderBy = "")
     {
-        $maxData = abs($maxData);
         $graphData = (object)[];
         $graphData->data = [];
         $graphData->labels = [];
+        $graphData->series = [];
         $graphData->legend = [];
-
-        try {
-            // Get all Headers to show as different Data-Streams
-            $columns = [];
-            $maxColumns = 0;
-            foreach ($dataSetIds as $k => $id) {
-                if (empty(trim($id))) continue;
-                $dataSet = $this->dataSetFactory->getById($id);
-
-                /* @var DataSetColumn $column */
-                foreach ($dataSet->getColumn() as $column) {
-                    // DataSetColumn->dataTypeId "2" (Number) and "3" (Date) can be processed
-                    if (($column->heading == $labelCols[$k]) || (($column->dataTypeId != 2) && ($column->dataTypeId != 3)) ) {
-                        continue;
-                    }
-                    $graphData->legend[] = $column->heading;
-                    $columns[$dataSet->dataSetId][] = $column->heading;
-                }
-                $maxColumns = max([$maxColumns, count($columns[$dataSet->dataSetId])]);
-            }
-
-            foreach ($dataSetIds as $k => $id) {
-                if (empty(trim($id))) continue;
-                $dataSet = $this->dataSetFactory->getById($id);
-                $columnOffset = count($graphData->data);
-
-                // Get the total number of data to limit to the last $maxData entries
-                $data = $dataSet->getData([], ['requireTotal' => true]);
-                $filter = [
-                  'size' => $maxData,
-                  'start' => max(0, $dataSet->countLast() - $maxData)
-                ];
         
-                // Add Labels and Data
-                foreach ($dataSet->getData($filter, ['requireTotal' => true]) as $c => $row) {
-                    if (!array_key_exists($c, $graphData->labels)) {
-                        $graphData->labels[$c] = '' . (!empty($labelCols[$k]) ? $row[$labelCols[$k]] : $c);
-                    }
-                    
-                    // Add all Data
-                    foreach ($columns[$dataSet->dataSetId] as $v => $column) {
-                        if ($switchRowsCols) {
-                            $idx = $columnOffset + $c;
-                        } else {
-                            $idx = $columnOffset + $v;
-                        }
-                        $graphData->data[$idx][] = $row[$column];
-                    }
-                }
-            }
-            if ($switchRowsCols) {
-                $this->swapLabelAndLegend($graphData);
-            }
+        try {
+            $dataSet = $this->dataSetFactory->getById($dataSetId);
+            $data = $dataSet->getData(empty($orderBy) ? [] : ['order' => $orderBy], ['requireTotal' => true]);
+            
+            $graphData->series = $this->extractUniqueValues($data, $seriesCol);
+            $graphData->legend = $this->prepareLegend($dataSet, $columns, $graphData->series, $labelCol);
+            $graphData->labels = $this->extractUniqueValues($data, $labelCol);
+            $graphData->data = $this->prepareData($data, $columns, $labelCol, $seriesCol);
         } catch (NotFoundException $e) {
             // In case there is a datset to be displayed what does not exists (deleted or so)
             $graphData->data[0][] = 0;
@@ -486,16 +509,198 @@ class Graph extends ModuleWidget
     }
     
     /**
-     * Some Charts need the Labels and Legend Texts to be swapped
-     *
-     * @param Object $graphData
+     * Extracts all Columns to be shown and returns them for the legend
+     * 
+     * @param \Xibo\Entity\DataSet &$dataSet Reference to the DataSet to get the Column-Names from
+     * @param array &$columns Reference to all columns to show
+     * @param array $series Series identifier to append to the Legend
+     * @param string $labelCol Name of the Column which holds the labels and therefore should not be displayed
+     * @return Array of column names for the legend
      */
-    protected function swapLabelAndLegend($graphData)
+    protected function prepareLegend(\Xibo\Entity\DataSet &$dataSet, array &$columns, $series = [], $labelCol = '')
     {
-        $labels = $graphData->labels;
-        $legend = $graphData->legend;
-        $graphData->labels = $legend;
-        $graphData->legend = $labels;
+        $result = [];
+        if (empty($series)) {
+            $series[] = NULL;
+        }
+        foreach ($series as $identifier) {
+            // @var DataSetColumn $column
+            foreach ($dataSet->getColumn() as $column) {
+                // Only selected columns and DataSetColumn->dataTypeId "2" (Number) and "3" (Date) can be processed
+                if ((empty($columns) || in_array($column->heading, $columns))
+                    && (($column->dataTypeId == 2) || ($column->dataTypeId == 3))
+                    && ($column->heading != $labelCol)) {
+                    // Prepand the series identifier if at least one is present
+                    if ($identifier == NULL) {
+                        array_push($result, $column->heading);
+                    } else {
+                        array_push($result, $identifier . self::SERIES_IDENTIFIER_SEPARATOR . $column->heading);
+                    }
+                } else if (in_array($column->heading, $columns)) {
+                  unset($columns[array_search($column->heading, $columns)]);
+                }
+            }
+        }
+        return $result;
+    }
+    
+    /**
+     * Returns a list of all unique values on the given column
+     * 
+     * @param array $data Reference to all data from the DataSet
+     * @param string $column Name of the Column which holds the values
+     * @return List of all values only once
+     */
+    protected function extractUniqueValues(&$data, $column = '')
+    {
+        $result = [];
+        if (!empty($column)) {
+            foreach ($data as $k => $row) {
+                if (array_key_exists($column, $row)) {
+                    array_push($result, $row[$column]);
+                }
+            }
+        }
+        reset($data);
+        return array_values(array_unique($result));
+    }
+
+    /**
+     * Returns a list of all data from the requested columns
+     * 
+     * This creates a summarized list of data, grouped by the value in the label column
+     *   LBL | A | B |
+     *  -----+---+---+
+     *   aa  | a | b |
+     *   aa  | c | d |
+     *   bb  | e | f |
+     *   cc  | g | h |
+     * 
+     * Create an array like [ [a+c, e, g], [b+d, f, h] ]
+     * This is: Each Column has one block; each LBL has one number in each block
+     * 
+     * 
+     * If there is also a series defined, the grouping will be like this:
+     *   LBL | SER | A | B |
+     *  -----+-----+---+---+
+     *   aa  | AA  | a | b |
+     *   aa  | BB  | c | d |
+     *   bb  | AA  | e | f |
+     *   bb  | BB  | g | h |
+     *   cc  | AA  | i | j |
+     *   cc  | AA  | k | l |
+     *             
+     * Create an array like [ [a, e, i+k], [b, f, j+l], [c, g], [d, h] ]
+     * This is: Each Column+SER has one block; each LBL+SER has one number in each block
+     * 
+     * @param array &$data Reference to all data from the DataSet
+     * @param array &$columns Reference to the list of all columns to be shown
+     * @param string $labelCol Name of the Column which holds the labels
+     * @param string $seriesCol Name of Column where the series identifier is in
+     * @return List of all data grouped by columns
+     */
+    protected function prepareData(&$data, &$columns, $labelCol = '', $seriesCol = '')
+    {
+        $result = [];
+        $keys = [];
+        foreach ($data as $k => $row) {
+            // Get the current key to identify the position in the values list.
+            // If there is a series identifier, this is appended to the main key to seperate the series
+            $series = '';
+            if (!empty($seriesCol) && array_key_exists($seriesCol, $row)) {
+                $series = self::SERIES_IDENTIFIER_SEPARATOR . $row[$seriesCol];
+            }
+            
+            // Getting the position to add the current column-values in the resulting list
+            // If there is label, try to find out if it was already processed to summarize the previous values
+            $key = empty($labelCol) ? $k : $row[$labelCol];
+            if (!array_key_exists($series, $keys)) {
+                $keys[$series] = [];
+            }
+            if (in_array($key, $keys[$series])) {
+                $pos = array_search($key, $keys[$series]);
+            } else {
+                $pos = count($keys[$series]);
+                array_push($keys[$series], $key);
+            }
+            
+            // Go through each column and add or append the value from the current row to the correct index
+            foreach ($columns as $c => $column) {
+                $col = $column . $series;
+                if (!array_key_exists($col, $result)) {
+                    $result[$col] = [];
+                }
+                
+                // Fill up with ZERO
+                if (count($result[$col]) < $pos) {
+                    $result[$col] = array_merge($result[$col], array_fill(0, $pos, 0));
+                }
+                
+                // If there is already a number on the current index, summarize the values; otherwise add the value
+                if (array_key_exists($pos, $result[$col])) {
+                    $result[$col][$pos] = $result[$col][$pos] + floatval($row[$column]);
+                } else {
+                    $result[$col][$pos] = floatval($row[$column]);
+                }
+            }
+        }
+        reset($data);
+        return array_values($result);
+    }
+    
+    /**
+     * This method regroups the data based on the index of the values in each row into a row based on the position of the value in the row.
+     * Example: $data = [ [ 1, 2, 3 ], [ 4, 5, 6 ] ]
+     * Result:  $data = [ [ 1, 4 ], [ 2, 5 ], [ 3, 6 ] ]
+     * This is needed for Bar-Charts and others which needs this kind of data representation
+     * 
+     * @param array &$data Reference to the data list to regroup
+     */
+    protected function regroupData(array &$data)
+    {
+        if (count($data) <= 0) {
+            return;
+        }
+        
+        $copy = $data;
+        if (!is_array($data[0])) {
+            $copy = [ $data ];
+        }
+        $data = [];
+        
+        foreach ($copy as $k => $row) {
+            foreach ($row as $col => $val) {
+                if (!array_key_exists($col, $data)) {
+                    $data[$col] = [];
+                }
+                $data[$col][$k] = $val;
+            }
+        }
+    }
+    
+    /**
+     * This method summarizes all values on each index (and subindex) and returns a flat list
+     * Example: $data = [ [ 1, 4 ], [ 2, 5 ], [ 3, 6 ] ]
+     * Result:  $data = [ 1+2+3, 4+5+6 ]
+     * This is needed for example for the Pie-/Donut-Chart, ...
+     * 
+     * @param array &$data Reference to the data list to summarize
+     */
+    protected function summarizeData(array &$data)
+    {
+        if ((count($data) <= 0) || !is_array($data[0])) {
+            return;
+        }
+        $result = [];
+        foreach ($data as $k => $row) {
+            foreach ($row as $col => $val) {
+                if (!array_key_exists($col, $result)) {
+                    $result[$col] = 0;
+                }
+                $result[$col] += $val;
+            }
+        }
+        $data = $result;
     }
     
     /**
@@ -503,8 +708,8 @@ class Graph extends ModuleWidget
      */
     public function IsValid()
     {
-        // Can't be sure because the client does the rendering
-        return 2;
+        // We can be sure because every WebPlayer should render this graph corectly
+        return 1;
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "title": "Data-Visualization with Graphs",
   "author": "Lukas Zurschmiede",
-  "description": "A module to visualize from local DataSets with a Graph.",
+  "description": "A module to visualize from DataSets with a Graph.",
   "name": "graph",
   "class": "Xibo\\Widget\\Graph"
 } 
