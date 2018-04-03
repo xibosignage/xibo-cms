@@ -1813,6 +1813,61 @@
                 }
             }
         },
+        "/display/authorise/{displayId}": {
+            "post": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Toggle authorised",
+                "description": "Toggle authorised for the Display.",
+                "operationId": "displayToggleAuthorise",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/display/defaultlayout/{displayId}": {
+            "post": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Set Default Layout",
+                "description": "Sent the default Layout on this Display",
+                "operationId": "displayDefaultLayout",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutId",
+                        "in": "formData",
+                        "description": "The Layout ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup": {
             "get": {
                 "tags": [
@@ -4443,7 +4498,7 @@
                 "operationId": "scheduleCalendarData",
                 "parameters": [
                     {
-                        "name": "DisplayGroupIds",
+                        "name": "displayGroupIds",
                         "in": "formData",
                         "description": "The DisplayGroupIds to return the schedule for. Empty for All.",
                         "type": "array",
@@ -4479,7 +4534,7 @@
                 }
             }
         },
-        "/schedule/:displayGroupId/events": {
+        "/schedule/{displayGroupId}/events": {
             "get": {
                 "tags": [
                     "schedule"
@@ -6589,7 +6644,7 @@
                 }
             }
         },
-        "/playlist/widget/notification/{playlistId}": {
+        "/playlist/widget/notificationview/{playlistId}": {
             "post": {
                 "tags": [
                     "widget"
@@ -9456,6 +9511,14 @@
                 "calculatedDuration": {
                     "description": "Calculated Duration of this widget after taking into account the useDuration flag",
                     "type": "integer"
+                },
+                "createdDt": {
+                    "description": "The datetime the Layout was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime the Layout was last modified",
+                    "type": "string"
                 },
                 "widgetOptions": {
                     "description": "An array of Widget Options",
