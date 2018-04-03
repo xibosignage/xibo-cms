@@ -271,6 +271,7 @@ class SAMLAuthentication extends Middleware
 
                         // Audit Log
                         $this->app->logService->audit('User', $user->userId, 'User created with SAML workflow', [
+                            'UserName' => $user->userName,
                             'IPAddress' => $this->app->request()->getIp(),
                             'UserAgent' => $this->app->request()->getUserAgent()
                         ]);
@@ -294,6 +295,8 @@ class SAMLAuthentication extends Middleware
                     $this->app->session->setUser($user->userId);
 
                     // Audit Log
+                    // Set the userId on the log object
+                    $this->app->logService->setUserId($user->userId);
                     $this->app->logService->audit('User', $user->userId, 'Login Granted via SAML', [
                         'IPAddress' => $this->app->request()->getIp(),
                         'UserAgent' => $this->app->request()->getUserAgent()
