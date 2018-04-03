@@ -268,6 +268,12 @@ class SAMLAuthentication extends Middleware
                         /** @var \Xibo\Entity\UserGroup $group */
                         $group->assignUser($user);
                         $group->save(['validate' => false]);
+
+                        // Audit Log
+                        $this->app->logService->audit('User', $user->userId, 'User created with SAML workflow', [
+                            'IPAddress' => $this->app->request()->getIp(),
+                            'UserAgent' => $this->app->request()->getUserAgent()
+                        ]);
                     }
                 }
 
@@ -286,6 +292,12 @@ class SAMLAuthentication extends Middleware
                     $this->app->session->setIsExpired(0);
                     $this->app->session->regenerateSessionId();
                     $this->app->session->setUser($user->userId);
+
+                    // Audit Log
+                    $this->app->logService->audit('User', $user->userId, 'Login Granted via SAML', [
+                        'IPAddress' => $this->app->request()->getIp(),
+                        'UserAgent' => $this->app->request()->getUserAgent()
+                    ]);
                 }
 
                 // Redirect to User Homepage
