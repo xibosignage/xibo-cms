@@ -1,29 +1,45 @@
 {% raw %}
-<script type="text/javascript">
-    var next = 1;
-    $('#dataSetAdd').on('click', function (e) {
-        var cont = $('#dataSetTemplate')
-            .clone()
-            .attr('id', null)
-            .appendTo($('#dataSetContainer'))
-            .show();
-
-        $('#_dataSetIds', cont).attr({
-            'id': null,
-            'name': null
-        }).attr({
-            'id': 'dataSetIds[' + next + ']',
-            'name': 'dataSetIds[' + next + ']'
-        });
-
-        $('#_dataSetLabels', cont).attr({
-            'id': null,
-            'name': null
-        }).attr({
-            'id': 'dataSetLabels[' + next + ']',
-            'name': 'dataSetLabels[' + next + ']'
-        });
-        next++;
-    });
-</script>
 {% endraw %}
+
+<script type="text/javascript">
+    function graphFormSetup(dialog) {
+        var extra = $('.bootbox').data().extra;
+        
+        $("#columnsIn, #columnsOut").sortable({
+            connectWith: '.connectedSortable',
+            dropOnEmpty: true
+        }).disableSelection();
+        
+        $(".li-sortable", dialog).dblclick(switchLists);
+        
+        $('#dataSetId').on('change', function(e) {
+            $.ajax({
+                url: extra.fetch + '?changed=' + $(this).val(),
+                method: 'GET'
+            }).done(function(data) {
+                $("#columnsIn, #columnsOut").children().remove();
+                $(data.extra.columns).each(function(k, elem) {
+                    $('#columnsOut').append('<li id="' + elem + '" class="li-sortable">' + elem + '</li>');
+                });
+                
+                $('#labelColumn').children().remove();
+                $('#seriesColumn').children().remove();
+                $(data.extra.labels).each(function(k, elem) {
+                    $('#labelColumn').append('<option value="' + elem + '">' + elem + '</option>');
+                    $('#seriesColumn').append('<option value="' + elem + '">' + elem + '</option>');
+                });
+            });
+        });
+    }
+  
+    function graphFormSubmit() {
+        // Clean the previous generated hidden columns from the form
+        var form = $("#graphEditForm");
+        form.find('input[name="columns[]"]').remove();
+        
+        $($("#columnsIn").sortable('toArray')).each(function(k, v) {
+            form.append('<input type="hidden" name="columns[]" value="' + v + '" />');
+        });
+        form.submit();
+    }
+</script>

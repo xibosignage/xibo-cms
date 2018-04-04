@@ -9,6 +9,9 @@
             <directory suffix="Test.php">tests/integration/Widget/</directory>
             <directory suffix="Test.php">tests/integration/Cache/</directory>
         </testsuite>
+        <testsuite name="Xibo Unit-Test Suite">
+            <directory suffix="Test.php">tests/Widget/</directory>
+        </testsuite>
       </testsuites>
     <groups>
       <exclude>
