@@ -19,6 +19,7 @@
 declare(strict_types=1);
 namespace Xibo\Tests\Widget;
 use PHPUnit\Framework\TestCase;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class GraphTest
@@ -67,7 +68,7 @@ abstract class WidgetBase extends TestCase
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    protected function getInstance(string $widget): object
+    protected function getInstance(string $widget): ModuleWidget
     {
         $this->app = $this->createMock(\Slim\Slim::class);
         $this->pool = $this->createMock(\Stash\Interfaces\PoolInterface::class);
