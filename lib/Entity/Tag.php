@@ -209,8 +209,11 @@ class Tag implements \JsonSerializable
         }
 
         $this->displayGroupIds = [];
-        foreach ($this->getStore()->select('SELECT displayGroupId FROM `lktagdisplaygroup` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
-            $this->displayGroupIds[] = $row['displayGroupId'];
+        // Didn't exist before 134
+        if (DBVERSION >= 134) {
+            foreach ($this->getStore()->select('SELECT displayGroupId FROM `lktagdisplaygroup` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
+                $this->displayGroupIds[] = $row['displayGroupId'];
+            }
         }
 
         // Set the originals
