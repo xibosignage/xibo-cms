@@ -196,8 +196,8 @@ then
     if [ ! "$CMS_ALIAS" == "none" ]
     then
         echo "Setting up CMS alias"
-        /bin/sed -i "s|.*Alias.*$|Alias /$CMS_ALIAS /var/www/cms/web|" /etc/apache2/conf.d/cms.conf
-        /bin/sed -i "s|.*RewriteBase.*$|RewriteBase /$CMS_ALIAS|" /var/www/cms/web/.htaccess
+        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/conf.d/cms.conf
+        /bin/sed -i "s|.*RewriteBase.*$|RewriteBase $CMS_ALIAS|" /var/www/cms/web/.htaccess
     fi
 
     if [ ! -e /var/www/cms/custom/settings-custom.php ]
