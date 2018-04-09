@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "9814a47159bfebb0fa514dea88e252f0",
-    "content-hash": "741f20d286adaf2e173c5edfff106d4d",
+    "hash": "61cc5fdc4d11168e89e03f1e7f48fd54",
+    "content-hash": "961f1cce838e7cf5f48f5dfeed5998f8",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -406,6 +406,7 @@
             ],
             "description": "Modern library to handle RSS/Atom feeds",
             "homepage": "https://github.com/miniflux/picoFeed",
+            "abandoned": true,
             "time": "2017-11-02 03:20:36"
         },
         {
@@ -1850,41 +1851,38 @@
         },
         {
             "name": "onelogin/php-saml",
-            "version": "v2.12.0",
+            "version": "3.0.0.x-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/onelogin/php-saml.git",
-                "reference": "9416fa739cff88ffcc472967cec048a774b97e0f"
+                "reference": "7cf3bb3a2cd6dec7751fdb4c69fd0e5e23479af9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/onelogin/php-saml/zipball/9416fa739cff88ffcc472967cec048a774b97e0f",
-                "reference": "9416fa739cff88ffcc472967cec048a774b97e0f",
+                "url": "https://api.github.com/repos/onelogin/php-saml/zipball/7cf3bb3a2cd6dec7751fdb4c69fd0e5e23479af9",
+                "reference": "7cf3bb3a2cd6dec7751fdb4c69fd0e5e23479af9",
                 "shasum": ""
             },
             "require": {
-                "ext-curl": "*",
-                "ext-dom": "*",
-                "ext-mcrypt": "*",
-                "ext-openssl": "*",
-                "php": ">=5.3.2"
+                "php": ">=5.4",
+                "robrichards/xmlseclibs": ">=3.0"
             },
             "require-dev": {
-                "pdepend/pdepend": "1.1.0",
+                "pdepend/pdepend": ">=2.5.0",
                 "phploc/phploc": "*",
-                "phpunit/phpunit": "4.8",
-                "satooshi/php-coveralls": "1.0.1",
+                "phpunit/phpunit": ">=4.8",
+                "satooshi/php-coveralls": ">=1.0.2",
                 "sebastian/phpcpd": "*",
-                "squizlabs/php_codesniffer": "2.9.0"
+                "squizlabs/php_codesniffer": "~3.1.1"
             },
             "suggest": {
-                "ext-gettext": "Install gettext and php5-gettext libs to handle translations"
+                "ext-curl": "Install curl lib to be able to use the IdPMetadataParser for parsing remote XMLs",
+                "ext-gettext": "Install gettext and php5-gettext libs to handle translations",
+                "ext-openssl": "Install openssl lib in order to handle with x509 certs (require to support sign and encryption)"
             },
             "type": "library",
             "autoload": {
                 "classmap": [
-                    "extlib/xmlseclibs",
-                    "lib/Saml",
                     "lib/Saml2"
                 ]
             },
@@ -1899,7 +1897,7 @@
                 "onelogin",
                 "saml"
             ],
-            "time": "2017-11-06 17:44:03"
+            "time": "2018-03-07 14:03:46"
         },
         {
             "name": "paragonie/random_compat",
@@ -2384,6 +2382,46 @@
                 "validator"
             ],
             "time": "2018-01-02 21:47:22"
+        },
+        {
+            "name": "robrichards/xmlseclibs",
+            "version": "3.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/robrichards/xmlseclibs.git",
+                "reference": "d937712f70f93a584eb0299ccd87dc6374003781"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/robrichards/xmlseclibs/zipball/d937712f70f93a584eb0299ccd87dc6374003781",
+                "reference": "d937712f70f93a584eb0299ccd87dc6374003781",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">= 5.4"
+            },
+            "suggest": {
+                "ext-openssl": "OpenSSL extension"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "RobRichards\\XMLSecLibs\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "A PHP library for XML Security",
+            "homepage": "https://github.com/robrichards/xmlseclibs",
+            "keywords": [
+                "security",
+                "signature",
+                "xml",
+                "xmldsig"
+            ],
+            "time": "2017-08-31 09:27:07"
         },
         {
             "name": "sallar/jdatetime",
@@ -5612,6 +5650,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "sallar/jdatetime": 20,
+        "onelogin/php-saml": 20,
         "fguillot/picofeed": 0,
         "umpirsky/twig-gettext-extractor": 20
     },
