@@ -25,6 +25,7 @@ use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
+use Xibo\Entity\Media;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -88,12 +89,26 @@ class Twitter extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
             $media->save();
+        }
+
+        // Tidy up the old SVG reference
+        try {
+            $oldSvg = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg');
+
+            if ($oldSvg->mediaId != null) {
+                $this->getLog()->debug('Deleting old emoji svg file');
+                $oldSvg->delete();
+            }
+        } catch (XiboException $xiboException) {
+            $this->getLog()->error('Unable to delete old SVG reference during Twitter install. E = ' . $xiboException->getMessage());
+            $this->getLog()->debug($xiboException->getTraceAsString());
         }
     }
 
@@ -551,9 +566,9 @@ class Twitter extends TwitterBase
 
         // Make an emojione client
         $emoji = new Client(new Ruleset());
-        $emoji->imageType = 'svg';
+        $emoji->imageType = 'png';
         $emoji->sprites = true;
-        $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
+        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
@@ -794,9 +809,12 @@ class Twitter extends TwitterBase
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
-        
+        $headContent .= '
+            <link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
+        ';
+
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
             $headContent .= '<style type="text/css">body { background-color: ' . $backgroundColor . ' }</style>';
@@ -860,12 +878,12 @@ class Twitter extends TwitterBase
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($this->getOption('tweetDistance', 0) > 0) {
+        if ($displayId === 0 || $this->getOption('tweetDistance', 0) > 0) {
             // We use the display to fence in the tweets to our location
             return $this->getWidgetId() . '_' . $displayId;
         } else {
             // Non-display specific
-            return $this->getWidgetId();
+            return $this->getWidgetId(). (($displayId === 0) ? '_0' : '');
         }
     }
 

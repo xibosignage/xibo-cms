@@ -11,6 +11,7 @@
         <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-select/css/bootstrap-select.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-select-ajax/css/ajax-bootstrap-select.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.css") }}?{{ version }}" rel="stylesheet">
@@ -26,13 +27,14 @@
         <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload-ui.css") }}?{{ version }}" rel="stylesheet">
         <link href="{{ theme.uri("libraries/toastr/toastr.min.css") }}" rel="stylesheet">
+        <link href="{{ theme.uri("libraries/bootstrap-tour/bootstrap-tour.min.css") }}" rel="stylesheet">
         <link href="{{ theme.uri("css/dashboard.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/timeline.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/xibo.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/calendar.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
-        <!-- Copyright 2006-2017 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
     </head>
@@ -57,7 +59,10 @@
 
         <script src="{{ theme.uri("libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js") }}?{{ version }}"></script>
+
         <script src="{{ theme.uri("libraries/bootstrap-select/js/bootstrap-select.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-select-ajax/js/ajax-bootstrap-select.min.js") }}?{{ version }}"></script>
+
         <script src="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/underscore/underscore-min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/jstimezonedetect/jstz.min.js") }}?{{ version }}"></script>
@@ -77,14 +82,15 @@
         <script src="{{ theme.uri("libraries/jquery-message-queuing/jquery.ba-jqmq.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/jquery-throttle-debounce/jquery.ba-throttle-debounce.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}?{{ version }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap-tour/bootstrap-tour.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/date-time-format.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/momentjs/moment.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("libraries/chartjs/Chart.min.js") }}?{{ version }}"></script>
-
         <script src="{{ theme.uri("libraries/colors/colors.min.js") }}?{{ version }}"></script>
+
         <script src="{{ theme.uri("js/xibo-cms.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("js/xibo-forms.js") }}?{{ version }}"></script>
         <script src="{{ theme.uri("js/xibo-preview-timeline.js") }}?{{ version }}"></script>
@@ -118,6 +124,8 @@
             {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
             {% set selectPickerTranslation %}libraries/bootstrap-select/js/i18n/defaults-{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
+            <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
+            {% set selectPickerTranslation %}libraries/bootstrap-select-ajax/js/locale/ajax-bootstrap-select{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
             <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
 
@@ -156,7 +164,6 @@
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.calendarLanguage }}";
             var pingUrl = "{{ urlFor("ping") }}";
-
             {% autoescape "js" %}
             var dataTablesLanguage = {
                 "decimal":        "",
@@ -208,5 +215,7 @@
 
         {% block javaScriptTemplates %}{% endblock %}
         {% block javaScript %}{% endblock %}
+
+        {% include "user-welcome.twig" %}
     </body>
 </html>

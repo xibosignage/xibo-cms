@@ -1,8 +1,22 @@
 {#
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (campaign-page.twig)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 This is the template for the campaign page
 #}
@@ -92,12 +106,12 @@ This is the template for the campaign page
 
         // Data Table events
         table.on('draw', dataTableDraw);
-        table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
+        table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
 
         // Callback for the media form
         // Fired when the media form opens
-        function layoutFormCallBack(dialog) {
+        function campaignAssignLayoutsFormOpen(dialog) {
 
             // Convert our filter form tags inputs into actual tag inputs
             $(dialog).find("#tags").tagsinput();
@@ -107,7 +121,9 @@ This is the template for the campaign page
 
             // Layout DataTable
             var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0, stateDuration: 0,
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
                     var data;
                     $.ajax({

@@ -475,8 +475,9 @@ class Media implements \JsonSerializable
         // Tags
         $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
 
-        // Are we loading for a delete? If so load the child models
-        if ($options['deleting'] || $options['fullInfo']) {
+        // Are we loading for a delete? If so load the child models, unless we're a module file in which case
+        // we've no need.
+        if ($this->mediaType !== 'module' && ($options['deleting'] || $options['fullInfo'])) {
 
             if ($this->widgetFactory === null)
                 throw new ConfigurationException(__('Call setChildObjectDependencies before load'));

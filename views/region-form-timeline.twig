@@ -28,16 +28,16 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-2">
-                <div class="well">
+                <div class="well module-selector-well">
                     <ul class="nav nav-list">
                         <li class="nav-header">{% trans "Add Media" %}</li>
                         <li class="XiboFormButton" href="{{ urlFor("playlist.library.assign.form", {id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{% trans "Library" %}</a></li>
                         {% set isAudioEnabled = 0 %}
                         {% for module in modules %}
                             {% if module.regionSpecific %}
-                                <li class="XiboFormButton" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                                <li class="XiboFormButton" data-widget-type="{{ module.type }}" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% else %}
-                                <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}" data-max-size="{{ libraryUpload.maxSize }}" data-max-size-message="{{ libraryUpload.maxSizeMessage }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                                <li class="libraryUploadForm" data-widget-type="{{ module.type }}" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}" data-max-size="{{ libraryUpload.maxSize }}" data-max-size-message="{{ libraryUpload.maxSizeMessage }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% endif %}
 
                             {% if module.type == "audio" %}

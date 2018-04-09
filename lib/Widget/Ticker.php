@@ -1385,12 +1385,12 @@ class Ticker extends ModuleWidget
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($this->getOption('sourceId', 1) == 2) {
+        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2) {
             // DataSets might use Display
             return $this->getWidgetId() . '_' . $displayId;
         } else {
             // Tickers are non-display specific
-            return $this->getWidgetId();
+            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
         }
     }
 

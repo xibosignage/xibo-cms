@@ -1157,8 +1157,8 @@ abstract class ModuleWidget implements ModuleInterface
                     $template['fileName'] = $template['image'];
 
                     if ($loadImage) {
-                        // We ltrim this because the control is expecting a relative URL
-                        $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                        // Find the URL to the module file representing this template image
+                        $template['image'] = $this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
                     }
                 } else {
                     $template['fileName'] = '';
@@ -1292,7 +1292,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getCacheKey($displayId)
     {
         // Default is the widgetId
-        return $this->getWidgetId();
+        return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
     }
 
     /** @inheritdoc */

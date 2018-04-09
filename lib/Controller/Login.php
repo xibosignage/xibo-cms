@@ -101,8 +101,6 @@ class Login extends Base
                 // Check password
                 $user->checkPassword($password);
 
-                // We are logged in!
-                $user->loggedIn = 1;
                 $user->touch();
 
                 $this->getLog()->info('%s user logged in.', $user->userName);
@@ -151,7 +149,6 @@ class Login extends Base
      */
     public function logout($redirect = true)
     {
-        $this->getUser()->loggedIn = 0;
         $this->getUser()->touch();
 
         // to log out a user we need only to clear out some session vars
@@ -164,23 +161,6 @@ class Login extends Base
 
         if ($redirect)
             $this->getApp()->redirectTo('login');
-    }
-
-    /**
-     * User Welcome
-     */
-    public function userWelcome()
-    {
-        $this->getState()->template = 'user-welcome-page';
-        $this->getState()->setData([
-            'help' => [
-                'dashboard' => $this->getHelp()->link('Dashboard', 'General'),
-                'display' => $this->getHelp()->link('Display', 'General'),
-                'layout' => $this->getHelp()->link('Layout', 'General'),
-                'schedule' => $this->getHelp()->link('Schedule', 'General'),
-                'windows' => $this->getHelp()->address('install_windows_client')
-            ]
-        ]);
     }
 
     /**
