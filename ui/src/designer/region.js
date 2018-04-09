@@ -5,9 +5,9 @@
  * @param {number} id - region id
  * @param {object} data - data from the API request
  * @param {object=} [options] - Region options
- * @param {string} [options.backgroundColor="#555"] - Color for the background
+ * @param {string} [options.backgroundColor="#555555ed"] - Color for the background
  */
-var Region = function(id, data, {backgroundColor = '#555'} = {}) {
+var Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
 
@@ -16,6 +16,8 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
     this.backgroundColor = backgroundColor;
     this.selected = false;
     this.loop = false; // Loop region widgets
+
+    this.createdRegion = false; // user created region
 
     // widget structure
     this.widgets = {};
@@ -54,45 +56,41 @@ var Region = function(id, data, {backgroundColor = '#555'} = {}) {
 };
 
 /**
- * Calculate region values for a region based on the scale of the container/layout
- * @param  {number} layoutScale Layout scaling from the container to the actual layout dimensions
- */
-Region.prototype.scaleTo = function(layoutScale) {
-    // Loop through the container properties and scale them according to the layout scale from the original
-    for(var property in this.containerProperties) {
-        if(this.containerProperties.hasOwnProperty(property)) {
-            this.containerProperties[property] = this.dimensions[property] * layoutScale;
-        }
-    }
-};
-
-/**
  * Transform a region using the new values and the layout's scaling and save the values to the structure
- * @param {string} type Type of transformation
- * @param {object=} [values] - Transformation values
- * @param {number} [values.width] - New width ( for resize tranformation )
- * @param {number} [values.height] - New height ( for resize tranformation )
- * @param {number} [values.top] - New top position ( for move tranformation )
- * @param {number} [values.left] - New left position ( for move tranformation )
- * @param {bool=} saveToHistory - Flag to save or not to the changes history
+ * @param {object=} [newValues] - Transformation values
+ * @param {number} [newValues.width] - New width ( for resize tranformation )
+ * @param {number} [newValues.height] - New height ( for resize tranformation )
+ * @param {number} [newValues.top] - New top position ( for move tranformation )
+ * @param {number} [newValues.left] - New left position ( for move tranformation )
+ * @param {bool=} saveToHistory - Flag to save or not to the change history
  */
-Region.prototype.saveTransformation = function(type, values, saveToHistory = true) {
+Region.prototype.transform = function(newValues, saveToHistory = true) {
 
-    console.log('saveTransformation: ' + type);
-    console.log(values);
-    
-    var currentValues = {
+    // save old/previous values
+    var oldValues = {
         width: this.dimensions.width,
         height: this.dimensions.height,
         top: this.dimensions.top,
         left: this.dimensions.left
     };
 
+    if(saveToHistory) {
+        lD.manager.addChange(
+            "transform",
+            "region",
+            this.id,
+            oldValues,
+            newValues
+        );
+    }
+
     // Apply changes to the region ( updating values )
-    this.dimensions.width = values.width;
-    this.dimensions.height = values.height;
-    this.dimensions.top = values.top;
-    this.dimensions.left = values.left;
+    this.dimensions.width = newValues.width;
+    this.dimensions.height = newValues.height;
+    this.dimensions.top = newValues.top;
+    this.dimensions.left = newValues.left;
+
+    return true;
 };
 
 module.exports = Region;

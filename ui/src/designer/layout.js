@@ -2,6 +2,13 @@
 const Region = require('./region.js');
 const Widget = require('./widget.js');
 
+// Default dimensions to be used when creating a new region
+const NewRegionDefaultDimensions = {
+    width: 100,
+    height: 100,
+    top: 10,
+    left: 10
+};
 
 /**
  * Layout contructor
@@ -31,6 +38,9 @@ var Layout = function(id, data) {
         left: 0,
         scaleToTheOriginal: 1
     };
+
+    // incremental index to use as the id for the new created regions
+    this.createdRegionsIndex = 0;
 
     this.backgroundCss = function() {
         if(this.backgroundImage === null) {
@@ -140,39 +150,132 @@ Layout.prototype.calculateTimeValues = function() {
     }
 };
 
+
 /**
- * Calculate layout values for the layout based on the scale of the container
- * @param {object} container - object to use as base to scale to
+ * Add a new empty element to the layout
+ * @param {string} elementType - element type (widget, region, ...)
  */
-Layout.prototype.scaleTo = function(container) {
+Layout.prototype.addElement = function(elementType) {
 
-    var layoutSizeRatio = this.width / this.height;
-    var containerWidth = container.DOMObject.width();
-    var containerHeight = container.DOMObject.height();
-    var containerSizeRatio = containerWidth / containerHeight;
-    var containerPadding = Math.min(containerWidth, containerHeight) * container.paddingPercentage;
+    var elementId;
+    
+    // Add element to the layout by type
+    if(elementType === 'region') {
 
-    if(layoutSizeRatio > containerSizeRatio) { // If the layout W/H is bigger than the container
-        // Calculate width and height 
-        this.containerProperties.width = Math.floor(containerWidth - (containerPadding * 2));
-        this.containerProperties.height = Math.floor(this.containerProperties.width / layoutSizeRatio);
+        var newRegion = new Region(
+            this.createdRegionsIndex, // TODO: Find a way to create a new ID
+            NewRegionDefaultDimensions
+        );
 
-        // Calculate position of the layout
-        this.containerProperties.left = Math.floor(containerPadding);
-        this.containerProperties.top = Math.floor(containerHeight / 2 - this.containerProperties.height / 2);
+        // Change the new element values to show that is temporary
+        newRegion.createdRegion = true;
+        newRegion.id = 'temp_' + newRegion.id;
+        newRegion.regionId = 't_' + newRegion.regionId;
 
-    } else { // If the layout W/H is smaller than the container
-        // Calculate width and height 
-        this.containerProperties.height = Math.floor(containerHeight - (containerPadding * 2));
-        this.containerProperties.width = Math.floor(this.containerProperties.height * layoutSizeRatio);
+        elementId = newRegion.id;
+        elementCopy = newRegion;
 
-        // Calculate position of the layout
-        this.containerProperties.top = Math.floor(containerPadding);
-        this.containerProperties.left = Math.floor(containerWidth / 2 - this.containerProperties.width / 2);
+        // Increase new region index
+        this.createdRegionsIndex++;
+
+        // Push Region to the Layout region array
+        this.regions[newRegion.id] = newRegion;
+
+    } else if(elementType === 'widget') {
+        console.log('TODO: Widget create');
     }
 
-    // Calculate scale from the original
-    this.containerProperties.scaleToTheOriginal = this.containerProperties.width / this.width;
+    if(!jQuery.isEmptyObject(elementCopy)) {
+        lD.manager.addChange(
+            "create",
+            elementType,
+            elementId,
+            elementCopy,
+            null
+        );
+    }
+
+    // Refresh the designer to update the changes
+    lD.refreshDesigner();
+
+    lD.selectObject($('#' + elementId));
+};
+
+/**
+ * Delete an element in the layout, by ID
+ * @param {string} elementType - element type (widget, region, ...)
+ * @param {number} elementId - element id
+ * @param {object=} options - additional options
+ * @param {bool} [options.saveToHistory = false] - Save to history
+ */
+Layout.prototype.deleteElement = function(elementId, elementType, options = {}) {
+
+    var elementCopy = {};
+    var deleteResult = false;
+    
+    // Get element from the layout
+    if(elementType === 'region'){
+        // Save a copy of the element
+        elementCopy = this.regions[elementId];
+
+        // Delete the region
+        delete this.regions[elementId];
+
+        deleteResult = true;
+        
+    } else if(elementType === 'widget') {
+        console.log('TODO: Widget delete');
+    }
+
+    // Check if element exists and add the change to the history
+    if(!jQuery.isEmptyObject(elementCopy) && options.saveToHistory){
+
+        // Save element without select flag
+        elementCopy.selected = false;
+
+        // save delete regions to history changes
+        lD.manager.addChange(
+            "delete",
+            elementType,
+            elementId,
+            elementCopy,
+            null
+        );
+    }
+
+    // If delete was successful, unselect all objects and refresh the designer
+    if(deleteResult) {
+        // Unselect all objects
+        lD.selectObject();
+
+        // Refresh the designer to update the changes
+        lD.refreshDesigner();
+    }
+
+    return deleteResult;
+};
+
+/**
+ * Restore element to the layout
+ * @param {number} elementId - element id
+ * @param {string} elementType - element type (widget, region, ...)
+ * @param {object} elementData - element data to restore
+ */
+Layout.prototype.restoreElement = function(elementId, elementType, elementData) {
+    var restoreResult = false;
+
+    if(elementType === 'widget') {
+        console.log('  TODO: Restore widget');
+        this.regions[elementData.regionId].widgets[elementId] = elementData;
+
+        restoreResult = true;
+    } else if(elementType === 'region') {
+        this.regions[elementId] = elementData;
+        
+        restoreResult = true;
+    }
+
+    return restoreResult;
 };
 
 module.exports = Layout;

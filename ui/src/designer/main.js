@@ -28,6 +28,8 @@ const Layout = require('./layout.js');
 const Widget = require('./widget.js');
 const Navigator = require('./navigator.js');
 const Timeline = require('./timeline.js');
+const Manager = require('./manager.js');
+const BottomToolbar = require('./bottom-toolbar.js');
 
 // Include CSS
 require('../css/designer.css');
@@ -47,11 +49,14 @@ window.lD = {
     // Manager
     manager: {},
 
-// Designer DOM div
+    // Designer DOM div
     designerDiv: $('#layout-editor'),
 
-// Selected object
-    selectedObject: {}
+    // Selected object
+    selectedObject: {},
+
+    // Bottom toolbar
+    bottomToolbar: {}
 };
 
 // Load Layout and build app structure
@@ -82,8 +87,17 @@ $(document).ready(function() {
                     lD.designerDiv.find('#layout-timeline')
                 );
 
-                // Default selected object is the layout ( that will render the containers )
-                lD.selectObject(lD.designerDiv.find('#layout_' + layoutId));
+                // Initialize manager
+                lD.manager = new Manager();
+
+
+                // Initialize bottom toolbar
+                lD.bottomToolbar = new BottomToolbar(
+                    lD.designerDiv.find('#bottom-toolbar')
+                );
+
+                // Default selected object is the layout
+                lD.selectObject();
             }
         })
         .fail(function(data) {
@@ -97,21 +111,10 @@ $(document).ready(function() {
             lD.designerDiv.html(htmlError);
 
             return -1;
-        });
+        }
+    );
 
-    // Button actions
-    lD.designerDiv.find('#refreshDesigner').click(function() {
-        lD.refreshDesigner();
-    });
-
-    lD.designerDiv.find('#layout-navigator-edit-navbar .close-button').click(function() {
-        lD.toggleNavigatorEditing(false);
-    });
-
-    lD.designerDiv.find('#enableNavigatorEditMode').click(function() {
-        lD.toggleNavigatorEditing(true);
-    });
-
+    // When in edit mode, enable click on background to close navigator
     lD.designerDiv.find('#layout-navigator-edit').click(function(event) {
         if(event.target.id === 'layout-navigator-edit') {
             lD.toggleNavigatorEditing(false);
@@ -121,35 +124,44 @@ $(document).ready(function() {
     // Refresh the designer render on window resize
     $(window).resize($.debounce(500, function(e) {
         if(e.target === window) {
-        refreshDesigner();
+            lD.refreshDesigner();
         }
     }));
 });
 
 /**
  * Select a layout object (layout/region/widget)
- * @param  {object} obj - Object to be selected
+ * @param {object=} obj - Object to be selected
  */
-lD.selectObject = function(obj) {
+lD.selectObject = function(obj = null) {
 
-    var newSelectedId = obj.attr('id');
-    var newSelectedType = obj.data('type');
+    // Get object properties from the DOM ( or set to layout if not defined )
+    var newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
+    var newSelectedType = (obj === null) ? 'layout' : obj.data('type');
 
     var oldSelectedId = this.selectedObject.id;
     var oldSelectedType = this.selectedObject.type;
     
-    // Unselect the previous selected object
-    switch(this.selectedObject.type) {
-        case 'region':
-            this.layout.regions[this.selectedObject.id].selected = false;
-            break;
+    // Unselect the previous selectedObject object if still selected
+    if( this.selectedObject.selected ) {
 
-        case 'widget':
-            this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
-            break;
+        switch(this.selectedObject.type) {
+            case 'region':
+                if(this.layout.regions[this.selectedObject.id]) {
+                    this.layout.regions[this.selectedObject.id].selected = false;
+                }
+                break;
 
-        default:
-            break;
+            case 'widget':
+                if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
+                    this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
+                }
+                break;
+
+            default:
+                break;
+        }
+        
     }
     
     // Set to the default object
@@ -189,6 +201,7 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.navigator);
     this.renderContainer(this.navigatorEdit);
     this.renderContainer(this.timeline);
+    this.renderContainer(this.bottomToolbar);
 };
 
 /**
@@ -206,16 +219,22 @@ lD.renderContainer = function(container) {
  * @param {boolean} enable - flag to toggle the editing
  */
 lD.toggleNavigatorEditing = function(enable) {
+
+    // Unselect objects ( select layout )
+    this.selectObject();
+
     if(enable) {
         // Create a new navigator instance
         this.navigatorEdit = new Navigator(
             this.designerDiv.find('#layout-navigator-edit-content'),
             {
                 edit: true,
+                editNavbar: this.designerDiv.find('#layout-navigator-edit-navbar'),
                 padding: 0.05
             }
         );
 
+        // Show navigator edit div
         this.designerDiv.find('#layout-navigator-edit').css('display', 'block');
 
         // Render navigator
@@ -229,7 +248,7 @@ lD.toggleNavigatorEditing = function(enable) {
         // Clean variable
         this.navigatorEdit = {};
 
-        // Clean object HTML
+        // Clean object HTML and hide div
         this.designerDiv.find('#layout-navigator-edit-content').empty();
         this.designerDiv.find('#layout-navigator-edit').css('display', 'none');
 

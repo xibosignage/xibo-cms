@@ -119,7 +119,7 @@
     position: relative;
 }
 
-#layout-editor #layout-navigator-edit #layout-navigator-edit-navbar {
+#layout-editor #layout-navigator-edit #layout-navigator-edit-navbar .navbar {
     padding: 5px;
     background: gray;
     width: 90%;
@@ -136,25 +136,31 @@
     user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
-#layout-editor .region.selectable:hover,
+#layout-editor #layout-navigator .region.selectable:hover,
 #layout-editor .widget.selectable:hover {
     background: #cfcfcf !important;
 }
 
-#layout-editor #layout-navigator .region.selected-region,
+#layout-editor .region.selected-region,
 #layout-editor #layout-timeline .region.selected-region {
     background: #1358e5 !important;
 }
 
-#layout-editor #layout-navigator .region.selected-widget,
+#layout-editor .region.selected-widget,
 #layout-editor .widget.selected-widget {
     background: #8bc34a !important;
 }
 
 /* Layout bottom navbar */
-#layout-editor #layout-bottom-navbar {
-    min-height: 40px;
-    padding: 3px 0 0 190px;
+#layout-editor #bottom-toolbar {
+    min-height: 45px;
+    padding: 5px 0 0 200px;
     z-index: 0;
     background: gray;
+}
+
+@media (max-width: 768px) {
+    #layout-editor #bottom-toolbar {
+        padding: 5px 0 0 5px;
+    }
 }
