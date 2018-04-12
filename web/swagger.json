@@ -5820,7 +5820,7 @@
                         "type": "integer"
                     },
                     {
-                        "name": "columns",
+                        "name": "dataSetColumnId",
                         "in": "formData",
                         "description": " EDIT only - Array of dataSetColumn IDs to assign",
                         "required": false,
