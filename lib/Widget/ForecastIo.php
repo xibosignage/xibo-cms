@@ -759,6 +759,7 @@ class ForecastIo extends ModuleWidget
         $dailySubs = '';
         $matches = '';
         preg_match_all('/\[dailyForecast.*?\]/', $body, $matches);
+
         // Substitute
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
@@ -786,7 +787,6 @@ class ForecastIo extends ModuleWidget
             // Substitute the completed template
             $body = str_replace($sub, $dailySubs, $body);
         }
-
 
         // Run replace over the main template
         $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone']);
@@ -819,14 +819,11 @@ class ForecastIo extends ModuleWidget
         // Replace the After body Content
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
         // Return that content.
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
@@ -881,5 +878,20 @@ class ForecastIo extends ModuleWidget
             $this->getLog()->error('Unable to reach Forecast API: %s', $e->getMessage());
             return false;
         }
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        $cachePeriod = $this->getSetting('cachePeriod', 60);
+        $updateInterval = $this->getOption('updateInterval', 60);
+
+        return max($cachePeriod, $updateInterval);
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        return $this->getWidgetId() . (($displayId === 0 || $this->getOption('useDisplayLocation') == 1) ? '_' . $displayId : '');
     }
 }

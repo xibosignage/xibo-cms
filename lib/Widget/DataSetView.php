@@ -220,7 +220,7 @@ class DataSetView extends ModuleWidget
      *      required=true
      *  ),
      *  @SWG\Parameter(
-     *      name="columns",
+     *      name="dataSetColumnId",
      *      in="formData",
      *      description=" EDIT only - Array of dataSetColumn IDs to assign",
      *      type="array",
@@ -478,9 +478,6 @@ class DataSetView extends ModuleWidget
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
-        // Clear all linked media.
-        $this->clearMedia();
-
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
     
@@ -540,10 +537,6 @@ class DataSetView extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
-
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
 
         return $this->renderTemplate($data);
     }
@@ -855,5 +848,25 @@ class DataSetView extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        // DataSetViews are display specific
+        return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
+        return $this->getOption('dataSetId');
     }
 }

@@ -1,0 +1,26 @@
+{
+  "dbVersion": 139,
+  "appVersion": "1.8.8",
+  "steps": [
+    {
+      "step": "Add widget created/modified dates",
+      "action": "ALTER TABLE widget ADD createdDt INT NULL;ALTER TABLE widget ADD modifiedDt INT NULL;"
+    },
+    {
+      "step": "Add index to the media table",
+      "action": "CREATE INDEX media_editedMediaID_index ON media (editedMediaID);"
+    },
+    {
+      "step": "Update help text on MAINTENANCE_LOG_MAXAGE",
+      "action": "UPDATE `setting` SET helpText = 'Maximum age for log entries in days. Set to 0 to keep logs indefinitely.' WHERE setting = 'MAINTENANCE_LOG_MAXAGE' LIMIT 1"
+    },
+    {
+      "step": "Update help text on MAINTENANCE_STAT_MAXAGE",
+      "action": "UPDATE `setting` SET helpText = 'Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely.' WHERE setting = 'MAINTENANCE_STAT_MAXAGE' LIMIT 1"
+    },
+    {
+      "step": "Remove loggedin column from user table",
+      "action": "ALTER TABLE user DROP COLUMN loggedin;"
+    }
+  ]
+}

@@ -150,4 +150,11 @@ class LocalVideo extends ModuleWidget
     {
         return $this->previewIcon();
     }
+
+    /** @inheritdoc */
+    public function getResource($displayId)
+    {
+        // Get resource isn't required for this module.
+        return null;
+    }
 }

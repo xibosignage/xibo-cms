@@ -12,7 +12,7 @@ services:
       MYSQL_DATABASE: "cms"
 
   xmr:
-    image: xibosignage/xibo-xmr:latest
+    image: xibosignage/xibo-xmr:release-0.7
     ports:
      - "9505:9505"
     environment:

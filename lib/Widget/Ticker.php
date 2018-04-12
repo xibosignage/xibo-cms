@@ -781,12 +781,6 @@ class Ticker extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        $this->concurrentRequestRelease();
-
         return $this->renderTemplate($data);
     }
 
@@ -804,9 +798,6 @@ class Ticker extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
-
-        // Lock this entire request
-        $this->concurrentRequestLock(md5($feedUrl));
 
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
@@ -830,9 +821,8 @@ class Ticker extends ModuleWidget
                 $client = new Client();
                 $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy([
                     'headers' => [
-                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4'
+                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
                     ],
-                    'stream' => true,
                     'timeout' => 20 // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
                 ]));
 
@@ -842,7 +832,7 @@ class Ticker extends ModuleWidget
                 $this->getLog()->debug('Feed returned content-type ' . $contentType);
 
                 // https://github.com/xibosignage/xibo/issues/1401
-                if (stripos($contentType, 'rss') === false && stripos($contentType, 'xml') === false) {
+                if (stripos($contentType, 'rss') === false && stripos($contentType, 'xml') === false && stripos($contentType, 'text') === false && stripos($contentType, 'html') === false) {
                     // The content type isn't compatible
                     $this->getLog()->error('Incompatible content type: ' . $contentType);
                     return false;
@@ -884,11 +874,11 @@ class Ticker extends ModuleWidget
             // Allowable attributes
             $clientConfig = new Config();
 
-            if ($this->getOption('allowedAttributes') != null) {
-                // need a sensible way to set this
-                // https://github.com/fguillot/picoFeed/issues/196
+            // need a sensible way to set this
+            // https://github.com/fguillot/picoFeed/issues/196
+            //if ($this->getOption('allowedAttributes') != null) {
                 //$clientConfig->setFilterWhitelistedTags(explode(',', $this->getOption('allowedAttributes')));
-            }
+            //}
 
             // Get the feed parser
             $reader = new Reader($clientConfig);
@@ -1133,9 +1123,6 @@ class Ticker extends ModuleWidget
         $dataSetId = $this->getOption('dataSetId');
         $upperLimit = $this->getOption('upperLimit');
         $lowerLimit = $this->getOption('lowerLimit');
-
-        // Lock this request
-        $this->concurrentRequestLock($dataSetId);
 
         // Ordering
         $ordering = '';
@@ -1387,5 +1374,35 @@ class Ticker extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2) {
+            // DataSets might use Display
+            return $this->getWidgetId() . '_' . $displayId;
+        } else {
+            // Tickers are non-display specific
+            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
+        }
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        if ($this->getOption('sourceId', 1) == 2) {
+            // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
+            return $this->getOption('dataSetId');
+        } else {
+            // Tickers are locked to the feed
+            return md5(urldecode($this->getOption('uri')));
+        }
     }
 }

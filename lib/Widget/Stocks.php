@@ -672,10 +672,6 @@ class Stocks extends AlphaVantageBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
         return $this->renderTemplate($data);
     }
 
@@ -687,5 +683,13 @@ class Stocks extends AlphaVantageBase
         // 2 = Unknown
         return 1;
     }
-    
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getSetting('updateInterval', 3600);
+
+        return max($cachePeriod, $updateInterval);
+    }
 }

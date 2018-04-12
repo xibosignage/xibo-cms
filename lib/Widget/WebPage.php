@@ -211,7 +211,7 @@ class WebPage extends ModuleWidget
         if ($this->getOption('modeid') == 1)
             return $this->previewIcon();
 
-        return $this->previewAsClient($width, $height, $scaleOverride);
+        return parent::preview($width, $height, $scaleOverride);
     }
 
     /**
@@ -287,5 +287,12 @@ class WebPage extends ModuleWidget
     {
         // Can't be sure because the client does the rendering
         return 2;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        // We have a long cache interval because we don't depend on any external data.
+        return 86400 * 365;
     }
 }

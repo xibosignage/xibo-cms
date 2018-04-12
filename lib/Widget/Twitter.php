@@ -25,7 +25,7 @@ use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
+use Xibo\Entity\Media;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -89,12 +89,26 @@ class Twitter extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
             $media->save();
+        }
+
+        // Tidy up the old SVG reference
+        try {
+            $oldSvg = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg');
+
+            if ($oldSvg->mediaId != null) {
+                $this->getLog()->debug('Deleting old emoji svg file');
+                $oldSvg->delete();
+            }
+        } catch (XiboException $xiboException) {
+            $this->getLog()->error('Unable to delete old SVG reference during Twitter install. E = ' . $xiboException->getMessage());
+            $this->getLog()->debug($xiboException->getTraceAsString());
         }
     }
 
@@ -429,9 +443,6 @@ class Twitter extends TwitterBase
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
-        if (!extension_loaded('curl'))
-            throw new ConfigurationException(__('cURL extension is required for Twitter'));
-
         // Do we need to add a geoCode?
         $geoCode = '';
         $distance = $this->getOption('tweetDistance');
@@ -555,9 +566,9 @@ class Twitter extends TwitterBase
 
         // Make an emojione client
         $emoji = new Client(new Ruleset());
-        $emoji->imageType = 'svg';
+        $emoji->imageType = 'png';
         $emoji->sprites = true;
-        $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
+        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
@@ -587,9 +598,13 @@ class Twitter extends TwitterBase
                 // Maybe make this more generic?
                 switch ($subClean) {
                     case 'Tweet':
-                        // Get the tweet text to operate on
-                        $tweetText = $tweet->full_text;
-
+                        // Get the tweet text to operate on, if it is a retweet we need to take the full_text in a different way
+                        if (isset($tweet->retweeted_status)){
+                            $tweetText = 'RT @' . $tweet->retweeted_status->user->screen_name . ': ' . $tweet->retweeted_status->full_text;
+                        }
+                        else
+                            $tweetText = $tweet->full_text;
+                            
                         // Replace URLs with their display_url before removal
                         if (isset($tweet->entities->urls)) {
                             foreach ($tweet->entities->urls as $url) {
@@ -708,11 +723,7 @@ class Twitter extends TwitterBase
         return $return;
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         // Make sure we are set up correctly
@@ -720,9 +731,6 @@ class Twitter extends TwitterBase
             $this->getLog()->error('Twitter Module not configured. Missing API Keys');
             return '';
         }
-
-        // Lock the request
-        $this->concurrentRequestLock();
 
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
@@ -760,8 +768,9 @@ class Twitter extends TwitterBase
         $items = $this->getTwitterFeed($displayId, $isPreview);
 
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
+        if (count($items) == 0) {
             return '';
+        }
 
         $options = array(
             'type' => $this->getModuleType(),
@@ -800,9 +809,12 @@ class Twitter extends TwitterBase
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
-        
+        $headContent .= '
+            <link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
+        ';
+
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
             $headContent .= '<style type="text/css">body { background-color: ' . $backgroundColor . ' }</style>';
@@ -842,15 +854,10 @@ class Twitter extends TwitterBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        $this->concurrentRequestRelease();
-
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
@@ -858,5 +865,32 @@ class Twitter extends TwitterBase
         // 1 = Valid
         // 2 = Unknown
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getOption('updateInterval', 60) * 60;
+        return max($updateInterval, $cachePeriod);
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        if ($displayId === 0 || $this->getOption('tweetDistance', 0) > 0) {
+            // We use the display to fence in the tweets to our location
+            return $this->getWidgetId() . '_' . $displayId;
+        } else {
+            // Non-display specific
+            return $this->getWidgetId(). (($displayId === 0) ? '_0' : '');
+        }
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // What is the minimum likely lock we can get to prevent concurrent access - probably search term
+        return $this->getOption('searchTerm');
     }
 }

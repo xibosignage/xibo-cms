@@ -929,7 +929,6 @@ CREATE TABLE IF NOT EXISTS `user` (
   `usertypeid` int(8) NOT NULL,
   `UserName` varchar(50) NOT NULL,
   `UserPassword` varchar(255) NOT NULL,
-  `loggedin` tinyint(1) NOT NULL DEFAULT '0',
   `lastaccessed` datetime DEFAULT NULL,
   `email` varchar(50) DEFAULT NULL COMMENT 'The users email address',
   `homePageId` int(11) NOT NULL DEFAULT '1' COMMENT 'The users homepage',
@@ -988,6 +987,8 @@ CREATE TABLE IF NOT EXISTS `widget` (
   `displayOrder` int(11) NOT NULL,
   `useDuration` int(4) NOT NULL DEFAULT '1',
   `calculatedDuration` int(4) NOT NULL,
+  `createdDt` int(11) NOT NULL,
+  `modifiedDt` int(11) NOT NULL,
   PRIMARY KEY (`widgetId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 

@@ -21,6 +21,7 @@
 
 namespace Xibo\Widget;
 
+use Jenssegers\Date\Date;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -42,7 +43,6 @@ interface ModuleInterface
      * HTML Content to completely render this module.
      */
     public function getTab($tab);
-    public function getResource();
     public function preview($width, $height, $scaleOverride = 0);
 
     /**
@@ -61,4 +61,60 @@ interface ModuleInterface
     public function installModule();
 
     public function settings();
+
+    /**
+     * Get the Modified Date of this Widget
+     * @param int $displayId The displayId, or 0 for preview
+     * @return Date the date this widgets was modified
+     */
+    public function getModifiedDate($displayId);
+
+    /**
+     * Get the Cache Date for this Widget using the cache key
+     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @return Date
+     */
+    public function getCacheDate($displayId);
+
+    /**
+     * Set the Cache Date using the cache key
+     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @param int|null Override duration in seconds, otherwise the getCacheDuration is used.
+     */
+    public function setCacheDate($displayId, $overrideDuration = null);
+
+    /**
+     * Get Cache Key
+     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @return string
+     */
+    public function getCacheKey($displayId);
+
+    /**
+     * Get the lock key for this widget.
+     * should return the most unique lock key required to prevent concurrent access
+     * normally the default is fine, unless the module fetches some external images
+     * @return string
+     */
+    public function getLockKey();
+
+    /**
+     * Get Cache Duration
+     * @return int the number of seconds the widget should be cached.
+     */
+    public function getCacheDuration();
+
+    /**
+     * Get Resource or Cache
+     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @return string
+     */
+    public function getResourceOrCache($displayId);
+
+    /**
+     * Get Resource
+     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @return string
+     */
+    public function getResource($displayId);
 }

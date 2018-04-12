@@ -753,7 +753,7 @@ function XiboFormRender(sourceObj, data) {
                 dialog.data("extra", response.extra);
 
                 // Buttons?
-                if (response.buttons != '') {
+                if (response.buttons !== '') {
 
                     // Append a footer to the dialog
                     var footer = $("<div>").addClass("modal-footer");
@@ -765,9 +765,9 @@ function XiboFormRender(sourceObj, data) {
                         response.buttons,
                         function(index, value) {
                             i++;
-                            var extrabutton = $('<button class="btn">').html(index);
+                            var extrabutton = $('<button id="dialog_btn_' + i + '" class="btn">').html(index);
 
-                            if (i == count) {
+                            if (i === count) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
@@ -777,8 +777,12 @@ function XiboFormRender(sourceObj, data) {
                             extrabutton.click(function(e) {
                                 e.preventDefault();
 
-                                if ($(this).hasClass("save-button"))
+                                if ($(this).hasClass("save-button")) {
                                     $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+                                    // Disable the button
+                                    // https://github.com/xibosignage/xibo/issues/1467
+                                    $(this).addClass("disabled");
+                                }
 
                                 if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
                                     // Close button
@@ -893,7 +897,7 @@ function XiboFormRender(sourceObj, data) {
                 XiboInitialise("#"+dialog.attr("id"));
                 
                 // Do we have to call any functions due to this success?
-                if (response.callBack != "" && response.callBack != undefined) {
+                if (response.callBack !== "" && response.callBack !== undefined) {
                     eval(response.callBack)(dialog);
                 }
             }
@@ -964,14 +968,22 @@ function formRenderDetectSpacingIssues(element) {
 }
 
 function XiboMultiSelectFormRender(button) {
-
+    // The button ID
     var buttonId = $(button).data().buttonId;
+
+    // Get a list of buttons that match the ID
     var matches = [];
+    var formOpenCallback = null;
 
     $("." + buttonId).each(function() {
         if ($(this).closest('tr').hasClass('selected')) {
             // This particular button should be included.
             matches.push($(this));
+
+            if (matches.length === 1) {
+                // this is the first button which matches, so use the form open hook if one has been provided.
+                formOpenCallback = $(this).data().formCallback;
+            }
         }
     });
 
@@ -993,6 +1005,11 @@ function XiboMultiSelectFormRender(button) {
     var dialogContent = dialog.find(".modal-body");
     var footer = $("<div>").addClass("modal-footer");
     dialog.find(".modal-content").append(footer);
+
+    // Call our open function if we have one
+    if (formOpenCallback !== undefined && formOpenCallback !== null) {
+        eval(formOpenCallback)(dialog);
+    }
 
     // Add some buttons
     var extrabutton;
@@ -1016,6 +1033,9 @@ function XiboMultiSelectFormRender(button) {
                 // continue processing the queue once the AJAX request's callback executes.
                 callback: function( item ) {
                     var data = $(item).data();
+
+                    if (dialog.data().commitData !== undefined)
+                        data = $.extend({}, data, dialog.data().commitData);
 
                     // Make an AJAX call
                     $.ajax({
@@ -1489,6 +1509,9 @@ function SystemMessageInline(messageText, modal) {
 
     // Remove existing errors
     $(".form-error", modal).remove();
+
+    // Re-enabled any disabled buttons
+    $(modal).find(".btn").removeClass("disabled");
 
     $("<div/>", {
         class: "well text-danger text-center form-error",

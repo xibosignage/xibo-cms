@@ -689,9 +689,7 @@ class Currencies extends AlphaVantageBase
         return $source;
     }
 
-    /**
-     * Get Tab
-     */
+    /** @inheritdoc */
     public function getTab($tab)
     {
         if (!$data = $this->getResults())
@@ -700,11 +698,7 @@ class Currencies extends AlphaVantageBase
         return ['results' => $data[0]];
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {        
         $data = [];
@@ -832,13 +826,10 @@ class Currencies extends AlphaVantageBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
         return $this->renderTemplate($data);
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Using the information you have in your module calculate whether it is valid or not.
@@ -847,5 +838,13 @@ class Currencies extends AlphaVantageBase
         // 2 = Unknown
         return 1;
     }
-    
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getSetting('updateInterval', 3600);
+
+        return max($cachePeriod, $updateInterval);
+    }
 }

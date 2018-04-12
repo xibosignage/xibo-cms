@@ -224,6 +224,8 @@ $app->get('/display', '\Xibo\Controller\Display:grid')->name('display.search');
 $app->put('/display/:id', '\Xibo\Controller\Display:edit')->name('display.edit');
 $app->delete('/display/:id', '\Xibo\Controller\Display:delete')->name('display.delete');
 $app->post('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('display.wol');
+$app->put('/display/authorise/:id', '\Xibo\Controller\Display:toggleAuthorise')->name('display.authorise');
+$app->put('/display/defaultlayout/:id', '\Xibo\Controller\Display:setDefaultLayout')->name('display.defaultlayout');
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');

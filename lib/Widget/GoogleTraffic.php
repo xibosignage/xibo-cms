@@ -286,4 +286,17 @@ class GoogleTraffic extends ModuleWidget
             'zoom' => $this->getOption('zoom', 12)
         ], 'google-traffic-get-resource');
     }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        // We have a long cache interval because we don't depend on any external data.
+        return 86400 * 365;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        return $this->getWidgetId() . (($this->getOption('useDisplayLocation') == 1 || $displayId === 0) ? '_' . $displayId : '');
+    }
 }

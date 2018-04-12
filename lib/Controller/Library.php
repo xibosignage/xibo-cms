@@ -26,6 +26,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\LibraryFullException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -400,7 +401,8 @@ class Library extends Base
             'retired' => $this->getSanitizer()->getInt('retired'),
             'duration' => $this->getSanitizer()->getString('duration'),
             'fileSize' => $this->getSanitizer()->getString('fileSize'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId')
+            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
+            'assignable' => $this->getSanitizer()->getInt('assignable')
         ]));
 
         // Add some additional row content
@@ -1000,7 +1002,10 @@ class Library extends Base
             $widget = $this->moduleFactory->createWithMedia($media);
         }
 
-        $widget->getResource();
+        if ($widget->getModule()->regionSpecific == 1)
+            throw new NotFoundException('Cannot download region specific module');
+
+        $widget->getResource(0);
 
         $this->setNoOutput(true);
     }

@@ -189,7 +189,7 @@
                         }
                     },
                     {"data": "licensed", "render": dataTableTickCrossColumn},
-                    {"data": "currentLayout", "visible": false},
+                    {"data": "currentLayout", "visible": false, "sortable": false},
                     {
                         "data": "storageAvailableSpace",
                         "visible": false,
@@ -210,7 +210,7 @@
                             return row.storageTotalSpaceFormatted;
                         }
                     },
-                    {"data": "storagePercentage", "visible": false},
+                    {"data": "storagePercentage", "visible": false, "sortable": false},
                     {"data": "description", "visible": false},
                     {
                         "name": "tags",
@@ -314,5 +314,37 @@
                 table.ajax.reload();
             });
         });
+
+        function setDefaultMultiSelectFormOpen(dialog) {
+            console.log('Multi-select form opened for default layout');
+
+            // Inject a list of layouts into the form, in a drop down.
+            var $select = $('<select name="layoutId" class="form-control">');
+            $select.on('change', function() {
+                console.log('Setting commit data to ' + $(this).val());
+                dialog.data().commitData = {layoutId: $(this).val()};
+            });
+
+            // Add the list to the body.
+            $(dialog).find('.modal-body').append($select);
+
+            // Query for the layouts
+            $.ajax({
+                type: "GET",
+                url: "{{ urlFor("layout.search") }}",
+                success: function(response, textStatus, error) {
+                    // Use the data object to populate our $select list
+                    $.each(response.data, function(index, element) {
+                        if (index === 0)
+                            dialog.data().commitData = {layoutId: element.layoutId};
+
+                        $select.append($('<option value="' + element.layoutId + '">' + element.layout + '</option>'))
+                    });
+                },
+                error: function(responseText) {
+                    SystemMessage(responseText, false);
+                }
+            });
+        }
     </script>
 {% endblock %}

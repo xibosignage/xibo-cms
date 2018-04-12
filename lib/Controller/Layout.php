@@ -1509,7 +1509,10 @@ class Layout extends Base
         // Make a media module
         $widget = $this->moduleFactory->createWithMedia($media);
 
-        $widget->getResource();
+        if ($widget->getModule()->regionSpecific == 1)
+            throw new NotFoundException('Cannot download non-region specific module');
+
+        $widget->getResource(0);
 
         $this->setNoOutput(true);
     }

@@ -608,7 +608,7 @@ class Soap
             $fileElements->appendChild($file);
 
             // Get the Layout Modified Date
-            $layoutModifiedDt = new \DateTime($layout->modifiedDt);
+            $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
 
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
@@ -632,10 +632,10 @@ class Soap
                             // date or not.
                             $module = $this->moduleFactory->createWithWidget($widget);
 
-                            $widgetModifiedDt = $module->getModifiedTimestamp($this->display->displayId);
-
-                            if ($widgetModifiedDt === null)
-                                $widgetModifiedDt = $layoutModifiedDt->getTimestamp();
+                            // Get the widget modified date
+                            // we will use the later of this vs the layout modified date as the updated attribute on
+                            // required files
+                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
 
                             // Append this item to required files
                             $file = $requiredFilesXml->createElement("file");
@@ -644,7 +644,7 @@ class Soap
                             $file->setAttribute('layoutid', $layoutId);
                             $file->setAttribute('regionid', $region->regionId);
                             $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $widgetModifiedDt);
+                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
                             $fileElements->appendChild($file);
                         }
                     }
@@ -694,13 +694,9 @@ class Soap
         }
 
         // Set any remaining required files to have 0 bytes requested (as we've generated a new nonce)
-        try {
-            $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
-                'displayId' => $this->display->displayId
-            ]);
-        } catch (DeadlockException $deadlockException) {
-            $this->getLog()->error('Deadlock when updating required files bytesRequested - ignoring and continuing with request');
-        }
+        $this->getStore()->update('UPDATE `requiredfile` SET bytesRequested = 0 WHERE displayId = :displayId', [
+            'displayId' => $this->display->displayId
+        ]);
 
         // Phone Home?
         $this->phoneHome();
@@ -1599,7 +1595,7 @@ class Soap
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResource($this->display->displayId);
+            $resource = $module->getResourceOrCache($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();

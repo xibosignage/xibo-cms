@@ -44,8 +44,6 @@ class TwitterMetro extends TwitterBase
      */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/modules/twittermetro';
-
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
     }
@@ -90,13 +88,9 @@ class TwitterMetro extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-metro-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.svg')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
-        
-        foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
-            /* @var \Xibo\Entity\Media $media */
-            $media->save();
-        }
     }
 
     /**
@@ -360,9 +354,9 @@ class TwitterMetro extends TwitterBase
 
         // Make an emojione client
         $emoji = new Client(new Ruleset());
-        $emoji->imageType = 'svg';
+        $emoji->imageType = 'png';
         $emoji->sprites = true;
-        $emoji->imagePathSVGSprites = $this->getResourceUrl('emojione/emojione.sprites.svg');
+        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
@@ -557,9 +551,6 @@ class TwitterMetro extends TwitterBase
             return '';
         }
 
-        // Lock the request
-        $this->concurrentRequestLock();
-
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
         
@@ -576,8 +567,9 @@ class TwitterMetro extends TwitterBase
         $templateData = $this->getTemplateData();
         
         // Return empty string if there are no items to show.
-        if (count($items) == 0)
+        if (count($items) == 0) {
             return '';
+        }
 
         $options = array(
             'type' => $this->getModuleType(),
@@ -602,8 +594,11 @@ class TwitterMetro extends TwitterBase
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '
+            <link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
+        ';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
@@ -658,12 +653,6 @@ class TwitterMetro extends TwitterBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
-        $this->concurrentRequestRelease();
-
         return $this->renderTemplate($data);
     }
 
@@ -687,5 +676,32 @@ class TwitterMetro extends TwitterBase
                 && count($tweet->entities->media) > 0)
             || (isset($tweet->retweeted_status->entities->media)
                 && count($tweet->retweeted_status->entities->media) > 0));
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getOption('updateInterval', 60) * 60;
+        return max($updateInterval, $cachePeriod);
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        if ($displayId === 0 || $this->getOption('tweetDistance', 0) > 0) {
+            // We use the display to fence in the tweets to our location
+            return $this->getWidgetId() . '_' . $displayId;
+        } else {
+            // Non-display specific
+            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
+        }
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // What is the minimum likely lock we can get to prevent concurrent access - probably search term
+        return $this->getOption('searchTerm');
     }
 }

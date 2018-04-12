@@ -39,6 +39,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -168,6 +169,7 @@ class Display extends Base
 
     /**
      * Include display page template page based on sub page selected
+     * @throws NotFoundException
      */
     function displayPage()
     {
@@ -499,7 +501,7 @@ class Display extends Base
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
+                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
             // Edit and Delete buttons first
@@ -541,6 +543,42 @@ class Display extends Base
             }
 
             if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
+                $display->buttons[] = ['divider' => true];
+            }
+
+            if ($this->getUser()->checkEditable($display)) {
+
+                // Authorise
+                $display->buttons[] = array(
+                    'id' => 'display_button_authorise',
+                    'url' => $this->urlFor('display.authorise.form', ['id' => $display->displayId]),
+                    'text' => __('Authorise'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('display.authorise', ['id' => $display->displayId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'display_button_authorise'),
+                        array('name' => 'text', 'value' => __('Toggle Authorise')),
+                        array('name' => 'rowtitle', 'value' => $display->display)
+                    )
+                );
+
+                // Default Layout
+                $display->buttons[] = array(
+                    'id' => 'display_button_defaultlayout',
+                    'url' => $this->urlFor('display.defaultlayout.form', ['id' => $display->displayId]),
+                    'text' => __('Default Layout'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('display.defaultlayout', ['id' => $display->displayId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'display_button_defaultlayout'),
+                        array('name' => 'text', 'value' => __('Set Default Layout')),
+                        array('name' => 'rowtitle', 'value' => $display->display),
+                        ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
+                    )
+                );
+
                 $display->buttons[] = ['divider' => true];
             }
 
@@ -1148,7 +1186,9 @@ class Display extends Base
         header("Content-Type: {$mime}");
 
         // Output a header
-        header('Cache-Control: no-cache, must-revalidate');
+        header("Cache-Control: no-store, no-cache, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
         header('Content-Length: ' . $size);
 
         // Return the file with PHP
@@ -1372,5 +1412,137 @@ class Display extends Base
                 }
             }
         }
+    }
+
+    /**
+     * Show the authorise form
+     * @param $displayId
+     * @throws NotFoundException
+     */
+    public function authoriseForm($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'display-form-authorise';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+    }
+
+    /**
+     * Toggle Authorise on this Display
+     * @param int $displayId
+     *
+     * @SWG\Post(
+     *  path="/display/authorise/{displayId}",
+     *  operationId="displayToggleAuthorise",
+     *  tags={"display"},
+     *  summary="Toggle authorised",
+     *  description="Toggle authorised for the Display.",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     * @throws XiboException
+     */
+    public function toggleAuthorise($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        $display->licensed = ($display->licensed == 1) ? 0 : 1;
+        $display->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Default Layout set for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+    }
+
+    /**
+     * @param $displayId
+     * @throws NotFoundException
+     */
+    public function defaultLayoutForm($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'display-form-defaultlayout';
+        $this->getState()->setData([
+            'display' => $display,
+            'layouts' => $this->layoutFactory->query()
+        ]);
+    }
+
+    /**
+     * Set the Default Layout for this Display
+     * @param int $displayId
+     *
+     * @SWG\Post(
+     *  path="/display/defaultlayout/{displayId}",
+     *  operationId="displayDefaultLayout",
+     *  tags={"display"},
+     *  summary="Set Default Layout",
+     *  description="Sent the default Layout on this Display",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="formData",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     * @throws XiboException
+     */
+    public function setDefaultLayout($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display))
+            throw new AccessDeniedException();
+
+        $layoutId = $this->getSanitizer()->getInt('layoutId');
+
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        if (!$this->getUser()->checkViewable($layout))
+            throw new AccessDeniedException();
+
+        $display->defaultLayoutId = $layoutId;
+        $display->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Default Layout set for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
     }
 }

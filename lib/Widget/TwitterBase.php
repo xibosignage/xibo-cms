@@ -1,12 +1,27 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (TwitterBase.php)
+* Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2006-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Widget;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * Class TwitterBase
@@ -36,82 +51,43 @@ abstract class TwitterBase extends ModuleWidget
             return $token;
         }
 
-        $cache->lock(10);
+        // We can take up to 30 seconds to request a new token
+        $cache->lock(30);
 
         $this->getLog()->debug('Bearer Token served from API');
 
-        // Shame - we will need to get it.
-        // and store it.
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER => array(
-                'POST /oauth2/token HTTP/1.1',
-                'Authorization: Basic ' . $key,
-                'Content-Type: application/x-www-form-urlencoded;charset=UTF-8',
-                'Content-Length: 29'
-            ),
-            CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => false,
-            CURLINFO_HEADER_OUT => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query(array('grant_type' => 'client_credentials')),
-            CURLOPT_URL => $url,
-        );
+        $client = new Client($this->getConfig()->getGuzzleProxy());
 
-        // Proxy support
-        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
+        try {
+            $response = $client->request('POST', $url, [
+                'form_params' => [
+                    'grant_type' => 'client_credentials'
+                ],
+                'headers' => [
+                    'Authorization' => 'Basic ' . $key
+                ]
+            ]);
 
-            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
-        }
+            $result = json_decode($response->getBody()->getContents());
 
-        $curl = curl_init();
+            if ($result->token_type !== 'bearer') {
+                $this->getLog()->error('Twitter API returned OK, but without a bearer token. ' . var_export($result, true));
+                return false;
+            }
 
-        // Set options
-        curl_setopt_array($curl, $httpOptions);
+            // It is, so lets cache it
+            // long times...
+            $cache->set($result->access_token);
+            $cache->expiresAfter(100000);
+            $this->getPool()->saveDeferred($cache);
 
-        // Call exec
-        if (!$result = curl_exec($curl)) {
-            // Log the error
-            $this->getLog()->error('Error contacting Twitter API: ' . curl_error($curl));
-            return false;
-        }
+            return $result->access_token;
 
-        // We want to check for a 200
-        $outHeaders = curl_getinfo($curl);
-
-        if ($outHeaders['http_code'] != 200) {
-            $this->getLog()->error('Twitter API returned ' . $result . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
-
-            // See if we can parse the error.
-            $body = json_decode($result);
-
-            $this->getLog()->error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
+        } catch (RequestException $requestException) {
+            $this->getLog()->error('Twitter API returned ' . $requestException->getMessage() . ' status. Unable to proceed.');
 
             return false;
         }
-
-        // See if we can parse the body as JSON.
-        $body = json_decode($result);
-
-        // We have a 200 - therefore we want to think about caching the bearer token
-        // First, lets check its a bearer token
-        if ($body->token_type != 'bearer') {
-            $this->getLog()->error('Twitter API returned OK, but without a bearer token. ' . var_export($body, true));
-            return false;
-        }
-
-        // It is, so lets cache it
-        // long times...
-        $cache->set($body->access_token);
-        $cache->expiresAfter(100000);
-        $this->getPool()->saveDeferred($cache);
-
-        return $body->access_token;
     }
 
     /**
@@ -125,69 +101,32 @@ abstract class TwitterBase extends ModuleWidget
      */
     protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
     {
+        $client = new Client($this->getConfig()->getGuzzleProxy());
 
-        // Construct the URL to call
-        $url = 'https://api.twitter.com/1.1/search/tweets.json';
-        $queryString = '?q=' . urlencode(trim($term)) .
-            '&result_type=' . $resultType .
-            '&count=' . $count .
-            '&include_entities=true' .
-            '&tweet_mode=extended';
+        $query = [
+            'q' => urlencode(trim($term)),
+            'result_type' => $resultType,
+            'count' => $count,
+            'include_entities' => true,
+            'tweet_mode' => 'extended'
+        ];
 
         if ($geoCode != '')
-            $queryString .= '&geocode=' . $geoCode;
+            $query['geocode'] = $geoCode;
 
-        $httpOptions = array(
-            CURLOPT_TIMEOUT => 20,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_HTTPHEADER => array(
-                'GET /1.1/search/tweets.json' . $queryString . 'HTTP/1.1',
-                'Host: api.twitter.com',
-                'Authorization: Bearer ' . $token
-            ),
-            CURLOPT_USERAGENT => 'Xibo Twitter Module',
-            CURLOPT_HEADER => false,
-            CURLINFO_HEADER_OUT => true,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_URL => $url . $queryString,
-        );
+        try {
+            $request = $client->request('GET', 'https://api.twitter.com/1.1/search/tweets.json', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $token
+                ],
+                'query' => $query
+            ]);
 
-        // Proxy support
-        if ($this->getConfig()->GetSetting('PROXY_HOST') != '' && !$this->getConfig()->isProxyException($url)) {
-            $httpOptions[CURLOPT_PROXY] = $this->getConfig()->GetSetting('PROXY_HOST');
-            $httpOptions[CURLOPT_PROXYPORT] = $this->getConfig()->GetSetting('PROXY_PORT');
+            return json_decode($request->getBody()->getContents());
 
-            if ($this->getConfig()->GetSetting('PROXY_AUTH') != '')
-                $httpOptions[CURLOPT_PROXYUSERPWD] = $this->getConfig()->GetSetting('PROXY_AUTH');
-        }
-
-        $this->getLog()->debug('Calling API with: ' . $url . $queryString);
-
-        $curl = curl_init();
-        curl_setopt_array($curl, $httpOptions);
-        $result = curl_exec($curl);
-
-        // Get the response headers
-        $outHeaders = curl_getinfo($curl);
-
-        if ($outHeaders['http_code'] == 0) {
-            // Unable to connect
-            $this->getLog()->error('Unable to reach twitter api.');
-            return false;
-        } else if ($outHeaders['http_code'] != 200) {
-            $this->getLog()->error('Twitter API returned ' . $outHeaders['http_code'] . ' status. Unable to proceed. Headers = ' . var_export($outHeaders, true));
-
-            // See if we can parse the error.
-            $body = json_decode($result);
-
-            $this->getLog()->error('Twitter Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
-
+        } catch (RequestException $requestException) {
+            $this->getLog()->error('Unable to reach twitter api. ' . $requestException->getMessage());
             return false;
         }
-
-        // Parse out header and body
-        $body = json_decode($result);
-
-        return $body;
     }
 }

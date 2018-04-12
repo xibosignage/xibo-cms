@@ -93,6 +93,22 @@ class Widget implements \JsonSerializable
     public $calculatedDuration = 0;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was created"
+     * )
+     */
+    public $createdDt;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The datetime the Layout was last modified"
+     * )
+     */
+    public $modifiedDt;
+
+    /**
      * @SWG\Property(description="An array of Widget Options")
      * @var WidgetOption[]
      */
@@ -239,7 +255,16 @@ class Widget implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->widgetId . $this->playlistId . $this->ownerId . $this->type . $this->duration . $this->displayOrder . $this->useDuration . $this->calculatedDuration);
+        return md5($this->widgetId
+            . $this->playlistId
+            . $this->ownerId
+            . $this->type
+            . $this->duration
+            . $this->displayOrder
+            . $this->useDuration
+            . $this->calculatedDuration
+            . json_encode($this->widgetOptions)
+        );
     }
 
     /**
@@ -248,6 +273,7 @@ class Widget implements \JsonSerializable
      */
     private function mediaHash()
     {
+        sort($this->mediaIds);
         return md5(implode(',', $this->mediaIds));
     }
 
@@ -388,6 +414,8 @@ class Widget implements \JsonSerializable
      */
     public function getPrimaryMedia()
     {
+        $this->load();
+
         $this->getLog()->debug('Getting first primary media for Widget: ' . $this->widgetId . ' Media: ' . json_encode($this->mediaIds) . ' audio ' . json_encode($this->getAudioIds()));
 
         if (count($this->mediaIds) <= 0)
@@ -720,12 +748,7 @@ class Widget implements \JsonSerializable
 
         $this->isNew = true;
 
-        $sql = '
-            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`)
-            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration)
-        ';
-
-        $this->widgetId = $this->getStore()->insert($sql, array(
+        $params = [
             'playlistId' => $this->playlistId,
             'ownerId' => $this->ownerId,
             'type' => $this->type,
@@ -733,12 +756,40 @@ class Widget implements \JsonSerializable
             'displayOrder' => $this->displayOrder,
             'useDuration' => $this->useDuration,
             'calculatedDuration' => $this->calculatedDuration
-        ));
+        ];
+
+        $cols = '';
+        $vals = '';
+        if (DBVERSION >= 139) {
+            $cols = ', `createdDt`, `modifiedDt` ';
+            $vals = ', :createdDt, :modifiedDt ';
+
+            $params['createdDt'] = ($this->createdDt === null) ? time() : $this->createdDt;
+            $params['modifiedDt'] = time();
+        }
+
+        $sql = '
+            INSERT INTO `widget` (`playlistId`, `ownerId`, `type`, `duration`, `displayOrder`, `useDuration`, `calculatedDuration`' . $cols . ')
+            VALUES (:playlistId, :ownerId, :type, :duration, :displayOrder, :useDuration, :calculatedDuration' . $vals . ')
+        ';
+
+        $this->widgetId = $this->getStore()->insert($sql, $params);
     }
 
     private function update()
     {
         $this->getLog()->debug('Saving Widget ' . $this->type . ' on PlaylistId ' . $this->playlistId . ' WidgetId: ' . $this->widgetId);
+
+        $params = [
+            'playlistId' => $this->playlistId,
+            'ownerId' => $this->ownerId,
+            'type' => $this->type,
+            'duration' => $this->duration,
+            'widgetId' => $this->widgetId,
+            'displayOrder' => $this->displayOrder,
+            'useDuration' => $this->useDuration,
+            'calculatedDuration' => $this->calculatedDuration
+        ];
 
         $sql = '
           UPDATE `widget` SET `playlistId` = :playlistId,
@@ -748,19 +799,19 @@ class Widget implements \JsonSerializable
             `displayOrder` = :displayOrder,
             `useDuration` = :useDuration,
             `calculatedDuration` = :calculatedDuration
+        ';
+
+        if (DBVERSION >= 139) {
+            $sql .= ' , modifiedDt = :modifiedDt ';
+
+            $params['modifiedDt'] = time();
+        }
+
+        $sql .= '
            WHERE `widgetId` = :widgetId
         ';
 
-        $this->getStore()->update($sql, array(
-            'playlistId' => $this->playlistId,
-            'ownerId' => $this->ownerId,
-            'type' => $this->type,
-            'duration' => $this->duration,
-            'widgetId' => $this->widgetId,
-            'displayOrder' => $this->displayOrder,
-            'useDuration' => $this->useDuration,
-            'calculatedDuration' => $this->calculatedDuration
-        ));
+        $this->getStore()->update($sql, $params);
     }
 
     /**

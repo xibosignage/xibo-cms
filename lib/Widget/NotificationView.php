@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2017 Spring Signage Ltd
- * (Notification.php)
+ * (NotificationView.php)
  */
 
 
@@ -11,7 +11,7 @@ namespace Xibo\Widget;
 use Xibo\Factory\NotificationFactory;
 
 /**
- * Class Notification
+ * Class NotificationView
  * @package Xibo\Widget
  */
 class NotificationView extends ModuleWidget
@@ -39,7 +39,7 @@ class NotificationView extends ModuleWidget
     /**
      * Adds an Notification Widget
      * @SWG\Post(
-     *  path="/playlist/widget/notification/{playlistId}",
+     *  path="/playlist/widget/notificationview/{playlistId}",
      *  operationId="WidgetNotificationAdd",
      *  tags={"widget"},
      *  summary="Add a Notification Widget",
@@ -320,10 +320,6 @@ class NotificationView extends ModuleWidget
         // Replace the Head Content with our generated java script
         $data['javaScript'] = $javaScriptContent;
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
         return $this->renderTemplate($data);
     }
 
@@ -346,5 +342,19 @@ class NotificationView extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        // We have a long cache interval because we don't depend on any external data.
+        // the modified timestamp expires us, unless we have an "age" parameter
+        return $this->getOption('age', 1440 * 365) * 60;
     }
 }

@@ -194,9 +194,6 @@ class Text extends ModuleWidget
      */
     public function GetResource($displayId = 0)
     {
-        // Clear all linked media.
-        $this->clearMedia();
-
         // Start building the template
         $this
             ->initialiseGetResource()
@@ -310,10 +307,6 @@ class Text extends ModuleWidget
             $this->appendCss('body { background-color: ' . $this->getOption('backgroundColor') . '; }');
         }
 
-        // Update and save widget if we've changed our assignments.
-        if ($this->hasMediaChanged())
-            $this->widget->save(['saveWidgetOptions' => false, 'notify' => false, 'notifyDisplays' => true, 'audit' => false]);
-
         return $this->finaliseGetResource();
     }
 
@@ -335,5 +328,12 @@ class Text extends ModuleWidget
     {
         // Text rendering will be valid
         return 1;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        // We have a long cache interval because we don't depend on any external data.
+        return 86400 * 365;
     }
 }

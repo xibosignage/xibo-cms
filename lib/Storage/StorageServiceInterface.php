@@ -8,6 +8,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\DeadlockException;
 use Xibo\Service\LogService;
 
 /**
@@ -107,6 +108,7 @@ interface StorageServiceInterface
      * @param $params
      * @param string|null $connection
      * @return mixed
+     * @throws DeadlockException
      */
     public function updateWithDeadlockLoop($sql, $params, $connection = null);
 
