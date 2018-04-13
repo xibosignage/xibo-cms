@@ -29,7 +29,6 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSet;
-use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
@@ -134,24 +133,11 @@ class Graph extends ModuleWidget
         return $this->dataSetFactory->query();
     }
     
-    public function getTab($name)
-    {
-        if ($name == 'columns') {
-          $id = $this->getSanitizer()->getInt('changed', 0);
-          $columns = [];
-          $labels = [];
-          try {
-              $columns = $this->valueColumns($id, []);
-              $labels = $this->labelColumns($id);
-          } catch(NotFoundException $ex) { }
-          return [ 'columns' => $columns, 'labels' => $labels ];
-        }
-    }
-    
     /**
      * Returns a List of all Columns which can be used to plot
      * @param int $dataSetId the dataset to get all columns from this can be used for the values
      * @return array
+     * @throws NotFoundException
      */
     public function selectedValueColumns($dataSetId)
     {
@@ -165,6 +151,7 @@ class Graph extends ModuleWidget
      * @param int $dataSetId the dataset to get all columns from this can be used for the values
      * @param array $selected List of all selected columns which should not be in the resulting list
      * @return array
+     * @throws NotFoundException
      */
     public function valueColumns($dataSetId, $selected)
     {
@@ -184,6 +171,7 @@ class Graph extends ModuleWidget
     /**
      * Returns a List of all Columns which can be used for the Labels
      * @return array
+     * @throws NotFoundException
      */
     public function labelColumns($dataSetId)
     {
@@ -263,14 +251,6 @@ class Graph extends ModuleWidget
     /**
      * @inheritdoc
      */
-    public function preview($width, $height, $scaleOverride = 0)
-    {
-        return $this->previewAsClient($width, $height, $scaleOverride);
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function getResource($displayId = 0)
     {
         $data = [];
@@ -306,7 +286,7 @@ class Graph extends ModuleWidget
         $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.effects.js') . '"></script>';
 
         // Options for the rendering.
-        // May be overriden by the various chart types
+        // May be overridden by the various chart types
         // In future releases this options may be configured by the user
         $graphOptions['shadowBlur'] = '5';
         $graphOptions['shadowOffsetX'] = '10';
@@ -439,12 +419,12 @@ class Graph extends ModuleWidget
         ';
 
         if (!empty($graphData->data)) {
-          // After body content - mostly XIBO-Stuff for scaling and so on
-          $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-          $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+            // After body content - mostly XIBO-Stuff for scaling and so on
+            $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
 
-          // Add all Chart Javascript
-          $javaScriptContent .= '<script>
+            // Add all Chart Javascript
+            $javaScriptContent .= '<script>
               $(document).ready(function() {
                   var options = ' . json_encode($options) . '
                   $("#' . $containerId . '").xiboLayoutScaler(options);
@@ -466,8 +446,8 @@ class Graph extends ModuleWidget
                   }).draw();
               });</script>';
 
-          // Replace the After body Content
-          $data['body'] .= $javaScriptContent;
+            // Replace the After body Content
+            $data['body'] .= $javaScriptContent;
         }
 
         return $this->renderTemplate($data);
@@ -515,7 +495,8 @@ class Graph extends ModuleWidget
      * @param array &$columns Reference to all columns to show
      * @param array $series Series identifier to append to the Legend
      * @param string $labelCol Name of the Column which holds the labels and therefore should not be displayed
-     * @return Array of column names for the legend
+     * @return array of column names for the legend
+     * @throws NotFoundException
      */
     protected function prepareLegend(\Xibo\Entity\DataSet &$dataSet, array &$columns, $series = [], $labelCol = '')
     {
@@ -549,7 +530,7 @@ class Graph extends ModuleWidget
      * 
      * @param array $data Reference to all data from the DataSet
      * @param string $column Name of the Column which holds the values
-     * @return List of all values only once
+     * @return array List of all values only once
      */
     protected function extractUniqueValues(&$data, $column = '')
     {
@@ -597,7 +578,7 @@ class Graph extends ModuleWidget
      * @param array &$columns Reference to the list of all columns to be shown
      * @param string $labelCol Name of the Column which holds the labels
      * @param string $seriesCol Name of Column where the series identifier is in
-     * @return List of all data grouped by columns
+     * @return array List of all data grouped by columns
      */
     protected function prepareData(&$data, &$columns, $labelCol = '', $seriesCol = '')
     {

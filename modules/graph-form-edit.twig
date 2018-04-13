@@ -2,6 +2,7 @@
 /*
  * Graph Xibo Module
  * Copyright (C) 2018 Lukas Zurschmiede
+ *  minor modifications by Spring Signage Ltd to integrate into the core modules
  *
  * This Xibo-Module is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,15 +23,13 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Edit Graph Page" %}
+    {% trans "Edit Graph" %}
 {% endblock %}
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, graphFormSubmit()
 {% endblock %}
-
-{% block callBack %}graphFormSetup{% endblock %}
 
 {% block formFieldActions %}
   [
@@ -135,7 +134,7 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#dataset" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "Dataset" %}</span></a></li>
+                <li><a href="#dataset" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "Data" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="graphEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
