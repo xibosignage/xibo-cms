@@ -1320,7 +1320,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function getResourceOrCache($displayId)
+    public final function getResourceOrCache($displayId, $region = null)
     {
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
 
@@ -1338,11 +1338,21 @@ abstract class ModuleWidget implements ModuleInterface
             . $this->getWidgetId()
             . DIRECTORY_SEPARATOR;
 
-        $cacheFile = $this->getCacheKey($displayId);
+        $cacheKey = $this->getCacheKey($displayId);
+
+        // If we are a non-preview, then we'd expect to be provided with a region.
+        // we use this to save a width/height aware version of this
+        if ($displayId !== 0) {
+            /** @var \Xibo\Entity\Region $region */
+            $cacheFile = $cacheKey . '_' . $region->width . '_' . $region->height;
+        } else {
+            $cacheFile = $cacheKey;
+        }
 
         $this->getLog()->debug('Cache details - modifiedDt: ' . (($modifiedDt === null) ? 'layoutDt' : $modifiedDt->format('Y-m-d H:i:s'))
             . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
             . ', cacheDuration: ' . $cacheDuration
+            . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
 
         if (!file_exists($cachePath))
@@ -1360,6 +1370,14 @@ abstract class ModuleWidget implements ModuleInterface
 
                 // We need to generate and cache this resource
                 try {
+                    // The cache has expired, so we remove all cache entries that match our cache key
+                    // including the preview (which will also be out of date)
+                    $this->getLog()->debug('Deleting old cache for this cache key: ' . $cacheKey);
+
+                    foreach (glob($cachePath . $cacheKey . '*') as $fileName) {
+                        unlink($fileName);
+                    }
+
                     // Clear the resources widget content
                     $this->clearMedia();
 
@@ -1412,6 +1430,22 @@ abstract class ModuleWidget implements ModuleInterface
             }
         } else {
             $resource = file_get_contents($cachePath . $cacheFile);
+        }
+
+        // If we are the preview, then we should look at updating the preview width, height and scale_override with
+        // the ones we've been given
+        // this is a workaround to making the cache key aware of the below parameters, which would create a new cache
+        // file each and every time the region changed size.
+        if ($displayId == 0) {
+            // Support keyword replacement and parsing for known combinations of these in existing widgets
+            // (for backwards compatibility)
+            $previewWidth = $this->getSanitizer()->getDouble('width', 0);
+            $previewHeight = $this->getSanitizer()->getDouble('height', 0);
+            $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
+
+            $resource = preg_replace('/"previewWidth":(\d*?),/', '"previewWidth":' . $previewWidth . ',', $resource);
+            $resource = preg_replace('/"previewHeight":(\d*?),/', '"previewHeight":' . $previewHeight . ',', $resource);
+            $resource = preg_replace('/"scaleOverride":(\d*?),/', '"scaleOverride":' . $scaleOverride . ',', $resource);
         }
 
         // Return the resource

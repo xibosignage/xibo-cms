@@ -22,6 +22,7 @@
 namespace Xibo\Widget;
 
 use Jenssegers\Date\Date;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -107,9 +108,11 @@ interface ModuleInterface
     /**
      * Get Resource or Cache
      * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @param \Xibo\Entity\Region|null $region
      * @return string
+     * @throws XiboException
      */
-    public function getResourceOrCache($displayId);
+    public function getResourceOrCache($displayId, $region = null);
 
     /**
      * Get Resource

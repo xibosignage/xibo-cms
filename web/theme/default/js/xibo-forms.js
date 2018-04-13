@@ -157,53 +157,55 @@ var text_callback = function(dialog, extraData) {
 
     // Do we have a media selector?
     var $selectPicker = $(".ckeditor_library_select");
-    $selectPicker.selectpicker({
+    if ($selectPicker.length > 0) {
+        $selectPicker.selectpicker({
             liveSearch: true
         })
-        .ajaxSelectPicker({
-            ajax: {
-                type: 'GET',
-                url: $selectPicker.data().searchUrl,
-                data: function () {
-                    return {
-                        media: '{{{q}}}',
-                        type: 'image',
-                        start: 0,
-                        length: 50
-                    };
-                }
-            },
-            preprocessData: function(data) {
-                var library = [];
-                if (data.hasOwnProperty('data')) {
-                    $.each(data.data, function (index, element) {
-                        library.push({
-                            'value': element.mediaId,
-                            'text': element.name,
-                            'data': {
-                                'image-url': $selectPicker.data().imageUrl.replace(':id', element.mediaId)
-                            },
-                            'disabled': false
+            .ajaxSelectPicker({
+                ajax: {
+                    type: 'GET',
+                    url: $selectPicker.data().searchUrl,
+                    data: function () {
+                        return {
+                            media: '{{{q}}}',
+                            type: 'image',
+                            start: 0,
+                            length: 50
+                        };
+                    }
+                },
+                preprocessData: function (data) {
+                    var library = [];
+                    if (data.hasOwnProperty('data')) {
+                        $.each(data.data, function (index, element) {
+                            library.push({
+                                'value': element.mediaId,
+                                'text': element.name,
+                                'data': {
+                                    'image-url': $selectPicker.data().imageUrl.replace(':id', element.mediaId)
+                                },
+                                'disabled': false
+                            });
                         });
-                    });
-                }
-                return library;
-            },
-            preserveSelected: false,
-            emptyRequest: true
-        })
-        .on('changed.bs.select', function (e) {
-            console.log(e);
-            var select = $(e.target);
-            var linkedTo = select.data().linkedTo;
-            var value = $(e.target).find(":selected").data().imageUrl;
+                    }
+                    return library;
+                },
+                preserveSelected: false,
+                emptyRequest: true
+            })
+            .on('changed.bs.select', function (e) {
+                console.log(e);
+                var select = $(e.target);
+                var linkedTo = select.data().linkedTo;
+                var value = $(e.target).find(":selected").data().imageUrl;
 
-            if (value !== undefined && value !== "" && linkedTo != null) {
-                if (CKEDITOR.instances[linkedTo] != undefined) {
-                    CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
+                if (value !== undefined && value !== "" && linkedTo != null) {
+                    if (CKEDITOR.instances[linkedTo] != undefined) {
+                        CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
+                    }
                 }
-            }
-        });
+            });
+    }
 
     // Turn the background colour into a picker
     $("#backgroundColor").colorpicker();
