@@ -1443,12 +1443,9 @@ abstract class ModuleWidget implements ModuleInterface
             $previewHeight = $this->getSanitizer()->getDouble('height', 0);
             $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
 
-            $resource = str_replace('[PREVIEW_WIDTH]', $previewWidth, $resource);
-            $resource = str_replace('[PREVIEW_HEIGHT]', $previewWidth, $resource);
-            $resource = str_replace('[PREVIEW_SCALE_OVERRIDE]', $previewWidth, $resource);
-            $resource = preg_replace('/"previewWidth":(\d*?),/', '"previewWidth":(' . $previewWidth . '),', $resource);
-            $resource = preg_replace('/"previewHeight":(\d*?),/', '"previewHeight":(' . $previewHeight . '),', $resource);
-            $resource = preg_replace('/"scaleOverride":(\d*?),/', '"scaleOverride":(' . $scaleOverride . '),', $resource);
+            $resource = preg_replace('/"previewWidth":(\d*?),/', '"previewWidth":' . $previewWidth . ',', $resource);
+            $resource = preg_replace('/"previewHeight":(\d*?),/', '"previewHeight":' . $previewHeight . ',', $resource);
+            $resource = preg_replace('/"scaleOverride":(\d*?),/', '"scaleOverride":' . $scaleOverride . ',', $resource);
         }
 
         // Return the resource
