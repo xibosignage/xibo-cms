@@ -126,4 +126,12 @@ class VideoIn extends ModuleWidget
         return $output;
 
     }
+
+    /** @inheritdoc */
+    public function getResource($displayId)
+    {
+        // Get resource isn't required for this module
+
+        return null;
+    }
 }
