@@ -58,8 +58,9 @@
     $(document).ready(function() {
         // Show Seconds: {{ showSeconds }}
         // Offset: {{ offset }}
-        var width = {{ previewWidth }};
-        var height = {{ previewHeight }};
+        var options = {{ options|raw }};
+        var width = options.previewWidth;
+        var height = options.previewHeight;
 
         if (width == 0 || height == 0) {
             width = $(window).width();
