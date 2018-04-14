@@ -24,5 +24,15 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 Cypress.Commands.add('login', function() {
+    cy.request({
+        method: 'POST',
+        url: '/login',
+        form: true,
+        body: {
+            'username': 'xibo_admin',
+            'password': 'password'
+        }
+    });
 
+    cy.getCookie('PHPSESSID').should('exist');
 });
