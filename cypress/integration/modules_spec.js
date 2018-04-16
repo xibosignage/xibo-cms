@@ -9,6 +9,6 @@ describe('Modules Page', function () {
         cy.contains('Modules');
 
         // TODO: How many modules are we expecting by default?
-        cy.contains('Showing 1 to 10 of 20 entries');
+        cy.contains('Showing 1 to 10 of');
     });
 });
