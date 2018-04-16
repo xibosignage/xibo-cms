@@ -23,7 +23,11 @@ RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize
 # the next state
 RUN rm /app/composer.* && \
     rm -r /app/docker && \
-    rm .dockerignore
+    rm .dockerignore && \
+    rm package.json && \
+    rm package-lock.json && \
+    rm cypress.json && \
+    rm -r /app/cypress
 
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \

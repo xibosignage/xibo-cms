@@ -12,3 +12,4 @@ web/theme/custom
 node_modules
 results.xml
 containers/
+cypress/videos/

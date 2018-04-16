@@ -15,9 +15,6 @@ results.xml
 #vendor/
 node_modules/
 
-# Don't include the e2e test suite
-cypress/
-
 # Cache should be empty so that it gets built internally
 cache/
 
@@ -34,9 +31,6 @@ CONTRIBUTING.md
 
 # Our own container's settings.php shouldn't be included
 web/settings.php
-
-# Package.json - note we will likely want to remove this in 2.0
-package.json
 
 # Our own build files
 build.sh

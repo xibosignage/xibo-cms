@@ -6,4 +6,10 @@ describe('Unauthenticated CMS access', function () {
 
         cy.contains('Version 1.8.8');
     });
+
+    it('should redirect to login when an authenticated page is requested', function() {
+
+        cy.visit('/layout/view');
+        cy.url().should('include', '/login');
+    });
 });
