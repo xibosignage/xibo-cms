@@ -1,7 +1,9 @@
 FROM cypress/base
 
+WORKDIR /app
+
 COPY cypress.json ./
-COPY cypress/ ./
+COPY cypress ./cypress
 
 RUN npm install --save-dev --slient cypress
 
