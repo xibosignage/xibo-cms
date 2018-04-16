@@ -3,6 +3,6 @@ FROM cypress/base
 COPY cypress.json ./
 COPY cypress/ ./
 
-RUN npm install --save-dev cypress
+RUN npm install --save-dev --slient cypress
 
 RUN $(npm bin)/cypress verify
