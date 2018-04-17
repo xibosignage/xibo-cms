@@ -105,7 +105,7 @@
                     },
                     delay: 1000,
                     template: next_template
-                }, {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}{
+                }, {% if currentUser.getOptionValue("lockPosition", "false") == "false" %}{
                     title: "",
                     content: "{% trans "Grab the Region handle to click and drag to resize" %}",
                     element: ".ui-icon-gripsmall-diagonal-se:eq(0)",
