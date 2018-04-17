@@ -648,7 +648,7 @@ class Stats extends Base
         $statement = $connection->prepare($sql);
 
         // Execute
-        $statement->execute();
+        $statement->execute($params);
 
         // Do some post processing
         while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
