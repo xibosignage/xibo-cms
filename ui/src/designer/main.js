@@ -22,6 +22,7 @@
 const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
 
+
 // Include modules
 const Region = require('./region.js');
 const Layout = require('./layout.js');
@@ -30,6 +31,8 @@ const Navigator = require('./navigator.js');
 const Timeline = require('./timeline.js');
 const Manager = require('./manager.js');
 const BottomToolbar = require('./bottom-toolbar.js');
+const PropertiesPanel = require('./properties-panel.js');
+const loadingTemplate = require('../templates/loading.hbs');
 
 // Include CSS
 require('../css/designer.css');
@@ -56,7 +59,10 @@ window.lD = {
     selectedObject: {},
 
     // Bottom toolbar
-    bottomToolbar: {}
+    bottomToolbar: {},
+
+    // Properties Panel
+    propertiesPanel: {}
 };
 
 // Load Layout and build app structure
@@ -64,12 +70,15 @@ $(document).ready(function() {
     // Get layout id
     var layoutId = lD.designerDiv.attr("data-layout-id");
 
-    // Append layout html to the main div
-    lD.designerDiv.html(designerMainTemplate());
+    // Append loading html to the main div
+    lD.designerDiv.html(loadingTemplate());
 
     // Load layout through an ajax request
     $.get("/layout?layoutId=" + layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
+
+            // Append layout html to the main div
+            lD.designerDiv.html(designerMainTemplate());
 
             if(res.data.length > 0) {
 
@@ -96,11 +105,17 @@ $(document).ready(function() {
                     lD.designerDiv.find('#bottom-toolbar')
                 );
 
+                // Initialize properties panel
+                lD.propertiesPanel = new PropertiesPanel(
+                    lD.designerDiv.find('#properties-panel')
+                );
+
                 // Default selected object is the layout
                 lD.selectObject();
             }
         })
         .fail(function(data) {
+
             // Output error on screen
             var htmlError = messageTemplate({
                 messageType: 'danger',
@@ -183,12 +198,8 @@ lD.selectObject = function(obj = null) {
         this.selectedObject.type = newSelectedType;
     }
 
-    //TODO: Output selected object properties on PROPERTIES container
-    this.designerDiv.find('#layout-property-panel').html(
-        '<h2>Property Panel</h1>' +
-        '<p>id: ' + this.selectedObject.id + '</p>' +
-        '<p>type: ' + this.selectedObject.type + '</p>'
-    );
+    // Output selected object properties on PROPERTIES container
+    this.propertiesPanel.render(this.selectedObject);
 
     // Refresh the designer containers
     this.refreshDesigner();
@@ -203,6 +214,35 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.timeline);
     this.renderContainer(this.bottomToolbar);
 };
+
+
+/**
+ * Reload API data and replace the layout structure with the new value
+ * @param {object} layout - previous layout
+ */
+lD.reloadData = function(layout) {
+
+    $.get("/layout?layoutId=" + layout.layoutId + "&embed=regions,playlists,widgets")
+        .done(function(res) {
+            lD.layout = new Layout(layout.layoutId, res.data[0]);
+            lD.refreshDesigner();
+        })
+        .fail(function(data) {
+
+            // Output error on screen
+            var htmlError = messageTemplate({
+                messageType: 'danger',
+                messageTitle: 'ERROR',
+                messageDescription: 'There was a problem reloading the layout!'
+            });
+
+            lD.designerDiv.html(htmlError);
+
+            return -1;
+        }
+    );
+};
+
 
 /**
  * Render layout structure to container, if it exists

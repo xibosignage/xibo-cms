@@ -8,6 +8,7 @@
  */
 var Widget = function(id, regionId, data) {
     this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
+    this.widgetId = id;
     this.regionId = 'region_' + regionId;
     
     // widget type

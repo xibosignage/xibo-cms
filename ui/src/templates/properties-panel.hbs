@@ -1,0 +1,21 @@
+<div id="properties-panel-container">
+
+    <div class="form-title">
+        <h2>{{header}}</h2>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-12">
+            {{#each buttons}}
+                <button type="button" onclick="{{this}}" class="btn btn-info">
+                    {{@key}}
+                </button>
+            {{/each}}
+        </div>
+    </div>
+
+    {{{form}}}
+
+</div>

@@ -1,5 +1,4 @@
 // MANAGER Module
-
 const Change = require('./change.js');
 
 /**

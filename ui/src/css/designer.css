@@ -13,36 +13,36 @@
 }
 
 /* Layout timeline */
-#layout-editor #layout-top-region #layout-timeline {
+#layout-editor #layout-timeline {
     background: #444;
     padding: 5px;
     overflow-x: hidden;
 }
 
-#layout-editor #layout-top-region #layout-timeline #regions-container {
+#layout-editor #layout-timeline #regions-container {
     overflow: auto;
     max-height: 250px;
 }
 
-#layout-editor #layout-top-region #layout-timeline .region {
+#layout-editor #layout-timeline .region {
     background: cadetblue;
     height: 40px;
     padding: 3px;
     margin: 4px 0;
 }
 
-#layout-editor #layout-top-region #layout-timeline #labels-container {
+#layout-editor #layout-timeline #labels-container {
     float: left;
     width: 4%;
     padding-top: 40px;
 }
 
-#layout-editor #layout-top-region #layout-timeline #timeline-container {
+#layout-editor #layout-timeline #timeline-container {
     float: left;
     width: 96%
 }
 
-#layout-editor #layout-top-region #layout-timeline .label-region {
+#layout-editor #layout-timeline .label-region {
     height: 40px;
     padding: 10px 2px 0 0; 
     text-align: right;
@@ -50,14 +50,14 @@
     color: white;
 }
 
-#layout-editor #layout-top-region #layout-timeline .widget {
+#layout-editor #layout-timeline .widget {
     color: #222;
     font-weight: bold;
     float: left;
     height: 100%;
 }
 
-#layout-editor #layout-top-region #layout-timeline .widget-ghost {
+#layout-editor #layout-timeline .widget-ghost {
     background: #f3f3f370;
     color: #999;
     font-weight: bold;
@@ -65,13 +65,13 @@
     height: 100%;
 }
 
-#layout-editor #layout-top-region #layout-timeline .ghost-padding {
+#layout-editor #layout-timeline .ghost-padding {
     background: #11111121;
     float: left;
     height: 100%;
 }
 
-#layout-editor #layout-top-region #layout-timeline .extension {
+#layout-editor #layout-timeline .extension {
     color: #999;
     font-weight: bold;
     float: left;
@@ -80,14 +80,21 @@
     margin-top: 0.2em;
 }
 
-#layout-editor #layout-center-region #layout-viewer {
+#layout-editor #layout-viewer {
     height: 450px;
-    background: lightcyan;
+    background: lightpink;
 }
 
-#layout-editor #layout-center-region #layout-property-panel {
-    background: lightpink;
-    height: 500px;
+/* Properties Panel */
+#layout-editor #properties-panel-container {
+    padding: 10px;
+    min-height: 450px;
+    background: white;
+}
+
+#layout-editor #properties-panel-container .form-title {
+    font-weight: bold;
+    font-size: 1.5em;
 }
 
 /* Layout Navigator */

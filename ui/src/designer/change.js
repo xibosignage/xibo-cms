@@ -32,7 +32,7 @@ var Change = function(id, type, targetType, targetID, oldState, newState){
 };
 
 /**
- * Upload change to the API ( and remove it if sucessful )
+ * Upload change to the API ( and remove it if successful )
  * @returns {boolean} Operation successful bool
 */
 Change.prototype.upload = function() {
