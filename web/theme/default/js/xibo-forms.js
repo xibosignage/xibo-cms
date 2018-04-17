@@ -15,7 +15,7 @@ var text_callback = function(dialog, extraData) {
     var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
     var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
     var applyContentsToIframe = function(field) {
-        console.log('Applying iframe adjustments to ' + field);
+        //console.log('Applying iframe adjustments to ' + field);
         $("#cke_" + field + " iframe").contents().find("head").append("" +
             "<style>" +
             "body {" +
