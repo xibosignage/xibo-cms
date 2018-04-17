@@ -29,6 +29,7 @@ use Stash\Item;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -1384,6 +1385,10 @@ abstract class ModuleWidget implements ModuleInterface
                     // Generate the resource
                     $resource = $this->getResource($displayId);
 
+                    // If the resource is false, then don't cache it for as long (most likely an error)
+                    if ($resource === false)
+                        throw new XiboException('GetResource generated FALSE');
+
                     // Cache to the library
                     $hash = null;
                     if (file_exists($cachePath . $cacheFile)) {
@@ -1409,6 +1414,16 @@ abstract class ModuleWidget implements ModuleInterface
                     $this->setCacheDate($displayId);
 
                     $this->getLog()->debug('Regenerate complete');
+
+                } catch (ConfigurationException $configurationException) {
+                    // If we have something wrong with the module and we are in the preview, then we should present the error
+                    // on screen
+                    if ($displayId === 0) {
+                        throw $configurationException;
+                    } else {
+                        // Don't cache, just log
+                        $this->getLog()->error('Configuration error with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $configurationException->getMessage());
+                    }
 
                 } catch (\Exception $e) {
                     $this->getLog()->error('Problem with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $e->getMessage());
