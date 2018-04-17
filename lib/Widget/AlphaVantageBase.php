@@ -144,8 +144,10 @@ abstract class AlphaVantageBase extends ModuleWidget
      */
     protected function getPriorDay($base, $pairs)
     {
+        $yesterday = Date::yesterday()->format('Y-m-d');
+
         try {
-            $cache = $this->getPool()->getItem($this->makeCacheKey(md5(var_export([$base, $pairs], true))));
+            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($base . $yesterday)));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
@@ -159,12 +161,10 @@ abstract class AlphaVantageBase extends ModuleWidget
                 // Use a web request
                 $client = new Client();
 
-                $yesterday = Date::yesterday()->format('Y-m-d');
 
-                $request = $client->request('GET', 'https://api.fixer.io/' . $yesterday, $this->getConfig()->getGuzzleProxy([
+                $request = $client->request('GET', 'https://exchangeratesapi.io/api/' . $yesterday, $this->getConfig()->getGuzzleProxy([
                     'query' => [
-                        'base' => $base,
-                        'symbols' => is_array($pairs) ? implode(',', $pairs) : $pairs
+                        'base' => $base
                     ]
                 ]));
 
@@ -179,7 +179,13 @@ abstract class AlphaVantageBase extends ModuleWidget
                 $this->getLog()->debug('getPriorDay is served from the cache.');
             }
 
-            return $data;
+            $return = [];
+
+            foreach ($pairs as $pair) {
+                $return[$pair] = isset($data[$pair]) ? $data[$pair] : null;
+            }
+
+            return $return;
 
         } catch (GuzzleException $guzzleException) {
             throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
