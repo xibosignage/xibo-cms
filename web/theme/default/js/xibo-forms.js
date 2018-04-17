@@ -14,8 +14,9 @@ var text_callback = function(dialog, extraData) {
     var scale = $layout.attr('designer_scale');
     var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
     var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
-    var applyContentsToIframe = function() {
-        $("#cke_ta_text iframe").contents().find("head").append("" +
+    var applyContentsToIframe = function(field) {
+        console.log('Applying iframe adjustments to ' + field);
+        $("#cke_" + field + " iframe").contents().find("head").append("" +
             "<style>" +
             "body {" +
             "width: " + regionWidth + "px; " +
@@ -73,10 +74,10 @@ var text_callback = function(dialog, extraData) {
     // Bind to instance ready so that we can adjust some things about the editor.
     CKEDITOR.instances["ta_text"].on('instanceReady', function() {
         // Apply scaling to this editor instance
-        applyContentsToIframe();
+        applyContentsToIframe("ta_text");
 
         // Reapply the background style after switching to source view and back to the normal editing view
-        CKEDITOR.instances["ta_text"].on('contentDom', applyContentsToIframe);
+        CKEDITOR.instances["ta_text"].on('contentDom', function () { applyContentsToIframe("ta_text") });
 
         // Get the template data
         var data = CKEDITOR.instances["ta_text"].getData();
@@ -103,16 +104,18 @@ var text_callback = function(dialog, extraData) {
         CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
         CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
             // Apply scaling to this editor instance
-            applyContentsToIframe();
+            applyContentsToIframe("noDataMessage");
 
             // Reapply the background style after switching to source view and back to the normal editing view
-            CKEDITOR.instances["noDataMessage"].on('contentDom', applyContentsToIframe);
+            CKEDITOR.instances["noDataMessage"].on('contentDom', function () { applyContentsToIframe("noDataMessage") });
 
             // Get the template data
             var data = CKEDITOR.instances["noDataMessage"].getData();
+            if (data === "") {
+                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.noDataMessage + "</span></span>";
+            }
 
             // Handle initial template set up
-            data = applyTemplateContentIfNecessary(data, extra);
             data = convertLibraryReferences(data);
 
             CKEDITOR.instances["noDataMessage"].setData(data);
