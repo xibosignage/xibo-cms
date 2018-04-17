@@ -4,7 +4,7 @@ describe('Unauthenticated CMS access', function () {
 
         cy.url().should('include', '/login');
 
-        cy.contains('Version 1.8.8');
+        cy.contains('Version 1.8.9');
     });
 
     it('should redirect to login when an authenticated page is requested', function() {
