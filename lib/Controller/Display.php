@@ -1525,6 +1525,7 @@ class Display extends Base
     public function setDefaultLayout($displayId)
     {
         $display = $this->displayFactory->getById($displayId);
+        $defaultLayoutId = $display->defaultLayoutId;
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -1538,6 +1539,8 @@ class Display extends Base
 
         $display->defaultLayoutId = $layoutId;
         $display->save(['validate' => false]);
+        if ($defaultLayoutId != $display->defaultLayoutId)
+            $display->notify();
 
         // Return
         $this->getState()->hydrate([
