@@ -163,7 +163,7 @@
                         {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, "image") }}
 
                         {% set title %}{% trans "Items" %}{% endset %}
-                        {% set helpText %}{% trans "The items wanted, can be comma separated." %}{% endset %}
+                        {% set helpText %}{% trans "The items wanted, can be comma separated. For the best results enter no more than 5 items." %}{% endset %}
                         {{ forms.input("items", title, module.getOption("items"), helpText, "", "required") }}
                         
                         {% set title %}{% trans "Base" %}{% endset %}
