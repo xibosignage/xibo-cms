@@ -1458,9 +1458,9 @@ abstract class ModuleWidget implements ModuleInterface
             $previewHeight = $this->getSanitizer()->getDouble('height', 0);
             $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
 
-            $resource = preg_replace('/"previewWidth":(\d*?),/', '"previewWidth":' . $previewWidth . ',', $resource);
-            $resource = preg_replace('/"previewHeight":(\d*?),/', '"previewHeight":' . $previewHeight . ',', $resource);
-            $resource = preg_replace('/"scaleOverride":(\d*?),/', '"scaleOverride":' . $scaleOverride . ',', $resource);
+            $resource = preg_replace('/"previewWidth":([-+]?[0-9]*\.?[0-9]+)/', '"previewWidth":' . $previewWidth, $resource);
+            $resource = preg_replace('/"previewHeight":([-+]?[0-9]*\.?[0-9]+)/', '"previewHeight":' . $previewHeight, $resource);
+            $resource = preg_replace('/"scaleOverride":([-+]?[0-9]*\.?[0-9]+)/', '"scaleOverride":' . $scaleOverride, $resource);
         }
 
         // Return the resource
