@@ -167,7 +167,7 @@
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
                         {% set title %}{% trans "Items" %}{% endset %}
-                        {% set helpText %}{% trans "The items wanted, can be comma separated." %}{% endset %}
+                        {% set helpText %}{% trans "The items wanted, can be comma separated. For the best results enter no more than 5 items." %}{% endset %}
                         {{ forms.input("items", title, "", helpText, "", "required") }}
 
                         {% set title %}{% trans "Items per Page" %}{% endset %}

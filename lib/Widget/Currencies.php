@@ -21,10 +21,10 @@
  */
 namespace Xibo\Widget;
 
-use GuzzleHttp\Exception\RequestException;
-use Stash\Invalidation;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -88,11 +88,15 @@ class Currencies extends AlphaVantageBase
 
     /**
      * Process any module settings
+     * @throws InvalidArgumentException
      */
     public function settings()
     {
         $this->module->settings['apiKey'] = $this->getSanitizer()->getString('apiKey');
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 14400);
+
+        if ($this->module->settings['cachePeriod'] < 3600)
+            throw new InvalidArgumentException(__('Cache Period must be 3600 or greater for this Module'), 'cachePeriod');
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -339,7 +343,7 @@ class Currencies extends AlphaVantageBase
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         
-        if( $this->getOption('overrideTemplate') == 1 ){
+        if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
             $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
@@ -350,8 +354,12 @@ class Currencies extends AlphaVantageBase
     }
 
     /**
-     * Get Results
+     * Get FX Results
+     *  PLEASE NOTE: This method does not cache results directly as the AlphaVantageBase class handles caching individual
+     *  requests.
+     *  This request uses a combination of AlphaVantage and Fixer.IO
      * @return array|bool an array of results. false if an invalid value is returned.
+     * @throws ConfigurationException
      */
     protected function getResults()
     {
@@ -386,99 +394,83 @@ class Currencies extends AlphaVantageBase
         // Does the template require a percentage change calculation.
         $percentageChangeRequested = stripos($itemTemplate, '[ChangePercentage]') > -1;
 
-        // Our cache key is based on the base/items/changepercentage
-        /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($base . implode(',', $items) . $percentageChangeRequested . $reverseConversion)));
-        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
+        $data = [];
+        $priorDay = [];
 
-        $data = $cache->get();
+        // Do we need to get the data for percentage change?
+        if ($percentageChangeRequested && !$reverseConversion) {
+            try {
+                // Get the prior day
+                $priorDay = $this->getPriorDay($base, $items);
 
-        if ($cache->isMiss()) {
-            // Lock this cache record
-            $cache->lock();
+                $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
 
-            // Start fresh
-            $data = [];
-            $priorDay = [];
+            } catch (XiboException $requestException) {
+                $this->getLog()->error('Problem getting percentage change currency information. E = ' . $requestException->getMessage());
+                $this->getLog()->debug($requestException->getTraceAsString());
+            }
+        }
 
-            // Do we need to get the data for percentage change?
-            if ($percentageChangeRequested && !$reverseConversion) {
-                try {
-                    // Get the prior day
-                    $priorDay = $this->getPriorDay($base, $items);
+        // Each item we want is a call to the results API
+        try {
+            foreach ($items as $currency) {
+                // Remove the multiplier if there's one (this is handled when we substitute the results into the template)
+                $currency = explode('|', $currency)[0];
+
+                // Do we need to reverse the from/to currency for this comparison?
+                if ($reverseConversion) {
+                    $result = $this->getCurrencyExchangeRate($currency, $base);
+
+                    // We need to get the prior day for this pair only (reversed)
+                    $priorDay = $this->getPriorDay($currency, $base);
 
                     $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
 
-                } catch (RequestException $requestException) {
-                    $this->getLog()->error('Problem getting percentage change currency information. E = ' . $requestException->getMessage());
-                    $this->getLog()->debug($requestException->getTraceAsString());
+                } else {
+                    $result = $this->getCurrencyExchangeRate($base, $currency);
                 }
-            }
 
-            // Each item we want is a call to the results API
-            try {
-                foreach ($items as $currency) {
-                    // Remove the multiplier if there's one (this is handled when we substitute the results into the template)
-                    $currency = explode('|', $currency)[0];
+                $this->getLog()->debug('Results are: ' . var_export($result, true));
 
-                    // Do we need to reverse the from/to currency for this comparison?
-                    if ($reverseConversion) {
-                        $result = $this->getCurrencyExchangeRate($currency, $base);
+                $parsedResult = [
+                    'time' => $result['Realtime Currency Exchange Rate']['6. Last Refreshed'],
+                    'ToName' => $result['Realtime Currency Exchange Rate']['3. To_Currency Code'],
+                    'ToCurrency' => $result['Realtime Currency Exchange Rate']['4. To_Currency Name'],
+                    'FromName' => $result['Realtime Currency Exchange Rate']['1. From_Currency Code'],
+                    'FromCurrency' => $result['Realtime Currency Exchange Rate']['2. From_Currency Name'],
+                    'Bid' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                    'Ask' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                    'LastTradePriceOnly' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
+                    'RawLastTradePriceOnly' => $result['Realtime Currency Exchange Rate']['5. Exchange Rate'],
+                    'TimeZone' => $result['Realtime Currency Exchange Rate']['7. Time Zone'],
+                ];
 
-                        // We need to get the proir day for this pair only (reversed)
-                        $priorDay = $this->getPriorDay($currency, $base);
+                // Set the name/currency to be the full name including the base currency
+                $parsedResult['Name'] = $parsedResult['FromName'] . '/' . $parsedResult['ToName'];
+                $parsedResult['Currency'] = $parsedResult['FromCurrency'] . '/' . $parsedResult['ToCurrency'];
 
-                        $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
-
-                    } else {
-                        $result = $this->getCurrencyExchangeRate($base, $currency);
-                    }
-
-                    $this->getLog()->debug('Results are: ' . var_export($result, true));
-
-                    $parsedResult = [
-                        'time' => $result['Realtime Currency Exchange Rate']['6. Last Refreshed'],
-                        'ToName' => $result['Realtime Currency Exchange Rate']['3. To_Currency Code'],
-                        'ToCurrency' => $result['Realtime Currency Exchange Rate']['4. To_Currency Name'],
-                        'FromName' => $result['Realtime Currency Exchange Rate']['1. From_Currency Code'],
-                        'FromCurrency' => $result['Realtime Currency Exchange Rate']['2. From_Currency Name'],
-                        'Bid' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
-                        'Ask' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
-                        'LastTradePriceOnly' => round($result['Realtime Currency Exchange Rate']['5. Exchange Rate'], 4),
-                        'RawLastTradePriceOnly' => $result['Realtime Currency Exchange Rate']['5. Exchange Rate'],
-                        'TimeZone' => $result['Realtime Currency Exchange Rate']['7. Time Zone'],
-                    ];
-
-                    // Set the name/currency to be the full name including the base currency
-                    $parsedResult['Name'] = $parsedResult['FromName'] . '/' . $parsedResult['ToName'];
-                    $parsedResult['Currency'] = $parsedResult['FromCurrency'] . '/' . $parsedResult['ToCurrency'];
-
-                    // work out the change when compared to the previous day
-                    if ($percentageChangeRequested && isset($priorDay[$parsedResult['ToName']]) && is_numeric($priorDay[$parsedResult['ToName']])) {
-                        $parsedResult['YesterdayTradePriceOnly'] = $priorDay[$parsedResult['ToName']];
-                        $parsedResult['Change'] = $parsedResult['RawLastTradePriceOnly'] - $parsedResult['YesterdayTradePriceOnly'];
-                    } else {
-                        $parsedResult['YesterdayTradePriceOnly'] = 0;
-                        $parsedResult['Change'] = 0;
-                    }
-
-                    // Parse the result and add it to our data array
-                    $data[] = $parsedResult;
+                // work out the change when compared to the previous day
+                if ($percentageChangeRequested && isset($priorDay[$parsedResult['ToName']]) && is_numeric($priorDay[$parsedResult['ToName']])) {
+                    $parsedResult['YesterdayTradePriceOnly'] = $priorDay[$parsedResult['ToName']];
+                    $parsedResult['Change'] = $parsedResult['RawLastTradePriceOnly'] - $parsedResult['YesterdayTradePriceOnly'];
+                } else {
+                    $parsedResult['YesterdayTradePriceOnly'] = 0;
+                    $parsedResult['Change'] = 0;
                 }
-            } catch (RequestException $requestException) {
-                $this->getLog()->error('Problem getting currency information. E = ' . $requestException->getMessage());
-                $this->getLog()->debug($requestException->getTraceAsString());
 
-                return false;
+                // Parse the result and add it to our data array
+                $data[] = $parsedResult;
             }
+        } catch (ConfigurationException $configurationException) {
+            throw $configurationException;
+        } catch (XiboException $requestException) {
+            $this->getLog()->error('Problem getting currency information. E = ' . $requestException->getMessage());
+            $this->getLog()->debug($requestException->getTraceAsString());
 
-            $this->getLog()->debug('Parsed Results are: ' . var_export($data, true));
-
-            // Cache it
-            $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod', 3600));
-            $this->getPool()->saveDeferred($cache);
+            return false;
         }
+
+        $this->getLog()->debug('Parsed Results are: ' . var_export($data, true));
 
         return $data;
     }

@@ -21,10 +21,10 @@
  */
 namespace Xibo\Widget;
 
-use GuzzleHttp\Exception\RequestException;
-use Stash\Invalidation;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -88,11 +88,15 @@ class Stocks extends AlphaVantageBase
 
     /**
      * Process any module settings
+     * @throws InvalidArgumentException
      */
     public function settings()
     {
         $this->module->settings['apiKey'] = $this->getSanitizer()->getString('apiKey');
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 14400);
+
+        if ($this->module->settings['cachePeriod'] < 3600)
+            throw new InvalidArgumentException(__('Cache Period must be 3600 or greater for this Module'), 'cachePeriod');
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -318,8 +322,11 @@ class Stocks extends AlphaVantageBase
     }
 
     /**
-     * Get YQL Data
+     * Get Stock Results
+     *  PLEASE NOTE: This method does not cache results directly as the AlphaVantageBase class handles caching individual
+     *  requests.
      * @return array|bool an array of results according to the key specified by result identifier. false if an invalid value is returned.
+     * @throws ConfigurationException
      */
     protected function getResults()
     {
@@ -332,78 +339,59 @@ class Stocks extends AlphaVantageBase
             return false;
         }
 
-        // Fire off a request for the data
-        /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($items)));
-        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
+        $data = [];
 
-        $data = $cache->get();
+        // Parse items out into an array
+        $items = explode(',', $items);
 
-        if ($cache->isMiss()) {
+        try {
+            foreach ($items as $symbol) {
 
-            // Start fresh
-            $data = [];
+                // Does this symbol have any additional data
+                $parsedSymbol = explode('|', $symbol);
 
-            // Lock
-            $cache->lock();
+                $symbol = $parsedSymbol[0];
+                $name = (isset($parsedSymbol[1]) ? $parsedSymbol[1] : $symbol);
+                $currency = (isset($parsedSymbol[2]) ? $parsedSymbol[2] : '');
 
-            $this->getLog()->debug('Querying API for ' . $items);
+                $result = $this->getStockQuote($symbol);
 
-            // Parse items out into an array
-            $items = explode(',', $items);
+                $this->getLog()->debug('Results are: ' . var_export($result, true));
 
-            try {
-                foreach ($items as $symbol) {
+                $parsedResult = [];
 
-                    // Does this symbol have any additional data
-                    $parsedSymbol = explode('|', $symbol);
+                foreach ($result['Time Series (Daily)'] as $series) {
 
-                    $symbol = $parsedSymbol[0];
-                    $name = (isset($parsedSymbol[1]) ? $parsedSymbol[1] : $symbol);
-                    $currency = (isset($parsedSymbol[2]) ? $parsedSymbol[2] : '');
+                    $parsedResult = [
+                        'Name' => $name,
+                        'Symbol' => $symbol,
+                        'time' => $result['Meta Data']['3. Last Refreshed'],
+                        'LastTradePriceOnly' => round($series['4. close'], 4),
+                        'RawLastTradePriceOnly' => $series['4. close'],
+                        'YesterdayTradePriceOnly' => round($series['1. open'], 4),
+                        'RawYesterdayTradePriceOnly' => $series['1. open'],
+                        'TimeZone' => $result['Meta Data']['5. Time Zone'],
+                        'Currency' => $currency
+                    ];
 
-                    $result = $this->getStockQuote($symbol);
+                    $parsedResult['Change'] = round($parsedResult['RawYesterdayTradePriceOnly'] - $parsedResult['RawLastTradePriceOnly'], 4);
 
-                    $this->getLog()->debug('Results are: ' . var_export($result, true));
-
-                    $parsedResult = [];
-
-                    foreach ($result['Time Series (Daily)'] as $series) {
-
-                        $parsedResult = [
-                            'Name' => $name,
-                            'Symbol' => $symbol,
-                            'time' => $result['Meta Data']['3. Last Refreshed'],
-                            'LastTradePriceOnly' => round($series['4. close'], 4),
-                            'RawLastTradePriceOnly' => $series['4. close'],
-                            'YesterdayTradePriceOnly' => round($series['1. open'], 4),
-                            'RawYesterdayTradePriceOnly' => $series['1. open'],
-                            'TimeZone' => $result['Meta Data']['5. Time Zone'],
-                            'Currency' => $currency
-                        ];
-
-                        $parsedResult['Change'] = round($parsedResult['RawYesterdayTradePriceOnly'] - $parsedResult['RawLastTradePriceOnly'], 4);
-
-                        break;
-                    }
-
-                    // Parse the result and add it to our data array
-                    $data[] = $parsedResult;
+                    break;
                 }
-            } catch (RequestException $requestException) {
-                $this->getLog()->error('Problem getting stock information. E = ' . $requestException->getMessage());
-                $this->getLog()->debug($requestException->getTraceAsString());
 
-                return false;
+                // Parse the result and add it to our data array
+                $data[] = $parsedResult;
             }
+        } catch (ConfigurationException $configurationException) {
+            throw $configurationException;
+        } catch (XiboException $requestException) {
+            $this->getLog()->error('Problem getting stock information. E = ' . $requestException->getMessage());
+            $this->getLog()->debug($requestException->getTraceAsString());
 
-            $this->getLog()->debug('Parsed Results are: ' . var_export($data, true));
-
-            // Cache it
-            $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod', 3600));
-            $this->getPool()->saveDeferred($cache);
+            return false;
         }
+
+        $this->getLog()->debug('Parsed Results are: ' . var_export($data, true));
 
         return $data;
     }

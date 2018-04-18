@@ -50,7 +50,7 @@ interface LogServiceInterface
     public function sql($sql, $params);
 
     /**
-     * @param string ...$object
+     * @param string
      * @return mixed
      */
     public function debug($object);

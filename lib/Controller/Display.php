@@ -964,9 +964,6 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
-        // Track the default layout
-        $defaultLayoutId = $display->defaultLayoutId;
-
         // Update properties
         if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
             $display->display = $this->getSanitizer()->getString('display');
@@ -996,7 +993,7 @@ class Display extends Base
             $display->auditingUntil = $display->auditingUntil->format('U');
 
         // Should we invalidate this display?
-        if ($defaultLayoutId != $display->defaultLayoutId) {
+        if ($display->hasPropertyChanged('defaultLayoutId')) {
             $display->notify();
         } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
             // Remove the cache if the display licenced state has changed
@@ -1538,6 +1535,8 @@ class Display extends Base
 
         $display->defaultLayoutId = $layoutId;
         $display->save(['validate' => false]);
+        if ($display->hasPropertyChanged('defaultLayoutId'))
+            $display->notify();
 
         // Return
         $this->getState()->hydrate([

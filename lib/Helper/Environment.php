@@ -11,8 +11,8 @@ namespace Xibo\Helper;
 
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.8';
-    public static $WEBSITE_VERSION = 139;
+    public static $WEBSITE_VERSION_NAME = '1.8.9';
+    public static $WEBSITE_VERSION = 140;
 
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '8.0';
@@ -243,5 +243,14 @@ class Environment
     public static function checkUrl($url)
     {
         return (stripos($url, '/web/') === false);
+    }
+
+    /**
+     * Is the CMS in DEV mode?
+     * @return bool
+     */
+    public static function isDevMode()
+    {
+        return (isset($_SERVER['CMS_DEV_MODE']) && $_SERVER['CMS_DEV_MODE'] === 'true');
     }
 }
