@@ -12,7 +12,7 @@ const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-edi
  * @param {number} [options.padding = 0.05] - Padding for the navigator
  * @param {object} [options.editNavbar = null] - Container to render the navbar
  */
-var Navigator = function(container, {edit = false, editNavbar = null, padding = 0.05} = {}) {
+let Navigator = function(container, {edit = false, editNavbar = null, padding = 0.05} = {}) {
     this.editMode = edit;
     this.DOMObject = container;
     this.navbarContainer = editNavbar;
@@ -27,11 +27,11 @@ Navigator.prototype.scaleLayout = function(layout, container) {
 
     //TODO: Probably needs some refactor
     
-    var layoutSizeRatio = layout.width / layout.height;
-    var containerWidth = container.width();
-    var containerHeight = container.height();
-    var containerSizeRatio = containerWidth / containerHeight;
-    var containerPadding = Math.min(containerWidth, containerHeight) * this.paddingPercentage;
+    const layoutSizeRatio = layout.width / layout.height;
+    const containerWidth = container.width();
+    const containerHeight = container.height();
+    const containerSizeRatio = containerWidth / containerHeight;
+    const containerPadding = Math.min(containerWidth, containerHeight) * this.paddingPercentage;
 
     if(layoutSizeRatio > containerSizeRatio) { // If the layout W/H is bigger than the container
         // Calculate width and height 
@@ -56,9 +56,9 @@ Navigator.prototype.scaleLayout = function(layout, container) {
     layout.containerProperties.scaleToTheOriginal = layout.containerProperties.width / layout.width;
 
     // Regions Scalling
-    for(var region in layout.regions) {
+    for(let region in layout.regions) {
         // Loop through the container properties and scale them according to the layout scale from the original
-        for(var property in layout.regions[region].containerProperties) {
+        for(let property in layout.regions[region].containerProperties) {
             if(layout.regions[region].containerProperties.hasOwnProperty(property)) {
                 layout.regions[region].containerProperties[property] = layout.regions[region].dimensions[property] * layout.containerProperties.scaleToTheOriginal;
             }
@@ -77,14 +77,14 @@ Navigator.prototype.render = function(layout) {
     this.scaleLayout(layout, this.DOMObject);
 
     // Compile layout template with data
-    var html = navigatorLayoutTemplate(layout);
+    const html = navigatorLayoutTemplate(layout);
 
     // Append layout html to the main div
     this.DOMObject.html(html);
 
     // Make regions draggable and resizable if navigator's on edit mode
     // Get layout container
-    var layoutContainer = this.DOMObject.find('#' + layout.id);
+    const layoutContainer = this.DOMObject.find('#' + layout.id);
 
     // Find all the regions and enable drag and resize
     this.DOMObject.find('#regions .region').resizable({
@@ -96,7 +96,7 @@ Navigator.prototype.render = function(layout) {
     }).on("resizestop dragstop",
         function(event, ui) {
 
-            var scale = layout.containerProperties.scaleToTheOriginal;
+            const scale = layout.containerProperties.scaleToTheOriginal;
             
             layout.regions[$(this).attr('id')].transform(
                 {

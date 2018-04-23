@@ -68,7 +68,7 @@ window.lD = {
 // Load Layout and build app structure
 $(document).ready(function() {
     // Get layout id
-    var layoutId = lD.designerDiv.attr("data-layout-id");
+    const layoutId = lD.designerDiv.attr("data-layout-id");
 
     // Append loading html to the main div
     lD.designerDiv.html(loadingTemplate());
@@ -117,7 +117,7 @@ $(document).ready(function() {
         .fail(function(data) {
 
             // Output error on screen
-            var htmlError = messageTemplate({
+            const htmlError = messageTemplate({
                 messageType: 'danger',
                 messageTitle: 'ERROR',
                 messageDescription: 'There was a problem loading the layout!'
@@ -151,11 +151,11 @@ $(document).ready(function() {
 lD.selectObject = function(obj = null) {
 
     // Get object properties from the DOM ( or set to layout if not defined )
-    var newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
-    var newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+    const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
+    const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
 
-    var oldSelectedId = this.selectedObject.id;
-    var oldSelectedType = this.selectedObject.type;
+    const oldSelectedId = this.selectedObject.id;
+    const oldSelectedType = this.selectedObject.type;
     
     // Unselect the previous selectedObject object if still selected
     if( this.selectedObject.selected ) {
@@ -230,7 +230,7 @@ lD.reloadData = function(layout) {
         .fail(function(data) {
 
             // Output error on screen
-            var htmlError = messageTemplate({
+            const htmlError = messageTemplate({
                 messageType: 'danger',
                 messageTitle: 'ERROR',
                 messageDescription: 'There was a problem reloading the layout!'

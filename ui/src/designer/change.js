@@ -3,7 +3,7 @@
  * Module that saves the previous and next change of an object ( as an operation )
  */
 
-var reverseChange = {
+const reverseChange = {
     'transform': 'transform',
     'delete': 'restoreElement',
     'create': 'deleteElement'
@@ -19,7 +19,7 @@ var reverseChange = {
  * @param {object=} [oldState] - Previous change properties
  * @param {object=} [newState] - Change properties, to be saved
 */
-var Change = function(id, type, targetType, targetID, oldState, newState){
+let Change = function(id, type, targetType, targetID, oldState, newState){
     this.id = id;
     this.type = type;
     this.target = {
@@ -53,9 +53,9 @@ Change.prototype.upload = function() {
 */
 Change.prototype.revert = function() {
 
-    var element = {};
-    var reverse = reverseChange[this.type];
-    var revertResult = false;
+    let element = {};
+    const reverse = reverseChange[this.type];
+    let revertResult = false;
 
     // Restore is a special case, we need to use the layout to restore the element
     if(reverse === 'restoreElement' || reverse === 'deleteElement') {

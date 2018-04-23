@@ -7,7 +7,7 @@ const bottomToolbarTemplate = require('../templates/bottom-toolbar.hbs');
  * Bottom toolbar contructor
  * @param {object} container - the container to render the navigator to
  */
-var BottomToolbar = function(container) {
+let BottomToolbar = function(container) {
     this.DOMObject = container;
 
     /**
@@ -25,19 +25,14 @@ var BottomToolbar = function(container) {
 BottomToolbar.prototype.render = function() {
 
     // Compile layout template with data
-    var html = bottomToolbarTemplate(this);
+    const html = bottomToolbarTemplate(this);
 
     // Append layout html to the main div
     this.DOMObject.html(html);
 
     // TODO: remove this, use just for debug purposes
     this.DOMObject.find('#debugButton').click(function() {
-        console.log('Manager changes:');
         console.log(lD.manager.changeHistory);
-
-        console.log('Layout:');
-        console.log(lD.layout);
-
     });
 
     // Button actions

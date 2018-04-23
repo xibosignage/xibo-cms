@@ -7,7 +7,7 @@
  * @param {object=} [options] - Region options
  * @param {string} [options.backgroundColor="#555555ed"] - Color for the background
  */
-var Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
+let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
 
@@ -67,7 +67,7 @@ var Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
 Region.prototype.transform = function(newValues, saveToHistory = true) {
 
     // save old/previous values
-    var oldValues = {
+    const oldValues = {
         width: this.dimensions.width,
         height: this.dimensions.height,
         top: this.dimensions.top,

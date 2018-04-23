@@ -4,10 +4,10 @@ const loadingTemplate = require('../templates/loading.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
 
 /**
- * Propoerties panel contructor
+ * Properties panel contructor
  * @param {object} container - the container to render the panel to
  */
-var PropertiesPanel = function(container) {
+let PropertiesPanel = function(container) {
     this.DOMObject = container;
 };
 
@@ -48,8 +48,8 @@ PropertiesPanel.prototype.render = function(element) {
 
     this.DOMObject.html(loadingTemplate());
 
-    var self = this;
-    var requestPath = '';
+    const self = this;
+    let requestPath = '';
 
     switch(element.type) {
         case 'layout':
@@ -71,9 +71,9 @@ PropertiesPanel.prototype.render = function(element) {
     // Get form for the given element
     $.get(requestPath).done(function(res) {
 
-        var htmlTemplate = Handlebars.compile(res.html);
+        const htmlTemplate = Handlebars.compile(res.html);
 
-        var html = propertiesPanel({
+        const html = propertiesPanel({
             header: res.dialogTitle,
             form: htmlTemplate(element),
             buttons: res.buttons

@@ -8,7 +8,7 @@ const timelineTemplate = require('../templates/timeline.hbs');
  * @param {object} container - the container to render the timeline to
  * @param {object =} [options] - Timeline options
  */
-var Timeline = function(container) {
+let Timeline = function(container) {
     this.DOMObject = container;
 
     this.scrollPercent = {
@@ -45,7 +45,7 @@ Timeline.prototype.changeZoom = function(zoom) {
         return;
     }
 
-    var zoomVariation = 10;
+    let zoomVariation = 10;
     
     if(this.properties.zoom >= 5000) {
         zoomVariation = 1000;
@@ -58,7 +58,7 @@ Timeline.prototype.changeZoom = function(zoom) {
     }
 
     // Calculate new zoom value
-    var newZoom = Math.round(this.properties.zoom + (zoomVariation * zoom));
+    let newZoom = Math.round(this.properties.zoom + (zoomVariation * zoom));
     
     // Reset zoom enable flags
     this.properties.zoomOutDisable = this.properties.zoomInDisable = '';
@@ -103,7 +103,7 @@ Timeline.prototype.updateLabels = function() {
 Timeline.prototype.calculateStartingZoom = function(regions) {
 
     // Find the smallest widget ( by duration )
-    var smallerWidgetDuration = -1;
+    let smallerWidgetDuration = -1;
     for(region in regions) {
         for(widget in regions[region].widgets) {
             if(regions[region].widgets[widget].getDuration() < smallerWidgetDuration || smallerWidgetDuration === -1) {
@@ -131,7 +131,7 @@ Timeline.prototype.calculateStartingZoom = function(regions) {
  */
 Timeline.prototype.checkRegionsVisibility = function(regions) {
 
-    var visibleDuration = lD.layout.duration * (100 / this.properties.zoom); //this.properties.maxTime - this.properties.minTime;
+    const visibleDuration = lD.layout.duration * (100 / this.properties.zoom); //this.properties.maxTime - this.properties.minTime;
     
     for(region in regions) {
         // Reset the region visibility flag
@@ -140,7 +140,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
         for(widget in regions[region].widgets) {
 
             // Calculate the ratio of the widget compared to the region length
-            var widthRatio = regions[region].widgets[widget].getDuration() / visibleDuration;
+            const widthRatio = regions[region].widgets[widget].getDuration() / visibleDuration;
 
             // Mark region as hidden if the widget is too small to be displayed
             if(widthRatio < (this.properties.widgetMinimumVisibleRatio/100)) {
@@ -159,15 +159,15 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
 
     for(region in regions) {
         
-        var currentRegion = regions[region];
+        let currentRegion = regions[region];
 
         // if the regions isn't marked for looping, skip to the next one
         if(!currentRegion.loop) {
             continue;
         }
 
-        var widgetsTotalDuration = 0;
-        var ghostWidgetsObject = [];
+        let widgetsTotalDuration = 0;
+        let ghostWidgetsObject = [];
 
         // Clear region previous ghosts
         currentRegion.ghostWidgetsObject = [];
@@ -179,11 +179,11 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
 
         // starting and ending time to check/draw ghosts in
         //      get the ghosts drawing starting time, depending on the minimum visualization time and if the widgets are shown on screen after it or not
-        var ghostsStartTime = (widgetsTotalDuration > this.properties.minTime) ? widgetsTotalDuration : this.properties.minTime;
-        var ghostsEndTime = this.properties.maxTime;
+        const ghostsStartTime = (widgetsTotalDuration > this.properties.minTime) ? widgetsTotalDuration : this.properties.minTime;
+        const ghostsEndTime = this.properties.maxTime;
         
         // distance from the beggining of ghosts and the end of the widgets
-        var paddingLeft = 0;
+        let paddingLeft = 0;
 
         // if the widgets are shown until the end visualization ( or after ), don't draw any ghosts
         if(widgetsTotalDuration > ghostsEndTime){
@@ -191,7 +191,7 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
         }
 
         // start the auxiliar time just after the widgets
-        var auxTime = widgetsTotalDuration;
+        let auxTime = widgetsTotalDuration;
 
         // go through auxiliar time, advancing with each widget's time
         while( auxTime < ghostsEndTime) {
@@ -202,11 +202,11 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
                 // if the next widget shows on the time span, add it to the array
                 if(auxTime + currentRegion.widgets[widget].getDuration() > ghostsStartTime) {
                     // clone widget to create a ghost
-                    var ghost = currentRegion.widgets[widget].createClone();
+                    let ghost = currentRegion.widgets[widget].createClone();
 
                     // if the ghost goes after the layout ending, crop it
                     if(auxTime + ghost.duration > lD.layout.duration) {
-                        var cropDuration = ghost.duration - ((auxTime + ghost.duration) - lD.layout.duration);
+                        const cropDuration = ghost.duration - ((auxTime + ghost.duration) - lD.layout.duration);
                         ghost.duration = cropDuration;
                     }
 
@@ -258,7 +258,7 @@ Timeline.prototype.render = function(layout) {
     this.createGhostWidgetsDinamically(layout.regions);
     
     // Render timeline template using layout object
-    var html = timelineTemplate({
+    const html = timelineTemplate({
         layout: layout, 
         properties: this.properties
     });
@@ -267,8 +267,7 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.html(html);
 
     // Load region container
-    var regionsContainer = this.DOMObject.find('#regions-container');
-
+    const regionsContainer = this.DOMObject.find('#regions-container');
 
     // Save regions size to guarantee that when the scroll event is called, the region don't reset to 0 ( bugfix )
     this.properties.scrollWidth = regionsContainer.find("#regions").width();
@@ -286,7 +285,7 @@ Timeline.prototype.render = function(layout) {
     });
 
     // Button actions
-    var self = this;
+    const self = this;
     this.DOMObject.find('#zoomIn').click(function() {
         self.changeZoom(1);
         self.render(layout);
@@ -313,7 +312,7 @@ Timeline.prototype.render = function(layout) {
         }
 
         // Get new scroll position
-        var newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();
+        const newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();
 
         // Only render if the scroll position has been updated
         if(self.properties.scrollPosition != newScrollPosition) {

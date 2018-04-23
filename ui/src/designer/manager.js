@@ -4,7 +4,7 @@ const Change = require('./change.js');
 /**
  * Layout Editor Manager
  */
-var Manager = function() {
+let Manager = function() {
     this.changeHistory = []; // Array of changes
 };
 
@@ -18,9 +18,9 @@ var Manager = function() {
 */
 Manager.prototype.addChange = function(changeType, targetType, targetID, oldValues, newValues) {
 
-    var changeId = this.changeHistory.length;
+    const changeId = this.changeHistory.length;
     
-    var newChange = new Change (
+    const newChange = new Change (
         changeId, 
         changeType,
         targetType,
@@ -48,7 +48,7 @@ Manager.prototype.revertLastChange = function(changeId = null) {
         changeId = this.changeHistory.length - 1;
     }
     
-    var success = this.changeHistory[changeId].revert();
+    const success = this.changeHistory[changeId].revert();
 
     // if sucessful, remove last element and refresh designer
     if(success){

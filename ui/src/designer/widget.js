@@ -6,7 +6,7 @@
  * @param {number} regionId - region where the widget belongs
  * @param {object} data - data from the API request
  */
-var Widget = function(id, regionId, data) {
+let Widget = function(id, regionId, data) {
     this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
     this.widgetId = id;
     this.regionId = 'region_' + regionId;
@@ -36,7 +36,7 @@ var Widget = function(id, regionId, data) {
     this.durationPercentage = function() {
 
         // Get duration percentage based on the layout
-        var duration = (this.getDuration() / lD.layout.duration) * 100;
+        const duration = (this.getDuration() / lD.layout.duration) * 100;
         
         // If the widget doesn't have the loop flag and is a single widget, extend it
         if(!this.loop && this.singleWidget){
@@ -58,10 +58,10 @@ var Widget = function(id, regionId, data) {
      */
     this.getOptions = function() {
 
-        var options = {};
+        let options = {};
 
         for(option in this.data.widgetOptions) {
-            let currOption = this.data.widgetOptions[option];
+            const currOption = this.data.widgetOptions[option];
 
             if(currOption.type === 'attrib'){
                 options[currOption.option] = currOption.value;
@@ -89,8 +89,8 @@ var Widget = function(id, regionId, data) {
 
         if(recalculate || this.duration === null){
 
-            var calculatedDuration = parseFloat(this.data.calculatedDuration);
-            var options = this.getOptions();
+            let calculatedDuration = parseFloat(this.data.calculatedDuration);
+            const options = this.getOptions();
 
             // if calculated duration is not calculated, see it to the default duration 
             if(calculatedDuration === 0) {
@@ -110,7 +110,7 @@ var Widget = function(id, regionId, data) {
  */
 Widget.prototype.createClone = function() {
     
-    var widgetClone = {
+    const widgetClone = {
         id: 'ghost_' + this.id,
         subType: this.subType,
         duration: this.getDuration(),

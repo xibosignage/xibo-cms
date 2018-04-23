@@ -15,7 +15,7 @@ const NewRegionDefaultDimensions = {
  * @param  {number} id - layout id
  * @param  {object} data - data from the API request
  */
-var Layout = function(id, data) {
+let Layout = function(id, data) {
 
     // Layout properties
     this.id = 'layout_' + id;
@@ -63,24 +63,24 @@ var Layout = function(id, data) {
 Layout.prototype.createDataStructure = function(data) {
 
     // layout duration calculated based on the longest region duration
-    var layoutDuration = 0;
+    let layoutDuration = 0;
 
     // Create regions and add them to the layout
-    for(var region in data.regions) {
-        var regionDuration = 0;
+    for(let region in data.regions) {
+        let regionDuration = 0;
 
-        var newRegion = new Region(
+        let newRegion = new Region(
             data.regions[region].regionId,
             data.regions[region]
         );
 
         // Widgets
-        var widgets = newRegion.playlists.widgets;
+        const widgets = newRegion.playlists.widgets;
 
         // Create widgets for this region
-        for(var widget in widgets) {
+        for(let widget in widgets) {
 
-            var newWidget = new Widget(
+            const newWidget = new Widget(
                 widgets[widget].widgetId,
                 data.regions[region].regionId,
                 widgets[widget]
@@ -115,20 +115,20 @@ Layout.prototype.createDataStructure = function(data) {
  */
 Layout.prototype.calculateTimeValues = function() {
     
-    for(var region in this.regions) {
-        var currRegion = this.regions[region];
+    for(let region in this.regions) {
+        let currRegion = this.regions[region];
 
         // Widgets
-        var widgets = currRegion.widgets;
-        var loopSingleWidget = false;
-        var singleWidget = false;
+        const widgets = currRegion.widgets;
+        let loopSingleWidget = false;
+        let singleWidget = false;
 
         // If there is only one widget in the playlist, check the loop option for that region
         if(widgets.length === 1) {
 
             singleWidget = true;
             // Check the loop option
-            for(var option in currRegion.options) {
+            for(let option in currRegion.options) {
                 if(currRegion.options[option].option === 'loop' && currRegion.options[option].value === '1') {
                     currRegion.loop = true;
                     loopSingleWidget = true;
@@ -140,8 +140,8 @@ Layout.prototype.calculateTimeValues = function() {
             currRegion.loop = true;
         }
 
-        for(var widget in widgets) {
-            var currWidget = widgets[widget];
+        for(let widget in widgets) {
+            let currWidget = widgets[widget];
 
             // If the widget needs to be extended
             currWidget.singleWidget = singleWidget;
@@ -157,12 +157,12 @@ Layout.prototype.calculateTimeValues = function() {
  */
 Layout.prototype.addElement = function(elementType) {
 
-    var elementId;
+    let elementId;
     
     // Add element to the layout by type
     if(elementType === 'region') {
 
-        var newRegion = new Region(
+        let newRegion = new Region(
             this.createdRegionsIndex, // TODO: Find a way to create a new ID
             NewRegionDefaultDimensions
         );
@@ -206,17 +206,13 @@ Layout.prototype.addElement = function(elementType) {
  * @param {string} elementType - element type (widget, region, ...)
  * @param {number} elementId - element id
  * @param {object=} options - additional options
- * @param {bool} [options.saveToHistory = false] - Save to history
  */
 Layout.prototype.deleteElement = function(elementId, elementType, options = {}) {
 
-    var elementCopy = {};
-    var deleteResult = false;
+    const self = this;
     
-    // Get element from the layout
-    if(elementType === 'region'){
-        // Save a copy of the element
-        elementCopy = this.regions[elementId];
+    let deleteResult = false;
+    let requestURL = '';
 
         // Delete the region
         delete this.regions[elementId];
@@ -262,7 +258,7 @@ Layout.prototype.deleteElement = function(elementId, elementType, options = {}) 
  * @param {object} elementData - element data to restore
  */
 Layout.prototype.restoreElement = function(elementId, elementType, elementData) {
-    var restoreResult = false;
+    let restoreResult = false;
 
     if(elementType === 'widget') {
         console.log('  TODO: Restore widget');
