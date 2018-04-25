@@ -210,45 +210,56 @@ Layout.prototype.addElement = function(elementType) {
 Layout.prototype.deleteElement = function(elementId, elementType, options = {}) {
 
     const self = this;
-    
+
     let deleteResult = false;
     let requestURL = '';
-
-        // Delete the region
-        delete this.regions[elementId];
-
-        deleteResult = true;
-        
+    
+    // Get element URL from the layout
+    if(elementType === 'region'){
+        requestURL = '/region/' + this.regions[elementId].regionId;
     } else if(elementType === 'widget') {
         console.log('TODO: Widget delete');
     }
 
-    // Check if element exists and add the change to the history
-    if(!jQuery.isEmptyObject(elementCopy) && options.saveToHistory){
+    console.log('TODO: Remove all records from change history array related to this element');
 
-        // Save element without select flag
-        elementCopy.selected = false;
+    // Call the API to delete the element
 
-        // save delete regions to history changes
-        lD.manager.addChange(
-            "delete",
-            elementType,
-            elementId,
-            elementCopy,
-            null
-        );
+    if(requestURL) {
+        $.ajax({
+            url: requestURL,
+            type: 'DELETE',
+            success: function(data) {
+
+                if(data.success) {
+                    alert('Delete successful!');
+
+                    // Delete element from the designer
+                    if(elementType === 'region') {
+                        delete self.regions[elementId];
+                    } else if(elementType === 'widget') {
+                        console.log('TODO: Widget delete');
+                    }
+                    // Delete the region
+
+                    // Unselect all objects
+                    lD.selectObject();
+
+                    // Refresh the designer to update the changes
+                    lD.refreshDesigner();
+                } else {
+                    toastr.error('Delete failed!', 'Error');
+                }
+            },
+            error: function(jXHR, textStatus, errorThrown) {
+                console.log(jXHR);
+                console.log(textStatus);
+                console.log(errorThrown);
+                
+                toastr.error('Delete failed!', 'Error');
+            }
+        });
     }
-
-    // If delete was successful, unselect all objects and refresh the designer
-    if(deleteResult) {
-        // Unselect all objects
-        lD.selectObject();
-
-        // Refresh the designer to update the changes
-        lD.refreshDesigner();
-    }
-
-    return deleteResult;
 };
 
 /**

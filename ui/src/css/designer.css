@@ -1,15 +1,5 @@
 #layout-editor  {
-    background: lightblue;
-}
-
-/* Layout top region */
-#layout-editor #layout-top-region {
-    background: gray;
-}
-
-/* Layout center region */
-#layout-editor #layout-center-region {
-    background: lightgray;
+    background: #a7a7a7;
 }
 
 /* Layout timeline */
@@ -87,14 +77,34 @@
 
 /* Properties Panel */
 #layout-editor #properties-panel-container {
-    padding: 10px;
     min-height: 450px;
     background: white;
 }
 
 #layout-editor #properties-panel-container .form-title {
+    text-align: center;
     font-weight: bold;
     font-size: 1.5em;
+    color: white;
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+#layout-editor #properties-panel-container .form-title-layout {
+    background: #444;
+}
+
+#layout-editor #properties-panel-container .form-title-region {
+    background: #365aa5;
+}
+
+#layout-editor #properties-panel-container .form-title-widget {
+    color: #222;
+    background: #9cce63;
+}
+
+#layout-editor #properties-panel-container .button-container {
+    padding: 10px;
 }
 
 /* Layout Navigator */
@@ -170,4 +180,29 @@
     #layout-editor #bottom-toolbar {
         padding: 5px 0 0 5px;
     }
+}
+
+/* Properties Panel */
+#layout-manager {
+    left: 0;
+    z-index: 1;
+    position: fixed;
+    top: 0;
+}
+
+#layout-manager #layout-manager-container {
+    display: grid;
+    grid-template-columns: auto;
+    grid-gap: 4px;
+    color: #444;
+}
+
+#layout-manager #layout-manager-container .change {
+    background-color: #ff9494;
+    border-radius: 2px;
+    padding: 2px;
+}
+
+#layout-manager #layout-manager-container .change.uploaded {
+  background-color: #8dffa6;
 }

@@ -9,35 +9,34 @@ const propertiesPanel = require('../templates/properties-panel.hbs');
  */
 let PropertiesPanel = function(container) {
     this.DOMObject = container;
+
+    // Initialy loaded data on the form
+    this.formSerializedLoadData = '';
 };
 
 
 /**
  * Save properties from the panel form
+ * @param {object} form - the form to be saved
+ * @param {object} element - the element that the form relates to
  */
-PropertiesPanel.prototype.save = function(form) {
+PropertiesPanel.prototype.save = function(form, element) {
 
-    console.log('HERE!!!!!!!!!');
+    const formNewData = $(form).serialize();
 
-    console.log($(form).attr('action'));
-    console.log($(form).serialize());
-
-    $.ajax({
-        url: $(form).attr('action'),
-        type: 'PUT',
-        data: $(form).serialize(),
-        success: function(data) {
-            console.log('Success!!!!');
-            if(data.success) {
-                lD.reloadData(lD.layout);
-            } else {
-                alert(data.message);
-            }
+    lD.manager.addChange(
+        "saveForm",
+        element.type,
+        element.id,
+        {
+            url: $(form).attr('action'),
+            data: this.formSerializedLoadData
         },
-        error: function(jXHR, textStatus, errorThrown) {
-            alert(errorThrown);
+        {
+            url: $(form).attr('action'),
+            data: formNewData
         }
-    });
+    );
 };
 
 /**
@@ -63,7 +62,7 @@ PropertiesPanel.prototype.render = function(element) {
         case 'widget':
             requestPath = '/playlist/widget/form/edit/' + element.widgetId
             break;
-    
+
         default:
             break;
     }
@@ -72,9 +71,10 @@ PropertiesPanel.prototype.render = function(element) {
     $.get(requestPath).done(function(res) {
 
         const htmlTemplate = Handlebars.compile(res.html);
-
+        
         const html = propertiesPanel({
             header: res.dialogTitle,
+            style: element.type,
             form: htmlTemplate(element),
             buttons: res.buttons
         })
@@ -82,15 +82,18 @@ PropertiesPanel.prototype.render = function(element) {
         // Append layout html to the main div
         self.DOMObject.html(html);
 
+        // Save form data
+        self.formSerializedLoadData = self.DOMObject.find('form').serialize();
+
         // Form submit handling
         self.DOMObject.find('form').submit(function(e) {
             e.preventDefault();
 
-            self.save(this);
+            self.save(this, element);
         });
 
     }).fail(function(data) {
-        console.log('TODO: Handle fail');
+        toastr.error('Get form failed!', 'Error');
     });
 
 };

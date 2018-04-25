@@ -99,12 +99,14 @@ Navigator.prototype.render = function(layout) {
             const scale = layout.containerProperties.scaleToTheOriginal;
             
             layout.regions[$(this).attr('id')].transform(
-                {
-                    width: parseFloat(($(this).width() / scale).toFixed(2)),
-                    height: parseFloat(($(this).height() / scale).toFixed(2)),
-                    top: parseFloat(($(this).position().top / scale).toFixed(2)),
-                    left: parseFloat(($(this).position().left / scale).toFixed(2))
-                }
+                layout.layoutId,
+                [{
+                    'width': parseFloat(($(this).width() / scale).toFixed(2)),
+                    'height': parseFloat(($(this).height() / scale).toFixed(2)),
+                    'top': parseFloat(($(this).position().top / scale).toFixed(2)),
+                    'left': parseFloat(($(this).position().left / scale).toFixed(2)),
+                    'regionid': layout.regions[$(this).attr('id')].regionId
+                }]
             );
         }
     );
@@ -122,7 +124,9 @@ Navigator.prototype.render = function(layout) {
 
         // Navbar buttons
         this.navbarContainer.find('#close-btn').click(function() {
-            lD.toggleNavigatorEditing(false);
+            lD.manager.saveAllChanges().then(function(){
+                lD.toggleNavigatorEditing(false);
+            });
         });
 
         this.navbarContainer.find('#undo-btn').click(function() {
@@ -130,23 +134,19 @@ Navigator.prototype.render = function(layout) {
         });
 
         this.navbarContainer.find('#add-btn').click(function() {
-            var deleteResult = false;
-
             layout.addElement('region');
-
         });
 
         this.navbarContainer.find('#delete-btn').click(function() {
 
+            console.log('TODO: Show confirmations dialog, warning the user that the element change history will be erased ( preventing reverting to a previous state )');
+            
             if(lD.selectedObject.type === 'region') {
 
                 // Delete element from the layout
                 layout.deleteElement(
                     lD.selectedObject.id,
-                    lD.selectedObject.type, 
-                    {
-                        saveToHistory: true
-                    }
+                    lD.selectedObject.type
                 );
             }
         });

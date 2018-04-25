@@ -39,6 +39,9 @@ require('../css/designer.css');
 
 // Create layout designer namespace (lD)
 window.lD = {
+
+    uploadChangesInRealTime: true,
+
     // Navigator
     navigator: {},
     navigatorEdit: {},
@@ -97,8 +100,9 @@ $(document).ready(function() {
                 );
 
                 // Initialize manager
-                lD.manager = new Manager();
-
+                lD.manager = new Manager(
+                    lD.designerDiv.find('#layout-manager')
+                );
 
                 // Initialize bottom toolbar
                 lD.bottomToolbar = new BottomToolbar(
@@ -213,6 +217,7 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.navigatorEdit);
     this.renderContainer(this.timeline);
     this.renderContainer(this.bottomToolbar);
+    this.renderContainer(this.manager);
 };
 
 
@@ -226,6 +231,12 @@ lD.reloadData = function(layout) {
         .done(function(res) {
             lD.layout = new Layout(layout.layoutId, res.data[0]);
             lD.refreshDesigner();
+
+            // Select the same object
+            const selectObjectId = lD.selectedObject.id;
+            lD.selectedObject = {};
+
+            lD.selectObject($('#' + selectObjectId));
         })
         .fail(function(data) {
 

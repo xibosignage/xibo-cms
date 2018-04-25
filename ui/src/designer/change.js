@@ -6,7 +6,8 @@
 const reverseChange = {
     'transform': 'transform',
     'delete': 'restoreElement',
-    'create': 'deleteElement'
+    'create': 'deleteElement',
+    'saveForm': 'saveForm'
 };
 
 /**
@@ -29,22 +30,38 @@ let Change = function(id, type, targetType, targetID, oldState, newState){
     this.oldState = oldState;
     this.newState = newState;
     this.timeStamp = Math.round((new Date()).getTime() / 1000);
+    
+    this.uploaded = false;
+
+    
+    this.uploadedState = function() {
+        return (this.uploaded) ? 'uploaded' : '';
+    }
 };
 
 /**
  * Upload change to the API ( and remove it if successful )
- * @returns {boolean} Operation successful bool
 */
 Change.prototype.upload = function() {
 
-    var resultStatus = false;
+    const self = this;
 
-    console.log('Upload change');
-    console.log(this);
+    var promise = $.ajax({
+        url: self.newState.url,
+        type: 'PUT',
+        data: self.newState.data,
+        success: function(data) {
 
-    resultStatus = true;
+            if(data.success) {
+                self.uploaded = true;
+            }
+        },
+        error: function(jXHR, textStatus, errorThrown) {
+            toastr.error('Change upload failed!', 'Error');
+        }
+    });
 
-    return resultStatus;
+    return promise;
 };
 
 /**

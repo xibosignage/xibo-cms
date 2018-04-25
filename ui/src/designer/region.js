@@ -57,6 +57,7 @@ let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
 
 /**
  * Transform a region using the new values and the layout's scaling and save the values to the structure
+ * @param {number} layoutId - the ID of the layout containing the region
  * @param {object=} [newValues] - Transformation values
  * @param {number} [newValues.width] - New width ( for resize tranformation )
  * @param {number} [newValues.height] - New height ( for resize tranformation )
@@ -64,23 +65,36 @@ let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
  * @param {number} [newValues.left] - New left position ( for move tranformation )
  * @param {bool=} saveToHistory - Flag to save or not to the change history
  */
-Region.prototype.transform = function(newValues, saveToHistory = true) {
+Region.prototype.transform = function(layoutId, newValues, saveToHistory = true) {
 
     // save old/previous values
-    const oldValues = {
-        width: this.dimensions.width,
-        height: this.dimensions.height,
-        top: this.dimensions.top,
-        left: this.dimensions.left
-    };
+    const oldValues = [{
+        'width': this.dimensions.width,
+        'height': this.dimensions.height,
+        'top': this.dimensions.top,
+        'left': this.dimensions.left,
+        'regionid': this.regionId
+    }];
 
+    // add transform change to history manager
     if(saveToHistory) {
         lD.manager.addChange(
             "transform",
             "region",
             this.id,
-            oldValues,
-            newValues
+            {
+                url: '/region/position/all/' + layoutId,
+                data: {
+                    regions: JSON.stringify(oldValues)
+                }
+            },
+            {
+                url: '/region/position/all/' + layoutId,
+                data: {
+                    regions: JSON.stringify(newValues)
+                }
+            },
+            false
         );
     }
 

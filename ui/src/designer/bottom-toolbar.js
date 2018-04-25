@@ -37,7 +37,7 @@ BottomToolbar.prototype.render = function() {
 
     // Button actions
     this.DOMObject.find('#refreshDesigner').click(function() {
-        lD.refreshDesigner();
+        lD.reloadData(lD.layout);
     });
 
     this.DOMObject.find('#undoLastAction').click(function() {
@@ -47,6 +47,11 @@ BottomToolbar.prototype.render = function() {
     // Button to enable navigator edit
     this.DOMObject.find('#enableNavigatorEditMode').click(function() {
         lD.toggleNavigatorEditing(true);
+    });
+
+    // Button to save all changes
+    this.DOMObject.find('#saveAllChanges').click(function() {
+        lD.manager.saveAllChanges();
     });
 };
 

@@ -1,19 +1,15 @@
 <div id="properties-panel-container">
 
-    <div class="form-title">
-        <h2>{{header}}</h2>
+    <div class="form-title form-title-{{style}}">
+        {{header}}
     </div>
 
-    <hr>
-
-    <div class="row">
-        <div class="col-md-12">
-            {{#each buttons}}
-                <button type="button" onclick="{{this}}" class="btn btn-info">
-                    {{@key}}
-                </button>
-            {{/each}}
-        </div>
+    <div class="row button-container">
+        {{#each buttons}}
+            <button type="button" onclick="{{this}}" class="btn btn-info">
+                {{@key}}
+            </button>
+        {{/each}}
     </div>
 
     {{{form}}}
