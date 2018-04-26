@@ -168,7 +168,6 @@
                         {{ forms.dropdown("recurrenceType", "single", title, event.recurrenceType, options, "id", "name", helpText) }}
 
                         {% set helpText %}{% trans "Which days of the week does this event repeat?" %}{% endset %}
-                        {% set noneOption %}{% trans "" %}{% endset %}
                         {% set monday %}{% trans "Monday" %}{% endset %}
                         {% set tuesday %}{% trans "Tuesday" %}{% endset %}
                         {% set wednesday %}{% trans "Wednesday" %}{% endset %}
@@ -177,7 +176,6 @@
                         {% set saturday %}{% trans "Saturday" %}{% endset %}
                         {% set sunday %}{% trans "Sunday" %}{% endset %}
                         {% set options = [
-                        { id: 0, name: noneOption },
                         { id: 1, name: monday },
                         { id: 2, name: tuesday },
                         { id: 3, name: wednesday },
