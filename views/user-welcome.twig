@@ -38,7 +38,7 @@
                 hasSeenNewUserWizard = 1;
 
                 $.ajax({
-                    url: '/user/welcome',
+                    url: '{{ urlFor("welcome.wizard.seen") }}',
                     type: 'PUT'
                 });
             },
@@ -214,7 +214,7 @@
         $("#reshowWelcomeMenuItem").on("click", function() {
             // Set the new user wizard flag to 0
             $.ajax({
-                url: '/user/welcome',
+                url: '{{ urlFor("welcome.wizard.unseen") }}',
                 type: 'POST'
             });
 
