@@ -184,19 +184,6 @@ class Hls extends ModuleWidget
 
         // This causes some android devices to switch to a hardware accellerated web view
         $this->setOption('transparency', 0);
-
-        // Ensure we have the necessary files linked up
-        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls.min.js');
-        $media->save();
-        $this->assignMedia($media->mediaId);
-
-        $this->setOption('hlsId', $media->mediaId);
-
-        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls-1px-transparent.png');
-        $media->save();
-        $this->assignMedia($media->mediaId);
-
-        $this->setOption('posterId', $media->mediaId);
     }
 
     /**
@@ -219,6 +206,20 @@ class Hls extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
+        // Ensure we have the necessary files linked up
+        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls.min.js');
+        $media->save();
+        $this->assignMedia($media->mediaId);
+
+        $this->setOption('hlsId', $media->mediaId);
+
+        $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls-1px-transparent.png');
+        $media->save();
+        $this->assignMedia($media->mediaId);
+
+        $this->setOption('posterId', $media->mediaId);
+
+        // Render and output HTML
         $this
             ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width)
