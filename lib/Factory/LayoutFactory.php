@@ -839,6 +839,17 @@ class LayoutFactory extends BaseFactory
 
                     if (count($diff) > 0)
                         throw new \InvalidArgumentException(__('DataSets have different column names'));
+
+                    // Set the prior dataSetColumnId on each column.
+                    foreach ($existingDataSet->columns as $column) {
+                        // Lookup the matching column in the external dataSet definition.
+                        foreach ($dataSet->columns as $externalColumn) {
+                            if ($externalColumn->heading == $column->heading) {
+                                $column->priorDatasetColumnId = $externalColumn->dataSetColumnId;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 // Replace instances of this dataSetId with the existing dataSetId, which will either be the existing
