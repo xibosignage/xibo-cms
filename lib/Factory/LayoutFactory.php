@@ -800,6 +800,7 @@ class LayoutFactory extends BaseFactory
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
+                    $existingDataSet->userId = $this->getUser()->userId;
                     $existingDataSet->save();
 
                     // Do we need to add data
