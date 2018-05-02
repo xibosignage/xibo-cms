@@ -17,8 +17,10 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("template", "Name") }}
-                            {{ inline.input("tags", "Tags") }}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("template", title) }}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {{ inline.input("tags", title) }}
                         </form>
                     </div>
                 </div>
