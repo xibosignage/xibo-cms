@@ -644,7 +644,7 @@ class Soap
                             $file->setAttribute('layoutid', $layoutId);
                             $file->setAttribute('regionid', $region->regionId);
                             $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
+                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt->format('U') : $widgetModifiedDt->format('U')));
                             $fileElements->appendChild($file);
                         }
                     }
