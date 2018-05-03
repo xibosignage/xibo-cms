@@ -50,18 +50,15 @@
     padding: 7px 9px;
 }
 
-.modal-dialog {
-    width: 900px
+@media (min-width: 920px) {
+    .modal-dialog {
+        width: 900px;
+    }
 }
 
 /* Define some modal widths and heights */
 .modal-big .modal-dialog {
     width: 80%;
-}
-
-/* Define some modal widths and heights */
-.help-modal-big .modal-dialog {
-    height: 700px;
 }
 
 @media (max-width: 767px) {
