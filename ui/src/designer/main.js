@@ -40,8 +40,6 @@ require('../css/designer.css');
 // Create layout designer namespace (lD)
 window.lD = {
 
-    uploadChangesInRealTime: true,
-
     // Navigator
     navigator: {},
     navigatorEdit: {},
@@ -77,7 +75,7 @@ $(document).ready(function() {
     lD.designerDiv.html(loadingTemplate());
 
     // Load layout through an ajax request
-    $.get("/layout?layoutId=" + layoutId + "&embed=regions,playlists,widgets")
+    $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
         .done(function(res) {
 
             // Append layout html to the main div
@@ -227,8 +225,11 @@ lD.refreshDesigner = function() {
  */
 lD.reloadData = function(layout) {
 
-    $.get("/layout?layoutId=" + layout.layoutId + "&embed=regions,playlists,widgets")
+    $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layout.layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
+            
+            if(res.data.length > 0) {
+            
             lD.layout = new Layout(layout.layoutId, res.data[0]);
             lD.refreshDesigner();
 
@@ -237,6 +238,7 @@ lD.reloadData = function(layout) {
             lD.selectedObject = {};
 
             lD.selectObject($('#' + selectObjectId));
+            }
         })
         .fail(function(data) {
 

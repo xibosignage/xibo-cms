@@ -99,15 +99,16 @@ Navigator.prototype.render = function(layout) {
             const scale = layout.containerProperties.scaleToTheOriginal;
             
             layout.regions[$(this).attr('id')].transform(
-                layout.layoutId,
-                [{
+                {
                     'width': parseFloat(($(this).width() / scale).toFixed(2)),
                     'height': parseFloat(($(this).height() / scale).toFixed(2)),
                     'top': parseFloat(($(this).position().top / scale).toFixed(2)),
-                    'left': parseFloat(($(this).position().left / scale).toFixed(2)),
-                    'regionid': layout.regions[$(this).attr('id')].regionId
-                }]
+                    'left': parseFloat(($(this).position().left / scale).toFixed(2))
+                }
             );
+
+            // Render navbar to calculate changes and refresh buttons
+            lD.navigatorEdit.renderNavbar();
         }
     );
 
@@ -117,40 +118,84 @@ Navigator.prototype.render = function(layout) {
         lD.selectObject($(this));
     });
 
-    // Render navbar if exists
-    if(this.navbarContainer != null) {
-        
-        this.navbarContainer.html(navigatorLayoutNavbarTemplate());
+    // Render navbar
+    this.renderNavbar();
+};
 
-        // Navbar buttons
-        this.navbarContainer.find('#close-btn').click(function() {
-            lD.manager.saveAllChanges().then(function(){
-                lD.toggleNavigatorEditing(false);
-            });
-        });
+/**
+ * Render Navbar
+ */
+Navigator.prototype.renderNavbar = function() {
 
-        this.navbarContainer.find('#undo-btn').click(function() {
-            lD.manager.revertLastChange();
-        });
-
-        this.navbarContainer.find('#add-btn').click(function() {
-            layout.addElement('region');
-        });
-
-        this.navbarContainer.find('#delete-btn').click(function() {
-
-            console.log('TODO: Show confirmations dialog, warning the user that the element change history will be erased ( preventing reverting to a previous state )');
-            
-            if(lD.selectedObject.type === 'region') {
-
-                // Delete element from the layout
-                layout.deleteElement(
-                    lD.selectedObject.id,
-                    lD.selectedObject.type
-                );
-            }
-        });
+    // Return if navbar does not exist
+    if(this.navbarContainer === null) {
+        return;
     }
+
+    this.navbarContainer.html(navigatorLayoutNavbarTemplate(
+        {
+            selected: ((lD.selectedObject.type === 'region') ? '' : 'disabled'),
+            undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled')
+        }
+    ));
+
+    // Navbar buttons
+    this.navbarContainer.find('#close-btn').click(function() {
+        lD.manager.saveAllChanges().then(function() {
+            lD.toggleNavigatorEditing(false);
+        });
+    });
+
+    this.navbarContainer.find('#undo-btn').click(function() {
+        lD.manager.revertChange();
+    });
+
+    this.navbarContainer.find('#add-btn').click(function() {
+        lD.manager.saveAllChanges().then(function() {
+            lD.layout.addElement('region');
+        });
+    });
+
+    this.navbarContainer.find('#delete-btn').click(function() {
+
+        if(lD.selectedObject.type === 'region') {
+
+            bootbox.confirm({
+                title: 'Delete Region',
+                message: 'Are you sure? All changes related to this object will be erased',
+                buttons: {
+                    confirm: {
+                        label: 'Yes',
+                        className: 'btn-danger'
+                    },
+                    cancel: {
+                        label: 'No',
+                        className: 'btn-default'
+                    }
+                },
+                callback: function(result) {
+                    if(result) {
+
+                        // Save all changes first
+                        lD.manager.saveAllChanges().then(function() {
+
+                            // Remove changes from the history array
+                            lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then(function() {
+
+                                // Delete element from the layout
+                                lD.layout.deleteElement(
+                                    lD.selectedObject.regionId,
+                                    lD.selectedObject.type
+                                );
+                    
+                            });
+                        });
+                    }
+                }
+            });
+
+        }
+    });
 };
 
 module.exports = Navigator;

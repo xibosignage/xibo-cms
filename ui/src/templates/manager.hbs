@@ -1,8 +1,17 @@
 
-<div id="layout-manager-container">
-    {{#each changeHistory}}
-        <div class="change {{uploadedState}}">
-            {{type}} -> {{target.id}}
-        </div>
-    {{/each}}
-</div>
+{{#if visible}}
+    <div id="layout-manager-header">
+        <!-- Labels -->
+        <div class="change label">Change</div>
+        <div class="change label uploaded">Uploaded</div>
+    </div>
+
+    <div id="layout-manager-container">
+        <!-- Changes -->
+        {{#each changeHistory}}
+            <div class="change {{uploadedState}}">
+                <strong>[{{id}}]</strong> {{target.type}}({{target.id}}) : {{type}}
+            </div>
+        {{/each}}
+    </div>
+{{/if}}

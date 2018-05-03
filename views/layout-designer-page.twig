@@ -19,6 +19,56 @@
     {% block javaScript %}       
         <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js"></script>
         <script type="text/javascript">
+
+            const urlsForApi = {
+                layout: {
+                    get: {
+                        url: "{{ urlFor("layout.search", {id: layout.layoutId}) }}",
+                        type: 'GET'
+                    },
+                    getForm: {
+                        url: "{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}",
+                        type: 'GET'
+                    },
+                    saveForm: {
+                        url: "{{ urlFor("layout.edit", {id: layout.layoutId}) }}",
+                        type: 'PUT'
+                    }
+                },
+                region: {
+                    transform: {
+                        url: "{{ urlFor("region.position.all", {id: layout.layoutId}) }}",
+                        type: 'PUT'
+                    },
+                    getForm: {
+                        url: "{{ urlFor("region.edit.form") }}",
+                        type: 'GET'
+                    },
+                    saveForm: {
+                        url: "{{ urlFor("region.edit") }}",
+                        type: 'PUT'
+                    },
+                    create: {
+                        url: "{{ urlFor("region.add", {id: layout.layoutId}) }}",
+                        type: 'POST'
+                    },
+                    delete: {
+                        url: "{{ urlFor("region.delete") }}",
+                        type: 'DELETE'
+                    }
+                },
+                widget: {
+                    getForm: {
+                        url: "{{ urlFor("module.widget.edit.form") }}",
+                        type: 'GET'
+                    },
+                    saveForm: {
+                        url: "{{ urlFor("module.widget.edit") }}",
+                        type: 'PUT'
+                    }
+                }
+            };
+
             var translation = {
                 savePositionsFirst: "{% autoescape "js" %}{{ "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo."|trans }}{% endautoescape %}"
             };

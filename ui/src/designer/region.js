@@ -57,54 +57,54 @@ let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
 
 /**
  * Transform a region using the new values and the layout's scaling and save the values to the structure
- * @param {number} layoutId - the ID of the layout containing the region
- * @param {object=} [newValues] - Transformation values
- * @param {number} [newValues.width] - New width ( for resize tranformation )
- * @param {number} [newValues.height] - New height ( for resize tranformation )
- * @param {number} [newValues.top] - New top position ( for move tranformation )
- * @param {number} [newValues.left] - New left position ( for move tranformation )
+ * @param {object=} [transform] - Transformation values
+ * @param {number} [transform.width] - New width ( for resize tranformation )
+ * @param {number} [transform.height] - New height ( for resize tranformation )
+ * @param {number} [transform.top] - New top position ( for move tranformation )
+ * @param {number} [transform.left] - New left position ( for move tranformation )
  * @param {bool=} saveToHistory - Flag to save or not to the change history
  */
-Region.prototype.transform = function(layoutId, newValues, saveToHistory = true) {
-
-    // save old/previous values
-    const oldValues = [{
-        'width': this.dimensions.width,
-        'height': this.dimensions.height,
-        'top': this.dimensions.top,
-        'left': this.dimensions.left,
-        'regionid': this.regionId
-    }];
-
+Region.prototype.transform = function(transform, saveToHistory = true) {
+    
     // add transform change to history manager
     if(saveToHistory) {
+
+        // save old/previous values
+        const oldValues = [{
+            'width': this.dimensions.width,
+            'height': this.dimensions.height,
+            'top': this.dimensions.top,
+            'left': this.dimensions.left,
+            'regionid': this.regionId
+        }];
+
+        const newValues = [{
+            'width': transform.width,
+            'height': transform.height,
+            'top': transform.top,
+            'left': transform.left,
+            'regionid': this.regionId
+        }];
+
         lD.manager.addChange(
             "transform",
             "region",
-            this.id,
+            this.regionId,
             {
-                url: '/region/position/all/' + layoutId,
-                data: {
-                    regions: JSON.stringify(oldValues)
-                }
+                regions: JSON.stringify(oldValues)
             },
             {
-                url: '/region/position/all/' + layoutId,
-                data: {
-                    regions: JSON.stringify(newValues)
-                }
+                regions: JSON.stringify(newValues)
             },
             false
         );
     }
 
     // Apply changes to the region ( updating values )
-    this.dimensions.width = newValues.width;
-    this.dimensions.height = newValues.height;
-    this.dimensions.top = newValues.top;
-    this.dimensions.left = newValues.left;
-
-    return true;
+    this.dimensions.width = transform.width;
+    this.dimensions.height = transform.height;
+    this.dimensions.top = transform.top;
+    this.dimensions.left = transform.left;
 };
 
 module.exports = Region;

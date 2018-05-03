@@ -161,8 +161,8 @@ Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
         
         let currentRegion = regions[region];
 
-        // if the regions isn't marked for looping, skip to the next one
-        if(!currentRegion.loop) {
+        // if the regions isn't marked for looping, or if does not contain any widget, skip to the next one
+        if(!currentRegion.loop || $.isEmptyObject(currentRegion.widgets)) {
             continue;
         }
 
@@ -256,7 +256,7 @@ Timeline.prototype.render = function(layout) {
 
     // Check widget repetition and create ghosts
     this.createGhostWidgetsDinamically(layout.regions);
-    
+
     // Render timeline template using layout object
     const html = timelineTemplate({
         layout: layout, 

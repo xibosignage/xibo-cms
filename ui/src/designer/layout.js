@@ -16,7 +16,7 @@ const NewRegionDefaultDimensions = {
  * @param  {object} data - data from the API request
  */
 let Layout = function(id, data) {
-
+    
     // Layout properties
     this.id = 'layout_' + id;
     this.layoutId = id;
@@ -38,9 +38,6 @@ let Layout = function(id, data) {
         left: 0,
         scaleToTheOriginal: 1
     };
-
-    // incremental index to use as the id for the new created regions
-    this.createdRegionsIndex = 0;
 
     this.backgroundCss = function() {
         if(this.backgroundImage === null) {
@@ -157,109 +154,31 @@ Layout.prototype.calculateTimeValues = function() {
  */
 Layout.prototype.addElement = function(elementType) {
 
-    let elementId;
-    
-    // Add element to the layout by type
-    if(elementType === 'region') {
-
-        let newRegion = new Region(
-            this.createdRegionsIndex, // TODO: Find a way to create a new ID
-            NewRegionDefaultDimensions
-        );
-
-        // Change the new element values to show that is temporary
-        newRegion.createdRegion = true;
-        newRegion.id = 'temp_' + newRegion.id;
-        newRegion.regionId = 't_' + newRegion.regionId;
-
-        elementId = newRegion.id;
-        elementCopy = newRegion;
-
-        // Increase new region index
-        this.createdRegionsIndex++;
-
-        // Push Region to the Layout region array
-        this.regions[newRegion.id] = newRegion;
-
-    } else if(elementType === 'widget') {
-        console.log('TODO: Widget create');
-    }
-
-    if(!jQuery.isEmptyObject(elementCopy)) {
-        lD.manager.addChange(
-            "create",
-            elementType,
-            elementId,
-            elementCopy,
-            null
-        );
-    }
-
-    // Refresh the designer to update the changes
-    lD.refreshDesigner();
-
-    lD.selectObject($('#' + elementId));
+    lD.manager.addChange(
+        "create",
+        elementType,
+        null,
+        null,
+        null
+    );
 };
 
 /**
  * Delete an element in the layout, by ID
  * @param {string} elementType - element type (widget, region, ...)
  * @param {number} elementId - element id
- * @param {object=} options - additional options
  */
-Layout.prototype.deleteElement = function(elementId, elementType, options = {}) {
-
-    const self = this;
-
-    let deleteResult = false;
-    let requestURL = '';
+Layout.prototype.deleteElement = function(elementId, elementType) {
     
-    // Get element URL from the layout
-    if(elementType === 'region'){
-        requestURL = '/region/' + this.regions[elementId].regionId;
-    } else if(elementType === 'widget') {
-        console.log('TODO: Widget delete');
-    }
-
-    console.log('TODO: Remove all records from change history array related to this element');
-
-    // Call the API to delete the element
-
-    if(requestURL) {
-        $.ajax({
-            url: requestURL,
-            type: 'DELETE',
-            success: function(data) {
-
-                if(data.success) {
-                    alert('Delete successful!');
-
-                    // Delete element from the designer
-                    if(elementType === 'region') {
-                        delete self.regions[elementId];
-                    } else if(elementType === 'widget') {
-                        console.log('TODO: Widget delete');
-                    }
-                    // Delete the region
-
-                    // Unselect all objects
-                    lD.selectObject();
-
-                    // Refresh the designer to update the changes
-                    lD.refreshDesigner();
-                } else {
-                    toastr.error('Delete failed!', 'Error');
-                }
-            },
-            error: function(jXHR, textStatus, errorThrown) {
-                console.log(jXHR);
-                console.log(textStatus);
-                console.log(errorThrown);
-                
-                toastr.error('Delete failed!', 'Error');
-            }
-        });
-    }
+    lD.manager.addChange(
+        "delete",
+        elementType,
+        elementId,
+        null,
+        null,
+        true,
+        false
+    );
 };
 
 /**

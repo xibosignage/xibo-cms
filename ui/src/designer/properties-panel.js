@@ -27,15 +27,9 @@ PropertiesPanel.prototype.save = function(form, element) {
     lD.manager.addChange(
         "saveForm",
         element.type,
-        element.id,
-        {
-            url: $(form).attr('action'),
-            data: this.formSerializedLoadData
-        },
-        {
-            url: $(form).attr('action'),
-            data: formNewData
-        }
+        element[element.type+'Id'],
+        this.formSerializedLoadData,
+        formNewData
     );
 };
 
@@ -48,27 +42,17 @@ PropertiesPanel.prototype.render = function(element) {
     this.DOMObject.html(loadingTemplate());
 
     const self = this;
-    let requestPath = '';
+    let requestPath = urlsForApi[element.type]['getForm'].url;
 
-    switch(element.type) {
-        case 'layout':
-            requestPath = '/layout/form/edit/' + element.layoutId
-            break;
-
-        case 'region':
-            requestPath = '/region/form/edit/' + element.regionId + '?layoutid=' + lD.layout.layoutId + '&regionid=' + element.regionId
-            break;
-
-        case 'widget':
-            requestPath = '/playlist/widget/form/edit/' + element.widgetId
-            break;
-
-        default:
-            break;
-    }
+    requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
     // Get form for the given element
     $.get(requestPath).done(function(res) {
+
+        // Prevent rendering null html
+        if(res.html === null) {
+            return;
+        }
 
         const htmlTemplate = Handlebars.compile(res.html);
         
@@ -89,7 +73,10 @@ PropertiesPanel.prototype.render = function(element) {
         self.DOMObject.find('form').submit(function(e) {
             e.preventDefault();
 
-            self.save(this, element);
+            self.save(
+                this, 
+                element
+            );
         });
 
     }).fail(function(data) {

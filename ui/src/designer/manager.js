@@ -9,7 +9,32 @@ let Manager = function(container) {
 
     this.DOMObject = container;
 
+    this.visible = true;
+
+    this.changeUniqueId = 0;
+
     this.changeHistory = []; // Array of changes
+
+    this.toggleVisibility = function() {
+        
+        this.visible = !this.visible;
+
+        // Render template container
+        this.render();
+    };
+
+    // Return true if there are some not uploaded changes
+    this.changesToUpload = function() {
+        
+        for(let index = this.changeHistory.length - 1;index >=0 ;index--) {
+
+            if(!this.changeHistory[index].uploaded) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 };
 
 /**
@@ -19,27 +44,31 @@ let Manager = function(container) {
  * @param  {string} targetID - Target object ID
  * @param {object=} [oldValues] - Previous object change
  * @param {object=} [newValues] - New object change
- * @param {bool=} [upload] - Upload change in real time
+ * @param {bool=} [upload=true] - Upload change in real time
+ * @param {bool=} [addToHistory=true] - Add change to the history array
 */
-Manager.prototype.addChange = function(changeType, targetType, targetID, oldValues, newValues, upload = true) {
+Manager.prototype.addChange = function(changeType, targetType, targetID, oldValues, newValues, upload = true, addToHistory = true) {
     
-    const changeId = this.changeHistory.length;
+    const changeId = this.changeUniqueId++;
     
+    // create new change and add it to the array
     const newChange = new Change (
-        changeId, 
-        changeType,
-        targetType,
-        targetID,
-        oldValues,
-        newValues
+            changeId,
+            changeType,
+            targetType,
+            targetID,
+            oldValues,
+            newValues
     );
 
-    // Add change to the array
-    this.changeHistory[changeId] = newChange;
+    // Add change to the history array
+    if(addToHistory) {
+        this.changeHistory.push(newChange);
+    }
 
-    // Upload change in "real time"
-    if(lD.uploadChangesInRealTime && upload) {
-        this.uploadChange(changeId);
+    // Upload change
+    if(upload) {
+        this.uploadChange(newChange);
     }
 
     // Render template container
@@ -48,37 +77,46 @@ Manager.prototype.addChange = function(changeType, targetType, targetID, oldValu
 
 /**
  * Revert change by ID or the last one in the history array
- * @param  {number=} changeId -Change ID to be reverted
 */
-Manager.prototype.revertLastChange = function(changeId = null) {
+Manager.prototype.revertChange = function() {
 
-    // Test for empty history array
-    if(this.changeHistory.length <= 0 ) {
+    // Prevent trying to revert if there are no changes in history
+    if(this.changeHistory.length <= 0) {
         return false;
     }
-    
-    // if ID is null, get last element id
-    if(changeId == null) {
-        changeId = this.changeHistory.length - 1;
-    }
-    
-    const success = this.changeHistory[changeId].revert();
 
-    // if sucessful, remove last element and refresh designer
-    if(success){
-        this.changeHistory.pop();
-        lD.reloadData(lD.layout);
-    }
+    const lastChange = this.changeHistory[this.changeHistory.length-1];
+    const uploadedState = lastChange.uploaded;
 
-    return success;
+    toastr.info('Reverting ' + lastChange.target.type + ' change: ' + lastChange.type);
+
+    //Client side revert
+    lastChange.revert().then(function(res) {
+        if(res) {
+            this.changeHistory.pop();
+
+            // Reload after a API revert
+            if(uploadedState) {
+                lD.reloadData(lD.layout);
+            } else {
+                lD.refreshDesigner();
+            }
+
+
+            toastr.success('Change reverted!');
+        }
+
+        // Render template container
+        this.render();
+    }.bind(this));
+
+    return true;
 };
 
 /**
  * Upload first change in the history array
 */
-Manager.prototype.uploadChange = function(changeId) {
-
-    const change = this.changeHistory[changeId];
+Manager.prototype.uploadChange = function(change) {
 
     // Test for empty history array
     if(!change || change.uploaded) {
@@ -92,10 +130,15 @@ Manager.prototype.uploadChange = function(changeId) {
     change.upload().then(function(res) {
         
         if(res.success) {
+            if(change.type === 'create') {
+                change.target.id = res.id;
+            }
+            
             toastr.success('Change uploaded!');
+            
             lD.reloadData(lD.layout);
+            
         } else {
-            console.log(res);
             
             toastr.error('Change upload failed!');
         }
@@ -109,7 +152,8 @@ Manager.prototype.uploadChange = function(changeId) {
 */
 Manager.prototype.saveAllChanges = async function() {
 
-    if(this.changeHistory.length <= 0) {
+    // stop method if there are no changes to be saved
+    if(!this.changesToUpload()) {
         return;
     }
 
@@ -117,7 +161,7 @@ Manager.prototype.saveAllChanges = async function() {
 
     let saveAllResult = true;
 
-    for(let index = 0;index < this.changeHistory.length;index++) {
+    for(let index = 0; index < this.changeHistory.length; index++) {
 
         const change = this.changeHistory[index];
 
@@ -139,9 +183,40 @@ Manager.prototype.saveAllChanges = async function() {
 
     if(saveAllResult) {
         toastr.success('All Changes Saved!');
+        lD.reloadData(lD.layout);
+    }
+};
+
+
+/**
+ * Remove all the changes in the history array related to a specific object
+ * @param  {string} targetType - Target object Type ( widget, region, layout, ... )
+ * @param  {string} targetId - Target object ID
+*/
+Manager.prototype.removeAllChanges = async function(targetType, targetId) {
+
+    toastr.info('Remove changes!');
+    let removals = 0;
+
+    
+    for(let index = 0; index < this.changeHistory.length; index++) {
+
+        const change = this.changeHistory[index];
+
+        if(change.target.type === targetType && change.target.id === targetId) {
+
+            this.changeHistory.splice(index, 1);
+
+            removals++;
+            index--;
+        }
+
     }
 
-    lD.reloadData(lD.layout);
+    // Render template container
+    this.render();
+
+    toastr.success('All Changes Removed!');
 };
 
 /**

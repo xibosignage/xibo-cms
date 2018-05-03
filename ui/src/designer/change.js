@@ -3,11 +3,20 @@
  * Module that saves the previous and next change of an object ( as an operation )
  */
 
-const reverseChange = {
-    'transform': 'transform',
-    'delete': 'restoreElement',
-    'create': 'deleteElement',
-    'saveForm': 'saveForm'
+ // Map from a operation to its inverse, and detail if the operation is done on the element or the layout
+const inverseChangeMap = {
+    transform: {
+        inverse: 'transform',
+        useElement: true
+    },
+    create: {
+        inverse: 'delete',
+        useElement: false
+    },
+    saveForm: {
+        inverse: 'saveForm',
+        useElement: true
+    }
 };
 
 /**
@@ -30,9 +39,9 @@ let Change = function(id, type, targetType, targetID, oldState, newState){
     this.oldState = oldState;
     this.newState = newState;
     this.timeStamp = Math.round((new Date()).getTime() / 1000);
-    
-    this.uploaded = false;
 
+    // Flag to check if the change was successfully uploaded
+    this.uploaded = false;
     
     this.uploadedState = function() {
         return (this.uploaded) ? 'uploaded' : '';
@@ -44,18 +53,21 @@ let Change = function(id, type, targetType, targetID, oldState, newState){
 */
 Change.prototype.upload = function() {
 
-    const self = this;
+    const linkToAPI = urlsForApi[this.target.type][this.type];
+    let requestPath = linkToAPI.url;
+  
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', this.target.id);
 
     var promise = $.ajax({
-        url: self.newState.url,
-        type: 'PUT',
-        data: self.newState.data,
+        url: requestPath,
+        type: linkToAPI.type,
+        data: this.newState,
         success: function(data) {
-
             if(data.success) {
-                self.uploaded = true;
+                this.uploaded = true;
             }
-        },
+        }.bind(this),
         error: function(jXHR, textStatus, errorThrown) {
             toastr.error('Change upload failed!', 'Error');
         }
@@ -68,32 +80,67 @@ Change.prototype.upload = function() {
  * Revert change
  * @returns {boolean} Operation successful bool
 */
-Change.prototype.revert = function() {
+Change.prototype.revert = async function() {
+    
+    const inverseOperation = inverseChangeMap[this.type].inverse;
+    const useElement = inverseChangeMap[this.type].useElement;
 
-    let element = {};
-    const reverse = reverseChange[this.type];
-    let revertResult = false;
+    if(!this.uploaded) { // Revert on the client side
 
-    // Restore is a special case, we need to use the layout to restore the element
-    if(reverse === 'restoreElement' || reverse === 'deleteElement') {
-        revertResult = lD.layout[reverse](this.target.id, this.target.type, this.oldState);
-    } else {
-        // Get element by type
-        if(this.target.type === "layout") {
-            console.log('    ->TODO: Layout');
-        } else if(this.target.type === "region") {
-            element = lD.layout.regions[this.target.id];
-        } else if(this.target.type === "widget") {
-            console.log('    ->TODO: Widget');
+        if(useElement) {
+            // Get data to apply
+            let data = this.oldState;
+
+            // Get element by type
+            let element = {};
+
+            if(this.target.type === 'layout') {
+                console.log('    ->TODO: Layout');
+            } else if(this.target.type === 'region') {
+                element = lD.layout.regions['region_' + this.target.id];
+            } else if(this.target.type === 'widget') {
+                console.log('    ->TODO: Widget');
+            }
+
+            // If the operation is a transform, parse data
+            if(inverseOperation === 'transform') {
+                data = JSON.parse(data.regions)[0];
+            }
+
+            // Apply inverse operation to the element
+            element[inverseOperation](data, false);
+
+            return true;
+        } else {
+            // TODO: Check if this is needed, since the only client side changes from now are on specific elements
+            return lD.layout[inverseOperation](this.target.id, this.target.type, this.oldState);
         }
 
-        console.log(reverseChange[this.type]);
+    } else { // Revert using the API
         
-        // Revert change by operation type
-        revertResult = element[reverseChange[this.type]](this.oldState, false);
-    }
+        const linkToAPI = urlsForApi[this.target.type][inverseOperation];
+        let requestPath = linkToAPI.url;
 
-    return revertResult;
+        // replace id if necessary/exists
+        requestPath = requestPath.replace(':id', this.target.id);
+
+        var promise = $.ajax({
+            url: requestPath,
+            type: linkToAPI.type,
+            data: this.oldState,
+            success: function(data) {
+                if(data.success) {
+                    return data.success;
+                }
+                return false;
+            },
+            error: function(jXHR, textStatus, errorThrown) {
+                toastr.error('Change upload failed!', 'Error');
+            }
+        });
+
+        return promise;
+    }
 };
 
 module.exports = Change;
