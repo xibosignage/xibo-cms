@@ -337,9 +337,7 @@ class NotificationView extends ModuleWidget
         ]);
 
         // Get the release date from the notification returned
-        if (count($notifications) > 0) {
-            $widgetModifiedDt = (count($notifications) > 0) ? $notifications[0]->releaseDt : $this->getDate()->parse($this->widget->modifiedDt, 'U');
-        }
+        $widgetModifiedDt = (count($notifications) > 0) ? $notifications[0]->releaseDt : $widgetModifiedDt;
 
         return $widgetModifiedDt;
     }
