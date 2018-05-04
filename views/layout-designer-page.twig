@@ -33,6 +33,10 @@
                     saveForm: {
                         url: "{{ urlFor("layout.edit", {id: layout.layoutId}) }}",
                         type: 'PUT'
+                    },
+                    downloadBackground: {
+                        url: "{{ urlFor("layout.download.background", {id: layout.layoutId}) }}",
+                        type: 'GET'
                     }
                 },
                 region: {

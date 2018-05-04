@@ -2,14 +2,6 @@
 const Region = require('./region.js');
 const Widget = require('./widget.js');
 
-// Default dimensions to be used when creating a new region
-const NewRegionDefaultDimensions = {
-    width: 100,
-    height: 100,
-    top: 10,
-    left: 10
-};
-
 /**
  * Layout contructor
  * @param  {number} id - layout id
@@ -31,6 +23,7 @@ let Layout = function(id, data) {
     this.backgroundImage = data.backgroundImageId;
     this.backgroundColor = data.backgroundColor;
 
+    // Calculated properties used to render the layout inside a specific container ( navigator, navigator edit, ...)
     this.containerProperties = {
         width: data.width,
         height: data.height,
@@ -39,11 +32,12 @@ let Layout = function(id, data) {
         scaleToTheOriginal: 1
     };
 
+    // Get background image if exists, if not, get the background color
     this.backgroundCss = function() {
         if(this.backgroundImage === null) {
             return this.backgroundColor;
         } else {
-            return "url('/layout/background/" + this.layoutId + "?preview=1&width=" + this.containerProperties.width + "&height=" + this.containerProperties.height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
+            return "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + this.containerProperties.width + "&height=" + this.containerProperties.height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
         }
     };
 
@@ -154,6 +148,7 @@ Layout.prototype.calculateTimeValues = function() {
  */
 Layout.prototype.addElement = function(elementType) {
 
+    // Add a create change to the history array
     lD.manager.addChange(
         "create",
         elementType,
@@ -170,6 +165,7 @@ Layout.prototype.addElement = function(elementType) {
  */
 Layout.prototype.deleteElement = function(elementId, elementType) {
     
+    // Create a delete type change, upload it but don't add it to the history array
     lD.manager.addChange(
         "delete",
         elementType,
@@ -179,29 +175,6 @@ Layout.prototype.deleteElement = function(elementId, elementType) {
         true,
         false
     );
-};
-
-/**
- * Restore element to the layout
- * @param {number} elementId - element id
- * @param {string} elementType - element type (widget, region, ...)
- * @param {object} elementData - element data to restore
- */
-Layout.prototype.restoreElement = function(elementId, elementType, elementData) {
-    let restoreResult = false;
-
-    if(elementType === 'widget') {
-        console.log('  TODO: Restore widget');
-        this.regions[elementData.regionId].widgets[elementId] = elementData;
-
-        restoreResult = true;
-    } else if(elementType === 'region') {
-        this.regions[elementId] = elementData;
-        
-        restoreResult = true;
-    }
-
-    return restoreResult;
 };
 
 module.exports = Layout;

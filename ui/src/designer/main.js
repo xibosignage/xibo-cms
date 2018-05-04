@@ -78,10 +78,10 @@ $(document).ready(function() {
     $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
         .done(function(res) {
 
-            // Append layout html to the main div
-            lD.designerDiv.html(designerMainTemplate());
-
             if(res.data.length > 0) {
+
+                // Append layout html to the main div
+                lD.designerDiv.html(designerMainTemplate());
 
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -114,20 +114,12 @@ $(document).ready(function() {
 
                 // Default selected object is the layout
                 lD.selectObject();
+            } else {
+                lD.showErrorMessage();
             }
         })
         .fail(function(data) {
-
-            // Output error on screen
-            const htmlError = messageTemplate({
-                messageType: 'danger',
-                messageTitle: 'ERROR',
-                messageDescription: 'There was a problem loading the layout!'
-            });
-
-            lD.designerDiv.html(htmlError);
-
-            return -1;
+            lD.showErrorMessage();
         }
     );
 
@@ -228,30 +220,21 @@ lD.reloadData = function(layout) {
     $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layout.layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
             
-            if(res.data.length > 0) {
-            
-            lD.layout = new Layout(layout.layoutId, res.data[0]);
-            lD.refreshDesigner();
+            if(res.data.length > 0) { //TODO: handle else
+                lD.layout = new Layout(layout.layoutId, res.data[0]);
+                lD.refreshDesigner();
 
-            // Select the same object
-            const selectObjectId = lD.selectedObject.id;
-            lD.selectedObject = {};
+                // Select the same object
+                const selectObjectId = lD.selectedObject.id;
+                lD.selectedObject = {};
 
-            lD.selectObject($('#' + selectObjectId));
+                lD.selectObject($('#' + selectObjectId));
+            } else {
+                lD.showErrorMessage();
             }
         })
         .fail(function(data) {
-
-            // Output error on screen
-            const htmlError = messageTemplate({
-                messageType: 'danger',
-                messageTitle: 'ERROR',
-                messageDescription: 'There was a problem reloading the layout!'
-            });
-
-            lD.designerDiv.html(htmlError);
-
-            return -1;
+            lD.showErrorMessage();
         }
     );
 };
@@ -306,4 +289,18 @@ lD.toggleNavigatorEditing = function(enable) {
         this.designerDiv.find('#layout-navigator-edit').css('display', 'none');
 
     }
+};
+
+/**
+ * Layout loading error message
+ */
+lD.showErrorMessage = function() {
+    // Output error on screen
+    const htmlError = messageTemplate({
+        messageType: 'danger',
+        messageTitle: 'ERROR',
+        messageDescription: 'There was a problem loading the layout!'
+    });
+
+    lD.designerDiv.html(htmlError);
 };

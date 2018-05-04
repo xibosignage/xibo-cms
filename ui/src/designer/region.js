@@ -86,6 +86,7 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
             'regionid': this.regionId
         }];
 
+        // Add a tranform change to the history array, but send the upload flag as false, so that the change is temporarily local
         lD.manager.addChange(
             "transform",
             "region",

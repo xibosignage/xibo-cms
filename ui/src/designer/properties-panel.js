@@ -24,6 +24,7 @@ PropertiesPanel.prototype.save = function(form, element) {
 
     const formNewData = $(form).serialize();
 
+    // Add a save form change to the history array, with previous form state and the new state
     lD.manager.addChange(
         "saveForm",
         element.type,
