@@ -324,9 +324,9 @@ class NotificationView extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getModifiedTimestamp($displayId)
+    public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = null;
+        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
         $age = $this->getOption('age', 0);
 
         // Get the date/time of the last notification drawn by this Widget
@@ -338,7 +338,7 @@ class NotificationView extends ModuleWidget
 
         // Get the release date from the notification returned
         if (count($notifications) > 0) {
-            $widgetModifiedDt = $notifications[0]->releaseDt;
+            $widgetModifiedDt = (count($notifications) > 0) ? $notifications[0]->releaseDt : $this->getDate()->parse($this->widget->modifiedDt, 'U');
         }
 
         return $widgetModifiedDt;
