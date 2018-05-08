@@ -26,7 +26,7 @@ class ShellCommand extends ModuleWidget
 {
     public function validate()
     {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '')
+        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == ''))
             throw new InvalidArgumentException(__('You must enter a command'));
     }
 
@@ -81,6 +81,13 @@ class ShellCommand extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="webosCommand",
+     *      in="formData",
+     *      description="Enter a webOS Command Line compatible command. Supported from R11 onward",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="launchThroughCmd",
      *      in="formData",
      *      description="flag (0,1) Windows only, Should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files, if you try to terminate this command only the command line will be terminated",
@@ -130,6 +137,7 @@ class ShellCommand extends ModuleWidget
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
+        $webos = $this->getSanitizer()->getString('webosCommand');
 
         $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
@@ -137,6 +145,7 @@ class ShellCommand extends ModuleWidget
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
+        $this->setOption('webosCommand', urlencode($webos));
 
         // Save the widget
         $this->validate();
@@ -156,6 +165,7 @@ class ShellCommand extends ModuleWidget
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
+        $webos = $this->getSanitizer()->getString('webosCommand');
 
         $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
@@ -163,6 +173,7 @@ class ShellCommand extends ModuleWidget
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
+        $this->setOption('webosCommand', urlencode($webos));
 
         // Save the widget
         $this->validate();
@@ -176,14 +187,17 @@ class ShellCommand extends ModuleWidget
 
         $windows = $this->getOption('windowsCommand');
         $linux = $this->getOption('linuxCommand');
+        $webos = $this->getOption('webosCommand');
 
-        if ($windows == '' && $linux == '') {
+        if ($windows == '' && $linux == '' && $webos == '') {
             return __('Stored Command: %s', $this->getOption('commandCode'));
         }
         else {
 
             $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
             $preview .= '<p>' . __('Linux Command') . ': ' . urldecode($linux) . '</p>';
+            $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($webos) . '</p>';
+
 
             return $preview;
         }
