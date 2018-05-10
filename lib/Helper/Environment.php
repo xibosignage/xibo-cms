@@ -262,4 +262,13 @@ class Environment
     {
         return (stripos($url, '/web/') === false);
     }
+
+    /**
+     * Is the CMS in DEV mode?
+     * @return bool
+     */
+    public static function isDevMode()
+    {
+        return (isset($_SERVER['CMS_DEV_MODE']) && $_SERVER['CMS_DEV_MODE'] === 'true');
+    }
 }

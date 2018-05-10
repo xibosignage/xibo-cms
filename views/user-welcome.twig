@@ -105,7 +105,7 @@
                     },
                     delay: 1000,
                     template: next_template
-                }, {
+                }, {% if currentUser.getOptionValue("lockPosition", "false") == "false" %}{
                     title: "",
                     content: "{% trans "Grab the Region handle to click and drag to resize" %}",
                     element: ".ui-icon-gripsmall-diagonal-se:eq(0)",
@@ -126,7 +126,7 @@
                     placement: "bottom",
                     reflex: true,
                     template: no_nav_template
-                }, {
+                }, {% endif %}{
                     title: "",
                     content: "{% trans "You now have an empty Region on a black background on your Layout, so lets add some content!" %}",
                     element: ".preview:eq(0)",
