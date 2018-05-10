@@ -21,7 +21,7 @@
 // Include handlebars templates
 const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
-
+const loadingTemplate = require('../templates/loading.hbs');
 
 // Include modules
 const Region = require('./region.js');
@@ -30,9 +30,9 @@ const Widget = require('./widget.js');
 const Navigator = require('./navigator.js');
 const Timeline = require('./timeline.js');
 const Manager = require('./manager.js');
+const Viewer = require('./viewer.js');
 const BottomToolbar = require('./bottom-toolbar.js');
 const PropertiesPanel = require('./properties-panel.js');
-const loadingTemplate = require('../templates/loading.hbs');
 
 // Include CSS
 require('../css/designer.css');
@@ -52,6 +52,9 @@ window.lD = {
 
     // Manager
     manager: {},
+
+    // Viewer
+    viewer: {},
 
     // Designer DOM div
     designerDiv: $('#layout-editor'),
@@ -100,6 +103,12 @@ $(document).ready(function() {
                 // Initialize manager
                 lD.manager = new Manager(
                     lD.designerDiv.find('#layout-manager')
+                );
+
+                // Initialize viewer
+                lD.viewer = new Viewer(
+                    lD.designerDiv.find('#layout-viewer'),
+                    lD.designerDiv.find('#layout-viewer-navbar')
                 );
 
                 // Initialize bottom toolbar
@@ -192,8 +201,9 @@ lD.selectObject = function(obj = null) {
         this.selectedObject.type = newSelectedType;
     }
 
-    // Output selected object properties on PROPERTIES container
+    // Render selected object in the following containers
     this.propertiesPanel.render(this.selectedObject);
+    this.viewer.render(this.selectedObject);
 
     // Refresh the designer containers
     this.refreshDesigner();

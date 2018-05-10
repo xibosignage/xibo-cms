@@ -103,17 +103,17 @@ Timeline.prototype.updateLabels = function() {
 Timeline.prototype.calculateStartingZoom = function(regions) {
 
     // Find the smallest widget ( by duration )
-    let smallerWidgetDuration = -1;
+    let shorterWidgetDuration = -1;
     for(region in regions) {
         for(widget in regions[region].widgets) {
-            if(regions[region].widgets[widget].getDuration() < smallerWidgetDuration || smallerWidgetDuration === -1) {
-                smallerWidgetDuration = regions[region].widgets[widget].getDuration();
+            if(regions[region].widgets[widget].getDuration() < shorterWidgetDuration || shorterWidgetDuration === -1) {
+                shorterWidgetDuration = regions[region].widgets[widget].getDuration();
             }
         }
     }
 
     // Calculate zoom and limit its minimum to 100%
-    this.properties.zoom = Math.floor(this.properties.widgetMinimumDurationOnStart / (smallerWidgetDuration / lD.layout.duration));
+    this.properties.zoom = Math.floor(this.properties.widgetMinimumDurationOnStart / (shorterWidgetDuration / lD.layout.duration));
     
     if(this.properties.zoom <= 100 ) {
         this.properties.zoom = this.properties.startingZoom = 100;
@@ -155,7 +155,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
  * Create widget replicas
  * @param {object} regions - Layout regions
  */
-Timeline.prototype.createGhostWidgetsDinamically = function(regions) {
+Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
 
     for(region in regions) {
         
@@ -255,7 +255,7 @@ Timeline.prototype.render = function(layout) {
     this.checkRegionsVisibility(layout.regions);
 
     // Check widget repetition and create ghosts
-    this.createGhostWidgetsDinamically(layout.regions);
+    this.createGhostWidgetsDynamically(layout.regions);
 
     // Render timeline template using layout object
     const html = timelineTemplate({
@@ -301,6 +301,7 @@ Timeline.prototype.render = function(layout) {
         self.render(layout);
     });
     
+    // TODO: Explain this further
     regionsContainer.scroll($.debounce(500, function() {
 
         /**

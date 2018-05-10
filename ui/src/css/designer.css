@@ -1,5 +1,6 @@
 #layout-editor  {
     background: #a7a7a7;
+    min-height: 800px;
 }
 
 /* Layout timeline */
@@ -71,12 +72,44 @@
     margin-top: 0.2em;
 }
 
+/* Layout Viewer */
+#layout-editor #layout-viewer-container {
+    padding: 10px;
+    background: black;
+}
+
 #layout-editor #layout-viewer {
-    height: 450px;
-    background: lightpink;
+    min-height: 450px;
+    background: #5f75a5;
+}
+
+#layout-editor #layout-viewer .viewer-element {
+    position:relative;
+    background: #ffffff3b;
+}
+
+#layout-editor #layout-viewer .empty {
+    position: relative;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff8a;
+    top: 50%;
+    transform: translateY(-50%);
+}
+#layout-editor #layout-viewer-navbar nav {
+    background: #898989;
+    padding: 4px;
+    border: #494949 3px solid;
+    height: 50px;
 }
 
 /* Properties Panel */
+#layout-editor #properties-panel {
+    min-height: 450px;
+    padding: 0;
+}
+
 #layout-editor #properties-panel-container {
     min-height: 450px;
     background: white;
@@ -217,5 +250,19 @@
 }
 
 #layout-manager .change.uploaded {
-  background-color: #8dffa6;
+    background-color: #8dffa6;
+}
+
+/* Loading Container */
+#layout-editor .loading-container {
+    position: relative;
+    min-height: inherit;
+}
+
+#layout-editor .loading-container i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 50px;
+    margin: -25px;
 }

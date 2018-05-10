@@ -37,6 +37,10 @@
                     downloadBackground: {
                         url: "{{ urlFor("layout.download.background", {id: layout.layoutId}) }}",
                         type: 'GET'
+                    },
+                    preview: {
+                        url: "{{ urlFor("layout.preview", {id: layout.layoutId}) }}",
+                        type: 'GET'
                     }
                 },
                 region: {
@@ -59,6 +63,10 @@
                     delete: {
                         url: "{{ urlFor("region.delete") }}",
                         type: 'DELETE'
+                    },
+                    preview: {
+                        url: "{{ urlFor("region.preview") }}",
+                        type: 'GET'
                     }
                 },
                 widget: {

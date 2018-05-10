@@ -1,0 +1,15 @@
+<div class="viewer-element"
+    style="width: {{ dimensions.width }}px;
+        height: {{ dimensions.height }}px;
+        top: {{ dimensions.top }}px;
+        left: {{ dimensions.left }}px;"
+>
+    
+    {{#if res.extra.empty }}
+        <p class="empty">
+            {{ res.extra.text }}
+        </p>
+    {{else}}
+        {{{ res.html }}}
+    {{/if}}
+</div>

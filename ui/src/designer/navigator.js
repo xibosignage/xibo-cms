@@ -141,7 +141,7 @@ Navigator.prototype.renderNavbar = function() {
 
     // Navbar buttons
     this.navbarContainer.find('#close-btn').click(function() {
-        lD.manager.saveAllChanges().then(function() {
+        lD.manager.saveAllChanges().then(function() { // TODO: Handle promisses here
             lD.toggleNavigatorEditing(false);
         });
     });
@@ -151,7 +151,7 @@ Navigator.prototype.renderNavbar = function() {
     });
 
     this.navbarContainer.find('#add-btn').click(function() {
-        lD.manager.saveAllChanges().then(function() {
+        lD.manager.saveAllChanges().then(function() { // TODO: Handle promisses here
             lD.layout.addElement('region');
         });
     });
@@ -177,7 +177,7 @@ Navigator.prototype.renderNavbar = function() {
                     if(result) {
 
                         // Save all changes first
-                        lD.manager.saveAllChanges().then(function() {
+                        lD.manager.saveAllChanges().then(function() { // TODO: Handle promisses here
 
                             // Remove changes from the history array
                             lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then(function() {
