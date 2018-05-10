@@ -414,7 +414,6 @@ class Module extends Base
         $this->getState()->template = $module->addForm();
         $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
-            'media' => $this->mediaFactory->query(),
             'module' => $module
         ]));
     }
@@ -492,7 +491,6 @@ class Module extends Base
         $this->getState()->template = $module->editForm();
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
-            'media' => $this->mediaFactory->query(),
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
         ]));
     }

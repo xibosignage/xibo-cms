@@ -297,6 +297,6 @@ class GoogleTraffic extends ModuleWidget
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        return $this->getWidgetId() . (($this->getOption('useDisplayLocation') == 1) ? '_' . $displayId : '');
+        return $this->getWidgetId() . (($this->getOption('useDisplayLocation') == 1 || $displayId === 0) ? '_' . $displayId : '');
     }
 }

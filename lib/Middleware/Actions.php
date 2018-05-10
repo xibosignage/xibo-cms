@@ -106,20 +106,27 @@ class Actions extends Middleware
                     /** @var UserNotificationFactory $factory */
                     $factory = $app->userNotificationFactory;
 
-                    if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-                        $app->logService->notice('Install.php exists and shouldn\'t');
-
-                        $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
+                    // Is the CMS Docker stack in DEV mode? (this will be true for dev and test)
+                    if (Environment::isDevMode()) {
+                        $notifications[] = $factory->create('CMS IN DEV MODE');
                         $extraNotifications++;
+                    } else {
+                        // We're not in DEV mode and therefore install/index.php shouldn't be there.
+                        if ($app->user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
+                            $app->logService->notice('Install.php exists and shouldn\'t');
 
-                        // Test for web in the URL.
-                        $url = $app->request()->getUrl() . $app->request()->getPathInfo();
-
-                        if (!Environment::checkUrl($url)) {
-                            $app->logService->notice('Suspicious URL detected - it is very unlikely that /web/ should be in the URL. URL is ' . $url);
-
-                            $notifications[] = $factory->create(__('CMS configuration warning, it is very unlikely that /web/ should be in the URL. This usually means that the DocumentRoot of the web server is wrong and may put your CMS at risk if not corrected.'));
+                            $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
                             $extraNotifications++;
+
+                            // Test for web in the URL.
+                            $url = $app->request()->getUrl() . $app->request()->getPathInfo();
+
+                            if (!Environment::checkUrl($url)) {
+                                $app->logService->notice('Suspicious URL detected - it is very unlikely that /web/ should be in the URL. URL is ' . $url);
+
+                                $notifications[] = $factory->create(__('CMS configuration warning, it is very unlikely that /web/ should be in the URL. This usually means that the DocumentRoot of the web server is wrong and may put your CMS at risk if not corrected.'));
+                                $extraNotifications++;
+                            }
                         }
                     }
 

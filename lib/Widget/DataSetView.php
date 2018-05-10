@@ -220,7 +220,7 @@ class DataSetView extends ModuleWidget
      *      required=true
      *  ),
      *  @SWG\Parameter(
-     *      name="columns",
+     *      name="dataSetColumnId",
      *      in="formData",
      *      description=" EDIT only - Array of dataSetColumn IDs to assign",
      *      type="array",

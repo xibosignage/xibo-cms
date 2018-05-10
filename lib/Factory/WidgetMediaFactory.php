@@ -51,6 +51,16 @@ class WidgetMediaFactory extends BaseFactory
     }
 
     /**
+     * Media Linked to Widgets by WidgetId
+     * @param int $widgetId
+     * @return array[int]
+     */
+    public function getModuleOnlyByWidgetId($widgetId)
+    {
+        return $this->query(null, ['widgetId' => $widgetId, 'moduleOnly' => 1]);
+    }
+
+    /**
      * Query Media Linked to Widgets
      * @param array $sortOrder
      * @param array $filterBy
@@ -58,7 +68,19 @@ class WidgetMediaFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId <> 0 ';
+        if ($this->getSanitizer()->getInt('moduleOnly', $filterBy) === 1) {
+            $sql = '
+                SELECT lkwidgetmedia.mediaId 
+                  FROM `lkwidgetmedia` 
+                    INNER JOIN `media` 
+                    ON `media`.mediaId = `lkwidgetmedia`.mediaId 
+                   WHERE widgetId = :widgetId 
+                    AND `lkwidgetmedia`.mediaId <> 0 
+                    AND `media`.type = \'module\'
+                ';
+        } else {
+            $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId <> 0 ';
+        }
 
         return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy))));
     }

@@ -245,7 +245,7 @@ class WidgetFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration', 'fromDt', 'toDt', 'createdDt', 'modifiedDt']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration', 'calculatedDuration', 'fromDt', 'toDt', 'createdDt', 'modifiedDt']]);
         }
 
         // Paging

@@ -34,45 +34,12 @@
 
 {% block formFieldActions %}
     [{
-    "field": "duration",
-    "trigger": "init",
-    "value": "0",
-    "operation": "equals",
-    "actions": {
-    ".loop-fields": { "display": "none" }
-    }
-    },{
-    "field": "duration",
-    "trigger": "change",
-    "value": "0",
-    "operation": "equals",
-    "actions": {
-    ".loop-fields": { "display": "none" }
-    }
-    },{
-    "field": "duration",
-    "trigger": "init",
-    "value": "0",
-    "operation": "not",
-    "actions": {
-    ".loop-fields": { "display": "block" }
-    }
-    },{
-    "field": "duration",
-    "trigger": "change",
-    "value": "0",
-    "operation": "not",
-    "actions": {
-    ".loop-fields": { "display": "block" }
-    }
-    },{
     "field": "useDuration",
     "trigger": "init",
     "value": false,
     "operation": "is:checked",
     "actions": {
-    ".duration-fields": { "display": "none" },
-    ".loop-fields": { "display": "none" }
+    ".duration-fields": { "display": "none" }
     }
     },{
     "field": "useDuration",
@@ -80,8 +47,7 @@
     "value": false,
     "operation": "is:checked",
     "actions": {
-    ".duration-fields": { "display": "none" },
-    ".loop-fields": { "display": "none" }
+    ".duration-fields": { "display": "none" }
     }
     },{
     "field": "useDuration",
@@ -152,28 +118,32 @@
                 {{ forms.input("windowsCommand", title, module.getOption("windowsCommand")|url_decode, helpText, "non-command-fields") }}
 
                 {% set title %}{% trans "Launch the command via Windows Command Line" %}{% endset %}
-                {% set helpText %}{% trans "Should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated." %}{% endset %}
+                {% set helpText %}{% trans "On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated." %}{% endset %}
                 {{ forms.checkbox("launchThroughCmd", title, module.getOption("launchThroughCmd", 1), helpText, "non-command-fields") }}
 
                 {% set title %}{% trans "Android / Linux Command" %}{% endset %}
                 {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
                 {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText, "non-command-fields") }}
 
+                {% set title %}{% trans "webOS Command" %}{% endset %}
+                {% set helpText %}{% trans "Enter a webOS Command Line compatible command" %}{% endset %}
+                {{ forms.hidden("webosCommand", title, module.getOption('webosCommand'), helpText, "non-command-fields") }}
+
                 {% set title %}{% trans "Set a duration?" %}{% endset %}
                 {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
-                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText, "non-command-fields") }}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields non-command-fields", "required") }}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
                 {% set title %}{% trans "Terminate the command once the duration elapses?" %}{% endset %}
                 {% set helpText %}{% trans "Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally." %}{% endset %}
-                {{ forms.checkbox("terminateCommand", title, module.getOption("terminateCommand"), helpText, "duration-fields non-command-fields") }}
+                {{ forms.checkbox("terminateCommand", title, module.getOption("terminateCommand"), helpText) }}
 
                 {% set title %}{% trans "Use taskkill to terminate commands?" %}{% endset %}
                 {% set helpText %}{% trans "On Windows, should the player use taskkill to terminate commands." %}{% endset %}
-                {{ forms.checkbox("useTaskkill", title, module.getOption("useTaskkill"), helpText, "duration-fields non-command-fields") }}
+                {{ forms.checkbox("useTaskkill", title, module.getOption("useTaskkill"), helpText) }}
             </form>
         </div>
     </div>

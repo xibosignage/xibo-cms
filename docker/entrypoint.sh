@@ -194,6 +194,8 @@ then
     mkdir -p /var/www/cms/library/temp
     chown apache.apache -R /var/www/cms
 
+    # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
+    # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
     if [ ! "$CMS_ALIAS" == "none" ]
     then
         echo "Setting up CMS alias"

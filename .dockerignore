@@ -32,8 +32,6 @@ CONTRIBUTING.md
 # Our own container's settings.php shouldn't be included
 web/settings.php
 
-# Package.json - note we will likely want to remove this in 2.0
-package.json
-
-# Our own build file
+# Our own build files
 build.sh
+build-composer.sh

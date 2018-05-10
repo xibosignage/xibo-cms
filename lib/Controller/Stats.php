@@ -643,8 +643,15 @@ class Stats extends Base
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
+        // Run our query using a connection object (to save memory)
+        $connection = $this->store->getConnection();
+        $statement = $connection->prepare($sql);
+
+        // Execute
+        $statement->execute($params);
+
         // Do some post processing
-        foreach ($this->store->select($sql, $params) as $row) {
+        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
             // Read the columns
             $type = $this->getSanitizer()->string($row['Type']);
             $fromDt = $this->getSanitizer()->string($row['start']);

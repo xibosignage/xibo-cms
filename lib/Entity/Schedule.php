@@ -333,9 +333,14 @@ class Schedule implements \JsonSerializable
 
         // Test dates
         if ($this->recurrenceType != '') {
-            // If we are a recurring schedule and our recurring date is out after the required files lookahead
+            // A recurring event
             $this->getLog()->debug('Checking look ahead based on recurrence');
-            return ($this->fromDt <= $currentDate->format('U') && ($this->recurrenceRange == 0 || $this->recurrenceRange > $rfLookAhead->format('U')));
+            // we should check whether the event from date is before the lookahead (i.e. the event has recurred once)
+            // we should also check whether the recurrence range is still valid (i.e. we've not stopped recurring and we don't recur forever)
+            return (
+                $this->fromDt <= $rfLookAhead->format('U')
+                && ($this->recurrenceRange == 0 || $this->recurrenceRange > $currentDate->format('U'))
+            );
         } else if (!$this->isCustomDayPart() || $this->eventTypeId == self::$COMMAND_EVENT) {
             // Day parting event (non recurring) or command event
             // only test the from date.
