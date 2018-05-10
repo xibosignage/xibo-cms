@@ -401,7 +401,8 @@ class Library extends Base
             'retired' => $this->getSanitizer()->getInt('retired'),
             'duration' => $this->getSanitizer()->getString('duration'),
             'fileSize' => $this->getSanitizer()->getString('fileSize'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId')
+            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
+            'assignable' => $this->getSanitizer()->getInt('assignable')
         ]));
 
         // Add some additional row content

@@ -753,7 +753,7 @@ function XiboFormRender(sourceObj, data) {
                 dialog.data("extra", response.extra);
 
                 // Buttons?
-                if (response.buttons != '') {
+                if (response.buttons !== '') {
 
                     // Append a footer to the dialog
                     var footer = $("<div>").addClass("modal-footer");
@@ -765,9 +765,9 @@ function XiboFormRender(sourceObj, data) {
                         response.buttons,
                         function(index, value) {
                             i++;
-                            var extrabutton = $('<button class="btn">').html(index);
+                            var extrabutton = $('<button id="dialog_btn_' + i + '" class="btn">').html(index);
 
-                            if (i == count) {
+                            if (i === count) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
@@ -777,8 +777,12 @@ function XiboFormRender(sourceObj, data) {
                             extrabutton.click(function(e) {
                                 e.preventDefault();
 
-                                if ($(this).hasClass("save-button"))
+                                if ($(this).hasClass("save-button")) {
                                     $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+                                    // Disable the button
+                                    // https://github.com/xibosignage/xibo/issues/1467
+                                    $(this).addClass("disabled");
+                                }
 
                                 if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
                                     // Close button
@@ -893,7 +897,7 @@ function XiboFormRender(sourceObj, data) {
                 XiboInitialise("#"+dialog.attr("id"));
                 
                 // Do we have to call any functions due to this success?
-                if (response.callBack != "" && response.callBack != undefined) {
+                if (response.callBack !== "" && response.callBack !== undefined) {
                     eval(response.callBack)(dialog);
                 }
             }
@@ -1505,6 +1509,9 @@ function SystemMessageInline(messageText, modal) {
 
     // Remove existing errors
     $(".form-error", modal).remove();
+
+    // Re-enabled any disabled buttons
+    $(modal).find(".btn").removeClass("disabled");
 
     $("<div/>", {
         class: "well text-danger text-center form-error",

@@ -29,6 +29,7 @@ use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
@@ -37,6 +38,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
@@ -105,6 +107,9 @@ class User extends Base
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var SessionFactory */
+    private $sessionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -125,10 +130,11 @@ class User extends Base
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
+     * @param SessionFactory $sessionFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -143,6 +149,7 @@ class User extends Base
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
+        $this->sessionFactory = $sessionFactory;
     }
 
     /**
@@ -245,6 +252,9 @@ class User extends Base
             /* @var \Xibo\Entity\User $user */
 
             $user->libraryQuotaFormatted = ByteFormatter::format($user->libraryQuota * 1024);
+
+            $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
+            $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
 
             if ($this->isApi())
                 break;
@@ -844,7 +854,7 @@ class User extends Base
      *
      * @param string $entity
      * @param int $objectId
-     * @throws ConfigurationException
+     * @throws XiboException
      */
     public function permissions($entity, $objectId)
     {
@@ -928,6 +938,15 @@ class User extends Base
                 $layout->load();
 
                 $updatePermissionsOnLayout($layout);
+            }
+        } else if ($object->permissionsClass() == 'Xibo\Entity\Region') {
+            // We always cascade region permissions down to the Playlist
+            // TODO: we should change this to $object->regionPlaylist in 2.0
+            $object->load();
+
+            foreach ($object->playlists as $playlist) {
+                /* @var Playlist $playlist */
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
             }
         }
 
@@ -1167,6 +1186,36 @@ class User extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('%s assigned to User Groups'), $user->userName),
             'id' => $user->userId
+        ]);
+    }
+
+    /**
+     * Update the User Welcome Tutorial to Seen
+     */
+    public function userWelcomeSetUnSeen()
+    {
+        $this->getUser()->newUserWizard = 0;
+        $this->getUser()->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser()->userName)
+        ]);
+    }
+
+    /**
+     * Update the User Welcome Tutorial to Seen
+     */
+    public function userWelcomeSetSeen()
+    {
+        $this->getUser()->newUserWizard = 1;
+        $this->getUser()->save(['validate' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
         ]);
     }
 }

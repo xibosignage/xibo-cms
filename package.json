@@ -1,7 +1,7 @@
 {
   "name": "xibo-cms",
   "version": "1.0.0",
-  "description": "Xibo - Digital Signage - http://www.xibo.org.uk Copyright (C) 2006-2016 Daniel Garner and Contributors.",
+  "description": "Xibo - Digital Signage - http://www.xibo.org.uk Copyright (C) 2006-2018 Daniel Garner and Contributors.",
   "main": "index.js",
   "scripts": {
     "build": "webpack"
@@ -9,6 +9,10 @@
   "directories": {
     "lib": "lib",
     "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cypress:open": "cypress open"
   },
   "repository": {
     "type": "git",
@@ -21,6 +25,7 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
+    "cypress": "^2.1.0",
     "clean-webpack-plugin": "^0.1.17",
     "copy-webpack-plugin": "^4.3.0",
     "css-loader": "^0.9.1",

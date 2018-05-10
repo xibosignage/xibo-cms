@@ -205,6 +205,15 @@ class Clock extends ModuleWidget
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
+        // After body content
+        $options = [
+            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
+            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
+            'originalWidth' => $this->region->width,
+            'originalHeight' => $this->region->height,
+            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+        ];
+
         // Clock Type
         switch ($this->getOption('clockTypeId', 1)) {
 
@@ -248,15 +257,6 @@ class Clock extends ModuleWidget
 
                 // Replace all the subs
                 $data['body'] = $format;
-
-                // After body content
-                $options = array(
-                    'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-                    'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-                    'originalWidth' => $this->region->width,
-                    'originalHeight' => $this->region->height,
-                    'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
-                );
 
                 $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
@@ -312,8 +312,7 @@ class Clock extends ModuleWidget
         }
 
         // If we are a preview, then pass in the width and height
-        $data['previewWidth'] = $this->getSanitizer()->getDouble('width', 0);
-        $data['previewHeight'] = $this->getSanitizer()->getDouble('height', 0);
+        $data['options'] = json_encode($options);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';

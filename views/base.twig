@@ -14,8 +14,8 @@
 
         {# Import user made CSS from theme #}
         <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        
-        <!-- Copyright 2006-2017 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
+        <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
     </head>
@@ -55,6 +55,7 @@
 
         {# Dates #}
 
+        {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
             <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/jalali-date.js"></script>
             <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js"></script>
@@ -71,11 +72,15 @@
         {% if translate.jsLocale != 'en-GB' %}
             {# Handle the inclusion of i18n #}
             {% set calendarTranslation %}{{ theme.rootUri() }}dist/vendor/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
-            <script src="{{ calendarTranslation }}"></script>
+            <script src="{{ theme.uri(calendarTranslation) }}"></script>
             {% set datePickerTranslation %}{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
-            <script src="{{ datePickerTranslation }}"></script>
+            <script src="{{ theme.uri(datePickerTranslation) }}"></script>
+            {% set selectPickerTranslation %}{{ theme.rootUri() }}dist/vendor/bootstrap-select/js/i18n/defaults-{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
+            <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
+            {% set selectPickerTranslation %}{{ theme.rootUri() }}dist/vendor/bootstrap-select-ajax/js/locale/ajax-bootstrap-select{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
+            <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
-        
+
         <script type="text/javascript">
             var translations = {{ translations|raw }};
             // Translations we want always available
@@ -91,6 +96,7 @@
             translations.success = "{{ "Success"|trans }}";
             translations.failure = "{{ "Failure"|trans }}";
             translations.enterText = "{{ "Enter text..."|trans }}";
+            translations.noDataMessage = "{{ "No Data returned from the source"|trans }}";
             translations.statusPending = "{{ "Status Pending"|trans }}";
             translations.duplicate = "{{ "Duplicate"|trans }}";
             translations.spacesWarning = "{{ "Warning - starts with or ends with a space, or contains double spaces"|trans }}";
@@ -163,5 +169,7 @@
 
         {% block javaScriptTemplates %}{% endblock %}
         {% block javaScript %}{% endblock %}
+
+        {% include "user-welcome.twig" %}
     </body>
 </html>

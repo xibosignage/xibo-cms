@@ -115,13 +115,11 @@
                                 <div class="form-group well">
                                     <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
                                     <div class="col-sm-10">
-                                        <select class="ckeditor_library_select" class="form-control" data-linked-to="ta_text">
-                                            <option></option>
-                                            {% for item in media %}
-                                                {% if item.mediaType == "image" %}
-                                                    <option value="{{ item.mediaId }}" data-image-url="{{ urlFor("library.download", {id: item.mediaId}) }}?preview=1">{{ item.name }}</option>
-                                                {% endif %}
-                                            {% endfor %}
+                                        <select id="ckeditor_library_select"
+                                                class="ckeditor_library_select form-control"
+                                                data-linked-to="ta_text"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
                                         </select>
                                     </div>
                                 </div>
