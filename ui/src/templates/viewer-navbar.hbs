@@ -1,11 +1,29 @@
-<nav class="navbar text-center">
-    <button type="button" id="left-btn" class="btn btn-secondary">
-        <i class="fa fa-arrow-left"></i>
-    </button>
-    <span class="label label-info">
-        {{ extra.current_item }} / {{ extra.number_items }}
+<nav>
+
+    {{!-- Paging controls --}}
+    {{#if pagingEnable}}
+        <span class="paging">
+            <button type="button" id="left-btn" class="btn btn-primary">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <button class="btn btn-default" disabled>
+                {{extra.current_item}} / {{extra.number_items}}
+            </button>
+            <button type="button" id="right-btn" class="btn btn-primary">
+                <i class="fa fa-arrow-right"></i>
+            </button>
+        </span>
+    {{/if}}
+
+    {{! Info}}
+    <span class="info">
+        <span class="label">
+             "{{extra.moduleName}}" ({{extra.type}}) 
+        </span>
+
+        <span class="label label-default">
+            {{extra.duration}} / {{extra.regionDuration}}
+        </span>
     </span>
-    <button type="button" id="right-btn" class="btn btn-secondary">
-        <i class="fa fa-arrow-right"></i>
-    </button>
+
 </nav>

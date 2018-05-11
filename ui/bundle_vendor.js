@@ -27,14 +27,14 @@ window.moment = require('moment');
 require('moment-timezone/moment-timezone.js');
 
 // moment-jalaali
-require('bootstrap-select');
 try {
     // Conditional import for the locale variable
     if( calendar_type && calendar_type == "Jalali") {
-        window.moment = require('moment-jalaali/build/moment-jalaali.js');
+        window.moment = require('moment-jalaali');
     }
 } catch (e) { //Handle variable not set error
     console.log('[Warning] loading moment-jalaali: Calendar Type not defined!');
+    console.log(e);
 }
 
 // bootstrap-select
@@ -94,6 +94,9 @@ dt_extras.forEach(function(e) {e(window, window.$);});
 
 // throttle-debounce
 window.$.debounce = require('throttle-debounce/debounce.js');
+
+// bootstrap-tour
+require('bootstrap-tour/build/js/bootstrap-tour.min.js');
 
 //--- Add Local JS files ---
 // jquery-message-queuing

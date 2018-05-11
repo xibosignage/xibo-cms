@@ -139,10 +139,14 @@ $(document).ready(function() {
         }
     });
 
-    // Refresh the designer render on window resize
+    // Refresh some modules on window resize
     $(window).resize($.debounce(500, function(e) {
         if(e.target === window) {
-            lD.refreshDesigner();
+
+            // Refresh navigators and viewer
+            lD.renderContainer(lD.navigator);
+            lD.renderContainer(lD.navigatorEdit);
+            lD.renderContainer(lD.viewer, lD.selectedObject);
         }
     }));
 });
@@ -201,10 +205,6 @@ lD.selectObject = function(obj = null) {
         this.selectedObject.type = newSelectedType;
     }
 
-    // Render selected object in the following containers
-    this.propertiesPanel.render(this.selectedObject);
-    this.viewer.render(this.selectedObject);
-
     // Refresh the designer containers
     this.refreshDesigner();
 };
@@ -213,11 +213,17 @@ lD.selectObject = function(obj = null) {
  * Refresh designer
  */
 lD.refreshDesigner = function() {
+
+    // Render containers with layout ( default )
     this.renderContainer(this.navigator);
     this.renderContainer(this.navigatorEdit);
     this.renderContainer(this.timeline);
     this.renderContainer(this.bottomToolbar);
     this.renderContainer(this.manager);
+
+    // Render selected object in the following containers
+    this.renderContainer(this.propertiesPanel, this.selectedObject);
+    this.renderContainer(this.viewer, this.selectedObject);
 };
 
 
@@ -253,10 +259,18 @@ lD.reloadData = function(layout) {
 /**
  * Render layout structure to container, if it exists
  * @param {object} container - Container for the layout to be rendered
+ * @param {object=} element - Element to be rendered, if not used, render layout
  */
-lD.renderContainer = function(container) {
+lD.renderContainer = function(container, element = {}) {
+    // Check container to prevent rendering to an empty container
     if(!jQuery.isEmptyObject(container)) {
-        container.render(this.layout);
+
+        // Render element if defined, layout otherwise
+        if(!jQuery.isEmptyObject(element)) {
+            container.render(element);
+        } else {
+            container.render(this.layout);
+        }
     }
 };
 

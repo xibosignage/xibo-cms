@@ -74,7 +74,7 @@
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    padding: 10px;
+    padding: 5px;
     background: black;
 }
 
@@ -97,11 +97,17 @@
     top: 50%;
     transform: translateY(-50%);
 }
+
 #layout-editor #layout-viewer-navbar nav {
-    background: #898989;
+    background:#444;
     padding: 4px;
-    border: #494949 3px solid;
-    height: 50px;
+    overflow: auto;
+    margin-top: 5px;
+}
+
+#layout-editor #layout-viewer-navbar nav .info {
+    float: right;
+    font-size: 20px;
 }
 
 /* Properties Panel */

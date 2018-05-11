@@ -37,6 +37,9 @@ require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 // timepicker
 require('timepicker/jquery.timepicker.min.css');
 
+// bootstrap-tour
+require('bootstrap-tour/build/css/bootstrap-tour.min.css');
+
 //--- Xibo style files ---
 require('./src/css/dashboard.css');
 require('./src/css/timeline.css');

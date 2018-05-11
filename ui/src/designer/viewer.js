@@ -13,9 +13,6 @@ const loadingTemplate = require('../templates/loading.hbs');
 let Viewer = function(container, navbarContainer) {
     this.DOMObject = container;
     this.navbarContainer = navbarContainer;
-    
-    // Item number in the sequence, defaulted to 1
-    this.seqItem = 1;
 };
 
 /**
@@ -67,8 +64,9 @@ Viewer.prototype.scaleElement = function(element, container) {
 /**
  * Render Viewer
  * @param {Object} element - the object to be rendered
+ * @param {number=} page - page to render on the viewer, default to 1
  */
-Viewer.prototype.render = function(element) {
+Viewer.prototype.render = function(element, page = 1) {
 
     this.DOMObject.html(loadingTemplate());
 
@@ -80,22 +78,21 @@ Viewer.prototype.render = function(element) {
     // Apply viewer scale to the layout
     const containerDimensions = self.scaleElement(element, this.DOMObject);
 
+    console.log(element);
+
+    // Id the element is a region or widget, increase request information
+    if(['region', 'widget'].includes(element.type)) {
+        requestPath += '?seq=' + page + '&width=' + containerDimensions.width + '&height=' + containerDimensions.height
+    }
+
     // Get HTML for the given element from the API
-    // FIXME: For now, call the API without values and replace the width and height if its an iframe
-    // + containerDimensions.width + '&height=' + containerDimensions.height + '&scale_override=' + containerDimensions.scale
-    $.get(requestPath + '?seq=' + this.seqItem).done(function(res) { 
+    $.get(requestPath).done(function(res) { 
         
         // Prevent rendering null html
         if(!res.success) {
             toastr.error(res.message);
             self.DOMObject.html(res.message);
             return;
-        }
-
-        // FIXME: Remove this if the API starts returning the width and height for the iframes
-        if(res.html.search('<iframe') >= 0) {
-            res.html = res.html.replace('width="0px"', 'width="' + containerDimensions.width + 'px"')
-            res.html = res.html.replace('height="0px"', 'height="' + containerDimensions.height + 'px"')
         }
 
         // Compile layout template with data
@@ -121,23 +118,28 @@ Viewer.prototype.render = function(element) {
  */
 Viewer.prototype.renderNavbar = function(data) {
 
-    // Return if navbar does not exist
-    if(this.navbarContainer === null || this.navbarContainer === undefined || !data.extra || data.extra.number_items <= 1) {
+    // Stop if navbar container does not exist
+    if(this.navbarContainer === null || this.navbarContainer === undefined) {
         return;
     }
 
-    this.navbarContainer.html(viewerNavbarTemplate(data));
+    this.navbarContainer.html(viewerNavbarTemplate(
+        {
+            extra: data.extra,
+            pagingEnable: (data.extra.number_items > 1)
+        }
+    ));
 
-    // Navbar buttons
-    this.navbarContainer.find('#left-btn').prop('disabled', (data.extra.current_item <= 1)).click(function() {
-        this.seqItem--;
-        this.render(lD.selectedObject)
-    }.bind(this));
+    // Paging controls
+    if(data.extra && data.extra.number_items > 1) {
+        this.navbarContainer.find('#left-btn').prop('disabled', (data.extra.current_item <= 1)).click(function() {
+            this.render(lD.selectedObject, data.extra.current_item - 1)
+        }.bind(this));
 
-    this.navbarContainer.find('#right-btn').prop('disabled', (data.extra.current_item >= data.extra.number_items)).click(function() {
-        this.seqItem++;
-        this.render(lD.selectedObject)
-    }.bind(this));
+        this.navbarContainer.find('#right-btn').prop('disabled', (data.extra.current_item >= data.extra.number_items)).click(function() {
+            this.render(lD.selectedObject, data.extra.current_item + 1)
+        }.bind(this));
+    }
 };
 
 module.exports = Viewer;
