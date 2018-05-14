@@ -987,6 +987,7 @@ class Layout extends Base
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
+        $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
         // https://github.com/xibosignage/xibo/issues/1283
