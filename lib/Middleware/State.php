@@ -804,6 +804,7 @@ class State extends Middleware
                 $container->configService,
                 $container->session,
                 $container->regionFactory,
+                $container->widgetFactory,
                 $container->permissionFactory,
                 $container->transitionFactory,
                 $container->moduleFactory,

@@ -20,6 +20,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -41,6 +42,9 @@ class Region extends Base
      * @var RegionFactory
      */
     private $regionFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
 
     /**
      * @var PermissionFactory
@@ -78,19 +82,21 @@ class Region extends Base
      * @param ConfigServiceInterface $config
      * @param Session $session
      * @param RegionFactory $regionFactory
+     * @param WidgetFactory $widgetFactory
      * @param PermissionFactory $permissionFactory
      * @param TransitionFactory $transitionFactory
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $permissionFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory,
                                 $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->session = $session;
         $this->regionFactory = $regionFactory;
+        $this->widgetFactory = $widgetFactory;
         $this->permissionFactory = $permissionFactory;
         $this->transitionFactory = $transitionFactory;
         $this->layoutFactory = $layoutFactory;
@@ -571,9 +577,11 @@ class Region extends Base
     /**
      * Represents the Preview inside the Layout Designer
      * @param int $regionId
+     * @throws XiboException
      */
     public function preview($regionId)
     {
+        $widgetId = $this->getSanitizer()->getInt('widgetId', null);
         $seqGiven = $this->getSanitizer()->getInt('seq', 1);
         $seq = $this->getSanitizer()->getInt('seq', 1);
         $width = $this->getSanitizer()->getDouble('width', 0);
@@ -585,28 +593,38 @@ class Region extends Base
             $region = $this->regionFactory->getById($regionId);
             $region->load();
 
-            // Get the first playlist we can find
-            $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
+            if ($widgetId !== null) {
+                // Single Widget Requested
+                $widget = $this->widgetFactory->getById($widgetId);
+                $widget->load();
 
-            // Expand this Playlist out to its individual Widgets
-            $widgets = $playlist->expandWidgets();
+                $countWidgets = 1;
 
-            $countWidgets = count($widgets);
+            } else {
 
-            // We want to load the widget in the given sequence
-            if ($countWidgets <= 0) {
-                // No media to preview
-                throw new NotFoundException(__('No widgets to preview'));
+                // Get the first playlist we can find
+                $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
+
+                // Expand this Playlist out to its individual Widgets
+                $widgets = $playlist->expandWidgets();
+
+                $countWidgets = count($widgets);
+
+                // We want to load the widget in the given sequence
+                if ($countWidgets <= 0) {
+                    // No media to preview
+                    throw new NotFoundException(__('No widgets to preview'));
+                }
+
+                $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
+
+                // Select the widget at the required sequence
+                $widget = $playlist->getWidgetAt($seq, $widgets);
+                /* @var \Xibo\Entity\Widget $widget */
+                $widget->load();
             }
 
-            $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
-
-            // Select the widget at the required sequence
-            $widget = $playlist->getWidgetAt($seq, $widgets);
-            /* @var \Xibo\Entity\Widget $widget */
-            $widget->load();
-
-            // Otherwise, output a preview
+            // Output a preview
             $module = $this->moduleFactory->createWithWidget($widget, $region);
 
             $this->getState()->extra['empty'] = false;
