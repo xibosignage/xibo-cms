@@ -22,7 +22,7 @@ let Timeline = function(container) {
         startingZoom: -1,
         minTime: 0,
         maxTime: lD.layout.duration,
-        deltatime: lD.layout.duration,
+        deltaTime: lD.layout.duration,
         zoomInDisable: '',
         zoomOutDisable: '',
         scrollPosition: 0, // scroll position
@@ -81,9 +81,9 @@ Timeline.prototype.changeZoom = function(zoom) {
  */
 Timeline.prototype.calculateTimeValues = function() {
 
-    this.properties.deltatime = Math.round(10 * (lD.layout.duration / (this.properties.zoom / 100))) / 10;
+    this.properties.deltaTime = Math.round(10 * (lD.layout.duration / (this.properties.zoom / 100))) / 10;
     this.properties.minTime = Math.round(10 * (this.properties.scrollPosition * lD.layout.duration)) / 10;
-    this.properties.maxTime = this.properties.minTime + this.properties.deltatime;
+    this.properties.maxTime = this.properties.minTime + this.properties.deltaTime;
 };
 
 /**
@@ -93,7 +93,7 @@ Timeline.prototype.updateLabels = function() {
 
     this.DOMObject.find('#minTime').html(this.properties.minTime + 's');
     this.DOMObject.find('#maxTime').html(this.properties.maxTime + 's');
-    this.DOMObject.find('#zoom').html(this.properties.deltatime + 's');
+    this.DOMObject.find('#zoom').html(this.properties.deltaTime + 's');
 };
 
 /**

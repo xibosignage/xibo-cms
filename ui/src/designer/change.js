@@ -69,7 +69,7 @@ Change.prototype.upload = function() {
             }
         }.bind(this),
         error: function(jXHR, textStatus, errorThrown) {
-            toastr.error('Change upload failed!', 'Error');
+            console.log(errorThrown, 'Change upload failed!');
         }
     });
 
@@ -135,7 +135,7 @@ Change.prototype.revert = async function() {
                 return false;
             },
             error: function(jXHR, textStatus, errorThrown) {
-                toastr.error('Change upload failed!', 'Error');
+                console.log('Change upload failed!', 'Error');
             }
         });
 

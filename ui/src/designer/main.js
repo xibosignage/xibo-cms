@@ -236,7 +236,7 @@ lD.reloadData = function(layout) {
     $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layout.layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
             
-            if(res.data.length > 0) { //TODO: handle else
+            if(res.data.length > 0) {
                 lD.layout = new Layout(layout.layoutId, res.data[0]);
                 lD.refreshDesigner();
 

@@ -26,8 +26,8 @@ let Widget = function(id, regionId, data) {
     this.widgetDurationNotSet = false;
     this.widgetDefaultDuration = 10; // in the case of the duration has not being calculated
 
-    //TODO: check if we need to maintain the "pure" data object
-    this.data = data; 
+    this.widgetOptions = data.widgetOptions;
+    this.calculatedDuration = data.calculatedDuration;
 
     /**
      * Return the percentage for the widget on the timeline
@@ -60,8 +60,8 @@ let Widget = function(id, regionId, data) {
 
         let options = {};
 
-        for(option in this.data.widgetOptions) {
-            const currOption = this.data.widgetOptions[option];
+        for(option in this.widgetOptions) {
+            const currOption = this.widgetOptions[option];
 
             if(currOption.type === 'attrib'){
                 options[currOption.option] = currOption.value;
@@ -89,7 +89,7 @@ let Widget = function(id, regionId, data) {
 
         if(recalculate || this.duration === null){
 
-            let calculatedDuration = parseFloat(this.data.calculatedDuration);
+            let calculatedDuration = parseFloat(this.calculatedDuration);
             const options = this.getOptions();
 
             // if calculated duration is not calculated, see it to the default duration 

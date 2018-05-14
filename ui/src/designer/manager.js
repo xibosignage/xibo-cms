@@ -139,12 +139,14 @@ Manager.prototype.uploadChange = function(change) {
             lD.reloadData(lD.layout);
             
         } else {
-            
             toastr.error('Change upload failed!');
         }
         // Render template container
         this.render();
-    }.bind(this));
+    }.bind(this)).catch(function(jXHR, textStatus, errorThrown) {
+        toastr.error(errorThrown, 'Upload failed!');
+        console.log(jXHR, textStatus, errorThrownHR);
+    });
 };
 
 /**
@@ -175,8 +177,10 @@ Manager.prototype.saveAllChanges = async function() {
                 saveAllResult = false;
                 toastr.error('Change upload failed!');
             }
+        }).catch(function(jXHR, textStatus, errorThrown) {
+            return Promise.reject('Not all results were saved');
         });
-        
+
         // Render template container
         this.render();
     }
@@ -184,6 +188,7 @@ Manager.prototype.saveAllChanges = async function() {
     if(saveAllResult) {
         toastr.success('All Changes Saved!');
         lD.reloadData(lD.layout);
+        return Promise.resolve('All Changes Saved');
     }
 };
 
@@ -217,6 +222,7 @@ Manager.prototype.removeAllChanges = async function(targetType, targetId) {
     this.render();
 
     toastr.success('All Changes Removed!');
+    return Promise.resolve('All Changes Removed');
 };
 
 /**

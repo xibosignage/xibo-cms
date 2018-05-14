@@ -13,7 +13,6 @@ let Layout = function(id, data) {
     this.id = 'layout_' + id;
     this.layoutId = id;
 
-    //this.data = data; //TODO: check if we need to maintain the "pure" data object
     this.regions = {};
     this.duration = null;
 
