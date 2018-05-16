@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
@@ -248,6 +249,9 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        if (!$layout->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         $layout->load([
             'loadPlaylists' => true,
             'loadTags' => false,
@@ -395,6 +399,12 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
 
+        // Check that this Regions Layout is in an editable state
+        $layout = $this->layoutFactory->getById($region->layoutId);
+
+        if (!$layout->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         // Load before we save
         $region->load();
 
@@ -417,7 +427,6 @@ class Region extends Base
         $region->save();
 
         // Mark the layout as needing rebuild
-        $layout = $this->layoutFactory->getById($region->layoutId);
         $layout->load(\Xibo\Entity\Layout::$loadOptionsMinimum);
 
         $saveOptions = \Xibo\Entity\Layout::$saveOptionsMinimum;
@@ -464,6 +473,12 @@ class Region extends Base
 
         if (!$this->getUser()->checkDeleteable($region))
             throw new AccessDeniedException();
+
+        // Check that this Regions Layout is in an editable state
+        $layout = $this->layoutFactory->getById($region->layoutId);
+
+        if (!$layout->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $region->delete();
 

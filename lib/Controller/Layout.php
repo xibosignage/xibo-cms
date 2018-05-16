@@ -27,6 +27,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -181,6 +182,14 @@ class Layout extends Base
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
+
+        // This is a temporary message - the new designer should handle this.
+        if (!$layout->isEditable())
+            throw new InvalidArgumentException('Layout is not editable, please checkout', 'layoutId');
+
+
+        // Get the Layout using the Draft ID
+        $layout = $this->layoutFactory->getByParentId($layoutId);
 
         // Work out our resolution
         if ($layout->schemaVersion < 2)
@@ -400,6 +409,8 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
+        $layout = $this->layoutFactory->getByParentId($layoutId);
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
@@ -569,6 +580,76 @@ class Layout extends Base
     }
 
     /**
+     * Unretire Layout Form
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function unretireForm($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $data = [
+            'layout' => $layout,
+            'help' => $this->getHelp()->link('Layout', 'Retire')
+        ];
+
+        $this->getState()->template = 'layout-form-unretire';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Unretires a layout
+     * @param int $layoutId
+     *
+     * @SWG\Put(
+     *  path="/layout/unretire/{layoutId}",
+     *  operationId="layoutUnretire",
+     *  tags={"layout"},
+     *  summary="Unretire Layout",
+     *  description="Retire a Layout so that it isn't available to Schedule. Existing Layouts will still be played",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws XiboException
+     */
+    function unretire($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $layout->retired = 0;
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false,
+            'notify' => false
+        ]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Unretired %s'), $layout->layout)
+        ]);
+    }
+
+    /**
      * Shows the Layout Grid
      *
      * @SWG\Get(
@@ -642,6 +723,9 @@ class Layout extends Base
      *      )
      *  )
      * )
+     *
+     * @throws NotFoundException
+     * @throws XiboException
      */
     function grid()
     {
@@ -669,7 +753,8 @@ class Layout extends Base
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'mediaLike' => $this->getSanitizer()->getString('mediaLike')
+            'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
+            'publishedStateId' => $this->getSanitizer()->getInt('publishedStateId'),
         ]));
 
         foreach ($layouts as $layout) {
@@ -754,6 +839,24 @@ class Layout extends Base
                     'url' => $this->urlFor('layout.designer', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
+
+                // Should we show a publish/discard button?
+                if ($layout->isEditable()) {
+                    $layout->buttons[] = ['divider' => true];
+
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_publish',
+                        'url' => $this->urlFor('layout.publish.form', ['id' => $layout->layoutId]),
+                        'text' => __('Publish')
+                    );
+
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_discard',
+                        'url' => $this->urlFor('layout.discard.form', ['id' => $layout->layoutId]),
+                        'text' => __('Discard')
+                    );
+                    $layout->buttons[] = ['divider' => true];
+                }
             }
 
             // Preview
@@ -788,12 +891,21 @@ class Layout extends Base
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($layout)) {
 
-                // Edit Button
-                $layout->buttons[] = array(
-                    'id' => 'layout_button_edit',
-                    'url' => $this->urlFor('layout.edit.form', ['id' => $layout->layoutId]),
-                    'text' => __('Edit')
-                );
+                if ($layout->isEditable()) {
+                    // Edit Button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_edit',
+                        'url' => $this->urlFor('layout.edit.form', ['id' => $layout->layoutId]),
+                        'text' => __('Edit')
+                    );
+                } else {
+                    // Checkout Button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_checkout',
+                        'url' => $this->urlFor('layout.checkout.form', ['id' => $layout->layoutId]),
+                        'text' => __('Checkout to Edit')
+                    );
+                }
 
                 // Copy Button
                 $layout->buttons[] = array(
@@ -803,19 +915,27 @@ class Layout extends Base
                 );
 
                 // Retire Button
-                $layout->buttons[] = array(
-                    'id' => 'layout_button_retire',
-                    'url' => $this->urlFor('layout.retire.form', ['id' => $layout->layoutId]),
-                    'text' => __('Retire'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.retire', ['id' => $layout->layoutId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'layout_button_retire'),
-                        array('name' => 'text', 'value' => __('Retire')),
-                        array('name' => 'rowtitle', 'value' => $layout->layout)
-                    )
-                );
+                if ($layout->retired == 0) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_retire',
+                        'url' => $this->urlFor('layout.retire.form', ['id' => $layout->layoutId]),
+                        'text' => __('Retire'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor('layout.retire', ['id' => $layout->layoutId])),
+                            array('name' => 'commit-method', 'value' => 'put'),
+                            array('name' => 'id', 'value' => 'layout_button_retire'),
+                            array('name' => 'text', 'value' => __('Retire')),
+                            array('name' => 'rowtitle', 'value' => $layout->layout)
+                        )
+                    );
+                } else {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_unretire',
+                        'url' => $this->urlFor('layout.unretire.form', ['id' => $layout->layoutId]),
+                        'text' => __('Unretire'),
+                    );
+                }
 
                 // Extra buttons if have delete permissions
                 if ($this->getUser()->checkDeleteable($layout)) {
@@ -877,6 +997,7 @@ class Layout extends Base
     /**
      * Edit form
      * @param int $layoutId
+     * @throws XiboException
      */
     function editForm($layoutId)
     {
@@ -887,6 +1008,8 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
+        $layout = $this->layoutFactory->getByParentId($layoutId);
         $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
         $this->getState()->template = 'layout-form-edit';
@@ -1482,8 +1605,6 @@ class Layout extends Base
         ]);
     }
 
-
-
     /**
      * Gets a file from the library
      * @param int $layoutId
@@ -1535,6 +1656,235 @@ class Layout extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'campaigns' => $this->campaignFactory->query()
+        ]);
+    }
+
+    /**
+     * Checkout Layout Form
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function checkoutForm($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $data = ['layout' => $layout];
+
+        $this->getState()->template = 'layout-form-checkout';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Checkout Layout
+     *
+     * @SWG\Put(
+     *  path="/layout/checkout/{layoutId}",
+     *  operationId="layoutCheckout",
+     *  tags={"layout"},
+     *  summary="Checkout Layout",
+     *  description="Checkout a Layout so that it can be edited. The original Layout will still be played",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
+     *
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function checkout($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        // Can't checkout a Layout which can already be edited
+        if ($layout->isEditable())
+            throw new InvalidArgumentException(__('Layout is already checked out'), 'statusId');
+
+        // Load the Layout
+        $layout->load();
+
+        // Make a skeleton copy of the Layout
+        $draft = clone $layout;
+        $draft->parentId = $layout->layoutId;
+        $draft->campaignId = $layout->campaignId;
+        $draft->save([
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        // todo: need to copy the permissions on all child items
+        // idea being that if we make permissions changes while in Draft, we'd want those changes to be reflected
+        // or reverted when we publish or discard.
+
+
+        // Update the original
+        $layout->publishedStatusId = 2; // Draft
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false,
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Checked out %s'), $layout->layout),
+            'data' => $draft
+        ]);
+    }
+
+    /**
+     * Publish Layout Form
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function publishForm($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $data = ['layout' => $layout];
+
+        $this->getState()->template = 'layout-form-publish';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Publish Layout
+     *
+     * @SWG\Put(
+     *  path="/layout/publish/{layoutId}",
+     *  operationId="layoutPublish",
+     *  tags={"layout"},
+     *  summary="Publish Layout",
+     *  description="Publish a Layout, discarding the original",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
+     *
+     * @param $layoutId
+     * @throws XiboException
+     */
+    public function publish($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
+        // parent.
+        $layout = $this->layoutFactory->getByParentId($layoutId);
+        $layout->publishDraft();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => sprintf(__('Published %s'), $layout->layout),
+            'data' => $layout
+        ]);
+    }
+
+    /**
+     * Discard Layout Form
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function discardForm($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $data = ['layout' => $layout];
+
+        $this->getState()->template = 'layout-form-discard';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Discard Layout
+     *
+     * @SWG\Put(
+     *  path="/layout/discard/{layoutId}",
+     *  operationId="layoutDiscard",
+     *  tags={"layout"},
+     *  summary="Discard Layout",
+     *  description="Discard a Layout restoring the original",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout")
+     *  )
+     * )
+     *
+     * @param $layoutId
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     */
+    public function discard($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        // Make sure the Layout is checked out to begin with
+        if (!$layout->isEditable())
+            throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
+
+        $layout = $this->layoutFactory->getByParentId($layoutId);
+        $layout->discardDraft();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => sprintf(__('Discarded %s'), $layout->layout),
+            'data' => $layout
         ]);
     }
 }

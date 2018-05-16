@@ -1,0 +1,44 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set layout = layout.layout %}
+    {% trans %}Checkout {{ layout }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Checkout" %}, $("#layoutCheckoutForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutCheckoutForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.checkout", {id: layout.layoutId}) }}">
+				{{ forms.message("Are you sure you want to checkout this Layout? It will be put in a Draft state so you can make edits.") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

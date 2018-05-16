@@ -48,22 +48,28 @@ trait LayoutHelperTrait
     /**
      * @param XiboLayout $layout
      * @param int $status
+     * @return $this
      */
     protected function setLayoutStatus($layout, $status)
     {
         $layout->status = $status;
         $this->getStore()->update('UPDATE `layout` SET `status` = :status WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId, 'status' => $status]);
         $this->getStore()->commitIfNecessary();
+
+        return $this;
     }
 
     /**
      * Build the Layout ready for XMDS
      * @param XiboLayout $layout
+     * @return $this
      */
     protected function buildLayout($layout)
     {
         // Call the status route
         $this->getEntityProvider()->get('/layout/status/' . $layout->layoutId);
+
+        return $this;
     }
 
     /**
@@ -120,5 +126,35 @@ trait LayoutHelperTrait
             return -10;
 
         return $resolutions[0]->resolutionId;
+    }
+
+    /**
+     * @param XiboLayout $layout
+     * @return $this
+     */
+    protected function checkout($layout)
+    {
+        $this->getEntityProvider()->put('/layout/checkout/' . $layout->layoutId);
+        return $this;
+    }
+
+    /**
+     * @param XiboLayout $layout
+     * @return $this
+     */
+    protected function publish($layout)
+    {
+        $this->getEntityProvider()->put('/layout/publish/' . $layout->layoutId);
+        return $this;
+    }
+
+    /**
+     * @param XiboLayout $layout
+     * @return $this
+     */
+    protected function discard($layout)
+    {
+        $this->getEntityProvider()->put('/layout/discard/' . $layout->layoutId);
+        return $this;
     }
 }

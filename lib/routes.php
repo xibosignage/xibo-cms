@@ -108,7 +108,11 @@ $app->post('/layout', '\Xibo\Controller\Layout:add')->name('layout.add');
 $app->put('/layout/:id', '\Xibo\Controller\Layout:edit')->name('layout.edit');
 $app->post('/layout/copy/:id', '\Xibo\Controller\Layout:copy')->name('layout.copy');
 $app->delete('/layout/:id', '\Xibo\Controller\Layout:delete')->name('layout.delete');
+$app->put('/layout/checkout/:id', '\Xibo\Controller\Layout:checkout')->name('layout.checkout');
+$app->put('/layout/publish/:id', '\Xibo\Controller\Layout:publish')->name('layout.publish');
+$app->put('/layout/discard/:id', '\Xibo\Controller\Layout:discard')->name('layout.discard');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
+$app->put('/layout/unretire/:id', '\Xibo\Controller\Layout:unretire')->name('layout.unretire');
 $app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->name('layout.status');
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');

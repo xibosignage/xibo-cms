@@ -791,6 +791,8 @@ class Widget implements \JsonSerializable
     {
         $this->getLog()->debug('Notifying upstream playlist. Notify Layout: ' . $options['notify'] . ' Notify Displays: ' . $options['notifyDisplays']);
 
+        // Should we notify the Playlist
+        // we do this if the duration has changed on this widget.
         if ($options['notifyPlaylists'] && $this->hasPropertyChanged('calculatedDuration')) {
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
@@ -799,6 +801,9 @@ class Widget implements \JsonSerializable
             ]);
         }
 
+        // Should we notify the Layout
+        // TODO: question whether we will ever do this anymore? A draft layout wouldn't ever be built, and we'd mark the parent Layout
+        // as status = 3 when we checked it in
         if ($options['notify']) {
             // Notify the Layout
             $this->getStore()->update('
@@ -818,6 +823,8 @@ class Widget implements \JsonSerializable
         }
 
         // Notify any displays (clearing their cache)
+        // this is typically done when there has been a dynamic change to the Widget - i.e. the Layout doesn't need
+        // to be rebuilt, but the Widget has some change that will be pushed out through getResource
         if ($options['notifyDisplays']) {
             $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByPlaylistId($this->playlistId);
         }
