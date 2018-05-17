@@ -36,6 +36,9 @@
                     {% set helpText %}{% trans "This library item has been used somewhere in the system. You will only be allowed to delete it if you check this." %}{% endset %}
                     {{ forms.checkbox("forceDelete", title, 0, helpText) }}
 
+                    {% set message %}{% trans "Please note that removing a media item from the Library will also delete it from the Published version of this Layout and you won't be able to undo that action by discarding your changes. Displays will also be immediately effected." %}{% endset %}
+                    {{ forms.message(message, "alert alert-info") }}
+
                 {% endif %}
 
             </form>

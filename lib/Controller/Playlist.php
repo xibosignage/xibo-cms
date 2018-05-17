@@ -868,6 +868,10 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         if ($playlist->isDynamic === 1)
             throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
 
@@ -994,6 +998,10 @@ class Playlist extends Base
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Load the widgets
         $playlist->load();
