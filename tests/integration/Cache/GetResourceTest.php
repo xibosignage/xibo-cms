@@ -47,10 +47,13 @@ class GetResourceTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache ' . get_class() .' Test');
 
         // Create a Layout
-        $this->layout = $this->checkout($this->createLayout());
+        $this->layout = $this->createLayout();
+
+        // Checkout
+        $layout = $this->checkout($this->layout);
 
         // Add a resource heavy module to the Layout (one that will download images)
-        $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
             'duration' => 100,
             'useDuration' => 1,
@@ -66,6 +69,9 @@ class GetResourceTest extends LocalWebTestCase
             'useDuration' => 1,
             'templateId' => 'media-rss-with-title'
         ]);
+
+        // Checkin
+        $this->layout = $this->publish($this->layout);
 
         // Set the Layout status
         $this->setLayoutStatus($this->layout, 3);

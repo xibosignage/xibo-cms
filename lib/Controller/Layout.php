@@ -1932,6 +1932,7 @@ class Layout extends Base
         // parent.
         $draft = $this->layoutFactory->getByParentId($layoutId);
         $draft->publishDraft();
+        $draft->load();
 
         // Return
         $this->getState()->hydrate([

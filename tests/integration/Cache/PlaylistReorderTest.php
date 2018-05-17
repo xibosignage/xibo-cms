@@ -44,7 +44,7 @@ class PlaylistReorderTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache Region Edit Test');
 
         // Create a Layout
-        $this->layout = $this->checkout($this->createLayout());
+        $this->layout = $this->createLayout();
 
         // Add a couple of text widgets to the region
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [

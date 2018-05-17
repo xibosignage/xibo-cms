@@ -154,11 +154,13 @@ trait LayoutHelperTrait
      */
     protected function publish($layout)
     {
+        $this->getLogger()->debug('Publish ' . $layout->layoutId);
+
         $response = $this->getEntityProvider()->put('/layout/publish/' . $layout->layoutId);
 
         // Swap the Layout object to use the one returned.
         /** @var XiboLayout $layout */
-        $layout = (new XiboLayout($this->getEntityProvider()))->hydrate($response);
+        $layout = $this->constructLayoutFromResponse($response);
 
         $this->getLogger()->debug('LayoutId is now: ' . $layout->layoutId);
 
@@ -171,11 +173,13 @@ trait LayoutHelperTrait
      */
     protected function discard($layout)
     {
+        $this->getLogger()->debug('Discard ' . $layout->layoutId);
+
         $response = $this->getEntityProvider()->put('/layout/discard/' . $layout->layoutId);
 
         // Swap the Layout object to use the one returned.
         /** @var XiboLayout $layout */
-        $layout = (new XiboLayout($this->getEntityProvider()))->hydrate($response);
+        $layout = $this->constructLayoutFromResponse($response);
 
         $this->getLogger()->debug('LayoutId is now: ' . $layout->layoutId);
 

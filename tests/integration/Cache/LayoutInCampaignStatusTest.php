@@ -56,14 +56,19 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         $this->campaign = (new XiboCampaign($this->getEntityProvider()))->create(Random::generateString());
 
         // Create a Layout
-        $this->layout = $this->checkout($this->createLayout());
+        $this->layout = $this->createLayout();
 
-        // Create a text widget on the Layout
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
         ]);
+
+        // Check us in again
+        $this->layout = $this->publish($this->layout);
 
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 

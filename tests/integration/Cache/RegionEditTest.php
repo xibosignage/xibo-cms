@@ -44,10 +44,13 @@ class RegionEditTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache Region Edit Test');
 
         // Create a Layout
-        $this->layout = $this->checkout($this->createLayout());
+        $this->layout = $this->createLayout();
+
+        // Checkout
+        $layout = $this->checkout($this->layout);
 
         // Add a region to the Layout
-        $this->region = (new XiboRegion($this->getEntityProvider()))->create($this->layout->layoutId, 200,300,75,125);
+        $this->region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
 
         // Set the Layout status
         $this->setLayoutStatus($this->layout, 1);
@@ -99,6 +102,9 @@ class RegionEditTest extends LocalWebTestCase
             'loop' => 0,
             'zIndex' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        // Checkin
+        $this->layout = $this->publish($this->layout);
 
         // Check the Layout Status
         // Validate the layout status afterwards

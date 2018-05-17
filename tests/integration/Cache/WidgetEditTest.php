@@ -43,14 +43,19 @@ class WidgetEditTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache Region Edit Test');
 
         // Create a Layout
-        $this->layout = $this->checkout($this->createLayout());
+        $this->layout = $this->createLayout();
 
-        // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
         ]);
+
+        // Check us in again
+        $this->layout = $this->publish($this->layout);
 
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
