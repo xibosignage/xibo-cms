@@ -46,8 +46,11 @@ class PlaylistReorderTest extends LocalWebTestCase
         // Create a Layout
         $this->layout = $this->createLayout();
 
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
         // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1,
@@ -56,7 +59,7 @@ class PlaylistReorderTest extends LocalWebTestCase
 
         $this->widget1 = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget B',
             'duration' => 100,
             'useDuration' => 1,
@@ -64,6 +67,9 @@ class PlaylistReorderTest extends LocalWebTestCase
         ]);
 
         $this->widget2 = (new XiboText($this->getEntityProvider()))->hydrate($response);
+
+        // Publish
+        $this->layout = $this->publish($this->layout);
 
         // Set the Layout status
         $this->setLayoutStatus($this->layout, 1);
@@ -106,13 +112,19 @@ class PlaylistReorderTest extends LocalWebTestCase
      */
     public function testInvalidateCache()
     {
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
         // Edit region
-        $this->client->post('/playlist/order/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        $this->client->post('/playlist/order/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'widgets' => [
                 $this->widget1->widgetId => 2,
                 $this->widget2->widgetId => 1
             ]
         ]);
+
+        // Publish
+        $this->layout = $this->publish($this->layout);
 
         // Check the Layout Status
         // Validate the layout status afterwards

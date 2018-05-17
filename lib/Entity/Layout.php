@@ -1317,7 +1317,7 @@ class Layout implements \JsonSerializable
         $parent->delete();
 
         // Set my statusId to published
-        // Notify
+        // we do not want to notify here as we should wait for the build to happen
         $this->publishedStatusId = 1;
         $this->save([
             'saveLayout' => true,
@@ -1326,7 +1326,7 @@ class Layout implements \JsonSerializable
             'setBuildRequired' => true,
             'validate' => false,
             'audit' => true,
-            'notify' => true
+            'notify' => false
         ]);
     }
 
@@ -1396,7 +1396,11 @@ class Layout implements \JsonSerializable
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign
-            $campaign->save();
+            // adding a Layout Specific Campaign shouldn't ever notify (it can't hit anything because we've only
+            // just added it)
+            $campaign->save([
+                'notify' => false
+            ]);
 
             // Assign the new campaignId to this layout
             $this->campaignId = $campaign->campaignId;
@@ -1408,7 +1412,9 @@ class Layout implements \JsonSerializable
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->assignLayout($this);
-            $campaign->save();
+            $campaign->save([
+                'notify' => false
+            ]);
         }
     }
 

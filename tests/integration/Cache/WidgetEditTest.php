@@ -54,9 +54,6 @@ class WidgetEditTest extends LocalWebTestCase
             'useDuration' => 1
         ]);
 
-        // Check us in again
-        $this->layout = $this->publish($this->layout);
-
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // Set the Layout status
@@ -106,6 +103,11 @@ class WidgetEditTest extends LocalWebTestCase
             'duration' => 100,
             'useDuration' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        $this->assertEquals(200, $this->client->response->status(), 'Transaction Status Incorrect');
+
+        // Check us in again
+        $this->layout = $this->publish($this->layout);
 
         // Check the Layout Status
         // Validate the layout status afterwards

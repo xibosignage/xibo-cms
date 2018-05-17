@@ -54,9 +54,6 @@ class WidgetDeleteTest extends LocalWebTestCase
             'useDuration' => 1
         ]);
 
-        // Check us in again
-        $this->layout = $this->publish($this->layout);
-
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // Set the Layout status
@@ -102,6 +99,11 @@ class WidgetDeleteTest extends LocalWebTestCase
     {
         // Edit region
         $this->client->delete('/playlist/widget/' . $this->widget->widgetId);
+
+        $this->assertEquals(200, $this->client->response->status(), 'Transaction Status Incorrect');
+
+        // Publish
+        $this->layout = $this->publish($this->layout);
 
         // Check the Layout Status
         // Validate the layout status afterwards

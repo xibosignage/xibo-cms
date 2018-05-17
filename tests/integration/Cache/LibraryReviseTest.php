@@ -48,16 +48,23 @@ class LibraryReviseTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Setup test for Cache Layout Edit Test');
 
-        // Create a Layout
-        $this->layout = $this->createLayout(1);
-
         // Upload some media
         $this->media = (new XiboLibrary($this->getEntityProvider()))
             ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
 
-        // Add it to the Layout
-        (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $this->layout->regions[0]->regionPlaylist['playlistId']);
+        // Create a Layout
+        $this->layout = $this->createLayout(1);
 
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
+        // Add it to the Layout
+        (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist['playlistId']);
+
+        // Publish
+        $this->layout = $this->publish($this->layout);
+
+        // Set the Layout status (force it)
         $this->setLayoutStatus($this->layout, 1);
 
         // Create a Display
@@ -79,6 +86,8 @@ class LibraryReviseTest extends LocalWebTestCase
         );
 
         $this->displaySetStatus($this->display, Display::$STATUS_DONE);
+
+        $this->getLogger()->debug('Finished setup');
     }
 
     public function tearDown()
