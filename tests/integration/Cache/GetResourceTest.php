@@ -47,7 +47,7 @@ class GetResourceTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache ' . get_class() .' Test');
 
         // Create a Layout
-        $this->layout = $this->createLayout();
+        $this->layout = $this->checkout($this->createLayout());
 
         // Add a resource heavy module to the Layout (one that will download images)
         $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [

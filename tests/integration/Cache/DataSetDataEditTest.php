@@ -67,7 +67,7 @@ class DataSetDataEditTest extends LocalWebTestCase
             '');
 
         // Create a Layout
-        $this->layout = $this->createLayout();
+        $this->layout = $this->checkout($this->createLayout());
 
         // Add a couple of text widgets to the region
         $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [

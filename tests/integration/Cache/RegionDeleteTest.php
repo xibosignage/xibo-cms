@@ -44,7 +44,7 @@ class RegionDeleteTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache Region Delete Test');
 
         // Create a Layout
-        $this->layout = $this->createLayout();
+        $this->layout = $this->checkout($this->createLayout());
 
         // Add a region to the Layout
         $this->region = (new XiboRegion($this->getEntityProvider()))->create($this->layout->layoutId, 200,300,75,125);

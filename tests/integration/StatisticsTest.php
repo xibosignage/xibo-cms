@@ -162,6 +162,7 @@ class StatisticsTest extends LocalWebTestCase
 
         // Create layout with random name
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
 
         // Add another region
         $region = $layout->regions[0];

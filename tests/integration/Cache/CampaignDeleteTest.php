@@ -48,7 +48,7 @@ class CampaignDeleteTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for Cache ' . get_class() .' Test');
 
         // Create a Layout
-        $this->layout = $this->createLayout();
+        $this->layout = $this->checkout($this->createLayout());
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',

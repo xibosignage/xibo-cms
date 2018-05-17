@@ -511,8 +511,6 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame($regionHeight, $object->data->height);
         $this->assertSame($regionTop, $object->data->top);
         $this->assertSame($regionLeft, $object->data->left);
-        # Clean up
-        $this->assertTrue($layout->delete(), 'Unable to delete ' . $layout->layoutId);
     }
 
     /**
@@ -776,9 +774,6 @@ class LayoutTest extends LocalWebTestCase
         # Check if successful
         $this->assertSame(200, $this->client->response->status());
         $object = json_decode($this->client->response->body());
-
-        # Clean up
-        $layout->delete();
     }
 
     /**
@@ -819,8 +814,5 @@ class LayoutTest extends LocalWebTestCase
         # Check if it fails as expected 
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
         $object = json_decode($this->client->response->body());
-
-        # Clean up
-        $layout->delete();
     }
 }
