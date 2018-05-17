@@ -344,17 +344,13 @@ class LayoutTest extends LocalWebTestCase
         // it will automatically get deleted in tearDown()
         $layout = $this->createLayout();
 
-        // Checkout the Layout
-        $this->checkout($layout);
-
+        // We do not need to checkout the Layout to perform an edit of its top level data.
         // Change the layout name and description
         $name = Random::generateString(8, 'phpunit');
         $description = Random::generateString(8, 'description');
         $this->client->put('/layout/' . $layout->layoutId, [
             'name' => $name,
-            'description' => $description,
-            'backgroundColor' => $layout->backgroundColor,
-            'backgroundzIndex' => $layout->backgroundzIndex
+            'description' => $description
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
@@ -378,25 +374,16 @@ class LayoutTest extends LocalWebTestCase
     */
     public function testEditFailure()
     {
-        # Check if there are layouts with that name already in the system
-        foreach ($this->startLayouts as $lay) {
-            if ($lay->layout == 'phpunit layout') {
-                $this->skipTest('layout already exists with that name');
-                return;
-            }
-        }
-        # Load in a known layout
-        /** @var XiboLayout $layout */
-        $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', $this->getResolutionId('landscape'));
-        # Change the layout name and description
-        $name = Random::generateString(8, 'phpunit');
-        $description = Random::generateString(8, 'description');
+        // Create a known layout with a random name for us to work with.
+        // it will automatically get deleted in tearDown()
+        $layout = $this->createLayout();
+
+        // Set a background z-index that is outside parameters
         $this->client->put('/layout/' . $layout->layoutId, [
-            'name' => $name,
-            'description' => $description,
             'backgroundColor' => $layout->backgroundColor,
             'backgroundzIndex' => -1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
     }
 
@@ -505,7 +492,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         // Add region to our layout with data from regionSuccessCases
         $this->client->post('/region/' . $layout->layoutId, [
@@ -552,7 +539,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         # Add region to our layout with datafrom regionFailureCases
         $response = $this->client->post('/region/' . $layout->layoutId, [
@@ -594,7 +581,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
@@ -628,7 +615,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
@@ -652,7 +639,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200, 670, 100, 100);
 
@@ -756,7 +743,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         # Create Two known regions and add them to that layout
         $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);
@@ -801,7 +788,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $this->checkout($layout);
+        $layout = $this->checkout($layout);
 
         # Create Two known regions and add them to that layout
         $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);

@@ -73,6 +73,7 @@ class WebpageWidgetTest extends LocalWebTestCase
 	{
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
 		$response = $this->client->post('/playlist/widget/webpage/' . $playlistId, [
@@ -126,6 +127,7 @@ class WebpageWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a webpage with wrapper
@@ -168,6 +170,7 @@ class WebpageWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a clock with wrapper

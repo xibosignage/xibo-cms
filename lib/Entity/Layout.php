@@ -440,7 +440,16 @@ class Layout implements \JsonSerializable
      */
     public function isEditable()
     {
-        return ($this->publishedStatusId === 2 || $this->parentId !== null); // Draft
+        return ($this->publishedStatusId === 2); // Draft
+    }
+
+    /**
+     * Is this Layout a Child?
+     * @return bool
+     */
+    public function isChild()
+    {
+        return ($this->parentId !== null);
     }
 
     /**
@@ -1264,7 +1273,7 @@ class Layout implements \JsonSerializable
     public function publishDraft()
     {
         // We are the draft - make sure we have a parent
-        if (!$this->isEditable())
+        if (!$this->isChild())
             throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
 
         // Get my parent for later
@@ -1282,6 +1291,18 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->parentId
         ]);
 
+        // Persist things that might have changed
+        // NOTE: permissions are managed on the campaign, so we do not need to worry.
+        $this->layout = $parent->layout;
+        $this->description = $parent->description;
+        $this->retired = $parent->retired;
+
+        // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
+        $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
+            'parentId' => $parent->layoutId,
+            'layoutId' => $this->layoutId
+        ]);
+
         // If this is the global default layout, then add some special handling to make sure we swap the default over
         // to the incoming draft
         if ($this->parentId == $this->config->GetSetting('DEFAULT_LAYOUT')) {
@@ -1292,6 +1313,7 @@ class Layout implements \JsonSerializable
         // Delete the parent (make sure we set the parent to be a child of us, otherwise we will delete the linked
         // campaign
         $parent->parentId = $this->layoutId;
+        $parent->tags = []; // Clear the tags so we don't attempt a delete.
         $parent->delete();
 
         // Set my statusId to published
@@ -1315,7 +1337,7 @@ class Layout implements \JsonSerializable
     public function discardDraft()
     {
         // We are the draft - make sure we have a parent
-        if (!$this->isEditable()) {
+        if (!$this->isChild()) {
             $this->getLog()->debug('Cant discard draft ' . $this->layoutId . '. publishedStatusId = ' . $this->publishedStatusId . ', parentId = ' . $this->parentId);
             throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
         }

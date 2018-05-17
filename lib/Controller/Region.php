@@ -249,7 +249,7 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
-        if (!$layout->isEditable())
+        if (!$layout->isChild())
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $layout->load([
@@ -402,7 +402,7 @@ class Region extends Base
         // Check that this Regions Layout is in an editable state
         $layout = $this->layoutFactory->getById($region->layoutId);
 
-        if (!$layout->isEditable())
+        if (!$layout->isChild())
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Load before we save
@@ -477,7 +477,7 @@ class Region extends Base
         // Check that this Regions Layout is in an editable state
         $layout = $this->layoutFactory->getById($region->layoutId);
 
-        if (!$layout->isEditable())
+        if (!$layout->isChild())
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $region->delete();
@@ -532,6 +532,10 @@ class Region extends Base
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
+
+        // Check that this Layout is a Draft
+        if (!$layout->isChild())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Pull in the regions and convert them to stdObjects
         $regions = $this->getSanitizer()->getParam('regions', null);

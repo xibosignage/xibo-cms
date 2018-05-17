@@ -1,0 +1,73 @@
+{#
+/*
+ Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Layout" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#layoutEditForm").submit()
+{% endblock %}
+
+{% block callBack %}backGroundFormSetup{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ urlFor("layout.edit.background", {id: layout.layoutId}) }}">
+                {% set title %}{% trans "Background Colour" %}{% endset %}
+                {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
+
+                {% set title %}{% trans "Background Image" %}{% endset %}
+                {% set helpText %}{% trans "Pick the background image from the library. It is recommended to pick JPG images as Windows Players can only show JPG background images." %}{% endset %}
+                {% set noneMessage %}{% trans "None" %}{% endset %}
+                {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
+                {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "selectPicker background-image-fields", "", "b", "", [{name:"data-live-search", value:"true"}]) }}
+
+                {% set title %}{% trans "Add a new background image?" %}{% endset %}
+                {{ forms.button(title, "", "", "background-image-fields background-image-add-button", "backgroundAddButton") }}
+
+                <div class="col-md-offset-2 col-md-10">
+                    <div id="layoutEditFormBackgroundUpload"></div>
+                </div>
+
+                {% set title %}{% trans "Resolution" %}{% endset %}
+                {% set helpText %}{% trans "Change the resolution" %}{% endset %}
+                {{ forms.dropdown("resolutionId", "single", title, resolution.resolutionId, resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
+
+                {% set title %}{% trans "Layer" %}{% endset %}
+                {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
+                {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
+
+                <div class="col-md-offset-2">
+                    <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=100&height=56" data-not-found-url="{{ theme.uri("img/forms/filenotfound.gif") }}" alt="{% trans "Background thumbnail" %}" />
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -47,7 +47,8 @@ class WidgetOnDraftsTest extends LocalWebTestCase
 
     public function tearDown()
     {
-        //$this->layout->delete();
+        // This should always be the original, regardless of whether we checkout/discard/etc
+        $this->layout->delete();
 
         parent::tearDown();
     }
@@ -72,5 +73,30 @@ class WidgetOnDraftsTest extends LocalWebTestCase
         $this->getLogger()->debug('Response from Widget Add is ' . $response);
 
         $this->assertSame(500, $this->client->response->status(), $response);
+    }
+
+    /**
+     * Test to try and add a widget to a Published Layout
+     */
+    public function testEditDraft()
+    {
+        // Checkout the Layout
+        $layout = $this->checkout($this->layout);
+
+        // Get my Playlist
+        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+
+        // Add a widget (and widget will do, it doesn't matter)
+        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId, [
+            'uri' => 'http://example.com',
+            'duration' => 10,
+            'useDuration' => 1,
+            'scaleTypeId' => 1,
+            'mute' => 1,
+        ]);
+
+        $this->getLogger()->debug('Response from Widget Add is ' . $response);
+
+        $this->assertSame(200, $this->client->response->status(), $response);
     }
 }

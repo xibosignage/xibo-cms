@@ -99,6 +99,7 @@ class AudioWidgetTest extends LocalWebTestCase
     {
         # Create layout 
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
 
         # Upload new media
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API audio', PROJECT_ROOT . '/tests/resources/cc0_f1_gp_cars_pass_crash.mp3');
@@ -152,6 +153,8 @@ class AudioWidgetTest extends LocalWebTestCase
     {
         # Create layout 
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
+
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Upload new media
@@ -172,6 +175,8 @@ class AudioWidgetTest extends LocalWebTestCase
     {
         # Create layout 
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
+
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Upload new medias
