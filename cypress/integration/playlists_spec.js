@@ -10,8 +10,6 @@ describe('Playlists Admin', function () {
         cy.visit('/playlist/view');
 
         cy.contains('Playlists');
-
-        cy.contains('Showing 1 to');
     });
 
     it('should add a non-dynamic playlist', function() {
@@ -26,6 +24,8 @@ describe('Playlists Admin', function () {
         cy.get('.modal .save-button').click();
 
         cy.contains('Cypress Test Playlist');
+
+        cy.contains('Showing 1 to');
     });
 
 });
