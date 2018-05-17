@@ -25,7 +25,7 @@ let Navigator = function(container, {edit = false, editNavbar = null, padding = 
  */
 Navigator.prototype.scaleLayout = function(layout, container) {
 
-    //TODO: Probably needs some refactor
+    //FIXME: Probably needs some refactor ( can be based on Viewer resize method )
     
     const layoutSizeRatio = layout.width / layout.height;
     const containerWidth = container.width();
@@ -87,7 +87,7 @@ Navigator.prototype.render = function(layout) {
     const layoutContainer = this.DOMObject.find('#' + layout.id);
 
     // Find all the regions and enable drag and resize
-    this.DOMObject.find('#regions .region').resizable({
+    this.DOMObject.find('#regions .designer-region').resizable({
         containment: layoutContainer,
         disabled: !this.editMode
     }).draggable({
@@ -141,18 +141,25 @@ Navigator.prototype.renderNavbar = function() {
 
     // Navbar buttons
     this.navbarContainer.find('#close-btn').click(function() {
-        lD.manager.saveAllChanges().then(function() { // TODO: Handle promisses here
+        lD.manager.saveAllChanges().then(function(res) {
+            
             lD.toggleNavigatorEditing(false);
+        }).catch(function(jXHR, textStatus, errorThrown) {
+            toastr.error(errorThrown, 'Save all changes failed!');
+            console.log(jXHR, textStatus, errorThrown);
+        });;
         });
-    });
 
     this.navbarContainer.find('#undo-btn').click(function() {
         lD.manager.revertChange();
     });
 
     this.navbarContainer.find('#add-btn').click(function() {
-        lD.manager.saveAllChanges().then(function() { // TODO: Handle promisses here
+        lD.manager.saveAllChanges().then(function() {
             lD.layout.addElement('region');
+        }).catch(function(jXHR, textStatus, errorThrown) {
+            toastr.error(errorThrown, 'Save all changes failed!');
+            console.log(jXHR, textStatus, errorThrown);
         });
     });
 
@@ -177,7 +184,7 @@ Navigator.prototype.renderNavbar = function() {
                     if(result) {
 
                         // Save all changes first
-                        lD.manager.saveAllChanges().then(function() { // TODO: Handle promisses here
+                        lD.manager.saveAllChanges().then(function() {
 
                             // Remove changes from the history array
                             lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then(function() {
@@ -188,7 +195,13 @@ Navigator.prototype.renderNavbar = function() {
                                     lD.selectedObject.type
                                 );
                     
+                            }).catch(function(jXHR, textStatus, errorThrown) {
+                                toastr.error(errorThrown, 'Remove all changes failed!');
+                                console.log(jXHR, textStatus, errorThrown);
                             });
+                        }).catch(function(jXHR, textStatus, errorThrown) {
+                            toastr.error(errorThrown, 'Save all changes failed!');
+                            console.log(jXHR, textStatus, errorThrown);
                         });
                     }
                 }

@@ -1,15 +1,28 @@
-<div class="viewer-element"
+<p class="top-right-btn">
+    <i id="fs-btn" class="fa fa-arrows-alt"></i>
+</p>
+
+<div class="viewer-element {{containerStyle}}"
     style="width: {{ dimensions.width }}px;
         height: {{ dimensions.height }}px;
         top: {{ dimensions.top }}px;
         left: {{ dimensions.left }}px;"
 >
-    
-    {{#if res.extra.empty }}
-        <p class="empty">
-            {{ res.extra.text }}
+
+    {{#if renderLayout }}
+        {{!-- Render Layout --}}
+        <p class="center-msg">
+            <i id="play-btn" class="fa fa-play-circle"></i>
         </p>
     {{else}}
-        {{{ res.html }}}
+
+        {{!-- Render Widget or Region --}}
+        {{#if res.extra.empty }}
+            <p class="center-msg">
+                {{ res.extra.text }}
+            </p>
+        {{else}}
+            {{{ res.html }}}
+        {{/if}}
     {{/if}}
 </div>

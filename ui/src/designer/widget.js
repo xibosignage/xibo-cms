@@ -12,6 +12,7 @@ let Widget = function(id, regionId, data) {
     this.regionId = 'region_' + regionId;
     
     // widget type
+    this.type = 'widget';
     this.subType = data.type;
 
     this.selected = false;

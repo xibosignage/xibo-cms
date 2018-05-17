@@ -3,6 +3,7 @@
 // Load templates
 const viewerTemplate = require('../templates/viewer.hbs');
 const viewerNavbarTemplate = require('../templates/viewer-navbar.hbs');
+const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
 /**
@@ -57,7 +58,7 @@ Viewer.prototype.scaleElement = function(element, container) {
     // Calculate top and left values to centre the element in the container
     elementDimensions.top = containerDimensions.height / 2 - elementDimensions.height / 2;
     elementDimensions.left = containerDimensions.width / 2 - elementDimensions.width / 2;
-    
+
     return elementDimensions;
 };
 
@@ -68,64 +69,104 @@ Viewer.prototype.scaleElement = function(element, container) {
  */
 Viewer.prototype.render = function(element, page = 1) {
 
+    // Show loading template
     this.DOMObject.html(loadingTemplate());
 
-    const self = this;
+    // Reset Navbar if exists
+    if(this.navbarContainer != null && this.navbarContainer != undefined) {
+        this.navbarContainer.html('');
+    }
+    
     let requestPath = urlsForApi[element.type]['preview'].url;
 
-    requestPath = requestPath.replace(':id', element[element.type + 'Id']);
+    // Get target element( get region if element is a Widget type )
+    const targetElement = (element.type === 'widget') ? lD.layout.regions[element.regionId] : element;
 
     // Apply viewer scale to the layout
-    const containerDimensions = self.scaleElement(element, this.DOMObject);
+    const containerDimensions = this.scaleElement(targetElement, this.DOMObject);
 
-    console.log(element);
+    requestPath = requestPath.replace(':id', targetElement[targetElement.type + 'Id']);
+    
+    // Render layout
+    if(element.type === 'layout') {
 
-    // Id the element is a region or widget, increase request information
-    if(['region', 'widget'].includes(element.type)) {
-        requestPath += '?seq=' + page + '&width=' + containerDimensions.width + '&height=' + containerDimensions.height
-    }
-
-    // Get HTML for the given element from the API
-    $.get(requestPath).done(function(res) { 
-        
-        // Prevent rendering null html
-        if(!res.success) {
-            toastr.error(res.message);
-            self.DOMObject.html(res.message);
-            return;
-        }
-
-        // Compile layout template with data
         const html = viewerTemplate({
-            res: res,
+            renderLayout: true,
+            containerStyle: 'layout-player',
             dimensions: containerDimensions
         });
 
-        // Append layout html to the main div
-        self.DOMObject.html(html);
+        this.DOMObject.html(html);
 
-        // Render navbar
-        self.renderNavbar(res);
+        // Handle play button
+        this.DOMObject.find('#play-btn').click(function() {
+            this.playPreview(requestPath, containerDimensions);
+        }.bind(this));
 
-    }).fail(function(res) {
-        toastr.error('Preview failed!');
-        self.DOMObject.html('Preview failed');
-    });
+        // Handle fullscreen button
+        this.DOMObject.find('#fs-btn').click(function() {
+            this.toggleFullscreen();
+        }.bind(this));
+
+    } else { // Render Widget or Region
+
+        // Id the element is a region or widget, increase request information
+        if(element.type === 'region') {
+            requestPath += '?seq=' + page;
+        } else if(element.type === 'widget'){
+            requestPath += '?widgetId=' + element[element.type + 'Id'];
+        }
+
+        requestPath += '&width=' + containerDimensions.width + '&height=' + containerDimensions.height;
+
+        // Get HTML for the given element from the API
+        $.get(requestPath).done(function(res) { 
+            
+            // Prevent rendering null html
+            if(!res.success) {
+                toastr.error(res.message);
+                this.DOMObject.html(res.message);
+                return;
+            }
+
+            // Compile layout template with data
+            const html = viewerTemplate({
+                res: res,
+                dimensions: containerDimensions
+            });
+
+            // Append layout html to the main div
+            this.DOMObject.html(html);
+
+            // Handle fullscreen button
+            this.DOMObject.find('#fs-btn').click(function() {
+                this.toggleFullscreen();
+            }.bind(this));
+
+            // Render navbar
+            this.renderNavbar(res, element.type);
+
+        }.bind(this)).fail(function(res) {
+            toastr.error('Preview failed!');
+            this.DOMObject.html('Preview failed');
+        }.bind(this));
+    }
 };
 
 /**
  * Render Navbar
  */
-Viewer.prototype.renderNavbar = function(data) {
+Viewer.prototype.renderNavbar = function(data, elementType) {
 
     // Stop if navbar container does not exist
-    if(this.navbarContainer === null || this.navbarContainer === undefined) {
+    if(this.navbarContainer === null || this.navbarContainer === undefined || data.extra.empty) {
         return;
     }
 
     this.navbarContainer.html(viewerNavbarTemplate(
         {
             extra: data.extra,
+            type: elementType,
             pagingEnable: (data.extra.number_items > 1)
         }
     ));
@@ -140,6 +181,29 @@ Viewer.prototype.renderNavbar = function(data) {
             this.render(lD.selectedObject, data.extra.current_item + 1)
         }.bind(this));
     }
+};
+
+/**
+ * Play preview
+ */
+Viewer.prototype.playPreview = function(url, dimensions) {
+    // Compile layout template with data
+    const html = viewerLayoutPreview({
+        url: url,
+        width: dimensions.width,
+        height: dimensions.height
+    });
+
+    // Append layout html to the main div
+    this.DOMObject.find('.layout-player').html(html);
+};
+
+/**
+ * Toggle fullscreen
+ */
+Viewer.prototype.toggleFullscreen = function() {
+    this.DOMObject.toggleClass('fullscreen');
+    this.render(lD.selectedObject);
 };
 
 module.exports = Viewer;

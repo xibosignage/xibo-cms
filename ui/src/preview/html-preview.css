@@ -26,7 +26,7 @@ div.preview-screen {
 /* Style the Splash Screen */
 div.preview-splash {
     height: 100%;
-    background:#000000 url('../img/xibologo.png') no-repeat center center;
+    background:#000000 url('../preview/img/xibologo.png') no-repeat center center;
     background-size: 50%;
 }
 
@@ -36,7 +36,7 @@ div.preview-loader {
     position: relative;
     margin:0 auto;
     top: 80%;
-    background:#000000 url('../img/loader.gif') no-repeat center center;
+    background:#000000 url('../preview/img/loader.gif') no-repeat center center;
     background-size: 100%;
 }
 

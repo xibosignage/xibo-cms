@@ -10,6 +10,7 @@
 let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
+    this.type = 'region';
 
     this.playlists = data.regionPlaylist;
 
@@ -17,7 +18,7 @@ let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
     this.selected = false;
     this.loop = false; // Loop region widgets
 
-    this.createdRegion = false; // user created region
+    this.isEmpty = true; // If the region has widgets or not
 
     // widget structure
     this.widgets = {};

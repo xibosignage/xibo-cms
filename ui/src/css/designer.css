@@ -14,11 +14,17 @@
     overflow: auto;
 }
 
-#layout-editor #layout-timeline .region {
-    background: cadetblue;
+#layout-editor #layout-timeline .designer-region {
+    background: #5f75a5;
     height: 40px;
     padding: 3px;
     margin: 4px 0;
+}
+
+#layout-editor #layout-timeline .designer-region .message {
+    color: white;
+    font-weight: bold;
+    padding: 7px;
 }
 
 #layout-editor #layout-timeline #labels-container {
@@ -42,16 +48,20 @@
     color: white;
 }
 
-#layout-editor #layout-timeline .widget {
+#layout-editor #layout-timeline .designer-widget {
+    background: #f1f1f1;
     color: #222;
     font-weight: bold;
     float: left;
+    padding: 6px;
     height: 100%;
+    border-radius: 4px;
+    border: 1px solid #868686;
 }
 
-#layout-editor #layout-timeline .widget-ghost {
+#layout-editor #layout-timeline .designer-widget-ghost {
     background: #f3f3f370;
-    color: #999;
+    color: #fff;
     font-weight: bold;
     float: left;
     height: 100%;
@@ -83,12 +93,37 @@
     background: #5f75a5;
 }
 
+#layout-editor #layout-viewer.fullscreen {
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(35, 35, 35, 0.9); /* Black w/ opacity */
+}
+
 #layout-editor #layout-viewer .viewer-element {
     position:relative;
     background: #ffffff3b;
 }
 
-#layout-editor #layout-viewer .empty {
+#layout-editor #layout-viewer .layout-player {
+    background: #000000;
+}
+
+#layout-editor #layout-viewer .top-right-btn {
+right: 0;
+    padding: 10px 20px;
+    position: absolute;
+    font-size: 25px;
+    color: #e0e0e0;
+    z-index: 1;
+}
+
+#layout-editor #layout-viewer .center-msg {
     position: relative;
     text-align: center;
     font-size: 20px;
@@ -98,11 +133,31 @@
     transform: translateY(-50%);
 }
 
+#layout-editor #layout-viewer #play-btn {
+    font-size: 70px;
+    color: #dddddd;
+    text-shadow: 0px 0px 5px #5c5c5c;
+}
+
+#layout-editor #layout-viewer #play-btn:hover {
+    font-size: 70px;
+    color: #f0f0f0;
+    text-shadow: 0px 0px 25px #ffffff;
+}
+
 #layout-editor #layout-viewer-navbar nav {
     background:#444;
     padding: 4px;
     overflow: auto;
     margin-top: 5px;
+}
+
+#layout-editor #layout-viewer-navbar .designer-region {
+    background:#365aa5;
+}
+
+#layout-editor #layout-viewer-navbar .designer-widget {
+    background:#9cce63;
 }
 
 #layout-editor #layout-viewer-navbar nav .info {
@@ -193,18 +248,24 @@
     user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
-#layout-editor #layout-navigator .region.selectable:hover,
-#layout-editor .widget.selectable:hover {
-    background: #cfcfcf !important;
+#layout-editor .designer-region.selectable:hover {
+    background: #9ebcf8 !important;
 }
 
-#layout-editor .region.selected-region,
-#layout-editor #layout-timeline .region.selected-region {
+#layout-editor #layout-timeline .designer-region.selectable:hover {
+    background: #9ebcf8 !important;
+}
+
+#layout-editor #layout-timeline .designer-widget.selectable:hover {
+    background: #c6ee99 !important;
+}
+
+#layout-editor .designer-region.selected-region {
     background: #1358e5 !important;
 }
 
-#layout-editor .region.selected-widget,
-#layout-editor .widget.selected-widget {
+#layout-editor #layout-navigator .designer-region.selected-widget,
+#layout-editor .designer-widget.selected-widget {
     background: #8bc34a !important;
 }
 
@@ -261,14 +322,60 @@
 
 /* Loading Container */
 #layout-editor .loading-container {
-    position: relative;
-    min-height: inherit;
+    height: 100%;
+    width: 100%;
+    position: absolute;
 }
 
-#layout-editor .loading-container i {
-    position: absolute;
+#layout-editor .loading-container .loading-icon {
+    position: relative;
+    text-align: center;
     top: 50%;
-    left: 50%;
-    font-size: 50px;
-    margin: -25px;
+    transform: translateY(-50%);
+    font-size: 75px;
+    color: #ffffff;
+    z-index: 0;
+}
+
+@media (max-width: 768px) {
+    #layout-editor #bottom-toolbar {
+        padding: 5px 0 0 5px;
+    }
+}
+
+/* Properties Panel */
+#layout-manager {
+    left: 0;
+    z-index: 1;
+    position: fixed;
+    top: 0;
+    width: 15%;
+    opacity: 0.95;
+}
+
+#layout-manager #layout-manager-header {
+    background: #2d2d2d;
+    color: white;
+    font-weight: bold;
+    padding: 5px;
+    border: #212121 3px solid;
+}
+
+#layout-manager #layout-manager-container {
+    display: grid;
+    grid-template-columns: auto;
+    grid-gap: 2px;
+    color: #444;
+    padding: 2px;
+}
+
+#layout-manager .change {
+    color: black;
+    background-color: #c3c3c3;
+    border-radius: 2px;
+    padding: 2px;
+}
+
+#layout-manager .change.uploaded {
+    background-color: #8dffa6;
 }

@@ -79,6 +79,9 @@ Layout.prototype.createDataStructure = function(data) {
             // Add newWidget to the Region widget object
             newRegion.widgets[newWidget.id] = newWidget;
 
+            // Mark the region as not empty
+            newRegion.isEmpty = false;
+
             // increase region Duration
             regionDuration += newWidget.getDuration();
         }
