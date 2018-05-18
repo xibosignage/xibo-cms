@@ -569,6 +569,12 @@
                 // Add region button
                 $("#regionAddButton").click(function (e) {
                     e.preventDefault();
+
+                    if (!$("#layout-save-all").hasClass("disabled")) {
+                        SystemMessage(translation.savePositionsFirst, true);
+                        return;
+                    }
+
                     $.ajax({
                         type: "post",
                         url: $(this).attr("href"),
