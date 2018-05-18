@@ -158,6 +158,10 @@
                         {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
                         {{ forms.input("searchTerm", title, module.getOption("searchTerm"), helpText, "", "required") }}
 
+                        {% set title %}{% trans "Language" %}{% endset %}
+                        {% set helpText %}{% trans "Language in which tweets should be returned" %}{% endset %}
+                        {{ forms.input("language", title, module.getOption("language"), helpText) }}
+
                         {% set title %}{% trans "Type" %}{% endset %}
                         {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
                         {% set mixed %}{% trans "Mixed" %}{% endset %}

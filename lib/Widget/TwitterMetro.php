@@ -200,6 +200,7 @@ class TwitterMetro extends TwitterBase
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('searchTerm', $this->getSanitizer()->getString('searchTerm'));
+        $this->setOption('language', $this->getSanitizer()->getString('language'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
@@ -289,7 +290,7 @@ class TwitterMetro extends TwitterBase
         
         // Connect to twitter and get the twitter feed.
         /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode)));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('language') . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode)));
         $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $data = $cache->get();
@@ -306,7 +307,7 @@ class TwitterMetro extends TwitterBase
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 60)))
+            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('language'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 60)))
                 return false;
 
             // Cache it

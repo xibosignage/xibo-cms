@@ -94,13 +94,14 @@ abstract class TwitterBase extends ModuleWidget
      * Search the twitter API
      * @param $token
      * @param $term
+     * @param $language
      * @param string $resultType
      * @param string $geoCode
      * @param int $count
      * @return bool|mixed
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
+    protected function searchApi($token, $term, $language = '', $resultType = 'mixed', $geoCode = '', $count = 15)
     {
         $client = new Client($this->getConfig()->getGuzzleProxy());
 
@@ -114,6 +115,9 @@ abstract class TwitterBase extends ModuleWidget
 
         if ($geoCode != '')
             $query['geocode'] = $geoCode;
+
+        if ($language != '')
+            $query['lang'] = $language;
 
         $this->getLog()->debug('Query is: ' . json_encode($query));
 
