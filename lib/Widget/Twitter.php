@@ -345,7 +345,7 @@ class Twitter extends TwitterBase
      *  @SWG\Parameter(
      *      name="resultContent",
      *      in="formData",
-     *      description="Indented content Type, available Options: 1 - All Tweets 2 - Tweets with the text only content 3 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
+     *      description="Intended content Type, available Options: 0 - All Tweets 1 - Tweets with the text only content 2 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
      *      type="string",
      *      required=false
      *   ),
