@@ -140,6 +140,9 @@ class DisplayProfileFactory extends BaseFactory
     {
         $profiles = array();
 
+        if ($sortOrder === null)
+            $sortOrder = ['name'];
+
         try {
             $params = array();
             $select = 'SELECT displayProfileId, name, type, config, isDefault, userId ';

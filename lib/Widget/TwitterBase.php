@@ -98,13 +98,14 @@ abstract class TwitterBase extends ModuleWidget
      * @param string $geoCode
      * @param int $count
      * @return bool|mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     protected function searchApi($token, $term, $resultType = 'mixed', $geoCode = '', $count = 15)
     {
         $client = new Client($this->getConfig()->getGuzzleProxy());
 
         $query = [
-            'q' => urlencode(trim($term)),
+            'q' => trim($term),
             'result_type' => $resultType,
             'count' => $count,
             'include_entities' => true,
@@ -113,6 +114,8 @@ abstract class TwitterBase extends ModuleWidget
 
         if ($geoCode != '')
             $query['geocode'] = $geoCode;
+
+        $this->getLog()->debug('Query is: ' . json_encode($query));
 
         try {
             $request = $client->request('GET', 'https://api.twitter.com/1.1/search/tweets.json', [

@@ -211,7 +211,7 @@ class WebPage extends ModuleWidget
         if ($this->getOption('modeid') == 1)
             return $this->previewIcon();
 
-        return $this->previewAsClient($width, $height, $scaleOverride);
+        return parent::preview($width, $height, $scaleOverride);
     }
 
     /**

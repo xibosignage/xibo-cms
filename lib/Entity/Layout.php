@@ -829,7 +829,7 @@ class Layout implements \JsonSerializable
         }
 
         if ($layoutHasEmptyRegion)
-            $this->getLog()->alert('Layout has empty region');
+            $this->getLog()->alert('Layout ID ' . $this->layoutId . ' has an empty region');
 
         foreach ($this->regions as $region) {
             /* @var Region $region */

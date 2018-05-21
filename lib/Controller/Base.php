@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 use Slim\Slim;
+use Slim\Views\Twig;
 use Xibo\Entity\User;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
@@ -122,7 +123,7 @@ class Base
     /**
      * Get the App
      * @return Slim
-     * @throws \Exception
+     * @throws ConfigurationException
      */
     public function getApp()
     {
@@ -462,9 +463,12 @@ class Base
      * @param string $template
      * @param array $data
      * @return string
+     * @throws ConfigurationException
      */
     public function renderTemplateToString($template, $data)
     {
-        return $this->getApp()->view()->render($template . '.twig', $data);
+        /** @var Twig $view */
+        $view = $this->getApp()->view();
+        return $view->render($template . '.twig', $data);
     }
 }

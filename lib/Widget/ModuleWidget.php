@@ -29,6 +29,7 @@ use Stash\Item;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -1141,8 +1142,8 @@ abstract class ModuleWidget implements ModuleInterface
                     $template['fileName'] = $template['image'];
 
                     if ($loadImage) {
-                        // We ltrim this because the control is expecting a relative URL
-                        $template['image'] = ltrim($this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]), '/');
+                        // Find the URL to the module file representing this template image
+                        $template['image'] = $this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
                     }
                 } else {
                     $template['fileName'] = '';
@@ -1276,7 +1277,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getCacheKey($displayId)
     {
         // Default is the widgetId
-        return $this->getWidgetId();
+        return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
     }
 
     /** @inheritdoc */
@@ -1320,7 +1321,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function getResourceOrCache($displayId)
+    public final function getResourceOrCache($displayId, $region = null)
     {
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
 
@@ -1338,11 +1339,21 @@ abstract class ModuleWidget implements ModuleInterface
             . $this->getWidgetId()
             . DIRECTORY_SEPARATOR;
 
-        $cacheFile = $this->getCacheKey($displayId);
+        $cacheKey = $this->getCacheKey($displayId);
+
+        // If we are a non-preview, then we'd expect to be provided with a region.
+        // we use this to save a width/height aware version of this
+        if ($displayId !== 0) {
+            /** @var \Xibo\Entity\Region $region */
+            $cacheFile = $cacheKey . '_' . $region->width . '_' . $region->height;
+        } else {
+            $cacheFile = $cacheKey;
+        }
 
         $this->getLog()->debug('Cache details - modifiedDt: ' . (($modifiedDt === null) ? 'layoutDt' : $modifiedDt->format('Y-m-d H:i:s'))
             . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
             . ', cacheDuration: ' . $cacheDuration
+            . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
 
         if (!file_exists($cachePath))
@@ -1360,11 +1371,23 @@ abstract class ModuleWidget implements ModuleInterface
 
                 // We need to generate and cache this resource
                 try {
+                    // The cache has expired, so we remove all cache entries that match our cache key
+                    // including the preview (which will also be out of date)
+                    $this->getLog()->debug('Deleting old cache for this cache key: ' . $cacheKey);
+
+                    foreach (glob($cachePath . $cacheKey . '*') as $fileName) {
+                        unlink($fileName);
+                    }
+
                     // Clear the resources widget content
                     $this->clearMedia();
 
                     // Generate the resource
                     $resource = $this->getResource($displayId);
+
+                    // If the resource is false, then don't cache it for as long (most likely an error)
+                    if ($resource === false)
+                        throw new XiboException('GetResource generated FALSE');
 
                     // Cache to the library
                     $hash = null;
@@ -1392,6 +1415,16 @@ abstract class ModuleWidget implements ModuleInterface
 
                     $this->getLog()->debug('Regenerate complete');
 
+                } catch (ConfigurationException $configurationException) {
+                    // If we have something wrong with the module and we are in the preview, then we should present the error
+                    // on screen
+                    if ($displayId === 0) {
+                        throw $configurationException;
+                    } else {
+                        // Don't cache, just log
+                        $this->getLog()->error('Configuration error with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $configurationException->getMessage());
+                    }
+
                 } catch (\Exception $e) {
                     $this->getLog()->error('Problem with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $e->getMessage());
                     $this->getLog()->debug($e->getTraceAsString());
@@ -1412,6 +1445,22 @@ abstract class ModuleWidget implements ModuleInterface
             }
         } else {
             $resource = file_get_contents($cachePath . $cacheFile);
+        }
+
+        // If we are the preview, then we should look at updating the preview width, height and scale_override with
+        // the ones we've been given
+        // this is a workaround to making the cache key aware of the below parameters, which would create a new cache
+        // file each and every time the region changed size.
+        if ($displayId == 0) {
+            // Support keyword replacement and parsing for known combinations of these in existing widgets
+            // (for backwards compatibility)
+            $previewWidth = $this->getSanitizer()->getDouble('width', 0);
+            $previewHeight = $this->getSanitizer()->getDouble('height', 0);
+            $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
+
+            $resource = preg_replace('/"previewWidth":([-+]?[0-9]*\.?[0-9]+)/', '"previewWidth":' . $previewWidth, $resource);
+            $resource = preg_replace('/"previewHeight":([-+]?[0-9]*\.?[0-9]+)/', '"previewHeight":' . $previewHeight, $resource);
+            $resource = preg_replace('/"scaleOverride":([-+]?[0-9]*\.?[0-9]+)/', '"scaleOverride":' . $scaleOverride, $resource);
         }
 
         // Return the resource

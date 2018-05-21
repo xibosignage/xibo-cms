@@ -24,6 +24,7 @@ namespace Xibo\Middleware;
 
 use Slim\Middleware;
 use Xibo\Exception\TokenExpiredException;
+use Xibo\Helper\Environment;
 
 class CsrfGuard extends Middleware
 {
@@ -82,8 +83,13 @@ class CsrfGuard extends Middleware
             // Validate the token unless we are on an excluded route
             $route = $this->app->router()->getCurrentRoute()->getPattern();
 
-            if ($this->app->excludedCsrfRoutes == null || ($route != null && !in_array($route, $this->app->excludedCsrfRoutes))) {
-
+            $excludedRoutes = $this->app->excludedCsrfRoutes;
+            if (($excludedRoutes !== null && is_array($excludedRoutes) && in_array($route, $excludedRoutes))
+                || (Environment::isDevMode() && $route === '/login')
+            ) {
+                $this->app->getLog()->info('Route excluded from CSRF: ' . $route);
+            } else {
+                // Checking CSRF
                 $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
                 if ($userToken == '') {
                     $userToken = $this->app->request()->params($this->key);

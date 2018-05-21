@@ -156,6 +156,9 @@ class Widget implements \JsonSerializable
      */
     public $isNew = false;
 
+    /** @var int[] Original Module Media Ids */
+    private $originalModuleMediaIds = [];
+
     /** @var array[int] Original Media IDs */
     private $originalMediaIds = [];
 
@@ -427,16 +430,12 @@ class Widget implements \JsonSerializable
 
     /**
      * Clear Media
+     *  this must only clear module media, not "primary" media
      */
     public function clearCachedMedia()
     {
         $this->load();
-        $this->mediaIds = [];
-
-        // Add back in the audio media id's
-        foreach ($this->audio as $audio) {
-            $this->mediaIds[] = $audio->mediaId;
-        }
+        $this->mediaIds = array_values(array_diff($this->mediaIds, $this->originalModuleMediaIds));
     }
 
     /**
@@ -565,6 +564,7 @@ class Widget implements \JsonSerializable
         // Load any media assignments for this widget
         $this->mediaIds = $this->widgetMediaFactory->getByWidgetId($this->widgetId);
         $this->originalMediaIds = $this->mediaIds;
+        $this->originalModuleMediaIds = $this->widgetMediaFactory->getModuleOnlyByWidgetId($this->widgetId);
 
         // Load any widget audio assignments
         $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);

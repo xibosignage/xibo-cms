@@ -50,18 +50,15 @@
     padding: 7px 9px;
 }
 
-.modal-dialog {
-    width: 900px
+@media (min-width: 920px) {
+    .modal-dialog {
+        width: 900px;
+    }
 }
 
 /* Define some modal widths and heights */
 .modal-big .modal-dialog {
     width: 80%;
-}
-
-/* Define some modal widths and heights */
-.help-modal-big .modal-dialog {
-    height: 700px;
 }
 
 @media (max-width: 767px) {
@@ -282,13 +279,6 @@ ul.dropdown-menu-form {
 
 .page-header {
     margin: 0;
-}
-
-#new-user-welcome-carousel .carousel-caption {
-    background-color: rgba(0, 0, 0, .7);
-    border-radius: 5px;
-    top: 20px;
-    bottom: auto;
 }
 
 .display-screenshot {
@@ -940,4 +930,12 @@ ul li.active.tab-design:hover a {
 
 .template-override-controls .well {
     min-height: 100px;
+}
+
+.module-selector-well {
+    margin-bottom: 0;
+}
+
+.module-selector-well .nav>li>a {
+    padding-bottom: 5px;
 }

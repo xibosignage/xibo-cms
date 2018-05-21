@@ -20,9 +20,14 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="bandwidthFilter">
                         <form class="form-inline">
-                            {{ inline.dateMonth("bandwidthFromDt", "From Date", defaults.fromDate, "", "", "", "") }}
-                            {{ inline.dateMonth("bandwidthToDt", "To Date", defaults.toDate, "", "", "", "") }}
-                            {{ inline.dropdown("displayId", "single", "Display", "", displayFilterOptions, "displayId", "display") }}
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.dateMonth("bandwidthFromDt", title, defaults.fromDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.dateMonth("bandwidthToDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {{ inline.dropdown("displayId", "single", title, "", displayFilterOptions, "displayId", "display") }}
                         </form>
                     </div>
                 </div>

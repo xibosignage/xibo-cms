@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file (Campaign.php) is part of Xibo.
  *
