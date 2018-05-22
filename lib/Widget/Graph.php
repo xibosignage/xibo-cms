@@ -38,9 +38,10 @@ use Xibo\Factory\ModuleFactory;
 
 class Graph extends ModuleWidget
 {
-    const DEFAULT_COLORS = '#7293CB, #E1974C, #84BA5B, #D35E60, #808585, #9067A7, #AB6857, #CCC210, #396AB1, #DA7C30, #3E9651, #CC2529, #535154, #6B4C9A, #922428, #948B3D';
     const SERIES_IDENTIFIER_SEPARATOR = ': ';
-    
+    private static $defaultColors = ['#7293CB', '#E1974C', '#84BA5B', '#D35E60', '#808585', '#9067A7', '#AB6857', '#CCC210',
+        '#396AB1', '#DA7C30', '#3E9651', '#CC2529', '#535154', '#6B4C9A', '#922428', '#948B3D'];
+
     public $codeSchemaVersion = 1;
 
     /**
@@ -85,17 +86,15 @@ class Graph extends ModuleWidget
     }
 
     /**
-     * Install all Javascript-Files provided by Graph
+     * @inheritdoc
+     * @override
      */
     public function installFiles()
     {
-        $sourcePath = PROJECT_ROOT . '/modules/vendor/rgraph/';
-        $dir = opendir($sourcePath);
-        while ($dir && ($file = readdir($dir)) !== false) {
-            if (substr($file, -3) == '.js') {
-                $this->mediaFactory->createModuleSystemFile($sourcePath . $file)->save();
-            }
-        }
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/Chart.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -303,11 +302,10 @@ class Graph extends ModuleWidget
 
     /**
      * @inheritdoc
+     * @override
      */
     public function getResource($displayId = 0)
     {
-        $data = [];
-        $graphOptions = [];
         $containerId = 'graph-' . $displayId;
 
         $this->getLog()->debug('Render graph for widgetId: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
@@ -318,7 +316,6 @@ class Graph extends ModuleWidget
         // Options XIBO needs for rendering - see JavaScript at the end of this function
         $options = array(
             'type' => $this->getModuleType(),
-            'speed' => $this->getOption('speed', 500),
             'useDuration' => $this->getUseDuration(),
             'duration' => $this->getDuration(),
             'originalWidth' => $this->region->width,
@@ -328,199 +325,62 @@ class Graph extends ModuleWidget
             'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
         );
 
-        // Head Content contains all needed scrips from Graph
-        $data['head']  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.core.js') . '"></script>';
-        $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.dynamic.js') . '"></script>';
-        $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.common.effects.js') . '"></script>';
-
-        // Options for the rendering.
-        // May be overridden by the various chart types
-        // TODO: In future releases this options may be configured by the user
-        $graphOptions['shadowBlur'] = '5';
-        $graphOptions['shadowOffsetX'] = '10';
-        $graphOptions['shadowOffsetY'] = '10';
-        $graphOptions['shadowColor'] = '#aaa';
-        
-        // Processing dependent on the Graph Type
-        switch ($this->getOption('graphType')) {
-            case 'donut_chart':
-                // Fall through on purpose
-                $graphOptions['variant'] = 'donut';
-            case 'pie_chart':
-                $jsObject = 'RGraph.Pie';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.pie.js') . '"></script>';
-
-                $graphOptions['exploded'] = '10';
-
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph();
-                break;
-
-            case 'bar_chart':
-                $jsObject = 'RGraph.Bar';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.bar.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph(true);
-                break;
-
-            case 'horizontal_bar_chart':
-                $jsObject = 'RGraph.HBar';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.hbar.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph(true);
-                break;
-
-            case 'waterfall_chart':
-                $jsObject = 'RGraph.Waterfall';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.waterfall.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph();
-                break;
-
-            case 'vertical_progress':
-                $jsObject = 'RGraph.VProgress';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.vprogress.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph();
-                $graphOptions['min'] = '0';
-                $graphOptions['max'] = '100';
-                break;
-
-            case 'horizontal_progress':
-                $jsObject = 'RGraph.HProgress';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.hprogress.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph();
-                $graphOptions['min'] = '0';
-                $graphOptions['max'] = '100';
-                break;
-
-            case 'radar_chart':
-                $jsObject = 'RGraph.Radar';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.radar.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph();
-                break;
-
-            case 'line_chart':
-            default:
-                $jsObject = 'RGraph.Line';
-                $data['head'] .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/rgraph/RGraph.line.js') . '"></script>';
-                // Get the graph data
-                $graphData = $this->getDataSetContentForRGraph();
-                break;
-        }
-
-        $data['head'] .= '
-            <style type="text/css">
-                .graphLegend { 
-                    position:absolute;
-                    display:inline-block;
-                    z-index:9999;
-                    text-align:left;
-                    border: 1px solid #ddd; 
-                    box-shadow: 1px 1px 2px #ccc;
-                    padding:0.5em 0.8em;
-                    line-height:1.8em; 
-                } 
-                .graphLegend div { 
-                    font-weight:bold; 
-                } 
-                .legendWrapper { 
-                    width:100%;
-                    top:0;
-                    left:0;
-                    text-align:center; 
-                }
-            </style>';
-
         // Background for the Graph and the legend
         $backgroundColor = $this->getOption('backgroundColor');
         $backgroundColor = ($backgroundColor == '') ? '' : 'background-color: ' . $backgroundColor . ';';
-        
-        // Preparing the Legend
-        $legend = '';
-        $javaScriptLegend = '';
-        if (((int)$this->getOption('showLegend') > 0) && !empty($graphData->legend)) {
-            $legendStyle = '';
-            
-            // Horizontal alignment
-            if ($this->getOption('legendRight') == 1) {
-                $legendStyle .= 'right:' . $this->getOption('legendX') . 'px;';
-            } else if ($this->getOption('legendCenter') == 0) {
-                $legendStyle .= 'left:' . $this->getOption('legendX') . 'px;';
-            }
-            
-            // Vertical alignment
-            if ($this->getOption('legendBottom') == 1) {
-                $legendStyle .= 'bottom:' . $this->getOption('legendY') . 'px;';
-            } else {
-                $legendStyle .= 'top:' . $this->getOption('legendY') . 'px;';
-            }
-            $legend = '<div id="' . $containerId . '_legend" class="graphLegend" style="' . $legendStyle . ';' . $backgroundColor . '"></div>';
-            
-            if ($this->getOption('legendCenter') == 1) {
-                $legend = '<div class="legendWrapper">' . $legend . '</div>';
-            }
-            
-            $javaScriptLegend = '
-                  if (typeof data.legend == "object") {
-                      for (var i = 0; i < data.legend.length; i++) {
-                          $("#' . $containerId . '_legend").append("<div style=\'color:" + graphOptions.colors[i%graphOptions.colors.length] + ";\'>" + data.legend[i] + "</div>");
-                      }
-                  }';
-        }
 
         // Body content
         $data['body'] = '
             <div id="' . $containerId . '" style="' . $backgroundColor . '">
-                <canvas id="' . $containerId . '_graph" width="' . $this->region->width . '" height="' . $this->region->height . '" style="border: 1px solid #ddd; box-shadow: 1px 1px 2px #ccc">[No Canvas support]</canvas>
-            ' . $legend . '
+                <canvas id="' . $containerId . '_graph" width="' . $this->region->width . '" height="' . $this->region->height . '">
+                    [No Canvas support]
+                </canvas>
             </div>
         ';
 
-        if (!empty($graphData->data)) {
-            // After body content - mostly XIBO-Stuff for scaling and so on
-            $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        // After body content - mostly XIBO-Stuff for scaling and so on
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/Chart.min.js') . '"></script>';
 
-            // Add all Chart Javascript
-            $javaScriptContent .= '<script>
-              $(document).ready(function() {
-                  var options = ' . json_encode($options) . '
-                  $("#' . $containerId . '").xiboLayoutScaler(options);
+        // Get data
+        $chartData = $this->getChartConfig();
+        $chartData->type = $this->getOption('graphType');
 
-                  var graphOptions = ' . json_encode((object)$graphOptions) . ';
-                  graphOptions.colors = ["' . str_replace(',', '","', $this->getOption('defaultColors', self::DEFAULT_COLORS)) . '"];
-
-                  var data = ' . json_encode($graphData) . ';
-                  ' . $javaScriptLegend . '
-                  graphOptions.xaxisLabels = data.labels;
-                  graphOptions.yaxisLabels = data.labels;
-                  graphOptions.labels = data.labels;
-                  graphOptions.title = "' . $this->getOption('name') . '";
-
-                  new ' . $jsObject . '({
-                      id: "' . $containerId . '_graph",
-                      data: data.data,
-                      options: graphOptions
-                  }).draw();
-              });</script>';
-
-            // Replace the After body Content
-            $data['body'] .= $javaScriptContent;
+        if ($this->getOption('showLegend') !== '1') {
+            $chartData->options = new \stdClass();
+            $chartData->options->legend = new \stdClass();
+            $chartData->options->legend->display = false;
         }
+
+        $this->getLog()->debug(json_encode($chartData, JSON_PRETTY_PRINT));
+
+        // Add all Chart Javascript
+        $javaScriptContent .= '<script>
+            $(document).ready(function() {                
+                var ctx = document.getElementById("' . $containerId . '_graph");
+                var chart = new Chart(ctx, ' . json_encode($chartData) . ');
+                
+                // Scale the Layout after rendering
+                $("#' . $containerId . '").xiboLayoutScaler(' . json_encode($options) . ');
+            });</script>
+        ';
+
+        // Replace the After body Content
+        $data['body'] .= $javaScriptContent;
 
         return $this->renderTemplate($data);
     }
 
     /**
      * Load all possible Columns and data from the selected DataSet
-     * @param $grouped bool Should the results be grouped
-     * @return Object { data: [], labels: [], series: [], legend: [] }
+     * @return Object { data: { datasets: [], labels: [] } }
+     * @throws NotFoundException
      */
-    protected function getDataSetContentForRGraph($grouped = false)
+    protected function getChartConfig()
     {
+        $chartType = $this->getOption('graphType');
         $xAxis = $this->getColumnType('x-axis');
         $yAxis = $this->getColumnType('y-axis');
         $seriesIdentifier = $this->getColumnType('series-identifier');
@@ -544,130 +404,98 @@ class Graph extends ModuleWidget
 
         // Create an object we json_encode into the HTML for this RGraph
         $graphData = new \stdClass();
-        $graphData->data = [];
-        $graphData->labels = [];
-        $graphData->legend = [];
-        
-        try {
-            $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
+        $graphData->data = new \stdClass();
+        $graphData->data->datasets = [];
+        $graphData->data->labels = [];
 
-            // Pull out the Data
-            $results = $dataSet->getData($queryOptions, ['requireTotal' => false]);
+        // Get the DataSet
+        $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
 
-            // transform the query results into the data array expected by r-graph
-            $data = [];
+        // Pull out the Data
+        $results = $dataSet->getData($queryOptions, ['requireTotal' => false]);
 
-            // Build an array keyed by the x-axis value configured
-            foreach ($results as $row) {
-                $data[$row[$xAxis]][] = $row;
-            }
+        // transform the query results into the data array expected by r-graph
+        $data = [];
 
-            $this->getLog()->debug(json_encode($data, JSON_PRETTY_PRINT));
+        // Build an array keyed by the x-axis value configured
+        foreach ($results as $row) {
+            $data[$row[$xAxis]][] = $row;
+        }
 
-            // Set our labels to be our x-axis keys
-            $graphData->labels = array_keys($data);
+        $this->getLog()->debug(json_encode($data, JSON_PRETTY_PRINT));
 
-            // Set our legend to be the y-axis names
-            // (we might override this when we come to fill out the data)
-            $graphData->legend = $yAxis;
+        // Set our labels to be our x-axis keys
+        $graphData->data->labels = array_keys($data);
 
-            // Each key should give us a "value" (perhaps an array) to add to the data array
-            // we should consider each y-axis when we do this
-            // Line chart: [ y1:[x1, x2, x3], y2:[x1, x2, x3] ]
-            // Bar chart: [ x1:[y1, y2], x2: [y1, y2], x3: [y1, y2] ]
-            $axisData = [];
+        // Calculate a DataSet for each x-axis that has been provided, taking care to enumerate through any
+        // series identifiers that have also been provided.
+        // we aggregate out duplicate keys
+        $axisData = [];
 
-            if (!$grouped) {
-                // Reset the legend if we have a series identifier (because we will have a legend item per series)
-                if ($seriesIdentifier !== null) {
-                    $graphData->legend = [];
-                }
+        // Process each Y-Axis, adding a new point per X
+        foreach ($yAxis as $axis) {
+            $axisDataTemp = [];
 
-                // Process each Y-Axis, adding a new point per X
-                foreach ($yAxis as $axis) {
-                    $axisDataTemp = [];
-
-                    foreach ($data as $key => $rows) {
-                        foreach ($rows as $row) {
-                            // If we have a series identifier, do this one time for each
-                            if ($seriesIdentifier !== null) {
-                                foreach ($seriesIdentifier as $identifier) {
-                                    // Keep track of the axis we're on
-                                    $axisDataTemp[$row[$identifier]][$key] = (isset($axisDataTemp[$row[$identifier]][$key])) ? $axisDataTemp[$row[$identifier]][$key] + $row[$axis] : $row[$axis];
-                                }
-                            } else {
-                                // Keep track of the axis we're on
-                                $axisDataTemp[$key] = (isset($axisDataTemp[$key])) ? $axisDataTemp[$key] + $row[$axis] : $row[$axis];
-                            }
-                        }
-                    }
-
-                    $this->getLog()->debug('Axis Data Temp is: ' . json_encode($axisDataTemp, JSON_PRETTY_PRINT));
-
-                    // We should have an array of data points for the first Y-axis on each X-Axis
-                    // e.g. for y1 [x1, x2, x3]
+            foreach ($data as $key => $rows) {
+                foreach ($rows as $row) {
+                    // If we have a series identifier, do this one time for each
                     if ($seriesIdentifier !== null) {
-                        // Split by series
-                        foreach ($axisDataTemp as $key => $value) {
-                            // Output the keys as the legend
-                            $graphData->legend[] = $key . self::SERIES_IDENTIFIER_SEPARATOR . $axis;
-
-                            // Values
-                            $axisData[] = array_values($value);
+                        foreach ($seriesIdentifier as $identifier) {
+                            // Keep track of the axis we're on
+                            $axisDataTemp[$row[$identifier]][$key] = (isset($axisDataTemp[$row[$identifier]][$key])) ? $axisDataTemp[$row[$identifier]][$key] + $row[$axis] : $row[$axis];
                         }
                     } else {
-                        $axisData[] = array_values($axisDataTemp);
+                        // Keep track of the axis we're on
+                        $axisDataTemp[$key] = (isset($axisDataTemp[$key])) ? $axisDataTemp[$key] + $row[$axis] : $row[$axis];
                     }
-                }
-            } else {
-                $alternateLegend = [];
-
-                foreach ($data as $key => $rows) {
-                    // This happens for each x-axis
-                    // for every y axis we've configured, go through the rows for this x-axis and work out
-                    // what the value should be.
-                    $axisDataTemp = [];
-                    foreach ($yAxis as $axis) {
-                        // We should keep a SUM for each yAxis
-                        foreach ($rows as $row) {
-                            if ($seriesIdentifier !== null) {
-                                // We want a SUM for each series identifier within this axis
-                                foreach ($seriesIdentifier as $identifier) {
-                                    // Keep track of the axis we're on
-                                    $axisDataTemp[$axis . $row[$identifier]] = (isset($axisDataTemp[$axis . $row[$identifier]])) ? $axisDataTemp[$axis . $row[$identifier]] + $row[$axis] : $row[$axis];
-
-                                    // Make use of this logic to maintain an alternative legend
-                                    if (!in_array($row[$identifier], $alternateLegend))
-                                        $alternateLegend[] = $row[$identifier];
-                                }
-                            } else {
-                                $axisDataTemp[$axis] = (isset($axisDataTemp[$axis])) ? $axisDataTemp[$axis] + $row[$axis] : $row[$axis];
-                            }
-                        }
-                    }
-
-                    $this->getLog()->debug('Axis Data Temp is: ' . json_encode($axisDataTemp, JSON_PRETTY_PRINT));
-
-                    $axisData[] = array_values($axisDataTemp);
-                }
-
-                // Override the legend if necessary
-                if (count($alternateLegend) > 0) {
-                    $graphData->legend = $alternateLegend;
                 }
             }
 
-            $graphData->data = (count($axisData) == 1) ? $axisData[0] : $axisData;
+            $this->getLog()->debug('Axis Data Temp is: ' . json_encode($axisDataTemp, JSON_PRETTY_PRINT));
 
-            $this->getLog()->debug(json_encode($graphData, JSON_PRETTY_PRINT));
+            // We should have an array of data points for the first Y-axis on each X-Axis
+            // e.g. for y1 [x1, x2, x3]
+            if ($seriesIdentifier !== null) {
+                // Split by series
+                foreach ($axisDataTemp as $key => $value) {
+                    // Values
+                    $temp = [
+                        'label' => $key,
+                        'data' => array_values($value)
+                    ];
 
+                    // Special handling for colors
+                    if ($chartType === 'line' || $chartType === 'radar') {
+                        $temp['borderColor'] = self::$defaultColors[count($axisData)];
+                    } else {
+                        $temp['backgroundColor'] = self::$defaultColors[count($axisData)];
+                    }
 
-        } catch (NotFoundException $e) {
-            // In case there is a DataSet to be displayed what does not exists (deleted or so)
-            $graphData->data[0][] = 0;
-            $graphData->legend[] = 'Unknown DataSet';
-            $graphData->labels[] = '';
+                    $axisData[] = $temp;
+                }
+            } else {
+                // No series identifiers
+                $temp = [
+                    'label' => $axis,
+                    'data' => array_values($axisDataTemp)
+                ];
+
+                // We could consider having a "colour per bar"
+                if ($chartType === 'line' || $chartType === 'radar') {
+                    $temp['borderColor'] = self::$defaultColors[count($axisData)];
+                } else if ($chartType === 'pie' || $chartType === 'doughnut') {
+                    for ($i = 0; $i < count($axisDataTemp); $i++) {
+                        $temp['backgroundColor'][] = self::$defaultColors[$i];
+                    }
+                } else {
+                    $temp['backgroundColor'] = self::$defaultColors[count($axisData)];
+                }
+
+                $axisData[] = $temp;
+            }
         }
+
+        $graphData->data->datasets = $axisData;
 
         return $graphData;
     }
@@ -685,7 +513,27 @@ class Graph extends ModuleWidget
      */
     public function getModifiedDate($displayId)
     {
+        // TODO: this is only here for testing
         return Date::now();
+
+        $widgetModifiedDt = null;
+
+        $dataSetId = $this->getOption('dataSetId');
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        // Set the timestamp
+        $widgetModifiedDt = $dataSet->lastDataEdit;
+
+        // Remote dataSets are kept "active" by required files
+        if ($dataSet->isRemote) {
+            // Touch this dataSet
+            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+            $dataSetCache->set('true');
+            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+            $this->getPool()->saveDeferred($dataSetCache);
+        }
+
+        return $widgetModifiedDt;
     }
 }
 

@@ -31,8 +31,6 @@
     {% trans "Save" %}, $("#graphEditForm").submit()
 {% endblock %}
 
-{% block callBack %}graphFormSetup{% endblock %}
-
 {% block formFieldActions %}
   [
     {
@@ -81,29 +79,23 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
-                        {% set bar_chart %}{% trans "Bar chart" %}{% endset %}
-                        {% set line_chart %}{% trans "Line chart" %}{% endset %}
-                        {% set horizontal_bar_chart %}{% trans "Horizontal Bar Chart" %}{% endset %}
-                        {% set pie_chart %}{% trans "Pie Chart" %}{% endset %}
-                        {% set donut_chart %}{% trans "Donut Chart" %}{% endset %}
-                        {% set radar_chart %}{% trans "Radar Chart" %}{% endset %}
-                        {% set vertical_progress %}{% trans "Vertical Progress Chart" %}{% endset %}
-                        {% set horizontal_progress %}{% trans "Horizontal Progress Chart" %}{% endset %}
-                        {% set waterfall_chart %}{% trans "Waterfall Chart" %}{% endset %}
+                        {% set bar_chart %}{% trans "Bar" %}{% endset %}
+                        {% set line_chart %}{% trans "Line" %}{% endset %}
+                        {% set horizontal_bar_chart %}{% trans "Horizontal Bar" %}{% endset %}
+                        {% set pie_chart %}{% trans "Pie" %}{% endset %}
+                        {% set donut_chart %}{% trans "Donut" %}{% endset %}
+                        {% set radar_chart %}{% trans "Radar" %}{% endset %}
                         {% set options = [
-                            { typeid: "line_chart", type: line_chart },
-                            { typeid: "pie_chart", type: pie_chart },
-                            { typeid: "donut_chart", type: donut_chart },
-                            { typeid: "bar_chart", type: bar_chart },
-                            { typeid: "horizontal_bar_chart", type: horizontal_bar_chart },
-                            { typeid: "waterfall_chart", type: waterfall_chart },
-                            { typeid: "vertical_progress", type: vertical_progress },
-                            { typeid: "horizontal_progress", type: horizontal_progress },
-                            { typeid: "radar_chart", type: radar_chart },
+                            { typeid: "line", type: line_chart },
+                            { typeid: "bar", type: bar_chart },
+                            { typeid: "pie", type: pie_chart },
+                            { typeid: "doughnut", type: donut_chart },
+                            { typeid: "horizontalBar", type: horizontal_bar_chart },
+                            { typeid: "radar", type: radar_chart },
                         ] %}
 
-                        {% set title %}{% trans "Graph Type" %}{% endset %}
-                        {% set helpText %}{% trans "Select which type of Graph to Display." %}{% endset %}
+                        {% set title %}{% trans "Chart Type" %}{% endset %}
+                        {% set helpText %}{% trans "Select which type of chart to Display." %}{% endset %}
                         {{ forms.dropdown("graphType", "single", title, module.getOption("graphType"), options, "typeid", "type", helpText) }}
 
                         {% set message %}Configure your charts data using the selectors below. You should have at least an X and a Y axis defined.{% endset %}
@@ -121,22 +113,7 @@
 
                         {% set title %}{% trans "Show legend?" %}{% endset %}
                         {{ forms.checkbox("showLegend", title, module.getOption("showLegend")) }}
-                        
-                        {% set title %}{% trans "Horizontally centered" %}{% endset %}
-                        {% set helpText %}{% trans "Center the legend horizontally" %}{% endset %}
-                        {{ forms.checkbox("legendCenter", title, module.getOption("legendCenter"), helpText, "legendCenter") }}
-                        
-                        {% set title %}{% trans "Horizontal (in px)" %}{% endset %}
-                        {{ forms.number("legendX", title, module.getOption("legendX"), "", "legendX") }}
-                        
-                        {% set title %}{% trans "From right" %}{% endset %}
-                        {{ forms.checkbox("legendRight", title, module.getOption("legendRight"), "", "legendRight") }}
-                        
-                        {% set title %}{% trans "Vertical (in px)" %}{% endset %}
-                        {{ forms.number("legendY", title, module.getOption("legendY"), "", "legendY") }}
-                        
-                        {% set title %}{% trans "From bottom" %}{% endset %}
-                        {{ forms.checkbox("legendBottom", title, module.getOption("legendBottom"), "", "legendBottom") }}
+
                     </div>
                 </div>
             </form>
