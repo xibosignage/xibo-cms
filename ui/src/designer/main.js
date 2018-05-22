@@ -267,7 +267,7 @@ lD.renderContainer = function(container, element = {}) {
 
         // Render element if defined, layout otherwise
         if(!jQuery.isEmptyObject(element)) {
-            container.render(element);
+            container.render(element, this.layout);
         } else {
             container.render(this.layout);
         }
@@ -289,8 +289,7 @@ lD.toggleNavigatorEditing = function(enable) {
             this.designerDiv.find('#layout-navigator-edit-content'),
             {
                 edit: true,
-                editNavbar: this.designerDiv.find('#layout-navigator-edit-navbar'),
-                padding: 0.05
+                editNavbar: this.designerDiv.find('#layout-navigator-edit-navbar')
             }
         );
 

@@ -22,21 +22,12 @@ let Layout = function(id, data) {
     this.backgroundImage = data.backgroundImageId;
     this.backgroundColor = data.backgroundColor;
 
-    // Calculated properties used to render the layout inside a specific container ( navigator, navigator edit, ...)
-    this.containerProperties = {
-        width: data.width,
-        height: data.height,
-        top: 0,
-        left: 0,
-        scaleToTheOriginal: 1
-    };
-
     // Get background image if exists, if not, get the background color
-    this.backgroundCss = function() {
+    this.backgroundCss = function(width = this.width, height = this.height) {       
         if(this.backgroundImage === null) {
             return this.backgroundColor;
         } else {
-            return "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + this.containerProperties.width + "&height=" + this.containerProperties.height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
+            return "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + width + "&height=" + height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
         }
     };
 

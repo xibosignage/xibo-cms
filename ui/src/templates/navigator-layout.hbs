@@ -1,9 +1,9 @@
 <div id="{{ id }}" data-type="layout" class="layout selectable"  style="position:relative; 
-        width: {{ containerProperties.width }}px; 
-        height: {{ containerProperties.height }}px; 
-        top: {{ containerProperties.top }}px;
-        left: {{ containerProperties.left }}px;
-        background: {{ backgroundCss }};">
+        width: {{ scaledDimensions.width }}px; 
+        height: {{ scaledDimensions.height }}px; 
+        top: {{ scaledDimensions.top }}px;
+        left: {{ scaledDimensions.left }}px;
+        background: {{ calculatedBackground }};">
     <div id="regions">
         {{#each regions}}
             {{> navigator-region}}

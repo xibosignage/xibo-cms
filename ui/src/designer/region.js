@@ -33,14 +33,6 @@ let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
         left: data.left
     };
 
-    // container properties
-    this.containerProperties = {
-        width: data.width,
-        height: data.height,
-        top: data.top,
-        left: data.left
-    };
-
     /**
      * Return the value if the region is selectd or not for the CSS
      */

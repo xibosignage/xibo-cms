@@ -9,62 +9,71 @@ const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-edi
  * @param {object} container - the container to render the navigator to
  * @param {object =} [options] - Navigator options
  * @param {bool} [options.edit = false] - Edit mode enable flag
- * @param {number} [options.padding = 0.05] - Padding for the navigator
  * @param {object} [options.editNavbar = null] - Container to render the navbar
  */
-let Navigator = function(container, {edit = false, editNavbar = null, padding = 0.05} = {}) {
+let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
     this.editMode = edit;
     this.DOMObject = container;
     this.navbarContainer = editNavbar;
-    this.paddingPercentage = padding;
 };
 
 /**
  * Calculate layout values for the layout based on the scale of this container
  * @param {object} layout - object to use as base to scale to
+ * @returns {object} Object containing dimensions for the object
  */
 Navigator.prototype.scaleLayout = function(layout, container) {
 
-    //FIXME: Probably needs some refactor ( can be based on Viewer resize method )
-    
-    const layoutSizeRatio = layout.width / layout.height;
-    const containerWidth = container.width();
-    const containerHeight = container.height();
-    const containerSizeRatio = containerWidth / containerHeight;
-    const containerPadding = Math.min(containerWidth, containerHeight) * this.paddingPercentage;
+    let layoutClone = Object.assign({}, layout);
 
-    if(layoutSizeRatio > containerSizeRatio) { // If the layout W/H is bigger than the container
-        // Calculate width and height 
-        layout.containerProperties.width = Math.floor(containerWidth - (containerPadding * 2));
-        layout.containerProperties.height = Math.floor(layout.containerProperties.width / layoutSizeRatio);
+    // Get container dimensions
+    const containerDimensions = {
+        width: container.width(),
+        height: container.height()
+    };
 
-        // Calculate position of the layout
-        layout.containerProperties.left = Math.floor(containerPadding);
-        layout.containerProperties.top = Math.floor(containerHeight / 2 - layout.containerProperties.height / 2);
+    // Calculate ratio
+    const elementRatio = layoutClone.width / layoutClone.height;
+    const containerRatio = containerDimensions.width / containerDimensions.height;
 
-    } else { // If the layout W/H is smaller than the container
-        // Calculate width and height 
-        layout.containerProperties.height = Math.floor(containerHeight - (containerPadding * 2));
-        layout.containerProperties.width = Math.floor(layout.containerProperties.height * layoutSizeRatio);
+    // Create container properties object
+    layoutClone.scaledDimensions = {};
 
-        // Calculate position of the layout
-        layout.containerProperties.top = Math.floor(containerPadding);
-        layout.containerProperties.left = Math.floor(containerWidth / 2 - layout.containerProperties.width / 2);
+    // Calculate scale factor
+    if(elementRatio > containerRatio) { // element is more "landscapish" than the container
+        // Scale is calculated using width
+        layoutClone.scaledDimensions.scale = containerDimensions.width / layoutClone.width;
+    } else { // Same ratio or the container is the most "landscapish"
+        // Scale is calculated using height
+        layoutClone.scaledDimensions.scale = containerDimensions.height / layoutClone.height;
     }
 
-    // Calculate scale from the original
-    layout.containerProperties.scaleToTheOriginal = layout.containerProperties.width / layout.width;
+    // Calculate new values for the element using the scale factor
+    layoutClone.scaledDimensions.width = layoutClone.width * layoutClone.scaledDimensions.scale;
+    layoutClone.scaledDimensions.height = layoutClone.height * layoutClone.scaledDimensions.scale;
+
+    // Calculate top and left values to centre the element in the container
+    layoutClone.scaledDimensions.top = containerDimensions.height / 2 - layoutClone.scaledDimensions.height / 2;
+    layoutClone.scaledDimensions.left = containerDimensions.width / 2 - layoutClone.scaledDimensions.width / 2;
+   
+    // Get scaled background
+    layoutClone.calculatedBackground = layoutClone.backgroundCss(layoutClone.scaledDimensions.width, layoutClone.scaledDimensions.height);
 
     // Regions Scalling
-    for(let region in layout.regions) {
+    for(let region in layoutClone.regions) {
+        
+        layoutClone.regions[region].scaledDimensions = {};
+
         // Loop through the container properties and scale them according to the layout scale from the original
-        for(let property in layout.regions[region].containerProperties) {
-            if(layout.regions[region].containerProperties.hasOwnProperty(property)) {
-                layout.regions[region].containerProperties[property] = layout.regions[region].dimensions[property] * layout.containerProperties.scaleToTheOriginal;
+        for(let property in layoutClone.regions[region].dimensions) {
+            if(layoutClone.regions[region].dimensions.hasOwnProperty(property)) {
+                layoutClone.regions[region].scaledDimensions[property] = layoutClone.regions[region].dimensions[property] * layoutClone.scaledDimensions.scale;
             }
         }
 
     }
+
+    return layoutClone;
 };
 
 /**
@@ -74,10 +83,10 @@ Navigator.prototype.scaleLayout = function(layout, container) {
 Navigator.prototype.render = function(layout) {
 
     // Apply navigator scale to the layout
-    this.scaleLayout(layout, this.DOMObject);
+    const scaledLayout = this.scaleLayout(layout, this.DOMObject);
 
     // Compile layout template with data
-    const html = navigatorLayoutTemplate(layout);
+    const html = navigatorLayoutTemplate(scaledLayout);
 
     // Append layout html to the main div
     this.DOMObject.html(html);
@@ -96,7 +105,7 @@ Navigator.prototype.render = function(layout) {
     }).on("resizestop dragstop",
         function(event, ui) {
 
-            const scale = layout.containerProperties.scaleToTheOriginal;
+            const scale = scaledLayout.scaledDimensions.scale;
             
             layout.regions[$(this).attr('id')].transform(
                 {

@@ -301,23 +301,23 @@ Timeline.prototype.render = function(layout) {
         self.render(layout);
     });
     
-    // TODO: Explain this further
+    // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll($.debounce(500, function() {
 
-        /**
-         * To avoid reseting to 0 when the debounce causes the position set to fail
-         * compare regions width with the rendered value before the trigger
-        */
+        // If regions are still not rendered, leave method
         if(self.properties.scrollWidth != $(this).find("#regions").width()) {
             return;
         }
 
-        // Get new scroll position
+        // Get new scroll position ( percentage )
         const newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();
 
-        // Only render if the scroll position has been updated
+        // Render only if the scroll position has been updated ( avoiding looping when calloing .scrollLeft())
         if(self.properties.scrollPosition != newScrollPosition) {
+            // Update cached scroll position
             self.properties.scrollPosition = newScrollPosition;
+
+            // Render layout
             self.render(layout);
         }
     }));

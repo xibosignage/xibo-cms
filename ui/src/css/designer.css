@@ -90,7 +90,11 @@
 
 #layout-editor #layout-viewer {
     min-height: 450px;
-    background: #5f75a5;
+}
+
+#layout-editor .layout-viewer-border {
+    background: #000000e6;
+    position: absolute;
 }
 
 #layout-editor #layout-viewer.fullscreen {
@@ -100,14 +104,18 @@
     top: 0;
     width: 100%; /* Full width */
     height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(35, 35, 35, 0.9); /* Black w/ opacity */
 }
 
+#layout-editor #layout-viewer.viewer-outline  {
+    position: absolute;
+    color: #10c01f;
+    z-index: 0;
+}
+
 #layout-editor #layout-viewer .viewer-element {
     position:relative;
-    background: #ffffff3b;
 }
 
 #layout-editor #layout-viewer .layout-player {
@@ -206,7 +214,8 @@ right: 0;
 #layout-editor #layout-navigator {
     background: black;
     min-height: 200px;
-    padding: 0;
+    padding: 5px;
+    border: #30426a 5px solid;
 }
 
 #layout-editor #layout-navigator-edit {

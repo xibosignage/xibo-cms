@@ -22,7 +22,7 @@ let Viewer = function(container, navbarContainer) {
  * @returns {object} Object containing dimensions for the object
  */
 Viewer.prototype.scaleElement = function(element, container) {
-
+    
     // Get container dimensions
     const containerDimensions = {
         width: container.width(),
@@ -59,6 +59,9 @@ Viewer.prototype.scaleElement = function(element, container) {
     elementDimensions.top = containerDimensions.height / 2 - elementDimensions.height / 2;
     elementDimensions.left = containerDimensions.width / 2 - elementDimensions.width / 2;
 
+    // Get scaled background
+    //elementDimensions.backgroundCSS = layoutClone.backgroundCss(layoutClone.scaledDimensions.width, layoutClone.scaledDimensions.height);
+
     return elementDimensions;
 };
 
@@ -67,10 +70,14 @@ Viewer.prototype.scaleElement = function(element, container) {
  * @param {Object} element - the object to be rendered
  * @param {number=} page - page to render on the viewer, default to 1
  */
-Viewer.prototype.render = function(element, page = 1) {
+Viewer.prototype.render = function(element, layout, page = 1) {
 
     // Show loading template
     this.DOMObject.html(loadingTemplate());
+
+    // Reset container properties
+    this.DOMObject.css('background', '#111');
+    this.DOMObject.css('border', 'none');
 
     // Reset Navbar if exists
     if(this.navbarContainer != null && this.navbarContainer != undefined) {
@@ -96,7 +103,15 @@ Viewer.prototype.render = function(element, page = 1) {
             dimensions: containerDimensions
         });
 
+        // Replace container html
         this.DOMObject.html(html);
+
+        // Render background image or color to the preview
+        if(layout.backgroundImage === null) {
+            this.DOMObject.find('.viewer-element').css('background', targetElement.backgroundColor);
+        } else {
+            this.DOMObject.find('.viewer-element').css('background', "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + (layout.width * containerDimensions.scale) + "&height=" + (layout.height * containerDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
+        }
 
         // Handle play button
         this.DOMObject.find('#play-btn').click(function() {
@@ -129,14 +144,17 @@ Viewer.prototype.render = function(element, page = 1) {
                 return;
             }
 
-            // Compile layout template with data
+            // Replace container html
             const html = viewerTemplate({
                 res: res,
                 dimensions: containerDimensions
             });
 
-            // Append layout html to the main div
+            // Append layout html to the container div
             this.DOMObject.html(html);
+
+            // Calculate and render background image or color to the preview
+            this.calculateBackground(containerDimensions, targetElement, layout);
 
             // Handle fullscreen button
             this.DOMObject.find('#fs-btn').click(function() {
@@ -174,11 +192,11 @@ Viewer.prototype.renderNavbar = function(data, elementType) {
     // Paging controls
     if(data.extra && data.extra.number_items > 1) {
         this.navbarContainer.find('#left-btn').prop('disabled', (data.extra.current_item <= 1)).click(function() {
-            this.render(lD.selectedObject, data.extra.current_item - 1)
+            this.render(lD.selectedObject, lD.layout, data.extra.current_item - 1)
         }.bind(this));
 
         this.navbarContainer.find('#right-btn').prop('disabled', (data.extra.current_item >= data.extra.number_items)).click(function() {
-            this.render(lD.selectedObject, data.extra.current_item + 1)
+            this.render(lD.selectedObject, lD.layout, data.extra.current_item + 1)
         }.bind(this));
     }
 };
@@ -203,7 +221,97 @@ Viewer.prototype.playPreview = function(url, dimensions) {
  */
 Viewer.prototype.toggleFullscreen = function() {
     this.DOMObject.toggleClass('fullscreen');
-    this.render(lD.selectedObject);
+    this.render(lD.selectedObject, lD.layout);
+};
+
+/**
+ * Calculate background CSS
+ */
+Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
+
+    // Calculate element and layout dimensions scaled to the container
+    const elementScaledDimensions = {
+        top: (parseFloat(element.dimensions.top) * dimensions.scale),
+        left: (parseFloat(element.dimensions.left) * dimensions.scale),
+        width: (parseFloat(element.dimensions.width) * dimensions.scale),
+        height: (parseFloat(element.dimensions.height) * dimensions.scale)
+    };
+
+    const layoutScaledDimensions = {
+        width: layout.width * dimensions.scale,
+        height: layout.height * dimensions.scale
+    };
+
+    // Add background ( or color ) to the viewer
+    if(layout.backgroundImage === null) {
+        this.DOMObject.css('background-color', layout.backgroundColor);
+    } else {
+        this.DOMObject.css('background', "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + (layout.width * dimensions.scale) + "&height=" + (layout.height * dimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
+        this.DOMObject.css('background-color', layout.backgroundColor);
+
+        // Adjust background position
+        this.DOMObject.css('background-position-x', -elementScaledDimensions.left + 'px');
+        this.DOMObject.css('background-position-y', -elementScaledDimensions.top + 'px');
+    }
+
+    // Reset element positions (to use viewer border to position it)
+    this.DOMObject.find('.viewer-element').css('top', 0);
+    this.DOMObject.find('.viewer-element').css('left', 0);
+
+    // Draw focus area borders
+    this.DOMObject.css('border-top', dimensions.top + 'px #000a solid');
+    this.DOMObject.css('border-left', dimensions.left + 'px #000a solid');
+
+    this.DOMObject.css('border-bottom', dimensions.top + 'px #000a solid');
+    this.DOMObject.css('border-right', dimensions.left + 'px #000a solid');
+
+    // Calculate and draw layout borders ( showing layout's limits)
+    // Left border
+    if(Math.abs(elementScaledDimensions.left) < dimensions.left) {
+
+        this.DOMObject.find('#border-before').css({
+            'width': (dimensions.left - elementScaledDimensions.left),
+            'height': dimensions.height,
+            '-webkit-transform': 'translate(' + (-dimensions.left) + 'px, 0px)'
+        });
+    }
+
+    // Top border
+    if(Math.abs(elementScaledDimensions.top) < dimensions.top) {
+
+        this.DOMObject.find('#border-before').css({
+            'width': dimensions.width,
+            'height': (dimensions.top - elementScaledDimensions.top),
+            '-webkit-transform': 'translate(0px, ' + (-dimensions.top) + 'px)'
+        });
+    }
+
+    // Calculate bottom and right borders dor the element and layout
+    const elementRightBorder = elementScaledDimensions.width + elementScaledDimensions.left;
+    const elementBottomBorder = elementScaledDimensions.height + elementScaledDimensions.top;
+    const layoutRightBorder = layoutScaledDimensions.width;
+    const layoutBottomBorder = layoutScaledDimensions.height;
+
+    // Right border ( using left padding since the image is aligned )
+    if(Math.abs(layoutRightBorder - elementRightBorder) < dimensions.left) {
+
+        this.DOMObject.find('#border-after').css({
+            'width': (dimensions.left - (layoutRightBorder - elementRightBorder)),
+            'height': dimensions.height,
+            '-webkit-transform': 'translate(' + (elementScaledDimensions.width + (layoutRightBorder - elementRightBorder)) + 'px, 0px)'
+        });
+    }
+
+    // Bottom border ( using top padding since the image is aligned )
+    if(Math.abs(layoutBottomBorder - elementBottomBorder) < dimensions.top) {
+
+        this.DOMObject.find('#border-after').css({
+            'width': dimensions.width,
+            'height': (dimensions.top - (layoutBottomBorder - elementBottomBorder)),
+            '-webkit-transform': 'translate(0px, ' + (elementScaledDimensions.height + (layoutBottomBorder - elementBottomBorder)) + 'px)'
+        });
+    }
+
 };
 
 module.exports = Viewer;
