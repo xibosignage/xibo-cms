@@ -28,7 +28,7 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, graphFormSubmit()
+    {% trans "Save" %}, $("#graphEditForm").submit()
 {% endblock %}
 
 {% block formFieldActions %}
@@ -49,93 +49,20 @@
       "field": "useDuration", "trigger": "change",
       "operation": "is:checked", "value": true,
       "actions": { ".duration-fields": { "display": "block" } }
-    },
-    {
-      "field": "showLegend", "trigger": "init",
-      "operation": "is:checked", "value": false,
-      "actions": {
-        ".legendCenter": { "display": "none" },
-        ".legendX": { "display": "none" },
-        ".legendY": { "display": "none" },
-        ".legendRight": { "display": "none" },
-        ".legendBottom": { "display": "none" }
-      }
-    },{
-      "field": "showLegend", "trigger": "init",
-      "operation": "is:checked", "value": true,
-      "actions": {
-        ".legendCenter": { "display": "block" },
-        ".legendX": { "display": "block" },
-        ".legendY": { "display": "block" },
-        ".legendRight": { "display": "block" },
-        ".legendBottom": { "display": "block" }
-      }
-    },{
-      "field": "showLegend", "trigger": "change",
-      "operation": "is:checked", "value": false,
-      "actions": {
-        ".legendCenter": { "display": "none" },
-        ".legendX": { "display": "none" },
-        ".legendY": { "display": "none" },
-        ".legendRight": { "display": "none" },
-        ".legendBottom": { "display": "none" }
-      }
-    },{
-      "field": "showLegend", "trigger": "change",
-      "operation": "is:checked", "value": true,
-      "actions": {
-        ".legendCenter": { "display": "block" },
-        ".legendX": { "display": "block" },
-        ".legendY": { "display": "block" },
-        ".legendRight": { "display": "block" },
-        ".legendBottom": { "display": "block" }
-      }
-    },
-    {
-      "field": "legendCenter", "trigger": "init",
-      "operation": "is:checked", "value": true,
-      "actions": {
-        ".legendX": { "display": "none" },
-        ".legendRight": { "display": "none" }
-      }
-    },{
-      "field": "legendCenter", "trigger": "init",
-      "operation": "is:checked", "value": false,
-      "actions": {
-        ".legendX": { "display": "block" },
-        ".legendRight": { "display": "block" }
-      }
-    },{
-      "field": "legendCenter", "trigger": "change",
-      "operation": "is:checked", "value": true,
-      "actions": {
-        ".legendX": { "display": "none" },
-        ".legendRight": { "display": "none" }
-      }
-    },{
-      "field": "legendCenter", "trigger": "change",
-      "operation": "is:checked", "value": false,
-      "actions": {
-        ".legendX": { "display": "block" },
-        ".legendRight": { "display": "block" }
-      }
     }
   ]
 {% endblock %}
 
 {% block callBack %}graphFormSetup{% endblock %}
 
-{% block extra %}{{ {
-  "fetch": urlFor('module.widget.tab.form', {id: module.widget.widgetId, tab: 'columns'})
-}|json_encode|raw }}{% endblock %}
+{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#dataset" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "Data" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li><a href="#formatting" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
             </ul>
             <form id="graphEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
@@ -151,12 +78,7 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
-                        
-                        {% set title %}{% trans "Background Color" %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), "", "background-color-group") }}
-                    </div>
-                    
-                    <div class="tab-pane" id="dataset">
+
                         {% set bar_chart %}{% trans "Bar chart" %}{% endset %}
                         {% set line_chart %}{% trans "Line chart" %}{% endset %}
                         {% set horizontal_bar_chart %}{% trans "Horizontal Bar Chart" %}{% endset %}
@@ -167,65 +89,36 @@
                         {% set horizontal_progress %}{% trans "Horizontal Progress Chart" %}{% endset %}
                         {% set waterfall_chart %}{% trans "Waterfall Chart" %}{% endset %}
                         {% set options = [
-                        { typeid: "line_chart", type: line_chart },
-                        { typeid: "pie_chart", type: pie_chart },
-                        { typeid: "donut_chart", type: donut_chart },
-                        { typeid: "bar_chart", type: bar_chart },
-                        { typeid: "horizontal_bar_chart", type: horizontal_bar_chart },
-                        { typeid: "waterfall_chart", type: waterfall_chart },
-                        { typeid: "vertical_progress", type: vertical_progress },
-                        { typeid: "horizontal_progress", type: horizontal_progress },
-                        { typeid: "radar_chart", type: radar_chart },
+                            { typeid: "line_chart", type: line_chart },
+                            { typeid: "pie_chart", type: pie_chart },
+                            { typeid: "donut_chart", type: donut_chart },
+                            { typeid: "bar_chart", type: bar_chart },
+                            { typeid: "horizontal_bar_chart", type: horizontal_bar_chart },
+                            { typeid: "waterfall_chart", type: waterfall_chart },
+                            { typeid: "vertical_progress", type: vertical_progress },
+                            { typeid: "horizontal_progress", type: horizontal_progress },
+                            { typeid: "radar_chart", type: radar_chart },
                         ] %}
-                        
+
                         {% set title %}{% trans "Graph Type" %}{% endset %}
-                        {{ forms.dropdown("graphType", "single", title, module.getOption("graphType"), options, "typeid", "type", "") }}
-                        
-                        {% set title %}{% trans "DataSet" %}{% endset %}
-                        {{ forms.dropdown("dataSetId", "single", title, module.getOption("dataSetId"), module.dataSets(), "dataSetId", "dataSet", "", "dataset-fields") }}
-                        
-                        <hr />
-                        
-                        {% set title %}{% trans "X-Identifier" %}{% endset %}
-                        {% set helpText %}{% trans "Which column should be used for labeling the X-Axis?" %}{% endset %}
-                        {{ forms.dropdown("labelColumn", "single", title, module.getOption("labelColumn"), module.labelColumns(module.getOption("dataSetId")), "", "", helpText, "dataset-fields") }}
-                        
-                        {% set title %}{% trans "Series-Identifier" %}{% endset %}
-                        {% set helpText %}{% trans "Which column contains the identifier for showing series of data?" %}{% endset %}
-                        {{ forms.dropdown("seriesColumn", "single", title, module.getOption("seriesColumn"), module.labelColumns(module.getOption("dataSetId")), "", "", helpText, "dataset-fields") }}
-                        
-                        {% set message %}{% trans "Below you can select the columns to be shown in the graph - drag and drop to reorder and to move between lists." %}{% endset %}
+                        {% set helpText %}{% trans "Select which type of Graph to Display." %}{% endset %}
+                        {{ forms.dropdown("graphType", "single", title, module.getOption("graphType"), options, "typeid", "type", helpText) }}
+
+                        {% set message %}Configure your charts data using the selectors below. You should have at least an X and a Y axis defined.{% endset %}
                         {{ forms.message(message) }}
 
-                        {% set selected = module.selectedValueColumns(module.getOption("dataSetId")) %}
-                        {% set available = module.valueColumns(module.getOption("dataSetId"), selected) %}
-                        <div class="row">
-                            <div class="col-md-10 col-md-offset-2">
-                                <div class="connectedlist col-sm-6">
-                                    <p class="text-info">{% trans "Columns Selected" %}</p>
-                                    <ul id="columnsIn" class="connectedSortable">
-                                        {% for column in selected %}
-                                            <li id="{{ column }}" class="li-sortable">{{ column }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                <div class="connectedlist col-sm-6">
-                                    <p class="text-info">{% trans "Columns Available" %}</p>
-                                    <ul id="columnsOut" class="connectedSortable">
-                                        {% for column in available %}
-                                            <li id="{{ column }}" class="li-sortable">{{ column }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
+                        <div id="graphConfig">
+
                         </div>
-                        
                     </div>
 
-                    <div class="tab-pane" id="advanced">
+                    <div class="tab-pane" id="formatting">
+                        {% set title %}{% trans "Background Color" %}{% endset %}
+                        {% set helpText %}{% trans "Select an optional background colour to put behind the graph, leaving this blank will make the graph transparent." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+
                         {% set title %}{% trans "Show legend?" %}{% endset %}
-                        {% set helpText %}{% trans "Should a legend be shown? For the labels you may enter a special JavaScript Method below." %}{% endset %}
-                        {{ forms.checkbox("showLegend", title, module.getOption("showLegend"), helpText) }}
+                        {{ forms.checkbox("showLegend", title, module.getOption("showLegend")) }}
                         
                         {% set title %}{% trans "Horizontally centered" %}{% endset %}
                         {% set helpText %}{% trans "Center the legend horizontally" %}{% endset %}

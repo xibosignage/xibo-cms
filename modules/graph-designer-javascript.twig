@@ -1,45 +1,129 @@
+{#
+/**
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{# Define some templates #}
 {% raw %}
+    <script type="text/x-handlebars-template" id="graphConfigTemplate">
+        <div class="form-group">
+            <label class="col-sm-1 control-label" for="columnType[]">{{ title }}</label>
+            <div class="col-sm-4">
+                <label for="columnType[]">
+                <select class="form-control" name="columnType[]">
+                    {{#each columnTypeOptions}}
+                    <option value="{{ id }}" {{#if_eq id ../columnType}}selected{{/if_eq}}>{{ value }}</option>
+                    {{/each}}
+                </select>
+                </label>
+            </div>
+            <div class="col-sm-4">
+                <select class="form-control" name="dataSetColumnId[]">
+                    <option value=""></option>
+                    {{#each columns}}
+                    <option value="{{ dataSetColumnId }}" {{#if_eq dataSetColumnId ../dataSetColumnId}}selected{{/if_eq}}>{{ heading }}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="col-sm-1">
+                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+            </div>
+        </div>
+    </script>
 {% endraw %}
 
 <script type="text/javascript">
+    Handlebars.registerHelper('if_eq', function(a, b, opts) {
+        if(a == b) // Or === depending on your needs
+            return opts.fn(this);
+        else
+            return opts.inverse(this);
+    });
+
     function graphFormSetup(dialog) {
         var extra = $('.bootbox').data().extra;
-        
-        $("#columnsIn, #columnsOut").sortable({
-            connectWith: '.connectedSortable',
-            dropOnEmpty: true
-        }).disableSelection();
-        
-        $(".li-sortable", dialog).dblclick(switchLists);
-        
-        $('#dataSetId').on('change', function(e) {
-            $.ajax({
-                url: extra.fetch + '?changed=' + $(this).val(),
-                method: 'GET'
-            }).done(function(data) {
-                $("#columnsIn, #columnsOut").children().remove();
-                $(data.extra.columns).each(function(k, elem) {
-                    $('#columnsOut').append('<li id="' + elem + '" class="li-sortable">' + elem + '</li>');
-                });
-                
-                $('#labelColumn').children().remove();
-                $('#seriesColumn').children().remove();
-                $(data.extra.labels).each(function(k, elem) {
-                    $('#labelColumn').append('<option value="' + elem + '">' + elem + '</option>');
-                    $('#seriesColumn').append('<option value="' + elem + '">' + elem + '</option>');
-                });
+
+        var $graphConfig = $("#graphConfig");
+        var graphConfigTemplate = Handlebars.compile($("#graphConfigTemplate").html());
+        var columnTypeOptions = [
+            {
+                id: "x-axis",
+                value: "{% trans "X-Axis" %}"
+            },{
+                id: "y-axis",
+                value: "{% trans "Y-Axis" %}"
+            },{
+                id: "series-identifier",
+                value: "{% trans "Series Identifier" %}"
+            }
+        ];
+
+        if (dialog.data().extra.config.length === 0) {
+            // No existing config, so we add a row to our config div
+            context = {
+                columns: dialog.data().extra.columns,
+                columnTypeOptions: columnTypeOptions,
+                title: "1",
+                columnType: "",
+                dataSetColumnId: "",
+                buttonGlyph: "fa-plus"
+            };
+            $graphConfig.append(graphConfigTemplate(context));
+        } else {
+            // For each of the existing config options, create form components
+            var j = 0;
+            $.each(dialog.data().extra.config, function (index, field) {
+                j++;
+
+                var context = {
+                    columns: dialog.data().extra.columns,
+                    columnTypeOptions: columnTypeOptions,
+                    title: j,
+                    columnType: field.columnType,
+                    dataSetColumnId: field.dataSetColumnId,
+                    buttonGlyph: ((j === 1) ? "fa-plus" : "fa-minus")
+                };
+
+                $graphConfig.append(graphConfigTemplate(context));
             });
+        }
+
+        // Nabble the resulting buttons
+        $graphConfig.on("click", "button", function (e) {
+            e.preventDefault();
+
+            // find the gylph
+            if ($(this).find("i").hasClass("fa-plus")) {
+                var context = {
+                    columns: dialog.data().extra.columns,
+                    columnTypeOptions: columnTypeOptions,
+                    title: $graphConfig.find('.form-group').length + 1,
+                    columnType: "",
+                    dataSetColumnId: "",
+                    buttonGlyph: "fa-minus"
+                };
+                $graphConfig.append(graphConfigTemplate(context));
+            } else {
+                // Remove this row
+                $(this).closest(".form-group").remove();
+            }
         });
-    }
-  
-    function graphFormSubmit() {
-        // Clean the previous generated hidden columns from the form
-        var form = $("#graphEditForm");
-        form.find('input[name="columns[]"]').remove();
-        
-        $($("#columnsIn").sortable('toArray')).each(function(k, v) {
-            form.append('<input type="hidden" name="columns[]" value="' + v + '" />');
-        });
-        form.submit();
     }
 </script>
