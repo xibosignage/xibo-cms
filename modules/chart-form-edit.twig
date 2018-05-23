@@ -123,6 +123,38 @@
     ".filter-clause-field": { "display": "block" },
     "#filterClause": { "display": "none" }
     }
+    },{
+    "field": "showLegend",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "none" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "none" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "block" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "block" }
+    }
     }
   ]
 {% endblock %}
@@ -197,6 +229,21 @@
 
                         {% set title %}{% trans "Show legend?" %}{% endset %}
                         {{ forms.checkbox("showLegend", title, module.getOption("showLegend")) }}
+
+                        {% set positionTop %}{% trans "Top" %}{% endset %}
+                        {% set positionLeft %}{% trans "Left" %}{% endset %}
+                        {% set positionRight %}{% trans "Right" %}{% endset %}
+                        {% set positionBottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                            { typeid: "top", type: positionTop },
+                            { typeid: "left", type: positionLeft },
+                            { typeid: "right", type: positionRight },
+                            { typeid: "bottom", type: positionBottom },
+                        ] %}
+
+                        {% set title %}{% trans "Legend Position" %}{% endset %}
+                        {% set helpText %}{% trans "Where should the legend be positioned." %}{% endset %}
+                        {{ forms.dropdown("legendPosition", "single", title, module.getOption("legendPosition"), options, "typeid", "type", helpText, "legend-fields") }}
 
                         {% set title %}{% trans "Title" %}{% endset %}
                         {% set helpText %}{% trans "Enter a title to show on the Chart." %}{% endset %}

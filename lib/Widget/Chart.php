@@ -281,8 +281,9 @@ class Chart extends ModuleWidget
 
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
         $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
-        $this->setOption('fontSize', $this->getSanitizer()->getString('fontSize'));
+        $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
         $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
+        $this->setOption('legendPosition', $this->getSanitizer()->getString('legendPosition'));
         $this->setOption('startYAtZero', $this->getSanitizer()->getCheckbox('startYAtZero', 0));
         $this->setOption('title', $this->getSanitizer()->getString('title'));
         $this->setOption('x-axis-label', $this->getSanitizer()->getString('x-axis-label'));
@@ -568,6 +569,8 @@ class Chart extends ModuleWidget
         if ($this->getOption('showLegend') !== '1') {
             $options['legend'] = [];
             $options['legend']['display'] = false;
+        } else {
+            $options['legend']['position'] = $this->getOption('legendPosition', 'top');
         }
 
         if ($this->getOption('title') != '') {
