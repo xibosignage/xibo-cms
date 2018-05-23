@@ -779,10 +779,10 @@ class Chart extends ModuleWidget
             $moduleColors = $this->getSetting('defaultColors', []);
 
             if (count($widgetColors) > 0)
-                array_unshift($this->colorPallet, $widgetColors);
+                $this->colorPallet = array_merge($widgetColors, $this->colorPallet);
 
             if (count($moduleColors) > 0)
-                array_unshift($this->colorPallet, $moduleColors);
+                $this->colorPallet = array_merge($moduleColors, $this->colorPallet);
 
             $this->getLog()->debug('Colour pallet is ' . var_export($this->colorPallet, true));
         }
