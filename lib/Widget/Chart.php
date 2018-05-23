@@ -260,7 +260,181 @@ class Chart extends ModuleWidget
     }
 
     /**
-     * Adds a Widget
+     * Adds a Chart Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/chart/{playlistId}",
+     *  operationId="WidgetChartAdd",
+     *  tags={"widget"},
+     *  summary="Add a Chart Widget",
+     *  description="Add a new Chart Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="Create Chart Widget using provided dataSetId of an existing dataSet",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="graphType",
+     *      in="formData",
+     *      description="EDIT only - Chart Type",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="columnType",
+     *      in="formData",
+     *      description="EDIT only - Array of Column Types (x-axis, y-axis, series-identifier) to assign",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataSetColumnId",
+     *      in="formData",
+     *      description="EDIT only - Array of dataSetColumn IDs to assign",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(type="integer")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="EDIT Only - The Chart Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="EDIT Only - Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="filter",
+     *      in="formData",
+     *      description="EDIT Only - SQL clause for filter this dataSet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ordering",
+     *      in="formData",
+     *      description="EDIT Only - SQL clause for how this dataSet should be ordered",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useOrderingClause",
+     *      in="formData",
+     *      description="EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useFilteringClause",
+     *      in="formData",
+     *      description="EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="EDIT Only - Background Color",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="fontColor",
+     *      in="formData",
+     *      description="EDIT Only - Font Color",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="fontSize",
+     *      in="formData",
+     *      description="EDIT Only - Font Size",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showLegend",
+     *      in="formData",
+     *      description="EDIT Only - Should the Legend be Shown",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="legendPosition",
+     *      in="formData",
+     *      description="EDIT Only - Where should the Legend be Shown (top, left, right, bottom)",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startYAtZero",
+     *      in="formData",
+     *      description="EDIT Only - Start the Y-Axis at 0",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="title",
+     *      in="formData",
+     *      description="EDIT Only - Chart title",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="x-axis-label",
+     *      in="formData",
+     *      description="EDIT Only - Chart x-axis label",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="y-axis-label",
+     *      in="formData",
+     *      description="EDIT Only - Chart y-axis label",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
      * @override
      * @throws XiboException
      */
