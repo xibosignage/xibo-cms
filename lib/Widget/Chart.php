@@ -21,7 +21,6 @@
  */
 namespace Xibo\Widget;
 
-use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
@@ -293,7 +292,7 @@ class Chart extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
 
         $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
-
+        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
         $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
         $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
@@ -723,42 +722,6 @@ class Chart extends ModuleWidget
             'displayId' => $displayId
         ];
     }
-    
-    /** @inheritdoc */
-    public function isValid()
-    {
-        // We can be sure because every WebPlayer should render this graph corectly
-        return 1;
-    }
-
-    /**
-     * @inheritdoc
-     * @override
-     */
-    public function getModifiedDate($displayId)
-    {
-        // TODO: this is only here for testing
-        return Date::now();
-
-        $widgetModifiedDt = null;
-
-        $dataSetId = $this->getOption('dataSetId');
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
-
-        // Set the timestamp
-        $widgetModifiedDt = $dataSet->lastDataEdit;
-
-        // Remote dataSets are kept "active" by required files
-        if ($dataSet->isRemote) {
-            // Touch this dataSet
-            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
-            $dataSetCache->set('true');
-            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
-            $this->getPool()->saveDeferred($dataSetCache);
-        }
-
-        return $widgetModifiedDt;
-    }
 
     private $colorPallet = null;
 
@@ -788,6 +751,52 @@ class Chart extends ModuleWidget
         }
 
         return $this->colorPallet;
+    }
+    
+    /** @inheritdoc */
+    public function isValid()
+    {
+        // We can be sure because every WebPlayer should render this graph corectly
+        return 1;
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+    /** @inheritdoc */
+    public function getCacheKey($displayId)
+    {
+        // DataSetViews are display specific
+        return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /**
+     * @inheritdoc
+     * @override
+     */
+    public function getModifiedDate($displayId)
+    {
+        // Either the Widget Modified Date or the DataSet Edit Date, whichever happens sooner
+        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
+
+        $dataSetId = $this->getOption('dataSetId');
+        $dataSet = $this->dataSetFactory->getById($dataSetId);
+
+        // Set the timestamp
+        $widgetModifiedDt = ($dataSet->lastDataEdit > $widgetModifiedDt) ? $dataSet->lastDataEdit : $widgetModifiedDt;
+
+        // Remote dataSets are kept "active" by required files
+        if ($dataSet->isRemote) {
+            // Touch this dataSet
+            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
+            $dataSetCache->set('true');
+            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+            $this->getPool()->saveDeferred($dataSetCache);
+        }
+
+        return $widgetModifiedDt;
     }
 }
 

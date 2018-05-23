@@ -188,6 +188,10 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
                         {% set bar_chart %}{% trans "Bar" %}{% endset %}
                         {% set line_chart %}{% trans "Line" %}{% endset %}
                         {% set horizontal_bar_chart %}{% trans "Horizontal Bar" %}{% endset %}
