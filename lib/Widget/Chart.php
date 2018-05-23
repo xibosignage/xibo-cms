@@ -30,7 +30,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
-class Graph extends ModuleWidget
+class Chart extends ModuleWidget
 {
     private static $defaultColors = ['#7293CB', '#E1974C', '#84BA5B', '#D35E60', '#808585', '#9067A7', '#AB6857', '#CCC210',
         '#396AB1', '#DA7C30', '#3E9651', '#CC2529', '#535154', '#6B4C9A', '#922428', '#948B3D'];
@@ -56,9 +56,9 @@ class Graph extends ModuleWidget
         // Install
         if ($this->module == null) {
             $module = $moduleFactory->createEmpty();
-            $module->name = 'Graph';
-            $module->type = 'graph';
-            $module->class = 'Xibo\Widget\Graph';
+            $module->name = 'Chart';
+            $module->type = 'chart';
+            $module->class = 'Xibo\Widget\Chart';
             $module->description = 'Graphical data visualization';
             $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
@@ -97,7 +97,7 @@ class Graph extends ModuleWidget
      */
     public function settingsForm()
     {
-        return 'graph-form-settings';
+        return 'chart-form-settings';
     }
     
     /**
@@ -105,7 +105,7 @@ class Graph extends ModuleWidget
      */
     public function layoutDesignerJavaScript()
     {
-        return 'graph-designer-javascript';
+        return 'chart-designer-javascript';
     }
 
     /**
