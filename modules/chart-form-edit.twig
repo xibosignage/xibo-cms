@@ -169,6 +169,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#formatting" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
+                <li><a href="#colorsTab" role="tab" data-toggle="tab"><span>{% trans "Colours" %}</span></a></li>
                 <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
                 <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
@@ -260,6 +261,15 @@
                         {% set title %}{% trans "Always start the Y-Axis at 0?" %}{% endset %}
                         {{ forms.checkbox("startYAtZero", title, module.getOption("startYAtZero")) }}
 
+                    </div>
+
+                    <div class="tab-pane" id="colorsTab">
+                        {% set message %}{% trans "Add a Colour Pallet to use when drawing a charts data series. If no or too few colours are specified the default colours will be used." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="seriesColors">
+
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="orderCriteria">

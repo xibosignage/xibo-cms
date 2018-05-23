@@ -32,9 +32,6 @@ use Xibo\Factory\ModuleFactory;
 
 class Chart extends ModuleWidget
 {
-    private static $defaultColors = ['#7293CB', '#E1974C', '#84BA5B', '#D35E60', '#808585', '#9067A7', '#AB6857', '#CCC210',
-        '#396AB1', '#DA7C30', '#3E9651', '#CC2529', '#535154', '#6B4C9A', '#922428', '#948B3D'];
-
     public $codeSchemaVersion = 1;
 
     /**
@@ -115,7 +112,7 @@ class Chart extends ModuleWidget
      */
     public function settings()
     {
-        $this->module->settings['defaultColors'] = $this->getSanitizer()->getString('defaultColors', self::DEFAULT_COLORS);
+        $this->module->settings['defaultColors'] = explode(',', $this->getSanitizer()->getString('defaultColors'));
         return $this->module->settings;
     }
 
@@ -202,6 +199,15 @@ class Chart extends ModuleWidget
     }
 
     /**
+     * Get the configured colours
+     * @return array
+     */
+    public function getColors()
+    {
+        return json_decode($this->getOption('seriesColors', "[]"), true);
+    }
+
+    /**
      * Get Extra content for the form
      * @return array
      * @throws NotFoundException
@@ -210,6 +216,7 @@ class Chart extends ModuleWidget
     {
         return [
             'config' => $this->getColumnConfig(),
+            'seriesColors' => $this->getColors(),
             'orderClause' => $this->getOrderClause(),
             'filterClause' => $this->getFilterClause(),
             'columns' => $this->dataSetColumns(),
@@ -238,6 +245,14 @@ class Chart extends ModuleWidget
 
             // TODO: validate the contents of the config object to ensure we have all we need (an X and Y for example)
             switch ($this->getOption('graphType')) {
+
+                case 'pie':
+                case 'doughnut':
+                    // Make sure we have an X and a Y and nothing else
+                    if ($this->getColumnType('series-identifier') !== null)
+                        throw new InvalidArgumentException(__('This type of chart does not support a Series Identifier'), 'config');
+
+                    break;
 
                 case '':
                     throw new InvalidArgumentException(__('Please select a graph type'), 'graphType');
@@ -289,7 +304,6 @@ class Chart extends ModuleWidget
         $this->setOption('x-axis-label', $this->getSanitizer()->getString('x-axis-label'));
         $this->setOption('y-axis-label', $this->getSanitizer()->getString('y-axis-label'));
 
-
         // Handle the config
         $columnTypes = $this->getSanitizer()->getStringArray('columnType');
         $dataSetColumnIds = $this->getSanitizer()->getStringArray('dataSetColumnId');
@@ -310,6 +324,10 @@ class Chart extends ModuleWidget
         }
 
         $this->setOption('config', json_encode($config));
+
+        // Handle colours
+        $seriesColors = $this->getSanitizer()->getStringArray('seriesColor');
+        $this->setOption('seriesColors', json_encode(array_filter($seriesColors)));
 
         // Order and Filter criteria
         $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
@@ -524,9 +542,9 @@ class Chart extends ModuleWidget
 
                     // Special handling for colors
                     if ($chartType === 'line' || $chartType === 'radar') {
-                        $temp['borderColor'] = self::$defaultColors[count($axisData)];
+                        $temp['borderColor'] = $this->getColorPallet()[count($axisData)];
                     } else {
-                        $temp['backgroundColor'] = self::$defaultColors[count($axisData)];
+                        $temp['backgroundColor'] = $this->getColorPallet()[count($axisData)];
                     }
 
                     $axisData[] = $temp;
@@ -540,13 +558,13 @@ class Chart extends ModuleWidget
 
                 // We could consider having a "colour per bar"
                 if ($chartType === 'line' || $chartType === 'radar') {
-                    $temp['borderColor'] = self::$defaultColors[count($axisData)];
+                    $temp['borderColor'] = $this->getColorPallet()[count($axisData)];
                 } else if ($chartType === 'pie' || $chartType === 'doughnut') {
                     for ($i = 0; $i < count($axisDataTemp); $i++) {
-                        $temp['backgroundColor'][] = self::$defaultColors[$i];
+                        $temp['backgroundColor'][] = $this->getColorPallet()[$i];
                     }
                 } else {
-                    $temp['backgroundColor'] = self::$defaultColors[count($axisData)];
+                    $temp['backgroundColor'] = $this->getColorPallet()[count($axisData)];
                 }
 
                 $axisData[] = $temp;
@@ -564,6 +582,7 @@ class Chart extends ModuleWidget
      */
     protected function getChartOptions()
     {
+        $chartType = $this->getOption('graphType');
         $options = [];
 
         if ($this->getOption('showLegend') !== '1') {
@@ -580,30 +599,34 @@ class Chart extends ModuleWidget
             ];
         }
 
-        if ($this->getOption('x-axis-label') != '') {
-            $options['scales']['xAxes'][] = [
-                'scaleLabel' => [
+        // Axis are only applicable for charts with a cartesan axis
+        if ($chartType !== 'pie' && $chartType !== 'doughnut' && $chartType !== 'radar') {
+
+            if ($this->getOption('x-axis-label') != '') {
+                $options['scales']['xAxes'][] = [
+                    'scaleLabel' => [
+                        'display' => true,
+                        'labelString' => $this->getOption('x-axis-label')
+                    ]
+                ];
+            }
+
+            // Options effecting the Y-Axis
+            $yAxis = [];
+
+            if ($this->getOption('y-axis-label') != '') {
+                $yAxis['scaleLabel'] = [
                     'display' => true,
-                    'labelString' => $this->getOption('x-axis-label')
-                ]
-            ];
+                    'labelString' => $this->getOption('y-axis-label')
+                ];
+            }
+
+            if ($this->getOption('startYAtZero') == '1') {
+                $yAxis['ticks']['beginAtZero'] = true;
+            }
+
+            $options['scales']['yAxes'][] = $yAxis;
         }
-
-        // Options effecting the Y-Axis
-        $yAxis = [];
-
-        if ($this->getOption('y-axis-label') != '') {
-            $yAxis['scaleLabel'] = [
-                'display' => true,
-                'labelString' => $this->getOption('y-axis-label')
-            ];
-        }
-
-        if ($this->getOption('startYAtZero') == '1') {
-            $yAxis['ticks']['beginAtZero'] = true;
-        }
-
-        $options['scales']['yAxes'][] = $yAxis;
 
         return $options;
     }
@@ -735,6 +758,36 @@ class Chart extends ModuleWidget
         }
 
         return $widgetModifiedDt;
+    }
+
+    private $colorPallet = null;
+
+    /**
+     * Get Color Pallet
+     * @return array|null
+     */
+    private function getColorPallet()
+    {
+        if ($this->colorPallet === null) {
+            // Get the combination of the widget, module and default color array.
+            $this->colorPallet = [
+                '#7293CB', '#E1974C', '#84BA5B', '#D35E60', '#808585', '#9067A7', '#AB6857', '#CCC210',
+                '#396AB1', '#DA7C30', '#3E9651', '#CC2529', '#535154', '#6B4C9A', '#922428', '#948B3D'
+            ];
+
+            $widgetColors = $this->getColors();
+            $moduleColors = $this->getSetting('defaultColors', []);
+
+            if (count($widgetColors) > 0)
+                array_unshift($this->colorPallet, $widgetColors);
+
+            if (count($moduleColors) > 0)
+                array_unshift($this->colorPallet, $moduleColors);
+
+            $this->getLog()->debug('Colour pallet is ' . var_export($this->colorPallet, true));
+        }
+
+        return $this->colorPallet;
     }
 }
 

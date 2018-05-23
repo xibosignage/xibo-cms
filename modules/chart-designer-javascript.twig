@@ -47,6 +47,81 @@
             </div>
         </div>
     </script>
+    <script type="text/x-handlebars-template" id="chartSeriesColorsTemplate">
+        <div class="form-group">
+            <label class="col-sm-1 control-label" for="seriesColor[]">{{ title }}</label>
+            <div class="col-sm-4">
+                <input class="form-control color-picker" name="seriesColor[]" value="{{ color }}" />
+            </div>
+            <div class="col-sm-1">
+                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+            </div>
+        </div>
+    </script>
+    <script type="text/x-handlebars-template" id="chartOrderClauseTemplate">
+        <div class="form-group">
+            <label class="col-sm-1 control-label" for="orderClause[]">{{ title }}</label>
+            <div class="col-sm-7">
+                <select class="form-control" name="orderClause[]">
+                    <option value=""></option>
+                    {{#each columns}}
+                    <option value="{{ heading }}" {{#if_eq heading ../orderClause}}selected{{/if_eq}}>{{ heading }}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label for="orderClauseDirection[]">
+                    <select class="form-control" name="orderClauseDirection[]">
+                        <option value="ASC" {{#if orderClauseAsc}}selected{{/if}}>{{ ascTitle }}</option>
+                        <option value="DESC" {{#if orderClauseDesc}}selected{{/if}}>{{ descTitle }}</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-1">
+                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="chartFilterClauseTemplate">
+        <div class="form-group">
+            <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
+            <div class="col-sm-2">
+                <label for="filterClauseOperator[]" {{#if_eq title "1"}}class="hidden"{{/if_eq}}>
+                <select class="form-control" name="filterClauseOperator[]">
+                    {{#each filterOperatorOptions}}
+                    <option value="{{ id }}" {{#if_eq id ../filterClauseOperator}}selected{{/if_eq}}>{{ value }}</option>
+                    {{/each}}
+                </select>
+                </label>
+            </div>
+            <div class="col-sm-3">
+                <select class="form-control" name="filterClause[]">
+                    <option value=""></option>
+                    {{#each columns}}
+                    <option value="{{ heading }}" {{#if_eq heading ../filterClause}}selected{{/if_eq}}>{{ heading }}</option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label for="filterClauseCriteria[]">
+                    <select class="form-control" name="filterClauseCriteria[]">
+                        {{#each filterOptions}}
+                        <option value="{{ id }}" {{#if_eq id ../filterClauseCriteria}}selected{{/if_eq}}>{{ value }}</option>
+                        {{/each}}
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-2">
+                <label for="filterClauseValue[]">
+                    <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
+                </label>
+            </div>
+            <div class="col-sm-1">
+                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+            </div>
+        </div>
+    </script>
 {% endraw %}
 
 <script type="text/javascript">
@@ -126,13 +201,65 @@
             }
         });
 
+        // Series Colors
+        var $seriesColors = $("#seriesColors");
+        var seriesColorsTemplate = Handlebars.compile($("#chartSeriesColorsTemplate").html());
+
+        if (dialog.data().extra.seriesColors.length === 0) {
+            // No existing config, so we add a row to our config div
+            context = {
+                title: "1",
+                color: "",
+                buttonGlyph: "fa-plus"
+            };
+            $seriesColors.append(seriesColorsTemplate(context));
+
+            $seriesColors.find('.color-picker').colorpicker({format: "hex"});
+        } else {
+            // For each of the existing config options, create form components
+            var j = 0;
+            $.each(dialog.data().extra.seriesColors, function (index, field) {
+                j++;
+
+                var context = {
+                    title: j,
+                    color: field,
+                    buttonGlyph: ((j === 1) ? "fa-plus" : "fa-minus")
+                };
+
+                $seriesColors.append(seriesColorsTemplate(context));
+            });
+
+            $seriesColors.find('.color-picker').colorpicker({format: "hex"});
+        }
+
+        // Nabble the resulting buttons
+        $seriesColors.on("click", "button", function (e) {
+            e.preventDefault();
+
+            // find the gylph
+            if ($(this).find("i").hasClass("fa-plus")) {
+                var context = {
+                    title: $seriesColors.find('.form-group').length + 1,
+                    color: "",
+                    buttonGlyph: "fa-minus"
+                };
+                $seriesColors.append(seriesColorsTemplate(context));
+
+                $seriesColors.find('.color-picker').colorpicker({format: "hex"});
+            } else {
+                // Remove this row
+                $(this).closest(".form-group").remove();
+            }
+        });
+
         // Order Clause
         var orderClauseFields = $("#orderClause");
 
         if (orderClauseFields.length === 0)
             return;
 
-        var orderClauseTemplate = Handlebars.compile($("#dataSetViewOrderClauseTemplate").html());
+        var orderClauseTemplate = Handlebars.compile($("#chartOrderClauseTemplate").html());
         var ascTitle = "{% trans "Ascending" %}";
         var descTitle = "{% trans "Descending" %}";
 
@@ -172,7 +299,7 @@
         // Filter Clause
         //
         var filterClauseFields = $("#filterClause");
-        var filterClauseTemplate = Handlebars.compile($("#dataSetViewFilterClauseTemplate").html());
+        var filterClauseTemplate = Handlebars.compile($("#chartFilterClauseTemplate").html());
         var filterOptions = [
             {
                 id: "starts-with",
