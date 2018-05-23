@@ -821,7 +821,7 @@ class Ticker extends ModuleWidget
                 $client = new Client();
                 $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy([
                     'headers' => [
-                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4'
+                        'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6, application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
                     ],
                     'timeout' => 20 // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
                 ]));
@@ -832,7 +832,7 @@ class Ticker extends ModuleWidget
                 $this->getLog()->debug('Feed returned content-type ' . $contentType);
 
                 // https://github.com/xibosignage/xibo/issues/1401
-                if (stripos($contentType, 'rss') === false && stripos($contentType, 'xml') === false) {
+                if (stripos($contentType, 'rss') === false && stripos($contentType, 'xml') === false && stripos($contentType, 'text') === false && stripos($contentType, 'html') === false) {
                     // The content type isn't compatible
                     $this->getLog()->error('Incompatible content type: ' . $contentType);
                     return false;
@@ -1385,12 +1385,12 @@ class Ticker extends ModuleWidget
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($this->getOption('sourceId', 1) == 2) {
+        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2) {
             // DataSets might use Display
             return $this->getWidgetId() . '_' . $displayId;
         } else {
             // Tickers are non-display specific
-            return $this->getWidgetId();
+            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
         }
     }
 

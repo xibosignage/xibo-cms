@@ -27,29 +27,12 @@ $app->get('/', function () use ($app) {
     $user = $app->user;
     /* @var \Xibo\Entity\User $user */
 
-    if ($user->newUserWizard == 0) {
-        /** @var \Xibo\Controller\Login $controller */
-        $controller = $app->container->get('\Xibo\Controller\Login');
-        $controller->setApp($app);
-        $controller->userWelcome();
+    $app->logService->debug('Showing the homepage: %s', $user->homePageId);
 
-        // We've seen it
-        $user->newUserWizard = 1;
-        $user->save(['validate' => false, 'saveUserOptions' => false]);
-    }
-    else {
-        $app->logService->debug('Showing the homepage: %s', $user->homePageId);
+    /** @var \Xibo\Entity\Page $page */
+    $page = $app->container->get('pageFactory')->getById($user->homePageId);
 
-        /** @var \Xibo\Entity\Page $page */
-        $page = $app->container->get('pageFactory')->getById($user->homePageId);
-
-        $app->redirectTo($page->getName() . '.view');
-    }
-
-    if ($controller == null)
-        throw new InvalidArgumentException(__('Homepage not set correctly'));
-
-    $controller->render();
+    $app->redirectTo($page->getName() . '.view');
 
 })->setName('home');
 
@@ -167,7 +150,8 @@ $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLa
 // user
 //
 $app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('user.view');
-$app->get('/user/welcome', '\Xibo\Controller\Login:userWelcome')->name('welcome.wizard');
+$app->post('/user/welcome', '\Xibo\Controller\User:userWelcomeSetUnseen')->name('welcome.wizard.unseen');
+$app->put('/user/welcome', '\Xibo\Controller\User:userWelcomeSetSeen')->name('welcome.wizard.seen');
 $app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('user.applications');
 $app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->name('user.change.password.form');
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');

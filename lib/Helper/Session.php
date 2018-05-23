@@ -421,7 +421,7 @@ class Session implements \SessionHandlerInterface
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
-            'remoteaddr' => $_SERVER['REMOTE_ADDR']
+            'remoteaddr' => $this->getIp()
         ];
 
         $this->getDb()->update($sql, $params);
@@ -458,5 +458,22 @@ class Session implements \SessionHandlerInterface
         ];
 
         $this->getDb()->update($sql, $params);
+    }
+    
+    /**
+     * Get the Client IP Address
+     * @return string
+     */
+    private function getIp()
+    {
+        $clientIp = '';
+        $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
+        foreach ($keys as $key) {
+            if (isset($_SERVER[$key])) {
+                $clientIp = $_SERVER[$key];
+                break;
+            }
+        }
+        return $clientIp;
     }
 }

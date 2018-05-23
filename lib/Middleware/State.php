@@ -997,7 +997,8 @@ class State extends Middleware
                 $container->campaignFactory,
                 $container->mediaFactory,
                 $container->scheduleFactory,
-                $container->displayFactory
+                $container->displayFactory,
+                $container->sessionFactory
             );
         });
 

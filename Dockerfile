@@ -23,7 +23,11 @@ RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize
 # the next state
 RUN rm /app/composer.* && \
     rm -r /app/docker && \
-    rm .dockerignore
+    rm .dockerignore && \
+    rm package.json && \
+    rm package-lock.json && \
+    rm cypress.json && \
+    rm -r /app/cypress
 
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \
@@ -95,7 +99,7 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
     XMR_HOST=xmr \
-    CMS_DB_VERSION=139 \
+    CMS_DB_VERSION=140 \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
     MYSQL_USER=cms \

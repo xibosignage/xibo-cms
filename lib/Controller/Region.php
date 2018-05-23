@@ -231,6 +231,8 @@ class Region extends Base
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add($layoutId)
     {

@@ -107,8 +107,9 @@
 
     $(document).ready(function() {
 
-        var previewWidth = {{ previewWidth }};
-        var previewHeight = {{ previewHeight }};
+        var options = {{ options|raw }};
+        var previewWidth = options.previewWidth;
+        var previewHeight = options.previewHeight;
 
         if (previewWidth == 0 || previewHeight == 0)
             var size = Math.min($(window).width(), $(window).height());

@@ -39,6 +39,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -500,7 +501,7 @@ class Display extends Base
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]);
+                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
             // Edit and Delete buttons first
@@ -963,9 +964,6 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
-        // Track the default layout
-        $defaultLayoutId = $display->defaultLayoutId;
-
         // Update properties
         if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
             $display->display = $this->getSanitizer()->getString('display');
@@ -995,7 +993,7 @@ class Display extends Base
             $display->auditingUntil = $display->auditingUntil->format('U');
 
         // Should we invalidate this display?
-        if ($defaultLayoutId != $display->defaultLayoutId) {
+        if ($display->hasPropertyChanged('defaultLayoutId')) {
             $display->notify();
         } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
             // Remove the cache if the display licenced state has changed
@@ -1185,7 +1183,9 @@ class Display extends Base
         header("Content-Type: {$mime}");
 
         // Output a header
-        header('Cache-Control: no-cache, must-revalidate');
+        header("Cache-Control: no-store, no-cache, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
         header('Content-Length: ' . $size);
 
         // Return the file with PHP
@@ -1535,6 +1535,8 @@ class Display extends Base
 
         $display->defaultLayoutId = $layoutId;
         $display->save(['validate' => false]);
+        if ($display->hasPropertyChanged('defaultLayoutId'))
+            $display->notify();
 
         // Return
         $this->getState()->hydrate([

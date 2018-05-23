@@ -2,7 +2,7 @@
 /*
  * Spring Signage Ltd - http://www.springsignage.com
  * Copyright (C) 2017 Spring Signage Ltd
- * (Notification.php)
+ * (NotificationView.php)
  */
 
 
@@ -11,7 +11,7 @@ namespace Xibo\Widget;
 use Xibo\Factory\NotificationFactory;
 
 /**
- * Class Notification
+ * Class NotificationView
  * @package Xibo\Widget
  */
 class NotificationView extends ModuleWidget
@@ -39,7 +39,7 @@ class NotificationView extends ModuleWidget
     /**
      * Adds an Notification Widget
      * @SWG\Post(
-     *  path="/playlist/widget/notification/{playlistId}",
+     *  path="/playlist/widget/notificationview/{playlistId}",
      *  operationId="WidgetNotificationAdd",
      *  tags={"widget"},
      *  summary="Add a Notification Widget",

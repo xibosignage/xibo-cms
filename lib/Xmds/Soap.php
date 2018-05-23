@@ -644,7 +644,7 @@ class Soap
                             $file->setAttribute('layoutid', $layoutId);
                             $file->setAttribute('regionid', $region->regionId);
                             $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
+                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt->format('U') : $widgetModifiedDt->format('U')));
                             $fileElements->appendChild($file);
                         }
                     }
@@ -1595,7 +1595,7 @@ class Soap
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResourceOrCache($this->display->displayId);
+            $resource = $module->getResourceOrCache($this->display->displayId, $this->regionFactory->getById($regionId));
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
