@@ -1,29 +1,23 @@
 <?php
 /*
- * Graph Xibo Module
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  * Copyright (C) 2018 Lukas Zurschmiede
+ * Copyright (C) 2018 Spring Signage Ltd
  *
- * This Xibo-Module is free software: you can redistribute it and/or modify
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
- * This Xibo-Module is distributed in the hope that it will be useful,
+ * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with This Xibo-Module.  If not, see <http://www.gnu.org/licenses/>.
- * 
- */
-
-/**
- * This module depends on RGraph <https://www.rgraph.net/>
- * For later releases see <https://www.rgraph.net/demos/index.html#canvas>
- *  - Options for the different chart types
- *  - Effects for the different chart types
- *  - Combine multiple graphs: Line and Line, Line and Bar, Pie and Donut and Donut, ...
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
 
@@ -38,7 +32,6 @@ use Xibo\Factory\ModuleFactory;
 
 class Graph extends ModuleWidget
 {
-    const SERIES_IDENTIFIER_SEPARATOR = ': ';
     private static $defaultColors = ['#7293CB', '#E1974C', '#84BA5B', '#D35E60', '#808585', '#9067A7', '#AB6857', '#CCC210',
         '#396AB1', '#DA7C30', '#3E9651', '#CC2529', '#535154', '#6B4C9A', '#922428', '#948B3D'];
 
@@ -191,6 +184,24 @@ class Graph extends ModuleWidget
     }
 
     /**
+     * Get the Order Clause
+     * @return mixed
+     */
+    public function getOrderClause()
+    {
+        return json_decode($this->getOption('orderClauses', "[]"), true);
+    }
+
+    /**
+     * Get the Filter Clause
+     * @return mixed
+     */
+    public function getFilterClause()
+    {
+        return json_decode($this->getOption('filterClauses', "[]"), true);
+    }
+
+    /**
      * Get Extra content for the form
      * @return array
      * @throws NotFoundException
@@ -199,6 +210,8 @@ class Graph extends ModuleWidget
     {
         return [
             'config' => $this->getColumnConfig(),
+            'orderClause' => $this->getOrderClause(),
+            'filterClause' => $this->getFilterClause(),
             'columns' => $this->dataSetColumns(),
             'dataSet' => ($this->getOption('dataSetId', 0) != 0) ? $this->dataSetFactory->getById($this->getOption('dataSetId')) : null
         ];
@@ -267,12 +280,14 @@ class Graph extends ModuleWidget
         $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
 
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
+        $this->setOption('fontSize', $this->getSanitizer()->getString('fontSize'));
         $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
-        $this->setOption('legendCenter', $this->getSanitizer()->getCheckbox('legendCenter', 0));
-        $this->setOption('legendX', $this->getSanitizer()->getInt('legendX', 0));
-        $this->setOption('legendY', $this->getSanitizer()->getInt('legendY', 0));
-        $this->setOption('legendRight', $this->getSanitizer()->getCheckbox('legendRight', 0));
-        $this->setOption('legendBottom', $this->getSanitizer()->getCheckbox('legendBottom', 0));
+        $this->setOption('startYAtZero', $this->getSanitizer()->getCheckbox('startYAtZero', 0));
+        $this->setOption('title', $this->getSanitizer()->getString('title'));
+        $this->setOption('x-axis-label', $this->getSanitizer()->getString('x-axis-label'));
+        $this->setOption('y-axis-label', $this->getSanitizer()->getString('y-axis-label'));
+
 
         // Handle the config
         $columnTypes = $this->getSanitizer()->getStringArray('columnType');
@@ -294,6 +309,53 @@ class Graph extends ModuleWidget
         }
 
         $this->setOption('config', json_encode($config));
+
+        // Order and Filter criteria
+        $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
+        $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
+        $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
+        $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
+        $orderClauseMapping = [];
+
+        $i = -1;
+        foreach ($orderClauses as $orderClause) {
+            $i++;
+
+            if ($orderClause == '')
+                continue;
+
+            // Map the stop code received to the stop ref (if there is one)
+            $orderClauseMapping[] = [
+                'orderClause' => $orderClause,
+                'orderClauseDirection' => isset($orderClauseDirections[$i]) ? $orderClauseDirections[$i] : '',
+            ];
+        }
+
+        $this->setOption('orderClauses', json_encode($orderClauseMapping));
+
+        $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
+        $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
+        $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
+        $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
+        $filterClauseMapping = [];
+
+        $i = -1;
+        foreach ($filterClauses as $filterClause) {
+            $i++;
+
+            if ($filterClause == '')
+                continue;
+
+            // Map the stop code received to the stop ref (if there is one)
+            $filterClauseMapping[] = [
+                'filterClause' => $filterClause,
+                'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
+                'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
+                'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
+            ];
+        }
+
+        $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
 
         $this->validate();
@@ -345,20 +407,19 @@ class Graph extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/Chart.min.js') . '"></script>';
 
         // Get data
-        $chartData = $this->getChartConfig();
+        $chartData = $this->getChartData($displayId);
         $chartData->type = $this->getOption('graphType');
 
-        if ($this->getOption('showLegend') !== '1') {
-            $chartData->options = new \stdClass();
-            $chartData->options->legend = new \stdClass();
-            $chartData->options->legend->display = false;
-        }
+        // Do we have any chart options to take into consideration?
+        $chartData->options = $this->getChartOptions();
 
         $this->getLog()->debug(json_encode($chartData, JSON_PRETTY_PRINT));
 
         // Add all Chart Javascript
         $javaScriptContent .= '<script>
-            $(document).ready(function() {                
+            $(document).ready(function() {
+                Chart.defaults.global.defaultFontSize = ' . $this->getOption('fontSize', 24)  . ';
+                Chart.defaults.global.defaultFontColor = "' . $this->getOption('fontColor', '#000000')  . '";
                 var ctx = document.getElementById("' . $containerId . '_graph");
                 var chart = new Chart(ctx, ' . json_encode($chartData) . ');
                 
@@ -375,10 +436,11 @@ class Graph extends ModuleWidget
 
     /**
      * Load all possible Columns and data from the selected DataSet
+     * @param int $displayId
      * @return Object { data: { datasets: [], labels: [] } }
      * @throws NotFoundException
      */
-    protected function getChartConfig()
+    protected function getChartData($displayId)
     {
         $chartType = $this->getOption('graphType');
         $xAxis = $this->getColumnType('x-axis');
@@ -394,13 +456,8 @@ class Graph extends ModuleWidget
         if ($seriesIdentifier !== null && !is_array($seriesIdentifier))
             $seriesIdentifier = [$seriesIdentifier];
 
-        $orderBy = $this->getOption('orderBy', null);
-
         // Set some query options
-        $queryOptions = [];
-        if (!empty($orderBy)) {
-            $queryOptions['orderBy'] = $orderBy;
-        }
+        $queryOptions = $this->getQueryOptions($displayId);
 
         // Create an object we json_encode into the HTML for this RGraph
         $graphData = new \stdClass();
@@ -498,6 +555,147 @@ class Graph extends ModuleWidget
         $graphData->data->datasets = $axisData;
 
         return $graphData;
+    }
+
+    /**
+     * Get Chart Options
+     * @return array
+     */
+    protected function getChartOptions()
+    {
+        $options = [];
+
+        if ($this->getOption('showLegend') !== '1') {
+            $options['legend'] = [];
+            $options['legend']['display'] = false;
+        }
+
+        if ($this->getOption('title') != '') {
+            $options['title'] = [
+                'display' => true,
+                'text' => $this->getOption('title')
+            ];
+        }
+
+        if ($this->getOption('x-axis-label') != '') {
+            $options['scales']['xAxes'][] = [
+                'scaleLabel' => [
+                    'display' => true,
+                    'labelString' => $this->getOption('x-axis-label')
+                ]
+            ];
+        }
+
+        // Options effecting the Y-Axis
+        $yAxis = [];
+
+        if ($this->getOption('y-axis-label') != '') {
+            $yAxis['scaleLabel'] = [
+                'display' => true,
+                'labelString' => $this->getOption('y-axis-label')
+            ];
+        }
+
+        if ($this->getOption('startYAtZero') == '1') {
+            $yAxis['ticks']['beginAtZero'] = true;
+        }
+
+        $options['scales']['yAxes'][] = $yAxis;
+
+        return $options;
+    }
+
+    /**
+     * Get the Query Options
+     * @param $displayId
+     * @return array
+     */
+    private function getQueryOptions($displayId)
+    {
+        // Ordering
+        $ordering = '';
+
+        if ($this->getOption('useOrderingClause', 1) == 1) {
+            $ordering = $this->getOption('ordering');
+        } else {
+            // Build an order string
+            foreach (json_decode($this->getOption('orderClauses', '[]'), true) as $clause) {
+                $ordering .= $clause['orderClause'] . ' ' . $clause['orderClauseDirection'] . ',';
+            }
+
+            $ordering = rtrim($ordering, ',');
+        }
+
+        // Filtering
+        $filter = '';
+
+        if ($this->getOption('useFilteringClause', 1) == 1) {
+            $filter = $this->getOption('filter');
+        } else {
+            // Build
+            $i = 0;
+            foreach (json_decode($this->getOption('filterClauses', '[]'), true) as $clause) {
+                $i++;
+                $criteria = '';
+
+                switch ($clause['filterClauseCriteria']) {
+
+                    case 'starts-with':
+                        $criteria = 'LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'ends-with':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'contains':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'equals':
+                        $criteria = '= \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-contains':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-starts-with':
+                        $criteria = 'NOT LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-ends-with':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-equals':
+                        $criteria = '<> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'greater-than':
+                        $criteria = '> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'less-than':
+                        $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                if ($i > 1)
+                    $filter .= ' ' . $clause['filterClauseOperator'] . ' ';
+
+                $filter .= $clause['filterClause'] . ' ' . $criteria;
+            }
+        }
+
+        return [
+            'filter' => $filter,
+            'order' => $ordering,
+            'displayId' => $displayId
+        ];
     }
     
     /** @inheritdoc */
