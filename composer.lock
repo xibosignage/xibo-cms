@@ -1449,16 +1449,16 @@
         },
         {
             "name": "johngrogg/ics-parser",
-            "version": "v2.1.4",
+            "version": "v2.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/u01jmg3/ics-parser.git",
-                "reference": "519a39afe15e50b5982151f921b0779ae1929de0"
+                "reference": "6f0a2d0b2f1ee4110a7430ac2f9dedfcece1f216"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/u01jmg3/ics-parser/zipball/519a39afe15e50b5982151f921b0779ae1929de0",
-                "reference": "519a39afe15e50b5982151f921b0779ae1929de0",
+                "url": "https://api.github.com/repos/u01jmg3/ics-parser/zipball/6f0a2d0b2f1ee4110a7430ac2f9dedfcece1f216",
+                "reference": "6f0a2d0b2f1ee4110a7430ac2f9dedfcece1f216",
                 "shasum": ""
             },
             "require": {
@@ -1505,7 +1505,7 @@
                 "ics-parser",
                 "ifb"
             ],
-            "time": "2018-05-21 14:08:32"
+            "time": "2018-05-24 14:04:09"
         },
         {
             "name": "league/event",
