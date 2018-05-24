@@ -1419,6 +1419,7 @@ abstract class ModuleWidget implements ModuleInterface
                     // If we have something wrong with the module and we are in the preview, then we should present the error
                     // on screen
                     if ($displayId === 0) {
+                        $this->getLog()->debug('Configuration error with Widget, in preview - rethrow');
                         throw $configurationException;
                     } else {
                         // Don't cache, just log
@@ -1441,7 +1442,10 @@ abstract class ModuleWidget implements ModuleInterface
                 // Unlock
                 $this->concurrentRequestRelease();
 
-                throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
+                if ($exception instanceof ConfigurationException)
+                    throw $exception;
+                else
+                    throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
             $resource = file_get_contents($cachePath . $cacheFile);
