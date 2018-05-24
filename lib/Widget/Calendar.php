@@ -368,7 +368,7 @@ class Calendar extends ModuleWidget
                         break;
 
                     case '[EndDate]':
-                        $replace = $this->getDate()->getLocalDate($event->dtend, $dateFormat);
+                        $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtend), $dateFormat);
                         break;
                 }
 

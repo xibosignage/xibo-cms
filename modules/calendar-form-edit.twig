@@ -82,6 +82,10 @@
             <form id="calendarFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="generalTab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
@@ -98,6 +102,33 @@
                         {% set title %}{% trans "Interval" %}{% endset %}
                         {% set helpText %}{% trans "Enter a string representing the interval to get events for." %}{% endset %}
                         {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
+
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
+                                <ul id="TickerDataSetColumns">
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Name</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Summary</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Description</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Location</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">StartDate</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">EndDate</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group well">
+                                <label class="col-sm-2 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                <div class="col-sm-10">
+                                    <select id="ckeditor_library_select2"
+                                            class="ckeditor_library_select form-control"
+                                            data-linked-to="ta_text"
+                                            data-search-url="{{ urlFor("library.search") }}"
+                                            data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
 
                         {% set helpText %}
                             {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
