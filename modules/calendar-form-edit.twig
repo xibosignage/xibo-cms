@@ -100,7 +100,7 @@
 
                         {# What range are we looking to return #}
                         {% set title %}{% trans "Interval" %}{% endset %}
-                        {% set helpText %}{% trans "Enter a string representing the interval to get events for." %}{% endset %}
+                        {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
                         {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
 
                         {% set title %}{% trans "Label Now" %}{% endset %}

@@ -29,6 +29,7 @@ use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 
 /**
  * Class Calendar
@@ -122,19 +123,33 @@ class Calendar extends ModuleWidget
 
     /**
      * Validate this modules config against a minimum set of requirements
+     * @throws InvalidArgumentException
      */
     private function validate()
     {
         // Must have a duration
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new \InvalidArgumentException(__('Please enter a feed URI containing the events you want to display'));
+            throw new InvalidArgumentException(__('Please enter a feed URI containing the events you want to display'), 'uri');
 
         if ($this->getWidgetId() != '') {
+            $customInterval = $this->getOption('customInterval');
 
+            if ($customInterval != '') {
+                // Try to create a date interval from it
+                $dateInterval = \DateInterval::createFromDateString($customInterval);
+
+                // Use now and add the date interval to it
+                $now = Date::now();
+                $check = $now->copy()->add($dateInterval);
+
+                if ($now->equalTo($check))
+                    throw new InvalidArgumentException(__('That is not a valid date interval, please use natural language such as 1 week'), 'customInterval');
+
+            }
         }
     }
 
