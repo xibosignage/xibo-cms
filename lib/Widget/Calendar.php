@@ -99,6 +99,7 @@ class Calendar extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('customInterval', $this->getSanitizer()->getString('customInterval'));
+        $this->setOption('eventLabelNow', $this->getSanitizer()->getString('eventLabelNow'));
 
         // Other options
         $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));

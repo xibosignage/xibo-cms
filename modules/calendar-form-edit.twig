@@ -103,6 +103,10 @@
                         {% set helpText %}{% trans "Enter a string representing the interval to get events for." %}{% endset %}
                         {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
 
+                        {% set title %}{% trans "Label Now" %}{% endset %}
+                        {% set helpText %}{% trans "Should we label the current event? We will use the current Date/Time to work out if the event is current. This will be replaced in the [Label] template tag." %}{% endset %}
+                        {{ forms.input("eventLabelNow", title, module.getOption("eventLabelNow"), helpText)}}
+
                         <div class="col-sm-6">
                             <div class="well">
                                 <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
@@ -113,6 +117,7 @@
                                     <li class="ckeditor_snippits" linkedto="ta_text">Location</li>
                                     <li class="ckeditor_snippits" linkedto="ta_text">StartDate</li>
                                     <li class="ckeditor_snippits" linkedto="ta_text">EndDate</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Label</li>
                                 </ul>
                             </div>
                         </div>
