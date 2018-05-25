@@ -215,6 +215,10 @@
 
                     <div class="tab-pane" id="advancedTab">
 
+                        {% set title %}{% trans "Exclude all day events?" %}{% endset %}
+                        {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}

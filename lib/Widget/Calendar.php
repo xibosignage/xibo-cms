@@ -109,6 +109,7 @@ class Calendar extends ModuleWidget
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
 
+        $this->setOption('excludeAllDay', $this->getSanitizer()->getCheckbox('excludeAllDay'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
 
         $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
@@ -363,10 +364,23 @@ class Calendar extends ModuleWidget
 
         // Decide on the Range we're interested in
         // $iCal->eventsFromInterval only works for future events
+        $excludeAllDay = $this->getOption('excludeAllDay', 0) == 1;
+
+        $startOfDay = Date::now()->startOfDay();
+        $endOfDay = $startOfDay->copy()->addDay()->startOfDay();
+
+        $this->getLog()->debug('Start of day is ' . $startOfDay->toDateTimeString());
+        $this->getLog()->debug('End of day is ' . $endOfDay->toDateTimeString());
 
         // Go through each event returned
         foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
             /** @var \ICal\Event $event */
+            $startDt = Date::createFromFormat('U', $iCal->iCalDateToUnixTimestamp($event->dtstart));
+            $endDt = Date::createFromFormat('U', $iCal->iCalDateToUnixTimestamp($event->dtend));
+
+            if ($excludeAllDay && $startDt->equalTo($startOfDay) && $endDt->equalTo($endOfDay))
+                continue;
+
             // Substitute for all matches in the template
             $rowString = $template;
 
@@ -426,9 +440,16 @@ class Calendar extends ModuleWidget
         return 1;
     }
 
-    public function getModifiedDate($displayId)
+    /** @inheritdoc */
+    public function getCacheDuration()
     {
-        // TODO: temp during development
-        return Date::now();
+        return $this->getOption('updateInterval', 120) * 60;
+    }
+
+    /** @inheritdoc */
+    public function getLockKey()
+    {
+        // Make sure we lock for the entire iCal URI to prevent any clashes
+        return md5(urldecode($this->getOption('uri')));
     }
 }
