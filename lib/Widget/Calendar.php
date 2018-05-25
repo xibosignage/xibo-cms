@@ -161,7 +161,11 @@ class Calendar extends ModuleWidget
             $noDataMessage = $this->getRawNode('noDataMessage');
 
             if ($noDataMessage != '') {
-                $items[] = $noDataMessage;
+                $items[] = [
+                    'startDate' => 0,
+                    'endDate' => Date::now()->addYear()->format('U'),
+                    'item' => $noDataMessage
+                ];
             } else {
                 $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
                 return '';
@@ -205,6 +209,7 @@ class Calendar extends ModuleWidget
         // Include some vendor items and javascript
         $this
             ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/moment.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScriptFile('xibo-text-render.js')
@@ -224,12 +229,35 @@ class Calendar extends ModuleWidget
                 'numItems' => $numItems,
                 'takeItemsFrom' => $takeItemsFrom,
                 'itemsPerPage' => $itemsPerPage,
+                'eventLabelNow' => $this->getOption('eventLabelNow', '')
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
+                
+                    var parsedItems = [];
+                    var now = moment();
+                
+                    // Prepare the items array, sorting it and removing any items that have expired.
+                    $.each(items, function(index, element) {
+                        // Parse the item and add it to the array if it hasnt finished yet
+                        var endDate = moment(element.endDate, "X");
+                        var item = element.item;
+                        
+                        if(endDate.isAfter(now)) {
+                            // If the event label has been set, then we should try and replace it in the item string
+                            if (options.eventLabelNow !== "" && moment(element.startDate, "X").isBefore(now)) {
+                                item = item.replace("[Label]", options.eventLabelNow);                            
+                            } else {
+                                item = item.replace("[Label]", ""); 
+                            }
+                        
+                            parsedItems.push(item);
+                        }
+                    });
+                
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
-                    $("#content").xiboTextRender(options, items);
+                    $("#content").xiboTextRender(options, parsedItems);
                 });
             ')
             ->appendItems($items);
@@ -370,13 +398,22 @@ class Calendar extends ModuleWidget
                     case '[EndDate]':
                         $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtend), $dateFormat);
                         break;
+
+                    case '[Label]':
+                        // This is replaced Player side
+                        $replace = '[Label]';
+                        break;
                 }
 
                 // Substitute the replacement we have found (it might be '')
                 $rowString = str_replace($sub, $replace, $rowString);
             }
 
-            $items[] = $rowString;
+            $items[] = [
+                'startDate' => $iCal->iCalDateToUnixTimestamp($event->dtstart),
+                'endDate' => $iCal->iCalDateToUnixTimestamp($event->dtend),
+                'item' => $rowString
+            ];
         }
 
         return $items;
