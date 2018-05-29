@@ -752,8 +752,8 @@ class DataSetView extends ModuleWidget
                     // Pull out the cell for this row / column
                     $replace = $row[$mapping['heading']];
 
-                    // If the value is empty, then move on
-                    if ($replace == '') {
+                    // If the value is empty, then move on (don't do so for 0)
+                    if ($replace === '') {
                         // We don't do anything there, we just output an empty column.
                         $replace = '';
 
