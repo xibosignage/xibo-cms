@@ -92,8 +92,8 @@ echo __('Maintenance Key');
 echo __('Max Log Age');
 echo __('Max Statistics Age');
 echo __('Max Display Timeout');
-echo __('Display a VNC Link?');
-echo __('Open VNC Link in new window?');
+echo __('Add a link to the Display name using this format mask?');
+echo __('The target attribute for the above link');
 echo __('Send repeat Display Timeouts');
 echo __('Send Schedule in advance?');
 echo __('Send files in advance?');
@@ -167,6 +167,8 @@ echo __('RSS/Atom Feed to be displayed on the Status Dashboard');
 echo __('Lock the Display Name to the device name provided by the Player?');
 echo __('Sending email name');
 echo __('Mail will be sent under this name');
+echo __('Turn the display name in display management into a link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.');
+echo __('If the display name is shown as a link in display management, what target should the link have? Set _top to open the link in the same window or _blank to open in a new window.');
 
 // Transitions
 echo __('Fade In');
