@@ -753,11 +753,12 @@ class DataSetView extends ModuleWidget
                     $replace = $row[$mapping['heading']];
 
                     // If the value is empty, then move on
-                    if ($replace == '')
-                        continue;
+                    if ($replace == '') {
+                        // We don't do anything there, we just output an empty column.
+                        $replace = '';
 
-                    // What if this column is an image column type?
-                    if ($mapping['dataTypeId'] == 4) {
+                    } else if ($mapping['dataTypeId'] == 4) {
+                        // What if this column is an image column type?
 
                         // Grab the external image
                         $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
