@@ -1,0 +1,14 @@
+{
+  "dbVersion": 141,
+  "appVersion": "1.8.10",
+  "steps": [
+    {
+      "step": "Add lastClear date on DataSet table",
+      "action": "ALTER TABLE dataset ADD lastClear INT NOT NULL DEFAULT 0;"
+    },
+    {
+      "step": "Remove ENUM restriction on DataSet authentication field.",
+      "action": "ALTER TABLE dataset MODIFY authentication varchar(10);"
+    }
+  ]
+}
