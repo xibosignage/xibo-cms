@@ -55,7 +55,8 @@
                                     {{ inline.dropdown("userId", "single", title, "", [{userId: null, userName: ""}]|merge(users), "userId", "userName") }}
                                 </div>
                                 <div class="tab-pane" id="advanced">
-                                    {{ inline.date("fromDt", "From Date") }}
+                                    {% set title %}{% trans "From Date" %}{% endset %}
+                                    {{ inline.date("fromDt", title) }}
 
                                     {% set title %}{% trans "Channel" %}{% endset %}
                                     {{ inline.input("channel", title) }}

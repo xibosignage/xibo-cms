@@ -231,13 +231,15 @@
                         "visible": false
                     },
                     {
-                        "name": "clientVersion",
-                        "data": function (data, type) {
+                        "name": "clientType",
+                        "data": "clientVersion",
+                        "render": function (data, type, row) {
                             if (type != "display")
-                                return data.clientVersion;
+                                return data;
 
-                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                            return row.clientType + ' ' + row.clientVersion + '-' + row.clientCode;
                         },
+                        "sort": "clientType",
                         "visible": false
                     },
                     {"data": "deviceName", "visible": false},

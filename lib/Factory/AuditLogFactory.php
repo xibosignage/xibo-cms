@@ -92,6 +92,11 @@ class AuditLogFactory extends BaseFactory
             $params['message'] = '%' . $this->getSanitizer()->getString('message', $filterBy) . '%';
         }
 
+        if ($this->getSanitizer()->getInt('entityId', $filterBy) !== null) {
+            $body .= ' AND `auditlog`.entityId = :entityId ';
+            $params['entityId'] = $this->getSanitizer()->getInt('entityId', $filterBy);
+        }
+
         $order = '';
         if (is_array($sortOrder) && count($sortOrder) > 0) {
             $order .= 'ORDER BY ' . implode(', ', $sortOrder) . ' ';

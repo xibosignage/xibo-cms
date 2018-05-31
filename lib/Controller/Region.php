@@ -477,6 +477,7 @@ class Region extends Base
     /**
      * Update Positions
      * @param int $layoutId
+     * @throws NotFoundException
      *
      * @SWG\Put(
      *  path="/region/position/all/{layoutId}",
@@ -494,7 +495,7 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="regions",
      *      in="formData",
-     *      description="Array of regions and their new positions. Each array element should ne json encoded and have regionId, top, left, width and height.",
+     *      description="Array of regions and their new positions. Each array element should be json encoded and have regionId, top, left, width and height.",
      *      type="array",
      *      required=true,
      *      @SWG\Items(

@@ -30,7 +30,7 @@
                 {{ forms.date("toDt", title) }}
 
                 {% set title %}{% trans "Display" %}{% endset %}
-                {{ forms.dropdown("displayid", "single", title, "", [{"displayId": null, "display": ""}]|merge(displays), "displayId", "display") }}
+                {{ forms.dropdown("displayId", "single", title, "", [{"displayId": null, "display": ""}]|merge(displays), "displayId", "display") }}
             </form>
         </div>
     </div>
