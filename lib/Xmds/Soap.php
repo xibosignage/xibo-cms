@@ -1269,6 +1269,16 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
+            // Add the IDs to the message
+            if ($scheduleId != '')
+                $message .= ' scheduleId: ' . $scheduleId;
+
+            if ($layoutId != '')
+                $message .= ' layoutId: '. $layoutId;
+
+            if ($mediaId != '')
+                $message .= ' mediaId: ' . $mediaId;
+
             // Trim the page if it is over 50 characters.
             $page = $thread . $method . $type;
 
@@ -1282,7 +1292,7 @@ class Soap
                 $levelName,
                 $page,
                 'POST',
-                $message . $scheduleId . $layoutId . $mediaId,
+                $message,
                 0,
                 $this->display->displayId
             ];

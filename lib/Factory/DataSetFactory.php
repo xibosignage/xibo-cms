@@ -205,6 +205,7 @@ class DataSetFactory extends BaseFactory
                 dataset.`summarize`,
                 dataset.`summarizeField`,
                 dataset.`lastSync`,
+                dataset.`lastClear`,
             ';
         }
 

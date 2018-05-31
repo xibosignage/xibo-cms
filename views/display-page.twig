@@ -164,7 +164,7 @@
 
                             if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
                                 var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
-                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
+                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
                             }
                             else {
                                 return data.display;
