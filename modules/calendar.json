@@ -1,0 +1,7 @@
+{
+  "title": "Calendar Module",
+  "author": "Spring Signage Ltd",
+  "description": "A module for displaying an iCal feed",
+  "name": "calendar",
+  "class": "Xibo\\Widget\\Calendar"
+}

@@ -68,7 +68,8 @@
     "illuminate/cache": "5.2.*",
     "xibosignage/oauth2-xibo-cms": "^1.1",
     "mtdowling/cron-expression": "^1.1",
-    "ralouphie/mimey": "^1.0"
+    "ralouphie/mimey": "^1.0",
+    "johngrogg/ics-parser": "^2.1"
   },
   "require-dev": {
     "php": ">=7",
