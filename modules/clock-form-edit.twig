@@ -138,7 +138,7 @@
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.input("name", title, "", helpText) }}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
                 {% set title %}{% trans "Set a duration?" %}{% endset %}
                 {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}

@@ -121,11 +121,11 @@
             {# Handle the inclusion of i18n #}
             {% set calendarTranslation %}libraries/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
             <script src="{{ theme.uri(calendarTranslation) }}"></script>
-            {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
+            {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsLocale }}.js{% endset %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
             {% set selectPickerTranslation %}libraries/bootstrap-select/js/i18n/defaults-{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
             <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
-            {% set selectPickerTranslation %}libraries/bootstrap-select-ajax/js/locale/ajax-bootstrap-select{{ translate.boostrapSelectLanguage }}.min.js{% endset %}
+            {% set selectPickerTranslation %}libraries/bootstrap-select-ajax/js/locale/ajax-bootstrap-select.{{ translate.calendarLanguage }}.min.js{% endset %}
             <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
 

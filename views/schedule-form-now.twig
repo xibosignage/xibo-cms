@@ -53,7 +53,11 @@
                 ] %}
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", "", optionGroups) }}
+                {% set attributes = [
+                    { name: "data-live-search", value: "true" },
+                    { name: "data-selected-text-format", value: "count > 4" }
+                ] %}
+                {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", attributes, optionGroups) }}
 
                 {% set title %}{% trans "Always?" %}{% endset %}
                 {% set helpText %}{% trans "Run this event from now and dont stop." %}{% endset %}

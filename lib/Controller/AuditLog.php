@@ -65,6 +65,7 @@ class AuditLog extends Base
         $filterToDt = $this->getSanitizer()->getDate('toDt');
         $filterUser = $this->getSanitizer()->getString('user');
         $filterEntity = $this->getSanitizer()->getString('entity');
+        $filterEntityId = $this->getSanitizer()->getString('entityId');
 
         $search = [];
 
@@ -83,6 +84,9 @@ class AuditLog extends Base
 
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
+
+        if ($filterEntityId != null)
+            $search['entityId'] = $filterEntityId;
 
         $rows = $this->auditLogFactory->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
