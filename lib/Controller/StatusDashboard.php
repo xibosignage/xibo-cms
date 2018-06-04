@@ -343,7 +343,8 @@ class StatusDashboard extends Base
                             $latestNews[] = array(
                                 'title' => $item->getTitle(),
                                 'description' => $content,
-                                'link' => $item->getUrl()
+                                'link' => $item->getUrl(),
+                                'date' => $this->getDate()->getLocalDate($item->getDate()->format('U'))
                             );
                         }
 

@@ -45,7 +45,7 @@
                             <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
                                 <i class="fa fa-clock-o" aria-hidden="true"></i>
                                 <span id="layout-duration" class="label label-success big-duration"></span></span>
-                            <span>| <b>Currently Editing</b></span>
+                            <span>| <b> {% trans "Currently Editing" %}</b></span>
                             <select id="layoutJumpList" data-live-search="true" data-width="auto">
                                 {% for item in layouts %}
                                     <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
@@ -337,6 +337,12 @@
                 // Add region button
                 $("#regionAddButton").click(function (e) {
                     e.preventDefault();
+
+                    if (!$("#layout-save-all").hasClass("disabled")) {
+                        SystemMessage(translation.savePositionsFirst, true);
+                        return;
+                    }
+
                     $.ajax({
                         type: "post",
                         url: $(this).attr("href"),

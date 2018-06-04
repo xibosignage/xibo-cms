@@ -76,7 +76,7 @@ class Font extends ModuleWidget
     public function settings()
     {
         if ($this->getSanitizer()->getCheckbox('rebuildFonts', 0) == 1) {
-            $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts();
+            $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
         }
     }
 

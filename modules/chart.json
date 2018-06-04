@@ -1,0 +1,7 @@
+{
+  "title": "Data Visualization with Charts",
+  "author": "Lukas Zurschmiede, Spring Signage Ltd",
+  "description": "A module to visualize from DataSets",
+  "name": "chart",
+  "class": "Xibo\\Widget\\Chart"
+} 

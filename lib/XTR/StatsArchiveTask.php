@@ -91,10 +91,8 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->runMessage .= ' - ' . $fromDt . ' / ' . $toDt . PHP_EOL;
 
-        $select = 'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName';
-        $countSelect = 'SELECT COUNT(*) AS cnt';
-
         $sql = '
+            SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
               FROM stat
                 INNER JOIN display
                 ON stat.DisplayID = display.DisplayID
@@ -113,45 +111,34 @@ class StatsArchiveTask implements TaskInterface
             'toDt' => $this->date->getLocalDate($toDt)
         ];
 
-        // How many records are we expecting?
-        $records = $this->store->select($countSelect . $sql, $params);
-
-        if (count($records) <= 0)
-            return;
-
-        $records = $this->sanitizer->int($records[0]['cnt']);
-
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        // Get records in blocks of 1000
-        $i = 0;
-        while ($i < $records) {
+        // Get records using a cursor so we don't load everything into memory
+        $statement = $this->store->getConnection()->prepare($sql);
 
-            $rows = $this->store->select($select . $sql . ' LIMIT ' . $i . ', 1000 ', $params);
+        // Exec
+        $statement->execute($params);
 
-            // Do some post processing
-            foreach ($rows as $row) {
-                // Read the columns
-                fputcsv($out, [
-                    $this->sanitizer->string($row['Type']),
-                    $this->sanitizer->string($row['start']),
-                    $this->sanitizer->string($row['end']),
-                    $this->sanitizer->string($row['Layout']),
-                    $this->sanitizer->string($row['Display']),
-                    $this->sanitizer->string($row['MediaName']),
-                    $this->sanitizer->string($row['Tag']),
-                    $this->sanitizer->int($row['displayID']),
-                    $this->sanitizer->int($row['layoutID']),
-                    $this->sanitizer->int($row['widgetId']),
-                    $this->sanitizer->int($row['mediaID'])
-                ]);
-            }
-
-            $i = $i + 1000;
+        // Do some post processing
+        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
+            // Read the columns
+            fputcsv($out, [
+                $this->sanitizer->string($row['Type']),
+                $this->sanitizer->string($row['start']),
+                $this->sanitizer->string($row['end']),
+                $this->sanitizer->string($row['Layout']),
+                $this->sanitizer->string($row['Display']),
+                $this->sanitizer->string($row['MediaName']),
+                $this->sanitizer->string($row['Tag']),
+                $this->sanitizer->int($row['displayID']),
+                $this->sanitizer->int($row['layoutID']),
+                $this->sanitizer->int($row['widgetId']),
+                $this->sanitizer->int($row['mediaID'])
+            ]);
         }
 
         fclose($out);

@@ -960,30 +960,30 @@ class Playlist extends Base
      * Order a playlist and its widgets
      * @param int $playlistId
      *
-     * SWG\Post(
+     * @SWG\Post(
      *  path="/playlist/order/{playlistId}",
      *  operationId="playlistOrder",
      *  tags={"playlist"},
      *  summary="Order Widgets",
      *  description="Set the order of widgets in the Playlist",
-     *  SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="playlistId",
      *      in="path",
      *      description="The Playlist ID to Order",
      *      type="integer",
      *      required=true
      *   ),
-     *  SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="widgets",
      *      in="formData",
-     *      description="Array of widgetIds and positions",
+     *      description="Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions",
      *      type="array",
      *      required=true,
      *      SWG\Items(
      *          ref="#/definitions/PlaylistWidgetList"
      *      )
      *   ),
-     *  SWG\Response(
+     *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
      *      SWG\Schema(ref="#/definitions/Playlist")

@@ -168,7 +168,185 @@ class TwitterMetro extends TwitterBase
     }
 
     /**
-     * Add Media
+     * Adds a Twitter Metro Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/twittermetro/{playlistId}",
+     *  operationId="WidgetTwitterMetroAdd",
+     *  tags={"widget"},
+     *  summary="Add a Twitter Metro Widget",
+     *  description="Add a new Twitter Metro Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Twitter Metro widget",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="(0, 1) Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="searchTerm",
+     *      in="formData",
+     *      description="Twitter search term, you can test your search term in twitter.com search box first",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="language",
+     *      in="formData",
+     *      description="Language in which tweets should be returned",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="speed",
+     *      in="formData",
+     *      description="The transition speed of the selected effect in milliseconds (1000 = normal)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noTweetsMessage",
+     *      in="formData",
+     *      description="A message to display when there are no tweets returned by the search query",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="The format to apply to all dates returned by he widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="resultType",
+     *      in="formData",
+     *      description="1 - Mixed, 2 -Recent 3 - Popular, Recent shows only recent tweets, Popular the most popular tweets and Mixed included both popular and recent",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tweetDistance",
+     *      in="formData",
+     *      description="Distance in miles that the tweets should be returned from. Set 0 for no restrictions",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tweetCount",
+     *      in="formData",
+     *      description="The number of tweets to return",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="removeUrls",
+     *      in="formData",
+     *      description="Flag (0, 1) Should the URLs be removed from the tweet text?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="removeMentions",
+     *      in="formData",
+     *      description="Flag (0, 1) Should mentions (@someone) be removed from the tweet text?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="removeHashtags",
+     *      in="formData",
+     *      description="Flag (0, 1) Should the hashtags (#something) be removed from the tweet text",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="colorTemplateId",
+     *      in="formData",
+     *      description="Use pre-configured templates, available options: default, full, gray, light, soft, vivid",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="overrideColorTemplate",
+     *      in="formData",
+     *      description="flag (0, 1) set to 0 and use colorTemplateId or set to 1 and provide colours to use in templateColours parameter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="templateColours",
+     *      in="formData",
+     *      description="Provide a string of new HEX colour codes to use, separated by |, for example: #e0d2c8|#5e411d|#fccf12|#82ff00|#64bae8",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="resultContent",
+     *      in="formData",
+     *      description="Intended content Type, available Options: 0 - All Tweets 1 - Tweets with the text only content 2 - Tweets with the text and image content. Pass only with overrideColorTemplate set to 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="removeRetweets",
+     *      in="formData",
+     *      description="Flag (0, 1) Should retweets be filtered?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
      */
     public function add()
     {
@@ -200,6 +378,7 @@ class TwitterMetro extends TwitterBase
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('searchTerm', $this->getSanitizer()->getString('searchTerm'));
+        $this->setOption('language', $this->getSanitizer()->getString('language'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
@@ -289,7 +468,7 @@ class TwitterMetro extends TwitterBase
         
         // Connect to twitter and get the twitter feed.
         /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode)));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('language') . $this->getOption('resultType') . $this->getOption('tweetCount', 60) . $geoCode)));
         $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $data = $cache->get();
@@ -306,7 +485,7 @@ class TwitterMetro extends TwitterBase
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 60)))
+            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('language'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 60)))
                 return false;
 
             // Cache it

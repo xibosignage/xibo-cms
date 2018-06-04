@@ -467,7 +467,7 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi())
-                break;
+                continue;
 
             // Add in the display profile information
             $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? __('Default') : $displayProfiles[$display->displayProfileId];

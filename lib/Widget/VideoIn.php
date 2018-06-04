@@ -69,7 +69,54 @@ class VideoIn extends ModuleWidget
         if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
             throw new InvalidArgumentException(__('You must enter a duration.'));
     }
-
+    /**
+     * Adds a Video In Widget
+     * @SWG\Post(
+     *  path="/playlist/widget/videoin/{playlistId}",
+     *  operationId="WidgetVideoInAdd",
+     *  tags={"widget"},
+     *  summary="Add a Video In Widget",
+     *  description="Add a new Video In Widget to the specified playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The playlist ID to add a Widget to",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Flag (0, 1) Select only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="Which device input should be shown? available options: HDMI, RGB, DVI, DP, OPS",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Widget"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new widget",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
     public function add()
     {
         // Set some options

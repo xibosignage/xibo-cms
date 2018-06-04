@@ -46,11 +46,16 @@
                                 <div class="tab-pane" id="advanced-filter">
 
                                     {% set title %}{% trans "Retired" %}{% endset %}
-                                    {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                                    {% set option1 = "Yes"|trans %}
+                                    {% set option2 = "No"|trans %}
+                                    {% set values = [{id: 1, value: option1}, {id: 0, value: option2}] %}
                                     {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
                                     {% set title %}{% trans "Show" %}{% endset %}
-                                    {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
+                                    {% set option1 = "All"|trans %}
+                                    {% set option2 = "Only Used"|trans %}
+                                    {% set option3 = "Only Unused"|trans %}
+                                    {% set values = [{id: 1, value: option1}, {id: 2, value: option2}, {id: 3, value: option3}] %}
                                     {{ inline.dropdown("layoutStatusId", "single", title, 1, values, "id", "value") }}
 
                                     {% set title %}{% trans "Description" %}{% endset %}

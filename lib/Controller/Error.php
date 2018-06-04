@@ -163,10 +163,13 @@ class Error extends Base
                     if ($e instanceof UpgradePendingException)
                         $exceptionClass = 'upgrade-in-progress-page';
 
-                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig'))
+                    $this->getLog()->debug('Loading error template ' . $exceptionClass);
+
+                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
                         $this->getState()->template = $exceptionClass;
-                    else
+                    } else {
                         $this->getState()->template = 'error';
+                    }
 
                     $app->flashNow('globalError', $message);
                 }
