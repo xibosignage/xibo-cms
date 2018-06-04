@@ -80,9 +80,8 @@ interface ModuleInterface
     /**
      * Set the Cache Date using the cache key
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @param int|null Override duration in seconds, otherwise the getCacheDuration is used.
      */
-    public function setCacheDate($displayId, $overrideDuration = null);
+    public function setCacheDate($displayId);
 
     /**
      * Get Cache Key
@@ -108,11 +107,10 @@ interface ModuleInterface
     /**
      * Get Resource or Cache
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @param \Xibo\Entity\Region|null $region
      * @return string
      * @throws XiboException
      */
-    public function getResourceOrCache($displayId, $region = null);
+    public function getResourceOrCache($displayId);
 
     /**
      * Get Resource

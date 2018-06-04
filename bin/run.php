@@ -83,8 +83,8 @@ $app->view($twig);
 
 \Xibo\Middleware\Storage::setStorage($app->container);
 \Xibo\Middleware\State::setState($app);
-$app->configService->loadTheme();
 
+$app->add(new \Xibo\Middleware\Xtr());
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
 
