@@ -23,6 +23,7 @@ namespace Xibo\XTR;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\Playlist;
+use Xibo\Entity\Task;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -63,29 +64,39 @@ class DynamicPlaylistSyncTask implements TaskInterface
     public function setFactories($container)
     {
         $this->store = $container->get('store');
-        $this->date = $container->get('date');
+        $this->date = $container->get('dateService');
         $this->playlistFactory = $container->get('playlistFactory');
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->moduleFactory = $container->get('moduleFactory');
+        $this->widgetFactory = $container->get('widgetFactory');
         return $this;
     }
 
     /** @inheritdoc */
     public function run()
     {
-        // Run a little query to get the last modified date from the media table
-        $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) FROM `media`;', [])[0]['modifiedDt'];
+        // If we're in the error state, then always run, otherwise check the dates we modified various triggers
+        if ($this->getTask()->lastRunStatus !== Task::$STATUS_ERROR) {
+            // Run a little query to get the last modified date from the media table
+            $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `media`;', [])[0]['modifiedDt'];
+            $lastPlaylistUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `playlist`;', [])[0]['modifiedDt'];
 
-        if (empty($lastMediaUpdate)) {
-            $this->appendRunMessage('No library media to assess');
-            return;
-        }
+            if (empty($lastMediaUpdate) && empty($lastPlaylistUpdate)) {
+                $this->appendRunMessage('No library media or Playlists to assess');
+                return;
+            }
 
-        $lastMediaUpdate = $this->date->parse($lastMediaUpdate);
-        $lastTaskRun = $this->date->parse($this->getTask()->lastRunDt, 'U');
+            $this->log->debug('Last media updated date is ' . $lastMediaUpdate);
+            $this->log->debug('Last playlist updated date is ' . $lastPlaylistUpdate);
 
-        if ($lastMediaUpdate->lessThan($lastTaskRun)) {
-            $this->appendRunMessage('No library media updates since we last ran');
-            return;
+            $lastMediaUpdate = $this->date->parse($lastMediaUpdate);
+            $lastPlaylistUpdate = $this->date->parse($lastPlaylistUpdate);
+            $lastTaskRun = $this->date->parse($this->getTask()->lastRunDt, 'U');
+
+            if ($lastMediaUpdate->lessThan($lastTaskRun) && $lastPlaylistUpdate->lessThan($lastTaskRun)) {
+                $this->appendRunMessage('No library media/playlist updates since we last ran');
+                return;
+            }
         }
 
         $count = 0;
@@ -95,18 +106,23 @@ class DynamicPlaylistSyncTask implements TaskInterface
             // We want to detect any differences in what should be assigned to this Playlist.
             $playlist->load();
 
+            $this->log->debug('Assessing Playlist: ' . $playlist->name);
+
             // Query for media which would be assigned to this Playlist and see if there are any differences
             $media = $this->mediaFactory->query(null, ['name' => $playlist->filterMediaName, 'tags' => $playlist->filterMediaTags]);
 
             // Work out if the set of widgets is different or not.
+            // This is only the first loose check
             $different = (count($playlist->widgets) !== count($media));
+
+            $this->log->debug('There are ' . count($media) . ' that should be assigned. Difference is ' . var_export($different, true));
 
             $mediaIds = array_map(function($element){
                 /** @var $element Media */
                 return $element->mediaId;
             }, $media);
 
-            $compareMediaIds = clone $mediaIds;
+            $compareMediaIds = $mediaIds;
 
             if (!$different) {
                 // Try a more complete check, using mediaIds
@@ -135,12 +151,20 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 }
 
                 // Add the ones we have left
+                $assignmentMade = false;
                 foreach ($media as $item) {
                     $count++;
                     if (in_array($item->mediaId, $mediaIds)) {
+                        $assignmentMade = true;
                         $this->createAndAssign($playlist, $item, $count);
                     }
                 }
+
+                if ($assignmentMade) {
+                    $playlist->save();
+                }
+            } else {
+                $this->log->debug('No differences detected');
             }
         }
 
@@ -155,6 +179,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
      */
     private function createAndAssign($playlist, $media, $displayOrder)
     {
+        $this->log->debug('Media Item needs to be assigned ' . $media->name . ' in sequence ' . $displayOrder);
+
         // Create a module
         $module = $this->moduleFactory->create($media->mediaType);
 

@@ -77,6 +77,30 @@ class Layout implements \JsonSerializable
     /**
      * @var int
      * @SWG\Property(
+     *  description="The parentId, if this Layout has a draft"
+     * )
+     */
+    public $parentId;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="The Status Id"
+     * )
+     */
+    public $publishedStatusId = 1;
+
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The Published Status (Published, Draft or Pending Approval"
+     * )
+     */
+    public $publishedStatus;
+
+    /**
+     * @var int
+     * @SWG\Property(
      *  description="The id of the image media set as the background"
      * )
      */
@@ -311,6 +335,9 @@ class Layout implements \JsonSerializable
         $this->hash = null;
         $this->permissions = [];
 
+        // A normal clone (for copy) will set this to Published, so that the copy is published.
+        $this->publishedStatusId = 1;
+
         // Clone the regions
         $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
     }
@@ -328,7 +355,7 @@ class Layout implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description . json_encode($this->statusMessage));
+        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description . json_encode($this->statusMessage) . $this->publishedStatusId);
     }
 
     /**
@@ -405,6 +432,24 @@ class Layout implements \JsonSerializable
         }
 
         return $widgets;
+    }
+
+    /**
+     * Is this Layout Editable - i.e. are we in a draft state or not.
+     * @return bool true if this layout is editable
+     */
+    public function isEditable()
+    {
+        return ($this->publishedStatusId === 2); // Draft
+    }
+
+    /**
+     * Is this Layout a Child?
+     * @return bool
+     */
+    public function isChild()
+    {
+        return ($this->parentId !== null);
     }
 
     /**
@@ -529,14 +574,24 @@ class Layout implements \JsonSerializable
         if ($this->layoutId == null || $this->layoutId == 0) {
             $this->add();
 
-            if ($options['audit'])
-                $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout]);
+            if ($options['audit']) {
+                if ($this->parentId === null) {
+                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout]);
+                } else {
+                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout]);
+                }
+            }
 
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
 
-            if ($options['audit'])
-                $this->audit($this->layoutId, 'Updated');
+            if ($options['audit']) {
+                if ($this->parentId === null) {
+                    $this->audit($this->layoutId, 'Updated');
+                } else {
+                    $this->audit($this->layoutId, 'Updated Draft');
+                }
+            }
 
         } else {
             $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId);
@@ -602,6 +657,17 @@ class Layout implements \JsonSerializable
         if ($this->layoutId == $this->config->GetSetting('DEFAULT_LAYOUT'))
             throw new InvalidArgumentException(__('This layout is used as the global default and cannot be deleted'), 'layoutId');
 
+        // Delete our draft if we have one
+        // this is recursive, so be careful!
+        if ($this->parentId === null && $this->publishedStatusId === 2) {
+            try {
+                $draft = $this->layoutFactory->getByParentId($this->layoutId);
+                $draft->delete(['notify' => false]);
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->info('No draft to delete for a Layout in the Draft state, odd!');
+            }
+        }
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -621,27 +687,33 @@ class Layout implements \JsonSerializable
             $region->delete($options);
         }
 
-        // Unassign from all Campaigns
-        foreach ($this->campaigns as $campaign) {
-            /* @var Campaign $campaign */
+        if ($this->parentId === null) {
+            // Unassign from all Campaigns
+            foreach ($this->campaigns as $campaign) {
+                /* @var Campaign $campaign */
+                $campaign->setChildObjectDependencies($this->layoutFactory);
+                $campaign->unassignLayout($this);
+                $campaign->save(['validate' => false]);
+            }
+
+            // Delete our own Campaign
+            $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->setChildObjectDependencies($this->layoutFactory);
-            $campaign->unassignLayout($this);
-            $campaign->save(['validate' => false]);
+            $campaign->delete();
+
+            // Remove the Layout from any display defaults
+            $this->getStore()->update('UPDATE `display` SET defaultlayoutid = :defaultLayoutId WHERE defaultlayoutid = :layoutId', [
+                'layoutId' => $this->layoutId,
+                'defaultLayoutId' => $this->config->GetSetting('DEFAULT_LAYOUT')
+            ]);
+
+            // Remove any display group links
+            $this->getStore()->update('DELETE FROM `lklayoutdisplaygroup` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
+
+        } else {
+            // Remove the draft from any Campaign assignments
+            $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
         }
-
-        // Delete our own Campaign
-        $campaign = $this->campaignFactory->getById($this->campaignId);
-        $campaign->setChildObjectDependencies($this->layoutFactory);
-        $campaign->delete();
-
-        // Remove the Layout from any display defaults
-        $this->getStore()->update('UPDATE `display` SET defaultlayoutid = :defaultLayoutId WHERE defaultlayoutid = :layoutId', [
-            'layoutId' => $this->layoutId,
-            'defaultLayoutId' => $this->config->GetSetting('DEFAULT_LAYOUT')
-        ]);
-
-        // Remove any display group links
-        $this->getStore()->update('DELETE FROM `lklayoutdisplaygroup` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
 
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
@@ -649,6 +721,9 @@ class Layout implements \JsonSerializable
         // Delete the cached file (if there is one)
         if (file_exists($this->getCachePath()))
             @unlink($this->getCachePath());
+
+        // Audit the Delete
+        $this->audit($this->layoutId, 'Deleted' . (($this->parentId !== null) ? ' draft for ' . $this->parentId : ''));
     }
 
     /**
@@ -669,7 +744,13 @@ class Layout implements \JsonSerializable
             throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
 
         // Check for duplicates
-        $duplicates = $this->layoutFactory->query(null, array('userId' => $this->ownerId, 'layoutExact' => $this->layout, 'notLayoutId' => $this->layoutId, 'disableUserCheck' => 1));
+        // exclude our own duplicate (if we're a draft)
+        $duplicates = $this->layoutFactory->query(null, [
+            'userId' => $this->ownerId,
+            'layoutExact' => $this->layout,
+            'notLayoutId' => ($this->parentId !== null) ? $this->parentId : $this->layoutId,
+            'disableUserCheck' => 1
+        ]);
 
         if (count($duplicates) > 0)
             throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
@@ -965,8 +1046,10 @@ class Layout implements \JsonSerializable
         $layoutNode->appendChild($tagsNode);
 
         // Update the layout status / duration accordingly
-        if ($layoutHasEmptyRegion)
+        if ($layoutHasEmptyRegion) {
             $status = 4;
+            $this->statusMessage .= __('Empty Region');
+        }
 
         $this->status = ($status < $this->status) ? $status : $this->status;
 
@@ -1134,7 +1217,8 @@ class Layout implements \JsonSerializable
     {
         $options = array_merge([
             'notify' => true,
-            'collectNow' => true
+            'collectNow' => true,
+            'exceptionOnError' => false
         ], $options);
 
         $path = $this->getCachePath();
@@ -1158,7 +1242,13 @@ class Layout implements \JsonSerializable
                 // Will continue and save the status as 4
                 $this->status = 4;
                 $this->statusMessage = 'Unexpected Error';
+
+                // No need to notify on an errored build
+                $options['notify'] = false;
             }
+
+            if ($this->status === 4 && $options['exceptionOnError'])
+                throw new InvalidArgumentException(__('There is an error with this Layout: %s', $this->statusMessage), 'status');
 
             $this->save([
                 'saveRegions' => true,
@@ -1185,19 +1275,121 @@ class Layout implements \JsonSerializable
         return $libraryLocation . $this->layoutId . '.xlf';
     }
 
+    /**
+     * Publish the Draft
+     * @throws XiboException
+     */
+    public function publishDraft()
+    {
+        // We are the draft - make sure we have a parent
+        if (!$this->isChild())
+            throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
+
+        // Get my parent for later
+        $parent = $this->layoutFactory->getById($this->parentId);
+
+        // I am the draft, so I clear my parentId, and set the parentId of my parent, to myself (swapping us)
+        // Make me the parent.
+        $this->getStore()->update('UPDATE `layout` SET parentId = NULL WHERE layoutId = :layoutId', [
+            'layoutId' => $this->layoutId
+        ]);
+
+        // Set my parent, to be my child.
+        $this->getStore()->update('UPDATE `layout` SET parentId = :parentId WHERE layoutId = :layoutId', [
+            'parentId' => $this->layoutId,
+            'layoutId' => $this->parentId
+        ]);
+
+        // Update any campaign links
+        $this->getStore()->update('
+          UPDATE `lkcampaignlayout` 
+            SET layoutId = :layoutId 
+           WHERE layoutId = :parentId 
+            AND campaignId IN (SELECT campaignId FROM campaign WHERE isLayoutSpecific = 0)
+        ', [
+            'parentId' => $this->parentId,
+            'layoutId' => $this->layoutId
+        ]);
+
+        // Persist things that might have changed
+        // NOTE: permissions are managed on the campaign, so we do not need to worry.
+        $this->layout = $parent->layout;
+        $this->description = $parent->description;
+        $this->retired = $parent->retired;
+
+        // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
+        $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
+            'parentId' => $parent->layoutId,
+            'layoutId' => $this->layoutId
+        ]);
+
+        // If this is the global default layout, then add some special handling to make sure we swap the default over
+        // to the incoming draft
+        if ($this->parentId == $this->config->GetSetting('DEFAULT_LAYOUT')) {
+            // Change it over to me.
+            $this->config->ChangeSetting('DEFAULT_LAYOUT', $this->layoutId);
+        }
+
+        // Delete the parent (make sure we set the parent to be a child of us, otherwise we will delete the linked
+        // campaign
+        $parent->parentId = $this->layoutId;
+        $parent->tags = []; // Clear the tags so we don't attempt a delete.
+        $parent->delete();
+
+        // Set my statusId to published
+        // we do not want to notify here as we should wait for the build to happen
+        $this->publishedStatusId = 1;
+        $this->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => true,
+            'validate' => false,
+            'audit' => true,
+            'notify' => false
+        ]);
+
+        // Nullify my parentId (I no longer have a parent)
+        $this->parentId = null;
+    }
+
+    /**
+     * Discard the Draft
+     * @throws XiboException
+     */
+    public function discardDraft()
+    {
+        // We are the draft - make sure we have a parent
+        if (!$this->isChild()) {
+            $this->getLog()->debug('Cant discard draft ' . $this->layoutId . '. publishedStatusId = ' . $this->publishedStatusId . ', parentId = ' . $this->parentId);
+            throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
+        }
+
+        // We just need to delete ourselves really
+        $this->delete();
+
+        // We also need to update the parent so that it is no longer draft
+        $parent = $this->layoutFactory->getById($this->parentId);
+        $parent->publishedStatusId = 1;
+        $parent->save([
+            self::$saveOptionsMinimum
+        ]);
+    }
+
     //
     // Add / Update
     //
 
     /**
      * Add
+     * @throws XiboException
      */
     private function add()
     {
         $this->getLog()->debug('Adding Layout ' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId)';
 
         $time = $this->date->getLocalDate();
 
@@ -1207,32 +1399,52 @@ class Layout implements \JsonSerializable
             'userid' => $this->ownerId,
             'createddt' => $time,
             'modifieddt' => $time,
+            'publishedStatusId' => $this->publishedStatusId, // Default to 1 (published)
             'status' => 3,
             'width' => $this->width,
             'height' => $this->height,
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
+            'parentId' => ($this->parentId == null) ? null : $this->parentId
         ));
 
         // Add a Campaign
-        $campaign = $this->campaignFactory->createEmpty();
-        $campaign->campaign = $this->layout;
-        $campaign->isLayoutSpecific = 1;
-        $campaign->ownerId = $this->getOwnerId();
-        $campaign->assignLayout($this);
+        // we do not add a campaign record for draft layouts.
+        if ($this->parentId === null) {
+            $campaign = $this->campaignFactory->createEmpty();
+            $campaign->campaign = $this->layout;
+            $campaign->isLayoutSpecific = 1;
+            $campaign->ownerId = $this->getOwnerId();
+            $campaign->assignLayout($this);
 
-        // Ready to save the Campaign
-        $campaign->save();
+            // Ready to save the Campaign
+            // adding a Layout Specific Campaign shouldn't ever notify (it can't hit anything because we've only
+            // just added it)
+            $campaign->save([
+                'notify' => false
+            ]);
 
-        // Assign the new campaignId to this layout
-        $this->campaignId = $campaign->campaignId;
+            // Assign the new campaignId to this layout
+            $this->campaignId = $campaign->campaignId;
+
+        } else if ($this->campaignId == null) {
+            throw new InvalidArgumentException(__('Draft Layouts must have a parent'), 'campaignId');
+        } else {
+            // Add this draft layout as a link to the campaign
+            $campaign = $this->campaignFactory->getById($this->campaignId);
+            $campaign->setChildObjectDependencies($this->layoutFactory);
+            $campaign->assignLayout($this);
+            $campaign->save([
+                'notify' => false
+            ]);
+        }
     }
 
     /**
      * Update
      * @param array $options
-     * NOTE: We set the XML to NULL during this operation as we will always convert old layouts to the new structure
+     * @throws XiboException
      */
     private function update($options = [])
     {
@@ -1256,6 +1468,7 @@ class Layout implements \JsonSerializable
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
               `status` = :status,
+              publishedStatusId = :publishedStatusId,
               `userId` = :userId,
               `schemaVersion` = :schemaVersion,
               `statusMessage` = :statusMessage
@@ -1277,15 +1490,18 @@ class Layout implements \JsonSerializable
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'status' => $this->status,
+            'publishedStatusId' => $this->publishedStatusId,
             'userId' => $this->ownerId,
             'schemaVersion' => $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage)
         ));
 
         // Update the Campaign
-        $campaign = $this->campaignFactory->getById($this->campaignId);
-        $campaign->campaign = $this->layout;
-        $campaign->ownerId = $this->ownerId;
-        $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
+        if ($this->parentId === null) {
+            $campaign = $this->campaignFactory->getById($this->campaignId);
+            $campaign->campaign = $this->layout;
+            $campaign->ownerId = $this->ownerId;
+            $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
+        }
     }
 }

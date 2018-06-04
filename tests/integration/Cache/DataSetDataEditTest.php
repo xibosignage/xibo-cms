@@ -69,8 +69,11 @@ class DataSetDataEditTest extends LocalWebTestCase
         // Create a Layout
         $this->layout = $this->createLayout();
 
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
         // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'name' => Random::generateString(),
             'dataSetId' => $this->dataSet->dataSetId,
             'duration' => 100,
@@ -78,6 +81,9 @@ class DataSetDataEditTest extends LocalWebTestCase
         ]);
 
         $this->widget = (new XiboDataSetView($this->getEntityProvider()))->hydrate($response);
+
+        // Check in
+        $this->layout = $this->publish($this->layout);
 
         // Set the Layout status
         $this->setLayoutStatus($this->layout, 1);

@@ -46,11 +46,17 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         // Create a Layout
         $this->layout = $this->createLayout();
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
         ]);
+
+        // Check us in again
+        $this->layout = $this->publish($this->layout);
 
         // Create a Display Group
         // this matches all displays created by the test suite

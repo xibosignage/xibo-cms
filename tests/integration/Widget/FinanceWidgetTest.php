@@ -73,6 +73,7 @@ class FinanceWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
         
         if ($isOverride) {
@@ -154,6 +155,7 @@ class FinanceWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a finance with wrapper
@@ -202,6 +204,7 @@ class FinanceWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a finance with wrapper

@@ -32,15 +32,15 @@ class Task implements \JsonSerializable
     public $configFile;
     public $class;
     public $status;
-    public $pid;
+    public $pid = 0;
     public $options = [];
     public $schedule;
-    public $lastRunDt;
+    public $lastRunDt = 0;
     public $lastRunStartDt;
     public $lastRunMessage;
     public $lastRunStatus;
-    public $lastRunDuration;
-    public $lastRunExitCode;
+    public $lastRunDuration = 0;
+    public $lastRunExitCode = 0;
     public $isActive;
     public $runNow;
 

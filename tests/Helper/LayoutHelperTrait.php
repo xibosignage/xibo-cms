@@ -11,6 +11,7 @@ namespace Xibo\Tests\Helper;
 
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboResolution;
 use Xibo\OAuth2\Client\Exception\XiboApiException;
 
@@ -30,7 +31,7 @@ trait LayoutHelperTrait
         $layout = (new XiboLayout($this->getEntityProvider()))
             ->create(
                 Random::generateString(),
-                'Layout to test Cache Invalidation',
+                'PHPUnit Created Layout for Automated Integration Testing',
                 '',
                 $this->getResolutionId('landscape')
             );
@@ -48,22 +49,28 @@ trait LayoutHelperTrait
     /**
      * @param XiboLayout $layout
      * @param int $status
+     * @return $this
      */
     protected function setLayoutStatus($layout, $status)
     {
         $layout->status = $status;
         $this->getStore()->update('UPDATE `layout` SET `status` = :status WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId, 'status' => $status]);
         $this->getStore()->commitIfNecessary();
+
+        return $this;
     }
 
     /**
      * Build the Layout ready for XMDS
      * @param XiboLayout $layout
+     * @return $this
      */
     protected function buildLayout($layout)
     {
         // Call the status route
         $this->getEntityProvider()->get('/layout/status/' . $layout->layoutId);
+
+        return $this;
     }
 
     /**
@@ -120,5 +127,89 @@ trait LayoutHelperTrait
             return -10;
 
         return $resolutions[0]->resolutionId;
+    }
+
+    /**
+     * @param XiboLayout $layout
+     * @return XiboLayout
+     */
+    protected function checkout($layout)
+    {
+        $this->getLogger()->debug('Checkout ' . $layout->layoutId);
+
+        $response = $this->getEntityProvider()->put('/layout/checkout/' . $layout->layoutId);
+
+        // Swap the Layout object to use the one returned.
+        /** @var XiboLayout $layout */
+        $layout = $this->constructLayoutFromResponse($response);
+
+        $this->getLogger()->debug('LayoutId is now: ' . $layout->layoutId);
+
+        return $layout;
+    }
+
+    /**
+     * @param XiboLayout $layout
+     * @return XiboLayout
+     */
+    protected function publish($layout)
+    {
+        $this->getLogger()->debug('Publish ' . $layout->layoutId);
+
+        $response = $this->getEntityProvider()->put('/layout/publish/' . $layout->layoutId);
+
+        // Swap the Layout object to use the one returned.
+        /** @var XiboLayout $layout */
+        $layout = $this->constructLayoutFromResponse($response);
+
+        $this->getLogger()->debug('LayoutId is now: ' . $layout->layoutId);
+
+        return $layout;
+    }
+
+    /**
+     * @param XiboLayout $layout
+     * @return XiboLayout
+     */
+    protected function discard($layout)
+    {
+        $this->getLogger()->debug('Discard ' . $layout->layoutId);
+
+        $response = $this->getEntityProvider()->put('/layout/discard/' . $layout->layoutId);
+
+        // Swap the Layout object to use the one returned.
+        /** @var XiboLayout $layout */
+        $layout = $this->constructLayoutFromResponse($response);
+
+        $this->getLogger()->debug('LayoutId is now: ' . $layout->layoutId);
+
+        return $layout;
+    }
+
+    /**
+     * @param $response
+     * @return \Xibo\OAuth2\Client\Entity\XiboEntity|XiboLayout
+     */
+    private function constructLayoutFromResponse($response)
+    {
+        /** @var XiboLayout $layout */
+        $layout = new XiboLayout($this->getEntityProvider());
+        $layout = $layout->hydrate($response);
+
+        $this->getLogger()->debug('Constructing Layout from Response: ' . $layout->layoutId);
+
+        if (isset($response['regions'])) {
+            foreach ($response['regions'] as $item) {
+                $region = new XiboRegion($this->getEntityProvider());
+                $region->hydrate($item);
+
+                // Add to parent object
+                $layout->regions[] = $region;
+            }
+        } else {
+            $this->getLogger()->debug('No regions returned with Layout object');
+        }
+
+        return $layout;
     }
 }

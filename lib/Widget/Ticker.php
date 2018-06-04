@@ -1351,17 +1351,16 @@ class Ticker extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getModifiedTimestamp($displayId)
+    public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = null;
-
+        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
         if ($this->getOption('sourceId', 1) == 2) {
 
             $dataSetId = $this->getOption('dataSetId');
             $dataSet = $this->dataSetFactory->getById($dataSetId);
 
             // Set the timestamp
-            $widgetModifiedDt = $dataSet->lastDataEdit;
+            $widgetModifiedDt = ($dataSet->lastDataEdit > $widgetModifiedDt) ? $dataSet->lastDataEdit : $widgetModifiedDt;
 
             // Remote dataSets are kept "active" by required files
             if ($dataSet->isRemote) {

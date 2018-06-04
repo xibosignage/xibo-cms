@@ -126,8 +126,8 @@
                 {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText, "non-command-fields") }}
 
                 {% set title %}{% trans "webOS Command" %}{% endset %}
-                {% set helpText %}{% trans "Enter a webOS Command Line compatible command" %}{% endset %}
-                {{ forms.hidden("webosCommand", title, module.getOption('webosCommand'), helpText, "non-command-fields") }}
+                {% set helpText %}{% trans "Enter a webOS Command Line compatible command. Supported from R11 onward" %}{% endset %}
+                {{ forms.input("webosCommand", title, module.getOption('webosCommand'), helpText, "non-command-fields") }}
 
                 {% set title %}{% trans "Set a duration?" %}{% endset %}
                 {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}

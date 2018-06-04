@@ -1047,6 +1047,7 @@ class Library extends Base
      * Installs fonts
      * @param array $options
      * @return array
+     * @throws XiboException
      */
     public function installFonts($options = [])
     {
@@ -1054,17 +1055,29 @@ class Library extends Base
             'invalidateCache' => true
         ], $options);
 
-        $this->getLog()->debug('Install Fonts called with options: %s', json_encode($options));
+        $this->getLog()->debug('Install Fonts called with options: ' . json_encode($options));
 
+        // Drop the entire font cache as we cannot selectively tell whether the change that caused
+        // this effects all users or not.
+        // Important to note, that we aren't regenerating each user at this point in time, we're only clearing the cache
+        // for them all and generating the current user.
+        // We then make sure that subsequent generates do not change the library fonts.css
+        if ($options['invalidateCache']) {
+            $this->getLog()->debug('Dropping font cache and regenerating.');
+            $this->pool->deleteItem('fontCss/');
+        }
+
+        // Each user has their own font cache (due to permissions) and the displays have their own font cache too
         // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss' . $this->getUser()->userId);
+        $cssItem = $this->pool->getItem('fontCss/' . $this->getUser()->userId);
 
         // Get the CSS
         $cssDetails = $cssItem->get();
 
         if ($options['invalidateCache'] || $cssItem->isMiss()) {
-            $this->getLog()->info('Regenerating font cache');
+            $this->getLog()->debug('Regenerating font cache');
 
+            // Go through all installed fonts each time and regenerate.
             $fontTemplate = '@font-face {
     font-family: \'[family]\';
     src: url(\'[url]\');
@@ -1077,8 +1090,12 @@ class Library extends Base
             $localCss = '';
             $ckEditorString = '';
 
-            if (count($fonts) > 0) {
+            // Check the library exists
+            $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+            $this->ensureLibraryExists($libraryLocation);
 
+            if (count($fonts) > 0) {
+                // Build our font strings.
                 foreach ($fonts as $font) {
                     /* @var Media $font */
 
@@ -1090,37 +1107,53 @@ class Library extends Base
                     $displayName = $font->name;
                     $familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
 
-                    // Css for the client contains the actual stored as location of the font.
+                    // Css for the player contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
 
                     // Test to see if this user should have access to this font
-                    if (!$this->getUser()->checkViewable($font))
-                        continue;
+                    if ($this->getUser()->checkViewable($font)) {
+                        // Css for the local CMS contains the full download path to the font
+                        $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                        $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
-                    // Css for the local CMS contains the full download path to the font
-                    $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
-                    $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
-
-                    // CKEditor string
-                    $ckEditorString .= $displayName . '/' . $familyName . ';';
+                        // CKEditor string
+                        $ckEditorString .= $displayName . '/' . $familyName . ';';
+                    }
                 }
 
-                // Make sure the library exists, otherwise we can't copy the temporary file.
-                $this->ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
+                // If we're a full regenerate, we want to also update the fonts.css file.
+                if ($options['invalidateCache']) {
 
-                // Put the player CSS into the temporary library location
-                $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
-                file_put_contents($tempUrl, $css);
+                    // Pull out the currently stored fonts.css from the library (if it exists)
+                    $existingLibraryFontsCss = '';
+                    if (file_exists($libraryLocation . 'fonts.css')) {
+                        $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts.css');
+                    }
 
-                // Install it (doesn't expire, isn't a system file, force update)
-                $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
-                $media->expires = 0;
-                $media->moduleSystemFile = true;
-                $media->isSaveRequired = true;
-                $media->save();
+                    // Check to see if the existing file is different from the new one
+                    if (md5($existingLibraryFontsCss) !== md5($css)) {
+                        $this->getLog()->info('Detected change in fonts.css file, saving to the library and notifying displays');
 
-                // We can remove the temp file
-                @unlink($tempUrl);
+                        // Put the player CSS into the temporary library location
+                        $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
+                        file_put_contents($tempUrl, $css);
+
+                        // Install it (doesn't expire, isn't a system file, force update)
+                        $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
+                        $media->expires = 0;
+                        $media->moduleSystemFile = true;
+                        $media->isSaveRequired = true;
+                        $media->save();
+
+                        // We can remove the temp file
+                        @unlink($tempUrl);
+
+                        // Clear the display cache
+                        $this->pool->deleteItem('/display');
+                    } else {
+                        $this->getLog()->debug('Newly generated font cache is the same as the old cache. Ignoring.');
+                    }
+                }
 
                 $cssDetails = [
                     'css' => $localCss,
@@ -1130,9 +1163,6 @@ class Library extends Base
                 $cssItem->set($cssDetails);
                 $cssItem->expiresAfter(new \DateInterval('P30D'));
                 $this->pool->saveDeferred($cssItem);
-
-                // Clear the display cache
-                $this->pool->deleteItem('/display');
             }
         } else {
             $this->getLog()->debug('CMS font CSS returned from Cache.');

@@ -58,8 +58,10 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         // Create a Layout
         $this->layout = $this->createLayout();
 
-        // Create a text widget on the Layout
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $this->layout->regions[0]->regionPlaylist['playlistId'], [
+        // Checkout
+        $layout = $this->checkout($this->layout);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
@@ -117,13 +119,18 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Make sure our Layout is already status 1
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
+        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Pre-Layout Status isnt as expected');
 
         // Make sure our Display is already DONE
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Pre-Display Status isnt as expected');
 
-        // Build the Layout
-        $this->client->get('/layout/status/' . $this->layout->layoutId);
+        // Publish (which builds)
+        $response = $this->client->put('/layout/publish/' . $this->layout->layoutId);
+        $response = json_decode($response, true);
+
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->status() . $this->client->response->body());
+
+        $this->layout = $this->constructLayoutFromResponse($response['data']);
 
         // Check the Layout Status
         // Validate the layout status afterwards

@@ -73,6 +73,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
 	{
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
 		$response = $this->client->post('/playlist/widget/googleTraffic/' . $playlistId, [
@@ -131,6 +132,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create Google traffic widgets with arguments from provideFailureCases
@@ -168,6 +170,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create Google traffic widget
@@ -215,6 +218,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create Google traffic widget

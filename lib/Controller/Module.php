@@ -435,6 +435,10 @@ class Module extends Base
         if ($this->permissionFactory == null)
             throw new ConfigurationException(__('Sorry there is an error with this request, cannot set inherited permissions'));
 
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         // Load some information about this playlist
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
@@ -532,6 +536,13 @@ class Module extends Base
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
 
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($module->widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         // Inject the Current User
         $module->setUser($this->getUser());
 
@@ -600,11 +611,17 @@ class Module extends Base
         if (!$this->getUser()->checkDeleteable($module->widget))
             throw new AccessDeniedException();
 
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($module->widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         // Set some dependencies that are used in the delete
         $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         $moduleName = $module->getName();
-        $widgetMedia = $module->widget->mediaIds;
 
         // Inject the Current User
         $module->setUser($this->getUser());
@@ -614,21 +631,6 @@ class Module extends Base
 
         // Call Widget Delete
         $module->widget->delete();
-
-        // Delete Media?
-        if ($this->getSanitizer()->getCheckbox('deleteMedia') == 1) {
-            foreach ($widgetMedia as $mediaId) {
-                $media = $this->mediaFactory->getById($mediaId);
-
-                // Check we have permissions to delete
-                if (!$this->getUser()->checkDeleteable($media))
-                    throw new AccessDeniedException();
-
-                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
-
-                $media->delete();
-            }
-        }
 
         // Successful
         $this->getState()->hydrate([
@@ -729,6 +731,8 @@ class Module extends Base
      *
      * @param string $type
      * @param int $widgetId
+     *
+     * @throws XiboException
      */
     public function editWidgetTransition($type, $widgetId)
     {
@@ -736,6 +740,13 @@ class Module extends Base
 
         if (!$this->getUser()->checkEditable($widget))
             throw new AccessDeniedException();
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $widget->load();
 
@@ -846,6 +857,7 @@ class Module extends Base
      * )
      *
      * @param int $widgetId
+     * @throws XiboException
      */
     public function widgetAudio($widgetId)
     {
@@ -853,6 +865,13 @@ class Module extends Base
 
         if (!$this->getUser()->checkEditable($widget))
             throw new AccessDeniedException();
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $widget->load();
 
@@ -907,6 +926,7 @@ class Module extends Base
      *)
      *
      * @param int $widgetId
+     * @throws XiboException
      */
     public function widgetAudioDelete($widgetId)
     {
@@ -914,6 +934,13 @@ class Module extends Base
 
         if (!$this->getUser()->checkEditable($widget))
             throw new AccessDeniedException();
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $widget->load();
 
@@ -1132,8 +1159,8 @@ class Module extends Base
      *  path="/playlist/widget/{widgetId}/expiry",
      *  operationId="WidgetAssignedExpiryEdit",
      *  tags={"widget"},
-     *  summary="Parameters for edting/adding audio file to a specific widget",
-     *  description="Parameters for edting/adding audio file to a specific widget",
+     *  summary="Set Widget From/To Dates",
+     *  description="Control when this Widget is active on this Playlist",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -1168,6 +1195,7 @@ class Module extends Base
      * )
      *
      * @param int $widgetId
+     * @throws XiboException
      */
     public function widgetExpiry($widgetId)
     {
@@ -1175,6 +1203,13 @@ class Module extends Base
 
         if (!$this->getUser()->checkEditable($widget))
             throw new AccessDeniedException();
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isEditable())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         $widget->load();
 

@@ -15,5 +15,9 @@ namespace Xibo\Exception;
 class ConfigurationException extends XiboException
 {
     public $httpStatusCode = 500;
-    public $handledException = true;
+
+    public function handledException()
+    {
+        return true;
+    }
 }

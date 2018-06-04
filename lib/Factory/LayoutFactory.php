@@ -289,6 +289,27 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Loads only the layout information
+     * @param int $layoutId
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public function getByParentId($layoutId)
+    {
+        if ($layoutId == 0)
+            throw new NotFoundException();
+
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
+    }
+
+    /**
      * Get by OwnerId
      * @param int $ownerId
      * @return Layout[]
@@ -314,6 +335,30 @@ class LayoutFactory extends BaseFactory
             'retired' => -1,
             'disableUserCheck' => $permissionsCheck ? 0 : 1
         ]);
+    }
+
+    /**
+     * Get by RegionId
+     * @param int $regionId
+     * @param bool $permissionsCheck Should we check permissions?
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public function getByRegionId($regionId, $permissionsCheck = true)
+    {
+        $layouts = $this->query(['displayOrder'], [
+            'regionId' => $regionId,
+            'excludeTemplates' => -1,
+            'retired' => -1,
+            'disableUserCheck' => $permissionsCheck ? 0 : 1
+        ]);
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
     }
 
     /**
@@ -800,6 +845,7 @@ class LayoutFactory extends BaseFactory
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
+                    $existingDataSet->userId = $this->getUser()->userId;
                     $existingDataSet->save();
 
                     // Do we need to add data
@@ -838,6 +884,17 @@ class LayoutFactory extends BaseFactory
 
                     if (count($diff) > 0)
                         throw new \InvalidArgumentException(__('DataSets have different column names'));
+
+                    // Set the prior dataSetColumnId on each column.
+                    foreach ($existingDataSet->columns as $column) {
+                        // Lookup the matching column in the external dataSet definition.
+                        foreach ($dataSet->columns as $externalColumn) {
+                            if ($externalColumn->heading == $column->heading) {
+                                $column->priorDatasetColumnId = $externalColumn->dataSetColumnId;
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 // Replace instances of this dataSetId with the existing dataSetId, which will either be the existing
@@ -927,6 +984,7 @@ class LayoutFactory extends BaseFactory
 
         $select  = "";
         $select .= "SELECT layout.layoutID, ";
+        $select .= "        layout.parentId, ";
         $select .= "        layout.layout, ";
         $select .= "        layout.description, ";
         $select .= "        layout.duration, ";
@@ -945,6 +1003,8 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.backgroundColor, ";
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
+        $select .= "        layout.publishedStatusId, ";
+        $select .= "        `status`.status AS publishedStatus, ";
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -965,6 +1025,7 @@ class LayoutFactory extends BaseFactory
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Campaign';
 
         $body  = "   FROM layout ";
+        $body .= '  INNER JOIN status ON status.id = layout.publishedStatusId ';
         $body .= "  INNER JOIN `lkcampaignlayout` ";
         $body .= "   ON lkcampaignlayout.LayoutID = layout.LayoutID ";
         $body .= "   INNER JOIN `campaign` ";
@@ -1034,6 +1095,22 @@ class LayoutFactory extends BaseFactory
             $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', 0, $filterBy);
         }
 
+        // Layout Draft
+        if ($this->getSanitizer()->getInt('parentId', 0, $filterBy) != 0) {
+            $body .= " AND layout.parentId = :parentId ";
+            $params['parentId'] = $this->getSanitizer()->getInt('parentId', 0, $filterBy);
+        } else if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) == 0) {
+            // If we're not searching for a parentId and we're not searching for a layoutId, then don't show any
+            // drafts (parentId will be empty on drafts)
+            $body .= ' AND layout.parentId IS NULL ';
+        }
+
+        // Layout Published Status
+        if ($this->getSanitizer()->getInt('publishedStatusId', $filterBy) !== null) {
+            $body .= " AND layout.publishedStatusId = :publishedStatusId ";
+            $params['publishedStatusId'] = $this->getSanitizer()->getInt('publishedStatusId', $filterBy);
+        }
+
         // Layout Status
         if ($this->getSanitizer()->getInt('status', $filterBy) !== null) {
             $body .= " AND layout.status = :status ";
@@ -1074,6 +1151,13 @@ class LayoutFactory extends BaseFactory
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :ownerCampaignId ";
             $params['ownerCampaignId'] = $this->getSanitizer()->getInt('ownerCampaignId', 0, $filterBy);
+        }
+
+        // Get by regionId
+        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
+            // Join Campaign back onto it again
+            $body .= " AND `layout`.layoutId IN (SELECT layoutId FROM `region` WHERE regionId = :regionId) ";
+            $params['regionId'] = $this->getSanitizer()->getInt('regionId', 0, $filterBy);
         }
 
         // Tags
@@ -1199,6 +1283,7 @@ class LayoutFactory extends BaseFactory
 
             // Validate each param and add it to the array.
             $layout->layoutId = $this->getSanitizer()->int($row['layoutID']);
+            $layout->parentId = $this->getSanitizer()->int($row['parentId']);
             $layout->schemaVersion = $this->getSanitizer()->int($row['schemaVersion']);
             $layout->layout = $this->getSanitizer()->string($row['layout']);
             $layout->description = $this->getSanitizer()->string($row['description']);
@@ -1218,6 +1303,8 @@ class LayoutFactory extends BaseFactory
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
             $layout->statusMessage = $row['statusMessage'];
+            $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
+            $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

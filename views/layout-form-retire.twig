@@ -1,23 +1,9 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2018 Spring Signage Ltd
  * (${FILE_NAME})
  */
-Theme::Set('form_id', 'RetireForm');
-Theme::Set('form_meta', '<input type="hidden" name="layoutId" value="' . $layoutId . '">');
-
-// Retire the layout
-Theme::Set('form_action', 'index.php?p=layout&q=Retire');
-Theme::Set('form_fields', array(Form::AddMessage(__('Are you sure you want to retire this layout ?'))));
-
-$form = Theme::RenderReturn('form_render');
-
- $this->getState()->SetFormRequestResponse($form, sprintf(__('Retire %s'), $layout->layout), '300px', '200px');
- $this->getState()->AddButton(__('Help'), 'XiboHelpRender("' . Help::Link('Layout', 'Retire') . '")');
- $this->getState()->AddButton(__('Delete'), 'XiboSwapDialog("index.php?p=layout&q=DeleteLayoutForm&layoutid=' . $layoutId . '")');
- $this->getState()->AddButton(__('No'), 'XiboDialogClose()');
- $this->getState()->AddButton(__('Yes'), '$("#RetireForm").submit()');
 #}
 
 {% extends "form-base.twig" %}
@@ -39,8 +25,8 @@ $form = Theme::RenderReturn('form_render');
     <div class="row">
         <div class="col-md-12">
             <form id="layoutRetireForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.retire", {id: layout.layoutId}) }}">
-				{{ forms.message("Are you sure you want to retire this layout?") }}
-				{# it is missing few things obviously #}
+                {% set title %}{% trans "Are you sure you want to retire this layout?" %}{% endset %}
+                {{ forms.message(title) }}
             </form>
         </div>
     </div>

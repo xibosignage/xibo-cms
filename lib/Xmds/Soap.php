@@ -640,7 +640,7 @@ class Soap
                         $file->setAttribute('layoutid', $layoutId);
                         $file->setAttribute('regionid', $region->regionId);
                         $file->setAttribute('mediaid', $widget->widgetId);
-                        $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt : $widgetModifiedDt));
+                        $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt->format('U') : $widgetModifiedDt->format('U')));
                         $fileElements->appendChild($file);
                     }
                 }
@@ -1264,6 +1264,16 @@ class Soap
             if ($message == '')
                 $message = $node->textContent;
 
+            // Add the IDs to the message
+            if ($scheduleId != '')
+                $message .= ' scheduleId: ' . $scheduleId;
+
+            if ($layoutId != '')
+                $message .= ' layoutId: '. $layoutId;
+
+            if ($mediaId != '')
+                $message .= ' mediaId: ' . $mediaId;
+
             // Trim the page if it is over 50 characters.
             $page = $thread . $method . $type;
 
@@ -1277,7 +1287,7 @@ class Soap
                 $levelName,
                 $page,
                 'POST',
-                $message . $scheduleId . $layoutId . $mediaId,
+                $message,
                 0,
                 $this->display->displayId
             ];

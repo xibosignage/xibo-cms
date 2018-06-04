@@ -560,6 +560,10 @@ class Campaign extends Base
             if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
+            // Make sure we're not a draft
+            if ($layout->isChild())
+                throw new InvalidArgumentException('Cannot assign a Draft Layout to a Campaign', 'layoutId');
+
             // Set the Display Order
             $layout->displayOrder = $this->getSanitizer()->getInt('displayOrder', $object);
 

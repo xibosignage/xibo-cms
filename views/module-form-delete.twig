@@ -31,14 +31,8 @@
                 {{ forms.message(message) }}
 
                 {% if module.getModule().regionSpecific == 0 and module.widget.mediaIds|length > 0 %}
-                    {% if module.getMedia().isUsed(1) %}
-                        {% set message %}{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." %}{% endset %}
-                        {{ forms.message(message) }}
-                    {% else %}
-                        {% set title %}{% trans "Also delete from the Library?" %}{% endset %}
-                        {% set helpText %}{% trans "This widget is linked to Media in the Library. Check this option to also delete that Media." %}{% endset %}
-                        {{ forms.checkbox("deleteMedia", title, 0, helpText) }}
-                    {% endif %}
+                    {% set message %}{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If the Library item should be deleted then please do so from the Library page." %}{% endset %}
+                    {{ forms.message(message, "alert alert-info") }}
                 {% endif %}
             </form>
         </div>

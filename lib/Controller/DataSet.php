@@ -786,6 +786,7 @@ class DataSet extends Base
         $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
         $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->code = $this->getSanitizer()->getString('code');
+        $dataSet->userId = $this->getUser()->userId;
         $dataSet->save();
 
         // Return

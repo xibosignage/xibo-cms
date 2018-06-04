@@ -154,6 +154,7 @@ class TickerWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
         
         if ($isFeed) {
@@ -324,6 +325,7 @@ class TickerWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         $this->getLogger()->debug('Create ticker for ' . $playlistId);
@@ -427,6 +429,7 @@ class TickerWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create dataset
@@ -497,6 +500,7 @@ class TickerWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a ticker with wrapper

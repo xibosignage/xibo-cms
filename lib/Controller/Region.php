@@ -12,6 +12,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
@@ -20,6 +21,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -41,6 +43,9 @@ class Region extends Base
      * @var RegionFactory
      */
     private $regionFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
 
     /**
      * @var PermissionFactory
@@ -78,19 +83,21 @@ class Region extends Base
      * @param ConfigServiceInterface $config
      * @param Session $session
      * @param RegionFactory $regionFactory
+     * @param WidgetFactory $widgetFactory
      * @param PermissionFactory $permissionFactory
      * @param TransitionFactory $transitionFactory
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $permissionFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory,
                                 $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->session = $session;
         $this->regionFactory = $regionFactory;
+        $this->widgetFactory = $widgetFactory;
         $this->permissionFactory = $permissionFactory;
         $this->transitionFactory = $transitionFactory;
         $this->layoutFactory = $layoutFactory;
@@ -242,6 +249,9 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
+        if (!$layout->isChild())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         $layout->load([
             'loadPlaylists' => true,
             'loadTags' => false,
@@ -389,6 +399,12 @@ class Region extends Base
         if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
 
+        // Check that this Regions Layout is in an editable state
+        $layout = $this->layoutFactory->getById($region->layoutId);
+
+        if (!$layout->isChild())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         // Load before we save
         $region->load();
 
@@ -411,7 +427,6 @@ class Region extends Base
         $region->save();
 
         // Mark the layout as needing rebuild
-        $layout = $this->layoutFactory->getById($region->layoutId);
         $layout->load(\Xibo\Entity\Layout::$loadOptionsMinimum);
 
         $saveOptions = \Xibo\Entity\Layout::$saveOptionsMinimum;
@@ -459,6 +474,12 @@ class Region extends Base
         if (!$this->getUser()->checkDeleteable($region))
             throw new AccessDeniedException();
 
+        // Check that this Regions Layout is in an editable state
+        $layout = $this->layoutFactory->getById($region->layoutId);
+
+        if (!$layout->isChild())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
         $region->delete();
 
         // Return
@@ -471,6 +492,7 @@ class Region extends Base
     /**
      * Update Positions
      * @param int $layoutId
+     * @throws NotFoundException
      *
      * @SWG\Put(
      *  path="/region/position/all/{layoutId}",
@@ -488,7 +510,7 @@ class Region extends Base
      *  @SWG\Parameter(
      *      name="regions",
      *      in="formData",
-     *      description="Array of regions and their new positions. Each array element should ne json encoded and have regionId, top, left, width and height.",
+     *      description="Array of regions and their new positions. Each array element should be json encoded and have regionId, top, left, width and height.",
      *      type="array",
      *      required=true,
      *      @SWG\Items(
@@ -511,6 +533,10 @@ class Region extends Base
 
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
+
+        // Check that this Layout is a Draft
+        if (!$layout->isChild())
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Pull in the regions and convert them to stdObjects
         $regions = $this->getSanitizer()->getParam('regions', null);
@@ -571,9 +597,11 @@ class Region extends Base
     /**
      * Represents the Preview inside the Layout Designer
      * @param int $regionId
+     * @throws XiboException
      */
     public function preview($regionId)
     {
+        $widgetId = $this->getSanitizer()->getInt('widgetId', null);
         $seqGiven = $this->getSanitizer()->getInt('seq', 1);
         $seq = $this->getSanitizer()->getInt('seq', 1);
         $width = $this->getSanitizer()->getDouble('width', 0);
@@ -585,28 +613,38 @@ class Region extends Base
             $region = $this->regionFactory->getById($regionId);
             $region->load();
 
-            // Get the first playlist we can find
-            $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
+            if ($widgetId !== null) {
+                // Single Widget Requested
+                $widget = $this->widgetFactory->getById($widgetId);
+                $widget->load();
 
-            // Expand this Playlist out to its individual Widgets
-            $widgets = $playlist->expandWidgets();
+                $countWidgets = 1;
 
-            $countWidgets = count($widgets);
+            } else {
 
-            // We want to load the widget in the given sequence
-            if ($countWidgets <= 0) {
-                // No media to preview
-                throw new NotFoundException(__('No widgets to preview'));
+                // Get the first playlist we can find
+                $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
+
+                // Expand this Playlist out to its individual Widgets
+                $widgets = $playlist->expandWidgets();
+
+                $countWidgets = count($widgets);
+
+                // We want to load the widget in the given sequence
+                if ($countWidgets <= 0) {
+                    // No media to preview
+                    throw new NotFoundException(__('No widgets to preview'));
+                }
+
+                $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
+
+                // Select the widget at the required sequence
+                $widget = $playlist->getWidgetAt($seq, $widgets);
+                /* @var \Xibo\Entity\Widget $widget */
+                $widget->load();
             }
 
-            $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
-
-            // Select the widget at the required sequence
-            $widget = $playlist->getWidgetAt($seq, $widgets);
-            /* @var \Xibo\Entity\Widget $widget */
-            $widget->load();
-
-            // Otherwise, output a preview
+            // Output a preview
             $module = $this->moduleFactory->createWithWidget($widget, $region);
 
             $this->getState()->extra['empty'] = false;

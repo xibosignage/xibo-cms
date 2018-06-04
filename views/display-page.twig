@@ -164,7 +164,7 @@
 
                             if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
                                 var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
-                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="' + data.clientAddress + '">' + data.display + '</a>';
+                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
                             }
                             else {
                                 return data.display;
@@ -231,13 +231,15 @@
                         "visible": false
                     },
                     {
-                        "name": "clientVersion",
-                        "data": function (data, type) {
+                        "name": "clientType",
+                        "data": "clientVersion",
+                        "render": function (data, type, row) {
                             if (type != "display")
-                                return data.clientVersion;
+                                return data;
 
-                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                            return row.clientType + ' ' + row.clientVersion + '-' + row.clientCode;
                         },
+                        "sort": "clientType",
                         "visible": false
                     },
                     {"data": "deviceName", "visible": false},

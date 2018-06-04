@@ -156,6 +156,12 @@ class DataSet implements \JsonSerializable
     public $lastSync = 0;
 
     /**
+     * @SWG\Property(description="Last Clear Timestamp")
+     * @var int
+     */
+    public $lastClear = 0;
+
+    /**
      * @SWG\Property(description="Root-Element form JSON where the data are stored in")
      * @var String
      */
@@ -576,7 +582,7 @@ class DataSet implements \JsonSerializable
      */
     public function getNextClearTime()
     {
-        return $this->lastSync + $this->clearRate;
+        return $this->lastClear + $this->clearRate;
     }
 
     /**
@@ -708,6 +714,22 @@ class DataSet implements \JsonSerializable
         return $this;
     }
 
+    /**
+     * @param int $time
+     * @return $this
+     */
+    public function saveLastClear($time)
+    {
+        $this->lastSync = $time;
+
+        $this->getStore()->update('UPDATE `dataset` SET lastClear = :lastClear WHERE dataSetId = :dataSetId', [
+            'dataSetId' => $this->dataSetId,
+            'lastClear' => $this->lastClear
+        ]);
+
+        return $this;
+    }
+
     private function touchLastAccessed()
     {
         // Touch this dataSet
@@ -790,8 +812,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `lastClear`, `summarize`, `summarizeField`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :lastClear, :summarize, :summarizeField';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;

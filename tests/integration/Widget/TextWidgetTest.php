@@ -74,6 +74,7 @@ class TextWidgetTest extends LocalWebTestCase
         //parent::setupEnv();
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         $response = $this->client->post('/playlist/widget/text/' . $playlistId, [
@@ -126,6 +127,7 @@ class TextWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a text widget with wrapper
@@ -162,6 +164,7 @@ class TextWidgetTest extends LocalWebTestCase
     {
         // Create layout
         $layout = $this->createLayout();
+        $layout = $this->checkout($layout);
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         # Create a text widget with wrapper

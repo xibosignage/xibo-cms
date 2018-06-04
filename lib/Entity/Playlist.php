@@ -134,9 +134,16 @@ class Playlist implements \JsonSerializable
      */
     public $permissions = [];
 
+    /**
+     * Temporary Id used during import/upgrade
+     * @var string read only string
+     */
+    public $tempId = null;
+
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
+
     private $unassignTags = [];
 
     //<editor-fold desc="Factories and Dependencies">
@@ -259,6 +266,45 @@ class Playlist implements \JsonSerializable
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
             $widget->setOwner($ownerId);
+        }
+    }
+
+    /**
+     * Is this Playlist a Region Playlist (region specific)
+     * @return bool
+     */
+    public function isRegionPlaylist()
+    {
+        return ($this->regionId != null);
+    }
+
+    /**
+     * Is this Playlist editable.
+     * Are we a standalone playlist OR are we on a draft layout
+     * @return bool
+     */
+    public function isEditable()
+    {
+        if ($this->isRegionPlaylist()) {
+            // Run a lookup to see if we're on a draft layout
+            $this->getLog()->debug('Checking whether we are on a Layout which is in the Draft State');
+
+            $exists = $this->getStore()->exists('
+                SELECT `layout`.layoutId 
+                  FROM `region`
+                    INNER JOIN `layout` ON layout.layoutId = region.layoutId 
+                 WHERE regionId = :regionId
+                  AND parentId IS NOT NULL
+            ', [
+                'regionId' => $this->regionId
+            ]);
+
+            $this->getLog()->debug('We are ' . (($exists) ? 'editable' : 'not editable'));
+
+            return $exists;
+        } else {
+            $this->getLog()->debug('Non-region Playlist - we\'re always Editable' );
+            return true;
         }
     }
 

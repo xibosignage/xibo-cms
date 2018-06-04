@@ -36,6 +36,8 @@
                             {% set title %}{% trans "Entity" %}{% endset %}
                             {{ inline.input("entity", title) }}
 
+                            {% set title %}{% trans "Entity ID" %}{% endset %}
+                            {{ inline.input("entityId", title) }}
                         </form>
                     </div>
                 </div>
@@ -47,6 +49,7 @@
                                 <th>{% trans "Date" %}</th>
                                 <th>{% trans "User" %}</th>
                                 <th>{% trans "Entity" %}</th>
+                                <th>{% trans "Entity ID" %}</th>
                                 <th>{% trans "Message" %}</th>
                                 <th>{% trans "Object" %}</th>
                             </tr>
@@ -131,6 +134,7 @@
                     {"data": "logDate", "render": dataTableDateFromUnix},
                     {"data": "userName"},
                     {"data": "entity"},
+                    {"data": "entityId"},
                     {"data": "message"},
                     {
                         "data": function (data, type, row, meta) {

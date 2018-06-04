@@ -193,17 +193,18 @@
             </div>
             {{#if oldMediaId}}
             <div class="row">
-                <div class="col-md-6">
-                    <label for="updateInLayouts" title="{{ trans.updateInLayouts.helpText }}">
+                <div class="col-md-12">
+                    <label for="updateInLayouts">
                         <input type="checkbox" id="updateInLayouts" name="updateInLayouts" {{#if updateInAllChecked}}checked{{/if}}>
                         {{ trans.updateInLayouts.title }}
                     </label>
-                </div>
-                <div class="col-md-6">
-                    <label for="deleteOldRevisions" title="{{ trans.deleteOldRevisions.helpText }}">
+                    <span class="help-block">{{ trans.updateInLayouts.helpText }}</span>
+
+                    <label for="deleteOldRevisions">
                         <input type="checkbox" id="deleteOldRevisions" name="deleteOldRevisions" {{#if deleteOldRevisionsChecked}}checked{{/if}}>
                         {{ trans.deleteOldRevisions.title }}
                     </label>
+                    <span class="help-block">{{ trans.deleteOldRevisions.helpText }}</span>
                 </div>
             </div>
             {{/if}}
