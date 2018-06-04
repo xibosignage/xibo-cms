@@ -1937,6 +1937,10 @@ class Layout extends Base
         $draft->publishDraft();
         $draft->load();
 
+        // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+        // error message
+        $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,

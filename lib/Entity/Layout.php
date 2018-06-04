@@ -1046,8 +1046,10 @@ class Layout implements \JsonSerializable
         $layoutNode->appendChild($tagsNode);
 
         // Update the layout status / duration accordingly
-        if ($layoutHasEmptyRegion)
+        if ($layoutHasEmptyRegion) {
             $status = 4;
+            $this->statusMessage .= __('Empty Region');
+        }
 
         $this->status = ($status < $this->status) ? $status : $this->status;
 
@@ -1215,7 +1217,8 @@ class Layout implements \JsonSerializable
     {
         $options = array_merge([
             'notify' => true,
-            'collectNow' => true
+            'collectNow' => true,
+            'exceptionOnError' => false
         ], $options);
 
         $path = $this->getCachePath();
@@ -1239,7 +1242,13 @@ class Layout implements \JsonSerializable
                 // Will continue and save the status as 4
                 $this->status = 4;
                 $this->statusMessage = 'Unexpected Error';
+
+                // No need to notify on an errored build
+                $options['notify'] = false;
             }
+
+            if ($this->status === 4 && $options['exceptionOnError'])
+                throw new InvalidArgumentException(__('There is an error with this Layout: %s', $this->statusMessage), 'status');
 
             $this->save([
                 'saveRegions' => true,
