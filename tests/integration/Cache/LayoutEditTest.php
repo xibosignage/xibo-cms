@@ -45,6 +45,17 @@ class LayoutEditTest extends LocalWebTestCase
         // Create a Layout
         $this->layout = $this->createLayout(1);
 
+        // We need to add a widget to it, so that the Layout tests out as valid
+        $layout = $this->checkout($this->layout);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+            'text' => 'Widget A',
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        $this->layout = $this->publish($this->layout);
+
         // Create a Display
         $this->display = $this->createDisplay();
 
@@ -103,11 +114,11 @@ class LayoutEditTest extends LocalWebTestCase
         // Check in the Layout
         $this->layout = $this->publish($this->layout);
 
-        // Validate the layout status afterwards
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
+        // Validate the layout status afterwards (publish builds the layout)
+        $this->assertTrue($this->layoutStatusEquals($this->layout, 1), 'Layout Status isnt as expected');
 
         // Validate the display status afterwards
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected after publish');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected after publish');
 
         // Somehow test that we have issued an XMR request
         $this->assertFalse(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');

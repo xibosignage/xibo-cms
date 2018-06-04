@@ -123,17 +123,17 @@ class PlaylistReorderTest extends LocalWebTestCase
             ]
         ]);
 
+        // This shouldn't effect the display
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+
         // Publish
         $this->layout = $this->publish($this->layout);
 
         // Check the Layout Status
         // Validate the layout status afterwards
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
+        $this->assertTrue($this->layoutStatusEquals($this->layout, 1), 'Layout Status isnt as expected');
 
         // Validate the display status afterwards
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
-
-        // Somehow test that we have issued an XMR request
-        $this->assertFalse(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');
     }
 }

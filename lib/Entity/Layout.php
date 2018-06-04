@@ -1300,6 +1300,17 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->parentId
         ]);
 
+        // Update any campaign links
+        $this->getStore()->update('
+          UPDATE `lkcampaignlayout` 
+            SET layoutId = :layoutId 
+           WHERE layoutId = :parentId 
+            AND campaignId IN (SELECT campaignId FROM campaign WHERE isLayoutSpecific = 0)
+        ', [
+            'parentId' => $this->parentId,
+            'layoutId' => $this->layoutId
+        ]);
+
         // Persist things that might have changed
         // NOTE: permissions are managed on the campaign, so we do not need to worry.
         $this->layout = $parent->layout;
@@ -1337,6 +1348,9 @@ class Layout implements \JsonSerializable
             'audit' => true,
             'notify' => false
         ]);
+
+        // Nullify my parentId (I no longer have a parent)
+        $this->parentId = null;
     }
 
     /**

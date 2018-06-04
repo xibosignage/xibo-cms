@@ -48,8 +48,14 @@ class WidgetDeleteTest extends LocalWebTestCase
         // Checkout
         $layout = $this->checkout($this->layout);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+        $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
             'text' => 'Widget A',
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+            'text' => 'Widget B',
             'duration' => 100,
             'useDuration' => 1
         ]);
@@ -102,15 +108,17 @@ class WidgetDeleteTest extends LocalWebTestCase
 
         $this->assertEquals(200, $this->client->response->status(), 'Transaction Status Incorrect');
 
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+
         // Publish
         $this->layout = $this->publish($this->layout);
 
         // Check the Layout Status
         // Validate the layout status afterwards
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
+        $this->assertTrue($this->layoutStatusEquals($this->layout, 1), 'Layout Status isnt as expected');
 
         // Validate the display status afterwards
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');
 
         // Somehow test that we have issued an XMR request
         $this->assertFalse(in_array($this->display->displayId, $this->getPlayerActionQueue()), 'Player action not present');

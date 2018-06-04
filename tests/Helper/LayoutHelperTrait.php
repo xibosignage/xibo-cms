@@ -196,6 +196,8 @@ trait LayoutHelperTrait
         $layout = new XiboLayout($this->getEntityProvider());
         $layout = $layout->hydrate($response);
 
+        $this->getLogger()->debug('Constructing Layout from Response: ' . $layout->layoutId);
+
         if (isset($response['regions'])) {
             foreach ($response['regions'] as $item) {
                 $region = new XiboRegion($this->getEntityProvider());

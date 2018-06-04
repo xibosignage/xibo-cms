@@ -59,9 +59,6 @@ class LayoutBuildTest extends LocalWebTestCase
             'useDuration' => 1
         ]);
 
-        // Check us in again
-        $this->layout = $this->publish($this->layout);
-
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // Create a Display
@@ -108,13 +105,16 @@ class LayoutBuildTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Make sure our Layout is already status 1
-        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Layout Status isnt as expected');
+        $this->assertTrue($this->layoutStatusEquals($this->layout, 3), 'Pre-Layout Status isnt as expected');
 
         // Make sure our Display is already DONE
-        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Pre-Display Status isnt as expected');
 
-        // Build the Layout
-        $this->client->get('/tasks/2');
+        // Publish (which builds)
+        $response = $this->client->put('/layout/publish/' . $this->layout->layoutId);
+        $response = json_decode($response, true);
+
+        $this->layout = $this->constructLayoutFromResponse($response['data']);
 
         // Check the Layout Status
         // Validate the layout status afterwards
