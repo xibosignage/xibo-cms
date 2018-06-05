@@ -54,13 +54,16 @@ class WidgetSyncTask implements TaskInterface
               INNER JOIN `display`
               ON display.displayId = requiredfile.displayId
            WHERE requiredfile.type = \'L\' 
-            /*AND display.loggedIn = 1*/
+            AND display.loggedIn = 1
           ORDER BY itemId, displayId
         ';
 
+        $smt = $this->store->getConnection()->prepare($sql);
+        $smt->execute();
+
         // Get a list of Layouts which are currently active, along with the display they are active on
         // get the widgets from each layout and call get resource on them
-        foreach ($this->store->select($sql, []) as $row) {
+        while ($row = $smt->fetch(\PDO::FETCH_ASSOC)) {
 
             // We have a Layout
             $layoutId = (int)$row['itemId'];
@@ -100,6 +103,9 @@ class WidgetSyncTask implements TaskInterface
                             $module = $moduleFactory->createWithWidget($widget, $region);
 
                             $module->getResourceOrCache($displayId);
+
+                            // Add a little break in here
+                            sleep(1);
                         }
                     }
                 }
