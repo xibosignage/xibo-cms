@@ -26,6 +26,10 @@ module.exports = {
                 to: 'preview'
             },
             {
+                from: 'ui/src/assets',
+                to: 'assets'
+            },
+            {
                 from: 'ui/src/vendor',
                 to: 'vendor'
             }
@@ -104,10 +108,15 @@ module.exports = {
         },
         {
             test: /\.hbs$/,
-            use: [
-                'handlebars-loader'
-            ]
-        }
-        ]
+            use: [{
+                loader: 'handlebars-loader',
+                options: {
+                    helperDirs: path.join(__dirname, 'ui/src/helpers'),
+                    precompileOptions: {
+                        knownHelpersOnly: false,
+                    }
+                }
+            }]
+        }]
     }
 };

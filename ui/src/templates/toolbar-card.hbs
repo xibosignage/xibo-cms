@@ -1,0 +1,13 @@
+<div class="toolbar-card" data-toggle="tooltip" data-placement="top" title="{{description}}">
+    <div class="img-container">
+        {{#if imageUri}}
+            <img src="/dist/assets/{{imageUri}}">
+        {{/if}}
+
+        {{#if thumbnailUrl}}
+            <img src="{{thumbnailUrl}}">
+        {{/if}}
+    </div>
+    
+    <p class="title">{{name}}</p>
+</div>

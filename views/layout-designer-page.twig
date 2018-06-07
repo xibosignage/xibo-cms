@@ -12,13 +12,19 @@
 {% block pageContent %}
 
     <!-- Editor structure -->
-    <div id="layout-editor" data-layout-id="{{ layout.layoutId }}"></div>
-    
+    <div id="layout-editor" data-layout-id="{{ layout.layoutId }}"></div>    
+
 {% endblock %}
 
     {% block javaScript %}       
         <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js"></script>
         <script type="text/javascript">
+
+            let modulesList = [];
+
+            {% for module in modules %}
+                modulesList.push({{ module.getModule()|json_encode|raw }});
+            {% endfor %}
 
             const urlsForApi = {
                 layout: {
@@ -80,6 +86,12 @@
                     },
                     preview: {
                         url: "{{ urlFor("region.preview") }}",
+                        type: 'GET'
+                    }
+                },
+                library: {
+                    get: {
+                        url: "{{ urlFor("library.search") }}",
                         type: 'GET'
                     }
                 }

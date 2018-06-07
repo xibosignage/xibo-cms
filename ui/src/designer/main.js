@@ -31,8 +31,11 @@ const Navigator = require('./navigator.js');
 const Timeline = require('./timeline.js');
 const Manager = require('./manager.js');
 const Viewer = require('./viewer.js');
-const BottomToolbar = require('./bottom-toolbar.js');
+const toolbar = require('./toolbar.js');
 const PropertiesPanel = require('./properties-panel.js');
+
+// Include helpers
+//require('../helpers/operators.js');
 
 // Include CSS
 require('../css/designer.css');
@@ -63,7 +66,7 @@ window.lD = {
     selectedObject: {},
 
     // Bottom toolbar
-    bottomToolbar: {},
+    toolbar: {},
 
     // Properties Panel
     propertiesPanel: {}
@@ -73,7 +76,7 @@ window.lD = {
 $(document).ready(function() {
     // Get layout id
     const layoutId = lD.designerDiv.attr("data-layout-id");
-
+    
     // Append loading html to the main div
     lD.designerDiv.html(loadingTemplate());
 
@@ -112,8 +115,8 @@ $(document).ready(function() {
                 );
 
                 // Initialize bottom toolbar
-                lD.bottomToolbar = new BottomToolbar(
-                    lD.designerDiv.find('#bottom-toolbar')
+                lD.toolbar = new toolbar(
+                    lD.designerDiv.find('#layout-editor-toolbar')
                 );
 
                 // Initialize properties panel
@@ -145,6 +148,7 @@ $(document).ready(function() {
 
             // Refresh navigators and viewer
             lD.renderContainer(lD.navigator);
+            lD.renderContainer(lD.toolbar);
             lD.renderContainer(lD.navigatorEdit);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }
@@ -218,7 +222,7 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.navigator);
     this.renderContainer(this.navigatorEdit);
     this.renderContainer(this.timeline);
-    this.renderContainer(this.bottomToolbar);
+    this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
 
     // Render selected object in the following containers

@@ -198,7 +198,11 @@ class Layout extends Base
             'isTemplate' => $isTemplate,
             'layouts' => $this->layoutFactory->query(null, ['excludeTemplates' => $isTemplate ? 0 : 1]),
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
-            'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
+            'modules' => array_map(function($element) use ($moduleFactory) { 
+                    $module = $moduleFactory->createForInstall($element->class);
+                    $module->setModule($element);
+                    return $module;
+                }, $moduleFactory->getAssignableModules())
         ];
 
         // Call the render the template

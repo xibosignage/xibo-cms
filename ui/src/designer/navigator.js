@@ -85,6 +85,9 @@ Navigator.prototype.render = function(layout) {
     // Apply navigator scale to the layout
     const scaledLayout = this.scaleLayout(layout, this.DOMObject);
 
+    // Add edit flag
+    scaledLayout.edit = this.editMode;
+
     // Compile layout template with data
     const html = navigatorLayoutTemplate(scaledLayout);
 
@@ -126,6 +129,11 @@ Navigator.prototype.render = function(layout) {
         e.stopPropagation();
         lD.selectObject($(this));
     });
+
+    // Handle edit button
+    this.DOMObject.find('#edit-btn').click(function() {
+        lD.toggleNavigatorEditing(true);
+    }.bind(this));
 
     // Render navbar
     this.renderNavbar();
