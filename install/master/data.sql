@@ -324,7 +324,7 @@ INSERT INTO task (taskId, name, class, status, options, schedule, isActive, conf
   (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
   (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * *', 1, '/tasks/notification-tidy.task'),
   (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, '[]', '30 * * * * *', 1, '/tasks/remote-dataset.task'),
-  (7, 'Widget Sync', '\\Xibo\\XTR\\WidgetSyncTask', 2, '[]', '30 * * * * *', 1, '/tasks/widget-sync.task');
+  (7, 'Widget Sync', '\\Xibo\\XTR\\WidgetSyncTask', 2, '[]', '*/3 * * * *', 1, '/tasks/widget-sync.task');
 
 
 INSERT INTO daypart (name, description, isRetired, userid, startTime, endTime, exceptions, isAlways, isCustom) VALUES

@@ -20,7 +20,7 @@
     },
     {
       "step": "Add Widget Sync Task",
-      "action": "INSERT INTO `task` SET `name`='Widget Sync', `class`='\\\\Xibo\\\\XTR\\\\WidgetSyncTask', `status`=2, `isActive`=1, `configFile`='/tasks/widget-sync.task', `options`='{}', `schedule`='30 * * * * *';"
+      "action": "INSERT INTO `task` SET `name`='Widget Sync', `class`='\\\\Xibo\\\\XTR\\\\WidgetSyncTask', `status`=2, `isActive`=1, `configFile`='/tasks/widget-sync.task', `options`='{}', `schedule`='*/3 * * * *';"
     }
   ]
 }
