@@ -225,7 +225,7 @@ class Image extends ModuleWidget
                 $this->getLog()->error('Image not readable: ' . $notReadableException->getMessage());
 
                 // Output the thumbnail
-                $img = Img::make(PROJECT_ROOT . '/web/' . $this->getConfig()->uri('img/error.png', true));
+                $img = Img::make($this->getConfig()->uri('img/error.png', true));
 
                 if ($width != 0 || $height != 0) {
                     $img->resize($width, $height, function ($constraint) use ($proportional) {
