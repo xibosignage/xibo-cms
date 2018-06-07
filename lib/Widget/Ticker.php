@@ -33,7 +33,7 @@ use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
-use Xibo\Service\LogService;
+use Xibo\Helper\Environment;
 
 
 class Ticker extends ModuleWidget
@@ -861,13 +861,14 @@ class Ticker extends ModuleWidget
             }
         }
 
-        //$this->getLog()->debug(var_export($document, true));
-
         // Cache HIT or we've requested
         // Load the feed XML document into a feed parser
+        $picoFeedLoggingEnabled = Environment::isDevMode();
+
         try {
             // Enable logging if we need to
-            if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
+            if ($picoFeedLoggingEnabled) {
+                $this->getLog()->debug('Setting Picofeed Logger to Enabled.');
                 Logger::enable();
             }
 
@@ -891,15 +892,25 @@ class Ticker extends ModuleWidget
             $feedItems = $feed->getItems();
 
         } catch (PicoFeedException $picoFeedException) {
+            // Output any PicoFeed logs
+            if ($picoFeedLoggingEnabled) {
+                $this->getLog()->debug('Outputting Picofeed Logs.');
+                foreach (Logger::getMessages() as $message) {
+                    $this->getLog()->debug($message);
+                }
+            }
+
             // Log and return empty?
-            $this->getLog()->error('Unable to get feed: ' . $picoFeedException->getMessage());
+            $this->getLog()->error('Unable to parse feed: ' . $picoFeedException->getMessage());
             $this->getLog()->debug($picoFeedException->getTraceAsString());
             return false;
         }
 
         // Output any PicoFeed logs
-        if (LogService::resolveLogLevel($this->getConfig()->GetSetting('audit', 'error')) == \Slim\Log::DEBUG) {
-            $this->getLog()->debug(var_export(Logger::getMessages(), true));
+        if ($picoFeedLoggingEnabled) {
+            foreach (Logger::getMessages() as $message) {
+                $this->getLog()->debug($message);
+            }
         }
 
         // Parse the text template

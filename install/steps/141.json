@@ -17,6 +17,10 @@
     {
       "step": "Update Display as VNC link setting to be more general",
       "action": "UPDATE `setting` SET title = 'The target attribute for the above link' WHERE setting = 'SHOW_DISPLAY_AS_VNC_TGT';"
+    },
+    {
+      "step": "Add Widget Sync Task",
+      "action": "INSERT INTO `task` SET `name`='Widget Sync', `class`='\\\\Xibo\\\\XTR\\\\WidgetSyncTask', `status`=2, `isActive`=1, `configFile`='/tasks/widget-sync.task', `options`='{}', `schedule`='*/3 * * * *';"
     }
   ]
 }
