@@ -440,6 +440,7 @@ class Display extends Base
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'showTags' => true,
+            'clientAddress' => $this->getSanitizer()->getString('clientAddress')
         ];
 
         // Get a list of displays
