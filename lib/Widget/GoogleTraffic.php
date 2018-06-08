@@ -105,6 +105,10 @@ class GoogleTraffic extends ModuleWidget
         // Minimum duration
         $this->module->settings['minDuration'] = $this->getSanitizer()->getInt('minDuration');
 
+        // Validate that the default duration isn't lower that the min duration
+        if ($this->module->settings['minDuration'] > $this->module->defaultDuration)
+            throw new InvalidArgumentException(__('Please set your default duration higher than your minimum'), 'defaultDuration');
+
         // Should we reset all widgets?
         if ($this->getSanitizer()->getCheckbox('resetAllWidgets') == 1) {
             $this->getStore()->update('UPDATE `widget` SET duration = :duration WHERE type = :type AND useDuration = 1', [
