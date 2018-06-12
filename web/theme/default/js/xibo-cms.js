@@ -380,6 +380,11 @@ function XiboInitialise(scope) {
         }
     });
 
+    // TODO: make a vanilla layout, display and media selector for reuse
+    $(scope + " .pagedLayoutSelect select.form-control").each(function() {
+        makePagedLayoutSelector($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+    });
+
     // Notification dates
     $(scope + " span.notification-date").each(function() {
         $(this).html(moment($(this).html(), "X").fromNow());
@@ -1545,4 +1550,53 @@ function ToggleFilterView(div) {
     else {
         $(div).fadeOut("slow");
     }
+}
+
+/**
+ * Make a Paged Layout Selector from a Select Element and its parent (which can be null)
+ * @param element
+ * @param parent
+ */
+function makePagedLayoutSelector(element, parent) {
+    element.select2({
+        dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        ajax: {
+            url: element.data('searchUrl'),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    layout: params.term,
+                    start: 0,
+                    length: 10
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+
+                $.each(data.data, function(index, element) {
+                    results.push({
+                        "id": element.layoutId,
+                        "text": element.layout
+                    });
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
 }

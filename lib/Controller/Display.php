@@ -758,7 +758,7 @@ class Display extends Base
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $layouts,
+            'layouts' => [$this->layoutFactory->getById($display->defaultLayoutId)],
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
@@ -1484,7 +1484,7 @@ class Display extends Base
         $this->getState()->template = 'display-form-defaultlayout';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->layoutFactory->query()
+            'layouts' => [$this->layoutFactory->getById($display->defaultLayoutId)]
         ]);
     }
 

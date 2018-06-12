@@ -326,7 +326,7 @@
             console.log('Multi-select form opened for default layout');
 
             // Inject a list of layouts into the form, in a drop down.
-            var $select = $('<select name="layoutId" class="form-control">');
+            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ urlFor("layout.search") }}">');
             $select.on('change', function() {
                 console.log('Setting commit data to ' + $(this).val());
                 dialog.data().commitData = {layoutId: $(this).val()};
@@ -335,47 +335,7 @@
             // Add the list to the body.
             $(dialog).find('.modal-body').append($select);
 
-            $select.select2({
-                dropdownParent: $(dialog),
-                ajax: {
-                    url: "{{ urlFor("layout.search") }}",
-                    dataType: "json",
-                    data: function(params) {
-                        var query = {
-                            layout: params.term,
-                            start: 0,
-                            length: 10
-                        };
-
-                        // Set the start parameter based on the page number
-                        if (params.page != null) {
-                            query.start = (params.page - 1) * 10;
-                        }
-
-                        return query;
-                    },
-                    processResults: function(data, params) {
-                        var results = [];
-
-                        $.each(data.data, function(index, element) {
-                            results.push({
-                                "id": element.layoutId,
-                                "text": element.layout
-                            });
-                        });
-
-                        var page = params.page || 1;
-                        page = (page > 1) ? page - 1 : page;
-
-                        return {
-                            results: results,
-                            pagination: {
-                                more: (page * 10 < data.recordsTotal)
-                            }
-                        }
-                    }
-                }
-            });
+            makePagedLayoutSelector($select, dialog);
         }
     </script>
 {% endblock %}

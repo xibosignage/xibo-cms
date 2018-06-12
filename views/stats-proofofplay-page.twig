@@ -39,11 +39,12 @@
                             {% set attributes = [
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" }
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("layout.search") }
                             ] %}
 
                             {% set title %}{% trans "Layout" %}{% endset %}
-                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", layouts, "layoutId", "layout", "", "selectPicker", "", "m", "", attributes) }}
+                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", layouts, "layoutId", "layout", "", "pagedLayoutSelect", "", "m", "", attributes) }}
 
                             {% set title %}{% trans "Media" %}{% endset %}
                             {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", media, "mediaId", "name", "", "selectPicker", "", "m", "", attributes) }}

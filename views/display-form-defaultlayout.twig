@@ -38,7 +38,7 @@
             <form id="displayDefaultLayoutForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.defaultlayout", {id: display.displayId}) }}">
                 {% set title %}{% trans "Default Layout" %}{% endset %}
                 {% set helpText %}{% trans "The Default Layout to Display where there is no other content." %}{% endset %}
-                {{ forms.dropdown("layoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText) }}
+                {{ forms.dropdown("layoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText, "pagedLayoutSelect", "", "", "", [{"name": "data-search-url", "value": urlFor("layout.search")}]) }}
             </form>
         </div>
     </div>
