@@ -335,21 +335,45 @@
             // Add the list to the body.
             $(dialog).find('.modal-body').append($select);
 
-            // Query for the layouts
-            $.ajax({
-                type: "GET",
-                url: "{{ urlFor("layout.search") }}",
-                success: function(response, textStatus, error) {
-                    // Use the data object to populate our $select list
-                    $.each(response.data, function(index, element) {
-                        if (index === 0)
-                            dialog.data().commitData = {layoutId: element.layoutId};
+            $select.select2({
+                dropdownParent: $(dialog),
+                ajax: {
+                    url: "{{ urlFor("layout.search") }}",
+                    dataType: "json",
+                    data: function(params) {
+                        var query = {
+                            layout: params.term,
+                            start: 0,
+                            length: 10
+                        };
 
-                        $select.append($('<option value="' + element.layoutId + '">' + element.layout + '</option>'))
-                    });
-                },
-                error: function(responseText) {
-                    SystemMessage(responseText, false);
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+
+                        return query;
+                    },
+                    processResults: function(data, params) {
+                        var results = [];
+
+                        $.each(data.data, function(index, element) {
+                            results.push({
+                                "id": element.layoutId,
+                                "text": element.layout
+                            });
+                        });
+
+                        var page = params.page || 1;
+                        page = page - 1;
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
                 }
             });
         }

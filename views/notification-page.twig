@@ -118,8 +118,8 @@
         table.on('processing.dt', dataTableProcessing);
 
         function notificationFormOpen(dialog) {
-            $('select[name="displayGroupIds[]"]', dialog).selectpicker();
-            $('select[name="userGroupIds[]"]', dialog).selectpicker();
+            $('select[name="displayGroupIds[]"]', dialog).select2();
+            $('select[name="userGroupIds[]"]', dialog).select2();
 
             // Conjure up a text editor
             CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);

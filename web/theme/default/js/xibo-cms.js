@@ -362,7 +362,23 @@ function XiboInitialise(scope) {
     
     });
 
-    $(scope + " .selectPicker select.form-control").selectpicker();
+    $(scope + " .selectPicker select.form-control").select2({
+        dropdownParent: ($(scope).hasClass("modal") ? $(scope) : $("body")),
+        templateResult: function(state) {
+
+            if (!state.id) {
+                return state.text;
+            }
+
+            var $el = $(state.element);
+
+            if ($el.data().content !== undefined) {
+                return $($el.data().content);
+            }
+
+            return state.text;
+        }
+    });
 
     // Notification dates
     $(scope + " span.notification-date").each(function() {

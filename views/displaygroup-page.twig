@@ -27,8 +27,9 @@
                             {{ inline.input("displayGroup", title) }}
 
                             {% set attributes = [
-                            { name: "data-live-search", value: "true" },
-                            { name: "data-selected-text-format", value: "count > 4" }
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" }
                             ] %}
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set helpText %}{% trans "Return Display Groups that directly contain the selected Display." %}{% endset %}

@@ -52,7 +52,7 @@ $(document).ready(function() {
     });
 
     // Make the select list nicer
-    $('#DisplayList').selectpicker();
+    $('#DisplayList').select2();
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
@@ -368,9 +368,9 @@ $(document).ready(function() {
 var setupScheduleForm = function(dialog) {
 
     // Select lists
-    $('#campaignId', dialog).selectpicker();
-    $('select[name="displayGroupIds[]"]', dialog).selectpicker();
-    $('select[name="recurrenceRepeatsOn[]"]', dialog).selectpicker();
+    $('#campaignId', dialog).select2();
+    $('select[name="displayGroupIds[]"]', dialog).select2();
+    $('select[name="recurrenceRepeatsOn[]"]', dialog).select2();
     
     // Hide/Show form elements according to the selected options
     // Initial state of the components
@@ -546,8 +546,8 @@ var duplicateScheduledEvent = function() {
 var setupScheduleNowForm = function(form) {
     
     // We submit this form ourselves (outside framework)
-    $('#campaignId', form).selectpicker();
-    $('select[name="displayGroupIds[]"]', form).selectpicker();
+    $('#campaignId', form).select2();
+    $('select[name="displayGroupIds[]"]', form).select2();
 
     // Hide the seconds input option unless seconds are enabled in the date format
     if (dateFormat.indexOf("s") <= -1) {

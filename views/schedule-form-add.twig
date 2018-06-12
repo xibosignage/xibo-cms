@@ -112,11 +112,7 @@
                         ] %}
                         {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        {% set attributes = [
-                            { name: "data-live-search", value: "true" },
-                            { name: "data-selected-text-format", value: "count > 4" }
-                        ] %}
-                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", attributes, optionGroups) }}
+                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", "", optionGroups) }}
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
