@@ -12,5 +12,5 @@
 {% block moduleFormFields %}
     {% set title %}{% trans "API Key" %}{% endset %}
     {% set helpText %}{% trans "Enter your API Key from Google Maps." %}{% endset %}
-    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText, "", "required") }}
+    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}
 {% endblock %}
