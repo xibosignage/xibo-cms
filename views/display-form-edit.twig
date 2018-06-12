@@ -69,7 +69,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
 
                         {% set title %}{% trans "Default Layout" %}{% endset %}
                         {% set helpText %}{% trans "The Default Layout to Display where there is no other content." %}{% endset %}
-                        {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText) }}
+                        {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText, "selectPicker") }}
                     </div>
                     <div class="tab-pane" id="location">
                         {% set title %}{% trans "Latitude" %}{% endset %}
@@ -81,8 +81,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {{ forms.number("longitude", title, display.longitude, helpText) }}
 
                         {% set attributes = [
-                        { name: "data-live-search", value: "true" },
-                        { name: "data-selected-text-format", value: "count > 4" }
+                        { name: "data-width", value: "100%" }
                         ] %}
                         {% set title %}{% trans "Timezone" %}{% endset %}
                         {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}

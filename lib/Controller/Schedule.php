@@ -596,12 +596,25 @@ class Schedule extends Base
      */
     function addForm()
     {
+        // Get the display groups added to the session (if there are some)
+        $displayGroupIds = $this->session->get('displayGroupIds');
+        $displayGroups = [];
+
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                if ($this->getUser()->checkViewable($displayGroup))
+                    $displayGroups[] = $displayGroup;
+            }
+        }
+
         $this->getState()->template = 'schedule-form-add';
         $this->getState()->setData([
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'displayGroupIds' => $this->session->get('displayGroupIds'),
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add')
         ]);
     }

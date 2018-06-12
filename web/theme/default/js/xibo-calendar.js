@@ -368,7 +368,94 @@ $(document).ready(function() {
 var setupScheduleForm = function(dialog) {
 
     // Select lists
-    $('#campaignId', dialog).select2();
+    var $campaignSelect = $('#campaignId', dialog);
+    $campaignSelect.select2({
+        dropdownParent: $(dialog),
+        ajax: {
+            url: $campaignSelect.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    isLayoutSpecific: -1,
+                    retired: 0,
+                    totalDuration: 0,
+                    name: params.term,
+                    start: 0,
+                    length: 10,
+                    columns: [
+                        {
+                            "data": "isLayoutSpecific"
+                        },
+                        {
+                            "data": "campaign"
+                        }
+                    ],
+                    order: [
+                        {
+                            "column": 0,
+                            "dir": "asc"
+                        },
+                        {
+                            "column": 1,
+                            "dir": "asc"
+                        }
+                    ]
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+                var campaigns = [];
+                var layouts = [];
+
+                $.each(data.data, function(index, element) {
+                    if (element.isLayoutSpecific === 1) {
+                        layouts.push({
+                            "id": element.campaignId,
+                            "text": element.campaign
+                        });
+                    } else {
+                        campaigns.push({
+                            "id": element.campaignId,
+                            "text": element.campaign
+                        });
+                    }
+                });
+
+                if (campaigns.length > 0) {
+                    results.push({
+                        "text": $campaignSelect.data('transCampaigns'),
+                        "children": campaigns
+                    })
+                }
+
+                if (layouts.length > 0) {
+                    results.push({
+                        "text": $campaignSelect.data('transLayouts'),
+                        "children": layouts
+                    })
+                }
+
+                console.log(results);
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
 
     var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
     $displaySelect.select2({
@@ -382,7 +469,25 @@ var setupScheduleForm = function(dialog) {
                     forSchedule: 1,
                     displayGroup: params.term,
                     start: 0,
-                    length: 10
+                    length: 10,
+                    columns: [
+                        {
+                            "data": "isDisplaySpecific"
+                        },
+                        {
+                            "data": "displayGroup"
+                        }
+                    ],
+                    order: [
+                        {
+                            "column": 0,
+                            "dir": "asc"
+                        },
+                        {
+                            "column": 1,
+                            "dir": "asc"
+                        }
+                    ]
                 };
 
                 // Set the start parameter based on the page number
