@@ -199,7 +199,7 @@ var text_callback = function(dialog, extraData) {
                     });
 
                     var page = params.page || 1;
-                    page = page - 1;
+                    page = (page > 1) ? page - 1 : page;
 
                     return {
                         results: results,

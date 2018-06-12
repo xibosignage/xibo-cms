@@ -181,6 +181,20 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="isDisplaySpecific",
+     *      in="formData",
+     *      description="Filter by whether the Display Group belongs to a Display or is user created",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="forSchedule",
+     *      in="formData",
+     *      description="Should the list be refined for only those groups the User can Schedule against?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
@@ -205,13 +219,23 @@ class DisplayGroup extends Base
             'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
             'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
             'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags')
+            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
+            'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific')
         ];
+
+        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
+
+            // Check to see if we're getting this data for a Schedule attempt, or for a general list
+            if ($this->getSanitizer()->getCheckbox('forSchedule') == 1) {
+                // Can't schedule with view, but no edit permissions
+                if (!$scheduleWithView && !$this->getUser()->checkEditable($group))
+                    continue;
+            }
 
             if ($this->isApi())
                 continue;

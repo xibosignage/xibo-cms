@@ -369,8 +369,71 @@ var setupScheduleForm = function(dialog) {
 
     // Select lists
     $('#campaignId', dialog).select2();
-    $('select[name="displayGroupIds[]"]', dialog).select2();
-    $('select[name="recurrenceRepeatsOn[]"]', dialog).select2();
+
+    var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
+    $displaySelect.select2({
+        dropdownParent: $(dialog),
+        ajax: {
+            url: $displaySelect.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    isDisplaySpecific: -1,
+                    forSchedule: 1,
+                    displayGroup: params.term,
+                    start: 0,
+                    length: 10
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var groups = [];
+                var displays = [];
+
+                $.each(data.data, function(index, element) {
+                    if (element.isDisplaySpecific === 1) {
+                        displays.push({
+                            "id": element.displayGroupId,
+                            "text": element.displayGroup
+                        });
+                    } else {
+                        groups.push({
+                            "id": element.displayGroupId,
+                            "text": element.displayGroup
+                        });
+                    }
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: [
+                        {
+                            "text": $displaySelect.data('transGroups'),
+                            "children": groups
+                        },{
+                            "text": $displaySelect.data('transDisplay'),
+                            "children": displays
+                        }
+                    ],
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
+
+    $('select[name="recurrenceRepeatsOn[]"]', dialog).select2({
+        width: "100%"
+    });
     
     // Hide/Show form elements according to the selected options
     // Initial state of the components

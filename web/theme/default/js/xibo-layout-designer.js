@@ -67,7 +67,7 @@ $(document).ready(function(){
                 });
 
                 var page = params.page || 1;
-                page = page - 1;
+                page = (page > 1) ? page - 1 : page;
 
                 return {
                     results: results,
