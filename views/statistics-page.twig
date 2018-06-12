@@ -11,8 +11,6 @@
 
 {% block pageContent %}
 
-    {% set displayFilterOptions = [{displayId: null, display: ""}]|merge(displays) %}
-
     <div class="widget">
         <div class="widget-title">{% trans "Bandwidth" %}</div>
         <div class="widget-body">
@@ -27,7 +25,17 @@
                             {{ inline.dateMonth("bandwidthToDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
-                            {{ inline.dropdown("displayId", "single", title, "", displayFilterOptions, "displayId", "display") }}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
                         </form>
                     </div>
                 </div>
@@ -51,7 +59,17 @@
                             {{ inline.date("availabilityToDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
-                            {{ inline.dropdown("displayId", "single", title, "", displayFilterOptions, "displayId", "display") }}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
                             {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
                             {{ inline.checkbox("onlyLoggedIn", title) }}

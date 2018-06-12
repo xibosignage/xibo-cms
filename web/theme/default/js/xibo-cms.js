@@ -380,9 +380,9 @@ function XiboInitialise(scope) {
         }
     });
 
-    // TODO: make a vanilla layout, display and media selector for reuse
-    $(scope + " .pagedLayoutSelect select.form-control").each(function() {
-        makePagedLayoutSelector($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+    // make a vanilla layout, display and media selector for reuse
+    $(scope + " .pagedSelect select.form-control").each(function() {
+        makePagedSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
     });
 
     // Notification dates
@@ -1557,18 +1557,19 @@ function ToggleFilterView(div) {
  * @param element
  * @param parent
  */
-function makePagedLayoutSelector(element, parent) {
+function makePagedSelect(element, parent) {
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         ajax: {
-            url: element.data('searchUrl'),
+            url: element.data("searchUrl"),
             dataType: "json",
             data: function(params) {
                 var query = {
-                    layout: params.term,
                     start: 0,
                     length: 10
                 };
+
+                query[element.data("searchTerm")] = params.term;
 
                 // Set the start parameter based on the page number
                 if (params.page != null) {
@@ -1579,11 +1580,12 @@ function makePagedLayoutSelector(element, parent) {
             },
             processResults: function(data, params) {
                 var results = [];
+                var $element = element;
 
-                $.each(data.data, function(index, element) {
+                $.each(data.data, function(index, el) {
                     results.push({
-                        "id": element.layoutId,
-                        "text": element.layout
+                        "id": el[$element.data("idProperty")],
+                        "text": el[$element.data("textProperty")]
                     });
                 });
 

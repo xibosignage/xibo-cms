@@ -69,7 +69,13 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
 
                         {% set title %}{% trans "Default Layout" %}{% endset %}
                         {% set helpText %}{% trans "The Default Layout to Display where there is no other content." %}{% endset %}
-                        {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText, "pagedLayoutSelect", "", "", "", [{"name": "data-search-url", "value": urlFor("layout.search")}]) }}
+                        {% set attributes = [
+                            { name: "data-search-url", value: urlFor("layout.search") },
+                            { name: "data-search-term", value: "layout" },
+                            { name: "data-id-property", value: "layoutId" },
+                            { name: "data-text-property", value: "layout" }
+                        ] %}
+                        {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText, "pagedSelect", "", "", "", attributes) }}
                     </div>
                     <div class="tab-pane" id="location">
                         {% set title %}{% trans "Latitude" %}{% endset %}

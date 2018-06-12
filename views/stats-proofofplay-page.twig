@@ -18,7 +18,6 @@
 
 
 {% block pageContent %}
-    {% set displayFilterOptions = [{displayId: null, display: ""}]|merge(displays) %}
 
     <div class="widget">
         <div class="widget-title">{% trans "Proof of Play" %}</div>
@@ -34,20 +33,43 @@
                             {{ inline.date("statsToDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
-                            {{ inline.dropdown("displayId", "single", title, "", displayFilterOptions, "displayId", "display") }}
-
                             {% set attributes = [
+                                { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("layout.search") }
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
                             ] %}
 
                             {% set title %}{% trans "Layout" %}{% endset %}
-                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", layouts, "layoutId", "layout", "", "pagedLayoutSelect", "", "m", "", attributes) }}
+                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
 
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" }
+                            ] %}
                             {% set title %}{% trans "Media" %}{% endset %}
-                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", media, "mediaId", "name", "", "selectPicker", "", "m", "", attributes) }}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
                         </form>
                     </div>
                 </div>
