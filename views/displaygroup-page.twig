@@ -26,18 +26,23 @@
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("displayGroup", title) }}
 
+                            {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
+                                { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" }
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
                             ] %}
-                            {% set title %}{% trans "Display" %}{% endset %}
                             {% set helpText %}{% trans "Return Display Groups that directly contain the selected Display." %}{% endset %}
-                            {{ inline.dropdown("displayId", "single", title, "", [{displayId:null, display: null}]|merge(displays), "displayId", "display", helpText, "selectPicker", "", "", "", attributes) }}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", helpText, "pagedSelect", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Nested Display" %}{% endset %}
                             {% set helpText %}{% trans "Return Display Groups that contain the selected Display somewhere in the nested Display Group relationship tree." %}{% endset %}
-                            {{ inline.dropdown("nestedDisplayId", "single", title, "", [{displayId:null, display: null}]|merge(displays), "displayId", "display", helpText, "selectPicker", "", "", "", attributes) }}
+                            {{ inline.dropdown("nestedDisplayId", "single", title, "", null, "displayId", "display", helpText, "pagedSelect", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Dynamic Criteria" %}{% endset %}
                             {{ inline.input("dynamicCriteria", title) }}

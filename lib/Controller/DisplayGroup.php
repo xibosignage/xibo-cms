@@ -135,9 +135,6 @@ class DisplayGroup extends Base
     public function displayPage()
     {
         $this->getState()->template = 'displaygroup-page';
-        $this->getState()->setData([
-            'displays' => $this->displayFactory->query()
-        ]);
     }
 
     /**

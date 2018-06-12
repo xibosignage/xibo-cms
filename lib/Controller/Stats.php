@@ -582,9 +582,6 @@ class Stats extends Base
     public function exportForm()
     {
         $this->getState()->template = 'statistics-form-export';
-        $this->getState()->setData([
-            'displays' => $this->displayFactory->query()
-        ]);
     }
 
     /**
