@@ -1,16 +1,29 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (GoogleTraffic.php)
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2016-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Widget;
 
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -49,7 +62,7 @@ class GoogleTraffic extends ModuleWidget
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
-            $module->defaultDuration = 60;
+            $module->defaultDuration = 600;
             $module->settings = [];
 
             $this->setModule($module);
@@ -88,6 +101,24 @@ class GoogleTraffic extends ModuleWidget
             throw new \InvalidArgumentException(__('Missing API Key'));
 
         $this->module->settings['apiKey'] = $apiKey;
+
+        // Minimum duration
+        $this->module->settings['minDuration'] = $this->getSanitizer()->getInt('minDuration');
+
+        // Validate that the default duration isn't lower that the min duration
+        if ($this->module->settings['minDuration'] > $this->module->defaultDuration)
+            throw new InvalidArgumentException(__('Please set your default duration higher than your minimum'), 'defaultDuration');
+
+        // Should we reset all widgets?
+        if ($this->getSanitizer()->getCheckbox('resetAllWidgets') == 1) {
+            $this->getStore()->update('UPDATE `widget` SET duration = :duration WHERE type = :type AND useDuration = 1', [
+                'type' => 'googletraffic',
+                'duration' => $this->module->settings['minDuration']
+            ]);
+
+            // Dump the cache to force a re-cache of all the API keys
+            $this->dumpCacheForModule();
+        }
     }
 
     /**
@@ -206,6 +237,11 @@ class GoogleTraffic extends ModuleWidget
             if (!v::longitude()->validate($this->getOption('longitude')))
                 throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
         }
+
+        // Check the duration against the minDuration setting
+        $minDuration = $this->getSetting('minDuration', 600);
+        if ($this->getUseDuration() == 1 && $this->getDuration() < $minDuration)
+            throw new InvalidArgumentException(__('The minimum duration for this Widget is %d.', $minDuration), 'duration');
     }
 
     /**

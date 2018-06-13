@@ -103,8 +103,8 @@
                         {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
                         {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
 
-                        {% set title %}{% trans "Label Now" %}{% endset %}
-                        {% set helpText %}{% trans "Should we label the current event? We will use the current Date/Time to work out if the event is current. This will be replaced in the [Label] template tag." %}{% endset %}
+                        {% set title %}{% trans "Additional Label for current events" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally use the Players Date/Time to work out if the event showing is current, and if so will apply this label anywhere the [Label] tag appears in the template." %}{% endset %}
                         {{ forms.input("eventLabelNow", title, module.getOption("eventLabelNow"), helpText)}}
 
                         <div class="col-sm-6">

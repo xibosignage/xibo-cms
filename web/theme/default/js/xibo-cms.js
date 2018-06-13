@@ -258,7 +258,7 @@ function XiboInitialise(scope) {
                 preset.val("");
             } else {
                 // Parse the value into a moment
-                value = moment($(this).val(), jsDateFormat);
+                value = moment(value, jsDateFormat.replace(jsTimeFormat, "").replace(" ", ""));
 
                 // Get the current master data (if empty, then assume now)
                 var updatedMaster = (preset.val() === "") ? moment() : moment(preset.val(), systemDateFormat);
