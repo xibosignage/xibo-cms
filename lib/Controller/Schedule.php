@@ -268,10 +268,18 @@ class Schedule extends Base
             $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
-            $title = sprintf(__('%s scheduled on %s'),
-                ($row->campaign == '') ? $row->command : $row->campaign,
-                $displayGroupList
-            );
+            if ($row->campaignId == 0) {
+                // Command
+                $title = __('%s scheduled on %s', $row->command, $displayGroupList);
+            } else {
+                // Campaign
+                $campaign = $this->campaignFactory->getById($row->campaignId);
+
+                if (!$this->getUser()->checkViewable($campaign))
+                    $row->campaign = __('Private Item');
+
+                $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
+            }
 
             // Event URL
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
@@ -451,8 +459,11 @@ class Schedule extends Base
 
                     if ($this->getUser()->checkViewable($layout))
                         $layouts[$layoutId] = $layout;
-                    else
-                        $layouts[$layoutId] = $layout->layout;
+                    else {
+                        $layouts[$layoutId] = [
+                            'layout' => __('Private Item')
+                        ];
+                    }
 
                     // Add the Campaign
                     $layout->campaigns = $this->campaignFactory->getByLayoutId($layout->layoutId);
@@ -466,6 +477,8 @@ class Schedule extends Base
                         }
                     }
                 }
+
+                $event['campaign'] = is_object($layouts[$layoutId]) ? $layouts[$layoutId]->layout : $layouts[$layoutId];
 
                 // Display Group details
                 $this->getLog()->debug('Adding this events displayGroupIds to list');
