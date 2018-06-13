@@ -602,6 +602,9 @@ class Schedule extends Base
 
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1)
+                    continue;
+
                 $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
                 if ($this->getUser()->checkViewable($displayGroup))
