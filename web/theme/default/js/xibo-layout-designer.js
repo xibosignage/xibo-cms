@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2008-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -16,6 +16,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 var layout;
 var lockPosition;
@@ -30,24 +31,72 @@ $(document).ready(function(){
     // Set the height of the grid to be something sensible for the current screen resolution
     var jumpList = $("#layoutJumpList");
 
-    jumpList.selectpicker();
+    jumpList.select2({
+        ajax: {
+            url: jumpList.data().url,
+            dataType: "json",
+            data: function(params) {
+                console.log(params.term);
 
-    jumpList.on("changed.bs.select", function(event, index, newValue, oldValue) {
-        localStorage.liveSearchPlaceholder = $(this).parent().find(".bs-searchbox input").val();
-        window.location = $(this).val();
-    }).on("shown.bs.select", function() {
-        $(this).parent().find(".bs-searchbox input").val(localStorage.liveSearchPlaceholder);
-        $(this).selectpicker("refresh");
+                var query = {
+                    layout: params.term,
+                    start: 0,
+                    length: 10
+                };
 
-        // Shrink the Dropdown list according to the container (HAX)
-        var jumpListContainer = $(".layoutJumpListContainer");
-        jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                // Find out what is inside the search box for this list, and save it (so we can replay it when the list
+                // is opened again)
+                if (params.term !== undefined) {
+                    localStorage.liveSearchPlaceholder = params.term;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+
+                $.each(data.data, function(index, element) {
+                    results.push({
+                        "id": element.layoutId,
+                        "text": element.layout
+                    });
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            },
+            delay: 250
+        }
     });
 
-    // Shrink the Dropdown list according to the container (HAX)
-    var jumpListContainer = $(".layoutJumpListContainer");
-    jumpListContainer.find(".bootstrap-select").width(jumpListContainer.width());
+    jumpList.on("select2:select", function(e) {
+        // Go to the Layout we've selected.
+        window.location = jumpList.data().designerUrl.replace(":id", e.params.data.id);
+    }).on("select2:opening", function(e) {
+        // Set the search box according to the saved value (if we have one)
+        console.log(localStorage.liveSearchPlaceholder);
 
+        if (localStorage.liveSearchPlaceholder != null && localStorage.liveSearchPlaceholder !== "") {
+            var $search = jumpList.data("select2").dropdown.$search;
+            $search.val(localStorage.liveSearchPlaceholder);
+
+            setTimeout(function() { $search.trigger("input"); }, 100);
+        }
+    });
+
+    // Load Layout
     layout = $("#layout");
 
     // Read in the values of lockPosition and hideControls

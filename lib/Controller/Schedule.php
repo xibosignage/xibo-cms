@@ -596,32 +596,28 @@ class Schedule extends Base
      */
     function addForm()
     {
-        $groups = array();
-        $displays = array();
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        // Get the display groups added to the session (if there are some)
+        $displayGroupIds = $this->session->get('displayGroupIds');
+        $displayGroups = [];
 
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1)
+                    continue;
 
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
-                continue;
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
+                if ($this->getUser()->checkViewable($displayGroup))
+                    $displayGroups[] = $displayGroup;
             }
         }
 
         $this->getState()->template = 'schedule-form-add';
         $this->getState()->setData([
-            'displays' => $displays,
-            'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'displayGroupIds' => $this->session->get('displayGroupIds'),
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add')
         ]);
     }
@@ -865,32 +861,13 @@ class Schedule extends Base
         if ($schedule->recurrenceRange != null)
             $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);
 
-        $groups = array();
-        $displays = array();
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
-                continue;
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'displays' => $displays,
-            'displayGroups' => $groups,
             'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'displayGroups' => $schedule->displayGroups,
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),

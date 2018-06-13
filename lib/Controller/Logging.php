@@ -81,7 +81,6 @@ class Logging extends Base
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
-            'displays' => $this->displayFactory->query(),
             'users' => $this->userFactory->query()
         ]);
     }

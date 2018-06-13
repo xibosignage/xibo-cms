@@ -315,7 +315,7 @@ class CampaignFactory extends BaseFactory
             $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
-        $intProperties = ['intProperties' => ['numberLayouts']];
+        $intProperties = ['intProperties' => ['numberLayouts', 'isLayoutSpecific']];
 
         // Layout durations
         if ($this->getSanitizer()->getInt('totalDuration', 0, $options) != 0) {
@@ -332,6 +332,10 @@ class CampaignFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
+            if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
+                $body .= ' AND retired = :retired ';
+            }
+
             $results = $this->getStore()->select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

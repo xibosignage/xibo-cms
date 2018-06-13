@@ -50,16 +50,11 @@
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
-                            { name: "data-live-search", value: "true" },
-                            { name: "data-selected-text-format", value: "count > 4" }
+                            { name: "data-search-url", value:  urlFor("displayGroup.search") },
+                            { name: "data-trans-groups", value:  "Groups"|trans },
+                            { name: "data-trans-display", value:  "Display"|trans }
                         ] %}
-                        {% set transGroups %}{% trans "Groups" %}{% endset %}
-                        {% set transDisplays %}{% trans "Display" %}{% endset %}
-                        {% set optionGroups = [
-                            {id: "group", label: transGroups},
-                            {id: "display", label: transDisplays}
-                        ] %}
-                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, displayGroups, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
@@ -87,36 +82,15 @@
                         {{ forms.dateTime("toDt", title, "", helpText, "endtime-control", "required") }}
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                        {% set layoutOptions = [] %}
-                        {% set campaignOptions = [] %}
-
-                        {% for item in campaigns %}
-                            {% if item.isLayoutSpecific == 1 %}
-                                {% set layoutOptions = layoutOptions|merge([{id: item.campaignId, value: item.campaign}]) %}
-                            {% else %}
-                                {% set campaignOptions = campaignOptions|merge([{id: item.campaignId, value: item.campaign}]) %}
-                            {% endif %}
-                        {% endfor %}
-
-                        {# Add a blank campaign record #}
-                        {% set campaignOptions = [{id: "", value: ""}]|merge(campaignOptions) %}
-
-                        {# Add a blank layout record #}
-                        {% set layoutOptions = [{id: "", value: ""}]|merge(layoutOptions) %}
-
-                        {% set campaigns %}{% trans "Campaigns" %}{% endset %}
-                        {% set layouts %}{% trans "Layouts" %}{% endset %}
-                        {% set optionGroups = [
-                        {id: "campaign", label: campaigns},
-                        {id: "layout", label: layouts}
+                        {% set attributes = [
+                            { name: "data-search-url", value:  urlFor("campaign.search") },
+                            { name: "data-trans-campaigns", value:  "Campaigns"|trans },
+                            { name: "data-trans-layouts", value:  "Layouts"|trans }
                         ] %}
+
                         {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        {% set attributes = [
-                            { name: "data-live-search", value: "true" },
-                            { name: "data-selected-text-format", value: "count > 4" }
-                        ] %}
-                        {{ forms.dropdown("campaignId", "single", title, "", {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "layout-control", "", "", "", attributes, optionGroups) }}
+                        {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes, optionGroups) }}
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">

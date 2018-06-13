@@ -60,8 +60,7 @@
                         {% set title %}{% trans "Users" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more users / groups who will receive this notification." %}{% endset %}
                         {% set attributes = [
-                        { name: "data-live-search", value: "true" },
-                        { name: "data-selected-text-format", value: "count > 4" }
+                            { name: "data-width", value: "100%" }
                         ] %}
                         {% set transUserGroups %}{% trans "Groups" %}{% endset %}
                         {% set transUsers %}{% trans "Users" %}{% endset %}
@@ -69,14 +68,13 @@
                         {id: "group", label: transUserGroups},
                         {id: "user", label: transUsers}
                         ] %}
-                        {{ forms.dropdown("userGroupIds[]", "dropdownmulti", title, userGroupIds, {group: userGroups, user: users}, "groupId", "group", helpText, "", "", "", "", attributes, optionGroups) }}
+                        {{ forms.dropdown("userGroupIds[]", "dropdownmulti", title, userGroupIds, {group: userGroups, user: users}, "groupId", "group", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
 
                         {% set title %}{% trans "Displays" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}
                         {% set attributes = [
-                        { name: "data-live-search", value: "true" },
-                        { name: "data-selected-text-format", value: "count > 4" }
+                            { name: "data-width", value: "100%" }
                         ] %}
                         {% set transGroups %}{% trans "Groups" %}{% endset %}
                         {% set transDisplays %}{% trans "Display" %}{% endset %}
@@ -84,7 +82,7 @@
                         {id: "group", label: transGroups},
                         {id: "display", label: transDisplays}
                         ] %}
-                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
                     </div>
                 </div>
