@@ -149,8 +149,7 @@ class DataSetData extends Base
 
         $this->getState()->template = 'dataset-data-form-add';
         $this->getState()->setData([
-            'dataSet' => $dataSet,
-            'images' => $this->mediaFactory->query(null, ['type' => 'image'])
+            'dataSet' => $dataSet
         ]);
     }
 
@@ -259,11 +258,20 @@ class DataSetData extends Base
 
         $dataSet->load();
 
+        $row = $dataSet->getData(['id' => $rowId])[0];
+
+        // Augment my row with any already selected library image
+        foreach ($dataSet->getColumn() as $dataSetColumn) {
+            if ($dataSetColumn->dataTypeId === 5) {
+                // Add this image object to my row
+                $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
+            }
+        }
+
         $this->getState()->template = 'dataset-data-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'row' => $dataSet->getData(['id' => $rowId])[0],
-            'images' => $this->mediaFactory->query(null, ['type' => 'image'])
+            'row' => $row
         ]);
     }
 

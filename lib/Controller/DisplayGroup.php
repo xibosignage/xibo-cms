@@ -1320,14 +1320,10 @@ class DisplayGroup extends Base
         // List of effected displays
         $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
 
-        // Possible media files to assign
-        $media = $this->mediaFactory->query(['name'], ['type' => 'genericfile']);
-
         $this->getState()->template = 'displaygroup-form-version';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'displays' => $displays,
-            'media' => $media,
             'help' => $this->getHelp()->link('DisplayGroup', 'Version')
         ]);
     }

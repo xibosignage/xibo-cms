@@ -1571,6 +1571,11 @@ function makePagedSelect(element, parent) {
 
                 query[element.data("searchTerm")] = params.term;
 
+                // Check to see if we've been given additional filter options
+                if (element.data("filterOptions") !== undefined) {
+                    query = $.extend({}, query, element.data("filterOptions"));
+                }
+
                 // Set the start parameter based on the page number
                 if (params.page != null) {
                     query.start = (params.page - 1) * 10;
