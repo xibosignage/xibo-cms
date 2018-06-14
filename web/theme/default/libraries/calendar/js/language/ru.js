@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['ru-RU'] = {
+window.calendar_languages['ru'] = {
 	error_noview:     'Календарь: Шаблон вида {0} не найден.',
 	error_dateformat: 'Календарь: неверный формат даты {0}. Должно быть или "now" или "yyyy-mm-dd"',
 	error_loadurl:    'Календарь: не назначен URL для загрузки событий.',

@@ -2,7 +2,7 @@ if(!window.calendar_languages) {
         window.calendar_languages = {};
 }
 
-window.calendar_languages['hr-HR'] = {
+window.calendar_languages['hr'] = {
         error_noview:     'Kalendar: Prikaz {0} nije pronađen.',
         error_dateformat: 'Kalendar: Neispravan format datuma {0}. Unesite "now" ili "yyyy-mm-dd"',
         error_loadurl:    'Kalendar: Poveznica događaja nije postavljena.',

@@ -6,14 +6,14 @@ if(!window.calendar_languages) {
 // Here you define the language and Country code. Replace en-US with your own.
 // First letters: the language code (lower case). See http://www.loc.gov/standards/iso639-2/php/code_list.php
 // Last letters: the Country code (upper case). See http://www.iso.org/iso/home/standards/country_codes/country_names_and_code_elements.htm
-window.calendar_languages['bg-BG'] = {
-	error_noview: 'Календар: Изглед {0} не беше открит',
-	error_dateformat: 'Календар: Грешен формат за дата {0}. Трябва да бъде или "now", или "yyyy-mm-dd"',
-	error_loadurl: 'Календар: URL адресът на събитието не е зададен',
-	error_where: 'Календар: Грешна посока {0}. Може да бъде  зададено само "next", "prev", или "today"',
-	error_timedevide: 'Календар: Параметърът за разделяне на времето трябва да може да се дели на 60, без остатък. Например 10, 15, 30',
+window.calendar_languages['cs'] = {
+	error_noview: 'Kalendář: Pohled {0} nebyl nalezen',
+	error_dateformat: 'Kalendář: Chybný formát data {0}. Zvolte "now" nebo "yyyy-mm-dd"',
+	error_loadurl: 'Kalendář: Není vyplněno URL události',
+	error_where: 'Kalendář: Chyba navigace {0}. Can be only "next" or "prev" or "today"',
+	error_timedevide: 'Kalendář: Rozdělení času musí být dělitelem 60 beze zbytku. Například 10, 15, 30',
 
-	no_events_in_day: 'Няма събития за този ден.',
+	no_events_in_day: 'Dnes žádné události.',
 
 	// {0} will be replaced with the year (example: 2013)
 	title_year: '{0}',
@@ -22,53 +22,53 @@ window.calendar_languages['bg-BG'] = {
 	title_month: '{0} {1}',
 	// {0} will be replaced with the week number (example: 37)
 	// {1} will be replaced with the year (example: 2013)
-	title_week: 'Седмица {0} от {1}',
+	title_week: 'týden {0} of {1}',
 	// {0} will be replaced with the weekday name (example: Thursday)
 	// {1} will be replaced with the day of the month (example: 12)
 	// {2} will be replaced with the month name (example: September)
 	// {3} will be replaced with the year (example: 2013)
 	title_day: '{0} {1} {2}, {3}',
 
-	week:        'Седмица {0}',
-	all_day:     'Цял ден',
-	time:        'Часове',
-	events:      'Събития',
-	before_time: 'Приключва преди времевата линия',
-	after_time:  'Започва след началото на времевата линия',
+	week:        'Týden {0}',
+	all_day:     'Celý den',
+	time:        'Čas',
+	events:      'Události',
+	before_time: 'Ends before timeline',
+	after_time:  'Starts after timeline',
 
-	m0: 'януари',
-	m1: 'февруари',
-	m2: 'март',
-	m3: 'април',
-	m4: 'май',
-	m5: 'юни',
-	m6: 'юли',
-	m7: 'август',
-	m8: 'септември',
-	m9: 'октомври',
-	m10: 'ноември',
-	m11: 'декември',
+	m0: 'Leden',
+	m1: 'Únor',
+	m2: 'Březen',
+	m3: 'Duben',
+	m4: 'Květen',
+	m5: 'Červen',
+	m6: 'Červenec',
+	m7: 'Srpen',
+	m8: 'Září',
+	m9: 'Říjen',
+	m10: 'Listopad',
+	m11: 'Prosinec',
 
-	ms0: 'яну',
-	ms1: 'фев',
-	ms2: 'мар',
-	ms3: 'апр',
-	ms4: 'май',
-	ms5: 'юни',
-	ms6: 'юли',
-	ms7: 'авг',
-	ms8: 'сеп',
-	ms9: 'окт',
-	ms10: 'ное',
-	ms11: 'дек',
+	ms0: 'Led',
+	ms1: 'Úno',
+	ms2: 'Bře',
+	ms3: 'Dub',
+	ms4: 'Kvě',
+	ms5: 'Čer',
+	ms6: 'Črv',
+	ms7: 'Srp',
+	ms8: 'Zář',
+	ms9: 'Říj',
+	ms10: 'Lis',
+	ms11: 'Pro',
 
-	d0: 'неделя',
-	d1: 'понеделник',
-	d2: 'вторник',
-	d3: 'сряда',
-	d4: 'четвъртък',
-	d5: 'петък',
-	d6: 'събота',
+	d0: 'Neděle',
+	d1: 'Pondělí',
+	d2: 'Úterý',
+	d3: 'Středa',
+	d4: 'Čtvrtek',
+	d5: 'Pátek',
+	d6: 'Sobota',
 
 	// Which is the first day of the week (2 for sunday, 1 for monday)
 	first_day: 1,

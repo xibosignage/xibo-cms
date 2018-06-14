@@ -6,14 +6,14 @@ if(!window.calendar_languages) {
 // Here you define the language and Country code. Replace en-US with your own.
 // First letters: the language code (lower case). See http://www.loc.gov/standards/iso639-2/php/code_list.php
 // Last letters: the Country code (upper case). See http://www.iso.org/iso/home/standards/country_codes/country_names_and_code_elements.htm
-window.calendar_languages['cs-CZ'] = {
-	error_noview: 'Kalendář: Pohled {0} nebyl nalezen',
-	error_dateformat: 'Kalendář: Chybný formát data {0}. Zvolte "now" nebo "yyyy-mm-dd"',
-	error_loadurl: 'Kalendář: Není vyplněno URL události',
-	error_where: 'Kalendář: Chyba navigace {0}. Can be only "next" or "prev" or "today"',
-	error_timedevide: 'Kalendář: Rozdělení času musí být dělitelem 60 beze zbytku. Například 10, 15, 30',
+window.calendar_languages['sk'] = {
+	error_noview: 'Calendar: View {0} not found',
+	error_dateformat: 'Calendar: Wrong date format {0}. Should be either "now" or "yyyy-mm-dd"',
+	error_loadurl: 'Calendar: Event URL is not set',
+	error_where: 'Calendar: Wrong navigation direction {0}. Can be only "next" or "prev" or "today"',
+	error_timedevide: 'Calendar: Time split parameter should divide 60 without decimals. Something like 10, 15, 30',
 
-	no_events_in_day: 'Dnes žádné události.',
+	no_events_in_day: 'Dnes žiadne udalosti.',
 
 	// {0} will be replaced with the year (example: 2013)
 	title_year: '{0}',
@@ -22,52 +22,52 @@ window.calendar_languages['cs-CZ'] = {
 	title_month: '{0} {1}',
 	// {0} will be replaced with the week number (example: 37)
 	// {1} will be replaced with the year (example: 2013)
-	title_week: 'týden {0} of {1}',
+	title_week: 'týždeň {0} of {1}',
 	// {0} will be replaced with the weekday name (example: Thursday)
 	// {1} will be replaced with the day of the month (example: 12)
 	// {2} will be replaced with the month name (example: September)
 	// {3} will be replaced with the year (example: 2013)
 	title_day: '{0} {1} {2}, {3}',
 
-	week:        'Týden {0}',
-	all_day:     'Celý den',
+	week:'Týždeň {0}',
+	all_day:     'Celý deň',
 	time:        'Čas',
-	events:      'Události',
-	before_time: 'Ends before timeline',
-	after_time:  'Starts after timeline',
+	events:      'Udalosti',
+	before_time: 'Pred rozvrhom',
+	after_time:  'Po rozvrhu',
 
-	m0: 'Leden',
-	m1: 'Únor',
-	m2: 'Březen',
-	m3: 'Duben',
-	m4: 'Květen',
-	m5: 'Červen',
-	m6: 'Červenec',
-	m7: 'Srpen',
-	m8: 'Září',
-	m9: 'Říjen',
-	m10: 'Listopad',
-	m11: 'Prosinec',
+	m0: 'Január',
+	m1: 'Február',
+	m2: 'Marec',
+	m3: 'Apríl',
+	m4: 'Máj',
+	m5: 'Jún',
+	m6: 'Júl',
+	m7: 'August',
+	m8: 'September',
+	m9: 'Október',
+	m10: 'November',
+	m11: 'December',
 
-	ms0: 'Led',
-	ms1: 'Úno',
-	ms2: 'Bře',
-	ms3: 'Dub',
-	ms4: 'Kvě',
-	ms5: 'Čer',
-	ms6: 'Črv',
-	ms7: 'Srp',
-	ms8: 'Zář',
-	ms9: 'Říj',
-	ms10: 'Lis',
-	ms11: 'Pro',
+	ms0: 'Jan',
+	ms1: 'Feb',
+	ms2: 'Mar',
+	ms3: 'Apr',
+	ms4: 'Maj',
+	ms5: 'Jun',
+	ms6: 'Jul',
+	ms7: 'Aug',
+	ms8: 'Sep',
+	ms9: 'Okt',
+	ms10: 'Nov',
+	ms11: 'Dec',
 
-	d0: 'Neděle',
-	d1: 'Pondělí',
-	d2: 'Úterý',
-	d3: 'Středa',
-	d4: 'Čtvrtek',
-	d5: 'Pátek',
+	d0: 'Nedeľa',
+	d1: 'Pondelok',
+	d2: 'Utorok',
+	d3: 'Streda',
+	d4: 'Štvrtok',
+	d5: 'Piatok',
 	d6: 'Sobota',
 
 	// Which is the first day of the week (2 for sunday, 1 for monday)
@@ -104,7 +104,7 @@ window.calendar_languages['cs-CZ'] = {
 	//   For example:
 	//   - From 1 January to 6 January: '01-01>06-01'
 	//   - Easter and the day after Easter: 'easter>easter+1'
-	//   Limitations: currently the multi-day holydays can't cross an year. So, for example, you can't specify a range as '30-12>01-01'; as a workaround you can specify two distinct holidays (for instance '30-12>31-12' and '01-01').
+	//   Limitations: currently the multi-day holydays can't cross an year. So, for example, you can't specify a range as '30-12>01-01'; as a workaround you can specify two distinct holidays (for instance '30-12>31-12' and '01-01'). 
 	holidays: {
 	}
 };

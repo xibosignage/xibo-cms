@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['ko-KR'] = {
+window.calendar_languages['ko'] = {
 	error_noview: '캘린더: {0} 볼 수 없습니다',
 	error_dateformat: '캘린더: 잘못된 날짜 형식 {0}. "now" 또는 "yyyy-mm-dd" 형식이어야 합니다',
 	error_loadurl: '캘린더: 이벤트 URL이 설정되지 않았습니다',

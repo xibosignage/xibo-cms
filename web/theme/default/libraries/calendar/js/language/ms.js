@@ -2,7 +2,7 @@ if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
 
-window.calendar_languages['ms-MY'] = {
+window.calendar_languages['ms'] = {
 	error_noview: 'Kalendar: Paparan {0} tidak wujud',
 	error_dateformat: 'Kalendar: Format waktu salah {0}. Seharusnya "now" atau "yyyy-mm-dd"',
 	error_loadurl: 'Kalendar: alamat URL tidak wujud',

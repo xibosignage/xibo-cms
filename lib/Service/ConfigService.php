@@ -289,6 +289,24 @@ class ConfigService implements ConfigServiceInterface
         }
     }
 
+    /**
+     * Check a theme file exists
+     * @param string $uri
+     * @return string
+     */
+    public function fileExists($uri)
+    {
+        if (!$this->themeLoaded)
+            return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
+
+        // Serve the appropriate theme file
+        if (file_exists(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
+            return true;
+        } else {
+            return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
+        }
+    }
+
     /** @inheritdoc */
     public function getSettings()
     {

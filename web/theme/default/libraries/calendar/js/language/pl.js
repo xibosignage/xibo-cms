@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['pl-PL'] = {
+window.calendar_languages['pl'] = {
 	error_noview:     'Kalendarz: Widok {0} nie znaleziony',
 	error_dateformat: 'Kalendarz: Zły format daty {0}. Powinna być w formacie "now" lub "yyyy-mm-dd"',
 	error_loadurl:    'Kalendarz: Adres URL do ładowania wydarzeń nie ustawiony',

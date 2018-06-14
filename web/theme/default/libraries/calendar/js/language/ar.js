@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['ar-SA'] = {
+window.calendar_languages['ar'] = {
 	error_noview: 'التقويم: العرض {0} غير موجود',
 	error_dateformat: 'التقويم: تنسيق خاطئ للتاريخ {0}. يجب أن يكون التاريخ "الآن" أو "yyyy-mm-dd"',
 	error_loadurl: 'التقويم: لم يتم تحديد رابط الحدث',

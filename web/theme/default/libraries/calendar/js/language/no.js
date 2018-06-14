@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['no-NO'] = {
+window.calendar_languages['no'] = {
 	error_noview:     'Kalender: {0} ble ikke funnet',
 	error_dateformat: 'Kalender: Feil datoformat {0}. Må være "now" eller "åååå-mm-dd"',
 	error_loadurl:    'Kalender: urlen for events er ikke satt',

@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['da-DK'] = {
+window.calendar_languages['da'] = {
 	error_noview: 'Kalender: View {0} ikke fundet',
 	error_dateformat: 'Kalender: Forkert dato format {0}. Det skal enten være "now" eller "åååå-mm-dd"',
 	error_loadurl: 'Kalender: Aktivitet URL ikke angivet',

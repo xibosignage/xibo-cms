@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['nl-NL'] = {
+window.calendar_languages['nl'] = {
 	error_noview:     'Kalender: View {0} niet gevonden',
 	error_dateformat: 'Kalender: Verkeerde datum formaat {0}. Dit formaat moet "now" zijn of "yyyy-mm-dd"',
 	error_loadurl:    'Kalender: Agenda laad URL is niet gezet (loadUrl)',

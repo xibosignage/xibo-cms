@@ -2,7 +2,7 @@ if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
 
-window.calendar_languages['bs-BA'] = {
+window.calendar_languages['bs'] = {
 	error_noview:     'Kalendar: View {0} nije pronađen',
 	error_dateformat: 'Kalendar: Pogrešan format datuma {0}. Trebao bi biti ili "now" ili "yyyy-mm-dd"',
 	error_loadurl:    'Kalendar: URL za događaje nije definisan',

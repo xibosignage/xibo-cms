@@ -1,73 +1,78 @@
+// If you want to suggest a new language you can use this file as a template.
+// To reduce the file size you should remove the comment lines (the ones that start with // )
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
+// Here you define the language and Country code. Replace en-US with your own.
+// First letters: the language code (lower case). See http://www.loc.gov/standards/iso639-2/php/code_list.php
+// Last letters: the Country code (upper case). See http://www.iso.org/iso/home/standards/country_codes/country_names_and_code_elements.htm
+window.calendar_languages['sl'] = {
+	error_noview: 'Koledar: Ne najdem pogleda {0}',
+	error_dateformat: 'Koledar: Napačna oblika datuma {0}. Mora biti bodisi "now" ali "yyyy-mm-dd"',
+	error_loadurl: 'Koledar: URL dogodek ni nastavljen',
+	error_where: 'Koledar: Napačna smer navigacije {0}. Lahko je le "next", "prev" ali "today"',
+	error_timedevide: 'Koledar: Time split parameter should divide 60 without decimals. Something like 10, 15, 30',
 
-window.calendar_languages['ja-JP'] = {
-	error_noview: 'カレンダーのビューが見つかりません： {0}',
-	error_dateformat: '日付のフォーマットが間違っています：{0}。"now" か "yyyy-mm-dd" で指定して下さい。',
-	error_loadurl: 'カレンダーのイベントURLがセットされていません。',
-	error_where: 'カレンダーのナビゲーションが間違っています：{0}。"next" か "prev" か "today" でセットして下さい。',
-	error_timedevide: 'カレンダーの時間分割パラメーターは、10, 15, 30等の60を小数なしで割り切れる整数を指定して下さい。',
-
-	no_events_in_day: 'イベントはありません。',
+	no_events_in_day: 'V tem dnevu ni dogodkov.',
 
 	// {0} will be replaced with the year (example: 2013)
-	title_year: '{0}年',
+	title_year: '{0}',
 	// {0} will be replaced with the month name (example: September)
 	// {1} will be replaced with the year (example: 2013)
-	title_month: '{1}年{0}',
+	title_month: '{0} {1}',
 	// {0} will be replaced with the week number (example: 37)
 	// {1} will be replaced with the year (example: 2013)
-	title_week: '{1}年{0}週目',
+	title_week: 'teden {0} v letu {1}',
 	// {0} will be replaced with the weekday name (example: Thursday)
 	// {1} will be replaced with the day of the month (example: 12)
 	// {2} will be replaced with the month name (example: September)
 	// {3} will be replaced with the year (example: 2013)
-	title_day: '{3}年{2}{1}日({0})',
+	title_day: '{0} {1} {2}, {3}',
 
-	week:        '{0}週目',
-	all_day:     '終日',
-	time:        '時間',
-	events:      'イベント',
-	before_time: 'タイムラインの前に終了',
-	after_time:  'タイムラインの後に開始',
+	week:'Teden {0}',
+	all_day:     'Cel dan',
+	time:        'Čas',
+	events:      'Dogodki',
+	before_time: 'Ends before timeline',
+	after_time:  'Starts after timeline',
 
-	m0: '1月',
-	m1: '2月',
-	m2: '3月',
-	m3: '4月',
-	m4: '5月',
-	m5: '6月',
-	m6: '7月',
-	m7: '8月',
-	m8: '9月',
-	m9: '10月',
-	m10: '11月',
-	m11: '12月',
+	m0: 'Januar',
+	m1: 'Februar',
+	m2: 'Marec',
+	m3: 'April',
+	m4: 'Maj',
+	m5: 'Junij',
+	m6: 'Julij',
+	m7: 'Avgust',
+	m8: 'September',
+	m9: 'Oktober',
+	m10: 'November',
+	m11: 'December',
 
-	ms0: '1月',
-	ms1: '2月',
-	ms2: '3月',
-	ms3: '4月',
-	ms4: '5月',
-	ms5: '6月',
-	ms6: '7月',
-	ms7: '8月',
-	ms8: '9月',
-	ms9: '10月',
-	ms10: '11月',
-	ms11: '12月',
+	ms0: 'Jan',
+	ms1: 'Feb',
+	ms2: 'Mar',
+	ms3: 'Apr',
+	ms4: 'Maj',
+	ms5: 'Jun',
+	ms6: 'Jul',
+	ms7: 'Avg',
+	ms8: 'Sep',
+	ms9: 'Okt',
+	ms10: 'Nov',
+	ms11: 'Dec',
 
-	d0: '日',
-	d1: '月',
-	d2: '火',
-	d3: '水',
-	d4: '木',
-	d5: '金',
-	d6: '土',
+	d0: 'Nedelja',
+	d1: 'Ponedeljek',
+	d2: 'Torek',
+	d3: 'Sreda',
+	d4: 'Četrtek',
+	d5: 'Petek',
+	d6: 'Sobota',
 
 	// Which is the first day of the week (2 for sunday, 1 for monday)
-	first_day: 2,
+	first_day: 1,
+	week_numbers_iso_8601: true,
 
 	// The list of the holidays.
 	// Each holiday has a date definition and a name (in your language)

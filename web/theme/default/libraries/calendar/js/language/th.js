@@ -3,7 +3,7 @@ if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
 
-window.calendar_languages['th-TH'] = {
+window.calendar_languages['th'] = {
 	error_noview: 'ปฏิทิน: ไม่พบ View {0}',
 	error_dateformat: 'ปฏิทิน: รูปแบบวันที่ไม่ถูกต้อง {0}. ควรจะเป็นค่า "now" หรือ "yyyy-mm-dd"',
 	error_loadurl: 'ปฏิทิน: URL ของเหตุการณ์ไม่ได้ตั้งค่าไว้',

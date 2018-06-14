@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['sv-SE'] = {
+window.calendar_languages['sv'] = {
 	error_noview:     'Kalender: Vy {0} ej funnen',
 	error_dateformat: 'Kalender: Felaktigt datumformat {0}. Skall vara antingen "now" eller "yyyy-mm-dd"',
 	error_loadurl:    'Kalender: Laddnings-URL för händelser är ej satt',

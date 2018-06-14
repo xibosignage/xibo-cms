@@ -1,7 +1,7 @@
 if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
-window.calendar_languages['ca-ES'] = {
+window.calendar_languages['ca'] = {
 	error_noview:     'Calendari: Vista {0} no trobada',
 	error_dateformat: 'Calendari: Format de data invàlid {0}. Ha de ser "now" o "yyyy-mm-dd"',
 	error_loadurl:    'Calendari: URL de càrrega d\'esdeveniments no configurada',

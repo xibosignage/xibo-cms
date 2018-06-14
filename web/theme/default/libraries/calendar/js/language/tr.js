@@ -3,7 +3,7 @@ if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
 
-window.calendar_languages['tr-TR'] = {
+window.calendar_languages['tr'] = {
 	error_noview: 'Takvim: Görünüm {0} bulunamadı',
 	error_dateformat: 'Takvim: Yanlış tarih formatı {0}. Şunlardan biri olmalı "now" veya "yyyy-mm-dd"',
 	error_loadurl: 'Takvim: Etkinlik bağlantısı belirtilmemiş',

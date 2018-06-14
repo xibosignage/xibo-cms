@@ -6,14 +6,14 @@ if(!window.calendar_languages) {
 // Here you define the language and Country code. Replace en-US with your own.
 // First letters: the language code (lower case). See http://www.loc.gov/standards/iso639-2/php/code_list.php
 // Last letters: the Country code (upper case). See http://www.iso.org/iso/home/standards/country_codes/country_names_and_code_elements.htm
-window.calendar_languages['sl-SL'] = {
-	error_noview: 'Koledar: Ne najdem pogleda {0}',
-	error_dateformat: 'Koledar: Napačna oblika datuma {0}. Mora biti bodisi "now" ali "yyyy-mm-dd"',
-	error_loadurl: 'Koledar: URL dogodek ni nastavljen',
-	error_where: 'Koledar: Napačna smer navigacije {0}. Lahko je le "next", "prev" ali "today"',
-	error_timedevide: 'Koledar: Time split parameter should divide 60 without decimals. Something like 10, 15, 30',
+window.calendar_languages['bg'] = {
+	error_noview: 'Календар: Изглед {0} не беше открит',
+	error_dateformat: 'Календар: Грешен формат за дата {0}. Трябва да бъде или "now", или "yyyy-mm-dd"',
+	error_loadurl: 'Календар: URL адресът на събитието не е зададен',
+	error_where: 'Календар: Грешна посока {0}. Може да бъде  зададено само "next", "prev", или "today"',
+	error_timedevide: 'Календар: Параметърът за разделяне на времето трябва да може да се дели на 60, без остатък. Например 10, 15, 30',
 
-	no_events_in_day: 'V tem dnevu ni dogodkov.',
+	no_events_in_day: 'Няма събития за този ден.',
 
 	// {0} will be replaced with the year (example: 2013)
 	title_year: '{0}',
@@ -22,53 +22,53 @@ window.calendar_languages['sl-SL'] = {
 	title_month: '{0} {1}',
 	// {0} will be replaced with the week number (example: 37)
 	// {1} will be replaced with the year (example: 2013)
-	title_week: 'teden {0} v letu {1}',
+	title_week: 'Седмица {0} от {1}',
 	// {0} will be replaced with the weekday name (example: Thursday)
 	// {1} will be replaced with the day of the month (example: 12)
 	// {2} will be replaced with the month name (example: September)
 	// {3} will be replaced with the year (example: 2013)
 	title_day: '{0} {1} {2}, {3}',
 
-	week:'Teden {0}',
-	all_day:     'Cel dan',
-	time:        'Čas',
-	events:      'Dogodki',
-	before_time: 'Ends before timeline',
-	after_time:  'Starts after timeline',
+	week:        'Седмица {0}',
+	all_day:     'Цял ден',
+	time:        'Часове',
+	events:      'Събития',
+	before_time: 'Приключва преди времевата линия',
+	after_time:  'Започва след началото на времевата линия',
 
-	m0: 'Januar',
-	m1: 'Februar',
-	m2: 'Marec',
-	m3: 'April',
-	m4: 'Maj',
-	m5: 'Junij',
-	m6: 'Julij',
-	m7: 'Avgust',
-	m8: 'September',
-	m9: 'Oktober',
-	m10: 'November',
-	m11: 'December',
+	m0: 'януари',
+	m1: 'февруари',
+	m2: 'март',
+	m3: 'април',
+	m4: 'май',
+	m5: 'юни',
+	m6: 'юли',
+	m7: 'август',
+	m8: 'септември',
+	m9: 'октомври',
+	m10: 'ноември',
+	m11: 'декември',
 
-	ms0: 'Jan',
-	ms1: 'Feb',
-	ms2: 'Mar',
-	ms3: 'Apr',
-	ms4: 'Maj',
-	ms5: 'Jun',
-	ms6: 'Jul',
-	ms7: 'Avg',
-	ms8: 'Sep',
-	ms9: 'Okt',
-	ms10: 'Nov',
-	ms11: 'Dec',
+	ms0: 'яну',
+	ms1: 'фев',
+	ms2: 'мар',
+	ms3: 'апр',
+	ms4: 'май',
+	ms5: 'юни',
+	ms6: 'юли',
+	ms7: 'авг',
+	ms8: 'сеп',
+	ms9: 'окт',
+	ms10: 'ное',
+	ms11: 'дек',
 
-	d0: 'Nedelja',
-	d1: 'Ponedeljek',
-	d2: 'Torek',
-	d3: 'Sreda',
-	d4: 'Četrtek',
-	d5: 'Petek',
-	d6: 'Sobota',
+	d0: 'неделя',
+	d1: 'понеделник',
+	d2: 'вторник',
+	d3: 'сряда',
+	d4: 'четвъртък',
+	d5: 'петък',
+	d6: 'събота',
 
 	// Which is the first day of the week (2 for sunday, 1 for monday)
 	first_day: 1,
@@ -104,7 +104,7 @@ window.calendar_languages['sl-SL'] = {
 	//   For example:
 	//   - From 1 January to 6 January: '01-01>06-01'
 	//   - Easter and the day after Easter: 'easter>easter+1'
-	//   Limitations: currently the multi-day holydays can't cross an year. So, for example, you can't specify a range as '30-12>01-01'; as a workaround you can specify two distinct holidays (for instance '30-12>31-12' and '01-01'). 
+	//   Limitations: currently the multi-day holydays can't cross an year. So, for example, you can't specify a range as '30-12>01-01'; as a workaround you can specify two distinct holidays (for instance '30-12>31-12' and '01-01').
 	holidays: {
 	}
 };

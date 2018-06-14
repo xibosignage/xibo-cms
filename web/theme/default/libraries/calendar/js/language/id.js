@@ -2,7 +2,7 @@ if(!window.calendar_languages) {
 	window.calendar_languages = {};
 }
 
-window.calendar_languages['id-ID'] = {
+window.calendar_languages['id'] = {
 	error_noview: 'Kalender: Tampilan {0} tidak ditemukan',
 	error_dateformat: 'Kalender: Format tanggal salah {0}. Seharusnya "now" atau "yyyy-mm-dd"',
 	error_loadurl: 'Kalender: URL dari jadwal belum di tentukan',
