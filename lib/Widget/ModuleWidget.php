@@ -29,6 +29,7 @@ use Stash\Item;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
+use Xibo\Event\Event;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
@@ -99,6 +100,9 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var string|null Cache Key Prefix */
     private $cacheKeyPrefix = null;
+
+    /** @var Event */
+    private $saveEvent;
 
     //<editor-fold desc="Injected Factory Classes and Services ">
 
@@ -615,10 +619,27 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * @param Event $event
+     * @return $this
+     */
+    final public function setSaveEvent($event)
+    {
+        $this->saveEvent = $event;
+        return $this;
+    }
+
+    /**
      * Save the Widget
      */
     final protected function saveWidget()
     {
+        if ($this->saveEvent !== null) {
+            $this->getLog()->debug('Dispatching save event ' . $this->saveEvent->getName());
+
+            // Dispatch the Edit Event
+            $this->dispatcher->dispatch($this->saveEvent->getName(), $this->saveEvent);
+        }
+
         $this->widget->save();
     }
 
