@@ -71,6 +71,12 @@
                     </ul>
                 </div>
             </div>
+            {% set title %}{% trans "Use library duration?" %}{% endset %}
+            {% set helpText %}{% trans "Check this option to use the duration from the Library for this assignment" %}{% endset %}
+            <label for="useDuration">
+                <input type="checkbox" name="useDuration" id="useDuration">{{ title }}
+            </label>
+            <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
 {% endblock %}
