@@ -204,6 +204,9 @@ class Schedule extends Base
             return;
         }
 
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
@@ -272,12 +275,15 @@ class Schedule extends Base
                 // Command
                 $title = __('%s scheduled on %s', $row->command, $displayGroupList);
             } else {
-                // Campaign
-                $campaign = $this->campaignFactory->getById($row->campaignId);
+                // Should we show the Layout name, or not (depending on permission)
+                // Make sure we only run the below code if we have to, its quite expensive
+                if (!$showLayoutName && !$this->getUser()->isSuperAdmin()) {
+                    // Campaign
+                    $campaign = $this->campaignFactory->getById($row->campaignId);
 
-                if (!$this->getUser()->checkViewable($campaign))
-                    $row->campaign = __('Private Item');
-
+                    if (!$this->getUser()->checkViewable($campaign))
+                        $row->campaign = __('Private Item');
+                }
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
             }
 
@@ -380,6 +386,9 @@ class Schedule extends Base
         if (!$this->getUser()->checkViewable($displayGroup))
             throw new AccessDeniedException();
 
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
         $date = $this->getSanitizer()->getDate('date');
 
         // Reset the seconds
@@ -457,7 +466,7 @@ class Schedule extends Base
                     if (!$this->isApi())
                         $layout->link = $this->getApp()->urlFor('layout.designer', ['id' => $layout->layoutId]);
 
-                    if ($this->getUser()->checkViewable($layout))
+                    if ($showLayoutName || $this->getUser()->checkViewable($layout))
                         $layouts[$layoutId] = $layout;
                     else {
                         $layouts[$layoutId] = [
