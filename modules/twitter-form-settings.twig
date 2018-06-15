@@ -16,7 +16,7 @@
 
     {% set title %}{% trans "API Secret" %}{% endset %}
     {% set helpText %}{% trans "Enter your API Secret from Twitter." %}{% endset %}
-    {{ forms.input("apiSecret", title, module.getSetting("apiSecret"), helpTextd) }}
+    {{ forms.input("apiSecret", title, module.getSetting("apiSecret"), helpText) }}
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of seconds you would like to cache twitter search results." %}{% endset %}
