@@ -396,6 +396,10 @@ class Media implements \JsonSerializable
             return $a->tagId - $b->tagId;
         });
 
+        $this->unassignTags[] = $tag;
+
+        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+
         return $this;
     }
 

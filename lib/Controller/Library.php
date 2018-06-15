@@ -25,6 +25,7 @@ use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -1329,7 +1330,7 @@ class Library extends Base
     }
 
     /**
-     * @SWG\Delete(
+     * @SWG\Post(
      *  path="/library/{mediaId}/untag",
      *  operationId="mediaUntag",
      *  tags={"library"},
@@ -1359,6 +1360,7 @@ class Library extends Base
      *
      * @param $mediaId
      * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function untag($mediaId)
     {
@@ -1373,7 +1375,7 @@ class Library extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to unassign'));
+            throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
 
         foreach ($tags as $tag) {
             $media->unassignTag($this->tagFactory->tagFromString($tag));
