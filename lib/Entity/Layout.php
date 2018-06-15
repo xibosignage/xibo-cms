@@ -647,6 +647,8 @@ class Layout implements \JsonSerializable
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
 
+        $this->getLog()->audit('Layout', $this->layoutId, 'Layout Deleted', ['layoutId' => $this->layoutId]);
+
         // Delete the cached file (if there is one)
         if (file_exists($this->getCachePath()))
             @unlink($this->getCachePath());
