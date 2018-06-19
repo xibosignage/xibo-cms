@@ -148,7 +148,6 @@ $(document).ready(function() {
 
             // Refresh navigators and viewer
             lD.renderContainer(lD.navigator);
-            lD.renderContainer(lD.toolbar);
             lD.renderContainer(lD.navigatorEdit);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }

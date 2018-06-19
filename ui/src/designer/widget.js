@@ -61,7 +61,7 @@ let Widget = function(id, regionId, data) {
 
         let options = {};
 
-        for(option in this.widgetOptions) {
+        for(let option in this.widgetOptions) {
             const currOption = this.widgetOptions[option];
 
             if(currOption.type === 'attrib'){

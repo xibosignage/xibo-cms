@@ -5,9 +5,9 @@
  * @param {number} id - region id
  * @param {object} data - data from the API request
  * @param {object=} [options] - Region options
- * @param {string} [options.backgroundColor="#555555ed"] - Color for the background
+ * @param {string} [options.backgroundColor="#555555"] - Color for the background
  */
-let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
+let Region = function(id, data, {backgroundColor = '#555555'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
     this.type = 'region';
@@ -37,7 +37,7 @@ let Region = function(id, data, {backgroundColor = '#555555ed'} = {}) {
      * Return the value if the region is selectd or not for the CSS
      */
     this.selectedFlag = function() {
-        for(widget in this.widgets) {
+        for(let widget in this.widgets) {
             if (this.widgets[widget].selected === true) {
                 return 'selected-widget';
             }

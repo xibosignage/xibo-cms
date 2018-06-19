@@ -104,8 +104,8 @@ Timeline.prototype.calculateStartingZoom = function(regions) {
 
     // Find the smallest widget ( by duration )
     let shorterWidgetDuration = -1;
-    for(region in regions) {
-        for(widget in regions[region].widgets) {
+    for(let region in regions) {
+        for(let widget in regions[region].widgets) {
             if(regions[region].widgets[widget].getDuration() < shorterWidgetDuration || shorterWidgetDuration === -1) {
                 shorterWidgetDuration = regions[region].widgets[widget].getDuration();
             }
@@ -133,11 +133,11 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
 
     const visibleDuration = lD.layout.duration * (100 / this.properties.zoom); //this.properties.maxTime - this.properties.minTime;
     
-    for(region in regions) {
+    for(let region in regions) {
         // Reset the region visibility flag
         regions[region].hideDetails = false;
 
-        for(widget in regions[region].widgets) {
+        for(let widget in regions[region].widgets) {
 
             // Calculate the ratio of the widget compared to the region length
             const widthRatio = regions[region].widgets[widget].getDuration() / visibleDuration;
@@ -157,7 +157,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
  */
 Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
 
-    for(region in regions) {
+    for(let region in regions) {
         
         let currentRegion = regions[region];
 
@@ -173,7 +173,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
         currentRegion.ghostWidgetsObject = [];
 
         // calculate widgets total duration
-        for(widget in currentRegion.widgets) {
+        for(let widget in currentRegion.widgets) {
             widgetsTotalDuration += currentRegion.widgets[widget].getDuration();
         }
 
@@ -197,7 +197,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
         while( auxTime < ghostsEndTime) {
 
             // repeat widget playlist to advance time and create the ghost widgets
-            for(widget in currentRegion.widgets) {
+            for(let widget in currentRegion.widgets) {
 
                 // if the next widget shows on the time span, add it to the array
                 if(auxTime + currentRegion.widgets[widget].getDuration() > ghostsStartTime) {

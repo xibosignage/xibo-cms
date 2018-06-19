@@ -259,11 +259,14 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
     this.DOMObject.find('.viewer-element').css('left', 0);
 
     // Draw focus area borders
-    this.DOMObject.css('border-top', dimensions.top + 'px #000a solid');
-    this.DOMObject.css('border-left', dimensions.left + 'px #000a solid');
+    this.DOMObject.css('border-color', '#000');
+    this.DOMObject.css('border-color', '#000a');
+    this.DOMObject.css('border-style', 'solid');
+    this.DOMObject.css('border-top-width', dimensions.top + 'px');
+    this.DOMObject.css('border-left-width', dimensions.left + 'px');
 
-    this.DOMObject.css('border-bottom', dimensions.top + 'px #000a solid');
-    this.DOMObject.css('border-right', dimensions.left + 'px #000a solid');
+    this.DOMObject.css('border-bottom-width', dimensions.top + 'px');
+    this.DOMObject.css('border-right-width', dimensions.left + 'px');
 
     // Calculate and draw layout borders ( showing layout's limits)
     // Left border
@@ -272,7 +275,11 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
         this.DOMObject.find('#border-before').css({
             'width': (dimensions.left - elementScaledDimensions.left),
             'height': dimensions.height,
-            '-webkit-transform': 'translate(' + (-dimensions.left) + 'px, 0px)'
+            '-webkit-transform': 'translate(' + (-dimensions.left) + 'px, 0px)',
+            '-moz-transform': 'translate(' + (-dimensions.left) + 'px, 0px)',
+            '-ms-transform': 'translate(' + (-dimensions.left) + 'px, 0px)',
+            '-o-transform': 'translate(' + (-dimensions.left) + 'px, 0px)',
+            'transform': 'translate(' + (-dimensions.left) + 'px, 0px)'
         });
     }
 
@@ -282,7 +289,11 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
         this.DOMObject.find('#border-before').css({
             'width': dimensions.width,
             'height': (dimensions.top - elementScaledDimensions.top),
-            '-webkit-transform': 'translate(0px, ' + (-dimensions.top) + 'px)'
+            '-webkit-transform': 'translate(0px, ' + (-dimensions.top) + 'px)',
+            '-moz-transform': 'translate(0px, ' + (-dimensions.top) + 'px)',
+            '-ms-transform': 'translate(0px, ' + (-dimensions.top) + 'px)',
+            '-o-transform': 'translate(0px, ' + (-dimensions.top) + 'px)',
+            'transform': 'translate(0px, ' + (-dimensions.top) + 'px)'
         });
     }
 
@@ -295,20 +306,33 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
     // Right border ( using left padding since the image is aligned )
     if(Math.abs(layoutRightBorder - elementRightBorder) < dimensions.left) {
 
+        const calculatedRight = (elementScaledDimensions.width + (layoutRightBorder - elementRightBorder));
+
         this.DOMObject.find('#border-after').css({
             'width': (dimensions.left - (layoutRightBorder - elementRightBorder)),
             'height': dimensions.height,
-            '-webkit-transform': 'translate(' + (elementScaledDimensions.width + (layoutRightBorder - elementRightBorder)) + 'px, 0px)'
+            '-webkit-transform': 'translate(' + calculatedRight + 'px, 0px)',
+            '-moz-transform': 'translate(' + calculatedRight + 'px, 0px)',
+            '-ms-transform': 'translate(' + calculatedRight + 'px, 0px)',
+            '-o-transform': 'translate(' + calculatedRight + 'px, 0px)',
+            'transform': 'translate(' + calculatedRight + 'px, 0px)'
         });
     }
 
     // Bottom border ( using top padding since the image is aligned )
     if(Math.abs(layoutBottomBorder - elementBottomBorder) < dimensions.top) {
 
+        const calculatedBottom = (elementScaledDimensions.height + (layoutBottomBorder - elementBottomBorder));
+
+
         this.DOMObject.find('#border-after').css({
             'width': dimensions.width,
             'height': (dimensions.top - (layoutBottomBorder - elementBottomBorder)),
-            '-webkit-transform': 'translate(0px, ' + (elementScaledDimensions.height + (layoutBottomBorder - elementBottomBorder)) + 'px)'
+            '-webkit-transform': 'translate(0px, ' + calculatedBottom + 'px)',
+            '-moz-transform': 'translate(0px, ' + calculatedBottom + 'px)',
+            '-ms-transform': 'translate(0px, ' + calculatedBottom + 'px)',
+            '-o-transform': 'translate(0px, ' + calculatedBottom + 'px)',
+            'transform': 'translate(0px, ' + calculatedBottom + 'px)'
         });
     }
 

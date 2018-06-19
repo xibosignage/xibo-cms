@@ -6,12 +6,16 @@ window.jQuery = window.$ = require('jquery');
 // bootstrap
 require('bootstrap');
 
+// babel-polyfill
+require('babel-polyfill');
+
 // bootbox
 window.bootbox = require('bootbox');
 
 // jquery-ui draggable, resizable & sortable
 require('jquery-ui/ui/widgets/resizable');
 require('jquery-ui/ui/widgets/draggable');
+require('jquery-ui/ui/widgets/droppable');
 require('jquery-ui/ui/widgets/sortable');
 
 // jquery-validation
