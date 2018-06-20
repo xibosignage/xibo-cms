@@ -43,6 +43,18 @@
                             {% set title %}{% trans "Media" %}{% endset %}
                             {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}
                             {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", mediaFilterOptions, "mediaId", "name", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set widget %}{% trans "Widget" %}{% endset %}
+                            {% set options = [
+                                { typeid: "", type: null },
+                                { typeid: "layout", type: layout },
+                                { typeid: "media", type: media },
+                                { typeid: "widget", type: widget }
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid","type") }}
                         </form>
                     </div>
                 </div>
