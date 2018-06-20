@@ -173,7 +173,7 @@
                         {% endset %}
                         {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10) }}
 
-                        {% set title %}{% trans "Set an alternative template for events that are current? ?" %}{% endset %}
+                        {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
                         {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
                         {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
 
