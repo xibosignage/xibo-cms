@@ -269,9 +269,11 @@ class Calendar extends ModuleWidget
                         var endDate = moment(element.endDate, "X");
                         
                         if (endDate.isAfter(now)) {
-                            parsedItems.push(element.item);
-                        } else {
-                            parsedItems.push(element.currentEventItem);
+                            if (moment(element.startDate, "X").isBefore(now)) {
+                                parsedItems.push(element.item);
+                            } else {
+                                parsedItems.push(element.currentEventItem);
+                            }
                         }
                     });
                 
