@@ -34,6 +34,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\ValueTooLargeException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
@@ -445,10 +446,17 @@ abstract class ModuleWidget implements ModuleInterface
      * Set Option
      * @param string $name
      * @param string $value
+     * @return $this
+     * @throws ValueTooLargeException
      */
     final protected function setOption($name, $value)
     {
+        if (strlen($value) > 67108864)
+            throw new ValueTooLargeException(__('Value too large for %s', $name), $name);
+
         $this->widget->setOptionValue($name, 'attrib', $value);
+
+        return $this;
     }
 
     /**
@@ -486,10 +494,17 @@ abstract class ModuleWidget implements ModuleInterface
      * Set Raw Node Value
      * @param $name
      * @param $value
+     * @return $this
+     * @throws ValueTooLargeException
      */
     final protected function setRawNode($name, $value)
     {
+        if (strlen($value) > 67108864)
+            throw new ValueTooLargeException(__('Value too large for %s', $name), $name);
+
         $this->widget->setOptionValue($name, 'cdata', $value);
+
+        return $this;
     }
 
     /**
