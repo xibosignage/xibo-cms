@@ -169,7 +169,7 @@ class Calendar extends ModuleWidget
 
         // Get the template and start making the body
         $template = $this->getRawNode('template', '');
-        $currentEventTemplate = $this->getRawNode('currentEventTemplate', '');
+        $currentEventTemplate = ($this->getOption('useCurrentTemplate') == 1) ? $this->getRawNode('currentEventTemplate', '') : null;
         $styleSheet = $this->getRawNode('styleSheet', '');
 
         // Parse library references first as its more efficient
@@ -191,7 +191,8 @@ class Calendar extends ModuleWidget
                 $items[] = [
                     'startDate' => 0,
                     'endDate' => Date::now()->addYear()->format('U'),
-                    'item' => $noDataMessage
+                    'item' => $noDataMessage,
+                    'currentEventItem' => $noDataMessage
                 ];
             } else {
                 $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
@@ -270,9 +271,9 @@ class Calendar extends ModuleWidget
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate, "X").isBefore(now)) {
-                                parsedItems.push(element.item);
-                            } else {
                                 parsedItems.push(element.currentEventItem);
+                            } else {
+                                parsedItems.push(element.item);
                             }
                         }
                     });
@@ -377,8 +378,13 @@ class Calendar extends ModuleWidget
         }
 
         // We've got something at least, so prepare the template
-        $matches = '';
+        $matches = [];
         preg_match_all('/\[.*?\]/', $template, $matches);
+
+        $currentEventMatches = [];
+        if ($currentEventTemplate != '') {
+            preg_match_all('/\[.*?\]/', $currentEventTemplate, $currentEventMatches);
+        }
 
         // Get a date format
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
@@ -403,50 +409,12 @@ class Calendar extends ModuleWidget
                 continue;
 
             // Substitute for all matches in the template
-            $rowString = $template;
-            $currentEventRow = $currentEventTemplate;
+            $rowString = $this->substituteForEvent($matches, $template, $iCal, $dateFormat, $event);
 
-            // Run through all [] substitutes in $matches
-            foreach ($matches[0] as $sub) {
-                $replace = '';
-
-                // Use the pool of standard tags
-                switch ($sub) {
-                    case '[Name]':
-                        $replace = $this->getOption('name');
-                        break;
-
-                    case '[Summary]':
-                        $replace = $event->summary;
-                        break;
-
-                    case '[Description]':
-                        $replace = $event->description;
-                        break;
-
-                    case '[Location]':
-                        $replace = $event->location;
-                        break;
-
-                    case '[StartDate]':
-                        $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtstart), $dateFormat);
-                        break;
-
-                    case '[EndDate]':
-                        $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtend), $dateFormat);
-                        break;
-
-                    case '[Label]':
-                        // This is replaced Player side
-                        $replace = '[Label]';
-                        break;
-                }
-
-                // Substitute the replacement we have found (it might be '')
-                $rowString = str_replace($sub, $replace, $rowString);
-
-                if ($currentEventTemplate != '')
-                    $currentEventRow = str_replace($sub, $replace, $currentEventRow);
+            if ($currentEventTemplate != '') {
+                $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate, $iCal, $dateFormat, $event);
+            } else {
+                $currentEventRow = $rowString;
             }
 
             $items[] = [
@@ -458,6 +426,54 @@ class Calendar extends ModuleWidget
         }
 
         return $items;
+    }
+
+    /**
+     * @param $matches
+     * @param $string
+     * @param ICal $iCal
+     * @param $dateFormat
+     * @param $event
+     * @return mixed
+     */
+    private function substituteForEvent($matches, $string, $iCal, $dateFormat, $event)
+    {
+        // Run through all [] substitutes in $matches
+        foreach ($matches[0] as $sub) {
+            $replace = '';
+
+            // Use the pool of standard tags
+            switch ($sub) {
+                case '[Name]':
+                    $replace = $this->getOption('name');
+                    break;
+
+                case '[Summary]':
+                    $replace = $event->summary;
+                    break;
+
+                case '[Description]':
+                    $replace = $event->description;
+                    break;
+
+                case '[Location]':
+                    $replace = $event->location;
+                    break;
+
+                case '[StartDate]':
+                    $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtstart), $dateFormat);
+                    break;
+
+                case '[EndDate]':
+                    $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtend), $dateFormat);
+                    break;
+            }
+
+            // Substitute the replacement we have found (it might be '')
+            $string = str_replace($sub, $replace, $string);
+        }
+
+        return $string;
     }
 
     /** @inheritdoc */
