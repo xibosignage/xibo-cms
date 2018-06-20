@@ -272,7 +272,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function uri($uri, $local = false)
     {
-        $rootUri = ($local) ? '' : $this->rootUri();
+        $rootUri = ($local) ? PROJECT_ROOT . '/web/' : $this->rootUri();
 
         if (!$this->themeLoaded)
             return $rootUri . 'theme/default/' . $uri;

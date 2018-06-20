@@ -30,8 +30,9 @@
                                     {{ inline.inputWithTags("tags", title, null, helpText) }}
 
                                     {% set attributes = [
-                                    { name: "data-live-search", value: "true" },
-                                    { name: "data-selected-text-format", value: "count > 4" }
+                                    { name: "data-allow-clear", value: "true" },
+                                    { name: "data-placeholder--id", value: null },
+                                    { name: "data-placeholder--value", value: "" }
                                     ] %}
 
                                     {% set title %}{% trans "Owner" %}{% endset %}
@@ -117,8 +118,13 @@
                         url: "{{ urlFor("user.pref") }}?preference=layoutGrid",
                         dataType: 'json',
                         success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
                         }
                     });
                     return data;

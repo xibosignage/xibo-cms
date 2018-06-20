@@ -61,6 +61,15 @@
                                     {{ forms.email(field.name, field.title, field.value, field.helpText) }}
                                 {% elseif field.fieldType == "checkbox" %}
                                     {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
+                                {% elseif field.fieldType == "dropdown" and field.name == "DEFAULT_LAYOUT" %}
+                                    {% set attributes = [
+                                        { name: "data-width", value: "100%" },
+                                        { name: "data-search-url", value: urlFor("layout.search") },
+                                        { name: "data-search-term", value: "layout" },
+                                        { name: "data-id-property", value: "layoutId" },
+                                        { name: "data-text-property", value: "layout" }
+                                    ] %}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "layoutId", "layout", field.helpText, "pagedSelect", "", "", "", attributes) }}
                                 {% elseif field.fieldType == "dropdown" %}
                                     {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
                                 {% elseif field.fieldType == "timezone" %}

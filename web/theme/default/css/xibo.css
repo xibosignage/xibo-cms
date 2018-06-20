@@ -884,10 +884,6 @@ ul li.active.tab-design:hover a {
     display: none;
 }
 
-.selectPickerWithImage .form-control {
-    height: inherit;
-}
-
 .bootstrap-tagsinput {
     min-width: 196px;
     height: auto;
@@ -938,4 +934,8 @@ ul li.active.tab-design:hover a {
 
 .module-selector-well .nav>li>a {
     padding-bottom: 5px;
+}
+
+.layout-designer-right-pane .select2-container--bootstrap {
+    display: inline-block;
 }

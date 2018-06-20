@@ -55,8 +55,13 @@
                     url: "{{ urlFor("user.pref") }}?preference=transitionGrid",
                     dataType: 'json',
                     success: function (json) {
-                        if (json.success)
-                            data = JSON.parse(json.data.value);
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
                     }
                 });
                 return data;

@@ -636,6 +636,13 @@ class Soap
                             // we will use the later of this vs the layout modified date as the updated attribute on
                             // required files
                             $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
+                            $cachedDt = $module->getCacheDate($this->display->displayId);
+
+                            // Updated date is the greater of layout/widget modified date
+                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
+
+                            // Finally compare against the cached date, and see if that has updated us at all
+                            $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
 
                             // Append this item to required files
                             $file = $requiredFilesXml->createElement("file");
@@ -644,7 +651,7 @@ class Soap
                             $file->setAttribute('layoutid', $layoutId);
                             $file->setAttribute('regionid', $region->regionId);
                             $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', ($layoutModifiedDt->greaterThan($widgetModifiedDt) ? $layoutModifiedDt->format('U') : $widgetModifiedDt->format('U')));
+                            $file->setAttribute('updated', $updatedDt->format('U'));
                             $fileElements->appendChild($file);
                         }
                     }
@@ -1605,7 +1612,7 @@ class Soap
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResourceOrCache($this->display->displayId, $this->regionFactory->getById($regionId));
+            $resource = $module->getResourceOrCache($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();

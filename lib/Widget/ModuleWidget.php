@@ -1309,7 +1309,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function setCacheDate($displayId, $overrideDuration = null)
+    public final function setCacheDate($displayId)
     {
         $now = $this->getDate()->parse();
         $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
@@ -1321,7 +1321,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function getResourceOrCache($displayId, $region = null)
+    public final function getResourceOrCache($displayId)
     {
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
 
@@ -1344,8 +1344,7 @@ abstract class ModuleWidget implements ModuleInterface
         // If we are a non-preview, then we'd expect to be provided with a region.
         // we use this to save a width/height aware version of this
         if ($displayId !== 0) {
-            /** @var \Xibo\Entity\Region $region */
-            $cacheFile = $cacheKey . '_' . $region->width . '_' . $region->height;
+            $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
         } else {
             $cacheFile = $cacheKey;
         }
@@ -1413,7 +1412,7 @@ abstract class ModuleWidget implements ModuleInterface
                     // Update the cache date
                     $this->setCacheDate($displayId);
 
-                    $this->getLog()->debug('Regenerate complete');
+                    $this->getLog()->debug('Generate complete');
 
                 } catch (ConfigurationException $configurationException) {
                     // If we have something wrong with the module and we are in the preview, then we should present the error
@@ -1430,9 +1429,8 @@ abstract class ModuleWidget implements ModuleInterface
                     $this->getLog()->error('Problem with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $e->getMessage());
                     $this->getLog()->debug($e->getTraceAsString());
 
-                    // Update the cache date
-                    // error scenario so drop the duration by 1/3rd
-                    $this->setCacheDate($cacheDuration / 3);
+                    // Update the cache date?
+                    $this->setCacheDate($displayId);
                 }
 
                 // Unlock
@@ -1448,6 +1446,8 @@ abstract class ModuleWidget implements ModuleInterface
                     throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
+            $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
+
             $resource = file_get_contents($cachePath . $cacheFile);
         }
 

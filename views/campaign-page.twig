@@ -34,7 +34,7 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaigns" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="campaignView">
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
@@ -76,7 +76,40 @@ This is the template for the campaign page
     <script type="text/javascript">
         // Configure the DataTable
         var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=campaignGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "campaignGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
             "filter": false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -129,11 +162,16 @@ This is the template for the campaign page
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=campaignGrid",
+                        url: "{{ urlFor("user.pref") }}?preference=campaignLayoutAssignGrid",
                         dataType: 'json',
                         success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
                         }
                     });
                     return data;
@@ -144,7 +182,7 @@ This is the template for the campaign page
                         url: "{{ urlFor("user.pref") }}",
                         data: {
                             preference: [{
-                                option: "campaignGrid",
+                                option: "campaignLayoutAssignGrid",
                                 value: JSON.stringify(data)
                             }]
                         }

@@ -18,7 +18,6 @@
 
 
 {% block pageContent %}
-    {% set displayFilterOptions = [{displayId: null, display: ""}]|merge(displays) %}
 
     <div class="widget">
         <div class="widget-title">{% trans "Proof of Play" %}</div>
@@ -34,15 +33,43 @@
                             {{ inline.date("statsToDt", title, defaults.toDate, "", "", "", "") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
-                            {{ inline.dropdown("displayId", "single", title, "", displayFilterOptions, "displayId", "display") }}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
 
                             {% set title %}{% trans "Layout" %}{% endset %}
-                            {% set layoutFilterOptions = [{layoutId: null, layout: ""}]|merge(layouts) %}
-                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", layoutFilterOptions, "layoutId", "layout", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
 
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" }
+                            ] %}
                             {% set title %}{% trans "Media" %}{% endset %}
-                            {% set mediaFilterOptions = [{mediaId: null, name: ""}]|merge(media) %}
-                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", mediaFilterOptions, "mediaId", "name", "", "selectPicker", "", "m", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set layout %}{% trans "Layout" %}{% endset %}
@@ -54,7 +81,7 @@
                                 { typeid: "media", type: media },
                                 { typeid: "widget", type: widget }
                             ] %}
-                            {{ inline.dropdown("type", "single", title, "", options, "typeid","type") }}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
                         </form>
                     </div>
                 </div>
@@ -100,8 +127,13 @@
                         url: "{{ urlFor("user.pref") }}?preference=proofOfPlayGrid",
                         dataType: 'json',
                         success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
                         }
                     });
                     return data;
