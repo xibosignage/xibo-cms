@@ -828,6 +828,7 @@ class DataSet implements \JsonSerializable
             $params['summarize'] = $this->summarize;
             $params['summarizeField'] = $this->summarizeField;
             $params['lastSync'] = 0;
+            $params['lastClear'] = 0;
         }
 
         // Do the insert
