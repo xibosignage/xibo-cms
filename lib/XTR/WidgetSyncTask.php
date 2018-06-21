@@ -21,9 +21,8 @@
 
 namespace Xibo\XTR;
 
-use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
-use Xibo\Entity\Widget;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -34,12 +33,25 @@ class WidgetSyncTask implements TaskInterface
 {
     use TaskTrait;
 
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
+    /** @var LayoutFactory */
+    private $layoutFactory;
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+        $this->moduleFactory = $container->get('moduleFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
+        return $this;
+    }
+
+    /** @inheritdoc */
     public function run()
     {
         // Get an array of modules to use
-        /** @var ModuleFactory $moduleFactory */
-        $moduleFactory = $this->app->container->get('moduleFactory');
-        $modules = $moduleFactory->get();
+        $modules = $this->moduleFactory->get();
 
         $currentLayoutId = 0;
         $layout = null;
@@ -86,27 +98,24 @@ class WidgetSyncTask implements TaskInterface
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
                 /* @var Region $region */
-                foreach ($region->playlists as $playlist) {
-                    /* @var Playlist $playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var Widget $widget */
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
-                        ) {
-                            $countWidgets++;
+                foreach ($region->getPlaylist()->expandWidgets() as $widget) {
+                    // See if we have a cache
+                    if ($widget->type == 'ticker' ||
+                        $widget->type == 'text' ||
+                        $widget->type == 'datasetview' ||
+                        $widget->type == 'webpage' ||
+                        $widget->type == 'embedded' ||
+                        $modules[$widget->type]->renderAs == 'html'
+                    ) {
+                        $countWidgets++;
 
-                            // Make me a module from the widget
-                            $module = $moduleFactory->createWithWidget($widget, $region);
+                        // Make me a module from the widget
+                        $module = $this->moduleFactory->createWithWidget($widget, $region);
 
-                            $module->getResourceOrCache($displayId);
+                        $module->getResourceOrCache($displayId);
 
-                            // Add a little break in here
-                            sleep(1);
-                        }
+                        // Add a little break in here
+                        sleep(1);
                     }
                 }
             }
