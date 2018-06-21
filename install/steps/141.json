@@ -21,6 +21,10 @@
     {
       "step": "Add Widget Sync Task",
       "action": "INSERT INTO `task` SET `name`='Widget Sync', `class`='\\\\Xibo\\\\XTR\\\\WidgetSyncTask', `status`=2, `isActive`=1, `configFile`='/tasks/widget-sync.task', `options`='{}', `schedule`='*/3 * * * *';"
+    },
+    {
+      "step": "Add a setting to allow users without view permissions to see Layouts that are scheduled.",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('SCHEDULE_SHOW_LAYOUT_NAME', '0', 'checkbox', 'If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.', null, 'permissions', 1, 'Show event Layout regardless of User permission?', '', 45, '', 1, 'checkbox'); "
     }
   ]
 }

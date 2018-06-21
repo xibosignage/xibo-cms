@@ -497,8 +497,19 @@ class Task extends Base
                         $this->run($taskId);
 
                         // Set to idle
-                        $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
-                        $this->store->incrementStat('xtr', 'update');
+                        try {
+                            $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
+                        } catch (\PDOException $PDOException) {
+                            $this->getLog()->info('PDO error updating task status for taskId ' . $taskId . '. E = ' . $PDOException->getMessage());
+
+                            // Re-connect and prepare new SQL statements.
+                            $db = $this->store->getConnection('xtr');
+                            $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
+                            $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
+
+                            // retry (if this fails we will throw out to the lower catch block).
+                            $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
+                        }
 
                     } catch (\Exception $exception) {
                         // This is a completely unexpected exception, and we should disable the task
@@ -509,10 +520,11 @@ class Task extends Base
                             'taskId' => $taskId,
                             'status' => \Xibo\Entity\Task::$STATUS_ERROR,
                             'isActive' => 0,
-                            'lastRunMessage' => 'Fatal Error'
+                            'lastRunMessage' => 'Fatal Error: ' . $exception->getMessage()
                         ]);
-                        $this->store->incrementStat('xtr', 'update');
                     }
+
+                    $this->store->incrementStat('xtr', 'update');
 
                     // We have run a task
                     $taskRun = true;

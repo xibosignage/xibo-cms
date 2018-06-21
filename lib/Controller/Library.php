@@ -1033,6 +1033,20 @@ class Library extends Base
     }
 
     /**
+     * Return the CMS flavored font css
+     */
+    public function fontList()
+    {
+        // Regenerate the CSS for fonts
+        $css = $this->installFonts(['invalidateCache' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'data' => $css['list']
+        ]);
+    }
+
+    /**
      * Get font CKEditor config
      * @return string
      */
@@ -1093,6 +1107,7 @@ class Library extends Base
             $css = '';
             $localCss = '';
             $ckEditorString = '';
+            $fontList = [];
 
             // Check the library exists
             $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
@@ -1122,6 +1137,12 @@ class Library extends Base
 
                         // CKEditor string
                         $ckEditorString .= $displayName . '/' . $familyName . ';';
+
+                        // Font list
+                        $fontList[] = [
+                            'displayName' => $displayName,
+                            'familyName' => $familyName
+                        ];
                     }
                 }
 
@@ -1161,7 +1182,8 @@ class Library extends Base
 
                 $cssDetails = [
                     'css' => $localCss,
-                    'ckeditor' => $ckEditorString
+                    'ckeditor' => $ckEditorString,
+                    'list' => $fontList
                 ];
 
                 $cssItem->set($cssDetails);

@@ -27,6 +27,28 @@ use Xibo\Exception\NotFoundException;
 
 class Image extends ModuleWidget
 {
+    /** @inheritdoc */
+    public function settingsForm()
+    {
+        return 'image-form-settings';
+    }
+
+    /** @inheritdoc */
+    public function settings()
+    {
+        parent::settings();
+
+        $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer()->getString('defaultScaleTypeId');
+    }
+
+    /** @inheritdoc */
+    public function setDefaultWidgetOptions()
+    {
+        parent::setDefaultWidgetOptions();
+
+        $this->setOption('scaleType', $this->getSetting('defaultScaleTypeId', 'center'));
+    }
+
     /**
      * Validate
      */

@@ -204,6 +204,9 @@ class Schedule extends Base
             return;
         }
 
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
@@ -268,10 +271,21 @@ class Schedule extends Base
             $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
-            $title = sprintf(__('%s scheduled on %s'),
-                ($row->campaign == '') ? $row->command : $row->campaign,
-                $displayGroupList
-            );
+            if ($row->campaignId == 0) {
+                // Command
+                $title = __('%s scheduled on %s', $row->command, $displayGroupList);
+            } else {
+                // Should we show the Layout name, or not (depending on permission)
+                // Make sure we only run the below code if we have to, its quite expensive
+                if (!$showLayoutName && !$this->getUser()->isSuperAdmin()) {
+                    // Campaign
+                    $campaign = $this->campaignFactory->getById($row->campaignId);
+
+                    if (!$this->getUser()->checkViewable($campaign))
+                        $row->campaign = __('Private Item');
+                }
+                $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
+            }
 
             // Event URL
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
@@ -372,6 +386,9 @@ class Schedule extends Base
         if (!$this->getUser()->checkViewable($displayGroup))
             throw new AccessDeniedException();
 
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
         $date = $this->getSanitizer()->getDate('date');
 
         // Reset the seconds
@@ -449,10 +466,13 @@ class Schedule extends Base
                     if (!$this->isApi())
                         $layout->link = $this->getApp()->urlFor('layout.designer', ['id' => $layout->layoutId]);
 
-                    if ($this->getUser()->checkViewable($layout))
+                    if ($showLayoutName || $this->getUser()->checkViewable($layout))
                         $layouts[$layoutId] = $layout;
-                    else
-                        $layouts[$layoutId] = $layout->layout;
+                    else {
+                        $layouts[$layoutId] = [
+                            'layout' => __('Private Item')
+                        ];
+                    }
 
                     // Add the Campaign
                     $layout->campaigns = $this->campaignFactory->getByLayoutId($layout->layoutId);
@@ -466,6 +486,8 @@ class Schedule extends Base
                         }
                     }
                 }
+
+                $event['campaign'] = is_object($layouts[$layoutId]) ? $layouts[$layoutId]->layout : $layouts[$layoutId];
 
                 // Display Group details
                 $this->getLog()->debug('Adding this events displayGroupIds to list');

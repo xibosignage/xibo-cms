@@ -1,0 +1,7 @@
+{
+ "id":"media-rss-image-only",
+ "value":"Image only",
+ "template":"<div class=\"image\">[Link|image]<\/div>",
+ "css":".image img { width:100%;}",
+ "image":"modules/ticker/media-rss-image-only.template.png"
+}

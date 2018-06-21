@@ -198,6 +198,8 @@ echo __('Is the Transition config locked?');
 echo __('Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.');
 echo __('Network');
 echo __('Regional');
+echo __('Show event Layout regardless of User permission?');
+echo __('If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.');
 
 // Transitions
 echo __('Fade In');

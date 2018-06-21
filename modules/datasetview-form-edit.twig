@@ -211,10 +211,6 @@
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
                         {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
 
-                    </div>
-
-                    <div class="tab-pane" id="appearance">
-
                         {% set message %}{% trans "Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists." %}{% endset %}
                         {{ forms.message(message) }}
 
@@ -238,6 +234,34 @@
                                 </div>
                             </div>
                         </div>
+
+                    </div>
+
+                    <div class="tab-pane" id="appearance">
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText) }}
+
+                        {% set title %}{% trans "Border Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
+                        {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText) }}
+
+                        {% set title %}{% trans "Font Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
+
+                        {% set title %}{% trans "Font" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: urlFor("library.font.list") },
+                            { name: "data-value", value: module.getOption("fontFamily") }
+                        ] %}
+                        {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Font Size" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
 
                         {% set title %}{% trans "Show the table headings?" %}{% endset %}
                         {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}

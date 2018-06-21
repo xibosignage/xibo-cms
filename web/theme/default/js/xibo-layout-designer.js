@@ -467,7 +467,7 @@ var assignMediaToPlaylist = function(url, media) {
         url: url,
         cache: false,
         dataType: "json",
-        data: {media: media},
+        data: {media: media, useDuration: $("#useDuration").is(":checked")},
         success: XiboSubmitResponse
     });
 };

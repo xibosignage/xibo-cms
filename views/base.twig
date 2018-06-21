@@ -113,16 +113,21 @@
         {% else %}
             <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}?{{ version }}"></script>
             <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}?{{ version }}"></script>
-            <script src="{{ theme.uri("libraries/calendar/js/language/en_GB.js") }}?{{ version }}"></script>
         {% endif %}
 
-        {% if translate.jsLocale != 'en-GB' %}
-            {# Handle the inclusion of i18n #}
-            {% set calendarTranslation %}libraries/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
+        {# Handle the inclusion of i18n #}
+        {% set calendarTranslation %}libraries/calendar/js/language/{{ translate.jsShortLocale }}.js{% endset %}
+        {% if theme.fileExists(calendarTranslation) %}
             <script src="{{ theme.uri(calendarTranslation) }}"></script>
-            {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsLocale }}.js{% endset %}
+        {% endif %}
+
+        {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
+        {% if theme.fileExists(datePickerTranslation) %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
-            {% set selectPickerTranslation %}libraries/select2/js/i18n/{{ translate.jsLocale }}.js{% endset %}
+        {% endif %}
+
+        {% set selectPickerTranslation %}libraries/select2/js/i18n/{{ translate.jsShortLocale }}.js{% endset %}
+        {% if theme.fileExists(selectPickerTranslation) %}
             <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
 
@@ -162,7 +167,7 @@
             var bootstrapDateFormatDateOnly = "{{ settings.DATE_FORMAT_BOOTSTRAP_DATEONLY }}";
             var calendarType = "{{ settings.CALENDAR_TYPE }}";
             var clockUrl = "{{ urlFor("clock") }}";
-            var calendarLanguage = "{{ translate.calendarLanguage }}";
+            var calendarLanguage = "{{ translate.jsShortLocale }}";
             var pingUrl = "{{ urlFor("ping") }}";
             {% autoescape "js" %}
             var dataTablesLanguage = {
