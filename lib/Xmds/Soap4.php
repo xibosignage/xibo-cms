@@ -535,7 +535,6 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', __('Incorrect Screen shot Format'));
         }
 
-
         $fp = fopen($location, 'wb');
         fwrite($fp, $screenShot);
         fclose($fp);
@@ -543,6 +542,9 @@ class Soap4 extends Soap
         // Touch the display record
         $this->display->screenShotRequested = 0;
         $this->display->save(Display::$saveOptionsMinimum);
+
+        // Cache the current screen shot time
+        $this->display->setCurrentScreenShotTime($this->getPool(), $this->getDate()->getLocalDate());
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 
