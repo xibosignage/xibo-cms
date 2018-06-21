@@ -9,7 +9,7 @@
     <div id="layout-manager-container">
         <!-- Changes -->
         {{#each changeHistory}}
-            <div class="change {{uploadedState}}">
+            <div class="change {{#if uploaded}}uploaded{{/if}}">
                 <strong>[{{id}}]</strong> {{target.type}}({{target.id}}) : {{type}}
             </div>
         {{/each}}

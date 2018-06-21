@@ -27,11 +27,28 @@ PropertiesPanel.prototype.save = function(form, element) {
     // Add a save form change to the history array, with previous form state and the new state
     lD.manager.addChange(
         "saveForm",
-        element.type,
-        element[element.type+'Id'],
-        this.formSerializedLoadData,
-        formNewData
-    );
+        element.type, // targetType
+        element[element.type + 'Id'], // targetId
+        this.formSerializedLoadData, // oldValues
+        formNewData // newValues
+    ).then((res) => { // Success
+
+        // Behavior if successful 
+        toastr.success(res.message);
+        lD.reloadData(lD.layout);
+    }).catch((error) => { // Fail/error
+
+        // Show error returned or custom message to the user
+        let errorMessage = 'Save form failed: ';
+        
+        if(typeof error == 'string') {
+            errorMessage += error; 
+        } else {
+            errorMessage += error.errorThrown; 
+        }
+
+        toastr.error(errorMessage);
+    });
 };
 
 /**

@@ -141,32 +141,36 @@ Layout.prototype.calculateTimeValues = function() {
  */
 Layout.prototype.addElement = function(elementType) {
 
-    // Add a create change to the history array
-    lD.manager.addChange(
+    // Add a create change to the history array, and a option to update the Id on the change to the newly created object
+    return lD.manager.addChange(
         "create",
-        elementType,
-        null,
-        null,
-        null
+        elementType, // targetType
+        null, // targetId
+        null, // oldValues
+        null, // newValues
+        {
+            updateTargetId: true // options.updateTargetId
+        }
     );
 };
 
 /**
  * Delete an element in the layout, by ID
- * @param {string} elementType - element type (widget, region, ...)
  * @param {number} elementId - element id
+ * @param {string} elementType - element type (widget, region, ...)
  */
-Layout.prototype.deleteElement = function(elementId, elementType) {
+Layout.prototype.deleteElement = function(elementType, elementId) {
     
     // Create a delete type change, upload it but don't add it to the history array
-    lD.manager.addChange(
+    return lD.manager.addChange(
         "delete",
-        elementType,
-        elementId,
-        null,
-        null,
-        true,
-        false
+        elementType, // targetType
+        elementId, // targetId
+        null, // oldValues
+        null, // newValues
+        {
+            addToHistory: false // options.addToHistory
+        }
     );
 };
 

@@ -129,8 +129,11 @@ $(document).ready(function() {
             } else {
                 lD.showErrorMessage();
             }
-        })
-        .fail(function(data) {
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+
+            // Output error to console
+            console.error(jqXHR, textStatus, errorThrown);
+
             lD.showErrorMessage();
         }
     );
@@ -251,8 +254,11 @@ lD.reloadData = function(layout) {
             } else {
                 lD.showErrorMessage();
             }
-        })
-        .fail(function(data) {
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+
+            // Output error to console
+            console.error(jqXHR, textStatus, errorThrown);
+
             lD.showErrorMessage();
         }
     );

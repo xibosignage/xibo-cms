@@ -158,25 +158,71 @@ Navigator.prototype.renderNavbar = function() {
 
     // Navbar buttons
     this.navbarContainer.find('#close-btn').click(function() {
-        lD.manager.saveAllChanges().then(function(res) {
-            
+        lD.manager.saveAllChanges().then((res) => {   
             lD.toggleNavigatorEditing(false);
-        }).catch(function(jXHR, textStatus, errorThrown) {
-            toastr.error(errorThrown, 'Save all changes failed!');
-            console.log(jXHR, textStatus, errorThrown);
-        });;
+        }).catch((err) => {
+            if(err) {
+                toastr.error('Save all changes failed: ' + err);
+            } else {
+                toastr.error('Save all changes failed!');
+            }
         });
+    });
 
     this.navbarContainer.find('#undo-btn').click(function() {
-        lD.manager.revertChange();
+        lD.manager.revertChange().then((res) => { // Success
+
+            toastr.success(res.message);
+
+            // Refresh designer according to local or API revert
+            if(res.localRevert) {
+                lD.refreshDesigner();
+            } else {
+                lD.reloadData(lD.layout);
+            }
+        }).catch((error) => { // Fail/error
+
+            console.log(error);
+
+            // Show error returned or custom message to the user
+            let errorMessage = 'Revert failed: ';
+
+            if(typeof error == 'string') {
+                errorMessage += error;
+            } else {
+                errorMessage += error.errorThrown;
+            }
+
+            toastr.error(errorMessage);
+    });
     });
 
     this.navbarContainer.find('#add-btn').click(function() {
-        lD.manager.saveAllChanges().then(function() {
-            lD.layout.addElement('region');
-        }).catch(function(jXHR, textStatus, errorThrown) {
-            toastr.error(errorThrown, 'Save all changes failed!');
-            console.log(jXHR, textStatus, errorThrown);
+        lD.manager.saveAllChanges().then((res) => {
+            toastr.success(res);
+
+            lD.layout.addElement('region').then((res) => { // Success
+
+                // Behavior if successful 
+                toastr.success(res.message);
+                lD.reloadData(lD.layout);
+            }).catch((error) => { // Fail/error
+                // Show error returned or custom message to the user
+                let errorMessage = 'Create region failed: ' + error;
+
+                if(typeof error == 'string') {
+                    errorMessage += error;
+                } else {
+                    errorMessage += error.errorThrown;
+                }
+
+                toastr.error(errorMessage);
+            });
+        }).catch((err) => {
+
+            console.log(err);
+
+            toastr.error('Save all changes failed!');
         });
     });
 
@@ -201,24 +247,35 @@ Navigator.prototype.renderNavbar = function() {
                     if(result) {
 
                         // Save all changes first
-                        lD.manager.saveAllChanges().then(function() {
+                        lD.manager.saveAllChanges().then((res) =>  {
 
                             // Remove changes from the history array
-                            lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then(function() {
+                            lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then((res) =>  {
 
                                 // Delete element from the layout
-                                lD.layout.deleteElement(
-                                    lD.selectedObject.regionId,
-                                    lD.selectedObject.type
-                                );
+                                lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
+
+                                    // Behavior if successful 
+                                    toastr.success(res.message);
+                                    lD.reloadData(lD.layout);
+                                }).catch((error) => { // Fail/error
+                                    // Show error returned or custom message to the user
+                                    let errorMessage = 'Delete element failed: ' + error;
+
+                                    if(typeof error == 'string') {
+                                        errorMessage += error;
+                                    } else {
+                                        errorMessage += error.errorThrown;
+                                    }
+
+                                    toastr.error(errorMessage);
+                                });
                     
-                            }).catch(function(jXHR, textStatus, errorThrown) {
-                                toastr.error(errorThrown, 'Remove all changes failed!');
-                                console.log(jXHR, textStatus, errorThrown);
+                            }).catch(function() {
+                                toastr.error('Remove all changes failed!');
                             });
-                        }).catch(function(jXHR, textStatus, errorThrown) {
-                            toastr.error(errorThrown, 'Save all changes failed!');
-                            console.log(jXHR, textStatus, errorThrown);
+                        }).catch(function() {
+                            toastr.error('Save all changes failed!');
                         });
                     }
                 }

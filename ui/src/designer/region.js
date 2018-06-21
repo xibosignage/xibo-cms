@@ -90,8 +90,12 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
             {
                 regions: JSON.stringify(newValues)
             },
-            false
-        );
+            {
+                upload: false // options.upload
+            }
+        ).catch((error) => { 
+            toastr.error('Transform region failed! ' + error);
+        });
     }
 
     // Apply changes to the region ( updating values )
