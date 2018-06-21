@@ -363,7 +363,7 @@ class Ticker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="templateId",
      *      in="formData",
-     *      description="EDIT Only, SourceId=1 - Template you'd like to apply, options available: title-only, prominent-title-with-desc-and-name-separator, media-rss-with-title, media-rss-wth-left-hand-text",
+     *      description="EDIT Only, SourceId=1 - Template you'd like to apply, options available: title-only, prominent-title-with-desc-and-name-separator, media-rss-with-title, media-rss-wth-left-hand-text, media-rss-image-only",
      *      type="string",
      *      required=false
      *   ),
