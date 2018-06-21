@@ -25,6 +25,7 @@ use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -1032,6 +1033,20 @@ class Library extends Base
     }
 
     /**
+     * Return the CMS flavored font css
+     */
+    public function fontList()
+    {
+        // Regenerate the CSS for fonts
+        $css = $this->installFonts(['invalidateCache' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'data' => $css['list']
+        ]);
+    }
+
+    /**
      * Get font CKEditor config
      * @return string
      */
@@ -1089,6 +1104,7 @@ class Library extends Base
             $css = '';
             $localCss = '';
             $ckEditorString = '';
+            $fontList = [];
 
             // Check the library exists
             $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
@@ -1118,6 +1134,12 @@ class Library extends Base
 
                         // CKEditor string
                         $ckEditorString .= $displayName . '/' . $familyName . ';';
+
+                        // Font list
+                        $fontList[] = [
+                            'displayName' => $displayName,
+                            'familyName' => $familyName
+                        ];
                     }
                 }
 
@@ -1157,7 +1179,8 @@ class Library extends Base
 
                 $cssDetails = [
                     'css' => $localCss,
-                    'ckeditor' => $ckEditorString
+                    'ckeditor' => $ckEditorString,
+                    'list' => $fontList
                 ];
 
                 $cssItem->set($cssDetails);
@@ -1326,7 +1349,7 @@ class Library extends Base
     }
 
     /**
-     * @SWG\Delete(
+     * @SWG\Post(
      *  path="/library/{mediaId}/untag",
      *  operationId="mediaUntag",
      *  tags={"library"},
@@ -1356,6 +1379,7 @@ class Library extends Base
      *
      * @param $mediaId
      * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function untag($mediaId)
     {
@@ -1370,7 +1394,7 @@ class Library extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to unassign'));
+            throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
 
         foreach ($tags as $tag) {
             $media->unassignTag($this->tagFactory->tagFromString($tag));

@@ -144,6 +144,7 @@ $app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->na
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
 $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
+$app->get('/library/fontlist', '\Xibo\Controller\Library:fontList')->name('library.font.list');
 
 
 //

@@ -19,13 +19,19 @@
                         <div class="XiboFilter well">
                             <div class="FilterDiv" id="Filter">
                                 <form class="form-inline">
+                                    {% set attributes = [
+                                        { name: "data-allow-clear", value: "true" },
+                                        { name: "data-placeholder--id", value: null },
+                                        { name: "data-placeholder--value", value: "" }
+                                    ] %}
+
                                     {% set title %}{% trans "User" %}{% endset %}
                                     {% set userFilterOptions = [{userId: null, user: ""}]|merge(users) %}
-                                    {{ inline.dropdown("userId", "single", title, "", userFilterOptions, "userId", "userName", "", "selectPicker", "", "u", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+                                    {{ inline.dropdown("userId", "single", title, "", userFilterOptions, "userId", "userName", "", "selectPicker", "", "u", "", attributes) }}
 
                                     {% set title %}{% trans "User Group" %}{% endset %}
                                     {% set groupFilterOptions = [{groupId: null, group: ""}]|merge(groups) %}
-                                    {{ inline.dropdown("groupId", "single", title, "", groupFilterOptions, "groupId", "group", "", "selectPicker", "", "g", "", [{name: "data-live-search", value:"true"}, {name: "data-selected-text-format", value: "count > 3"}]) }}
+                                    {{ inline.dropdown("groupId", "single", title, "", groupFilterOptions, "groupId", "group", "", "selectPicker", "", "g", "", attributes) }}
                                 </form>
                             </div>
                         </div>

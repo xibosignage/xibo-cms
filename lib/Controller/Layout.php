@@ -205,7 +205,6 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
-            'layouts' => $this->layoutFactory->query(null, ['excludeTemplates' => $isTemplate ? 0 : 1]),
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
             'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
         ];
@@ -1109,13 +1108,17 @@ class Layout extends Base
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
+        // If we have a background image, output it
+        $backgroundId = $this->getSanitizer()->getInt('backgroundOverride', $layout->backgroundImageId);
+        $backgrounds = ($backgroundId != null) ? [$this->mediaFactory->getById($backgroundId)] : [];
+
         $this->getState()->template = 'layout-form-background';
         $this->getState()->setData([
             'layout' => $layout,
             'resolution' => $resolution,
             'resolutions' => $this->resolutionFactory->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
-            'backgroundId' => $this->getSanitizer()->getInt('backgroundOveride', $layout->backgroundImageId),
-            'backgrounds' => $this->mediaFactory->query(null, ['type' => 'image']),
+            'backgroundId' => $backgroundId,
+            'backgrounds' => $backgrounds,
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
     }
@@ -1350,7 +1353,7 @@ class Layout extends Base
     }
 
     /**
-     * @SWG\Delete(
+     * @SWG\Post(
      *  path="/layout/{layoutId}/untag",
      *  operationId="layoutUntag",
      *  tags={"layout"},
@@ -1398,7 +1401,7 @@ class Layout extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to unassign'));
+            throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
 
         foreach ($tags as $tag) {
             $layout->unassignTag($this->tagFactory->tagFromString($tag));

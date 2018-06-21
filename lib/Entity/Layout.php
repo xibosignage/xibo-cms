@@ -718,6 +718,8 @@ class Layout implements \JsonSerializable
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
 
+        $this->getLog()->audit('Layout', $this->layoutId, 'Layout Deleted', ['layoutId' => $this->layoutId]);
+
         // Delete the cached file (if there is one)
         if (file_exists($this->getCachePath()))
             @unlink($this->getCachePath());
@@ -800,11 +802,17 @@ class Layout implements \JsonSerializable
      */
     public function unassignTag($tag)
     {
+        $this->load();
+
         $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
             return $a->tagId - $b->tagId;
         });
+
+        $this->unassignTags[] = $tag;
+
+        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
         return $this;
     }

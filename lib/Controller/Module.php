@@ -22,6 +22,8 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
+use Xibo\Event\WidgetAddEvent;
+use Xibo\Event\WidgetEditEvent;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
@@ -452,6 +454,9 @@ class Module extends Base
         // Inject the Current User
         $module->setUser($this->getUser());
 
+        // Set an event to be called when we save this module
+        $module->setSaveEvent(new WidgetAddEvent($module));
+
         // Call module add
         $module->add();
 
@@ -545,6 +550,9 @@ class Module extends Base
 
         // Inject the Current User
         $module->setUser($this->getUser());
+
+        // Set an event to be called when we save this module
+        $module->setSaveEvent(new WidgetEditEvent($module));
 
         // Call Module Edit
         $module->edit();

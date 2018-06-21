@@ -52,7 +52,7 @@ $(document).ready(function() {
     });
 
     // Make the select list nicer
-    $('#DisplayList').selectpicker();
+    $('#DisplayList').select2();
 
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
@@ -368,9 +368,177 @@ $(document).ready(function() {
 var setupScheduleForm = function(dialog) {
 
     // Select lists
-    $('#campaignId', dialog).selectpicker();
-    $('select[name="displayGroupIds[]"]', dialog).selectpicker();
-    $('select[name="recurrenceRepeatsOn[]"]', dialog).selectpicker();
+    var $campaignSelect = $('#campaignId', dialog);
+    $campaignSelect.select2({
+        dropdownParent: $(dialog),
+        ajax: {
+            url: $campaignSelect.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    isLayoutSpecific: -1,
+                    retired: 0,
+                    totalDuration: 0,
+                    name: params.term,
+                    start: 0,
+                    length: 10,
+                    columns: [
+                        {
+                            "data": "isLayoutSpecific"
+                        },
+                        {
+                            "data": "campaign"
+                        }
+                    ],
+                    order: [
+                        {
+                            "column": 0,
+                            "dir": "asc"
+                        },
+                        {
+                            "column": 1,
+                            "dir": "asc"
+                        }
+                    ]
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+                var campaigns = [];
+                var layouts = [];
+
+                $.each(data.data, function(index, element) {
+                    if (element.isLayoutSpecific === 1) {
+                        layouts.push({
+                            "id": element.campaignId,
+                            "text": element.campaign
+                        });
+                    } else {
+                        campaigns.push({
+                            "id": element.campaignId,
+                            "text": element.campaign
+                        });
+                    }
+                });
+
+                if (campaigns.length > 0) {
+                    results.push({
+                        "text": $campaignSelect.data('transCampaigns'),
+                        "children": campaigns
+                    })
+                }
+
+                if (layouts.length > 0) {
+                    results.push({
+                        "text": $campaignSelect.data('transLayouts'),
+                        "children": layouts
+                    })
+                }
+
+                console.log(results);
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
+
+    var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
+    $displaySelect.select2({
+        dropdownParent: $(dialog),
+        ajax: {
+            url: $displaySelect.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    isDisplaySpecific: -1,
+                    forSchedule: 1,
+                    displayGroup: params.term,
+                    start: 0,
+                    length: 10,
+                    columns: [
+                        {
+                            "data": "isDisplaySpecific"
+                        },
+                        {
+                            "data": "displayGroup"
+                        }
+                    ],
+                    order: [
+                        {
+                            "column": 0,
+                            "dir": "asc"
+                        },
+                        {
+                            "column": 1,
+                            "dir": "asc"
+                        }
+                    ]
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var groups = [];
+                var displays = [];
+
+                $.each(data.data, function(index, element) {
+                    if (element.isDisplaySpecific === 1) {
+                        displays.push({
+                            "id": element.displayGroupId,
+                            "text": element.displayGroup
+                        });
+                    } else {
+                        groups.push({
+                            "id": element.displayGroupId,
+                            "text": element.displayGroup
+                        });
+                    }
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: [
+                        {
+                            "text": $displaySelect.data('transGroups'),
+                            "children": groups
+                        },{
+                            "text": $displaySelect.data('transDisplay'),
+                            "children": displays
+                        }
+                    ],
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
+
+    $('select[name="recurrenceRepeatsOn[]"]', dialog).select2({
+        width: "100%"
+    });
     
     // Hide/Show form elements according to the selected options
     // Initial state of the components
@@ -546,8 +714,8 @@ var duplicateScheduledEvent = function() {
 var setupScheduleNowForm = function(form) {
     
     // We submit this form ourselves (outside framework)
-    $('#campaignId', form).selectpicker();
-    $('select[name="displayGroupIds[]"]', form).selectpicker();
+    $('#campaignId', form).select2();
+    $('select[name="displayGroupIds[]"]', form).select2();
 
     // Hide the seconds input option unless seconds are enabled in the date format
     if (dateFormat.indexOf("s") <= -1) {

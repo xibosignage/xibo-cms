@@ -852,6 +852,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Optional flag indicating whether to enable the useDuration field",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -901,7 +908,12 @@ class Playlist extends Base
             $module = $this->moduleFactory->create($item->mediaType);
 
             // Determine the duration
+            // if we have a duration provided, then use it, otherwise use the duration recorded on the library item already
             $itemDuration = ($duration !== null) ? $duration : $item->duration;
+
+            // If the library item duration (or provided duration) is 0, then call the module to determine what the
+            // duration should be.
+            // in most cases calling the module will return the Module Default Duration as configured in settings.
             $itemDuration = ($itemDuration == 0) ? $module->determineDuration() : $itemDuration;
 
             // Create a widget
@@ -914,8 +926,8 @@ class Playlist extends Base
             // Set default options (this sets options on the widget)
             $module->setDefaultWidgetOptions();
 
-            // If a duration is provided, then we want to use it
-            if ($duration !== null)
+            // If a duration has been provided, then we want to use it, so set useDuration to 1.
+            if ($duration !== null || $this->getSanitizer()->getCheckbox('useDuration') == 1)
                 $widget->useDuration = 1;
 
             // Calculate the duration

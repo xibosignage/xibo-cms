@@ -446,7 +446,8 @@ class State extends Middleware
                 $container->dataSetFactory,
                 $container->dataSetColumnFactory,
                 $container->dataSetColumnTypeFactory,
-                $container->dataTypeFactory
+                $container->dataTypeFactory,
+                $container->pool
             );
         });
 

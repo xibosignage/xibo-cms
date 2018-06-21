@@ -204,6 +204,9 @@ class Schedule extends Base
             return;
         }
 
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
@@ -268,10 +271,21 @@ class Schedule extends Base
             $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
-            $title = sprintf(__('%s scheduled on %s'),
-                ($row->campaign == '') ? $row->command : $row->campaign,
-                $displayGroupList
-            );
+            if ($row->campaignId == 0) {
+                // Command
+                $title = __('%s scheduled on %s', $row->command, $displayGroupList);
+            } else {
+                // Should we show the Layout name, or not (depending on permission)
+                // Make sure we only run the below code if we have to, its quite expensive
+                if (!$showLayoutName && !$this->getUser()->isSuperAdmin()) {
+                    // Campaign
+                    $campaign = $this->campaignFactory->getById($row->campaignId);
+
+                    if (!$this->getUser()->checkViewable($campaign))
+                        $row->campaign = __('Private Item');
+                }
+                $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
+            }
 
             // Event URL
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
@@ -372,6 +386,9 @@ class Schedule extends Base
         if (!$this->getUser()->checkViewable($displayGroup))
             throw new AccessDeniedException();
 
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
         $date = $this->getSanitizer()->getDate('date');
 
         // Reset the seconds
@@ -449,10 +466,13 @@ class Schedule extends Base
                     if (!$this->isApi())
                         $layout->link = $this->getApp()->urlFor('layout.designer', ['id' => $layout->layoutId]);
 
-                    if ($this->getUser()->checkViewable($layout))
+                    if ($showLayoutName || $this->getUser()->checkViewable($layout))
                         $layouts[$layoutId] = $layout;
-                    else
-                        $layouts[$layoutId] = $layout->layout;
+                    else {
+                        $layouts[$layoutId] = [
+                            'layout' => __('Private Item')
+                        ];
+                    }
 
                     // Add the Campaign
                     $layout->campaigns = $this->campaignFactory->getByLayoutId($layout->layoutId);
@@ -466,6 +486,8 @@ class Schedule extends Base
                         }
                     }
                 }
+
+                $event['campaign'] = is_object($layouts[$layoutId]) ? $layouts[$layoutId]->layout : $layouts[$layoutId];
 
                 // Display Group details
                 $this->getLog()->debug('Adding this events displayGroupIds to list');
@@ -596,32 +618,28 @@ class Schedule extends Base
      */
     function addForm()
     {
-        $groups = array();
-        $displays = array();
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        // Get the display groups added to the session (if there are some)
+        $displayGroupIds = $this->session->get('displayGroupIds');
+        $displayGroups = [];
 
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1)
+                    continue;
 
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
-                continue;
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
+                if ($this->getUser()->checkViewable($displayGroup))
+                    $displayGroups[] = $displayGroup;
             }
         }
 
         $this->getState()->template = 'schedule-form-add';
         $this->getState()->setData([
-            'displays' => $displays,
-            'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'displayGroupIds' => $this->session->get('displayGroupIds'),
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add')
         ]);
     }
@@ -865,32 +883,13 @@ class Schedule extends Base
         if ($schedule->recurrenceRange != null)
             $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);
 
-        $groups = array();
-        $displays = array();
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
-
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
-                continue;
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'displays' => $displays,
-            'displayGroups' => $groups,
             'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'displayGroups' => $schedule->displayGroups,
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),

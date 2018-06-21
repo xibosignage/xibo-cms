@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\SettingsFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -137,9 +138,11 @@ class Settings extends Base
                 // convert to a dropdown
                 $setting['fieldType'] = 'dropdown';
 
-                foreach ($this->layoutFactory->query(null, ['disableUserCheck' => 1]) as $layout) {
+                try {
                     /** @var \Xibo\Entity\Layout $layout */
-                    $options[] = ['id' => $layout->layoutId, 'value' => $layout->layout];
+                    $options[] = $this->layoutFactory->getById($setting['value']);
+                } catch (NotFoundException $notFoundException) {
+                    $options = [];
                 }
 
             } else {

@@ -123,6 +123,9 @@ class StatsArchiveTask implements TaskInterface
         // Exec
         $statement->execute($params);
 
+        // Store a count of rows for the delete
+        $countRows = 0;
+
         // Do some post processing
         while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
             // Read the columns
@@ -139,6 +142,9 @@ class StatsArchiveTask implements TaskInterface
                 $this->sanitizer->int($row['widgetId']),
                 $this->sanitizer->int($row['mediaID'])
             ]);
+
+            // Increment count of rows
+            $countRows++;
         }
 
         fclose($out);
@@ -160,8 +166,28 @@ class StatsArchiveTask implements TaskInterface
         $media = $this->mediaFactory->create(__('Stats Export %s to %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
-        // Delete the stats
-        $this->store->update('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt', $params);
+        // Delete the stats, incrementally
+        $rowsModified = 1;
+        $loops = 0;
+        $loopsRequired = ($countRows / 1000) + 1; // add 1 for good measure, just to make sure our final delete doesn't hit anything
+
+        // Prepare a SQL statement
+        $delete = $this->store->getConnection()->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT 1000');
+
+        while ($rowsModified > 0 && $loops < $loopsRequired) {
+            $loops++;
+
+            // Run the delete
+            $delete->execute($params);
+
+            // Find out how many rows we've deleted
+            $rowsModified = $delete->rowCount();
+
+            // We shouldn't be in a transaction, but commit anyway just in case
+            $this->store->commitIfNecessary();
+
+            sleep(1);
+        }
     }
 
     /**

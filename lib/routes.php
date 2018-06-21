@@ -121,7 +121,7 @@ $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.imp
 $app->post('/layout/:id/upgrade', '\Xibo\Controller\Layout:upgrade')->name('layout.upgrade');
 // Tagging
 $app->post('/layout/:id/tag', '\Xibo\Controller\Layout:tag')->name('layout.tag');
-$app->delete('/layout/:id/untag', '\Xibo\Controller\Layout:untag')->name('layout.untag');
+$app->post('/layout/:id/untag', '\Xibo\Controller\Layout:untag')->name('layout.untag');
 
 /**
  * Region
@@ -218,7 +218,7 @@ $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.ti
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 // Tagging
 $app->post('/library/:id/tag', '\Xibo\Controller\Library:tag')->name('library.tag');
-$app->delete('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');
+$app->post('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');
 
 /**
  * Displays

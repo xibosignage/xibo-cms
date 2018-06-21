@@ -99,7 +99,6 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => $this->displayFactory->query(),
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
@@ -118,11 +117,6 @@ class Stats extends Base
     {
         $data = [
             // List of Displays this user has permission for
-            'displays' => $this->displayFactory->query(),
-            // List of Media this user has permission for
-            'media' => $this->mediaFactory->query(),
-            // List of Layouts this user has permission for
-            'layouts' => $this->layoutFactory->query(),
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
@@ -588,9 +582,6 @@ class Stats extends Base
     public function exportForm()
     {
         $this->getState()->template = 'statistics-form-export';
-        $this->getState()->setData([
-            'displays' => $this->displayFactory->query()
-        ]);
     }
 
     /**

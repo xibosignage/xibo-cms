@@ -156,7 +156,7 @@ class MaintenanceDailyTask implements TaskInterface
 
         if ($this->config->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-            $folder = PROJECT_ROOT . '/web/' . $this->config->uri('layouts', true);
+            $folder = $this->config->uri('layouts', true);
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {

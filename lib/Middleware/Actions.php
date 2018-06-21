@@ -48,7 +48,7 @@ class Actions extends Middleware
             // Process Actions
             if (!Environment::migrationPending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
 
-                $folder = PROJECT_ROOT . '/web/' . $app->configService->uri('layouts', true);
+                $folder = $app->configService->uri('layouts', true);
 
                 foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                     if (stripos($file, '.zip')) {
