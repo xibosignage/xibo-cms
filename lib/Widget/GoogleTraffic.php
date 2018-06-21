@@ -91,14 +91,17 @@ class GoogleTraffic extends ModuleWidget
 
     /**
      * Process any module settings
+     * @throws InvalidArgumentException
      */
     public function settings()
     {
         // Process any module settings you asked for.
         $apiKey = $this->getSanitizer()->getString('apiKey');
 
-        if ($apiKey == '')
-            throw new \InvalidArgumentException(__('Missing API Key'));
+        if ($this->module->enabled != 0) {
+            if ($apiKey == '')
+                throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+        }
 
         $this->module->settings['apiKey'] = $apiKey;
 

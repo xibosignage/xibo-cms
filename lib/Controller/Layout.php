@@ -27,6 +27,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -1126,7 +1127,7 @@ class Layout extends Base
     }
 
     /**
-     * @SWG\Delete(
+     * @SWG\Post(
      *  path="/layout/{layoutId}/untag",
      *  operationId="layoutUntag",
      *  tags={"layout"},
@@ -1156,6 +1157,7 @@ class Layout extends Base
      *
      * @param $layoutId
      * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function untag($layoutId)
     {
@@ -1170,7 +1172,7 @@ class Layout extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to unassign'));
+            throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
 
         foreach ($tags as $tag) {
             $layout->unassignTag($this->tagFactory->tagFromString($tag));

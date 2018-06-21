@@ -300,6 +300,11 @@ class DisplayFactory extends BaseFactory
             $params['macAddress'] = '%' . $this->getSanitizer()->getString('macAddress', $filterBy) . '%';
         }
 
+        if ($this->getSanitizer()->getString('clientAddress', $filterBy) != '') {
+            $body .= ' AND display.clientaddress LIKE :clientAddress ';
+            $params['clientAddress'] = '%' . $this->getSanitizer()->getString('clientAddress', $filterBy) . '%';
+        }
+
         if ($this->getSanitizer()->getString('clientVersion', $filterBy) != '') {
             $body .= ' AND display.client_version LIKE :clientVersion ';
             $params['clientVersion'] = '%' . $this->getSanitizer()->getString('clientVersion', $filterBy) . '%';

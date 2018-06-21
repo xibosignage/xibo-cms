@@ -11,6 +11,7 @@ namespace Xibo\Controller;
 
 //use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
@@ -414,6 +415,8 @@ class DataSetData extends Base
      * @param $dataSetId
      * @param $rowId
      *
+     * @throws NotFoundException
+     *
      * @SWG\Delete(
      *  path="/dataset/data/{dataSetId}/{rowId}",
      *  operationId="dataSetDataDelete",
@@ -446,6 +449,10 @@ class DataSetData extends Base
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
+
+        if (empty($dataSet->getData(['id' => $rowId])[0])) {
+            throw new NotFoundException(__('row not found'), 'dataset');
+        }
 
         // Delete the row
         $dataSet->deleteRow($rowId);

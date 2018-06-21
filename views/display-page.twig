@@ -49,6 +49,9 @@
                             {% set title %}{% trans "Tags" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
                             {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                            {% set title %}{% trans "IP Address" %}{% endset %}
+                            {{ inline.input("clientAddress", title) }}
                         </form>
                     </div>
                 </div>

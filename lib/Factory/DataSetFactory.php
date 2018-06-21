@@ -403,7 +403,7 @@ class DataSetFactory extends BaseFactory
                 // Check the cache control situation
                 if ($enableCaching) {
                     // recache if necessary
-                    $cacheControlKey = $this->pool->getItem('/dataset/cache/' . md5($resolvedUri . json_encode($requestParams)));
+                    $cacheControlKey = $this->pool->getItem('/dataset/cache/' . $dataSet->dataSetId . '/' . md5($resolvedUri . json_encode($requestParams)));
                     $cacheControlKeyValue = ($cacheControlKey->isMiss()) ? '' : $cacheControlKey->get();
 
                     $this->getLog()->debug('Cache Control Key is ' . $cacheControlKeyValue);

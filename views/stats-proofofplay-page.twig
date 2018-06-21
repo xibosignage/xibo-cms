@@ -70,6 +70,18 @@
                             ] %}
                             {% set title %}{% trans "Media" %}{% endset %}
                             {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set widget %}{% trans "Widget" %}{% endset %}
+                            {% set options = [
+                                { typeid: "", type: null },
+                                { typeid: "layout", type: layout },
+                                { typeid: "media", type: media },
+                                { typeid: "widget", type: widget }
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
                         </form>
                     </div>
                 </div>

@@ -469,6 +469,8 @@ class Region implements \JsonSerializable
         // Delete this region
         $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
 
+        $this->getLog()->audit('Region', $this->regionId, 'Region Deleted', ['regionId' => $this->regionId]);
+
         // Notify Layout
         if ($options['notify'])
             $this->notifyLayout();
