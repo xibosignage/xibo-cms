@@ -72,6 +72,7 @@ class Twitter extends TwitterBase
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 60;
             $module->settings = [];
+            $module->installName = 'twitter';
 
             $this->setModule($module);
             $this->installModule();

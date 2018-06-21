@@ -70,6 +70,7 @@ class TwitterMetro extends TwitterBase
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 60;
             $module->settings = [];
+            $module->installName = 'twittermetro';
 
             $this->setModule($module);
             $this->installModule();

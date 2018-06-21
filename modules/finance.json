@@ -1,7 +1,0 @@
-{
-  "title": "Finance Module",
-  "author": "Spring Signage Ltd",
-  "description": "A module for displaying Financial information. Uses the Yahoo API",
-  "name": "finance",
-  "class": "Xibo\\Widget\\Finance"
-}

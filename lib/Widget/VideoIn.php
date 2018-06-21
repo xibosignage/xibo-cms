@@ -47,6 +47,7 @@ class VideoIn extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 60;
             $module->settings = [];
+            $module->installName = 'videoin';
 
             $this->setModule($module);
             $this->installModule();

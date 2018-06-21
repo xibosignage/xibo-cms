@@ -31,9 +31,25 @@ use Xibo\Factory\ModuleFactory;
  */
 interface ModuleInterface
 {
-    // Some Default Add/Edit/Delete functionality each module should have
+    /**
+     * Add Widget
+     * @return mixed
+     * @throws XiboException
+     */
     public function add();
+
+    /**
+     * Edit Widget
+     * @return mixed
+     * @throws XiboException
+     */
     public function edit();
+
+    /**
+     * Delete Widget
+     * @return mixed
+     * @throws XiboException
+     */
     public function delete();
 
     // Return the name of the media as input by the user

@@ -23,9 +23,9 @@ namespace Xibo\Widget;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use Xibo\Exception\InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
@@ -75,6 +75,7 @@ class ForecastIo extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->settings = [];
             $module->defaultDuration = 60;
+            $module->installName = 'forecastio';
 
             $this->setModule($module);
             $this->installModule();

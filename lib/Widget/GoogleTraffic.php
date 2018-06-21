@@ -64,6 +64,7 @@ class GoogleTraffic extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 600;
             $module->settings = [];
+            $module->installName = 'googletraffic';
 
             $this->setModule($module);
             $this->installModule();

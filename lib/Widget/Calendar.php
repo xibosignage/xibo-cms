@@ -63,6 +63,7 @@ class Calendar extends ModuleWidget
             $module->schemaVersion = 1;
             $module->defaultDuration = 60;
             $module->settings = [];
+            $module->installName = 'calendar';
 
             $this->setModule($module);
             $this->installModule();

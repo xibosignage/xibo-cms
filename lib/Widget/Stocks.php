@@ -57,6 +57,7 @@ class Stocks extends AlphaVantageBase
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 30;
             $module->settings = [];
+            $module->installName = 'stocks';
 
             $this->setModule($module);
             $this->installModule();

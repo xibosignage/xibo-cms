@@ -672,17 +672,13 @@ abstract class ModuleWidget implements ModuleInterface
         $this->widget->calculateDuration($this)->save();
     }
 
-    /**
-     * Add Media
-     */
+    /** @inheritdoc */
     public function add()
     {
         // Nothing to do
     }
 
-    /**
-     * Edit Media
-     */
+    /** @inheritdoc */
     public function edit()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -692,9 +688,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->widget->save();
     }
 
-    /**
-     * Delete Widget
-     */
+    /** @inheritdoc */
     public function delete()
     {
         $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
