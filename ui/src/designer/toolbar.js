@@ -1,7 +1,7 @@
 // NAVIGATOR Module
 
 // Load templates
-const bottomToolbarTemplate = require('../templates/toolbar.hbs');
+const ToolbarTemplate = require('../templates/toolbar.hbs');
 
 const defaultMenuItems = [
     {
@@ -18,7 +18,7 @@ const defaultMenuItems = [
  * Bottom toolbar contructor
  * @param {object} container - the container to render the navigator to
  */
-let BottomToolbar = function(container) {
+let Toolbar = function(container) {
     this.DOMObject = container;
     this.openedMenu = -1;
     this.menuItems = defaultMenuItems;
@@ -30,6 +30,7 @@ let BottomToolbar = function(container) {
 
     this.cardDimensions = {
         width: 100, // In pixels
+        height: 70, // In pixels
         margin: 2 // In pixels
     };
 };
@@ -37,10 +38,10 @@ let BottomToolbar = function(container) {
 /**
  * Render toolbar
  */
-BottomToolbar.prototype.render = function() {
+Toolbar.prototype.render = function() {
 
     // Compile layout template with data
-    const html = bottomToolbarTemplate({
+    const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
         undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled'),
@@ -81,7 +82,29 @@ BottomToolbar.prototype.render = function() {
     }.bind(this));
 
     this.DOMObject.find('#undoLastAction').click(function() {
-        lD.manager.revertChange();
+        lD.manager.revertChange().then((res) => { // Success
+
+            toastr.success(res.message);
+
+            // Refresh designer according to local or API revert
+            if(res.localRevert) {
+                lD.refreshDesigner();
+            } else {
+                lD.reloadData(lD.layout);
+            }
+        }).catch((error) => { // Fail/error
+
+            // Show error returned or custom message to the user
+            let errorMessage = 'Revert failed: ';
+
+            if(typeof error == 'string') {
+                errorMessage += error;
+            } else {
+                errorMessage += error.errorThrown;
+            }
+
+            toastr.error(errorMessage);
+        });
     });
 
     this.DOMObject.find('#deleteAllTabs').click(function() {
@@ -97,9 +120,20 @@ BottomToolbar.prototype.render = function() {
     });
 
     // Set cards width/margin and draggable properties
-    this.DOMObject.find('.toolbar-card').width(this.cardDimensions.width).css('margin', this.cardDimensions.margin).draggable({
-        revert: true,
-        opacity: 0.35
+    this.DOMObject.find('.toolbar-card').width(
+        this.cardDimensions.width
+    ).height(
+        this.cardDimensions.height
+    ).css(
+        'margin', this.cardDimensions.margin
+    ).draggable({
+        cursor: "crosshair",
+        cursorAt: {
+            top: (this.cardDimensions.height + this.cardDimensions.margin) / 2, 
+            left: (this.cardDimensions.width + this.cardDimensions.margin) / 2
+        },
+        opacity: 0.3,
+        helper: 'clone'
     });
 
     // Initialize tooltips
@@ -109,9 +143,9 @@ BottomToolbar.prototype.render = function() {
 
 /**
  * Load content
- * @param {number} menu - menu to laod content for
+ * @param {number} menu - menu to load content for
  */
-BottomToolbar.prototype.loadContent = function(menu = -1) {
+Toolbar.prototype.loadContent = function(menu = -1) {
 
     // Calculate pagination
     const pagination = lD.toolbar.calculatePagination(menu);
@@ -127,6 +161,9 @@ BottomToolbar.prototype.loadContent = function(menu = -1) {
 
         for (let index = 0; index < this.menuItems[menu].content.length; index++) {
             const element = this.menuItems[menu].content[index];
+
+            element.maxSize = libraryUpload.maxSize;
+            element.maxSizeMessage = libraryUpload.maxSizeMessage;
     
             // Hide element if it's outside the "to display" region
             element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length));
@@ -168,28 +205,30 @@ BottomToolbar.prototype.loadContent = function(menu = -1) {
             this.menuItems[menu].title += ' [' + customFilter.type + '] ';
         }
 
+        // Request elements based on filters
         $.ajax({
             url: linkToAPI.url,
             type: linkToAPI.type,
-            data: customFilter,
-            success: function(res) {
+            data: customFilter
+        }).done(function(res) {
 
-                if(res.data.length == 0) {
-                    toastr.info('No results for the filter!', 'Search');
-                    lD.toolbar.menuItems[menu].content = null;
-                } else {
-                    lD.toolbar.menuItems[menu].content = res.data;
-                }
-
-                // Enable/Disable page up pagination button according to the page to display and total elements
-                lD.toolbar.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= res.recordsTotal) ? 'disabled' : '';
-
-                lD.toolbar.render();
-            },
-            error: function(jXHR, textStatus, errorThrown) {
-                toastr.error('Library load failed!', 'Error');
+            if(res.data.length == 0) {
+                toastr.info('No results for the filter!', 'Search');
                 lD.toolbar.menuItems[menu].content = null;
+            } else {
+                lD.toolbar.menuItems[menu].content = res.data;
             }
+
+            // Enable/Disable page up pagination button according to the page to display and total elements
+            lD.toolbar.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= res.recordsTotal) ? 'disabled' : '';
+
+            lD.toolbar.render();
+        }).catch(function(jqXHR, textStatus, errorThrown) {
+
+            console.error(jqXHR, textStatus, errorThrown);
+            toastr.error('Library load failed!');
+            
+            lD.toolbar.menuItems[menu].content = null;
         });
     }
 }
@@ -198,7 +237,7 @@ BottomToolbar.prototype.loadContent = function(menu = -1) {
  * Open menu
  * @param {number} menu - menu to open index, -1 by default and to toggle
  */
-BottomToolbar.prototype.openTab = function(menu = -1) {
+Toolbar.prototype.openTab = function(menu = -1) {
     
     // Close previous opened menu
     if(menu == -1 && this.openedMenu != -1) {
@@ -226,7 +265,7 @@ BottomToolbar.prototype.openTab = function(menu = -1) {
 /**
  * Create new tab
  */
-BottomToolbar.prototype.createNewTab = function() {
+Toolbar.prototype.createNewTab = function() {
 
     let moduleListFiltered = [];
 
@@ -271,17 +310,18 @@ BottomToolbar.prototype.createNewTab = function() {
  * Delete tab
  * @param {number} menu
  */
-BottomToolbar.prototype.deleteTab = function(menu) {
+Toolbar.prototype.deleteTab = function(menu) {
     
     this.menuItems.splice(menu, 1);
     this.openedMenu = -1;
 
     this.render();
 }
+
 /**
  * Delete all tabs
  */
-BottomToolbar.prototype.deleteAllTabs = function() {
+Toolbar.prototype.deleteAllTabs = function() {
 
     for(let index = this.menuItems.length - 1; index > 0; index--) {
         this.menuItems.splice(index, 1);
@@ -291,12 +331,11 @@ BottomToolbar.prototype.deleteAllTabs = function() {
     this.render();
 }
 
-
 /**
  * Calculate pagination
  * @param {number} menu
  */
-BottomToolbar.prototype.calculatePagination = function(menu) {
+Toolbar.prototype.calculatePagination = function(menu) {
 
     // Get page and number of elements
     const currentPage = this.menuItems[menu].page;
@@ -315,4 +354,286 @@ BottomToolbar.prototype.calculatePagination = function(menu) {
     };
 }
 
-module.exports = BottomToolbar;
+/**
+ * Action to take after dropping a draggable item
+ * @param {object} droppable - Target drop are object
+ * @param {object} draggable - Dragged object
+ */
+Toolbar.prototype.dropItemAdd = function(droppable, draggable) {
+
+    const droppableId = $(droppable).attr('id');
+    const droppableType = $(droppable).data('type');
+
+    const draggableType = $(draggable).data('type');
+
+    // Get playlist Id
+    const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+    
+    // Adding media from search to a region
+    if(draggableType == 'media') {
+    
+        // Get media Id
+        const mediaToAdd = {
+            media: [
+                $(draggable).data('mediaId')
+            ]
+        };
+
+        // Create change to be uploaded
+        lD.manager.addChange(
+            'addMedia',
+            'playlist', // targetType 
+            playlistId,  // targetId
+            null,  // oldValues
+            mediaToAdd, // newValues
+            {
+                updateTargetId: true, 
+                updateTargetType: 'widget'
+            }
+        ).then((res) => { // Success
+
+            // Behavior if successful 
+            toastr.success(res.message);
+            lD.reloadData(lD.layout);
+        }).catch((error) => { // Fail/error
+
+            // Show error returned or custom message to the user
+            let errorMessage = 'Add media failed: ';
+
+            if(typeof error == 'string') {
+                errorMessage += error;
+            } else {
+                errorMessage += error.errorThrown;
+            }
+
+            toastr.error(errorMessage);
+        });
+    } else {
+
+        // Get regionSpecific property
+        const regionSpecific = $(draggable).data('regionSpecific');
+
+        // Upload form if not region specific
+        if(regionSpecific == 0) {
+
+            const validExt = $(draggable).data('validExt').replace(/,/g, "|");
+
+            this.openUploadForm({
+                trans: playlistTrans,
+                upload: {
+                    maxSize: $(draggable).data().maxSize,
+                    maxSizeMessage: $(draggable).data().maxSizeMessage,
+                    validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
+                    validExt: validExt
+                },
+                playlistId: playlistId
+            }, {
+                cancel: {
+                    label: translations.cancel,
+                    className: "btn-default",
+                    callback: function() {
+                        console.log('Closed');
+                        this.modal('hide');
+                    }
+                },
+                main: {
+                    label: translations.done,
+                    className: "btn-primary",
+                    callback: function(res) {
+                        console.log('DONE');
+                        console.log(res);
+                        lD.reloadData(lD.layout);;
+                    }
+                }
+            });
+
+        } else { // Load add widget form
+
+            // Get playlist Id
+            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+
+            // Load form the API
+            const linkToAPI = urlsForApi['playlist']['addWidgetForm'];
+
+            let requestPath = linkToAPI.url;
+
+            // Replace type
+            requestPath = requestPath.replace(':type', draggableType);
+
+            // Replace playlist id
+            requestPath = requestPath.replace(':id', playlistId);
+
+            let dialog = bootbox.dialog({
+                title: 'Add ' + draggableType + ' widget',
+                message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+                buttons: {
+                    cancel: {
+                        label: translations.cancel,
+                        className: 'btn-danger',
+                        callback: function() {
+                            this.modal('hide')
+                        }
+                    },
+                    add: {
+                        label: translations.save,
+                        className: 'btn-info',
+                        callback: function() {
+                            console.log('Save Form and add Widget');
+                            console.log(this.find('.bootbox-body form').attr('action'));
+                            console.log(this.find('.bootbox-body form').attr('method'));
+                            console.log(this.find('.bootbox-body form').serialize());
+
+
+                            this.submitForm = true;
+
+                            // Run form submit module optional function
+                            if(typeof window[draggableType + '_form_add_submit'] === 'function') {
+                                this.submitForm = window[draggableType + '_form_add_submit'].bind(this)();
+                            }
+
+                            // Create change to be uploaded
+                            if(this.submitForm) {
+                                lD.manager.addChange(
+                                    'widgetAdd',
+                                    'widget', // targetType 
+                                    null,  // targetId
+                                    null,  // oldValues
+                                    this.find('.bootbox-body form').serialize(), // newValues
+                                    {
+                                        updateTargetId: true,
+                                        customRequestPath: {
+                                            url: this.find('.bootbox-body form').attr('action'),
+                                            type: this.find('.bootbox-body form').attr('method')
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                    }
+                }
+            });
+
+
+            // Request and load element form
+            $.ajax({
+                url: requestPath,
+                type: linkToAPI.type
+            }).done(function(res) {
+
+                console.log(res);
+
+                if(res.success) {
+                    dialog.find('.bootbox-body').html(res.html);
+
+                    // Run form open module optional function
+                    if(typeof window[draggableType + '_form_add_open'] === 'function') {
+                        window[draggableType + '_form_add_open'].bind(dialog)();
+                    }
+
+                } else {
+
+                    // Login Form needed?
+                    if(data.login) {
+
+                        window.location.href = window.location.href;
+                        location.reload(false);
+                    } else {
+
+                        toastr.error('Element form load failed!');
+
+                        // Just an error we dont know about
+                        if(data.message == undefined) {
+                            console.error(data);
+                        } else {
+                            console.error(data.message);
+                        }
+
+                        dialog.modal('hide');
+                    }
+                }
+            }).catch(function(jqXHR, textStatus, errorThrown) {
+
+                console.error(jqXHR, textStatus, errorThrown);
+                toastr.error('Element form load failed!');
+
+                dialog.modal('hide')
+            });
+        }
+    }
+};
+
+
+/**
+ * Open Upload Form
+ * @param {object} templateOptions
+ * @param {object} buttons
+ */
+Toolbar.prototype.openUploadForm = function(templateOptions, buttons) {
+ 
+    // Close the current dialog
+    bootbox.hideAll();
+
+    var template = Handlebars.compile($("#template-file-upload").html());
+
+    // Handle bars and open a dialog
+    bootbox.dialog({
+        message: template(templateOptions),
+        title: playlistTrans.uploadMessage,
+        buttons: buttons,
+        animate: false,
+        updateInAllChecked: uploadFormUpdateAllDefault,
+        deleteOldRevisionsChecked: uploadFormDeleteOldDefault
+    });
+
+    this.openUploadFormModelShown($(".modal-body").find("form"));
+};
+
+/**
+ * Modal shown
+ * @param {object} form
+ */
+Toolbar.prototype.openUploadFormModelShown = function(form) {
+
+    // Configure the upload form
+    var url = libraryAddUrl;
+
+    // Initialize the jQuery File Upload widget:
+    form.fileupload({
+        url: url,
+        disableImageResize: true
+    });
+
+    // Upload server status check for browsers with CORS support:
+    if($.support.cors) {
+        $.ajax({
+            url: url,
+            type: 'HEAD'
+        }).fail(function() {
+            $('<span class="alert alert-error"/>')
+                .text('Upload server currently unavailable - ' + new Date())
+                .appendTo(form);
+        });
+    }
+
+    // Enable iframe cross-domain access via redirect option:
+    form.fileupload(
+        'option',
+        'redirect',
+        window.location.href.replace(
+            /\/[^\/]*$/,
+            '/cors/result.html?%s'
+        )
+    );
+
+    form.bind('fileuploadsubmit', function(e, data) {
+        var inputs = data.context.find(':input');
+        if(inputs.filter('[required][value=""]').first().focus().length) {
+            return false;
+        }
+        data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+        inputs.filter("input").prop("disabled", true);
+    });
+}
+
+module.exports = Toolbar;

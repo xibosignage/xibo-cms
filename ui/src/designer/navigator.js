@@ -130,6 +130,13 @@ Navigator.prototype.render = function(layout) {
         lD.selectObject($(this));
     });
 
+    this.DOMObject.find('.designer-region').droppable({
+        accept: '.toolbar-card',
+        drop: function(event, ui) {
+            lD.toolbar.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    });
+
     // Handle edit button
     this.DOMObject.find('#edit-btn').click(function() {
         lD.toggleNavigatorEditing(true);
@@ -194,7 +201,7 @@ Navigator.prototype.renderNavbar = function() {
             }
 
             toastr.error(errorMessage);
-    });
+        });
     });
 
     this.navbarContainer.find('#add-btn').click(function() {
@@ -251,7 +258,7 @@ Navigator.prototype.renderNavbar = function() {
 
                             // Remove changes from the history array
                             lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then((res) =>  {
-
+                                
                                 // Delete element from the layout
                                 lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
 

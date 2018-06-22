@@ -279,7 +279,7 @@ Timeline.prototype.render = function(layout) {
     this.updateLabels();
 
     // Enable hover and select for each layout/region
-    this.DOMObject.find('.selectable').click(function(e) {
+    this.DOMObject.find('.selectable:not(.ui-draggable-dragging)').click(function(e) {
         e.stopPropagation();
         lD.selectObject($(this));
     });
@@ -299,6 +299,21 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.find('#zoom').click(function() {
         self.changeZoom(0);
         self.render(layout);
+    });
+
+    this.DOMObject.find('.designer-region').droppable({
+        accept: '.toolbar-card',
+        drop: function(event, ui) {
+            lD.toolbar.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    }).sortable({
+        items: '.designer-widget:not(.designer-widget-ghost)', 
+        placeholder: "designer-widget-sort",
+        stop: function(event, ui) {
+            console.log('Sort stop!');
+            console.log(event);
+            console.log(ui);
+        }
     });
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour

@@ -2,10 +2,10 @@
     <div class="container-toolbar">
 
         <div class="toolbar-content">
-            
+            {{!-- Menu items/tabs --}}
             {{#each menuItems}}
                 <div id="content-{{@index}}" class="toolbar-pane {{state}}">
-                   
+                    {{!-- Show content if exists --}}
                     {{#if content}}
                         <button id="pag-btn-left" {{pagBtnLeftDisabled}} class="btn btn-primary pagination-btn">
                             <i class="fa fa-arrow-left"></i>
@@ -13,9 +13,15 @@
                 
                         <div class="toolbar-pane-content"
                             style="width:{{contentWidth}}%">
+                            {{!-- Show content elements if not marked as hidden --}}
                             {{#each content}}
                                 {{#unless hideElement}}
-                                    {{> toolbar-card}}
+                                    {{!-- Load cards according to type searchItem/Widget --}}
+                                    {{#if ../search}}
+                                        {{> toolbar-card-media}}
+                                    {{else}}
+                                        {{> toolbar-card}}
+                                    {{/if}}
                                 {{/unless}}
                             {{/each}}
                         </div>
@@ -84,22 +90,26 @@
 
         <ul class="nav navbar-nav navbar-right">
 
-
             {{#if tabsCount}}
                 <li>
                     <button id="deleteAllTabs" class="btn btn-danger navbar-btn" href="#">
-                        <span>Close All Tabs</span>
+                        <span>Close Tabs</span>
                         <i class="fa fa-times"></i>
                     </button>
                 </li>
             {{/if}}
-
 
             <li>
                 <button id="undoLastAction" {{undo}} class="btn btn-warning navbar-btn" href="#">
                     <span>Undo</span>
                     <i class="fa fa-undo"></i>
                 </button>
+            </li>
+
+            <li>
+                <a id="trashContainer" class="navbar-bin">
+                    <i class="fa fa-trash"></i>
+                </a>
             </li>
         </ul>
     </div>
