@@ -22,7 +22,13 @@ namespace Xibo\Widget;
 
 use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\XiboException;
+use Xibo\Factory\ModuleFactory;
 
+/**
+ * Class VideoIn
+ * @package Xibo\Widget
+ */
 class VideoIn extends ModuleWidget
 {
     /**
@@ -117,6 +123,8 @@ class VideoIn extends ModuleWidget
      *      )
      *  )
      * )
+     *
+     * @throws XiboException
      */
     public function add()
     {
@@ -130,8 +138,7 @@ class VideoIn extends ModuleWidget
         $this->saveWidget();
     }
 
-    /**
-     */
+    /** @inheritdoc */
     public function edit()
     {
         // Set some options
@@ -145,6 +152,7 @@ class VideoIn extends ModuleWidget
         $this->saveWidget();
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Client dependant

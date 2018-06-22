@@ -31,70 +31,75 @@ $(document).ready(function(){
     // Set the height of the grid to be something sensible for the current screen resolution
     var jumpList = $("#layoutJumpList");
 
-    jumpList.select2({
-        ajax: {
-            url: jumpList.data().url,
-            dataType: "json",
-            data: function(params) {
-                console.log(params.term);
+    if (jumpList.length > 0) {
 
-                var query = {
-                    layout: params.term,
-                    start: 0,
-                    length: 10
-                };
+        jumpList.select2({
+            ajax: {
+                url: jumpList.data().url,
+                dataType: "json",
+                data: function (params) {
+                    console.log(params.term);
 
-                // Set the start parameter based on the page number
-                if (params.page != null) {
-                    query.start = (params.page - 1) * 10;
-                }
+                    var query = {
+                        layout: params.term,
+                        start: 0,
+                        length: 10
+                    };
 
-                // Find out what is inside the search box for this list, and save it (so we can replay it when the list
-                // is opened again)
-                if (params.term !== undefined) {
-                    localStorage.liveSearchPlaceholder = params.term;
-                }
-
-                return query;
-            },
-            processResults: function(data, params) {
-                var results = [];
-
-                $.each(data.data, function(index, element) {
-                    results.push({
-                        "id": element.layoutId,
-                        "text": element.layout
-                    });
-                });
-
-                var page = params.page || 1;
-                page = (page > 1) ? page - 1 : page;
-
-                return {
-                    results: results,
-                    pagination: {
-                        more: (page * 10 < data.recordsTotal)
+                    // Set the start parameter based on the page number
+                    if (params.page != null) {
+                        query.start = (params.page - 1) * 10;
                     }
-                }
-            },
-            delay: 250
-        }
-    });
 
-    jumpList.on("select2:select", function(e) {
-        // Go to the Layout we've selected.
-        window.location = jumpList.data().designerUrl.replace(":id", e.params.data.id);
-    }).on("select2:opening", function(e) {
-        // Set the search box according to the saved value (if we have one)
-        console.log(localStorage.liveSearchPlaceholder);
+                    // Find out what is inside the search box for this list, and save it (so we can replay it when the list
+                    // is opened again)
+                    if (params.term !== undefined) {
+                        localStorage.liveSearchPlaceholder = params.term;
+                    }
 
-        if (localStorage.liveSearchPlaceholder != null && localStorage.liveSearchPlaceholder !== "") {
-            var $search = jumpList.data("select2").dropdown.$search;
-            $search.val(localStorage.liveSearchPlaceholder);
+                    return query;
+                },
+                processResults: function (data, params) {
+                    var results = [];
 
-            setTimeout(function() { $search.trigger("input"); }, 100);
-        }
-    });
+                    $.each(data.data, function (index, element) {
+                        results.push({
+                            "id": element.layoutId,
+                            "text": element.layout
+                        });
+                    });
+
+                    var page = params.page || 1;
+                    page = (page > 1) ? page - 1 : page;
+
+                    return {
+                        results: results,
+                        pagination: {
+                            more: (page * 10 < data.recordsTotal)
+                        }
+                    }
+                },
+                delay: 250
+            }
+        });
+
+        jumpList.on("select2:select", function (e) {
+            // Go to the Layout we've selected.
+            window.location = jumpList.data().designerUrl.replace(":id", e.params.data.id);
+        }).on("select2:opening", function (e) {
+            // Set the search box according to the saved value (if we have one)
+            console.log(localStorage.liveSearchPlaceholder);
+
+            if (localStorage.liveSearchPlaceholder != null && localStorage.liveSearchPlaceholder !== "") {
+                var $search = jumpList.data("select2").dropdown.$search;
+                $search.val(localStorage.liveSearchPlaceholder);
+
+                setTimeout(function () {
+                    $search.trigger("input");
+                }, 100);
+            }
+        });
+    }
 
     // Load Layout
     layout = $("#layout");
