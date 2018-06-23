@@ -73,12 +73,17 @@ Change into your new folder
 cd xibo-cms
 ```
 
-Install the external dependencies with Composer. Your local machine is unlikely to have the necessary dependencies to install the packages, hence the `--ignore` switch.
+Install the external dependencies with Composer. Your local machine is unlikely to have the necessary dependencies to install the packages, hence the `--ignore-platform-reqs` switch.
 
 ```sh
 php composer.phar install --ignore-platform-reqs
 ```
+Note, on some distributions, such as Ubuntu, composer may be availabe in the distribution's software repositories. In this case, the command listed above may be different. For example, on Ubuntu 18.04, you would use the following two commands to install composer and then run the equivalent of `php composer.phar install --ignore-platform-reqs`:
 
+```sh
+sudo apt install composer
+composer install --ignore-platform-reqs
+```
 
 
 ## Bring up the Containers
