@@ -57,6 +57,27 @@
                         "description": "Filter by has layouts",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "isLayoutSpecific",
+                        "in": "formData",
+                        "description": "Filter by whether this Campaign is specific to a Layout or User added",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Filter by retired",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "totalDuration",
+                        "in": "formData",
+                        "description": "Should we total the duration?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1910,6 +1931,20 @@
                         "description": "Filter by DisplayGroups containing a specific dynamic criteria",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "isDisplaySpecific",
+                        "in": "formData",
+                        "description": "Filter by whether the Display Group belongs to a Display or is user created",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "forSchedule",
+                        "in": "formData",
+                        "description": "Should the list be refined for only those groups the User can Schedule against?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3133,7 +3168,7 @@
             }
         },
         "/layout/{layoutId}/untag": {
-            "delete": {
+            "post": {
                 "tags": [
                     "layout"
                 ],
@@ -3539,7 +3574,7 @@
             }
         },
         "/library/{mediaId}/untag": {
-            "delete": {
+            "post": {
                 "tags": [
                     "library"
                 ],
@@ -4108,6 +4143,50 @@
                         "description": "Optional duration for all Media in this assignment to use on the Widget",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Optional flag indicating whether to enable the useDuration field",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Playlist"
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/order/{playlistId}": {
+            "post": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Order Widgets",
+                "description": "Set the order of widgets in the Playlist",
+                "operationId": "playlistOrder",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID to Order",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgets",
+                        "in": "formData",
+                        "description": "Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/PlaylistWidgetList"
+                        }
                     }
                 ],
                 "responses": {
@@ -4312,7 +4391,7 @@
                     {
                         "name": "regions",
                         "in": "formData",
-                        "description": "Array of regions and their new positions. Each array element should ne json encoded and have regionId, top, left, width and height.",
+                        "description": "Array of regions and their new positions. Each array element should be json encoded and have regionId, top, left, width and height.",
                         "required": true,
                         "type": "array",
                         "items": {
@@ -5488,6 +5567,192 @@
                         "description": "Edit only - Flag (0, 1) Should the audio loop (only for duration > 0 )?",
                         "required": false,
                         "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/chart/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Chart Widget",
+                "description": "Add a new Chart Widget to the specified playlist",
+                "operationId": "WidgetChartAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "Create Chart Widget using provided dataSetId of an existing dataSet",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "graphType",
+                        "in": "formData",
+                        "description": "EDIT only - Chart Type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "columnType",
+                        "in": "formData",
+                        "description": "EDIT only - Array of Column Types (x-axis, y-axis, series-identifier) to assign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "dataSetColumnId",
+                        "in": "formData",
+                        "description": "EDIT only - Array of dataSetColumn IDs to assign",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "EDIT Only - The Chart Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "EDIT Only - Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "filter",
+                        "in": "formData",
+                        "description": "EDIT Only - SQL clause for filter this dataSet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ordering",
+                        "in": "formData",
+                        "description": "EDIT Only - SQL clause for how this dataSet should be ordered",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useOrderingClause",
+                        "in": "formData",
+                        "description": "EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useFilteringClause",
+                        "in": "formData",
+                        "description": "EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "EDIT Only - Background Color",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "fontColor",
+                        "in": "formData",
+                        "description": "EDIT Only - Font Color",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "fontSize",
+                        "in": "formData",
+                        "description": "EDIT Only - Font Size",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showLegend",
+                        "in": "formData",
+                        "description": "EDIT Only - Should the Legend be Shown",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "legendPosition",
+                        "in": "formData",
+                        "description": "EDIT Only - Where should the Legend be Shown (top, left, right, bottom)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "startYAtZero",
+                        "in": "formData",
+                        "description": "EDIT Only - Start the Y-Axis at 0",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "title",
+                        "in": "formData",
+                        "description": "EDIT Only - Chart title",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "x-axis-label",
+                        "in": "formData",
+                        "description": "EDIT Only - Chart x-axis label",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "y-axis-label",
+                        "in": "formData",
+                        "description": "EDIT Only - Chart y-axis label",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -7325,7 +7590,7 @@
                     {
                         "name": "templateId",
                         "in": "formData",
-                        "description": "EDIT Only, SourceId=1 - Template you'd like to apply, options available: title-only, prominent-title-with-desc-and-name-separator, media-rss-with-title, media-rss-wth-left-hand-text",
+                        "description": "EDIT Only, SourceId=1 - Template you'd like to apply, options available: title-only, prominent-title-with-desc-and-name-separator, media-rss-with-title, media-rss-wth-left-hand-text, media-rss-image-only",
                         "required": false,
                         "type": "string"
                     },
@@ -7451,6 +7716,13 @@
                         "in": "formData",
                         "description": "Twitter search term, you can test your search term in twitter.com search box first",
                         "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "language",
+                        "in": "formData",
+                        "description": "Language in which tweets should be returned",
+                        "required": false,
                         "type": "string"
                     },
                     {
@@ -7589,7 +7861,7 @@
                     {
                         "name": "resultContent",
                         "in": "formData",
-                        "description": "Indented content Type, available Options: 1 - All Tweets 2 - Tweets with the text only content 3 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
+                        "description": "Intended content Type, available Options: 0 - All Tweets 1 - Tweets with the text only content 2 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
                         "required": false,
                         "type": "string"
                     },
@@ -7613,6 +7885,193 @@
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/twittermetro/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Twitter Metro Widget",
+                "description": "Add a new Twitter Metro Widget to the specified playlist",
+                "operationId": "WidgetTwitterMetroAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Twitter Metro widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "searchTerm",
+                        "in": "formData",
+                        "description": "Twitter search term, you can test your search term in twitter.com search box first",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "language",
+                        "in": "formData",
+                        "description": "Language in which tweets should be returned",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "speed",
+                        "in": "formData",
+                        "description": "The transition speed of the selected effect in milliseconds (1000 = normal)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noTweetsMessage",
+                        "in": "formData",
+                        "description": "A message to display when there are no tweets returned by the search query",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The format to apply to all dates returned by he widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "resultType",
+                        "in": "formData",
+                        "description": "1 - Mixed, 2 -Recent 3 - Popular, Recent shows only recent tweets, Popular the most popular tweets and Mixed included both popular and recent",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "tweetDistance",
+                        "in": "formData",
+                        "description": "Distance in miles that the tweets should be returned from. Set 0 for no restrictions",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tweetCount",
+                        "in": "formData",
+                        "description": "The number of tweets to return",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeUrls",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the URLs be removed from the tweet text?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeMentions",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should mentions (@someone) be removed from the tweet text?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "removeHashtags",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should the hashtags (#something) be removed from the tweet text",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "colorTemplateId",
+                        "in": "formData",
+                        "description": "Use pre-configured templates, available options: default, full, gray, light, soft, vivid",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideColorTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use colorTemplateId or set to 1 and provide colours to use in templateColours parameter",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateColours",
+                        "in": "formData",
+                        "description": "Provide a string of new HEX colour codes to use, separated by |, for example: #e0d2c8|#5e411d|#fccf12|#82ff00|#64bae8",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "resultContent",
+                        "in": "formData",
+                        "description": "Intended content Type, available Options: 0 - All Tweets 1 - Tweets with the text only content 2 - Tweets with the text and image content. Pass only with overrideColorTemplate set to 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "removeRetweets",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Should retweets be filtered?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -7681,6 +8140,60 @@
                         "description": "Edit only - Flag (0, 1) Should the video loop (only for duration > 0 )?",
                         "required": false,
                         "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/videoin/{playlistId}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a Video In Widget",
+                "description": "Add a new Video In Widget to the specified playlist",
+                "operationId": "WidgetVideoInAdd",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The playlist ID to add a Widget to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Flag (0, 1) Select only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "sourceId",
+                        "in": "formData",
+                        "description": "Which device input should be shown? available options: HDMI, RGB, DVI, DP, OPS",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8082,6 +8595,10 @@
                 },
                 "lastSync": {
                     "description": "Last Synchronisation Timestamp",
+                    "type": "integer"
+                },
+                "lastClear": {
+                    "description": "Last Clear Timestamp",
                     "type": "integer"
                 },
                 "dataRoot": {
