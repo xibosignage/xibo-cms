@@ -115,6 +115,13 @@ interface ConfigServiceInterface
     public function uri($uri, $local = false);
 
     /**
+     * Check a theme file exists
+     * @param string $uri
+     * @return bool
+     */
+    public function fileExists($uri);
+
+    /**
      * Get App Root URI
      * @return mixed
      */

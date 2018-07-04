@@ -1,7 +1,7 @@
 {#
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2017 Spring Signage Ltd
+ * Copyright (C) 2015-2018 Spring Signage Ltd
  * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * (dataset-form-edit.twig) This file is part of Xibo.
@@ -103,20 +103,24 @@
                         {% set auth_none %}{% trans "None" %}{% endset %}
                         {% set auth_basic %}{% trans "Basic" %}{% endset %}
                         {% set auth_digest %}{% trans "Digest" %}{% endset %}
+                        {% set auth_ntlm %}{% trans "NTLM" %}{% endset %}
+                        {% set auth_bearer %}{% trans "Bearer" %}{% endset %}
                         {% set options = [
                             { typeid: "none", type: auth_none },
                             { typeid: "basic", type: auth_basic },
-                            { typeid: "digest", type: auth_digest }
+                            { typeid: "digest", type: auth_digest },
+                            { typeid: "ntlm", type: auth_ntlm },
+                            { typeid: "bearer", type: auth_bearer }
                         ] %}
                         {{ forms.dropdown("authentication", "single", title, dataSet.authentication, options, "typeid", "type", helpText) }}
 
                         {% set title %}{% trans "Username" %}{% endset %}
                         {% set helpText %}{% trans "Enter the authentication Username" %}{% endset %}
-                        {{ forms.input("username", title, dataSet.username, helpText, "auth-fields", "") }}
+                        {{ forms.input("username", title, dataSet.username, helpText, "auth-field-username", "") }}
 
                         {% set title %}{% trans "Password" %}{% endset %}
                         {% set helpText %}{% trans "Corresponding Password" %}{% endset %}
-                        {{ forms.input("password", title, dataSet.password, helpText, "auth-fields", "") }}
+                        {{ forms.input("password", title, dataSet.password, helpText, "auth-field-password", "") }}
                     </div>
 
                     <div class="tab-pane" id="data">

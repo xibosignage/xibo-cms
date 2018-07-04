@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.9', 5, 2, 140);
+('1.8.10', 5, 2, 141);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -184,8 +184,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (44, 'MAINTENANCE_LOG_MAXAGE', '30', 'number', 'Maximum age for log entries in days. Set to 0 to keep logs indefinitely.', NULL, 'maintenance', 1, 'Max Log Age', '', 60, '30', 1, 'int'),
 (45, 'MAINTENANCE_STAT_MAXAGE', '30', 'number', 'Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely.', NULL, 'maintenance', 1, 'Max Statistics Age', '', 70, '30', 1, 'int'),
 (46, 'MAINTENANCE_ALERT_TOUT', '12', 'number', 'How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis.', NULL, 'maintenance', 1, 'Max Display Timeout', '', 80, '12', 1, 'int'),
-(47, 'SHOW_DISPLAY_AS_VNCLINK', '', 'text', 'Turn the display name in display management into a VNC link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.', NULL, 'displays', 1, 'Display a VNC Link?', '', 30, '', 1, 'string'),
-(48, 'SHOW_DISPLAY_AS_VNC_TGT', '_top', 'text', 'If the display name is shown as a link in display management, what target should the link have? Set _top to open the link in the same window or _blank to open in a new window.', NULL, 'displays', 1, 'Open VNC Link in new window?', '', 40, '_top', 1, 'string'),
+(47, 'SHOW_DISPLAY_AS_VNCLINK', '', 'text', 'Turn the display name in display management into a link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.', NULL, 'displays', 1, 'Add a link to the Display name using this format mask?', '', 30, '', 1, 'string'),
+(48, 'SHOW_DISPLAY_AS_VNC_TGT', '_top', 'text', 'If the display name is shown as a link in display management, what target should the link have? Set _top to open the link in the same window or _blank to open in a new window.', NULL, 'displays', 1, 'The target attribute for the above link', '', 40, '_top', 1, 'string'),
 (49, 'MAINTENANCE_ALWAYS_ALERT', 'Off', 'dropdown', 'Should Xibo send an email if a display is in an error state every time the maintenance script runs?', 'On|Off', 'maintenance', 1, 'Send repeat Display Timeouts', '', 80, 'Off', 1, 'word'),
 (50, 'SCHEDULE_LOOKAHEAD', 'On', 'dropdown', 'Should Xibo send future schedule information to clients?', 'On|Off', 'general', 0, 'Send Schedule in advance?', '', 40, 'On', 1, 'word'),
 (51, 'REQUIRED_FILES_LOOKAHEAD', '172800', 'number', 'How many seconds in to the future should the calls to RequiredFiles look?', NULL, 'general', 1, 'Send files in advance?', '', 50, '172800', 1, 'int'),
@@ -237,7 +237,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (98, 'DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', '200', 'number', 'The default size in pixels for the Display Screenshots', NULL, 'displays', 1, 'Display Screenshot Default Size', '', 100, '200', 1, 'int'),
 (99, 'LATEST_NEWS_URL', 'http://xibo.org.uk/feed', 'text', 'RSS/Atom Feed to be displayed on the Status Dashboard', '', 'general', 0, 'Latest News URL', '', 111, '', 0, 'string'),
 (100, 'DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox'),
-(101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string');
+(101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string'),
+(102, 'SCHEDULE_SHOW_LAYOUT_NAME', '0', 'checkbox', 'If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.', null, 'permissions', 1, 'Show event Layout regardless of User permission?', '', 45, '', 1, 'checkbox');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -323,7 +324,8 @@ INSERT INTO task (taskId, name, class, status, options, schedule, isActive, conf
   (3, 'Email Notifications', '\\Xibo\\XTR\\EmailNotificationsTask', 2, '[]', '*/5 * * * * *', 1, '/tasks/email-notifications.task'),
   (4, 'Stats Archive', '\\Xibo\\XTR\\StatsArchiveTask', 2, '{"periodSizeInDays":"7","maxPeriods":"4"}', '0 0 * * Mon', 0, '/tasks/stats-archiver.task'),
   (5, 'Remove old Notifications', '\\Xibo\\XTR\\NotificationTidyTask', 2, '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}', '15 0 * * *', 1, '/tasks/notification-tidy.task'),
-  (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, '[]', '30 * * * * *', 1, '/tasks/remote-dataset.task');
+  (6, 'Fetch Remote DataSets', '\\Xibo\\XTR\\RemoteDataSetFetchTask', 2, '[]', '30 * * * * *', 1, '/tasks/remote-dataset.task'),
+  (7, 'Widget Sync', '\\Xibo\\XTR\\WidgetSyncTask', 2, '[]', '*/3 * * * *', 1, '/tasks/widget-sync.task');
 
 
 INSERT INTO daypart (name, description, isRetired, userid, startTime, endTime, exceptions, isAlways, isCustom) VALUES

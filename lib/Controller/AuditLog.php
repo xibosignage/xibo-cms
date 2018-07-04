@@ -65,6 +65,7 @@ class AuditLog extends Base
         $filterToDt = $this->getSanitizer()->getDate('toDt');
         $filterUser = $this->getSanitizer()->getString('user');
         $filterEntity = $this->getSanitizer()->getString('entity');
+        $filterEntityId = $this->getSanitizer()->getString('entityId');
 
         $search = [];
 
@@ -83,6 +84,9 @@ class AuditLog extends Base
 
         if ($filterEntity != '')
             $search['entity'] = $filterEntity;
+
+        if ($filterEntityId != null)
+            $search['entityId'] = $filterEntityId;
 
         $rows = $this->auditLogFactory->query($this->gridRenderSort(), $this->gridRenderFilter($search));
 
@@ -120,25 +124,18 @@ class AuditLog extends Base
         if ($filterFromDt == null || $filterToDt == null)
             throw new \InvalidArgumentException(__('Please provide a from/to date.'));
 
-        $search = [
-            ['fromTimeStamp', $filterFromDt->setTime(0, 0, 0)->format('U')],
-            ['toTimeStamp', $filterToDt->setTime(0, 0, 0)->format('U')]
-        ];
+        $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
+        $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
 
-        // Build the search string
-        $search = implode(' ', array_map(function ($element) {
-            return implode('|', $element);
-        }, $search));
-
-        $rows = $this->auditLogFactory->query('logId', ['search' => $search]);
+        $rows = $this->auditLogFactory->query('logId', ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]);
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'Message', 'Object']);
+        fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object']);
 
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, $this->getDate()->getLocalDate($row->logDate), $row->userName, $row->entity, $row->message, $row->objectAfter]);
+            fputcsv($out, [$row->logId, $this->getDate()->getLocalDate($row->logDate), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
         }
 
         fclose($out);

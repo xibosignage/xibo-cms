@@ -53,16 +53,11 @@
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
-                            { name: "data-live-search", value: "true" },
-                            { name: "data-selected-text-format", value: "count > 4" }
+                            { name: "data-search-url", value:  urlFor("displayGroup.search") },
+                            { name: "data-trans-groups", value:  "Groups"|trans },
+                            { name: "data-trans-display", value:  "Display"|trans }
                         ] %}
-                        {% set transGroups %}{% trans "Groups" %}{% endset %}
-                        {% set transDisplays %}{% trans "Display" %}{% endset %}
-                        {% set optionGroups = [
-                            {id: "group", label: transGroups},
-                            {id: "display", label: transDisplays}
-                        ] %}
-                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, displayGroups, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
@@ -168,7 +163,6 @@
                         {{ forms.dropdown("recurrenceType", "single", title, event.recurrenceType, options, "id", "name", helpText) }}
 
                         {% set helpText %}{% trans "Which days of the week does this event repeat?" %}{% endset %}
-                        {% set noneOption %}{% trans "" %}{% endset %}
                         {% set monday %}{% trans "Monday" %}{% endset %}
                         {% set tuesday %}{% trans "Tuesday" %}{% endset %}
                         {% set wednesday %}{% trans "Wednesday" %}{% endset %}
@@ -177,7 +171,6 @@
                         {% set saturday %}{% trans "Saturday" %}{% endset %}
                         {% set sunday %}{% trans "Sunday" %}{% endset %}
                         {% set options = [
-                        { id: 0, name: noneOption },
                         { id: 1, name: monday },
                         { id: 2, name: tuesday },
                         { id: 3, name: wednesday },

@@ -373,12 +373,19 @@ class DataSetView extends ModuleWidget
         $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
         $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate', 1));
+        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
         $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-        
+
+
+        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+        $this->setOption('borderColor', $this->getSanitizer()->getString('borderColor'));
+        $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
+        $this->setOption('fontFamily', $this->getSanitizer()->getString('fontFamily'));
+        $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
+
         if( $this->getOption('overrideTemplate') == 1 ){
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
         }
@@ -496,6 +503,23 @@ class DataSetView extends ModuleWidget
         
         // Get the embedded HTML out of RAW
         $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet);
+
+        // If we have some options then add them to the end of the style sheet
+        if ($this->getOption('backgroundColor') != '') {
+            $styleSheet .= 'table.DataSetTable { background-color: ' . $this->getOption('backgroundColor') . '; }';
+        }
+        if ($this->getOption('borderColor') != '') {
+            $styleSheet .= 'table.DataSetTable, table.DataSetTable tr, table.DataSetTable th, table.DataSetTable td { border: 1px solid ' . $this->getOption('borderColor') . '; }';
+        }
+        if ($this->getOption('fontColor') != '') {
+            $styleSheet .= 'table.DataSetTable { color: ' . $this->getOption('fontColor') . '; }';
+        }
+        if ($this->getOption('fontFamily') != '') {
+            $styleSheet .= 'table.DataSetTable { font-family: ' . $this->getOption('fontFamily') . '; }';
+        }
+        if ($this->getOption('fontSize') != '') {
+            $styleSheet .= 'table.DataSetTable { font-size: ' . $this->getOption('fontSize') . 'px; }';
+        }
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
@@ -752,12 +776,13 @@ class DataSetView extends ModuleWidget
                     // Pull out the cell for this row / column
                     $replace = $row[$mapping['heading']];
 
-                    // If the value is empty, then move on
-                    if ($replace == '')
-                        continue;
+                    // If the value is empty, then move on (don't do so for 0)
+                    if ($replace === '') {
+                        // We don't do anything there, we just output an empty column.
+                        $replace = '';
 
-                    // What if this column is an image column type?
-                    if ($mapping['dataTypeId'] == 4) {
+                    } else if ($mapping['dataTypeId'] == 4) {
+                        // What if this column is an image column type?
 
                         // Grab the external image
                         $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
@@ -828,15 +853,15 @@ class DataSetView extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getModifiedTimestamp($displayId)
+    public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = null;
+        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
 
         $dataSetId = $this->getOption('dataSetId');
         $dataSet = $this->dataSetFactory->getById($dataSetId);
 
         // Set the timestamp
-        $widgetModifiedDt = $dataSet->lastDataEdit;
+        $widgetModifiedDt = ($dataSet->lastDataEdit > $widgetModifiedDt) ? $dataSet->lastDataEdit : $widgetModifiedDt;
 
         // Remote dataSets are kept "active" by required files
         if ($dataSet->isRemote) {

@@ -43,7 +43,9 @@
                 {% else %}
                     {% set allSelected = "" %}
                 {% endif %}
-                <select id="DisplayList" class="form-control" name="displayGroupIds[]" data-live-search="true" data-selected-text-format="count > 4" data-none-selected-text="{% trans "Select Displays" %}" multiple>
+                <select id="DisplayList" class="form-control" name="displayGroupIds[]"
+                        data-width="200px"
+                        data-placeholder="{% trans "Select Displays" %}" multiple>
                     <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
                     <optgroup label="{% trans "Groups" %}">
                         {% for group in groups %}

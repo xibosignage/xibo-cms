@@ -29,10 +29,12 @@ use Stash\Item;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
+use Xibo\Event\Event;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\ValueTooLargeException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
@@ -99,6 +101,9 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var string|null Cache Key Prefix */
     private $cacheKeyPrefix = null;
+
+    /** @var Event */
+    private $saveEvent;
 
     //<editor-fold desc="Injected Factory Classes and Services ">
 
@@ -441,10 +446,17 @@ abstract class ModuleWidget implements ModuleInterface
      * Set Option
      * @param string $name
      * @param string $value
+     * @return $this
+     * @throws ValueTooLargeException
      */
     final protected function setOption($name, $value)
     {
+        if (strlen($value) > 67108864)
+            throw new ValueTooLargeException(__('Value too large for %s', $name), $name);
+
         $this->widget->setOptionValue($name, 'attrib', $value);
+
+        return $this;
     }
 
     /**
@@ -482,10 +494,17 @@ abstract class ModuleWidget implements ModuleInterface
      * Set Raw Node Value
      * @param $name
      * @param $value
+     * @return $this
+     * @throws ValueTooLargeException
      */
     final protected function setRawNode($name, $value)
     {
+        if (strlen($value) > 67108864)
+            throw new ValueTooLargeException(__('Value too large for %s', $name), $name);
+
         $this->widget->setOptionValue($name, 'cdata', $value);
+
+        return $this;
     }
 
     /**
@@ -615,10 +634,27 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * @param Event $event
+     * @return $this
+     */
+    final public function setSaveEvent($event)
+    {
+        $this->saveEvent = $event;
+        return $this;
+    }
+
+    /**
      * Save the Widget
      */
     final protected function saveWidget()
     {
+        if ($this->saveEvent !== null) {
+            $this->getLog()->debug('Dispatching save event ' . $this->saveEvent->getName());
+
+            // Dispatch the Edit Event
+            $this->dispatcher->dispatch($this->saveEvent->getName(), $this->saveEvent);
+        }
+
         $this->widget->save();
     }
 
@@ -1309,7 +1345,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function setCacheDate($displayId, $overrideDuration = null)
+    public final function setCacheDate($displayId)
     {
         $now = $this->getDate()->parse();
         $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
@@ -1321,7 +1357,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function getResourceOrCache($displayId, $region = null)
+    public final function getResourceOrCache($displayId)
     {
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
 
@@ -1344,8 +1380,7 @@ abstract class ModuleWidget implements ModuleInterface
         // If we are a non-preview, then we'd expect to be provided with a region.
         // we use this to save a width/height aware version of this
         if ($displayId !== 0) {
-            /** @var \Xibo\Entity\Region $region */
-            $cacheFile = $cacheKey . '_' . $region->width . '_' . $region->height;
+            $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
         } else {
             $cacheFile = $cacheKey;
         }
@@ -1413,12 +1448,13 @@ abstract class ModuleWidget implements ModuleInterface
                     // Update the cache date
                     $this->setCacheDate($displayId);
 
-                    $this->getLog()->debug('Regenerate complete');
+                    $this->getLog()->debug('Generate complete');
 
                 } catch (ConfigurationException $configurationException) {
                     // If we have something wrong with the module and we are in the preview, then we should present the error
                     // on screen
                     if ($displayId === 0) {
+                        $this->getLog()->debug('Configuration error with Widget, in preview - rethrow');
                         throw $configurationException;
                     } else {
                         // Don't cache, just log
@@ -1429,9 +1465,8 @@ abstract class ModuleWidget implements ModuleInterface
                     $this->getLog()->error('Problem with Widget ' . $this->getWidgetId() . ' for displayId ' . $displayId . '. E = ' . $e->getMessage());
                     $this->getLog()->debug($e->getTraceAsString());
 
-                    // Update the cache date
-                    // error scenario so drop the duration by 1/3rd
-                    $this->setCacheDate($cacheDuration / 3);
+                    // Update the cache date?
+                    $this->setCacheDate($displayId);
                 }
 
                 // Unlock
@@ -1441,9 +1476,14 @@ abstract class ModuleWidget implements ModuleInterface
                 // Unlock
                 $this->concurrentRequestRelease();
 
-                throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
+                if ($exception instanceof ConfigurationException)
+                    throw $exception;
+                else
+                    throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
+            $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
+
             $resource = file_get_contents($cachePath . $cacheFile);
         }
 

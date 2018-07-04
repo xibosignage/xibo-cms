@@ -26,7 +26,8 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("userGroup", "Name") }}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("userGroup", title) }}
                         </form>
                     </div>
                 </div>
@@ -65,8 +66,13 @@
                         url: "{{ urlFor("user.pref") }}?preference=userGroupGrid",
                         dataType: 'json',
                         success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
                         }
                     });
                     return data;

@@ -17,8 +17,10 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {{ inline.input("template", "Name") }}
-                            {{ inline.input("tags", "Tags") }}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("template", title) }}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {{ inline.input("tags", title) }}
                         </form>
                     </div>
                 </div>
@@ -57,8 +59,13 @@
                     url: "{{ urlFor("user.pref") }}?preference=templateGrid",
                     dataType: 'json',
                     success: function (json) {
-                        if (json.success)
-                            data = JSON.parse(json.data.value);
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
                     }
                 });
                 return data;

@@ -26,6 +26,7 @@ use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -122,25 +123,34 @@ class Twitter extends TwitterBase
 
     /**
      * Process any module settings
+     * @throws InvalidArgumentException
      */
     public function settings()
     {
         // Process any module settings you asked for.
         $apiKey = $this->getSanitizer()->getString('apiKey');
-
-        if ($apiKey == '')
-            throw new \InvalidArgumentException(__('Missing API Key'));
-
-        // Process any module settings you asked for.
         $apiSecret = $this->getSanitizer()->getString('apiSecret');
+        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $cachePeriodImages = $this->getSanitizer()->getInt('cachePeriodImages', 24);
 
-        if ($apiSecret == '')
-            throw new \InvalidArgumentException(__('Missing API Secret'));
+        if ($this->module->enabled != 0) {
+            if ($apiKey == '')
+                throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+
+            if ($apiSecret == '')
+                throw new InvalidArgumentException(__('Missing API Secret'), 'apiSecret');
+
+            if ($cachePeriod <= 0)
+                throw new InvalidArgumentException(__('Cache period must be a positive number'), 'cachePeriod');
+
+            if ($cachePeriodImages <= 0)
+                throw new InvalidArgumentException(__('Image cache period must be a positive number'), 'cachePeriodImages');
+        }
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
-        $this->module->settings['cachePeriodImages'] = $this->getSanitizer()->getInt('cachePeriodImages', 24);
+        $this->module->settings['cachePeriod'] = $cachePeriod;
+        $this->module->settings['cachePeriodImages'] = $cachePeriodImages;
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -203,6 +213,13 @@ class Twitter extends TwitterBase
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="language",
+     *      in="formData",
+     *      description="Language in which tweets should be returned",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
      *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
@@ -257,7 +274,7 @@ class Twitter extends TwitterBase
      *      description="The number of tweets to return",
      *      type="integer",
      *      required=false
-     *   ), 
+     *   ),
      *  @SWG\Parameter(
      *      name="removeUrls",
      *      in="formData",
@@ -338,7 +355,7 @@ class Twitter extends TwitterBase
      *  @SWG\Parameter(
      *      name="resultContent",
      *      in="formData",
-     *      description="Indented content Type, available Options: 1 - All Tweets 2 - Tweets with the text only content 3 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
+     *      description="Intended content Type, available Options: 0 - All Tweets 1 - Tweets with the text only content 2 - Tweets with the text and image content. Pass only with overrideTemplate set to 1",
      *      type="string",
      *      required=false
      *   ),
@@ -405,6 +422,7 @@ class Twitter extends TwitterBase
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('searchTerm', $this->getSanitizer()->getString('searchTerm'));
+        $this->setOption('language', $this->getSanitizer()->getString('language'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
@@ -422,7 +440,7 @@ class Twitter extends TwitterBase
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 5);
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-        
+
         if( $this->getOption('overrideTemplate') == 1 ){
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
@@ -502,7 +520,7 @@ class Twitter extends TwitterBase
         
         // Connect to twitter and get the twitter feed.
         /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode)));
+        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($searchTerm . $this->getOption('language') . $this->getOption('resultType') . $this->getOption('tweetCount', 15) . $geoCode)));
         $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         $data = $cache->get();
@@ -519,7 +537,7 @@ class Twitter extends TwitterBase
                 return false;
 
             // We have the token, make a tweet
-            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15)))
+            if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('language'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15)))
                 return false;
 
             // Cache it

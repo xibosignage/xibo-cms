@@ -126,10 +126,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if ($updateInLayouts) {
                     $controller->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
 
-                    if ($module->getModuleType() == 'audio') {
-                        // Replace any widg
-                    }
-
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
                         if (!$controller->getUser()->checkEditable($widget)) {

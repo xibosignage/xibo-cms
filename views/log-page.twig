@@ -55,7 +55,19 @@
                                     {{ inline.dropdown("userId", "single", title, "", [{userId: null, userName: ""}]|merge(users), "userId", "userName") }}
                                 </div>
                                 <div class="tab-pane" id="advanced">
-                                    {{ inline.date("fromDt", "From Date") }}
+                                    {% set title %}{% trans "From Date" %}{% endset %}
+                                    <div class="form-group">
+                                        <label class="control-label" for="fromDt">{{ title }}</label>
+                                        <div class="input-group date" style="display:table;">
+                                            <input type="hidden" name="fromDt" id="fromDt" />
+                                            <input class="form-control datePicker dateControl" name="fromDtLink"
+                                                   type="text" id="fromDtLink" data-link-field="fromDt"
+                                                   data-link-format="yyyy-mm-dd hh:ii:ss" readonly />
+                                            <span class="input-group-addon" id="fromDateControlCancel">
+                                                <span class="fa fa-times-circle"></span>
+                                            </span>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Channel" %}{% endset %}
                                     {{ inline.input("channel", title) }}
@@ -82,8 +94,17 @@
                                     {{ inline.dropdown("function", "single", title, "", functionOptions, "id", "value") }}
 
                                     {% set title %}{% trans "Display" %}{% endset %}
-                                    {% set displays = [{displayId: null, display: ""}]|merge(displays) %}
-                                    {{ inline.dropdown("displayId", "single", title, "", displays, "displayId", "display") }}
+                                    {% set attributes = [
+                                        { name: "data-width", value: "200px" },
+                                        { name: "data-allow-clear", value: "true" },
+                                        { name: "data-placeholder--id", value: null },
+                                        { name: "data-placeholder--value", value: "" },
+                                        { name: "data-search-url", value: urlFor("display.search") },
+                                        { name: "data-search-term", value: "display" },
+                                        { name: "data-id-property", value: "displayId" },
+                                        { name: "data-text-property", value: "display" }
+                                    ] %}
+                                    {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
                                     {% set title %}{% trans "Message" %}{% endset %}
                                     {{ inline.input("message", title) }}
@@ -134,8 +155,13 @@
                         url: "{{ urlFor("user.pref") }}?preference=logGrid",
                         dataType: 'json',
                         success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
                         }
                     });
                     return data;
@@ -178,8 +204,20 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#logs_wrapper').find('.col-sm-6').eq(1));
 
-            $("#refreshLog").click(function () {
+            $("#refreshLog").click(function() {
                 table.ajax.reload();
+            });
+
+            $("#fromDateControlCancel").on('click', function() {
+                // Clear the date picker
+                var $fromDt = $("#fromDt");
+                $fromDt.val("");
+                $("#fromDtLink").val("");
+
+                table.ajax.reload();
+
+                // Reset local storage
+                localStorage.setItem("logView", JSON.stringify($fromDt.closest("form").serializeArray()));
             });
         });
     </script>

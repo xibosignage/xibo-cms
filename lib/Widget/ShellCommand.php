@@ -26,7 +26,7 @@ class ShellCommand extends ModuleWidget
 {
     public function validate()
     {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '')
+        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == ''))
             throw new InvalidArgumentException(__('You must enter a command'));
     }
 
@@ -130,6 +130,7 @@ class ShellCommand extends ModuleWidget
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
+        $webos = $this->getSanitizer()->getString('webosCommand');
 
         $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
@@ -137,6 +138,7 @@ class ShellCommand extends ModuleWidget
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
+        $this->setOption('webosCommand', urlencode($webos));
 
         // Save the widget
         $this->validate();
@@ -156,6 +158,7 @@ class ShellCommand extends ModuleWidget
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
+        $webos = $this->getSanitizer()->getString('webosCommand');
 
         $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
@@ -163,6 +166,7 @@ class ShellCommand extends ModuleWidget
         $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
+        $this->setOption('webosCommand', urlencode($webos));
 
         // Save the widget
         $this->validate();
@@ -176,6 +180,7 @@ class ShellCommand extends ModuleWidget
 
         $windows = $this->getOption('windowsCommand');
         $linux = $this->getOption('linuxCommand');
+        $webos = $this->getOption('webosCommand');
 
         if ($windows == '' && $linux == '') {
             return __('Stored Command: %s', $this->getOption('commandCode'));

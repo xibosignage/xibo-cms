@@ -253,6 +253,10 @@ class DisplayProfile implements \JsonSerializable
         if (!v::stringType()->notEmpty()->validate($this->type))
             throw new InvalidArgumentException(__('Missing type'), 'type');
 
+        for ($j = 0; $j < count($this->config); $j++) {
+            if ($this->config[$j]['name'] == 'MaxConcurrentDownloads' && $this->config[$j]['value'] <= 0 && $this->type = 'windows')
+                throw new InvalidArgumentException(__('Concurrent downloads must be a positive number'), 'MaxConcurrentDownloads');
+        }
         // Check there is only 1 default (including this one)
         $sql = '
           SELECT COUNT(*) AS cnt

@@ -1,0 +1,318 @@
+{#
+/**
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2018 Lukas Zurschmiede
+ * Copyright (C) 2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Chart" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#graphEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+  [
+    {
+      "field": "useDuration", "trigger": "init",
+      "operation": "is:checked", "value": false,
+      "actions": { ".duration-fields": { "display": "none" } }
+    },{
+      "field": "useDuration", "trigger": "init",
+      "operation": "is:checked", "value": true,
+      "actions": { ".duration-fields": { "display": "block" } }
+    },{
+      "field": "useDuration", "trigger": "change",
+      "operation": "is:checked", "value": false,
+      "actions": { ".duration-fields": { "display": "none" } }
+    },{
+      "field": "useDuration", "trigger": "change",
+      "operation": "is:checked", "value": true,
+      "actions": { ".duration-fields": { "display": "block" } }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "none" },
+    "#orderClause": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "none" },
+    "#orderClause": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "block" },
+    "#orderClause": { "display": "none" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "block" },
+    "#orderClause": { "display": "none" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "none" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "none" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "block" }
+    }
+    },{
+    "field": "showLegend",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".legend-fields": { "display": "block" }
+    }
+    }
+  ]
+{% endblock %}
+
+{% block callBack %}graphFormSetup{% endblock %}
+
+{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#formatting" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
+                <li><a href="#colorsTab" role="tab" data-toggle="tab"><span>{% trans "Colours" %}</span></a></li>
+                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            </ul>
+            <form id="graphEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set bar_chart %}{% trans "Bar" %}{% endset %}
+                        {% set line_chart %}{% trans "Line" %}{% endset %}
+                        {% set horizontal_bar_chart %}{% trans "Horizontal Bar" %}{% endset %}
+                        {% set pie_chart %}{% trans "Pie" %}{% endset %}
+                        {% set donut_chart %}{% trans "Donut" %}{% endset %}
+                        {% set radar_chart %}{% trans "Radar" %}{% endset %}
+                        {% set options = [
+                            { typeid: "line", type: line_chart },
+                            { typeid: "bar", type: bar_chart },
+                            { typeid: "pie", type: pie_chart },
+                            { typeid: "doughnut", type: donut_chart },
+                            { typeid: "horizontalBar", type: horizontal_bar_chart },
+                            { typeid: "radar", type: radar_chart },
+                        ] %}
+
+                        {% set title %}{% trans "Chart Type" %}{% endset %}
+                        {% set helpText %}{% trans "Select which type of chart to Display." %}{% endset %}
+                        {{ forms.dropdown("graphType", "single", title, module.getOption("graphType"), options, "typeid", "type", helpText) }}
+
+                        {% set message %}Configure your charts data using the selectors below. You should have at least an X and a Y axis defined.{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="graphConfig">
+
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="formatting">
+                        {% set title %}{% trans "Background Color" %}{% endset %}
+                        {% set helpText %}{% trans "Select an optional background colour to put behind the chart, leaving this blank will make the graph transparent." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+
+                        {% set title %}{% trans "Font Color" %}{% endset %}
+                        {% set helpText %}{% trans "Choose a font colour that will work well with your Layout's background - or the Region below this one." %}{% endset %}
+                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
+
+                        {% set title %}{% trans "Font Size" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size for all text that will show on the chart." %}{% endset %}
+                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
+
+                        {% set title %}{% trans "Show legend?" %}{% endset %}
+                        {{ forms.checkbox("showLegend", title, module.getOption("showLegend")) }}
+
+                        {% set positionTop %}{% trans "Top" %}{% endset %}
+                        {% set positionLeft %}{% trans "Left" %}{% endset %}
+                        {% set positionRight %}{% trans "Right" %}{% endset %}
+                        {% set positionBottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                            { typeid: "top", type: positionTop },
+                            { typeid: "left", type: positionLeft },
+                            { typeid: "right", type: positionRight },
+                            { typeid: "bottom", type: positionBottom },
+                        ] %}
+
+                        {% set title %}{% trans "Legend Position" %}{% endset %}
+                        {% set helpText %}{% trans "Where should the legend be positioned." %}{% endset %}
+                        {{ forms.dropdown("legendPosition", "single", title, module.getOption("legendPosition"), options, "typeid", "type", helpText, "legend-fields") }}
+
+                        {% set title %}{% trans "Title" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a title to show on the Chart." %}{% endset %}
+                        {{ forms.input("title", title, module.getOption("title"), helpText) }}
+
+                        {% set title %}{% trans "X-Axis Label" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a label to show on the Charts x-axis." %}{% endset %}
+                        {{ forms.input("x-axis-label", title, module.getOption("x-axis-label"), helpText) }}
+
+                        {% set title %}{% trans "Y-Axis Label" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a label to show on the Charts y-axis." %}{% endset %}
+                        {{ forms.input("y-axis-label", title, module.getOption("y-axis-label"), helpText) }}
+
+                        {% set title %}{% trans "Always start the Y-Axis at 0?" %}{% endset %}
+                        {{ forms.checkbox("startYAtZero", title, module.getOption("startYAtZero")) }}
+
+                    </div>
+
+                    <div class="tab-pane" id="colorsTab">
+                        {% set message %}{% trans "Add a Colour Pallet to use when drawing a charts data series. If no or too few colours are specified the default colours will be used." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="seriesColors">
+
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="orderCriteria">
+
+                        {% set message %}{% trans "The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="orderClause">
+
+                        </div>
+
+                        {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
+                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 0), helpText) }}
+
+                        {% set title %}{% trans "Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
+                        {{ forms.input("ordering", title, module.getOption("ordering"), helpText, "order-clause-field") }}
+
+                    </div>
+
+                    <div class="tab-pane" id="filterCriteria">
+                        {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="filterClause">
+
+                        </div>
+
+                        {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
+                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 0), helpText) }}
+
+                        {% set title %}{% trans "Filter" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
+                        {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

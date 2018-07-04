@@ -159,7 +159,7 @@
                     {% if latestNews|length > 0 %}
                         {% for news in latestNews %}
                             <div class="article">
-                                <h4 class="article_title">{{ news.title }}</h4>
+                                <h4 class="article_title">{{ news.title }} <small class="article_date">{{ news.date }}</small></h4>
                                 <p>{{ news.description|raw }} {% if news.link %}<a href="{{ news.link }}" title="Read" target="_blank">{% trans "Full Article" %}</a>.{% endif %}</p>
                             </div>
                         {% endfor %}
@@ -214,6 +214,11 @@
             options: {
                 maintainAspectRatio: false
             }
+        });
+
+        $(".article_date").each(function(index, element) {
+            // Replace the ISO date with a nice formatted date "for humans"
+            $(this).html(moment($(this).html(), systemDateFormat).fromNow());
         });
     </script>
 {% endblock %}

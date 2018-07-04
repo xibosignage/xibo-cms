@@ -163,6 +163,10 @@
                         {% set helpText %}{% trans "Search term. You can test your search term in the twitter.com search box first." %}{% endset %}
                         {{ forms.input("searchTerm", title, "", helpText, "", "required") }}
 
+                        {% set title %}{% trans "Language" %}{% endset %}
+                        {% set helpText %}{% trans "Language in which tweets should be returned" %}{% endset %}
+                        {{ forms.input("language", title, "", helpText) }}
+
                         {% set title %}{% trans "Type" %}{% endset %}
                         {% set helpText %}{% trans "Recent shows only the most recent tweets, Popular the most popular and Mixed includes both popular and recent results." %}{% endset %}
                         {% set mixed %}{% trans "Mixed" %}{% endset %}
@@ -192,7 +196,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, null, null, "image") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "tweet-only"), module.templatesAvailable(),"id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}

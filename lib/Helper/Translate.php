@@ -24,6 +24,7 @@ use CachedFileReader;
 use Gettext\Translations;
 use Gettext\Translator;
 use gettext_reader;
+use Illuminate\Support\Str;
 use Xibo\Service\ConfigServiceInterface;
 
 /**
@@ -35,6 +36,7 @@ class Translate
     private static $requestedLanguage;
     private static $locale;
     private static $jsLocale;
+    private static $jsLocaleRequested;
 
     /**
      * Gets and Sets the Locale
@@ -43,24 +45,25 @@ class Translate
      */
     public static function InitLocale($config, $language = NULL)
     {
-        $localeDir = PROJECT_ROOT . '/locale';
-        $default = ($language == NULL) ? $config->GetSetting('DEFAULT_LANGUAGE') : $language;
+        // The default language
+        $default = $config->GetSetting('DEFAULT_LANGUAGE');
 
         // Build an array of supported languages
+        $localeDir = PROJECT_ROOT . '/locale';
         $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
 
-        // Try to get the local firstly from _REQUEST (post then get)
-        $requestedLanguage = $language;
-        $foundLanguage = '';
+        // Record any matching languages we find.
+        $foundLanguage = null;
 
-        if ($requestedLanguage != '') {
+        // Try to get the local firstly from _REQUEST (post then get)
+        if ($language != null) {
             // Serve only the requested language
             // Firstly, Sanitize it
-            $requestedLanguage = str_replace('-', '_', $requestedLanguage);
+            self::$requestedLanguage = str_replace('-', '_', $language);
 
             // Check its valid
-            if (in_array($requestedLanguage . '.mo', $supportedLanguages)) {
-                $foundLanguage = $requestedLanguage;
+            if (in_array(self::$requestedLanguage . '.mo', $supportedLanguages)) {
+                $foundLanguage = self::$requestedLanguage;
             }
         }
         else if ($config->GetSetting('DETECT_LANGUAGE') == 1) {
@@ -69,7 +72,6 @@ class Translate
             $languagePreferenceArray = Translate::parseHttpAcceptLanguageHeader();
 
             if (count($languagePreferenceArray) > 0) {
-
                 // Go through the list until we have a match
                 foreach ($languagePreferenceArray as $languagePreference => $preferenceRating) {
 
@@ -79,6 +81,9 @@ class Translate
 
                     // Sanitize
                     $languagePreference = str_replace('-', '_', $languagePreference);
+
+                    // Set as requested
+                    self::$requestedLanguage = $languagePreference;
 
                     // Check it is valid
                     if (in_array($languagePreference . '.mo', $supportedLanguages)) {
@@ -90,7 +95,8 @@ class Translate
         }
 
         // Requested language
-        self::$requestedLanguage = ($foundLanguage == '') ? $default : $foundLanguage;
+        if (self::$requestedLanguage == null)
+            self::$requestedLanguage = $default;
 
         // Are we still empty, then default language from settings
         if ($foundLanguage == '') {
@@ -111,6 +117,7 @@ class Translate
         // Store our resolved language locales
         self::$locale = $foundLanguage;
         self::$jsLocale = str_replace('_', '-', $foundLanguage);
+        self::$jsLocaleRequested = str_replace('_', '-', self::$requestedLanguage);
     }
 
     /**
@@ -126,6 +133,28 @@ class Translate
     public static function GetJsLocale()
     {
         return self::$jsLocale;
+    }
+
+    /**
+     * @param array $options
+     * @return string
+     */
+    public static function getRequestedJsLocale($options = [])
+    {
+        $options = array_merge([
+            'short' => false
+        ], $options);
+
+        if ($options['short'] && (strlen(self::$jsLocaleRequested) > 2) && Str::contains(self::$jsLocaleRequested, '-')) {
+            // Short js-locale requested, and our string is longer than 2 characters and has a splitter (language variant)
+            $variant = explode('-', self::$jsLocaleRequested);
+
+            // The logic here is that if they are the same, i.e. de-DE, then we should only output de, but if they are
+            // different, i.e. de-AT then we should output the whole thing
+            return (strtolower($variant[0]) === strtolower($variant[1])) ? $variant[0] : self::$jsLocaleRequested;
+        } else {
+            return self::$jsLocaleRequested;
+        }
     }
 
     public static function getRequestedLanguage()

@@ -66,8 +66,13 @@
                     url: "{{ urlFor("user.pref") }}?preference=dataSetGrid",
                     dataType: 'json',
                     success: function (json) {
-                        if (json.success)
-                            data = JSON.parse(json.data.value);
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
                     }
                 });
                 return data;
@@ -264,12 +269,18 @@
 
         function onAuthenticationFieldChanged(dialog) {
             var authentication = $(dialog).find("#authentication").val();
-            var $authFields = $(dialog).find(".auth-fields");
+            var $authFieldUserName = $(dialog).find(".auth-field-username");
+            var $authFieldPassword = $(dialog).find(".auth-field-password");
 
             if (authentication === "none") {
-                $authFields.addClass("hidden");
+                $authFieldUserName.addClass("hidden");
+                $authFieldPassword.addClass("hidden");
+            } else if (authentication === "bearer") {
+                $authFieldUserName.addClass("hidden");
+                $authFieldPassword.removeClass("hidden");
             } else {
-                $authFields.removeClass("hidden");
+                $authFieldUserName.removeClass("hidden");
+                $authFieldPassword.removeClass("hidden");
             }
         }
     </script>

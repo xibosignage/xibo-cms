@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Campaign;
 use Xibo\Entity\Layout;
+use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
@@ -947,6 +948,13 @@ class User extends Base
             foreach ($object->playlists as $playlist) {
                 /* @var Playlist $playlist */
                 $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
+            }
+        } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
+            // Are we a font?
+            /** @var $object Media */
+            if ($object->mediaType === 'font') {
+                // Drop permissions (we need to reassess).
+                $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
             }
         }
 

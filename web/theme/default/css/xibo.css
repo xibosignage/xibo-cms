@@ -50,18 +50,15 @@
     padding: 7px 9px;
 }
 
-.modal-dialog {
-    width: 900px
+@media (min-width: 920px) {
+    .modal-dialog {
+        width: 900px;
+    }
 }
 
 /* Define some modal widths and heights */
 .modal-big .modal-dialog {
     width: 80%;
-}
-
-/* Define some modal widths and heights */
-.help-modal-big .modal-dialog {
-    height: 700px;
 }
 
 @media (max-width: 767px) {
@@ -887,10 +884,6 @@ ul li.active.tab-design:hover a {
     display: none;
 }
 
-.selectPickerWithImage .form-control {
-    height: inherit;
-}
-
 .bootstrap-tagsinput {
     min-width: 196px;
     height: auto;
@@ -941,4 +934,8 @@ ul li.active.tab-design:hover a {
 
 .module-selector-well .nav>li>a {
     padding-bottom: 5px;
+}
+
+.layout-designer-right-pane .select2-container--bootstrap {
+    display: inline-block;
 }

@@ -34,7 +34,7 @@ This is the template for the campaign page
     <div class="widget">
         <div class="widget-title">{% trans "Campaigns" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="campaignView">
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
@@ -76,7 +76,40 @@ This is the template for the campaign page
     <script type="text/javascript">
         // Configure the DataTable
         var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=campaignGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "campaignGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
             "filter": false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -119,8 +152,11 @@ This is the template for the campaign page
             // Hold a container for the layouts we have assigned already
             var container = $("#LayoutAssign");
 
+            // Assignment table
+            var $layoutAssignments = $("#layoutAssignments");
+
             // Layout DataTable
-            var layoutTable = $("#layoutAssignments").DataTable({ "language": dataTablesLanguage,
+            var layoutTable = $layoutAssignments.DataTable({ "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
@@ -129,11 +165,16 @@ This is the template for the campaign page
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=campaignGrid",
+                        url: "{{ urlFor("user.pref") }}?preference=campaignLayoutAssignGrid",
                         dataType: 'json',
                         success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
                         }
                     });
                     return data;
@@ -144,7 +185,7 @@ This is the template for the campaign page
                         url: "{{ urlFor("user.pref") }}",
                         data: {
                             preference: [{
-                                option: "campaignGrid",
+                                option: "campaignLayoutAssignGrid",
                                 value: JSON.stringify(data)
                             }]
                         }
@@ -156,7 +197,7 @@ This is the template for the campaign page
                 ajax: {
                     url: "{{ urlFor("layout.search") }}",
                     "data": function(d) {
-                        $.extend(d, $("#layoutAssignments").closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
+                        $.extend(d, $layoutAssignments.closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
                     }
                 },
                 "columns": [
@@ -168,7 +209,7 @@ This is the template for the campaign page
                     {
                         "sortable": false,
                         "data": function(data, type, row, meta) {
-                            if (type != "display")
+                            if (type !== "display")
                                 return "";
 
                             // Create a click-able span
@@ -178,24 +219,21 @@ This is the template for the campaign page
                 ]
             });
 
-            layoutTable.on('draw', { form: $("#layoutAssignments").closest(".XiboGrid").find("form") }, function(e, settings) {
+            layoutTable.on('draw', { form: $layoutAssignments.closest(".XiboGrid").find("form") }, function(e, settings) {
                 dataTableDraw(e, settings);
                 dataTableCreateTagEvents(e, settings);
 
-                // Clicky on the +spans
-                $(".assignItem", "#layoutAssignments").click(function() {
+                // Bind a click event to each table rows + button (span)
+                $layoutAssignments.find(".assignItem").on("click", function() {
                     // Get the row that this is in.
                     var data = layoutTable.row($(this).closest("tr")).data();
 
                     // Append to our layouts list
-                    // We are adding a new layout, so the display order should be the highest display order
-                    var order = nextDisplayOrder();
-
                     // Construct a new item for the assigned box
                     var newItem = $("<li/>", {
                         "text": data.layout,
                         "data-layout-id": data.layoutId,
-                        "data-display-order": order,
+                        "data-display-order": $("#LayoutAssign li").length,
                         "class": "btn btn-sm btn-default"
                     });
 
@@ -213,10 +251,13 @@ This is the template for the campaign page
             layoutTable.on('processing.dt', dataTableProcessing);
 
             // Make our little list sortable
-            $("#LayoutAssignSortable").sortable();
+            var $layoutAssignSortable = $("#LayoutAssignSortable");
+            $layoutAssignSortable.sortable({
+                items: "li:not(.ui-state-disabled)"
+            });
 
             // Bind to the existing items in the list
-            $("#LayoutAssignSortable").find('li span').click(function () {
+            $layoutAssignSortable.find('li span').on("click", function () {
                 $(this).parent().remove();
             });
 
@@ -227,7 +268,7 @@ This is the template for the campaign page
             
             // Get the original sortable positions
             container.data().originalLayoutPositions = [];
-            $("#LayoutAssignSortable").find("li").each(function(){
+            $layoutAssignSortable.find("li").each(function(){
                 container.data().originalLayoutPositions.push($(this).data("layoutId"));
             });
         }
@@ -242,8 +283,6 @@ This is the template for the campaign page
             
             var finalLayoutPositions = [];
             
-            var layoutChanges = [];
-            
             // Get the final sortable positions
             finalLayoutPositions = [];
             $("#LayoutAssignSortable").find("li").each(function(){
@@ -256,15 +295,15 @@ This is the template for the campaign page
             
             for (var i = 0; i < finalLayoutPositions.length; i++) {
                 var elem = finalLayoutPositions[i];
-                
+                var finalPosition = i;
+
                 // Search for the element on the original layout
-                if (originalLayoutPositions.indexOf(elem) != -1) {
+                if (originalLayoutPositions.indexOf(elem) !== -1) {
                     
                     var originalPosition = originalLayoutPositions.indexOf(elem);
-                    var finalPosition = i;
-                    
+
                     // If the original position is different from the final, make the swap
-                    if (originalPosition != finalPosition) {
+                    if (originalPosition !== finalPosition) {
                         // Remove from the original position
                         unassign.push({layoutId: elem, displayOrder: originalPosition+1});
                         
@@ -275,23 +314,19 @@ This is the template for the campaign page
                     // Clean picked element from the original list
                     originalLayoutPositions[originalPosition] = -1;
                 } else {
-                    
-                    // If the element is not on the list add it to the end of it
-                    assign.push({layoutId: elem, displayOrder: originalPositionsLength});
-                    
-                    // Increase the last position variable
-                    originalPositionsLength++
+                    // We can't find this element, so we add it to the assign list.
+                    assign.push({layoutId: elem, displayOrder: finalPosition+1});
                 }
             }
             
             // Remove all non processed elements
-            for (var i = 0; i < originalLayoutPositions.length; i++) {
-                    if (originalLayoutPositions[i] != -1) {
-                        var elem = originalLayoutPositions[i];
-                        
-                        // Remove from the original position
-                        unassign.push({layoutId: elem, displayOrder: i+1});
-                    }
+            for (i = 0; i < originalLayoutPositions.length; i++) {
+                if (originalLayoutPositions[i] !== -1) {
+                    var elem = originalLayoutPositions[i];
+
+                    // Remove from the original position
+                    unassign.push({layoutId: elem, displayOrder: i+1});
+                }
             }
             
             assignLayoutsToCampaign(container.data().url, assign, unassign);
@@ -308,18 +343,6 @@ This is the template for the campaign page
                 data: {layoutId: layout, unassignLayoutId: unassign},
                 success: XiboSubmitResponse
             });
-        }
-
-        function nextDisplayOrder() {
-            // Look through the assignment list and get the next display order
-            var high = 0;
-            $("#LayoutAssign li").each(function() {
-                var itemOrder = $(this).data().displayOrder;
-                if (itemOrder > high)
-                    high = itemOrder;
-            });
-
-            return high + 1;
         }
     </script>
 {% endblock %}

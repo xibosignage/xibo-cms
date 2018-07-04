@@ -27,6 +27,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -195,7 +196,6 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
-            'layouts' => $this->layoutFactory->query(null, ['excludeTemplates' => $isTemplate ? 0 : 1]),
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
             'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
         ];
@@ -891,13 +891,17 @@ class Layout extends Base
 
         $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
+        // If we have a background image, output it
+        $backgroundId = $this->getSanitizer()->getInt('backgroundOverride', $layout->backgroundImageId);
+        $backgrounds = ($backgroundId != null) ? [$this->mediaFactory->getById($backgroundId)] : [];
+
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
             'resolution' => $resolution,
             'resolutions' => $this->resolutionFactory->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
-            'backgroundId' => $this->getSanitizer()->getInt('backgroundOveride', $layout->backgroundImageId),
-            'backgrounds' => $this->mediaFactory->query(null, ['type' => 'image']),
+            'backgroundId' => $backgroundId,
+            'backgrounds' => $backgrounds,
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
     }
@@ -987,22 +991,25 @@ class Layout extends Base
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
+        $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
         // https://github.com/xibosignage/xibo/issues/1283
         if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
             foreach ($layout->getWidgets() as $widget) {
                 // Copy the media
-                $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                $media = clone $oldMedia;
-                $media->setOwner($this->getUser()->userId);
-                $media->save();
+                    if ( $widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio' ) {
+                        $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        $media = clone $oldMedia;
+                        $media->setOwner($this->getUser()->userId);
+                        $media->save();
 
-                $widget->unassignMedia($oldMedia->mediaId);
-                $widget->assignMedia($media->mediaId);
+                        $widget->unassignMedia($oldMedia->mediaId);
+                        $widget->assignMedia($media->mediaId);
 
-                // Update the widget option with the new ID
-                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+                        // Update the widget option with the new ID
+                        $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+                    }
             }
 
             // Also handle the background image, if there is one
@@ -1120,7 +1127,7 @@ class Layout extends Base
     }
 
     /**
-     * @SWG\Delete(
+     * @SWG\Post(
      *  path="/layout/{layoutId}/untag",
      *  operationId="layoutUntag",
      *  tags={"layout"},
@@ -1150,6 +1157,7 @@ class Layout extends Base
      *
      * @param $layoutId
      * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function untag($layoutId)
     {
@@ -1164,7 +1172,7 @@ class Layout extends Base
         $tags = $this->getSanitizer()->getStringArray('tag');
 
         if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to unassign'));
+            throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
 
         foreach ($tags as $tag) {
             $layout->unassignTag($this->tagFactory->tagFromString($tag));

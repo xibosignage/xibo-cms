@@ -93,11 +93,13 @@ class RemoteDataSetFetchTask implements TaskInterface
                     $results = $dataSetFactory->callRemoteService($dataSet, $dependant);
 
                     if ($results->number > 0) {
-
                         // Truncate only if we also fetch new Data
                         if ($dataSet->isTruncateEnabled() && $runTime >= $dataSet->getNextClearTime()) {
                             $this->log->debug('Truncate ' . $dataSet->dataSet);
                             $dataSet->deleteData();
+
+                            // Update the last clear time.
+                            $dataSet->saveLastClear($runTime);
                         }
 
                         $dataSetFactory->processResults($dataSet, $results);

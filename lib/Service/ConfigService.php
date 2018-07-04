@@ -272,7 +272,7 @@ class ConfigService implements ConfigServiceInterface
      */
     public function uri($uri, $local = false)
     {
-        $rootUri = ($local) ? '' : $this->rootUri();
+        $rootUri = ($local) ? PROJECT_ROOT . '/web/' : $this->rootUri();
 
         if (!$this->themeLoaded)
             return $rootUri . 'theme/default/' . $uri;
@@ -286,6 +286,24 @@ class ConfigService implements ConfigServiceInterface
         }
         else {
             return $rootUri . 'theme/default/' . $uri;
+        }
+    }
+
+    /**
+     * Check a theme file exists
+     * @param string $uri
+     * @return string
+     */
+    public function fileExists($uri)
+    {
+        if (!$this->themeLoaded)
+            return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
+
+        // Serve the appropriate theme file
+        if (file_exists(PROJECT_ROOT . '/web/' . $this->themeConfig['themeFolder'] . $uri)) {
+            return true;
+        } else {
+            return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
         }
     }
 

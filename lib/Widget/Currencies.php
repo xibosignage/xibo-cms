@@ -92,11 +92,19 @@ class Currencies extends AlphaVantageBase
      */
     public function settings()
     {
-        $this->module->settings['apiKey'] = $this->getSanitizer()->getString('apiKey');
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 14400);
+        $apiKey = $this->getSanitizer()->getString('apiKey');
+        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 14400);
 
-        if ($this->module->settings['cachePeriod'] < 3600)
-            throw new InvalidArgumentException(__('Cache Period must be 3600 or greater for this Module'), 'cachePeriod');
+        if ($this->module->enabled != 0) {
+            if ($apiKey == '')
+                throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+
+            if ($cachePeriod < 3600)
+                throw new InvalidArgumentException(__('Cache Period must be 3600 or greater for this Module'), 'cachePeriod');
+        }
+
+        $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['cachePeriod'] = $cachePeriod;
 
         // Return an array of the processed settings.
         return $this->module->settings;

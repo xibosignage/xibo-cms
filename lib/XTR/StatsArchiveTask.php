@@ -75,10 +75,8 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->runMessage .= ' - ' . $fromDt . ' / ' . $toDt . PHP_EOL;
 
-        $select = 'SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName';
-        $countSelect = 'SELECT COUNT(*) AS cnt';
-
         $sql = '
+            SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
               FROM stat
                 INNER JOIN display
                 ON stat.DisplayID = display.DisplayID
@@ -97,45 +95,40 @@ class StatsArchiveTask implements TaskInterface
             'toDt' => $this->date->getLocalDate($toDt)
         ];
 
-        // How many records are we expecting?
-        $records = $this->store->select($countSelect . $sql, $params);
-
-        if (count($records) <= 0)
-            return;
-
-        $records = $this->sanitizer->int($records[0]['cnt']);
-
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        // Get records in blocks of 1000
-        $i = 0;
-        while ($i < $records) {
+        // Get records using a cursor so we don't load everything into memory
+        $statement = $this->store->getConnection()->prepare($sql);
 
-            $rows = $this->store->select($select . $sql . ' LIMIT ' . $i . ', 1000 ', $params);
+        // Exec
+        $statement->execute($params);
 
-            // Do some post processing
-            foreach ($rows as $row) {
-                // Read the columns
-                fputcsv($out, [
-                    $this->sanitizer->string($row['Type']),
-                    $this->sanitizer->string($row['start']),
-                    $this->sanitizer->string($row['end']),
-                    $this->sanitizer->string($row['Layout']),
-                    $this->sanitizer->string($row['Display']),
-                    $this->sanitizer->string($row['MediaName']),
-                    $this->sanitizer->string($row['Tag']),
-                    $this->sanitizer->int($row['displayID']),
-                    $this->sanitizer->int($row['layoutID']),
-                    $this->sanitizer->int($row['widgetId']),
-                    $this->sanitizer->int($row['mediaID'])
-                ]);
-            }
+        // Store a count of rows for the delete
+        $countRows = 0;
 
-            $i = $i + 1000;
+        // Do some post processing
+        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
+            // Read the columns
+            fputcsv($out, [
+                $this->sanitizer->string($row['Type']),
+                $this->sanitizer->string($row['start']),
+                $this->sanitizer->string($row['end']),
+                $this->sanitizer->string($row['Layout']),
+                $this->sanitizer->string($row['Display']),
+                $this->sanitizer->string($row['MediaName']),
+                $this->sanitizer->string($row['Tag']),
+                $this->sanitizer->int($row['displayID']),
+                $this->sanitizer->int($row['layoutID']),
+                $this->sanitizer->int($row['widgetId']),
+                $this->sanitizer->int($row['mediaID'])
+            ]);
+
+            // Increment count of rows
+            $countRows++;
         }
 
         fclose($out);
@@ -157,8 +150,28 @@ class StatsArchiveTask implements TaskInterface
         $media = $this->mediaFactory->create(__('Stats Export %s to %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
-        // Delete the stats
-        $this->store->update('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt', $params);
+        // Delete the stats, incrementally
+        $rowsModified = 1;
+        $loops = 0;
+        $loopsRequired = ($countRows / 1000) + 1; // add 1 for good measure, just to make sure our final delete doesn't hit anything
+
+        // Prepare a SQL statement
+        $delete = $this->store->getConnection()->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT 1000');
+
+        while ($rowsModified > 0 && $loops < $loopsRequired) {
+            $loops++;
+
+            // Run the delete
+            $delete->execute($params);
+
+            // Find out how many rows we've deleted
+            $rowsModified = $delete->rowCount();
+
+            // We shouldn't be in a transaction, but commit anyway just in case
+            $this->store->commitIfNecessary();
+
+            sleep(1);
+        }
     }
 
     /**

@@ -205,6 +205,7 @@ class DataSetFactory extends BaseFactory
                 dataset.`summarize`,
                 dataset.`summarizeField`,
                 dataset.`lastSync`,
+                dataset.`lastClear`,
             ';
         }
 
@@ -316,6 +317,7 @@ class DataSetFactory extends BaseFactory
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @return \stdClass{entries:[],number:int}
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function callRemoteService(DataSet $dataSet, DataSet $dependant = null, $enableCaching = true)
     {
@@ -350,12 +352,27 @@ class DataSetFactory extends BaseFactory
             $requestParams = [];
 
             // Auth
-            if ($dataSet->authentication !== 'none') {
-                $requestParams['auth'] = [
-                    'username' => $dataSet->username,
-                    'password' => $dataSet->password,
-                    'digest' => $dataSet->authentication
-                ];
+            switch ($dataSet->authentication) {
+
+                case 'basic':
+                    $requestParams['auth'] = [$dataSet->username, $dataSet->password];
+                    break;
+
+                case 'digest':
+                    $requestParams['auth'] = [$dataSet->username, $dataSet->password, 'digest'];
+                    break;
+
+                case 'ntlm':
+                    $requestParams['auth'] = [$dataSet->username, $dataSet->password, 'ntlm'];
+                    break;
+
+                case 'bearer':
+                    $requestParams['headers'] = ['Authorization' => 'Bearer ' . $dataSet->authentication];
+                    break;
+
+                case 'none':
+                default:
+                    $this->getLog()->debug('No authentication required');
             }
 
             // Post request?
@@ -386,7 +403,7 @@ class DataSetFactory extends BaseFactory
                 // Check the cache control situation
                 if ($enableCaching) {
                     // recache if necessary
-                    $cacheControlKey = $this->pool->getItem('/dataset/cache/' . md5($resolvedUri . json_encode($requestParams)));
+                    $cacheControlKey = $this->pool->getItem('/dataset/cache/' . $dataSet->dataSetId . '/' . md5($resolvedUri . json_encode($requestParams)));
                     $cacheControlKeyValue = ($cacheControlKey->isMiss()) ? '' : $cacheControlKey->get();
 
                     $this->getLog()->debug('Cache Control Key is ' . $cacheControlKeyValue);

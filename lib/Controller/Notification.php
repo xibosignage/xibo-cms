@@ -186,7 +186,7 @@ class Notification extends Base
         $users = [];
 
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var Xibo\Entity\DisplayGroup $displayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
@@ -236,7 +236,7 @@ class Notification extends Base
         $users = [];
 
         foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var Xibo\Entity\DisplayGroup $displayGroup */
+            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
