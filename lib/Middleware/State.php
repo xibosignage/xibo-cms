@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file (State.php) is part of Xibo.
  *
@@ -30,6 +30,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
@@ -221,7 +222,7 @@ class State extends Middleware
         $app->logService->setMode($mode);
 
         // Configure logging
-        if (strtolower($mode) == 'test') {
+        if (Environment::isForceDebugging() || strtolower($mode) == 'test') {
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
             $app->getLog()->setLevel(\Slim\Log::DEBUG);

@@ -1385,7 +1385,7 @@ abstract class ModuleWidget implements ModuleInterface
             $cacheFile = $cacheKey;
         }
 
-        $this->getLog()->debug('Cache details - modifiedDt: ' . (($modifiedDt === null) ? 'layoutDt' : $modifiedDt->format('Y-m-d H:i:s'))
+        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format('Y-m-d H:i:s')
             . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
             . ', cacheDuration: ' . $cacheDuration
             . ', cacheKey: ' . $cacheKey
@@ -1394,7 +1394,7 @@ abstract class ModuleWidget implements ModuleInterface
         if (!file_exists($cachePath))
             mkdir($cachePath, 0777, true);
 
-        if ( ($modifiedDt !== null && $modifiedDt->greaterThan($cachedDt))
+        if ( $modifiedDt->greaterThan($cachedDt)
                 || $cachedDt->addSeconds($cacheDuration)->lessThan($now)
                 || !file_exists($cachePath . $cacheFile) ) {
 
