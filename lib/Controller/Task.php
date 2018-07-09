@@ -1,10 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (Task.php)
+/**
+ * Copyright (C) 2016-2018 Spring Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
@@ -434,32 +448,20 @@ class Task extends Base
     {
         $this->getLog()->debug('XTR poll started');
 
+        // Process timeouts
         $this->pollProcessTimeouts();
 
         // The getting/updating of tasks runs in a separate DB connection
-        // Query for a list of tasks to run.
-        $db = $this->store->getConnection('xtr');
-
-        // This queries for all enabled tasks, because we need to assess the schedule in code
-        $pollSth = $db->prepare('SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration');
+        $sqlForActiveTasks = 'SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration';
 
         // Update statements
-        $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
-        if (DBVERSION < 133)
-            $updateStartSth = null;
-        else
-            $updateStartSth = $db->prepare('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId');
-
-        $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
+        $updateSth = 'UPDATE `task` SET status = :status WHERE taskId = :taskId';
 
         // We loop until we have gone through without running a task
         // we select new tasks each time
         while (true) {
             // Get tasks that aren't running currently
-            $pollSth->execute(['status' => \Xibo\Entity\Task::$STATUS_RUNNING]);
-            $this->store->incrementStat('xtr', 'select');
-
-            $tasks = $pollSth->fetchAll(\PDO::FETCH_ASSOC);
+            $tasks = $this->store->select($sqlForActiveTasks, ['status' => \Xibo\Entity\Task::$STATUS_RUNNING], 'xtr', true);
 
             // Assume we wont run anything
             $taskRun = false;
@@ -478,18 +480,18 @@ class Task extends Base
 
                     // Set to running
                     if (DBVERSION < 133) {
-                        $updateSth->execute([
+                        $this->store->update($updateSth, [
                             'taskId' => $taskId,
                             'status' => \Xibo\Entity\Task::$STATUS_RUNNING
-                        ]);
+                        ], 'xtr');
                     } else {
-                        $updateStartSth->execute([
+                        $this->store->update('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId', [
                             'taskId' => $taskId,
                             'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
                             'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
-                        ]);
+                        ], 'xtr');
                     }
-                    $this->store->incrementStat('xtr', 'update');
+                    $this->store->commitIfNecessary('xtr');
 
                     // Pass to run.
                     try {
@@ -497,34 +499,25 @@ class Task extends Base
                         $this->run($taskId);
 
                         // Set to idle
-                        try {
-                            $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
-                        } catch (\PDOException $PDOException) {
-                            $this->getLog()->info('PDO error updating task status for taskId ' . $taskId . '. E = ' . $PDOException->getMessage());
-
-                            // Re-connect and prepare new SQL statements.
-                            $db = $this->store->getConnection('xtr');
-                            $updateSth = $db->prepare('UPDATE `task` SET status = :status WHERE taskId = :taskId');
-                            $updateFatalErrorSth = $db->prepare('UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage WHERE taskId = :taskId');
-
-                            // retry (if this fails we will throw out to the lower catch block).
-                            $updateSth->execute(['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE]);
-                        }
+                        $this->store->update($updateSth, ['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE], 'xtr', true);
 
                     } catch (\Exception $exception) {
                         // This is a completely unexpected exception, and we should disable the task
                         $this->getLog()->error('Task run error for taskId ' . $taskId . '. E = ' . $exception->getMessage());
 
                         // Set to error
-                        $updateFatalErrorSth->execute([
+                        $this->store->update('
+                            UPDATE `task` SET status = :status, isActive = :isActive, lastRunMessage = :lastRunMessage 
+                             WHERE taskId = :taskId
+                        ', [
                             'taskId' => $taskId,
                             'status' => \Xibo\Entity\Task::$STATUS_ERROR,
                             'isActive' => 0,
                             'lastRunMessage' => 'Fatal Error: ' . $exception->getMessage()
-                        ]);
+                        ], 'xtr', true);
                     }
 
-                    $this->store->incrementStat('xtr', 'update');
+                    $this->store->commitIfNecessary('xtr');
 
                     // We have run a task
                     $taskRun = true;

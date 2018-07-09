@@ -24,6 +24,7 @@ namespace Xibo\XTR;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -61,56 +62,77 @@ class WidgetSyncTask implements TaskInterface
         $smt = $this->store->getConnection()->prepare($sql);
         $smt->execute();
 
+        // Track the total time we've spent caching (excluding all other operations, etc)
+        $timeCaching = 0.0;
+
         // Get a list of Layouts which are currently active, along with the display they are active on
         // get the widgets from each layout and call get resource on them
         while ($row = $smt->fetch(\PDO::FETCH_ASSOC)) {
 
-            // We have a Layout
-            $layoutId = (int)$row['itemId'];
-            $displayId = (int)$row['displayId'];
+            try {
+                // We have a Layout
+                $layoutId = (int)$row['itemId'];
+                $displayId = (int)$row['displayId'];
 
-            $this->log->debug('Found layout to keep in sync ' . $layoutId);
+                $this->log->debug('Found layout to keep in sync ' . $layoutId);
 
-            if ($layoutId !== $currentLayoutId) {
-                $countLayouts++;
+                if ($layoutId !== $currentLayoutId) {
+                    $countLayouts++;
 
-                // We've changed layout
-                // load in the new one
-                $layout = $this->layoutFactory->getById($layoutId);
-                $layout->load();
+                    // We've changed layout
+                    // load in the new one
+                    $layout = $this->layoutFactory->getById($layoutId);
+                    $layout->load();
 
-                // Update pointer
-                $currentLayoutId = $layoutId;
-            }
+                    // Update pointer
+                    $currentLayoutId = $layoutId;
+                }
 
-            // Load the layout XML and work out if we have any ticker / text / dataset media items
-            foreach ($layout->regions as $region) {
-                /* @var Region $region */
-                foreach ($region->playlists as $playlist) {
-                    /* @var Playlist $playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var Widget $widget */
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
-                        ) {
-                            $countWidgets++;
+                // Load the layout XML and work out if we have any ticker / text / dataset media items
+                foreach ($layout->regions as $region) {
+                    /* @var Region $region */
+                    foreach ($region->playlists as $playlist) {
+                        /* @var Playlist $playlist */
+                        foreach ($playlist->widgets as $widget) {
+                            /* @var Widget $widget */
+                            if ($widget->type == 'ticker' ||
+                                $widget->type == 'text' ||
+                                $widget->type == 'datasetview' ||
+                                $widget->type == 'webpage' ||
+                                $widget->type == 'embedded' ||
+                                $modules[$widget->type]->renderAs == 'html'
+                            ) {
+                                $countWidgets++;
 
-                            // Make me a module from the widget
-                            $module = $moduleFactory->createWithWidget($widget, $region);
+                                // Make me a module from the widget
+                                $module = $moduleFactory->createWithWidget($widget, $region);
 
-                            $module->getResourceOrCache($displayId);
+                                // Record start time
+                                $startTime = microtime(true);
 
-                            // Add a little break in here
-                            sleep(1);
+                                // Cache the widget
+                                $module->getResourceOrCache($displayId);
+
+                                // Record end time and aggregate for final total
+                                $duration = (microtime(true) - $startTime);
+                                $timeCaching = $timeCaching + $duration;
+
+                                $this->log->debug('Took ' . $duration . ' seconds to check and/or cache widgetId ' . $widget->widgetId . ' for displayId ' . $displayId);
+
+                                // Add a little break in here
+                                usleep(10000);
+                            }
                         }
                     }
                 }
+            } catch (XiboException $xiboException) {
+                // Log and skip to the next layout
+                $this->log->debug($xiboException->getTraceAsString());
+                $this->log->error('Cannot process layoutId ' . $layoutId . ', E = ' . $xiboException->getMessage());
             }
         }
+
+        $this->log->info('Total time spent caching is ' . $timeCaching);
 
         $this->appendRunMessage('Synced ' . $countWidgets . ' widgets across ' . $countLayouts . ' layouts.');
     }
