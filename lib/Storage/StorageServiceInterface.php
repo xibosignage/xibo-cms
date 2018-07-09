@@ -63,44 +63,54 @@ interface StorageServiceInterface
      * Check to see if the query returns records
      * @param string $sql
      * @param array[mixed] $params
+     * @param string|null $connection
+     * @param bool $reconnect
      * @return bool
      */
-    public function exists($sql, $params);
+    public function exists($sql, $params, $connection = null, $reconnect = false);
 
     /**
      * Run Insert SQL
      * @param string $sql
      * @param array $params
+     * @param string|null $connection
+     * @param bool $reconnect
      * @return int
      * @throws \PDOException
      */
-    public function insert($sql, $params);
+    public function insert($sql, $params, $connection = null, $reconnect = false);
 
     /**
      * Run Update SQL
      * @param string $sql
      * @param array $params
+     * @param string|null $connection
+     * @param bool $reconnect
      * @return int affected rows
      * @throws \PDOException
      */
-    public function update($sql, $params);
+    public function update($sql, $params, $connection = null, $reconnect = false);
 
     /**
      * Run Select SQL
      * @param $sql
      * @param $params
+     * @param string|null $connection
+     * @param bool $reconnect
      * @return array
      * @throws \PDOException
      */
-    public function select($sql, $params);
+    public function select($sql, $params, $connection = null, $reconnect = false);
 
     /**
      * Run SQL in an isolated connection/transaction
      * @param $sql
      * @param $params
+     * @param string|null $connection
+     * @param bool $reconnect
      * @return mixed
      */
-    public function isolated($sql, $params);
+    public function isolated($sql, $params, $connection = null, $reconnect = false);
 
     /**
      * Run the SQL statement with a deadlock loop
