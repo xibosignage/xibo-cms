@@ -7,7 +7,6 @@
 
 namespace Xibo\Widget;
 
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 
 /**
@@ -144,36 +143,8 @@ class Pdf extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        // We have a long cache interval because we don't depend on any external data.
-        return 86400 * 365;
-    }
-
-    /** @inheritdoc */
-    public function getModifiedDate($displayId)
-    {
-        // PDF isn't ever cached by preview, but it is by getResource
-        // its a HTML render non-region specific Module (which is an edge case thus far)
-        // that means we must return the layout modifiedDt here, so that any media replacements are reflected in the
-        // cache.
-        // https://github.com/xibosignage/xibo/issues/1563
-
-        // Default behaviour is to assume we use the widget modified date
-        $default = parent::getModifiedDate($displayId);
-
-        // Do we have a region provided?
-        // we should do if we are a GetResource call
-        if ($this->region !== null) {
-            try {
-                // Use the region to get our layout modified date
-                $layout = $this->layoutFactory->getById($this->region->layoutId);
-
-                return $layout->modifiedDt;
-            } catch (NotFoundException $notFoundException) {
-                $this->getLog()->error('PDF widget ' . $this->getWidgetId() . ' initialised it a region that is not valid - layout not found');
-                return $default;
-            }
-        }
-
-        return $default;
+        // We have a short cache duration because this module doesn't rely on any external sources and we're just
+        // creating some HTML.
+        return 1;
     }
 }
