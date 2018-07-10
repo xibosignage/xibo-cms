@@ -54,6 +54,7 @@
   "dependencies": {
     "@babel/core": "^7.0.0-beta.51",
     "@babel/preset-env": "^7.0.0-beta.51",
+    "ajax-bootstrap-select": "^1.4.4",
     "babel-polyfill": "^6.26.0",
     "blueimp-file-upload": "~9.19.2",
     "blueimp-load-image": "~2.17.1",

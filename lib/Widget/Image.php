@@ -28,6 +28,16 @@ use Xibo\Exception\XiboException;
 
 class Image extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'image-designer-javascript';
+    }
+
     /**
      * Validate
      */

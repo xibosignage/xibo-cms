@@ -23,6 +23,16 @@ namespace Xibo\Widget;
 
 class Video extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'video-designer-javascript';
+    }
+
     /**
      * Form for updating the module settings
      */

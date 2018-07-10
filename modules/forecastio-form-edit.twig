@@ -15,124 +15,12 @@
 
 {% block formButtons %}
     {% if currentUser.isSuperAdmin() and settings.SERVER_MODE == "Test" %}
-        {% trans "Export Template" %}, requestTab("forecast"| "{{ urlFor("module.widget.tab.form", {tab: "exporttemplate", id: module.widget.widgetId}) }}")
+        {% trans "Export Template" %}, formHelpers.requestTab("forecast"| "{{ urlFor("module.widget.tab.form", {tab: "exporttemplate", id: module.widget.widgetId}) }}")
     {% endif %}
-    {% trans "Get Forecast" %}, requestTab("forecast"| "{{ urlFor("module.widget.tab.form", {tab: "forecast", id: module.widget.widgetId}) }}")
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#forecastEditForm").submit()
+    {% trans "Get Forecast" %}, formHelpers.requestTab("forecast"| "{{ urlFor("module.widget.tab.form", {tab: "forecast", id: module.widget.widgetId}) }}")
 {% endblock %}
-
-{% block callBack %}forecastIoFormSetup{% endblock %}
 
 {% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
-
-{% block formFieldActions %}
-    [{
-    "field": "useDisplayLocation",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".locationControls": { "display": "block" }
-    }
-    },{
-    "field": "useDisplayLocation",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".locationControls": { "display": "block" }
-    }
-    },{
-    "field": "useDisplayLocation",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".locationControls": { "display": "none" }
-    }
-    },{
-    "field": "useDisplayLocation",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".locationControls": { "display": "none" }
-    }
-    },{
-    "field": "overrideTemplate",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".template-override-controls": { "display": "none" },
-    ".reloadTemplateButton": { "display": "none" },
-    ".template-selector-control": { "display": "block" }
-    }
-    },{
-    "field": "overrideTemplate",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".template-override-controls": { "display": "none" },
-    ".reloadTemplateButton": { "display": "none" },
-    ".template-selector-control": { "display": "block" }
-    }
-    },{
-    "field": "overrideTemplate",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".template-override-controls": { "display": "block" },
-    ".reloadTemplateButton": { "display": "block" },
-    ".template-selector-control": { "display": "none" }
-    }
-    },{
-    "field": "overrideTemplate",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".template-override-controls": { "display": "block" },
-    ".reloadTemplateButton": { "display": "block" },
-    ".template-selector-control": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    }]
-{% endblock %}
 
 {% block formHtml %}
     <div class="row">

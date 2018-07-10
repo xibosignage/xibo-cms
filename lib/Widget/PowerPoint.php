@@ -23,6 +23,16 @@ namespace Xibo\Widget;
 
 class PowerPoint extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'powerpoint-designer-javascript';
+    }
+
     public function isValid()
     {
         // Client dependant

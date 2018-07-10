@@ -161,17 +161,34 @@ Layout.prototype.addElement = function(elementType) {
  */
 Layout.prototype.deleteElement = function(elementType, elementId) {
     
-    // Create a delete type change, upload it but don't add it to the history array
-    return lD.manager.addChange(
-        "delete",
-        elementType, // targetType
-        elementId, // targetId
-        null, // oldValues
-        null, // newValues
-        {
-            addToHistory: false // options.addToHistory
-        }
-    );
+    // Save all changes first
+    return lD.manager.saveAllChanges().then((res) =>  {
+
+        // Remove changes from the history array
+        return lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then((res) =>  {
+
+            // Unselect selected object before deleting
+            lD.selectObject();
+
+            // Create a delete type change, upload it but don't add it to the history array
+            return lD.manager.addChange(
+                "delete",
+                elementType, // targetType
+                elementId, // targetId
+                null, // oldValues
+                null, // newValues
+                {
+                    addToHistory: false // options.addToHistory
+                }
+            );
+
+        }).catch(function() {
+            toastr.error('Remove all changes failed!');
+        });
+    }).catch(function() {
+        toastr.error('Save all changes failed!');
+    });
+    
 };
 
 module.exports = Layout;

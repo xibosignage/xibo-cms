@@ -13,48 +13,6 @@
     {% trans "Edit HLS Video Stream" %}
 {% endblock %}
 
-{% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#HlsVideoEditForm").submit()
-{% endblock %}
-
-{% block formFieldActions %}
-    [{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    }]
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">

@@ -30,6 +30,14 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'googletraffic-designer-javascript';
+    }
+
+    /**
      * Install or Update this module
      * @param ModuleFactory $moduleFactory
      */

@@ -101,7 +101,7 @@ Timeline.prototype.updateLabels = function() {
  * @param {object} regions - Layout regions
  */
 Timeline.prototype.calculateStartingZoom = function(regions) {
-
+    
     // Find the smallest widget ( by duration )
     let shorterWidgetDuration = -1;
     for(let region in regions) {
@@ -238,6 +238,13 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
 };
 
 /**
+ * Reset zoom to be recalculated on next render
+ */
+Timeline.prototype.resetZoom = function() {
+    this.properties.zoom = -1;
+};
+
+/**
  * Render Timeline and the layout
  * @param {Object} layout - the layout object to be rendered
  */
@@ -306,13 +313,39 @@ Timeline.prototype.render = function(layout) {
         drop: function(event, ui) {
             lD.toolbar.dropItemAdd(event.target, ui.draggable[0]);
         }
-    }).sortable({
-        items: '.designer-widget:not(.designer-widget-ghost)', 
-        placeholder: "designer-widget-sort",
-        stop: function(event, ui) {
-            console.log('Sort stop!');
-            console.log(event);
-            console.log(ui);
+    });
+
+    this.DOMObject.find('#regions .designer-widget:not(.designer-widget-ghost)').draggable({
+        start: function(event, ui) {
+            $(this).draggable('instance').offset.click = {
+                left: Math.floor(ui.helper.outerWidth() / 2),
+                top: Math.floor(ui.helper.outerHeight() / 2)
+            };
+        },
+        appendTo: $(lD.toolbar.DOMObject),
+        scroll: false,
+        cursor: 'crosshair',
+        opacity: 0.6,
+        zIndex: 100,
+        helper: function(event) {
+            return $('<div class="layout-widget-deletable deletable">' + event.currentTarget.id + '</div>');
+        }
+    });
+
+    this.DOMObject.find('#regions .designer-region').draggable({
+        start: function(event, ui) {
+            $(this).draggable('instance').offset.click = {
+                left: Math.floor(ui.helper.outerWidth() / 2),
+                top: Math.floor(ui.helper.outerHeight() / 2)
+            };
+        },
+        appendTo: $(lD.toolbar.DOMObject),
+        scroll: false,
+        cursor: 'crosshair',
+        opacity: 0.6,
+        zIndex: 100,
+        helper: function(event) {
+            return $('<div class="layout-region-deletable deletable">' + event.currentTarget.id + '</div>');
         }
     });
     

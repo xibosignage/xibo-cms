@@ -23,6 +23,10 @@ const inverseChangeMap = {
     addMedia: {
         inverse: 'delete',
         useElement: true
+    },
+    addWidget: {
+        inverse: 'delete',
+        useElement: true
     }
 };
 
@@ -121,7 +125,9 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
     let requestPath = linkToAPI.url;
 
     // replace id if necessary/exists
-    requestPath = requestPath.replace(':id', change.target.id);
+    if(change.target) {
+        requestPath = requestPath.replace(':id', change.target.id);
+    }
 
     // Run ajax request and save promise
     return new Promise(function(resolve, reject) {
@@ -136,7 +142,7 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
 
                 // Update the Id of the change with the new element
                 if(updateId) {
-                    if(change.type === 'create') {
+                    if(change.type === 'create' || change.type === 'addWidget') {
                         change.target.id = data.id;
                     } else if(change.type === 'addMedia') {
                         change.target.id = data.data.newWidgets[0].widgetId;
@@ -360,6 +366,15 @@ Manager.prototype.removeAllChanges = function(targetType, targetId) {
 
         resolve('All Changes Removed');
     });
+};
+
+
+/**
+ * Remove last change
+*/
+Manager.prototype.removeLastChange = function() {
+    lD.manager.changeHistory.pop();
+    lD.manager.render();
 };
 
 /**

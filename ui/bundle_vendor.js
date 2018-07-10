@@ -43,10 +43,15 @@ try {
 
 // bootstrap-select
 require('bootstrap-select');
+
+// ajax-bootstrap-select
+require('ajax-bootstrap-select/dist/js/ajax-bootstrap-select.min.js');
+
 try {
     // Conditional import for the locale variable
     if( jsLocale && jsLocale != "en-GB" ) {
         require('bootstrap-select/js/i18n/defaults-' + boostrapSelectLanguage + '.js');
+        require('ajax-bootstrap-select/dist/js/locale/ajax-bootstrap-select.' + boostrapSelectLanguage + '.min.js');
     }
 } catch (e) { //Handle variable not set error
     console.log('[Warning] loading bootstrap-select: Locale not defined!');

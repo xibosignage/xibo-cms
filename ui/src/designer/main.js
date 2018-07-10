@@ -34,9 +34,6 @@ const Viewer = require('./viewer.js');
 const toolbar = require('./toolbar.js');
 const PropertiesPanel = require('./properties-panel.js');
 
-// Include helpers
-//require('../helpers/operators.js');
-
 // Include CSS
 require('../css/designer.css');
 
@@ -69,7 +66,7 @@ window.lD = {
     toolbar: {},
 
     // Properties Panel
-    propertiesPanel: {}
+    propertiesPanel: {},
 };
 
 // Load Layout and build app structure
@@ -160,8 +157,9 @@ $(document).ready(function() {
 /**
  * Select a layout object (layout/region/widget)
  * @param {object=} obj - Object to be selected
+ * @param {bool=} forceSelect - Select object even if it was already selected
  */
-lD.selectObject = function(obj = null) {
+lD.selectObject = function(obj = null, forceSelect = false) {
 
     // Get object properties from the DOM ( or set to layout if not defined )
     const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
@@ -197,7 +195,7 @@ lD.selectObject = function(obj = null) {
     this.selectedObject.type = 'layout';
 
     // If the selected object was different from the previous, select a new one
-    if(oldSelectedId != newSelectedId) {
+    if(oldSelectedId != newSelectedId || forceSelect) {
 
         // Save the new selected object
         if(newSelectedType === 'region') {
@@ -219,6 +217,9 @@ lD.selectObject = function(obj = null) {
  * Refresh designer
  */
 lD.refreshDesigner = function() {
+
+    // Remove temporary data
+    this.clearTemporaryData();
 
     // Render containers with layout ( default )
     this.renderContainer(this.navigator);
@@ -244,9 +245,8 @@ lD.reloadData = function(layout) {
             
             if(res.data.length > 0) {
                 lD.layout = new Layout(layout.layoutId, res.data[0]);
-                lD.refreshDesigner();
 
-                // Select the same object
+                // Select the same object ( that will refresh the layout too )
                 const selectObjectId = lD.selectedObject.id;
                 lD.selectedObject = {};
 
@@ -335,4 +335,13 @@ lD.showErrorMessage = function() {
     });
 
     lD.designerDiv.html(htmlError);
+};
+
+/**
+ * Clear Temporary Data ( Cleaning cached variables )
+ */
+lD.clearTemporaryData = function() {
+    
+    // Remove text callback editor structure variables
+    formHelpers.textCallbackDestroy();
 };

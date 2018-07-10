@@ -24,6 +24,15 @@ use InvalidArgumentException;
 
 class ShellCommand extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'shellcommand-designer-javascript';
+    }
+
     public function validate()
     {
         if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '')

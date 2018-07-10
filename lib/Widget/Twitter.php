@@ -113,6 +113,14 @@ class Twitter extends TwitterBase
     }
 
     /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'twitter-designer-javascript';
+    }
+
+    /**
      * Form for updating the module settings
      */
     public function settingsForm()

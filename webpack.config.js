@@ -112,7 +112,7 @@ module.exports = {
                 use: [{
                     loader: 'handlebars-loader',
                     options: {
-                        helperDirs: path.join(__dirname, 'ui/src/helpers'),
+                        helperDirs: path.join(__dirname, 'ui/src/helpers/handlebars'),
                         precompileOptions: {
                             knownHelpersOnly: false,
                         }

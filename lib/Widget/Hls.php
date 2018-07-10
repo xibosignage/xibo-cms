@@ -20,6 +20,7 @@ use Xibo\Factory\ModuleFactory;
  */
 class Hls extends ModuleWidget
 {
+
     public $codeSchemaVersion = 1;
 
     /** @inheritdoc */
@@ -27,6 +28,14 @@ class Hls extends ModuleWidget
     {
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
+    }
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'hls-designer-javascript';
     }
 
     /**

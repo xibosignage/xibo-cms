@@ -9,6 +9,9 @@ require('bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
 // bootstrap-select
 require('bootstrap-select/dist/css/bootstrap-select.min.css');
 
+// ajax-bootstrap-select
+require('ajax-bootstrap-select/dist/css/ajax-bootstrap-select.min.css');
+
 // jquery-ui
 require('jquery-ui/themes/base/core.css');
 require('jquery-ui/themes/base/menu.css');

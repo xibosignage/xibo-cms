@@ -14,6 +14,9 @@ const loadingTemplate = require('../templates/loading.hbs');
 let Viewer = function(container, navbarContainer) {
     this.DOMObject = container;
     this.navbarContainer = navbarContainer;
+
+    // Element dimensions inside the viewer container
+    this.containerElementDimensions = null;
 };
 
 /**
@@ -90,7 +93,7 @@ Viewer.prototype.render = function(element, layout, page = 1) {
     const targetElement = (element.type === 'widget') ? lD.layout.regions[element.regionId] : element;
 
     // Apply viewer scale to the layout
-    const containerDimensions = this.scaleElement(targetElement, this.DOMObject);
+    this.containerElementDimensions = this.scaleElement(targetElement, this.DOMObject);
 
     requestPath = requestPath.replace(':id', targetElement[targetElement.type + 'Id']);
     
@@ -100,7 +103,7 @@ Viewer.prototype.render = function(element, layout, page = 1) {
         const html = viewerTemplate({
             renderLayout: true,
             containerStyle: 'layout-player',
-            dimensions: containerDimensions
+            dimensions: this.containerElementDimensions
         });
 
         // Replace container html
@@ -110,12 +113,12 @@ Viewer.prototype.render = function(element, layout, page = 1) {
         if(layout.backgroundImage === null) {
             this.DOMObject.find('.viewer-element').css('background', targetElement.backgroundColor);
         } else {
-            this.DOMObject.find('.viewer-element').css('background', "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + (layout.width * containerDimensions.scale) + "&height=" + (layout.height * containerDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
+            this.DOMObject.find('.viewer-element').css('background', "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
         }
 
         // Handle play button
         this.DOMObject.find('#play-btn').click(function() {
-            this.playPreview(requestPath, containerDimensions);
+            this.playPreview(requestPath, this.containerElementDimensions);
         }.bind(this));
 
         // Handle fullscreen button
@@ -132,7 +135,7 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             requestPath += '?widgetId=' + element[element.type + 'Id'];
         }
 
-        requestPath += '&width=' + containerDimensions.width + '&height=' + containerDimensions.height;
+        requestPath += '&width=' + this.containerElementDimensions.width + '&height=' + this.containerElementDimensions.height;
 
         // Get HTML for the given element from the API
         $.get(requestPath).done(function(res) { 
@@ -147,14 +150,14 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             // Replace container html
             const html = viewerTemplate({
                 res: res,
-                dimensions: containerDimensions
+                dimensions: lD.viewer.containerElementDimensions
             });
 
             // Append layout html to the container div
             this.DOMObject.html(html);
 
             // Calculate and render background image or color to the preview
-            this.calculateBackground(containerDimensions, targetElement, layout);
+            this.calculateBackground(lD.viewer.containerElementDimensions, targetElement, layout);
 
             // Handle fullscreen button
             this.DOMObject.find('#fs-btn').click(function() {

@@ -114,12 +114,12 @@ class TwitterMetro extends TwitterBase
     }
     
     /**
-     * @return string
+     * Javascript functions for the layout designer
      */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
-        return 'twittermetro-form-javascript';
+        return 'twittermetro-designer-javascript';
     }
     
     /**

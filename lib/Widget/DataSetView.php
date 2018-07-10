@@ -44,7 +44,7 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * @return string
+     * Javascript functions for the layout designer
      */
     public function layoutDesignerJavaScript()
     {

@@ -25,6 +25,15 @@ use Respect\Validation\Validator as v;
 
 class LocalVideo extends ModuleWidget
 {
+    
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'localvideo-designer-javascript';
+    }
+
     /**
      * Validate
      */

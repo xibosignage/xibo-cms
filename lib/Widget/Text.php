@@ -44,6 +44,15 @@ class Text extends ModuleWidget
     }
 
     /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'text-designer-javascript';
+    }
+
+
+    /**
      * @throws InvalidArgumentException
      */
     public function validate()

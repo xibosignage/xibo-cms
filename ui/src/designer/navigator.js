@@ -99,12 +99,11 @@ Navigator.prototype.render = function(layout) {
     const layoutContainer = this.DOMObject.find('#' + layout.id);
 
     // Find all the regions and enable drag and resize
+    if(this.editMode) {
     this.DOMObject.find('#regions .designer-region').resizable({
-        containment: layoutContainer,
-        disabled: !this.editMode
+            containment: layoutContainer
     }).draggable({
-        containment: layoutContainer,
-        disabled: !this.editMode
+            containment: layoutContainer
     }).on("resizestop dragstop",
         function(event, ui) {
 
@@ -123,6 +122,24 @@ Navigator.prototype.render = function(layout) {
             lD.navigatorEdit.renderNavbar();
         }
     );
+    } else {
+        this.DOMObject.find('#regions .designer-region').draggable({
+            start: function(event, ui) {
+                $(this).draggable('instance').offset.click = {
+                    left: Math.floor(ui.helper.outerWidth() / 2),
+                    top: Math.floor(ui.helper.outerHeight() / 2)
+                };
+            },
+            appendTo: $(lD.toolbar.DOMObject),
+            scroll: false,
+            cursor: 'crosshair',
+            opacity: 0.6,
+            zIndex: 100,
+            helper: function(event) {
+                return $('<div class="layout-region-deletable deletable">' + event.currentTarget.id + '</div>');
+            }
+        });
+    }
 
     // Enable select for each layout/region
     this.DOMObject.find('.selectable').click(function(e) {
@@ -226,9 +243,6 @@ Navigator.prototype.renderNavbar = function() {
                 toastr.error(errorMessage);
             });
         }).catch((err) => {
-
-            console.log(err);
-
             toastr.error('Save all changes failed!');
         });
     });
@@ -252,16 +266,8 @@ Navigator.prototype.renderNavbar = function() {
                 },
                 callback: function(result) {
                     if(result) {
-
-                        // Save all changes first
-                        lD.manager.saveAllChanges().then((res) =>  {
-
-                            // Remove changes from the history array
-                            lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then((res) =>  {
-                                
                                 // Delete element from the layout
                                 lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
-
                                     // Behavior if successful 
                                     toastr.success(res.message);
                                     lD.reloadData(lD.layout);
@@ -277,17 +283,9 @@ Navigator.prototype.renderNavbar = function() {
 
                                     toastr.error(errorMessage);
                                 });
-                    
-                            }).catch(function() {
-                                toastr.error('Remove all changes failed!');
-                            });
-                        }).catch(function() {
-                            toastr.error('Save all changes failed!');
-                        });
                     }
                 }
             });
-
         }
     });
 };

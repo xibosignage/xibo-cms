@@ -25,6 +25,15 @@ use Respect\Validation\Validator as v;
 
 class VideoIn extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'videoin-designer-javascript';
+    }
+
     /**
      * Install or Update this module
      * @param ModuleFactory $moduleFactory

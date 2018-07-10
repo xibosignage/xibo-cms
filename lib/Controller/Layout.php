@@ -207,6 +207,7 @@ class Layout extends Base
 
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
+        //$this->getState()->template = 'layout-designer-page-old';
         $this->getState()->setData($data);
     }
 

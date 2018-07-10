@@ -945,6 +945,9 @@ class Playlist extends Base
             }
         }
 
+        // Output the new widgets to the response
+        $playlist->newWidgets = $newWidgets;
+
         // Success
         $this->getState()->hydrate([
             'message' => __('Media Assigned'),

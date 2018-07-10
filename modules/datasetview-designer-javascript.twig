@@ -7,7 +7,6 @@
 
 #}
 
-
 {% raw %}
 <script type="text/x-handlebars-template" id="dataSetViewOrderClauseTemplate">
     <div class="form-group">
@@ -77,12 +76,51 @@
 {% endraw %}
 
 <script type="text/javascript">
+
     Handlebars.registerHelper('if_eq', function(a, b, opts) {
         if(a == b) // Or === depending on your needs
             return opts.fn(this);
         else
             return opts.inverse(this);
     });
+
+
+    // Runs after form opens
+    function datasetview_form_edit_open() {
+
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set display location field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
+
+        // Set override template field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
+
+        // Set order and filtering clauses fields, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');
+
+        dataSetFormSetup(this);
+    }
+
+    // Runs before form submit
+    function datasetview_form_edit_submit() {
+        
+        var form = $("#dataSetViewEditForm");
+
+        // Clean the previous generated hidden dataSetColumns from the form
+        form.find('input[name="dataSetColumnId[]"]').remove();
+
+        // Add all the selected columns to the form as hidden input fields
+        $($("#columnsIn").sortable('toArray')).each(function() {
+            form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
+        });
+
+        form.data("apply", true);
+
+        formHelpers.textCallbackUpdate();
+    }
+
 
     function dataSetFormSetup(dialog) {
 
@@ -98,7 +136,7 @@
             // Reapply
             var templateId = $("#templateId").val();
 
-            $.each($('.bootbox').data().extra.templates, function(index, value) {
+            $.each($(dialog).data().extra.templates, function(index, value) {
                 if (value.id == templateId) {
                     $("#styleSheet").val(value.css);
                 }
@@ -111,7 +149,7 @@
 
                 var templateId = $("#templateId").val();
 
-                $.each($('.bootbox').data().extra.templates, function(index, value) {
+                $.each($(dialog).data().extra.templates, function(index, value) {
                     if (value.id == templateId) {
                         $("#styleSheet").val(value.css);
                     }
@@ -126,7 +164,7 @@
         CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
 
             $("#cke_noDataMessage .cke_contents").css({
-                background: $('#layout').css('background-color')
+                background: lD.layout.backgroundColor
             });
 
             $("#cke_noDataMessage iframe").css({
@@ -137,7 +175,7 @@
             CKEDITOR.instances["noDataMessage"].on('contentDom', function () {
 
                 $("#cke_noDataMessage .cke_contents").css({
-                    background: $('#layout').css('background-color')
+                    background: lD.layout.backgroundColor
                 });
 
                 $("#cke_noDataMessage iframe").css({
@@ -158,12 +196,8 @@
         });
     }
 
-    function dataSetTickerFormSetup(dialog) {
-        text_callback(dialog, $('.bootbox').data().extra.templates);
-        configureQueryBuilder(dialog);
-    }
-
     function configureQueryBuilder(dialog) {
+
         // Order Clause
         var orderClauseFields = $("#orderClause");
 
@@ -313,24 +347,5 @@
                 $(this).closest(".form-group").remove();
             }
         });
-    }
-
-    function DataSetViewSubmit(apply) {
-
-        var form = $("#dataSetViewEditForm");
-        
-        // Clean the previous generated hidden dataSetColumns from the form
-        form.find('input[name="dataSetColumnId[]"]').remove();
-
-        // Add all the selected columns to the form as hidden input fields
-        $($("#columnsIn").sortable('toArray')).each(function() {
-            form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
-        });
-
-        // Submit the form
-        if (apply == 1)
-            form.data("apply", true);
-
-        form.submit();
     }
 </script>

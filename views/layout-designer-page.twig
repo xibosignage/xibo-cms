@@ -16,16 +16,18 @@
 
 {% endblock %}
 
-    {% block javaScript %}       
+    {% block javaScript %}     
         <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js"></script>
         <script type="text/javascript">
 
             let modulesList = [];
-
+        
             {% for module in modules %}
                 modulesList.push({{ module.getModule()|json_encode|raw }});
             {% endfor %}
 
+            let libraryUpload = {{ libraryUpload|json_encode|raw }};
+            
             const urlsForApi = {
                 layout: {
                     get: {
@@ -87,11 +89,29 @@
                     preview: {
                         url: "{{ urlFor("region.preview") }}",
                         type: 'GET'
+                    },
+                    addForm: {
+                        url: "{{ urlFor("module.widget.add.form") }}",
+                        type: 'GET'
+                    },
+                    delete: {
+                        url: "{{ urlFor("module.widget.delete") }}",
+                        type: 'DELETE'
                     }
                 },
                 library: {
                     get: {
                         url: "{{ urlFor("library.search") }}",
+                        type: 'GET'
+                    }
+                },
+                playlist: {
+                    addMedia: {
+                        url: "{{ urlFor("playlist.library.assign") }}",
+                        type: 'POST'
+                    },
+                    addWidgetForm: {
+                        url: "{{ urlFor("module.widget.add.form") }}",
                         type: 'GET'
                     }
                 }
@@ -115,6 +135,7 @@
                 viewLibrary: "{% trans "View Library" %}"
             }
             var playlistAddFilesTrans = {
+                uploadMessage: "{% trans "Replace" %}",
                 addFiles: "{% trans "Add Replacement" %}",
                 startUpload: "{% trans "Start Replace" %}",
                 cancelUpload: "{% trans "Cancel Replace" %}",
