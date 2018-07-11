@@ -287,7 +287,16 @@ class PermissionFactory extends BaseFactory
 
         $body .= '
             ) joinedGroup
-            LEFT OUTER JOIN `permission`
+        ';
+
+        if ($this->getSanitizer()->getInt('setOnly', 0, $filterBy) == 1) {
+            $body .= ' INNER JOIN ';
+        } else {
+            $body .= ' LEFT OUTER JOIN ';
+        }
+
+        $body .= '
+             `permission`
             ON `permission`.groupId = joinedGroup.groupId
               AND objectId = :objectId
               AND entityId = :entityId
