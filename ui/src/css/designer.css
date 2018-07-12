@@ -484,7 +484,8 @@
     position: fixed;
     top: 0;
     width: 180px;
-    opacity: 0.95;
+    opacity: 0.95;background: #303030;
+    border: #3e3e3e 4px solid;
 }
 
 #layout-manager #layout-manager-header {
@@ -501,6 +502,19 @@
     grid-gap: 2px;
     color: #444;
     padding: 2px;
+}
+
+#layout-manager .title {
+    color: white;
+    font-weight: bold;
+    background-color: #4d4d4d;
+    cursor: move;
+    text-align: center;
+}
+
+#layout-manager .label {
+    display: inline-block;
+    width: 48%;
 }
 
 #layout-manager .change {

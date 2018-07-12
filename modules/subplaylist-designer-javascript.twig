@@ -33,7 +33,25 @@
             return opts.inverse(this);
     });
 
+    // Runs after form opens
+    function subplaylist_form_add_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        playlistFormSetup(this);
+    }
+
+    // Runs after form opens
+    function subplaylist_form_edit_open() {
+
+        // Use same method as form add open
+        subplaylist_form_add_open.bind(this)();
+    }
+
     function playlistFormSetup(dialog) {
+
+        console.log(dialog.data().extra);
 
         // Order Clause
         var subPlaylistFields = $(".sub-playlists");

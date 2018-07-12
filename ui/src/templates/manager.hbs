@@ -1,11 +1,19 @@
 
-{{#if visible}}
-    <div id="layout-manager-header">
-        <!-- Labels -->
-        <div class="change label">Change</div>
-        <div class="change label uploaded">Uploaded</div>
+<div id="layout-manager-header" class="text-center">
+    <div class="title">
+        History
+        {{#if visible}}
+            <i class="fa fa-angle-up"></i>
+        {{else}}
+            <i class="fa fa-angle-down"></i>
+        {{/if}}
     </div>
+    <!-- Labels -->
+    <div class="change label">Change</div>
+    <div class="change label uploaded">Uploaded</div>
+</div>
 
+{{#if visible}}
     <div id="layout-manager-container">
         <!-- Changes -->
         {{#each changeHistory}}

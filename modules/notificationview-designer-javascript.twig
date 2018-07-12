@@ -6,28 +6,66 @@
  */
 #}
 <script type="text/javascript">
+
+    // Runs after form opens
+    function notificationview_form_add_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        notificationWidgetFormOpen(this);
+    }
+
+    // Runs before form submit
+    function notificationview_form_add_submit() {        
+
+        // Update text callback fields
+        formHelpers.textCallbackUpdate();
+    }
+
+    // Runs after form opens
+    function notificationview_form_edit_open() {
+
+        // Use same method as form add open
+        notificationview_form_add_open.bind(this)();
+    }
+
+    // Runs before form submit
+    function notificationview_form_edit_submit() {
+
+        // Use same method as form add submit
+        notificationview_form_add_submit.bind(this)();
+    }
+
     function notificationWidgetFormOpen(dialog) {
         // Choose a complementary color
-        var color = $c.complement($("#layout").data().backgroundColor);
+        var color = $c.complement(lD.layout.backgroundColor);
 
-        // Apply some CSS to set a scale for these editors
-        var $layout = $("#layout");
-        var scale = $layout.attr('designer_scale');
-        var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
-        var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
+        var regionDimensions = null;
+
+        // Get region dimensions
+        if(lD.selectedObject.type == 'widget') {
+            regionDimensions = lD.layout.regions[lD.selectedObject.regionId].dimensions;
+        } else {
+            regionDimensions = lD.layout.regions[lD.selectedObject.id].dimensions;
+        }
+
+        // Calculate scale based on the region previewed in the viewer
+        var scale = lD.viewer.containerElementDimensions.width / regionDimensions.width; //$layout.attr('designer_scale');
+
         var applyContentsToIframe = function(field) {
-
             $("#cke_" + field + " iframe").contents().find("head").append("" +
                 "<style>" +
                 "body {" +
-                "width: " + regionWidth + "px; " +
-                "height: " + regionHeight + "px; border:2px solid red; " +
-                "background: " + $('#layout').css('background-color') + "; " +
+                "width: " + regionDimensions.width + "px; " +
+                "height: " + regionDimensions.height + "px; border:2px solid red; " +
+                "margin-right: 10px; " +
+                "background: " + lD.layout.backgroundColor + "; " +
                 "transform: scale(" + scale + "); " +
                 "transform-origin: 0 0; }" +
                 "h1, h2, h3, h4, p { margin-top: 0;}" +
                 "</style>");
-        }
+        };
 
         // Configure the editor
         CKEDITOR.replace("template", CKEDITOR_DEFAULT_CONFIG);
@@ -62,24 +100,6 @@
             // Default config for fonts
             if (data === "") {
                 CKEDITOR.instances["noDataMessage"].setData("<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>");
-            }
-        });
-
-        // Make sure when we close the dialog we also destroy the editor
-        dialog.on("hide.bs.modal", function() {
-            try {
-                if (CKEDITOR.instances["template"] !== undefined) {
-                    CKEDITOR.instances["template"].destroy();
-                }
-            } catch (e) {
-                console.log("Unable to remove CKEditor instance. " + e);
-            }
-            try {
-                if (CKEDITOR.instances["noDataMessage"] !== undefined) {
-                    CKEDITOR.instances["noDataMessage"].destroy();
-                }
-            } catch (e) {
-                console.log("Unable to remove CKEditor instance. " + e);
             }
         });
     }

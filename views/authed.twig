@@ -156,7 +156,10 @@
             <div class="row fileupload-buttonbar">
                 <div class="col-md-7">
                     <div class="well">
-                        {{ upload.maxSizeMessage }}
+                        <p>{{ upload.maxSizeMessage }}</p>
+                        {{#if upload.validExtensionsMessage}}
+                            <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
+                        {{/if}}                            
                     </div>
                     <!-- The fileinput-button span is used to style the file input field as button -->
                     <span class="btn btn-success fileinput-button">

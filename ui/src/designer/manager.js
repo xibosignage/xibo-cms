@@ -44,11 +44,11 @@ let Manager = function(container) {
     this.changeHistory = []; // Array of changes
 
     this.toggleVisibility = function() {
-
-        this.visible = !this.visible;
+        
+        lD.manager.visible = !lD.manager.visible;
 
         // Render template container
-        this.render();
+        lD.manager.render();
     };
 
     // Return true if there are some not uploaded changes
@@ -386,6 +386,12 @@ Manager.prototype.render = function() {
 
     // Append layout html to the main div
     this.DOMObject.html(html);
+
+    //Make the history div draggable
+    this.DOMObject.draggable();
+
+    //Add toggle visibility event
+    this.DOMObject.find('#layout-manager-header .title').click(this.toggleVisibility);
 };
 
 module.exports = Manager;
