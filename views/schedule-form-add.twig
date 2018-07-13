@@ -31,7 +31,7 @@
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleAddForm" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
+            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
