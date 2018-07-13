@@ -1,16 +1,16 @@
 let formHelpers = function() {
 
     /**
-     * Setup checkbox+input combo fields
+     * Use passed main checkbox object's value (checkBoxSelector) to toggle the secondary passed fields (inputFieldsSelector OR inputFieldsSelectorOpposite) inside the form
      * @param {object} form - Form object
-     * @param {string} checkBoxSelect - CSS selector for the checkbox
-     * @param {string} inputFieldsSelect - CSS selector for the input fields
-     * @param {string=} inputFieldsSelectOpposite - CSS selector for the input fields that behave diferently from the select fields on previous param
+     * @param {string} checkBoxSelect - CSS selector for the checkbox object
+     * @param {string} inputFieldsSelector - CSS selector for the input fields to toggle ( show on checked, hide on unchecked)
+     * @param {string=} inputFieldsSelectorOpposite - CSS selector for the input fields that behave diferently from the select fields on previous param ( hide on checked, show on unchecked)
      */
-    this.setupCheckboxInputFields = function(form, checkBoxSelect, inputFieldsSelect, inputFieldsSelectOpposite) {
-        const checkboxObj = $(form).find(checkBoxSelect);
-        const inputFieldsObj = $(form).find(inputFieldsSelect);
-        const inputFieldsObjOpposite = $(form).find(inputFieldsSelectOpposite);
+    this.setupCheckboxInputFields = function(form, checkBoxSelector, inputFieldsSelector, inputFieldsSelectorOpposite) {
+        const checkboxObj = $(form).find(checkBoxSelector);
+        const inputFieldsObj = $(form).find(inputFieldsSelector);
+        const inputFieldsObjOpposite = $(form).find(inputFieldsSelectorOpposite);
 
         const displayInputFields = function() {
             // Init
@@ -32,11 +32,11 @@ let formHelpers = function() {
     };
 
     /**
-     * Setup selectbox+fields
+     * Use passed main input object's value (inputValueSelector) to toggle the secondary passed fields (inputFieldsArray) inside the form
      * @param {object} form - Form object
-     * @param {string} inputValueSelector - CSS selector for the selectbox
-     * @param {Array.<string>} inputFieldsArray - CSS selector for the input fields
-     * @param {Array.<>} customIndexValues - Array of values to compare
+     * @param {string} inputValueSelector - CSS selector for the input field that triggers the "change" and "input" events
+     * @param {Array.<string>} inputFieldsArray - Array of CSS selector for the input fields to be compared with the values to be toggled
+     * @param {Array.<>} customIndexValues - Array of values to compare to the inputFieldsArray, if it matches, the field will be shown/hidden according to the inverted flag state
      * @param {bool=} inverted - Use hide element instead of show just element ( default )
      */
     this.setupObjectValueInputFields = function(form, inputValueSelector, inputFieldsArray, customIndexValues = null, inverted = false) {
@@ -81,10 +81,10 @@ let formHelpers = function() {
     };
 
     /**
-     * Display error message on form ( create or update it )
-     * @param {object} form - Form object
+     * Append an error message on form ( create or update a previously created one )
+     * @param {object} form - Form object that contains one object with id = "errorMessage"
      * @param {string} message- Message to be displayed
-     * @param {string} type - Type of message (success, danger, info, warning)
+     * @param {string} type - Type of message (Bootstrap Alert: success, danger, info, warning)
      */
     this.displayErrorMessage = function(form, message, type) {
 
@@ -124,8 +124,8 @@ let formHelpers = function() {
     };
 
     /**
-     * 
-     * @param {object} dialog - Dialog object
+     * Create a CKEDITOR instance to conjure a text editor
+     * @param {object} dialog - Dialog object ( the object that contains the replaceable fields )
      * @param {object} extraData- Extra data
      */
     this.textCallback = function(dialog, extraData) {
@@ -336,7 +336,7 @@ let formHelpers = function() {
     };
 
     /**
-     * Upgrade and close text callback on submit
+     * Update text callback CKEDITOR instance
      */
     this.textCallbackUpdate = function() {
 
@@ -354,7 +354,7 @@ let formHelpers = function() {
     };
 
     /**
-     * Upgrade and close text callback on submit
+     * Destroy text callback CKEDITOR instance
      */
     this.textCallbackDestroy = function() {
 
@@ -375,7 +375,7 @@ let formHelpers = function() {
 
 
     /**
-     * Media Edit form
+     * Create and attach a Replace button, and open a upload form on click to replace media
      * @param {object} dialog - Dialog object
      */
     this.mediaEditFormOpen = function(dialog) {
