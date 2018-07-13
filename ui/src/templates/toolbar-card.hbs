@@ -1,0 +1,17 @@
+<div class="toolbar-card" 
+    data-toggle="tooltip" 
+    data-placement="top" 
+    data-type="{{type}}" 
+    data-region-specific="{{regionSpecific}}"
+    data-valid-ext="{{ validExtensions }}"
+    data-max-size="{{ maxSize }}" 
+    data-max-size-message="{{ maxSizeMessage }}"
+    title="{{description}}">
+    <div class="img-container">
+        {{#if imageUri}}
+            <img src="/dist/assets/{{imageUri}}">
+        {{/if}}
+    </div>
+    
+    <p class="title">{{name}}</p>
+</div>

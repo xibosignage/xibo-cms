@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Get Results" %}, requestTab("results"| "{{ urlFor("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
+    {% trans "Get Results" %}, formHelpers.requestTab("results"| "{{ urlFor("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#financeEditForm").submit()
 {% endblock %}

@@ -1,0 +1,32 @@
+<div id="{{ id }}" data-type="region" class="designer-region selectable {{selectedFlag}}">
+    {{#if hideDetails}}{{!-- Show message to zoom in --}}
+        <div class="message">
+            <i class="fa fa-search-plus"></i>
+            <span>Zoom in to see/edit region</span>
+        </div>
+    {{else if isEmpty}}
+        <div class="message">
+            <span>Empty Region</span>
+        </div>
+    {{else}}
+        {{!-- Draw widgets --}}
+        {{#each widgets}}
+            {{> timeline-widget}}
+        {{/each}}
+        
+        {{#if loop}}
+        
+            {{!-- Ghost widget padding --}}
+            {{#if ghostWidgetsHavePadding}}
+                <div class="ghost-padding" style="
+                            width: {{ ghostWidgetsPadding }}%;">
+                </div>
+            {{/if}}
+        
+            {{!-- Ghost widget objects --}}
+            {{#each ghostWidgetsObject}}
+                {{> timeline-ghost-widget}}
+            {{/each}}
+        {{/if}}
+    {{/if}}
+</div>

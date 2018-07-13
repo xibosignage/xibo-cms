@@ -14,10 +14,7 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Set Full Screen" %}, setFullScreenLayout({{ layout.width }}| {{ layout.height }})
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, regionEditFormSubmit()
+    {% trans "Save" %}, $("#regionEditForm").submit()
 {% endblock %}
 
 {% block formFieldActions %}

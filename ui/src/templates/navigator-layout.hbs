@@ -1,0 +1,19 @@
+{{#unless edit}}
+    <p class="top-right-btn">
+        <i id="edit-btn" class="fa fa-edit"></i>
+    </p>
+{{/unless}}
+
+
+<div id="{{ id }}" data-type="layout" class="layout selectable"  style="position:relative; 
+        width: {{ scaledDimensions.width }}px; 
+        height: {{ scaledDimensions.height }}px; 
+        top: {{ scaledDimensions.top }}px;
+        left: {{ scaledDimensions.left }}px;
+        background: {{ calculatedBackground }};">
+    <div id="regions">
+        {{#each regions}}
+            {{> navigator-region}}
+        {{/each}}
+    </div>
+</div>

@@ -1,0 +1,24 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function videoin_form_add_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+    }
+
+    // Runs after form opens
+    function videoin_form_edit_open() {
+
+        // Use same method as form add open
+        videoin_form_add_open.bind(this)();
+    }
+
+</script>

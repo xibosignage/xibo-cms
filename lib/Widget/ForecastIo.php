@@ -54,6 +54,14 @@ class ForecastIo extends ModuleWidget
     }
 
     /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'forecastio-designer-javascript';
+    }
+
+    /**
      * Install or Update this module
      * @param ModuleFactory $moduleFactory
      */

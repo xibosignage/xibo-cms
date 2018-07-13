@@ -15,6 +15,16 @@ use Xibo\Exception\XiboException;
  */
 class Pdf extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'pdf-designer-javascript';
+    }
+
     /**
      * Install Files
      */

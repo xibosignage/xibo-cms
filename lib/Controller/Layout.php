@@ -206,11 +206,16 @@ class Layout extends Base
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
-            'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
+            'modules' => array_map(function($element) use ($moduleFactory) { 
+                    $module = $moduleFactory->createForInstall($element->class);
+                    $module->setModule($element);
+                    return $module;
+                }, $moduleFactory->getAssignableModules())
         ];
 
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
+        //$this->getState()->template = 'layout-designer-page-old';
         $this->getState()->setData($data);
     }
 
@@ -845,7 +850,7 @@ class Layout extends Base
                 continue;
 
             $layout->includeProperty('buttons');
-            $layout->excludeProperty('regions');
+            //$layout->excludeProperty('regions');
 
             $layout->thumbnail = '';
 

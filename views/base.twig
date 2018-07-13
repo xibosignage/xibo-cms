@@ -7,31 +7,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="token" content="{{ csrfToken }}"/>
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+        <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
 
-        <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/select2/css/select2.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/select2/css/select2-bootstrap.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/calendar/css/calendar.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/morrisjs/morris.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/datatables/dataTables.bootstrap.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/datatables/buttons.dataTables.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/jquery-file-upload/css/jquery.fileupload-ui.css") }}?{{ version }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/toastr/toastr.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("libraries/bootstrap-tour/bootstrap-tour.min.css") }}" rel="stylesheet">
-        <link href="{{ theme.uri("css/dashboard.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/timeline.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/xibo.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/calendar.css") }}?{{ version }}" rel="stylesheet" media="screen">
+        {# Import CSS bundle from dist #}
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
+
+        {# Import user made CSS from theme #}
         <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
         <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
@@ -40,93 +21,67 @@
     </head>
     <body>
         {% block content %}{% endblock %}
+        <script type="text/javascript">
+            var calendar_type = "{{ settings.CALENDAR_TYPE }}";
+            var jsLocale = "{{ translate.jsLocale }}";
+        </script>
 
-        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery/jquery.validate.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery/additional-methods.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap/js/bootbox.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-switch/bootstrap-switch.min.js") }}?{{ version }}"></script>
+        {# Import JS bundle from dist #}
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
 
-        {# Datatables #}
-        <script src="{{ theme.uri("libraries/datatables/jquery.dataTables.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/dataTables.bootstrap.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/dataTables.buttons.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.colVis.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.print.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.html5.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/datatables/buttons.flash.min.js") }}?{{ version }}"></script>
+        {# jquery-file-upload #}
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js"></script>
 
-        <script src="{{ theme.uri("libraries/jquery/jquery-ui/jquery-ui-1.10.2.custom.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js") }}?{{ version }}"></script>
+        {# Import libraries copied to dist #}
+        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js"></script>
 
-        <script src="{{ theme.uri("libraries/select2/js/select2.full.js") }}?{{ version }}"></script>
+        {# Import XIBO js files #}
+        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-preview-timeline.js"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js"></script>
 
-        <script src="{{ theme.uri("libraries/bootstrap-ekko-lightbox/ekko-lightbox.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/underscore/underscore-min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jstimezonedetect/jstz.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/ckeditor/ckeditor.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap-ckeditor-fix.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/tmpl.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-load-image/load-image.all.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.iframe-transport.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-process.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-resize.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-validate.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-ui.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-image.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-video.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-file-upload/js/jquery.fileupload-audio.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-message-queuing/jquery.ba-jqmq.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-throttle-debounce/jquery.ba-throttle-debounce.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/toastr/toastr.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-tour/bootstrap-tour.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/date-time-format.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/momentjs/moment.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/momentjs/moment-timezone.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/morrisjs/raphael.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/morrisjs/morris.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/chartjs/Chart.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/colors/colors.min.js") }}?{{ version }}"></script>
+        {# TODO SELECT 2 Library#}<script src="{{ theme.uri("libraries/select2/js/select2.full.js") }}?{{ version }}"></script>
 
-        <script src="{{ theme.uri("js/xibo-cms.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("js/xibo-forms.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("js/xibo-preview-timeline.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("js/xibo-calendar.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("js/xibo-datasets.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/handlebars/handlebars-v3.0.0.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-serialize-object/jquery.serialize-object.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-tagsinput-master/bootstrap-tagsinput.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/jquery-timepicker/jquery.timepicker.min.js") }}?{{ version }}"></script>
-        <script src="{{ theme.uri("libraries/bootstrap-slider-master/bootstrap-slider.min.js") }}?{{ version }}"></script>
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
-            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/jalali-date.js") }}?{{ version }}"></script>
-            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js") }}?{{ version }}"></script>
-            <script src="{{ theme.uri("libraries/calendar/js/calendar-jalali.js") }}?{{ version }}"></script>
-            <script src="{{ theme.uri("libraries/momentjs/moment-jalali.js") }}?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/jalali-date.js"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js"></script>
             <script type="text/javascript">
                 moment.loadPersian();
             </script>
         {% else %}
-            <script src="{{ theme.uri("libraries/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js") }}?{{ version }}"></script>
-            <script src="{{ theme.uri("libraries/calendar/js/calendar.js") }}?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js"></script>
         {% endif %}
 
         {# Handle the inclusion of i18n #}
-        {% set calendarTranslation %}libraries/calendar/js/language/{{ translate.jsShortLocale }}.js{% endset %}
+        {% set calendarTranslation %}{{ theme.rootUri() }}dist/vendor/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
         {% if theme.fileExists(calendarTranslation) %}
             <script src="{{ theme.uri(calendarTranslation) }}"></script>
         {% endif %}
 
-        {% set datePickerTranslation %}libraries/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
+        {% set datePickerTranslation %}{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(datePickerTranslation) %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
         {% endif %}
 
-        {% set selectPickerTranslation %}libraries/select2/js/i18n/{{ translate.jsShortLocale }}.js{% endset %}
+        {# TODO: this is a guess - need to change when we include select2 #}
+        {% set selectPickerTranslation %}{{ theme.rootUri() }}dist/vendor/select2/js/i18n/{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(selectPickerTranslation) %}
             <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
@@ -143,6 +98,7 @@
             translations.multiselect = "{{ "Multiple Items Selected"|trans }}";
             translations.multiselectNoItemsMessage = "{{ "Sorry, no items have been selected."|trans }}";
             translations.multiselectMessage = "{{ "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items."|trans }}";
+            translations.validExtensions = "{{ "Valid Extensions"|trans }}";
             translations.save = "{{ "Save"|trans }}";
             translations.cancel = "{{ "Cancel"|trans }}";
             translations.close = "{{ "Close"|trans }}";
@@ -170,6 +126,7 @@
             var clockUrl = "{{ urlFor("clock") }}";
             var calendarLanguage = "{{ translate.jsShortLocale }}";
             var pingUrl = "{{ urlFor("ping") }}";
+
             {% autoescape "js" %}
             var dataTablesLanguage = {
                 "decimal":        "",

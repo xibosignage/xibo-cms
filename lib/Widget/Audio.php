@@ -11,6 +11,16 @@ namespace Xibo\Widget;
 
 class Audio extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'audio-designer-javascript';
+    }
+
     /**
      * Edit an Audio Widget
      * @SWG\Post(

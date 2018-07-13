@@ -79,6 +79,15 @@ class Currencies extends AlphaVantageBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'currencies-designer-javascript';
+    }
+
     /**
      * Form for updating the module settings
      */

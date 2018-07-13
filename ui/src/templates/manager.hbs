@@ -1,0 +1,25 @@
+
+<div id="layout-manager-header" class="text-center">
+    <div class="title">
+        History
+        {{#if visible}}
+            <i class="fa fa-angle-up"></i>
+        {{else}}
+            <i class="fa fa-angle-down"></i>
+        {{/if}}
+    </div>
+    <!-- Labels -->
+    <div class="change label">Change</div>
+    <div class="change label uploaded">Uploaded</div>
+</div>
+
+{{#if visible}}
+    <div id="layout-manager-container">
+        <!-- Changes -->
+        {{#each changeHistory}}
+            <div class="change {{#if uploaded}}uploaded{{/if}}">
+                <strong>[{{id}}]</strong> {{target.type}}({{target.id}}) : {{type}}
+            </div>
+        {{/each}}
+    </div>
+{{/if}}

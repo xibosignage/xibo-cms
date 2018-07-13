@@ -1,0 +1,22 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function image_form_edit_open() {
+
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields, .loop-fields');
+
+        // Set command code field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#scaleTypeId', ['.align-fields'], ['center']);
+
+        formHelpers.mediaEditFormOpen(this);
+    }
+
+</script>

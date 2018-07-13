@@ -245,7 +245,7 @@ class Tag implements \JsonSerializable
         foreach ($this->getStore()->select('SELECT displayGroupId FROM `lktagdisplaygroup` WHERE tagId = :tagId', ['tagId' => $this->tagId]) as $row) {
             $this->displayGroupIds[] = $row['displayGroupId'];
         }
-
+    
         // Set the originals
         $this->originalLayoutIds = $this->layoutIds;
         $this->originalPlaylistIds = $this->playlistIds;

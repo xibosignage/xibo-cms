@@ -12,13 +12,6 @@
     {% trans "Add Sub-Playlist" %}
 {% endblock %}
 
-{% block formButtons %}
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#subPlaylistForm").submit()
-{% endblock %}
-
-{% block callBack %}playlistFormSetup{% endblock %}
-
 {% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}

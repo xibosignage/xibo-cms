@@ -1,0 +1,74 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function stocks_form_add_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set override template field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
+
+        // Set effect type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
+
+        stocksFormSetup(this);
+    }
+
+
+    // Runs after form opens
+    function stocks_form_edit_open() {
+
+        // Use same method as form add open
+        stocks_form_add_open.bind(this)();
+    }
+   
+    function stocksFormSetup(form) {
+        $(form).find('#backgroundColor').colorpicker({format: 'rgba'});
+
+        // If all 3 of the template fields are empty, then the template should be reapplied.
+        if (!$(form).find('#overrideTemplate').is(':checked')) {
+            // Reapply
+            var templateId = $('#templateId').val();
+
+            $.each($(form).data().extra, function(index, value) {
+                if (value.id == templateId) {
+                    $('#widgetOriginalWidth').val(value.widgetOriginalWidth);
+                    $('#widgetOriginalHeight').val(value.widgetOriginalHeight);
+                    $('#mainTemplate').val(value.main);
+                    $('#itemTemplate').val(value.item);
+                    $('#styleSheet').val(value.css);
+                    $('#maxItemsPerPage').val(value.maxItemsPerPage);
+                }
+            });
+        }
+
+        $(form).find('#templateId').on('change', function() {
+            // Check to see if the override template check box is unchecked
+            if (!$('#overrideTemplate').is(':checked')) {
+
+                var templateId = $('#templateId').val();
+
+                $.each($(form).data().extra, function(index, value) {
+                    if (value.id == templateId) {
+                        $('#widgetOriginalWidth').val(value.widgetOriginalWidth);
+                        $('#widgetOriginalHeight').val(value.widgetOriginalHeight);
+                        $('#mainTemplate').val(value.main);
+                        $('#itemTemplate').val(value.item);
+                        $('#styleSheet').val(value.css);
+                        $('#maxItemsPerPage').val(value.maxItemsPerPage);
+                    }
+                });
+            }
+        });
+    };
+
+
+</script>
