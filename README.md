@@ -89,13 +89,52 @@ Use Docker Compose to bring up the containers.
 docker-compose up --build -d
 ```
 
-This will create a model installation with a DB container holding the `cms` database, mapped to external port 3315, a XMR container and a WEB container which maps the working directory into `/var/www/cms`, which is inturn served by Apache.
+## Installation Wizard
 
-Editing files in your favourite editor on your host file system will cause them to be updated inside the web container.
+Visit Xibo in the browser and follow the installation instructions. The CMS will be accessible at `localhost`. When
+asked for a database you should select to create a new database and enter these details:
 
-Your database is persisted in `/containers/db` and will survive reboots, etc.
+ - Host: `mysql`
+ - Admin User: `root`
+ - Admin Password: `root`
 
+When asked for a library location you should enter
 
+ - /var/www/cms/library
+ 
+## Package manager ( npm ) and module bundler ( webpack )
+
+Configure NPM Package Manager (https://www.npmjs.com/) and build dist folder with Webpack (https://webpack.js.org/):
+
+ - Install Node.js ( comes with NPM ) from https://nodejs.org/en/
+
+ - Update NPM to latest version:
+```
+npm install npm@latest -g
+```
+
+ - Install the dependencies in the local node_modules folder:
+```
+npm install
+```
+
+ - Build the dist folder with:
+ ```
+ npm run build
+ ```
+
+## Under the hood
+
+Vagrant has created a virtual machine, installed Docker on it and then provisioned 3 Docker containers for Xibo to use.
+There is a container for the CMS web server, a container for the mysql database and a container for XMR.
+
+Your cloned repository is mapped into the Vagrant VM under `/data/web` and the Docker container mounts this as
+`/var/www/xibo`. Changes you make to the source code on your host machine are immediately reflected in the nested VM
+and Docker container.
+
+Database data is maintained in the guest VM and is persisted when the VM is power cycled (`vagrant halt / vagrant up`). For
+convenience the Docker MySQL container exposes mysql on port 3306 to the Vagrant VM. You can therefore connect to MySQL
+over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
 
 
 # Application Structure

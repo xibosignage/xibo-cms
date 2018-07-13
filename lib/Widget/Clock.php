@@ -38,6 +38,14 @@ class Clock extends ModuleWidget
     }
 
     /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'clock-designer-javascript';
+    }
+
+    /**
      * Validate
      */
     public function validate()

@@ -1,0 +1,116 @@
+<nav class="navbar navbar-fixed-bottom">
+    <div class="container-toolbar">
+
+        <div class="toolbar-content">
+            {{!-- Menu items/tabs --}}
+            {{#each menuItems}}
+                <div id="content-{{@index}}" class="toolbar-pane {{state}}">
+                    {{!-- Show content if exists --}}
+                    {{#if content}}
+                        <button id="pag-btn-left" {{pagBtnLeftDisabled}} class="btn btn-primary pagination-btn">
+                            <i class="fa fa-arrow-left"></i>
+                        </button>
+                
+                        <div class="toolbar-pane-content"
+                            style="width:{{contentWidth}}%">
+                            {{!-- Show content elements if not marked as hidden --}}
+                            {{#each content}}
+                                {{#unless hideElement}}
+                                    {{!-- Load cards according to type searchItem/Widget --}}
+                                    {{#if ../search}}
+                                        {{> toolbar-card-media}}
+                                    {{else}}
+                                        {{> toolbar-card}}
+                                    {{/if}}
+                                {{/unless}}
+                            {{/each}}
+                        </div>
+
+                        <button id="pag-btn-right" {{pagBtnRightDisabled}} class="btn btn-primary pagination-btn">
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                    {{/if}}
+
+                    {{#if search}}
+                        <form id="media-search-form-{{@index}}" class="form-inline">
+                            <div class="form-group">
+                                <input id="input-name" type="text" value="{{filters.name.value}}" class="form-control" placeholder="{{filters.name.name}}">
+                                
+                                <input id="input-tag" type="text" value="{{filters.tag.value}}" class="form-control" placeholder="{{filters.tag.name}}">
+                            
+                                <select id="input-type" class="form-control">
+                                    <option value="">{{filters.type.name}}</option>
+                                    {{#each filters.type.values}}
+                                        <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
+                                    {{/each}}
+                                </select>
+                    
+                            </div>
+                    
+                            <button data-search-id="{{@index}}" class="btn btn-primary search-btn" type="button">                                    
+                                <span>Search!</span>
+                            </button>
+                        </form>
+                    {{/if}}
+                    
+                </div>
+            {{/each}}
+        
+        </div>
+
+        <div class="navbar-header navbar-buttons">
+            <a id="btn-menu-toggle" class="navbar-brand">
+                 
+                {{#if opened}}
+                    <i class="fa fa-toggle-on"></i>
+                {{else}}
+                    <i class="fa fa-toggle-off"></i>
+                {{/if}}
+            </a>
+        </div>
+
+        <ul class="nav navbar-nav navbar-buttons">
+            {{#each menuItems}}
+                <li>
+                    <a id="btn-menu-{{@index}}" class="{{state}}">
+                        <span>{{title}}</span>
+                        {{#if search}}
+                            <i id="close-btn-menu-{{@index}}" class="fa fa-times close-tab-button"></i>
+                        {{/if}}
+                    </a>
+                </li>    
+            {{/each}}
+
+            <li>
+                <a id="btn-menu-new-tab">
+                    <i class="fa fa-search-plus"></i>
+                </a>
+            </li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+
+            {{#if tabsCount}}
+                <li>
+                    <button id="deleteAllTabs" class="btn btn-danger navbar-btn" href="#">
+                        <span>Close Tabs</span>
+                        <i class="fa fa-times"></i>
+                    </button>
+                </li>
+            {{/if}}
+
+            <li>
+                <button id="undoLastAction" {{undo}} class="btn btn-warning navbar-btn" href="#">
+                    <span>Undo</span>
+                    <i class="fa fa-undo"></i>
+                </button>
+            </li>
+
+            <li>
+                <a id="trashContainer" class="navbar-bin {{#if deletableSelectedObject}}available{{/if}}">
+                    <i class="fa fa-trash"></i>
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>

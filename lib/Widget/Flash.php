@@ -23,6 +23,16 @@ namespace Xibo\Widget;
 
 class Flash extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'flash-designer-javascript';
+    }
+
     public function editForm()
     {
         return 'generic-form-edit';

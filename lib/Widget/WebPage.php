@@ -29,6 +29,15 @@ use Respect\Validation\Validator as v;
  */
 class WebPage extends ModuleWidget
 {
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'webpage-designer-javascript';
+    }
+
     /**
      * Install Files
      */

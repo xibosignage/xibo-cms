@@ -27,80 +27,6 @@
     {% trans "Add Shell Command" %}
 {% endblock %}
 
-{% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#shellCommandAddForm").submit()
-{% endblock %}
-
-{% block formFieldActions %}
-    [{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    },{
-    "field": "commandCode",
-    "trigger": "init",
-    "value": "",
-    "operation": "equals",
-    "actions": {
-    ".non-command-fields": { "display": "block" }
-    }
-    },{
-    "field": "commandCode",
-    "trigger": "init",
-    "value": "",
-    "operation": "not",
-    "actions": {
-    ".non-command-fields": { "display": "none" }
-    }
-    },{
-    "field": "commandCode",
-    "trigger": "change",
-    "value": "",
-    "operation": "equals",
-    "actions": {
-    ".non-command-fields": { "display": "block" }
-    }
-    },{
-    "field": "commandCode",
-    "trigger": "change",
-    "value": "",
-    "operation": "not",
-    "actions": {
-    ".non-command-fields": { "display": "none" }
-    }
-    }]
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -139,11 +65,11 @@
 
                 {% set title %}{% trans "Terminate the command once the duration elapses?" %}{% endset %}
                 {% set helpText %}{% trans "Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally." %}{% endset %}
-                {{ forms.checkbox("terminateCommand", title, 0, helpText) }}
+                {{ forms.checkbox("terminateCommand", title, 0, helpText, "duration-fields") }}
 
                 {% set title %}{% trans "Use taskkill to terminate commands?" %}{% endset %}
                 {% set helpText %}{% trans "On Windows, should the player use taskkill to terminate commands." %}{% endset %}
-                {{ forms.checkbox("useTaskkill", title, 0, helpText) }}
+                {{ forms.checkbox("useTaskkill", title, 0, helpText, "duration-fields") }}
             </form>
         </div>
     </div>

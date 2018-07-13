@@ -53,12 +53,12 @@ class Ticker extends ModuleWidget
     }
 
     /**
-     * @return string
+     * Javascript functions for the layout designer
      */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
-        return 'datasetview-designer-javascript';
+        return 'ticker-designer-javascript';
     }
 
     /**

@@ -24,7 +24,6 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 
 class Image extends ModuleWidget
 {
@@ -48,6 +47,16 @@ class Image extends ModuleWidget
         parent::setDefaultWidgetOptions();
 
         $this->setOption('scaleType', $this->getSetting('defaultScaleTypeId', 'center'));
+    }
+
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        // We use the same javascript as the data set view designer
+        return 'image-designer-javascript';
     }
 
     /**

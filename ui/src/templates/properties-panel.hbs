@@ -1,0 +1,20 @@
+<div id="properties-panel-container">
+
+    <div class="form-title form-title-{{style}}">
+        {{header}}
+    </div>
+
+    <div class="form-container">
+        {{{form}}}
+    </div>
+
+    <div class="row button-container">
+        <div class="col-sm-12">
+            {{#each buttons}}
+                <button type="button" id="{{@key}}" onclick="{{this}}" class="btn btn-info">
+                    {{@key}}
+                </button>
+            {{/each}}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,44 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function clock_form_add_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set clock type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#clockTypeId', ['.analogue-control-group', '.digital-control-group', '.flip-control-group'], [1, 2, 3]);
+
+        formHelpers.textCallback(this);
+    }
+
+    // Runs before form submit
+    function clock_form_add_submit() {        
+
+        // Update text callback fields
+        formHelpers.textCallbackUpdate();
+    }
+
+
+    // Runs after form opens
+    function clock_form_edit_open() {
+
+        // Use same method as form add open
+        clock_form_add_open.bind(this)();
+    }
+
+    // Runs before form submit
+    function clock_form_edit_submit() {
+
+        // Use same method as form add submit
+        clock_form_add_submit.bind(this)();
+    }
+
+</script>

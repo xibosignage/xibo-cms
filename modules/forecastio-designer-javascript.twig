@@ -1,0 +1,64 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function forecastio_form_add_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set display location field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
+        
+        // Set override template field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
+
+        forecastIoFormSetup(this);
+    }
+
+    // Runs after form opens
+    function forecastio_form_edit_open() {
+
+        // Use same method as form add open
+        forecastio_form_add_open.bind(this)();
+    }
+
+    /**
+     * Setup Forecast IO form
+     * @param {object} dialog - Dialog object
+     */
+    function forecastIoFormSetup(dialog) {
+
+        $(dialog).find('#color').colorpicker();
+
+        var reapplyWeatherTemplate = function() {
+            // Reapply
+            var templateId = $(dialog).find('#templateId').val();
+
+            $.each($(dialog).data().extra, function(index, value) {
+                if(value.id == templateId) {
+                    $(dialog).find('#widgetOriginalWidth').val(value.widgetOriginalWidth);
+                    $(dialog).find('#widgetOriginalHeight').val(value.widgetOriginalHeight);
+                    $(dialog).find('#currentTemplate').val(value.main);
+                    $(dialog).find('#dailyTemplate').val(value.daily);
+                    $(dialog).find('#styleSheet').val(value.css);
+                }
+            });
+        };
+
+        // Reapply the selected template if override template isn't checked
+        // https://github.com/xibosignage/xibo/issues/1241
+        if(!$(dialog).find('#overrideTemplate').is(':checked')) {
+            reapplyWeatherTemplate();
+        }
+
+        $(dialog).find('#templateId').on('change', reapplyWeatherTemplate);
+    };
+
+</script>

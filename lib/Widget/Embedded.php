@@ -25,7 +25,16 @@ namespace Xibo\Widget;
  * @package Xibo\Widget
  */
 class Embedded extends ModuleWidget
-{
+{    
+
+    /**
+     * Javascript functions for the layout designer
+     */
+    public function layoutDesignerJavaScript()
+    {
+        return 'embedded-designer-javascript';
+    }
+
     /**
      * Install Files
      */
