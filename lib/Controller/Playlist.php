@@ -991,14 +991,14 @@ class Playlist extends Base
      *      description="Array of widgetIds and positions - all widgetIds present in the playlist need to be passed in the call with their positions",
      *      type="array",
      *      required=true,
-     *      SWG\Items(
+     *      @SWG\Items(
      *          ref="#/definitions/PlaylistWidgetList"
      *      )
      *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      SWG\Schema(ref="#/definitions/Playlist")
+     *      @SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
      *

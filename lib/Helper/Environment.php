@@ -271,4 +271,13 @@ class Environment
     {
         return (isset($_SERVER['CMS_DEV_MODE']) && $_SERVER['CMS_DEV_MODE'] === 'true');
     }
+
+    /**
+     * Is debugging forced ON for this request?
+     * @return bool
+     */
+    public static function isForceDebugging()
+    {
+        return (isset($_SERVER['CMS_FORCE_DEBUG']) && $_SERVER['CMS_FORCE_DEBUG'] === 'true');
+    }
 }

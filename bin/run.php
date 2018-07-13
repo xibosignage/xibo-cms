@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
+ * Copyright (C) 2016-2018 Spring Signage Ltd
  * (run.php)
  *
  * Xibo is free software: you can redistribute it and/or modify

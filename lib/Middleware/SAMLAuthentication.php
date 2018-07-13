@@ -23,6 +23,10 @@
 namespace Xibo\Middleware;
 
 
+use OneLogin\Saml2\Auth;
+use OneLogin\Saml2\Error;
+use OneLogin\Saml2\Settings;
+use OneLogin\Saml2\Utils;
 use Slim\Middleware;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
@@ -55,7 +59,7 @@ class SAMLAuthentication extends Middleware
           isset($this->app->configService->samlSettings['workflow']['slo']) &&
               $this->app->configService->samlSettings['workflow']['slo'] == true) {
             // Initiate SAML SLO
-            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
+            $auth = new Auth($this->app->configService->samlSettings);
             $auth->logout();
         } else {
             $this->app->redirect($this->app->urlFor('logout'));
@@ -80,7 +84,7 @@ class SAMLAuthentication extends Middleware
         $app->logoutRoute = 'saml.logout';
 
         $app->get('/saml/metadata', function () {
-            $settings = new \OneLogin_Saml2_Settings($this->app->configService->samlSettings, true);
+            $settings = new Settings($this->app->configService->samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
@@ -90,14 +94,14 @@ class SAMLAuthentication extends Middleware
             } else {
                 throw new \Xibo\Exception\ConfigurationException(
                     'Invalid SP metadata: '.implode(', ', $errors),
-                    \OneLogin_Saml2_Error::METADATA_SP_INVALID
+                    Error::METADATA_SP_INVALID
                 );
             }
         });
 
         $app->get('/saml/login', function () {
             // Initiate SAML SSO
-            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
+            $auth = new Auth($this->app->configService->samlSettings);
             $auth->login();
         });
 
@@ -110,7 +114,7 @@ class SAMLAuthentication extends Middleware
             $app = $this->getApplication();
 
             // Log some interesting things
-            $app->getLog()->debug('Arrived at the ACS route with own URL: ' . \OneLogin_Saml2_Utils::getSelfRoutedURLNoQuery());
+            $app->getLog()->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
 
             // Inject the POST parameters required by the SAML toolkit
             $_POST = $this->app->request->post();
@@ -118,13 +122,13 @@ class SAMLAuthentication extends Middleware
             // Pull out the SAML settings
             $samlSettings = $this->app->configService->samlSettings;
 
-            $auth = new \OneLogin_Saml2_Auth($samlSettings);
+            $auth = new Auth($samlSettings);
             $auth->processResponse();
 
             $errors = $auth->getErrors();
 
             if (!empty($errors)) {
-                throw new \OneLogin_Saml2_Error(
+                throw new Error(
                     'SAML SSO failed: '.implode(', ', $errors) . '. Last Reason: ' . $auth->getLastErrorReason()
                 );
             } else {
@@ -315,7 +319,7 @@ class SAMLAuthentication extends Middleware
             // Inject the GET parameters required by the SAML toolkit
             $_GET = $this->app->request->get();
 
-            $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
+            $auth = new Auth($this->app->configService->samlSettings);
             $auth->processSLO(false, null, false, function() use ($app) {
                 // Grab a login controller
                 /** @var \Xibo\Controller\Login $loginController */
@@ -347,7 +351,7 @@ class SAMLAuthentication extends Middleware
             }
             else {
                 // Initiate SAML SSO
-                $auth = new \OneLogin_Saml2_Auth($this->app->configService->samlSettings);
+                $auth = new Auth($this->app->configService->samlSettings);
                 $auth->login();
             }
         };

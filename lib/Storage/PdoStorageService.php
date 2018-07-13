@@ -148,106 +148,183 @@ class PdoStorageService implements StorageServiceInterface
         return $this->conn[$name];
     }
 
-    /**
-     * Check to see if the query returns records
-     * @param string $sql
-     * @param array[mixed] $params
-     * @return bool
-     */
-    public function exists($sql, $params)
+    /** @inheritdoc */
+    public function exists($sql, $params, $connection = null, $reconnect = false)
     {
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        $sth = $this->getConnection()->prepare($sql);
-        $sth->execute($params);
+        if ($connection === null)
+            $connection = 'default';
 
-        $this->incrementStat('default', 'exists');
+        try {
+            $sth = $this->getConnection($connection)->prepare($sql);
+            $sth->execute($params);
 
-        if ($sth->fetch())
-            return true;
-        else
-            return false;
+            $this->incrementStat($connection, 'exists');
+
+            if ($sth->fetch())
+                return true;
+            else
+                return false;
+
+        } catch (\PDOException $PDOException) {
+            // Throw if we're not expected to reconnect.
+            if (!$reconnect)
+                throw $PDOException;
+
+            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+
+            if ($errorCode != 2006) {
+                throw $PDOException;
+            } else {
+                $this->close($connection);
+                return $this->exists($sql, $params, $connection, false);
+            }
+        }
     }
-    
-    /**
-     * Run Insert SQL
-     * @param string $sql
-     * @param array $params
-     * @param \PDO[Optional] $dbh
-     * @return int
-     * @throws \PDOException
-     */
-    public function insert($sql, $params)
+
+    /** @inheritdoc */
+    public function insert($sql, $params, $connection = null, $reconnect = false)
 	{
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        if (!$this->getConnection()->inTransaction())
-            $this->getConnection()->beginTransaction();
+        if ($connection === null)
+            $connection = 'default';
 
-        $sth = $this->getConnection()->prepare($sql);
+        try {
+            if (!$this->getConnection($connection)->inTransaction())
+                $this->getConnection($connection)->beginTransaction();
 
-        $sth->execute($params);
+            $sth = $this->getConnection($connection)->prepare($sql);
 
-        $this->incrementStat('default', 'insert');
+            $sth->execute($params);
 
-        return intval($this->getConnection()->lastInsertId());
+            $this->incrementStat($connection, 'insert');
+
+            return intval($this->getConnection($connection)->lastInsertId());
+
+        } catch (\PDOException $PDOException) {
+            // Throw if we're not expected to reconnect.
+            if (!$reconnect)
+                throw $PDOException;
+
+            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+
+            if ($errorCode != 2006) {
+                throw $PDOException;
+            } else {
+                $this->close($connection);
+                return $this->insert($sql, $params, $connection, false);
+            }
+        }
     }
 
 	/** @inheritdoc */
-	public function update($sql, $params)
+	public function update($sql, $params, $connection = null, $reconnect = false)
 	{
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        if (!$this->getConnection()->inTransaction())
-            $this->getConnection()->beginTransaction();
+        if ($connection === null)
+            $connection = 'default';
 
-        $sth = $this->getConnection()->prepare($sql);
+        try {
+            if (!$this->getConnection($connection)->inTransaction())
+                $this->getConnection($connection)->beginTransaction();
 
-        $sth->execute($params);
+            $sth = $this->getConnection($connection)->prepare($sql);
 
-        $rows = $sth->rowCount();
+            $sth->execute($params);
 
-        $this->incrementStat('default', 'update');
+            $rows = $sth->rowCount();
 
-        return $rows;
+            $this->incrementStat($connection, 'update');
+
+            return $rows;
+
+        } catch (\PDOException $PDOException) {
+            // Throw if we're not expected to reconnect.
+            if (!$reconnect)
+                throw $PDOException;
+
+            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+
+            if ($errorCode != 2006) {
+                throw $PDOException;
+            } else {
+                $this->close($connection);
+                return $this->update($sql, $params, $connection, false);
+            }
+        }
 	}
 
-	/**
-	 * Run Select SQL
-	 * @param $sql
-	 * @param $params
-	 * @return array
-	 * @throws \PDOException
-	 */
-	public function select($sql, $params)
+    /** @inheritdoc */
+	public function select($sql, $params, $connection = null, $reconnect = false)
 	{
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        $sth = $this->getConnection()->prepare($sql);
+        if ($connection === null)
+            $connection = 'default';
 
-        $sth->execute($params);
+        try {
+            $sth = $this->getConnection($connection)->prepare($sql);
 
-        $this->incrementStat('default', 'select');
+            $sth->execute($params);
 
-        return $sth->fetchAll(\PDO::FETCH_ASSOC);
+            $this->incrementStat($connection, 'select');
+
+            return $sth->fetchAll(\PDO::FETCH_ASSOC);
+
+        } catch (\PDOException $PDOException) {
+            // Throw if we're not expected to reconnect.
+            if (!$reconnect)
+                throw $PDOException;
+
+            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+
+            if ($errorCode != 2006) {
+                throw $PDOException;
+            } else {
+                $this->close($connection);
+                return $this->select($sql, $params, $connection, false);
+            }
+        }
 	}
 
 	/** @inheritdoc */
-	public function isolated($sql, $params)
+	public function isolated($sql, $params, $connection = null, $reconnect = false)
     {
         // Should we log?
         if ($this->log != null)
             $this->log->sql($sql, $params);
 
-        $sth = $this->getConnection('isolated')->prepare($sql);
+        if ($connection === null)
+            $connection = 'isolated';
 
-        $sth->execute($params);
+        try {
+            $sth = $this->getConnection($connection)->prepare($sql);
 
-        $this->incrementStat('isolated', 'update');
+            $sth->execute($params);
+
+            $this->incrementStat('isolated', 'update');
+
+        } catch (\PDOException $PDOException) {
+            // Throw if we're not expected to reconnect.
+            if (!$reconnect)
+                throw $PDOException;
+
+            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+
+            if ($errorCode != 2006) {
+                throw $PDOException;
+            } else {
+                $this->close($connection);
+                return $this->isolated($sql, $params, $connection, false);
+            }
+        }
     }
 
     /** @inheritdoc */
@@ -301,7 +378,7 @@ class PdoStorageService implements StorageServiceInterface
     {
         if ($this->getConnection($name)->inTransaction()) {
             $this->incrementStat($name, 'commit');
-            $this->getConnection()->commit();
+            $this->getConnection($name)->commit();
         }
     }
 
