@@ -22,6 +22,14 @@ var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
 
+// Fix startsWith string prototype for IE
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position) {
+        position = position || 0;
+        return this.indexOf(searchString, position) === position;
+    };
+}
+
 // Fix endsWith string prototype for IE
 if (!String.prototype.endsWith) {
     String.prototype.endsWith = function(suffix) {
@@ -258,7 +266,7 @@ function XiboInitialise(scope) {
                 preset.val("");
             } else {
                 // Parse the value into a moment
-                value = moment($(this).val(), jsDateFormat);
+                value = moment(value, jsDateFormat.replace(jsTimeFormat, "").replace(" ", ""));
 
                 // Get the current master data (if empty, then assume now)
                 var updatedMaster = (preset.val() === "") ? moment() : moment(preset.val(), systemDateFormat);
@@ -362,7 +370,28 @@ function XiboInitialise(scope) {
     
     });
 
-    $(scope + " .selectPicker select.form-control").selectpicker();
+    $(scope + " .selectPicker select.form-control").select2({
+        dropdownParent: ($(scope).hasClass("modal") ? $(scope) : $("body")),
+        templateResult: function(state) {
+
+            if (!state.id) {
+                return state.text;
+            }
+
+            var $el = $(state.element);
+
+            if ($el.data().content !== undefined) {
+                return $($el.data().content);
+            }
+
+            return state.text;
+        }
+    });
+
+    // make a vanilla layout, display and media selector for reuse
+    $(scope + " .pagedSelect select.form-control").each(function() {
+        makePagedSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+    });
 
     // Notification dates
     $(scope + " span.notification-date").each(function() {
@@ -1529,4 +1558,60 @@ function ToggleFilterView(div) {
     else {
         $(div).fadeOut("slow");
     }
+}
+
+/**
+ * Make a Paged Layout Selector from a Select Element and its parent (which can be null)
+ * @param element
+ * @param parent
+ */
+function makePagedSelect(element, parent) {
+    element.select2({
+        dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        ajax: {
+            url: element.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    start: 0,
+                    length: 10
+                };
+
+                query[element.data("searchTerm")] = params.term;
+
+                // Check to see if we've been given additional filter options
+                if (element.data("filterOptions") !== undefined) {
+                    query = $.extend({}, query, element.data("filterOptions"));
+                }
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+                var $element = element;
+
+                $.each(data.data, function(index, el) {
+                    results.push({
+                        "id": el[$element.data("idProperty")],
+                        "text": el[$element.data("textProperty")]
+                    });
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
 }

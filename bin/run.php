@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
+ * Copyright (C) 2016-2018 Spring Signage Ltd
  * (run.php)
  *
  * Xibo is free software: you can redistribute it and/or modify
@@ -86,8 +86,8 @@ $app->view($twig);
 
 \Xibo\Middleware\Storage::setStorage($app->container);
 \Xibo\Middleware\State::setState($app);
-$app->configService->loadTheme();
 
+$app->add(new \Xibo\Middleware\Xtr());
 $app->add(new \Xibo\Middleware\Storage());
 $app->add(new \Xibo\Middleware\Xmr());
 

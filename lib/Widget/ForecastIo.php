@@ -25,6 +25,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
@@ -74,6 +75,7 @@ class ForecastIo extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->settings = [];
             $module->defaultDuration = 60;
+            $module->installName = 'forecastio';
 
             $this->setModule($module);
             $this->installModule();
@@ -106,17 +108,24 @@ class ForecastIo extends ModuleWidget
 
     /**
      * Process any module settings
+     * @throws InvalidArgumentException
      */
     public function settings()
     {
         // Process any module settings you asked for.
         $apiKey = $this->getSanitizer()->getString('apiKey');
+        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 300);
 
-        if ($apiKey == '')
-            throw new \InvalidArgumentException(__('Missing API Key'));
+        if ($this->module->enabled != 0) {
+            if ($apiKey == '')
+                throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+
+            if ($cachePeriod <= 0)
+                throw new InvalidArgumentException(__('Cache period must be a positive number'), 'cachePeriod');
+        }
 
         $this->module->settings['apiKey'] = $apiKey;
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $this->module->settings['cachePeriod'] = $cachePeriod;
     }
 
     public function validate()

@@ -65,6 +65,7 @@ class Chart extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 240;
             $module->settings = [];
+            $module->installName = 'chart';
 
             $this->setModule($module);
             $this->installModule();

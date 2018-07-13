@@ -1,0 +1,90 @@
+{#
+/**
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+<script type="text/javascript">
+
+    function calendarFormOpen(dialog, extra) {
+        text_callback(dialog, extra);
+
+        var $layout = $("#layout");
+
+        // Choose a complementary color
+        var color = $c.complement($layout.data().backgroundColor);
+
+        // Apply some CSS to set a scale for these editors
+        var scale = $layout.attr('designer_scale');
+        var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
+        var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
+
+        var applyContentsToIframe = function(field) {
+            //console.log('Applying iframe adjustments to ' + field);
+            $("#cke_" + field + " iframe").contents().find("head").append("" +
+                "<style>" +
+                "body {" +
+                "width: " + regionWidth + "px; " +
+                "height: " + regionHeight + "px; border:2px solid red; " +
+                "background: " + $('#layout').css('background-color') + "; " +
+                "transform: scale(" + scale + "); " +
+                "transform-origin: 0 0; }" +
+                "h1, h2, h3, h4, p { margin-top: 0;}" +
+                "</style>");
+        };
+
+        var convertLibraryReferences = function(data) {
+            // We need to convert any library references [123] to their full URL counterparts
+            // we leave well alone non-library references.
+            var regex = /\[[0-9]+]/gi;
+
+            data = data.replace(regex, function (match) {
+                var inner = match.replace("]", "").replace("[", "");
+                return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
+            });
+
+            return data;
+        };
+
+        // Conjure up a text editor
+        CKEDITOR.replace("currentEventTemplate", CKEDITOR_DEFAULT_CONFIG);
+
+        // Bind to instance ready so that we can adjust some things about the editor.
+        CKEDITOR.instances["currentEventTemplate"].on('instanceReady', function() {
+            // Apply scaling to this editor instance
+            applyContentsToIframe("currentEventTemplate");
+
+            // Reapply the background style after switching to source view and back to the normal editing view
+            CKEDITOR.instances["currentEventTemplate"].on('contentDom', function () { applyContentsToIframe("currentEventTemplate") });
+
+            // Get the template data
+            var data = CKEDITOR.instances["currentEventTemplate"].getData();
+
+            // Default config for fonts
+            if (data === "") {
+                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>";
+            }
+
+            // Handle initial template set up
+            data = convertLibraryReferences(data);
+
+            CKEDITOR.instances["currentEventTemplate"].setData(data);
+        });
+    }
+</script>

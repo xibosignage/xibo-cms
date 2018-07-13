@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
+ * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -19,7 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use finfo;
+
+use Intervention\Image\ImageManagerStatic as Img;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
@@ -440,6 +441,7 @@ class Display extends Base
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'showTags' => true,
+            'clientAddress' => $this->getSanitizer()->getString('clientAddress')
         ];
 
         // Get a list of displays
@@ -745,14 +747,11 @@ class Display extends Base
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
-        $layouts = $this->layoutFactory->query(null, ['retired' => 0]);
-
-        if ($display->defaultLayoutId != null) {
-            try {
-                $layouts = array_merge([$this->layoutFactory->getById($display->defaultLayoutId)], $layouts);
-            } catch (NotFoundException $e) {
-                $this->getLog()->error('Default layoutId ' . $display->defaultLayoutId . ' not found for displayId ' . $display->displayId);
-            }
+        // Get the currently assigned default layout
+        try {
+            $layouts = (($display->defaultLayoutId != null) ? [$this->layoutFactory->getById($display->defaultLayoutId)] : []);
+        } catch (NotFoundException $notFoundException) {
+            $layouts = [];
         }
 
         $this->getState()->template = 'display-form-edit';
@@ -1160,9 +1159,16 @@ class Display extends Base
     /**
      * Output a screen shot
      * @param int $displayId
+     * @throws XiboException
      */
     public function screenShot($displayId)
     {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
+
+        // The request will output its own content, disable framework
         $this->setNoOutput(true);
 
         // Output an image if present, otherwise not found image.
@@ -1176,23 +1182,29 @@ class Display extends Base
             $fileName = $this->getConfig()->uri('forms/filenotfound.gif');
         }
 
-        $size = filesize($fileName);
+        Img::configure(array('driver' => 'gd'));
+        $img = Img::make($fileName);
 
-        $fi = new finfo(FILEINFO_MIME_TYPE);
-        $mime = $fi->file($fileName);
-        header("Content-Type: {$mime}");
+        $date = $display->getCurrentScreenShotTime($this->pool);
 
-        // Output a header
+        if ($date != '') {
+            $img
+                ->rectangle(0, 0, 110, 15, function($draw) {
+                    $draw->background('#ffffff');
+                })
+                ->text($date, 10, 10);
+        }
+
+        // Cache headers
         header("Cache-Control: no-store, no-cache, must-revalidate");
         header("Pragma: no-cache");
         header("Expires: 0");
-        header('Content-Length: ' . $size);
 
-        // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
         @ob_end_clean();
         @ob_end_flush();
-        readfile($fileName);
+
+        echo $img->response();
     }
 
     /**
@@ -1481,10 +1493,17 @@ class Display extends Base
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
+        // Get the currently assigned default layout
+        try {
+            $layouts = (($display->defaultLayoutId != null) ? [$this->layoutFactory->getById($display->defaultLayoutId)] : []);
+        } catch (NotFoundException $notFoundException) {
+            $layouts = [];
+        }
+
         $this->getState()->template = 'display-form-defaultlayout';
         $this->getState()->setData([
             'display' => $display,
-            'layouts' => $this->layoutFactory->query()
+            'layouts' => $layouts
         ]);
     }
 

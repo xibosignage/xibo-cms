@@ -855,4 +855,34 @@ class Display implements \JsonSerializable
 
         return $this;
     }
+
+    /**
+     * @param PoolInterface $pool
+     * @return int|null
+     */
+    public function getCurrentScreenShotTime($pool)
+    {
+        $item = $pool->getItem('/screenShotTime/' . $this->displayId);
+
+        return $item->get();
+    }
+
+    /**
+     * @param PoolInterface $pool
+     * @param string $date
+     * @return $this
+     */
+    public function setCurrentScreenShotTime($pool, $date)
+    {
+        // Cache it
+        $this->getLog()->debug('Caching currentLayoutId with Pool');
+
+        $item = $pool->getItem('/screenShotTime/' . $this->displayId);
+        $item->set($date);
+        $item->expiresAfter(new \DateInterval('P1W'));
+
+        $pool->saveDeferred($item);
+
+        return $this;
+    }
 }

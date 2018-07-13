@@ -133,6 +133,27 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="isLayoutSpecific",
+     *      in="formData",
+     *      description="Filter by whether this Campaign is specific to a Layout or User added",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Filter by retired",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="totalDuration",
+     *      in="formData",
+     *      description="Should we total the duration?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -149,11 +170,13 @@ class Campaign extends Base
             'campaignId' => $this->getSanitizer()->getInt('campaignId'),
             'name' => $this->getSanitizer()->getString('name'),
             'tags' => $this->getSanitizer()->getString('tags'),
-            'hasLayouts' => $this->getSanitizer()->getInt('hasLayouts')
+            'hasLayouts' => $this->getSanitizer()->getInt('hasLayouts'),
+            'isLayoutSpecific' => $this->getSanitizer()->getInt('isLayoutSpecific'),
+            'retired' => $this->getSanitizer()->getInt('retired')
         ];
 
         $options = [
-            'totalDuration' => 1,
+            'totalDuration' => $this->getSanitizer()->getInt('totalDuration', 1),
         ];
 
         $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter), $options);

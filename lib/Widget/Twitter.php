@@ -26,6 +26,7 @@ use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -71,6 +72,7 @@ class Twitter extends TwitterBase
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 60;
             $module->settings = [];
+            $module->installName = 'twitter';
 
             $this->setModule($module);
             $this->installModule();
@@ -122,25 +124,34 @@ class Twitter extends TwitterBase
 
     /**
      * Process any module settings
+     * @throws InvalidArgumentException
      */
     public function settings()
     {
         // Process any module settings you asked for.
         $apiKey = $this->getSanitizer()->getString('apiKey');
-
-        if ($apiKey == '')
-            throw new \InvalidArgumentException(__('Missing API Key'));
-
-        // Process any module settings you asked for.
         $apiSecret = $this->getSanitizer()->getString('apiSecret');
+        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $cachePeriodImages = $this->getSanitizer()->getInt('cachePeriodImages', 24);
 
-        if ($apiSecret == '')
-            throw new \InvalidArgumentException(__('Missing API Secret'));
+        if ($this->module->enabled != 0) {
+            if ($apiKey == '')
+                throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+
+            if ($apiSecret == '')
+                throw new InvalidArgumentException(__('Missing API Secret'), 'apiSecret');
+
+            if ($cachePeriod <= 0)
+                throw new InvalidArgumentException(__('Cache period must be a positive number'), 'cachePeriod');
+
+            if ($cachePeriodImages <= 0)
+                throw new InvalidArgumentException(__('Image cache period must be a positive number'), 'cachePeriodImages');
+        }
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['apiSecret'] = $apiSecret;
-        $this->module->settings['cachePeriod'] = $this->getSanitizer()->getInt('cachePeriod', 300);
-        $this->module->settings['cachePeriodImages'] = $this->getSanitizer()->getInt('cachePeriodImages', 24);
+        $this->module->settings['cachePeriod'] = $cachePeriod;
+        $this->module->settings['cachePeriodImages'] = $cachePeriodImages;
 
         // Return an array of the processed settings.
         return $this->module->settings;

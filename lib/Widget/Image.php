@@ -28,6 +28,28 @@ use Xibo\Exception\XiboException;
 
 class Image extends ModuleWidget
 {
+    /** @inheritdoc */
+    public function settingsForm()
+    {
+        return 'image-form-settings';
+    }
+
+    /** @inheritdoc */
+    public function settings()
+    {
+        parent::settings();
+
+        $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer()->getString('defaultScaleTypeId');
+    }
+
+    /** @inheritdoc */
+    public function setDefaultWidgetOptions()
+    {
+        parent::setDefaultWidgetOptions();
+
+        $this->setOption('scaleType', $this->getSetting('defaultScaleTypeId', 'center'));
+    }
+
     /**
      * Validate
      */
@@ -233,7 +255,7 @@ class Image extends ModuleWidget
                 $this->getLog()->error('Image not readable: ' . $notReadableException->getMessage());
 
                 // Output the thumbnail
-                $img = Img::make(PROJECT_ROOT . '/web/' . $this->getConfig()->uri('img/error.png', true));
+                $img = Img::make($this->getConfig()->uri('img/error.png', true));
 
                 if ($width != 0 || $height != 0) {
                     $img->resize($width, $height, function ($constraint) use ($proportional) {

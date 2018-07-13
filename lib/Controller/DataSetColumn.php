@@ -19,6 +19,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Stash\Interfaces\PoolInterface;
 
 /**
  * Class DataSetColumn
@@ -38,6 +39,9 @@ class DataSetColumn extends Base
     /** @var  DataTypeFactory */
     private $dataTypeFactory;
 
+    /** @var PoolInterface */
+    private $pool;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -51,8 +55,9 @@ class DataSetColumn extends Base
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      * @param DataTypeFactory $dataTypeFactory
+     * @param PoolInterface $pool
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory, $pool)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -60,6 +65,7 @@ class DataSetColumn extends Base
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->dataSetColumnTypeFactory = $dataSetColumnTypeFactory;
         $this->dataTypeFactory = $dataTypeFactory;
+        $this->pool = $pool;
     }
     /**
      * Column Page
@@ -289,6 +295,11 @@ class DataSetColumn extends Base
         $column->showFilter = $this->getSanitizer()->getCheckbox('showFilter');
         $column->showSort = $this->getSanitizer()->getCheckbox('showSort');
 
+        if ($column->dataSetColumnTypeId == 3){
+            $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
+            $this->getLog()->debug('New remote column detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
+        }
+
         // Assign the column to set the column order if necessary
         $dataSet->assignColumn($column);
 
@@ -450,6 +461,11 @@ class DataSetColumn extends Base
         $column->showFilter = $this->getSanitizer()->getCheckbox('showFilter');
         $column->showSort = $this->getSanitizer()->getCheckbox('showSort');
         $column->save();
+
+        if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')){
+            $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
+            $this->getLog()->debug('Edited remoteField detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
+        }
 
         $dataSet->notify();
 

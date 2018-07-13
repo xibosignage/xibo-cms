@@ -61,8 +61,13 @@
                     url: "{{ urlFor("user.pref") }}?preference=notificationGrid",
                     dataType: 'json',
                     success: function (json) {
-                        if (json.success)
-                            data = JSON.parse(json.data.value);
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
                     }
                 });
                 return data;
@@ -113,9 +118,6 @@
         table.on('processing.dt', dataTableProcessing);
 
         function notificationFormOpen(dialog) {
-            $('select[name="displayGroupIds[]"]', dialog).selectpicker();
-            $('select[name="userGroupIds[]"]', dialog).selectpicker();
-
             // Conjure up a text editor
             CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
 

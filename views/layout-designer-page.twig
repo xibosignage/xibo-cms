@@ -41,17 +41,15 @@
                         <li class="tab-design">
                             <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Actions" %}</a>
                         </li>
-                        <div class="pull-right">
+                        <div class="pull-right layout-designer-right-pane">
                             <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
                                 <i class="fa fa-clock-o" aria-hidden="true"></i>
                                 <span id="layout-duration" class="label label-success big-duration"></span></span>
                             <span>| <b> {% trans "Currently Editing" %}</b></span>
-                            <select id="layoutJumpList" data-live-search="true" data-width="auto">
-                                {% for item in layouts %}
-                                    <option value="{{ urlFor("layout.designer", {id: item.layoutId}) }}"{% if item.layoutId == layout.layoutId %} selected{% endif %}>{{ item.layout }}</option>
-                                {% endfor %}
+                            <select id="layoutJumpList" data-width="200px" data-url="{{ urlFor("layout.search") }}" data-designer-url="{{ urlFor("layout.designer") }}">
+                                <option value="{{ layout.layoutId }}">{{ layout.layout }}</option>
                             </select>
-                        </div>
+                        </div>  
                     </ul>
                 </div>
                 <div class="panel-body">
@@ -61,7 +59,7 @@
 
                                 <div class="btn-group btn-group-justified" role="group" aria-label="...">
                                     <div class="btn-group" role="group">
-                                        <a class="XiboFormButton btn btn-default btn-sm" role="button" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span><i class="fa fa-picture-o" aria-hidden="true"></i> {% trans "Background" %}</span></a>
+                                        <a class="XiboFormButton btn btn-default btn-sm" role="button" href="{{ urlFor("layout.background.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span><i class="fa fa-picture-o" aria-hidden="true"></i> {% trans "Background" %}</span></a>
                                     </div>
                                     <div class="btn-group" role="group">
                                         <a class="btn btn-info btn-sm" id="regionAddButton" role="button" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span><i class="fa fa-plus" aria-hidden="true"></i> {% trans "Region" %}</span></a>

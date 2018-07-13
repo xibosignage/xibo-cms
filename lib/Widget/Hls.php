@@ -51,6 +51,7 @@ class Hls extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->defaultDuration = 60;
             $module->settings = [];
+            $module->installName = 'hls';
 
             $this->setModule($module);
             $this->installModule();

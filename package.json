@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
-    "cypress": "^2.1.0",
+    "cypress": "^3.0.1",
     "del": "^2.2.1",
     "gulp": "^3.9.1",
     "gulp-composer": "^0.4.0",

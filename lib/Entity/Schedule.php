@@ -447,7 +447,7 @@ class Schedule implements \JsonSerializable
             throw new InvalidArgumentException(__('Priority must be 0 or a positive number'), 'isPriority');
 
         // Check recurrenceDetail every is positive
-        if ($this->recurrenceDetail < 0)
+        if ($this->recurrenceType != '' && ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0))
             throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
     }
 

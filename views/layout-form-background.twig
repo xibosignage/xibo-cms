@@ -43,11 +43,21 @@
                 {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
                 {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
 
-                {% set title %}{% trans "Background Image" %}{% endset %}
+                {% set attributes = [
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: urlFor("library.search") },
+                    { name: "data-search-term", value: "name" },
+                    { name: "data-width", value: "100%" },
+                    { name: "data-id-property", value: "mediaId" },
+                    { name: "data-text-property", value: "name" },
+                    { name: "data-filter-options", value: '{"type":"image"}' }
+                ] %}
                 {% set helpText %}{% trans "Pick the background image from the library. It is recommended to pick JPG images as Windows Players can only show JPG background images." %}{% endset %}
                 {% set noneMessage %}{% trans "None" %}{% endset %}
                 {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
-                {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "selectPicker background-image-fields", "", "b", "", [{name:"data-live-search", value:"true"}]) }}
+                {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}
 
                 {% set title %}{% trans "Add a new background image?" %}{% endset %}
                 {{ forms.button(title, "", "", "background-image-fields background-image-add-button", "backgroundAddButton") }}

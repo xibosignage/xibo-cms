@@ -12,9 +12,9 @@
 {% block moduleFormFields %}
     {% set title %}{% trans "API Key" %}{% endset %}
     {% set helpText %}{% trans "Enter your API Key from DarkSky." %}{% endset %}
-    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText, "", "required") }}
+    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of seconds you would like to cache long/lat requests for. DarkSky offers 1000 requests a day." %}{% endset %}
-    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod"), helpText, "", "required") }}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod"), helpText) }}
 {% endblock %}

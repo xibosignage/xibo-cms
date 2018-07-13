@@ -31,9 +31,25 @@ use Xibo\Factory\ModuleFactory;
  */
 interface ModuleInterface
 {
-    // Some Default Add/Edit/Delete functionality each module should have
+    /**
+     * Add Widget
+     * @return mixed
+     * @throws XiboException
+     */
     public function add();
+
+    /**
+     * Edit Widget
+     * @return mixed
+     * @throws XiboException
+     */
     public function edit();
+
+    /**
+     * Delete Widget
+     * @return mixed
+     * @throws XiboException
+     */
     public function delete();
 
     // Return the name of the media as input by the user
@@ -80,9 +96,8 @@ interface ModuleInterface
     /**
      * Set the Cache Date using the cache key
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @param int|null Override duration in seconds, otherwise the getCacheDuration is used.
      */
-    public function setCacheDate($displayId, $overrideDuration = null);
+    public function setCacheDate($displayId);
 
     /**
      * Get Cache Key
@@ -108,11 +123,10 @@ interface ModuleInterface
     /**
      * Get Resource or Cache
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @param \Xibo\Entity\Region|null $region
      * @return string
      * @throws XiboException
      */
-    public function getResourceOrCache($displayId, $region = null);
+    public function getResourceOrCache($displayId);
 
     /**
      * Get Resource
