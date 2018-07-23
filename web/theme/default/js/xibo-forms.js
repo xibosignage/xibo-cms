@@ -209,7 +209,8 @@ var text_callback = function(dialog, extraData) {
                     }
                 },
                 delay: 250
-            }
+            },
+            dropdownParent: $(dialog)
         }).on('select2:select', function (e) {
                 var linkedTo = $(this).data().linkedTo;
                 var value = e.params.data.imageUrl;
