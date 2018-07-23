@@ -34,6 +34,7 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -43,6 +44,7 @@ use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -111,6 +113,12 @@ class User extends Base
     /** @var SessionFactory */
     private $sessionFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -132,10 +140,12 @@ class User extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
      * @param SessionFactory $sessionFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param WidgetFactory $widgetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -151,6 +161,8 @@ class User extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
         $this->sessionFactory = $sessionFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->widgetFactory = $widgetFactory;
     }
 
     /**
@@ -576,7 +588,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
