@@ -836,7 +836,7 @@ class DataSetView extends ModuleWidget
             return $table;
         }
         catch (NotFoundException $e) {
-            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             return '';
         }

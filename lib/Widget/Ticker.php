@@ -706,7 +706,7 @@ class Ticker extends ModuleWidget
             if ($noDataMessage != '') {
                 $items[] = $noDataMessage;
             } else {
-                $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
+                $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
                 return '';
             }
         }
