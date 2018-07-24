@@ -121,6 +121,12 @@ $(document).ready(function() {
                     lD.designerDiv.find('#properties-panel')
                 );
 
+
+                if(res.data[0].publishedStatusId != 2) {
+                    // Show checkout screen
+                    lD.showCheckoutScreen(lD.layout);
+                }
+
                 // Default selected object is the layout
                 lD.selectObject();
             } else {
@@ -264,6 +270,70 @@ lD.reloadData = function(layout) {
     );
 };
 
+/**
+ * Reload API data and replace the layout structure with the new value
+ * @param {object} layout - previous layout
+ */
+lD.checkoutLayout = function(layout) {
+
+    const linkToAPI = urlsForApi['layout']['checkout'];
+    let requestPath = linkToAPI.url;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', layout.layoutId);
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+        if(res.success) {
+            toastr.success(res.message);
+            
+            lD.reloadData(res.data);
+
+            bootbox.hideAll();
+        } else {
+            toastr.error(res.message);
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+};
+
+/**
+ * Reload API data and replace the layout structure with the new value
+ * @param {object} layout - previous layout
+ */
+lD.publishLayout = function(layout) {
+
+    const linkToAPI = urlsForApi['layout']['publish'];
+    let requestPath = linkToAPI.url;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', layout.parentLayoutId);
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+        if(res.success) {
+            toastr.success(res.message);
+
+            console.log('Back to grid');
+            
+            console.log(urlsForApi['layout']['list']);
+
+            window.location.href = urlsForApi['layout']['list'].url;
+            
+        } else {
+            toastr.error(res.message);
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+};
 
 /**
  * Render layout structure to container, if it exists
@@ -335,6 +405,60 @@ lD.showErrorMessage = function() {
     });
 
     lD.designerDiv.html(htmlError);
+};
+
+/**
+ * Layout checkout screen
+ */
+lD.showCheckoutScreen = function(layout) {
+    
+    bootbox.dialog({
+        title: 'Checkout ' + layout.name,
+        message: 'Layout is not editable, please checkout!',
+        closeButton: false,
+        buttons: {
+            done: {
+                label: 'Checkout',
+                className: "btn-primary btn-lg",
+                callback: function(res) {
+
+                    $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
+
+                    lD.checkoutLayout(layout);
+
+                    // Prevent the modal to close ( close only when chekout layout resolves )
+                    return false;
+                }
+            }
+        }
+    });
+};
+
+/**
+ * Layout checkout screen
+ */
+lD.showPublishScreen = function(layout) {
+
+    bootbox.dialog({
+        title: 'Publish ' + layout.name,
+        message: 'Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed.',
+        closeButton: false,
+        buttons: {
+            done: {
+                label: 'Publish',
+                className: "btn-primary btn-lg",
+                callback: function(res) {
+
+                    $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
+
+                    lD.publishLayout(layout);
+
+                    // Prevent the modal to close ( close only when chekout layout resolves )
+                    return false;
+                }
+            }
+        }
+    });
 };
 
 /**

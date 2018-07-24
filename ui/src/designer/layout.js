@@ -8,6 +8,15 @@ const Widget = require('./widget.js');
  * @param  {object} data - data from the API request
  */
 let Layout = function(id, data) {
+
+    // Is it editable? ( checkif status is draft )
+    this.editable = (data.publishedStatusId == 2);
+
+    // Parent Id
+    this.parentLayoutId = data.parentId;
+
+    // Layout name
+    this.name = data.layout;
     
     // Layout properties
     this.id = 'layout_' + id;
@@ -27,7 +36,12 @@ let Layout = function(id, data) {
         if(this.backgroundImage === null) {
             return this.backgroundColor;
         } else {
-            return "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + width + "&height=" + height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
+            // Get API link
+            let linkToAPI = urlsForApi['layout']['downloadBackground'].url;
+            // Replace ID in the link
+            linkToAPI = linkToAPI.replace(':id', this.layoutId);
+
+            return "url('" + linkToAPI + "?preview=1&width=" + width + "&height=" + height + "&proportional=0&layoutBackgroundId=" + this.backgroundImage + "') top center no-repeat; background-color: " + this.backgroundColor;
         }
     };
 

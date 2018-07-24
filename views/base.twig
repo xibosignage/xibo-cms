@@ -24,6 +24,7 @@
         <script type="text/javascript">
             var calendar_type = "{{ settings.CALENDAR_TYPE }}";
             var jsLocale = "{{ translate.jsLocale }}";
+            var jsShortLocale = "{{ translate.jsShortLocale }}";
         </script>
 
         {# Import JS bundle from dist #}
@@ -53,8 +54,6 @@
         <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js"></script>
 
-        {# TODO SELECT 2 Library#}<script src="{{ theme.uri("libraries/select2/js/select2.full.js") }}?{{ version }}"></script>
-
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
@@ -78,12 +77,6 @@
         {% set datePickerTranslation %}{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(datePickerTranslation) %}
             <script src="{{ theme.uri(datePickerTranslation) }}"></script>
-        {% endif %}
-
-        {# TODO: this is a guess - need to change when we include select2 #}
-        {% set selectPickerTranslation %}{{ theme.rootUri() }}dist/vendor/select2/js/i18n/{{ translate.jsShortLocale }}.js{% endset %}
-        {% if theme.fileExists(selectPickerTranslation) %}
-            <script src="{{ theme.uri(selectPickerTranslation) }}"></script>
         {% endif %}
 
         <script type="text/javascript">

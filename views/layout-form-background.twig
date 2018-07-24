@@ -54,6 +54,8 @@
                     { name: "data-text-property", value: "name" },
                     { name: "data-filter-options", value: '{"type":"image"}' }
                 ] %}
+
+                {% set title %}{% trans "Background Image" %}{% endset %}
                 {% set helpText %}{% trans "Pick the background image from the library. It is recommended to pick JPG images as Windows Players can only show JPG background images." %}{% endset %}
                 {% set noneMessage %}{% trans "None" %}{% endset %}
                 {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}

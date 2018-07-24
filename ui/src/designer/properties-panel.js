@@ -80,9 +80,14 @@ PropertiesPanel.prototype.save = function(form, element) {
  */
 PropertiesPanel.prototype.render = function(element) {
 
-    this.DOMObject.html(loadingTemplate());
+    // Prevent the panel to render if the layout is not editable
+    if(element.type == 'layout' && !element.editable ) {
+        return;
+    }
 
     const self = this;
+
+    self.DOMObject.html(loadingTemplate());
     let requestPath = urlsForApi[element.type]['getForm'].url;
 
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
