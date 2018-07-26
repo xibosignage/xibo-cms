@@ -1,0 +1,7 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+HOME=/var/www/cms
+
+# m h  dom mon dow   command
+*  *  *  *  *  . /etc/periodic/15min/cms-db-backup.env ; /usr/bin/php bin/xtr.php > /dev/null 2>&1
