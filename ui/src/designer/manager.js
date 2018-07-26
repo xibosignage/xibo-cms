@@ -126,7 +126,15 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
 
     // replace id if necessary/exists
     if(change.target) {
-        requestPath = requestPath.replace(':id', change.target.id);
+        let replaceId = change.target.id;
+
+        // If the replaceId is not set or the change needs the layoutId, set it to the replace var
+        if(replaceId == null || linkToAPI.useLayoutId) {
+            
+            replaceId = lD.layout.layoutId;
+        }
+
+        requestPath = requestPath.replace(':id', replaceId);
     }
 
     // Run ajax request and save promise
@@ -267,7 +275,17 @@ Manager.prototype.revertChange = function() {
             let requestPath = linkToAPI.url;
 
             // replace id if necessary/exists
-            requestPath = requestPath.replace(':id', lastChange.target.id);
+            if(lastChange.target) {
+                let replaceId = lastChange.target.id;
+
+                // If the replaceId is not set or the change needs the layoutId, set it to the replace var
+                if(replaceId == null || linkToAPI.useLayoutId) {
+
+                    replaceId = lD.layout.layoutId;
+                }
+
+                requestPath = requestPath.replace(':id', replaceId);
+            }
 
             $.ajax({
                 url: requestPath,

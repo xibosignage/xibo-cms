@@ -53,6 +53,9 @@ try {
     console.log('[Warning] loading select2: Locale not defined!');
 }
 
+// Default theme for select2
+$.fn.select2.defaults.set("theme", "bootstrap");
+
 // ekko-lightbox
 require('ekko-lightbox');
 

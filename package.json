@@ -85,7 +85,7 @@
     "moment": "~2.20.1",
     "moment-jalaali": "~0.7.2",
     "moment-timezone": "~0.5.14",
-    "select2": "^4.0.6-rc.1",
+    "select2": "^4.0.5",
     "select2-bootstrap-theme": "0.1.0-beta.10",
     "throttle-debounce": "~1.0.1",
     "timepicker": "~1.11.12",

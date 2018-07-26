@@ -65,7 +65,8 @@
                 region: {
                     transform: {
                         url: "{{ urlFor("region.position.all") }}",
-                        type: 'PUT'
+                        type: 'PUT',
+                        useLayoutId: true
                     },
                     getForm: {
                         url: "{{ urlFor("region.edit.form") }}",
@@ -77,7 +78,8 @@
                     },
                     create: {
                         url: "{{ urlFor("region.add") }}",
-                        type: 'POST'
+                        type: 'POST',
+                        useLayoutId: true
                     },
                     delete: {
                         url: "{{ urlFor("region.delete") }}",
