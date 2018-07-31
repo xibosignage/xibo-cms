@@ -125,7 +125,8 @@ class LayoutStructureStep implements Step
                 }
 
                 // Save the layout
-                $layout->save(['notify' => false]);
+                $layout->save(['notify' => false, 'audit' => false]);
+                $this->log->audit(substr(get_class($layout), strrpos(get_class($layout), '\\') + 1), $layout->getId(), 'Upgraded', []);
 
                 // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
                 foreach ($layout->regions as $region) {
