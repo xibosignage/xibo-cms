@@ -27,7 +27,9 @@ RUN rm /app/composer.* && \
     rm package.json && \
     rm package-lock.json && \
     rm cypress.json && \
-    rm -r /app/cypress
+    rm -r /app/cypress && \
+    rm -r /app/ui && \
+    rm /app/webpack.config.js
 
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \
@@ -45,7 +47,24 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
 
 # Stage 2
 # Run webpack
-# todo: this will come in 2.0
+FROM node:latest AS webpack
+WORKDIR /app
+
+# Install webpack
+RUN npm install webpack -g
+
+# Copy package.json and the webpack config file
+COPY webpack.config.js .
+COPY package.json .
+
+# Install npm packages
+RUN npm install
+
+# Copy ui folder
+COPY ./ui ./ui
+
+# Build webpack
+RUN npm run build
 
 # Stage 3
 # Build the CMS container
@@ -131,6 +150,9 @@ EXPOSE 80
 # Map the source files into /var/www/cms
 RUN mkdir -p /var/www/cms
 COPY --from=composer /app /var/www/cms
+
+# Copy dist built webpack app folder to web
+COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
 # Map a volumes to this folder.
 # Our CMS files, library, cache and backups will be in here.
