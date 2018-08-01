@@ -85,6 +85,11 @@ Toolbar.prototype.render = function() {
         this.createNewTab();
     }.bind(this));
 
+    this.DOMObject.find('#publishLayout').click(function() {
+        // Show publish screen
+        lD.showPublishScreen(lD.layout);
+    });
+
     this.DOMObject.find('#undoLastAction').click(function() {
         lD.manager.revertChange().then((res) => { // Success
 
@@ -606,7 +611,7 @@ Toolbar.prototype.dropItemAdd = function(droppable, draggable) {
                         }
                     }
                 }
-            }).attr("id", calculatedId);;
+            }).attr("id", calculatedId);
 
             // Request and load element form
             $.ajax({

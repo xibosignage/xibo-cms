@@ -41,21 +41,20 @@ try {
     console.log(e);
 }
 
-// bootstrap-select
-require('bootstrap-select');
-
-// ajax-bootstrap-select
-require('ajax-bootstrap-select/dist/js/ajax-bootstrap-select.min.js');
+// select2
+require('select2');
 
 try {
     // Conditional import for the locale variable
-    if( jsLocale && jsLocale != "en-GB" ) {
-        require('bootstrap-select/js/i18n/defaults-' + boostrapSelectLanguage + '.js');
-        require('ajax-bootstrap-select/dist/js/locale/ajax-bootstrap-select.' + boostrapSelectLanguage + '.min.js');
+    if(jsShortLocale && jsShortLocale != "en-GB" ) {
+        require('select2/dist/js/i18n/' + jsLocale + '.js');
     }
 } catch (e) { //Handle variable not set error
-    console.log('[Warning] loading bootstrap-select: Locale not defined!');
+    console.log('[Warning] loading select2: Locale not defined!');
 }
+
+// Default theme for select2
+$.fn.select2.defaults.set("theme", "bootstrap");
 
 // ekko-lightbox
 require('ekko-lightbox');

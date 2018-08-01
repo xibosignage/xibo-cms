@@ -281,52 +281,67 @@ let formHelpers = function() {
         // Do we have a media selector?
         var $selectPicker = $(".ckeditor_library_select");
         if($selectPicker.length > 0) {
-            $selectPicker.selectpicker({
-                liveSearch: true
-            })
-                .ajaxSelectPicker({
-                    ajax: {
-                        type: 'GET',
-                        url: $selectPicker.data().searchUrl,
-                        data: function() {
-                            return {
-                                media: '{{{q}}}',
-                                type: 'image',
-                                start: 0,
-                                length: 50
-                            };
-                        }
-                    },
-                    preprocessData: function(data) {
-                        var library = [];
-                        if(data.hasOwnProperty('data')) {
-                            $.each(data.data, function(index, element) {
-                                library.push({
-                                    'value': element.mediaId,
-                                    'text': element.name,
-                                    'data': {
-                                        'image-url': $selectPicker.data().imageUrl.replace(':id', element.mediaId)
-                                    },
-                                    'disabled': false
-                                });
-                            });
-                        }
-                        return library;
-                    },
-                    preserveSelected: false,
-                    emptyRequest: true
-                })
-                .on('changed.bs.select', function(e) {
-                    var select = $(e.target);
-                    var linkedTo = select.data().linkedTo;
-                    var value = $(e.target).find(":selected").data().imageUrl;
+            $selectPicker.select2({
+                ajax: {
+                    url: $selectPicker.data().searchUrl,
+                    dataType: "json",
+                    data: function(params) {
+                        var query = {
+                            media: params.term,
+                            type: "image",
+                            start: 0,
+                            length: 10
+                        };
 
-                    if(value !== undefined && value !== "" && linkedTo != null) {
-                        if(CKEDITOR.instances[linkedTo] != undefined) {
-                            CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
+                        // Set the start parameter based on the page number
+                        if(params.page != null) {
+                            query.start = (params.page - 1) * 10;
                         }
+
+                        // Find out what is inside the search box for this list, and save it (so we can replay it when the list
+                        // is opened again)
+                        if(params.term !== undefined) {
+                            localStorage.liveSearchPlaceholder = params.term;
+                        }
+
+                        return query;
+                    },
+                    processResults: function(data, params) {
+                        var results = [];
+
+                        $.each(data.data, function(index, element) {
+                            results.push({
+                                "id": element.mediaId,
+                                "text": element.name,
+                                'imageUrl': $selectPicker.data().imageUrl.replace(':id', element.mediaId),
+                                'disabled': false
+                            });
+                        });
+
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    },
+                    delay: 250
+                }
+            }).on('select2:select', function(e) {
+                var linkedTo = $(this).data().linkedTo;
+                var value = e.params.data.imageUrl;
+
+                console.log('Value is ' + value + ", linked control is " + linkedTo);
+
+                if(value !== undefined && value !== "" && linkedTo != null) {
+                    if(CKEDITOR.instances[linkedTo] != undefined) {
+                        CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
                     }
-                });
+                }
+            });
         }
 
         // Turn the background colour into a picker

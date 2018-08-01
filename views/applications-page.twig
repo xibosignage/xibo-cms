@@ -51,7 +51,7 @@
         var table = $("#applications").DataTable({ "language": dataTablesLanguage,
             serverSide: true, stateSave: true, stateDuration: 0,
             stateLoadCallback: function (settings, callback) {
-                var data;
+                var data = {};
                 $.ajax({
                     type: "GET",
                     async: false,

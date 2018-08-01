@@ -183,13 +183,11 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
-        // This is a temporary message - the new designer should handle this.
-        if (!$layout->isEditable())
-            throw new InvalidArgumentException('Layout is not editable, please checkout', 'layoutId');
-
-
-        // Get the Layout using the Draft ID
-        $layout = $this->layoutFactory->getByParentId($layoutId);
+        // Get the parent layout if it's editable
+        if ($layout->isEditable()) {
+            // Get the Layout using the Draft ID
+            $layout = $this->layoutFactory->getByParentId($layoutId);
+        }
 
         // Work out our resolution
         if ($layout->schemaVersion < 2)

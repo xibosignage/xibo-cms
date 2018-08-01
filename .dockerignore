@@ -15,6 +15,9 @@ results.xml
 #vendor/
 node_modules/
 
+# Dist will be built by Dockerfile
+web/dist/
+
 # Cache should be empty so that it gets built internally
 cache/
 

@@ -113,7 +113,12 @@ Viewer.prototype.render = function(element, layout, page = 1) {
         if(layout.backgroundImage === null) {
             this.DOMObject.find('.viewer-element').css('background', targetElement.backgroundColor);
         } else {
-            this.DOMObject.find('.viewer-element').css('background', "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
+            // Get API link
+            let linkToAPI = urlsForApi['layout']['downloadBackground'].url;
+            // Replace ID in the link
+            linkToAPI = linkToAPI.replace(':id', element.layoutId);
+
+            this.DOMObject.find('.viewer-element').css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
         }
 
         // Handle play button
@@ -249,7 +254,12 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
     if(layout.backgroundImage === null) {
         this.DOMObject.css('background-color', layout.backgroundColor);
     } else {
-        this.DOMObject.css('background', "url('" + urlsForApi['layout']['downloadBackground'].url + "?preview=1&width=" + (layout.width * dimensions.scale) + "&height=" + (layout.height * dimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
+        // Get API link
+        let linkToAPI = urlsForApi['layout']['downloadBackground'].url;
+        // Replace ID in the link
+        linkToAPI = linkToAPI.replace(':id', layout.layoutId);
+
+        this.DOMObject.css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * dimensions.scale) + "&height=" + (layout.height * dimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
         this.DOMObject.css('background-color', layout.backgroundColor);
 
         // Adjust background position

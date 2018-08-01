@@ -31,30 +31,42 @@
             const urlsForApi = {
                 layout: {
                     get: {
-                        url: "{{ urlFor("layout.search", {id: layout.layoutId}) }}",
+                        url: "{{ urlFor("layout.search") }}",
                         type: 'GET'
                     },
                     getForm: {
-                        url: "{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}",
+                        url: "{{ urlFor("layout.background.form") }}",
                         type: 'GET'
                     },
                     saveForm: {
-                        url: "{{ urlFor("layout.edit", {id: layout.layoutId}) }}",
+                        url: "{{ urlFor("layout.edit") }}",
                         type: 'PUT'
                     },
                     downloadBackground: {
-                        url: "{{ urlFor("layout.download.background", {id: layout.layoutId}) }}",
+                        url: "{{ urlFor("layout.download.background") }}",
                         type: 'GET'
                     },
                     preview: {
-                        url: "{{ urlFor("layout.preview", {id: layout.layoutId}) }}",
+                        url: "{{ urlFor("layout.preview") }}",
                         type: 'GET'
+                    },
+                    checkout: {
+                        url: "{{ urlFor("layout.checkout") }}",
+                        type: 'PUT'
+                    }, 
+                    publish: {
+                        url: "{{ urlFor("layout.publish") }}",
+                        type: 'PUT'
+                    },
+                    list: {
+                        url: "{{ urlFor("layout.view") }}"
                     }
                 },
                 region: {
                     transform: {
-                        url: "{{ urlFor("region.position.all", {id: layout.layoutId}) }}",
-                        type: 'PUT'
+                        url: "{{ urlFor("region.position.all") }}",
+                        type: 'PUT',
+                        useLayoutId: true
                     },
                     getForm: {
                         url: "{{ urlFor("region.edit.form") }}",
@@ -65,8 +77,9 @@
                         type: 'PUT'
                     },
                     create: {
-                        url: "{{ urlFor("region.add", {id: layout.layoutId}) }}",
-                        type: 'POST'
+                        url: "{{ urlFor("region.add") }}",
+                        type: 'POST',
+                        useLayoutId: true
                     },
                     delete: {
                         url: "{{ urlFor("region.delete") }}",
