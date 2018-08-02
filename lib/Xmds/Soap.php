@@ -628,28 +628,27 @@ class Soap
                         // date or not.
                         $module = $this->moduleFactory->createWithWidget($widget);
 
-                            // Get the widget modified date
-                            // we will use the later of this vs the layout modified date as the updated attribute on
-                            // required files
-                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
-                            $cachedDt = $module->getCacheDate($this->display->displayId);
+                        // Get the widget modified date
+                        // we will use the later of this vs the layout modified date as the updated attribute on
+                        // required files
+                        $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
+                        $cachedDt = $module->getCacheDate($this->display->displayId);
 
-                            // Updated date is the greater of layout/widget modified date
-                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
+                        // Updated date is the greater of layout/widget modified date
+                        $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
 
-                            // Finally compare against the cached date, and see if that has updated us at all
-                            $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
+                        // Finally compare against the cached date, and see if that has updated us at all
+                        $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
 
-                            // Append this item to required files
-                            $file = $requiredFilesXml->createElement("file");
-                            $file->setAttribute('type', 'resource');
-                            $file->setAttribute('id', $widget->widgetId);
-                            $file->setAttribute('layoutid', $layoutId);
-                            $file->setAttribute('regionid', $region->regionId);
-                            $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $updatedDt->format('U'));
-                            $fileElements->appendChild($file);
-                        }
+                        // Append this item to required files
+                        $file = $requiredFilesXml->createElement("file");
+                        $file->setAttribute('type', 'resource');
+                        $file->setAttribute('id', $widget->widgetId);
+                        $file->setAttribute('layoutid', $layoutId);
+                        $file->setAttribute('regionid', $region->regionId);
+                        $file->setAttribute('mediaid', $widget->widgetId);
+                        $file->setAttribute('updated', $updatedDt->format('U'));
+                        $fileElements->appendChild($file);
                     }
                 }
             }
