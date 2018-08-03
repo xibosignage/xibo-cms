@@ -296,6 +296,21 @@ class ConfigService implements ConfigServiceInterface
      */
     public function fileExists($uri)
     {
+        // Serve the appropriate file
+        if (file_exists(PROJECT_ROOT . '/web/' . $uri)) {
+            return true;
+        } else {
+            return file_exists(PROJECT_ROOT . '/web/' . $uri);
+        }
+    }
+
+    /**
+     * Check a theme file exists
+     * @param string $uri
+     * @return string
+     */
+    public function themeFileExists($uri)
+    {
         if (!$this->themeLoaded)
             return file_exists(PROJECT_ROOT . '/web/theme/default/' . $uri);
 

@@ -105,6 +105,13 @@ interface ConfigServiceInterface
      * @param string $uri
      * @return bool
      */
+    public function themeFileExists($uri);
+
+    /**
+     * Check a web file exists
+     * @param string $uri
+     * @return bool
+     */
     public function fileExists($uri);
 
     /**
