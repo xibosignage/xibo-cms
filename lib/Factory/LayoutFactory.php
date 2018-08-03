@@ -1099,7 +1099,8 @@ class LayoutFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('parentId', 0, $filterBy) != 0) {
             $body .= " AND layout.parentId = :parentId ";
             $params['parentId'] = $this->getSanitizer()->getInt('parentId', 0, $filterBy);
-        } else if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) == 0) {
+        } else if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) == 0
+            && $this->getSanitizer()->getInt('showDrafts', 0, $filterBy) == 0) {
             // If we're not searching for a parentId and we're not searching for a layoutId, then don't show any
             // drafts (parentId will be empty on drafts)
             $body .= ' AND layout.parentId IS NULL ';

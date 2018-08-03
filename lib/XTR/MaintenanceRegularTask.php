@@ -208,7 +208,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->runMessage .= '## ' . __('Build Layouts') . PHP_EOL;
 
         // Build Layouts
-        foreach ($this->layoutFactory->query(null, ['status' => 3]) as $layout) {
+        foreach ($this->layoutFactory->query(null, ['status' => 3, 'showDrafts' => 1]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             try {
                 $layout->xlfToDisk(['notify' => true]);
