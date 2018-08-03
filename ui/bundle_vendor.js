@@ -38,7 +38,6 @@ try {
     }
 } catch (e) { //Handle variable not set error
     console.log('[Warning] loading moment-jalaali: Calendar Type not defined!');
-    console.log(e);
 }
 
 // select2
