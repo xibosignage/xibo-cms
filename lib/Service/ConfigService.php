@@ -297,11 +297,7 @@ class ConfigService implements ConfigServiceInterface
     public function fileExists($uri)
     {
         // Serve the appropriate file
-        if (file_exists(PROJECT_ROOT . '/web/' . $uri)) {
-            return true;
-        } else {
-            return file_exists(PROJECT_ROOT . '/web/' . $uri);
-        }
+        return file_exists(PROJECT_ROOT . '/web/' . $uri);
     }
 
     /**
