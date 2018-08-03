@@ -147,13 +147,15 @@ COPY --from=composer /app /var/www/cms
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
-# All other files (.dockerignore excludes things we don't want)
+# All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY . /var/www/cms
 
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
     rm -r /var/www/cms/docker && \
+    rm -r /var/www/cms/tests && \
     rm /var/www/cms/.dockerignore && \
+    rm /var/www/cms/phpunit.xml && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
     rm /var/www/cms/cypress.json && \

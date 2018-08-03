@@ -6,9 +6,7 @@
 # Containers
 containers/
 
-# Test sources aren't included in the production container (they are mounted by dev/ci)
-tests/
-phpunit.xml
+# Exclude old test results
 results.xml
 
 # Vendor will be built by Dockerfile - don't include any of our local vendor files
