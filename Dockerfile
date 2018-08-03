@@ -15,22 +15,13 @@ RUN cd / && \
 # Stage 1
 # Run composer
 FROM composer:1.6 as composer
-COPY . /app
-RUN composer install --no-interaction --no-dev --ignore-platform-reqs --optimize-autoloader
+COPY ./composer.json /app
+COPY ./composer.lock /app
+
+RUN composer install --no-interaction --no-dev --optimize-autoloader
 
 # Tidy up
-# remove non-required vendor files and anything else we do not want in the archive and do not need for
-# the next state
-RUN rm /app/composer.* && \
-    rm -r /app/docker && \
-    rm .dockerignore && \
-    rm package.json && \
-    rm package-lock.json && \
-    rm cypress.json && \
-    rm -r /app/cypress && \
-    rm -r /app/ui && \
-    rm /app/webpack.config.js
-
+# remove non-required vendor files
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \
   find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
@@ -149,10 +140,26 @@ EXPOSE 80
 
 # Map the source files into /var/www/cms
 RUN mkdir -p /var/www/cms
+
+# Composer generated vendor files
 COPY --from=composer /app /var/www/cms
 
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
+
+# All other files (.dockerignore excludes things we don't want)
+COPY . /var/www/cms
+
+# Tidy up
+RUN rm /var/www/cms/composer.* && \
+    rm -r /var/www/cms/docker && \
+    rm /var/www/cms/.dockerignore && \
+    rm /var/www/cms/package.json && \
+    rm /var/www/cms/package-lock.json && \
+    rm /var/www/cms/cypress.json && \
+    rm -r /var/www/cms/cypress && \
+    rm -r /var/www/cms/ui && \
+    rm /var/www/cms/webpack.config.js
 
 # Map a volumes to this folder.
 # Our CMS files, library, cache and backups will be in here.
