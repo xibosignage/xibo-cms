@@ -1450,10 +1450,6 @@ class Layout extends Base
         /* @var \Xibo\Entity\Layout $layout */
         $layout = $this->layoutFactory->getById($layoutId);
 
-        // If we are a draft (and this is the parent) then refuse to do it
-        if ($layout->isEditable())
-            throw new InvalidArgumentException(__('There is a Draft of this Layout, cannot show the status'), 'statusId');
-
         $layout->xlfToDisk();
 
         switch ($layout->status) {

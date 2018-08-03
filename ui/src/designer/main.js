@@ -127,6 +127,9 @@ $(document).ready(function() {
                     lD.showCheckoutScreen(lD.layout);
                 }
 
+                // Call layout status every minute
+                setInterval('lD.layoutStatus()', 1000 * 60); // Every minute
+
                 // Default selected object is the layout
                 lD.selectObject();
             } else {
@@ -468,4 +471,28 @@ lD.clearTemporaryData = function() {
     
     // Remove text callback editor structure variables
     formHelpers.textCallbackDestroy();
+};
+
+/**
+ * Call layout status
+ */
+lD.layoutStatus = function() {
+    
+    const linkToAPI = urlsForApi['layout']['status'];
+    let requestPath = linkToAPI.url;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.layoutId);
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+        if(!res.success) {
+            console.log('Get status error');
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
 };

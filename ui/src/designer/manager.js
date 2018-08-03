@@ -297,6 +297,13 @@ Manager.prototype.revertChange = function() {
                     // Remove change from history
                     lD.manager.changeHistory.pop();
 
+                    // If the operation is a deletion, unselect object before deleting
+                    if(inverseOperation === 'delete') {
+
+                        // Unselect selected object before deleting
+                        lD.selectObject();
+                    }
+
                     // Resolve promise
                     resolve(data);
 
