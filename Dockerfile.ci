@@ -1,3 +1,6 @@
+# this is the dev container and doesn't contain CRON or composer
+# it maps the PWD straight through
+
 # Multi-stage build
 # Stage 0
 # Compile xsendfile apache module
@@ -18,23 +21,7 @@ FROM composer:1.6 as composer
 COPY ./composer.json /app
 COPY ./composer.lock /app
 
-RUN composer install --no-interaction --no-dev --optimize-autoloader
-
-# Tidy up
-# remove non-required vendor files
-WORKDIR /app/vendor
-RUN find -type d -name '.git' -exec rm -r {} + && \
-  find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
-  find -type d -name 'tests' -exec rm -r {} + && \
-  find -type d -name 'benchmarks' -exec rm -r {} + && \
-  find -type d -name 'smoketests' -exec rm -r {} + && \
-  find -type d -name 'demo' -exec rm -r {} + && \
-  find -type d -name 'doc' -exec rm -r {} + && \
-  find -type d -name 'docs' -exec rm -r {} + && \
-  find -type d -name 'examples' -exec rm -r {} + && \
-  find -type f -name 'phpunit.xml' -exec rm -r {} + && \
-  find -type f -name '*.md' -exec rm -r {} +
-
+RUN composer install --no-interaction
 
 # Stage 2
 # Run webpack
@@ -57,7 +44,7 @@ COPY ./ui ./ui
 # Build webpack
 RUN npm run build
 
-# Stage 3
+# Stage 1
 # Build the CMS container
 FROM alpine:3.6
 MAINTAINER Spring Signage <support@springsignage.com>
@@ -98,6 +85,14 @@ RUN apk update && apk upgrade && apk add tar \
 # Add all necessary config files in one layer
 ADD docker/ /
 
+# Adjust file permissions as appropriate
+RUN chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
+             /etc/periodic/15min/cms-db-backup && \
+    mkdir -p /run/apache2 && \
+    rm /etc/apache2/conf.d/info.conf && \
+    rm /etc/apache2/conf.d/userdir.conf && \
+    chmod 777 /tmp
+
 # Add xsendfile Module
 COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsendfile.so
 
@@ -106,23 +101,14 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
     sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
 
-# Setup persistent environment variables
-ENV CMS_DEV_MODE=false \
-    XMR_HOST=xmr \
-    CMS_SERVER_NAME=localhost \
-    MYSQL_HOST=mysql \
-    MYSQL_USER=cms \
-    MYSQL_PASSWORD=none \
+# Set some environment variables
+ENV CMS_DEV_MODE=true \
+    MYSQL_HOST=db \
     MYSQL_PORT=3306 \
+    MYSQL_USER=root \
+    MYSQL_PASSWORD=root \
     MYSQL_DATABASE=cms \
-    CMS_SMTP_SERVER=smtp.gmail.com:587 \
-    CMS_SMTP_USERNAME=none \
-    CMS_SMTP_PASSWORD=none \
-    CMS_SMTP_USE_TLS=YES \
-    CMS_SMTP_USE_STARTTLS=YES \
-    CMS_SMTP_REWRITE_DOMAIN=gmail.com \
-    CMS_SMTP_HOSTNAME=none \
-    CMS_SMTP_FROM_LINE_OVERRIDE=YES \
+    CMS_SERVER_NAME=localhost \
     CMS_ALIAS=none \
     CMS_PHP_SESSION_GC_MAXLIFETIME=1440 \
     CMS_PHP_POST_MAX_SIZE=2G \
@@ -139,7 +125,12 @@ ENV CMS_DEV_MODE=false \
 EXPOSE 80
 
 # Map the source files into /var/www/cms
-RUN mkdir -p /var/www/cms
+# Create library and cache, because they might not exist
+# Create /var/www/backup so that we have somewhere for entrypoint to log errors.
+RUN mkdir -p /var/www/cms && \
+    mkdir -p /var/www/cms/library/temp && \
+    mkdir -p /var/www/cms/cache && \
+    mkdir -p /var/www/backup
 
 # Composer generated vendor files
 COPY --from=composer /app /var/www/cms
@@ -147,42 +138,8 @@ COPY --from=composer /app /var/www/cms
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
-# All other files (.dockerignore excludes many things, but we tidy up the rest below)
+# All other files (.dockerignore excludes things we don't want)
 COPY . /var/www/cms
 
-# Tidy up
-RUN rm /var/www/cms/composer.* && \
-    rm -r /var/www/cms/docker && \
-    rm -r /var/www/cms/tests && \
-    rm /var/www/cms/.dockerignore && \
-    rm /var/www/cms/phpunit.xml && \
-    rm /var/www/cms/package.json && \
-    rm /var/www/cms/package-lock.json && \
-    rm /var/www/cms/cypress.json && \
-    rm -r /var/www/cms/cypress && \
-    rm -r /var/www/cms/ui && \
-    rm /var/www/cms/webpack.config.js
-
-# Map a volumes to this folder.
-# Our CMS files, library, cache and backups will be in here.
-RUN mkdir -p /var/www/cms/library/temp &&  \
-    mkdir -p /var/www/backup && \
-    mkdir -p /var/www/cms/cache && \
-    mkdir -p /var/www/cms/web/userscripts && \
-    chown -R apache:apache /var/www/cms && \
-    chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
-             /etc/periodic/15min/cms-db-backup && \
-    mkdir -p /run/apache2 && \
-    rm /etc/apache2/conf.d/info.conf && \
-    rm /etc/apache2/conf.d/userdir.conf && \
-    addgroup ssmtp && \
-    chmod 777 /tmp
-
-# Expose volume mount points
-VOLUME /var/www/cms/library
-VOLUME /var/www/cms/custom
-VOLUME /var/www/cms/web/theme/custom
-VOLUME /var/www/backup
-VOLUME /var/www/cms/web/userscripts
-
+# Run entry
 CMD ["/entrypoint.sh"]

@@ -528,7 +528,7 @@ class Layout implements \JsonSerializable
         $this->hash = $this->hash();
         $this->loaded = true;
 
-        $this->getLog()->debug('Loaded %s', $this->layoutId);
+        $this->getLog()->debug('Loaded ' . $this->layoutId . ' with hash ' . $this->hash . ', status ' . $this->status);
     }
 
     /**
@@ -594,7 +594,7 @@ class Layout implements \JsonSerializable
             }
 
         } else {
-            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId);
+            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId . ', status = ' . $this->status);
         }
 
         if ($options['saveRegions']) {
@@ -913,7 +913,7 @@ class Layout implements \JsonSerializable
             $countWidgets = count($widgets);
 
             if ($countWidgets <= 0) {
-                $this->getLog()->info('Layout has empty region');
+                $this->getLog()->info('Layout has empty region - ' . $countWidgets . ' widgets. playlistId = ' . $region->getPlaylist()->getId());
                 $layoutHasEmptyRegion = true;
             }
 
@@ -1234,6 +1234,8 @@ class Layout implements \JsonSerializable
         if ($this->status == 3 || !file_exists($path)) {
 
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
+
+            $this->load(['loadPlaylists' => true]);
 
             // Assume error
             $this->status = 4;

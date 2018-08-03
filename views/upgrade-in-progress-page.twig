@@ -14,8 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
-    <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet" media="screen">
-    <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">
+    <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
 
     <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
@@ -53,16 +52,16 @@
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="form-signin text-center" action="{{ urlFor("login") }}">
-        <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}"></a></p>
+    <div class="container">
+        <div class="form-signin text-center" action="{{ urlFor("login") }}">
+            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
-        <p>{% trans "The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes." %}</p>
+            <p>{% trans "The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes." %}</p>
+        </div>
+
+        <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}</p>
     </div>
-
-    <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}</p>
-</div> <!-- /container -->
-<script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
-<script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
+    <!-- /container -->
+    <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
 </body>
 </html>
