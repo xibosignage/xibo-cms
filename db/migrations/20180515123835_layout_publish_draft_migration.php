@@ -33,12 +33,10 @@ class LayoutPublishDraftMigration extends AbstractMigration
         $status = $this->table('status');
         $status
             ->addColumn('status', 'string', ['limit' => 254])
-            ->insert([
-                    ['status' => 'Published'],
-                    ['status' => 'Draft'],
-                    ['status' => 'Pending Approval'],
-                ])
             ->save();
+
+        // We must ensure that the IDs are added as we expect (don't rely on auto_increment)
+        $this->execute('INSERT INTO `status` (`id`, `status`) VALUES (1, \'Published\'), (2, \'Draft\'), (3, \'Pending Approval\')');
 
         // Add a reference to the Layout and Playlist tables for "parentId"
         $layout = $this->table('layout');
