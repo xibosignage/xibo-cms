@@ -138,5 +138,8 @@ COPY --from=composer /app /var/www/cms
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
+# All other files (.dockerignore excludes things we don't want)
+COPY . /var/www/cms
+
 # Run entry
 CMD ["/entrypoint.sh"]
