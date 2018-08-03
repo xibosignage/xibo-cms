@@ -69,14 +69,14 @@
         {% endif %}
 
         {# Handle the inclusion of i18n #}
-        {% set calendarTranslation %}{{ theme.rootUri() }}dist/vendor/calendar/js/language/{{ translate.calendarLanguage }}.js{% endset %}
+        {% set calendarTranslation %}dist/vendor/calendar/js/language/{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(calendarTranslation) %}
-            <script src="{{ theme.uri(calendarTranslation) }}"></script>
+            <script src="{{ theme.rootUri() }}{{ calendarTranslation }}"></script>
         {% endif %}
 
-        {% set datePickerTranslation %}{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
+        {% set datePickerTranslation %}dist/vendor/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(datePickerTranslation) %}
-            <script src="{{ theme.uri(datePickerTranslation) }}"></script>
+            <script src="{{ theme.rootUri() }}{{ datePickerTranslation }}"></script>
         {% endif %}
 
         <script type="text/javascript">
