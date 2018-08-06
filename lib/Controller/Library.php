@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -66,6 +67,9 @@ class Library extends Base
 
     /** @var  PoolInterface */
     private $pool;
+
+    /** @var EventDispatcherInterface */
+    private $dispatcher;
 
     /**
      * @var UserFactory
@@ -141,6 +145,7 @@ class Library extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
+     * @param EventDispatcherInterface $dispatcher
      * @param UserFactory $userFactory
      * @param ModuleFactory $moduleFactory
      * @param TagFactory $tagFactory
@@ -157,7 +162,7 @@ class Library extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -166,6 +171,7 @@ class Library extends Base
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->pool = $pool;
+        $this->dispatcher = $dispatcher;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
         $this->permissionFactory = $permissionFactory;
@@ -178,6 +184,15 @@ class Library extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+    }
+
+    /**
+     * Get Dispatcher
+     * @return EventDispatcherInterface
+     */
+    public function getDispatcher()
+    {
+        return $this->dispatcher;
     }
 
     /**
