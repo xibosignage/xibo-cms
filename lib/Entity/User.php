@@ -801,14 +801,15 @@ class User implements \JsonSerializable
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
-                     VALUES (:userName, :password, :userTypeId, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, newUserWizard, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
+                     VALUES (:userName, :password, :userTypeId, :newUserWizard, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
         $this->userId = $this->getStore()->insert($sql, [
             'userName' => $this->userName,
             'password' => $this->password,
             'userTypeId' => $this->userTypeId,
+            'newUserWizard' => $this->newUserWizard,
             'email' => $this->email,
             'homePageId' => $this->homePageId,
             'CSPRNG' => $this->CSPRNG,
