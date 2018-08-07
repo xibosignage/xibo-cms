@@ -855,7 +855,7 @@ class DataSetView extends ModuleWidget
     /** @inheritdoc */
     public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        $widgetModifiedDt = $this->widget->modifiedDt;
 
         $dataSetId = $this->getOption('dataSetId');
         $dataSet = $this->dataSetFactory->getById($dataSetId);
@@ -872,7 +872,7 @@ class DataSetView extends ModuleWidget
             $this->getPool()->saveDeferred($dataSetCache);
         }
 
-        return $widgetModifiedDt;
+        return $this->getDate()->parse($widgetModifiedDt, 'U');
     }
 
     /** @inheritdoc */

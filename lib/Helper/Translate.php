@@ -46,7 +46,7 @@ class Translate
     public static function InitLocale($config, $language = NULL)
     {
         // The default language
-        $default = $config->GetSetting('DEFAULT_LANGUAGE');
+        $default = ($language === null) ? $config->GetSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
         $localeDir = PROJECT_ROOT . '/locale';

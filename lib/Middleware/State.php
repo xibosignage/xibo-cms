@@ -640,6 +640,7 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->pool,
+                $container->dispatcher,
                 $container->userFactory,
                 $container->moduleFactory,
                 $container->tagFactory,

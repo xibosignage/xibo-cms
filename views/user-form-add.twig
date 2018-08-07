@@ -31,6 +31,7 @@
                 {% if currentUser.userTypeId == 1 %}
                     <li><a href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
                 {% endif %}
+                <li><a href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
             <form id="userAddForm" class="UserForm form-horizontal" method="post" action="{{ urlFor("user.add") }}">
                 <div class="tab-content">
@@ -125,6 +126,15 @@
                         {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
                     </div>
                     {% endif %}
+                    <div class="tab-pane" id="optionsTab">
+                        {% set title %}{% trans "Hide navigation?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the navigation side bar be hidden for this User?" %}{% endset %}
+                        {{ forms.checkbox("hideNavigation", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Hide User Guide?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User see the new user guide when they log in?" %}{% endset %}
+                        {{ forms.checkbox("newUserWizard", title, 1, helpText) }}
+                    </div>
                 </div>
             </form>
         </div>

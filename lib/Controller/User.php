@@ -436,6 +436,20 @@ class User extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="newUserWizard",
+     *      in="formData",
+     *      description="Flag indicating whether to show the new user guide",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="hideNavigation",
+     *      in="formData",
+     *      description="Flag indicating whether to hide the navigation",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -482,6 +496,10 @@ class User extends Base
         $user->ref3 = $this->getSanitizer()->getString('ref3');
         $user->ref4 = $this->getSanitizer()->getString('ref4');
         $user->ref5 = $this->getSanitizer()->getString('ref5');
+
+        // Options
+        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
 
         // Initial user group
         $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
@@ -544,6 +562,10 @@ class User extends Base
         $user->ref3 = $this->getSanitizer()->getString('ref3');
         $user->ref4 = $this->getSanitizer()->getString('ref4');
         $user->ref5 = $this->getSanitizer()->getString('ref5');
+
+        // Options
+        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
 
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
@@ -647,6 +669,7 @@ class User extends Base
     public function editForm($userId)
     {
         $user = $this->userFactory->getById($userId);
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
@@ -799,7 +822,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId, ['groupId'], ['setOnly' => 1]) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,

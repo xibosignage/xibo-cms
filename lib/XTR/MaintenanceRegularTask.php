@@ -162,6 +162,10 @@ class MaintenanceRegularTask implements TaskInterface
             /* @var \Xibo\Entity\Layout $layout */
             try {
                 $layout->xlfToDisk(['notify' => true]);
+
+                // Commit after each build
+                // https://github.com/xibosignage/xibo/issues/1593
+                $this->store->commitIfNecessary();
             } catch (\Exception $e) {
                 $this->log->error('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage());
             }
