@@ -94,7 +94,7 @@ class UserGroup extends Base
     /**
      * Group Grid
      * @SWG\Get(
-     *  path="/usergroup",
+     *  path="/group",
      *  operationId="userGroupSearch",
      *  tags={"usergroup"},
      *  summary="UserGroup Search",
@@ -138,7 +138,7 @@ class UserGroup extends Base
             $group->libraryQuotaFormatted = ByteFormatter::format($group->libraryQuota * 1024);
 
             if ($this->isApi())
-                break;
+                continue;
 
             // we only want to show certain buttons, depending on the user logged in
             if ($this->isEditable($group)) {
@@ -206,8 +206,9 @@ class UserGroup extends Base
     }
 
     /**
-     * Form to Add a Group
+     * Form to Edit a Group
      * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     function editForm($groupId)
     {
@@ -247,7 +248,50 @@ class UserGroup extends Base
     }
 
     /**
-     * Adds a group
+     * Add User Group
+     * @SWG\Post(
+     *  path="/group",
+     *  operationId="userGroupAdd",
+     *  tags={"usergroup"},
+     *  summary="UserGroup Add",
+     *  description="Add User Group",
+     *  @SWG\Parameter(
+     *      name="group",
+     *      in="formData",
+     *      description="Name of the User Group",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="libraryQuota",
+     *      in="formData",
+     *      description="The quota that should be applied (KiB). Provide 0 for no quota",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isSystemNotification",
+     *      in="formData",
+     *      description="Flag (0, 1), should members of this Group receive system notifications?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isDisplayNotification",
+     *      in="formData",
+     *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroup")
+     *      )
+     *  )
+     * )
      */
     function add()
     {
@@ -277,8 +321,59 @@ class UserGroup extends Base
     }
 
     /**
-     * Edits the Group Information
-     * @param int $groupId
+     * Edit User Group
+     * @SWG\Put(
+     *  path="/group/{userGroupId}",
+     *  operationId="userGroupEdit",
+     *  tags={"usergroup"},
+     *  summary="UserGroup Edit",
+     *  description="Edit User Group",
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="path",
+     *      description="ID of the User Group",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="group",
+     *      in="formData",
+     *      description="Name of the User Group",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="libraryQuota",
+     *      in="formData",
+     *      description="The quota that should be applied (KiB). Provide 0 for no quota",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isSystemNotification",
+     *      in="formData",
+     *      description="Flag (0, 1), should members of this Group receive system notifications?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isDisplayNotification",
+     *      in="formData",
+     *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroup")
+     *      )
+     *  )
+     * )
+     * @param $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     function edit($groupId)
     {
@@ -313,9 +408,27 @@ class UserGroup extends Base
     }
 
     /**
-     * Deletes a Group
-     * @param int $groupId
+     * Delete User Group
+     * @param $groupId
      * @throws \Xibo\Exception\NotFoundException
+     * @SWG\Delete(
+     *  path="/group/{userGroupId}",
+     *  operationId="userGroupDelete",
+     *  tags={"usergroup"},
+     *  summary="Delete User Group",
+     *  description="Delete User Group",
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="path",
+     *      description="The user Group ID to Delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      */
     function delete($groupId)
     {
@@ -340,6 +453,7 @@ class UserGroup extends Base
     /**
      * ACL Form for the provided GroupId
      * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function aclForm($groupId)
     {
@@ -402,6 +516,7 @@ class UserGroup extends Base
     /**
      * ACL update
      * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function acl($groupId)
     {
@@ -480,6 +595,7 @@ class UserGroup extends Base
     /**
      * Shows the Members of a Group
      * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function membersForm($groupId)
     {
@@ -528,8 +644,38 @@ class UserGroup extends Base
     }
 
     /**
-     * Sets the Members of a group
-     * @param int $groupId
+     * Assign User to the User Group
+     * @SWG\Post(
+     *  path="group/members/assign/{userGroupId}",
+     *  operationId="userGroupAssign",
+     *  tags={"usergroup"},
+     *  summary="Assign User to User Group",
+     *  description="Assign User to User Group",
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="path",
+     *      description="ID of the user group to which assign the user",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="formData",
+     *      description="Array of userIDs to assign",
+     *      type="array",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroup")
+     *      )
+     *  )
+     * )
+     * @param $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function assignUser($groupId)
     {
@@ -579,8 +725,38 @@ class UserGroup extends Base
     }
 
     /**
-     * Unassign a User from group
-     * @param int $groupId
+     * Unassign User to the User Group
+     * @SWG\Post(
+     *  path="group/members/unassign/{userGroupId}",
+     *  operationId="userGroupUnassign",
+     *  tags={"usergroup"},
+     *  summary="Unassign User from User Group",
+     *  description="Unassign User from User Group",
+     *  @SWG\Parameter(
+     *      name="userGroupId",
+     *      in="path",
+     *      description="ID of the user group from which to unassign the user",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="formData",
+     *      description="Array of userIDs to unassign",
+     *      type="array",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/UserGroup")
+     *      )
+     *  )
+     * )
+     * @param $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function unassignUser($groupId)
     {
@@ -662,6 +838,7 @@ class UserGroup extends Base
      * )
      *
      * @param int $userGroupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function copy($userGroupId)
     {

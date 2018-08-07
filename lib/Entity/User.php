@@ -32,6 +32,7 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -40,6 +41,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserOptionFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Pbkdf2Hash;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -299,6 +301,12 @@ class User implements \JsonSerializable
     /** @var  ApplicationScopeFactory */
     private $applicationScopeFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -352,15 +360,19 @@ class User implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param WidgetFactory $widgetFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->widgetFactory = $widgetFactory;
         return $this;
     }
 
@@ -773,6 +785,7 @@ class User implements \JsonSerializable
         // Delete any media
         foreach ($this->media as $media) {
             /* @var Media $media */
+            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
             $media->delete();
         }
 
