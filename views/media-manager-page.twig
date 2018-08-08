@@ -29,11 +29,11 @@
                     <table id="entries" class="table table-striped">
                         <thead>
                             <tr>
+                                <th>{% trans "Widget" %}</th>
+                                <th>{% trans "Type" %}</th>
                                 <th>{% trans "Layout" %}</th>
                                 <th>{% trans "Region" %}</th>
                                 <th>{% trans "Playlist" %}</th>
-                                <th>{% trans "Widget" %}</th>
-                                <th>{% trans "Type" %}</th>
                                 <th>{% trans "Display Order" %}</th>
                                 <th></th>
                             </tr>
@@ -55,7 +55,7 @@
         $(document).ready(function() {
             table = $("#entries").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: false,
+                serverSide: true,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
@@ -66,11 +66,19 @@
                     }
                 },
                 "columns": [
-                    {"data": "layout.layout"},
-                    {"data": "region"},
-                    {"data": "playlist"},
                     {"data": "widget"},
                     {"data": "type"},
+                    {
+                        "data": "layout",
+                        "orderable": false
+                    },
+                    {
+                        "data": "region",
+                        "orderable": false
+                    },
+                    {
+                        "data": "playlist"
+                    },
                     {"data": "displayOrder"},
                     {
                         "orderable": false,
