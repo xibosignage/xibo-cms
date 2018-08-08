@@ -131,13 +131,40 @@ class MediaManager extends Base
             if (!$this->getUser()->checkEditable($widget))
                 continue;
 
-            $row['buttons'] = [
-                [
-                    'id' => 'WidgetEditForm',
-                    'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
-                    'text' => __('Edit')
-                ]
+            $row['buttons'] = [];
+
+            $row['buttons'][] = [
+                'id' => 'WidgetEditForm',
+                'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
+                'text' => __('Edit')
             ];
+
+            // Thumbnail URL
+            $row['thumbnail'] = '';
+            $row['thumbnailUrl'] = '';
+
+            if ($module->getModule()->regionSpecific == 0) {
+
+                if ($widget->type == 'image') {
+                    $download = $this->urlFor('library.download', ['id' => $widget->getPrimaryMediaId()]) . '?preview=1';
+                    $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
+                    $row['thumbnailUrl'] = $download . '&width=100&height=56&cache=1';
+                }
+
+                // Add a replace button directly on the drop down menu
+                $row['buttons'][] = [
+                    'id' => 'MediaReplaceForm',
+                    'url' => '#',
+                    'text' => __('Replace'),
+                    'dataAttributes' => [
+                        ['name' => 'media-id', 'value' => $widget->getPrimaryMediaId()],
+                        ['name' => 'widget-id', 'value' => $widget->widgetId],
+                        ['name' => 'valid-extensions', 'value' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $widget->type]))]
+                    ],
+                    'class' => 'MediaManagerReplaceButton'
+                ];
+            }
+
 
             $rows[] = $row;
         }
