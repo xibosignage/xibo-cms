@@ -458,12 +458,21 @@ class Library extends Base
                 );
             }
 
-            if ($user->checkDeleteable($media)) {
-                // Delete
+            if ($this->getUser()->checkDeleteable($media)) {
+                // Delete Button
                 $media->buttons[] = array(
                     'id' => 'content_button_delete',
                     'url' => $this->urlFor('library.delete.form', ['id' => $media->mediaId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('library.delete', ['id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'content_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
+                    )
                 );
             }
 
