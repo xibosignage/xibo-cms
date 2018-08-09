@@ -1559,7 +1559,7 @@ class Display extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Default Layout ID %d set for %s'), $layout->layoutId, $display->display),
+            'message' => sprintf(__('Default Layout with name %s set for %s'), $layout->layout, $display->display),
             'id' => $display->displayId
         ]);
     }
