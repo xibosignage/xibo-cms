@@ -240,17 +240,17 @@ class WidgetFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
         if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
-            $body .= ' AND playlistId = :playlistId';
+            $body .= ' AND `widget`.playlistId = :playlistId';
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
-            $body .= ' AND widgetId = :widgetId';
+            $body .= ' AND `widget`.widgetId = :widgetId';
             $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
         }
 
         if ($this->getSanitizer()->getString('type', $filterBy) !== null) {
-            $body .= ' AND type = :type';
+            $body .= ' AND `widget`.type = :type';
             $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
         }
 
