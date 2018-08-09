@@ -51,6 +51,8 @@ class FixDatabaseIndexesAndContraints implements Step
             $this->addUniqueIndexForLkDisplayDg();
 
         $this->addForeignKeyToOAuthClients();
+
+        $this->addForeignKeyToTags();
     }
 
     /**
@@ -150,5 +152,56 @@ class FixDatabaseIndexesAndContraints implements Step
 
         // Create the index fresh, now that duplicates removed
         $this->store->update('ALTER TABLE `oauth_clients` ADD CONSTRAINT oauth_clients_user_UserID_fk FOREIGN KEY (userId) REFERENCES `user` (UserID);', []);
+    }
+
+    /**
+     * Adds a foreign key for the tag link tables
+     */
+    private function addForeignKeyToTags()
+    {
+        // Does the constraint already exist?
+        if (!$this->store->exists('
+            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
+                AND `table_name` = \'lktagcampaign\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'campaignId\';', [])) {
+
+            // Delete any records which result in a constraint failure (the records would be orphaned anyway)
+            $this->store->update('DELETE FROM `lktagcampaign` WHERE campaignId NOT IN (SELECT campaignId FROM `campaign`)', []);
+
+            // Add the constraint
+            $this->store->update('ALTER TABLE `lktagcampaign` ADD CONSTRAINT `lktagcampaign_ibfk_1` FOREIGN KEY (`campaignId`) REFERENCES `campaign` (`campaignId`);', []);
+        }
+
+        if (!$this->store->exists('
+            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
+                AND `table_name` = \'lktaglayout\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'layoutId\';', [])) {
+
+            // Delete any records which result in a constraint failure (the records would be orphaned anyway)
+            $this->store->update('DELETE FROM `lktaglayout` WHERE layoutId NOT IN (SELECT layoutId FROM `layout`)', []);
+
+            // Add the constraint
+            $this->store->update('ALTER TABLE `lktaglayout` ADD CONSTRAINT `lktaglayout_ibfk_1` FOREIGN KEY (`layoutId`) REFERENCES `layout` (`layoutId`);', []);
+        }
+
+        if (!$this->store->exists('
+            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
+                AND `table_name` = \'lktagmedia\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'mediaId\';', [])) {
+
+            // Delete any records which result in a constraint failure (the records would be orphaned anyway)
+            $this->store->update('DELETE FROM `lktagmedia` WHERE mediaId NOT IN (SELECT mediaId FROM `media`)', []);
+
+            // Add the constraint
+            $this->store->update('ALTER TABLE `lktagmedia` ADD CONSTRAINT `lktagmedia_ibfk_1` FOREIGN KEY (`mediaId`) REFERENCES `media` (`mediaId`);', []);
+        }
+
+        if (!$this->store->exists('
+            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
+                AND `table_name` = \'lktagdisplaygroup\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'displaygroupId\';', [])) {
+
+            // Delete any records which result in a constraint failure (the records would be orphaned anyway)
+            $this->store->update('DELETE FROM `lktagdisplaygroup` WHERE displayGroupId NOT IN (SELECT displayGroupId FROM `displaygroup`)', []);
+
+            // Add the constraint
+            $this->store->update('ALTER TABLE `lktagdisplaygroup` ADD CONSTRAINT `lktagdisplaygroup_ibfk_1` FOREIGN KEY (`displayGroupId`) REFERENCES `displaygroup` (`displayGroupId`);', []);
+        }
     }
 }

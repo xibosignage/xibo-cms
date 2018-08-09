@@ -1,0 +1,11 @@
+{
+  "dbVersion": 142,
+  "appVersion": "1.8.11",
+  "steps": [
+    {
+      "step": "Fix database constraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    }
+  ]
+}
