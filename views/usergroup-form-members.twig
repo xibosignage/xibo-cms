@@ -32,7 +32,7 @@
                  data-param-unassign="unassignUserId"
                  data-url="{{ urlFor("group.members.assign", {id: group.groupId}) }}"
                     >
-                {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member of not.{% endtrans %}{% endset %}
+                {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
                 <table class="table table-bordered membersTable">
                     <tr>
