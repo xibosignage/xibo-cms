@@ -410,7 +410,7 @@ let formHelpers = function() {
             e.preventDefault();
 
             // Open the upload dialog with our options.
-            lD.toolbar.openUploadForm(
+            lD.openUploadForm(
                 {
                     oldMediaId: mediaId,
                     widgetId: widgetId,

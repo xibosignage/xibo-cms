@@ -33,22 +33,23 @@ const inverseChangeMap = {
 /**
  * Layout Editor Manager
  */
-let Manager = function(container) {
+let Manager = function(container, visible) {
 
     this.DOMObject = container;
 
-    this.visible = true;
+    this.extended = true;
+
+    this.visible = visible;
 
     this.changeUniqueId = 0;
 
     this.changeHistory = []; // Array of changes
 
-    this.toggleVisibility = function() {
-        
-        lD.manager.visible = !lD.manager.visible;
+    this.toggleExtended = function() {  
+        this.extended = !this.extended;
 
         // Render template container
-        lD.manager.render();
+        this.render();
     };
 
     // Return true if there are some not uploaded changes
@@ -62,7 +63,7 @@ let Manager = function(container) {
         }
 
         return false;
-    }
+    };
 };
 
 /**
@@ -406,6 +407,10 @@ Manager.prototype.removeLastChange = function() {
  * Render Manager
  */
 Manager.prototype.render = function() {
+
+    if(this.visible == false) {
+        return;
+    }
     // Compile layout template with data
     const html = managerTemplate(this);
 
@@ -416,7 +421,7 @@ Manager.prototype.render = function() {
     this.DOMObject.draggable();
 
     //Add toggle visibility event
-    this.DOMObject.find('#layout-manager-header .title').click(this.toggleVisibility);
+    this.DOMObject.find('#layout-manager-header .title').click(this.toggleExtended.bind(this));
 };
 
 module.exports = Manager;

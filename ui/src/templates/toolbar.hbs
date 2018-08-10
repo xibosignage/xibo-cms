@@ -99,22 +99,19 @@
                 </li>
             {{/if}}
 
-            <li>
-                <button id="publishLayout" class="btn btn-success navbar-btn" href="#">
-                    <span>Publish</span>
-                    <i class="fa fa-check-square-o"></i>
-                </button>
-            </li>
+            {{#each customButtons}}
+                <li>
+                    <button id="{{id}}" class="btn {{class}} navbar-btn" href="#">
+                        <span>{{title}}</span>
+                        {{#if logo}}
+                            <i class="fa {{logo}}"></i>
+                        {{/if}}
+                    </button>
+                </li>
+            {{/each}}
 
             <li>
-                <button id="undoLastAction" {{undo}} class="btn btn-warning navbar-btn" href="#">
-                    <span>Undo</span>
-                    <i class="fa fa-undo"></i>
-                </button>
-            </li>
-
-            <li>
-                <a id="trashContainer" class="navbar-bin {{#if deletableSelectedObject}}available{{/if}}">
+                <a id="trashContainer" class="navbar-bin">
                     <i class="fa fa-trash"></i>
                 </a>
             </li>

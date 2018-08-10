@@ -99,7 +99,7 @@ let Widget = function(id, regionId, data) {
             }
             
             // set the duration to the widget
-            this.duration = calculatedDuration
+            this.duration = calculatedDuration;
         }
 
         return this.duration;

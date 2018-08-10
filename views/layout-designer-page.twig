@@ -27,6 +27,8 @@
             {% endfor %}
 
             let libraryUpload = {{ libraryUpload|json_encode|raw }};
+
+            const serverMode = "{{ settings.SERVER_MODE }}";
             
             const urlsForApi = {
                 layout: {
@@ -39,7 +41,7 @@
                         type: 'GET'
                     },
                     saveForm: {
-                        url: "{{ urlFor("layout.edit") }}",
+                        url: "{{ urlFor("layout.edit.background") }}",
                         type: 'PUT'
                     },
                     downloadBackground: {
@@ -130,6 +132,16 @@
                         url: "{{ urlFor("module.widget.add.form") }}",
                         type: 'GET'
                     }
+                },
+                user: {
+                    getPref: {
+                        url: "{{ urlFor("user.pref") }}",
+                        type: 'GET'
+                    },
+                    savePref: {
+                        url: "{{ urlFor("user.pref") }}",
+                        type: 'POST'
+                    }
                 }
             };
 
@@ -163,6 +175,13 @@
                     title: "{% trans "Delete the old version?" %}",
                     helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
                 }
+            }
+             var layoutDesignerTrans = {
+                publishTitle: "{% trans "Publish" %}",
+                publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
+                checkoutTitle: "{% trans "Checkout" %}",
+                checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
+                undo: "{% trans "Undo" %}"
             }
             {% endautoescape %}
 

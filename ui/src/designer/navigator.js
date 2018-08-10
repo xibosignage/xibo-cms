@@ -150,7 +150,7 @@ Navigator.prototype.render = function(layout) {
     this.DOMObject.find('.designer-region').droppable({
         accept: '.toolbar-card',
         drop: function(event, ui) {
-            lD.toolbar.dropItemAdd(event.target, ui.draggable[0]);
+            lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
 

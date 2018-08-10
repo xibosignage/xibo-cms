@@ -200,11 +200,11 @@ Viewer.prototype.renderNavbar = function(data, elementType) {
     // Paging controls
     if(data.extra && data.extra.number_items > 1) {
         this.navbarContainer.find('#left-btn').prop('disabled', (data.extra.current_item <= 1)).click(function() {
-            this.render(lD.selectedObject, lD.layout, data.extra.current_item - 1)
+            this.render(lD.selectedObject, lD.layout, data.extra.current_item - 1);
         }.bind(this));
 
         this.navbarContainer.find('#right-btn').prop('disabled', (data.extra.current_item >= data.extra.number_items)).click(function() {
-            this.render(lD.selectedObject, lD.layout, data.extra.current_item + 1)
+            this.render(lD.selectedObject, lD.layout, data.extra.current_item + 1);
         }.bind(this));
     }
 };
