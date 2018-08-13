@@ -41,10 +41,7 @@ class FixDatabaseIndexesAndContraints implements Step
         $this->config = $config;
     }
 
-    /**
-     * @param \Slim\Helper\Set $container
-     * @throws \Xibo\Exception\NotFoundException
-     */
+    /** @inheritdoc */
     public function doStep($container)
     {
         if (!$this->checkIndexExists('lkdisplaydg', ['displayGroupId', 'displayId'], 1))
@@ -53,6 +50,12 @@ class FixDatabaseIndexesAndContraints implements Step
         $this->addForeignKeyToOAuthClients();
 
         $this->addForeignKeyToTags();
+
+        $this->addForeignKeyToPermissions();
+
+        if (!$this->checkIndexExists('permission', ['objectId'], 0)) {
+            $this->store->update('CREATE INDEX permission_objectId_index ON permission (objectId);', []);
+        }
     }
 
     /**
@@ -138,7 +141,7 @@ class FixDatabaseIndexesAndContraints implements Step
             FROM INFORMATION_SCHEMA.STATISTICS
             WHERE table_schema=DATABASE()
                   AND table_name = \'oauth_clients\'
-            AND index_name LIKE \'%_fk\'
+            AND index_name LIKE \'%fk\'
             AND column_name = \'userId\'
         ;', [])) {
             return;
@@ -162,7 +165,7 @@ class FixDatabaseIndexesAndContraints implements Step
         // Does the constraint already exist?
         if (!$this->store->exists('
             SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktagcampaign\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'campaignId\';', [])) {
+                AND `table_name` = \'lktagcampaign\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'campaignId\';', [])) {
 
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->store->update('DELETE FROM `lktagcampaign` WHERE campaignId NOT IN (SELECT campaignId FROM `campaign`)', []);
@@ -173,7 +176,7 @@ class FixDatabaseIndexesAndContraints implements Step
 
         if (!$this->store->exists('
             SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktaglayout\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'layoutId\';', [])) {
+                AND `table_name` = \'lktaglayout\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'layoutId\';', [])) {
 
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->store->update('DELETE FROM `lktaglayout` WHERE layoutId NOT IN (SELECT layoutId FROM `layout`)', []);
@@ -184,7 +187,7 @@ class FixDatabaseIndexesAndContraints implements Step
 
         if (!$this->store->exists('
             SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktagmedia\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'mediaId\';', [])) {
+                AND `table_name` = \'lktagmedia\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'mediaId\';', [])) {
 
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->store->update('DELETE FROM `lktagmedia` WHERE mediaId NOT IN (SELECT mediaId FROM `media`)', []);
@@ -195,13 +198,41 @@ class FixDatabaseIndexesAndContraints implements Step
 
         if (!$this->store->exists('
             SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktagdisplaygroup\' AND `index_name` LIKE \'%_fk\' AND `column_name` = \'displaygroupId\';', [])) {
+                AND `table_name` = \'lktagdisplaygroup\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'displaygroupId\';', [])) {
 
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->store->update('DELETE FROM `lktagdisplaygroup` WHERE displayGroupId NOT IN (SELECT displayGroupId FROM `displaygroup`)', []);
 
             // Add the constraint
             $this->store->update('ALTER TABLE `lktagdisplaygroup` ADD CONSTRAINT `lktagdisplaygroup_ibfk_1` FOREIGN KEY (`displayGroupId`) REFERENCES `displaygroup` (`displayGroupId`);', []);
+        }
+    }
+
+    /**
+     * Adds a foreign key for the permissions tables
+     */
+    private function addForeignKeyToPermissions()
+    {
+        if (!$this->store->exists('
+            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
+                AND `table_name` = \'permission\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'groupId\';', [])) {
+
+            // Delete any records which result in a constraint failure (the records would be orphaned anyway)
+            $this->store->update('DELETE FROM `permission` WHERE groupId NOT IN (SELECT groupId FROM `group`)', []);
+
+            // Add the constraint
+            $this->store->update('ALTER TABLE `permission` ADD CONSTRAINT `permission_ibfk_1` FOREIGN KEY (`groupId`) REFERENCES `group` (`groupId`);', []);
+        }
+
+        if (!$this->store->exists('
+            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
+                AND `table_name` = \'permission\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'entityId\';', [])) {
+
+            // Delete any records which result in a constraint failure (the records would be orphaned anyway)
+            $this->store->update('DELETE FROM `permission` WHERE entityId NOT IN (SELECT entityId FROM `permissionentity`)', []);
+
+            // Add the constraint
+            $this->store->update('ALTER TABLE `permission` ADD CONSTRAINT `permission_ibfk_2` FOREIGN KEY (`entityId`) REFERENCES `permissionentity` (`entityId`);', []);
         }
     }
 }

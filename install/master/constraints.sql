@@ -131,3 +131,14 @@ ALTER TABLE `lktagcampaign` ADD CONSTRAINT `lktagcampaign_ibfk_1` FOREIGN KEY (`
 ALTER TABLE `lktaglayout` ADD CONSTRAINT `lktaglayout_ibfk_1` FOREIGN KEY (`layoutId`) REFERENCES `layout` (`layoutId`);
 ALTER TABLE `lktagmedia` ADD CONSTRAINT `lktagmedia_ibfk_1` FOREIGN KEY (`mediaId`) REFERENCES `media` (`mediaId`);
 ALTER TABLE `lktagdisplaygroup` ADD CONSTRAINT `lktagdisplaygroup_ibfk_1` FOREIGN KEY (`displayGroupId`) REFERENCES `displaygroup` (`displayGroupId`);
+
+# Permissions foreign keys and index
+CREATE INDEX permission_objectId_index ON permission (objectId);
+
+ALTER TABLE permission
+  ADD CONSTRAINT permission_group_groupID_fk
+FOREIGN KEY (groupId) REFERENCES `group` (groupID);
+
+ALTER TABLE permission
+  ADD CONSTRAINT permission_permissionentity_entityId_fk
+FOREIGN KEY (entityId) REFERENCES permissionentity (entityId);
