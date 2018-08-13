@@ -100,6 +100,19 @@ class StatusDashboard extends Base
     }
 
     /**
+     * Displays
+     */
+    public function displays()
+    {
+        // Get a list of displays
+        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->displayFactory->countLast();
+        $this->getState()->setData($displays);
+    }
+
+    /**
      * View
      */
     function displayPage()
@@ -110,26 +123,23 @@ class StatusDashboard extends Base
         $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
 
         try {
-            // Displays this user has access to
-            $displays = $this->displayFactory->query(['display']);
-            $displayIds = array_map(function($element) {
-                return $element->displayId;
-            }, $displays);
-            $displayIds[] = -1;
-
             // Get some data for a bandwidth chart
             $dbh = $this->store->getConnection();
+            $params = ['month' => time() - (86400 * 365)];
 
             $sql = '
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
                   IFNULL(SUM(Size), 0) AS size
                 FROM `bandwidth`
-               WHERE month > :month AND displayId IN (' . implode(',', $displayIds) . ')
-              GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month);
-              ';
-            $params = array('month' => time() - (86400 * 365));
+                  INNER JOIN `lkdisplaydg`
+                  ON lkdisplaydg.displayid = bandwidth.displayId
+               WHERE month > :month ';
 
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
+            $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month); ';
+
+            // Run the SQL
             $results = $this->store->select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
@@ -258,9 +268,6 @@ class StatusDashboard extends Base
             $data['libraryWidgetLabels'] = json_encode($libraryLabels);
             $data['libraryWidgetData'] = json_encode($libraryUsage);
 
-            // Also a display widget
-            $data['displays'] = $displays;
-
             // Get a count of users
             $data['countUsers'] = count($this->userFactory->query());
 
@@ -271,6 +278,8 @@ class StatusDashboard extends Base
             }, $displayGroups);
             // Add an empty one
             $displayGroupIds[] = -1;
+
+            $params = ['now' => time()];
 
             $sql = '
               SELECT IFNULL(COUNT(*), 0) AS count_scheduled 
@@ -285,10 +294,12 @@ class StatusDashboard extends Base
                 AND eventId IN (
                   SELECT eventId 
                     FROM `lkscheduledisplaygroup` 
-                   WHERE displayGroupId IN (' . implode(',', $displayGroupIds) . ')
-                )
+                   WHERE 1 = 1
             ';
-            $params = array('now' => time());
+
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkscheduledisplaygroup`.displayGroupId');
+
+            $sql .= ' ) ';
 
             $sth = $dbh->prepare($sql);
             $sth->execute($params);
