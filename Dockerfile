@@ -145,27 +145,9 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
-    addgroup ssmtp
-
-# Initial configuration
-RUN test ! -f /var/www/SETUP-COMPLETED && \
-    cp /tmp/settings.php-template /var/www/cms/web/settings.php && \
-    cp /tmp/settings-custom.php /var/www/cms/custom/settings-custom.php && \
-    touch /var/www/SETUP-COMPLETED
-
-RUN mkdir -p /var/www/backup/db && \
-    mkdir -p /var/www/cms/library/temp && \
-    rm /var/www/cms/web/install/index.php
-
-RUN chmod 0777 /var/www/backup/db && \
-    chmod 0755 /etc/periodic/apache && \
-    chmod 0755 /etc/periodic/15min/cms-db-backup && \
-    chmod 0777 /tmp && \
-    chmod 0640 /etc/ssmtp/ssmtp.conf && \
-    chmod  g+s /usr/sbin/ssmtp && \
-    chgrp ssmtp /etc/ssmtp/ssmtp.conf && \
-    chgrp ssmtp /usr/sbin/ssmtp && \
-    chown apache.apache -R /var/www/cms
+    touch /CMS-FLAG && \
+    addgroup ssmtp && \
+    chmod 777 /tmp
 
 # Expose volume mount points
 VOLUME /var/www/cms/library

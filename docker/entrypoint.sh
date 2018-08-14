@@ -126,21 +126,42 @@ then
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 fi
 
+if [ -e /CMS-FLAG ]
+then
+  # Remove the CMS-FLAG so we don't run this block each time we're started
+  rm /CMS-FLAG
+
+  # Write settings.php
+  echo "Updating settings.php"
+
+  # We won't have a settings.php in place, so we'll need to copy one in
+  cp /tmp/settings.php-template /var/www/cms/web/settings.php
+  chown apache.apache -R /var/www/cms/web/settings.php
+
+  SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
+fi
+
 if [ "$CMS_DEV_MODE" == "false" ]
 then
-    # Define the secret if not done already
-    SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8) && \
-    /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
-
-    # Update /etc/periodic/15min/cms-db-backup.env with current environment (for cron)
-    /bin/sed -i "s/^MYSQL_USER=.*$/MYSQL_USER=$MYSQL_USER/"             /etc/periodic/15min/cms-db-backup.env
-    /bin/sed -i "s/^MYSQL_PASSWORD=.*$/MYSQL_PASSWORD=$MYSQL_PASSWORD/" /etc/periodic/15min/cms-db-backup.env
-    /bin/sed -i "s/^MYSQL_HOST=.*$/MYSQL_HOST=$MYSQL_HOST/"             /etc/periodic/15min/cms-db-backup.env
-    /bin/sed -i "s/^MYSQL_PORT=.*$/MYSQL_PORT=$MYSQL_PORT/"             /etc/periodic/15min/cms-db-backup.env
-    /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup.env
+    # Update /etc/periodic/15min/cms-db-backup with current environment (for cron)
+    /bin/sed -i "s/^MYSQL_USER=.*$/MYSQL_USER=$MYSQL_USER/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_PASSWORD=.*$/MYSQL_PASSWORD=$MYSQL_PASSWORD/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_HOST=.*$/MYSQL_HOST=$MYSQL_HOST/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_PORT=.*$/MYSQL_PORT=$MYSQL_PORT/" /etc/periodic/15min/cms-db-backup
+    /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
     # Update /var/www/maintenance with current environment (for cron)
-    crontab -u apache /etc/periodic/apache
+    echo "Configuring Maintenance"
+    echo "#!/bin/bash" > /var/www/maintenance.sh
+    echo "" >> /var/www/maintenance.sh
+    /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
+    echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
+    chmod 755 /var/www/maintenance.sh
+
+    echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
+    echo "" >> /etc/crontabs/apache
+    crontab -u apache /etc/crontabs/apache
 
     # Configure SSMTP to send emails if required
     /bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf
@@ -159,6 +180,17 @@ then
     /bin/sed -i "s/hostname=.*$/hostname=$CMS_SMTP_HOSTNAME/" /etc/ssmtp/ssmtp.conf
     /bin/sed -i "s/FromLineOverride=.*$/FromLineOverride=$CMS_SMTP_FROM_LINE_OVERRIDE/" /etc/ssmtp/ssmtp.conf
 
+    # Secure SSMTP files
+    # Following recommendations here:
+    # https://wiki.archlinux.org/index.php/SSMTP#Security
+    /bin/chgrp ssmtp /etc/ssmtp/ssmtp.conf
+    /bin/chgrp ssmtp /usr/sbin/ssmtp
+    /bin/chmod 640 /etc/ssmtp/ssmtp.conf
+    /bin/chmod g+s /usr/sbin/ssmtp
+
+    mkdir -p /var/www/cms/library/temp
+    chown apache.apache -R /var/www/cms
+
     # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
     if [ ! "$CMS_ALIAS" == "none" ]
@@ -167,14 +199,26 @@ then
         /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/conf.d/cms.conf
         /bin/sed -i "s|.*RewriteBase.*$|RewriteBase $CMS_ALIAS|" /var/www/cms/web/.htaccess
     fi
+
+    if [ ! -e /var/www/cms/custom/settings-custom.php ]
+    then
+        /bin/cp /tmp/settings-custom.php /var/www/cms/custom
+    fi
+
+    # Remove install.php if it exists
+    if [ -e /var/www/cms/web/install/index.php ]
+    then
+        echo "Removing web/install/index.php from production container"
+        rm /var/www/cms/web/install/index.php
+    fi
 fi
 
 # Configure PHP session.gc_maxlifetime
-/bin/sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php7/php.ini
-/bin/sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7/php.ini
-/bin/sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
-/bin/sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
-/bin/sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
+sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php7/php.ini
+sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7/php.ini
+sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
+sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
+sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
 
 echo "Running maintenance"
 cd /var/www/cms
