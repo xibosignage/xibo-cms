@@ -40,6 +40,10 @@ require('../css/designer.css');
 // Create layout designer namespace (lD)
 window.lD = {
 
+    // Main object info
+    mainObjectType: 'layout',
+    mainObjectId: '',
+
     // Navigator
     navigator: {},
     navigatorEdit: {},
@@ -89,6 +93,9 @@ $(document).ready(function() {
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
 
+                // Update main object id
+                lD.mainObjectId = lD.layout.layoutId;
+
                 // Initialize navigator
                 lD.navigator = new Navigator(
                     // Small container
@@ -103,7 +110,8 @@ $(document).ready(function() {
                 // Initialize manager
                 lD.manager = new Manager(
                     lD.designerDiv.find('#layout-manager'),
-                    (serverMode == 'Test')
+                    (serverMode == 'Test'),
+                    lD
                 );
 
                 // Initialize viewer
@@ -280,6 +288,9 @@ lD.reloadData = function(layout) {
             
             if(res.data.length > 0) {
                 lD.layout = new Layout(layout.layoutId, res.data[0]);
+
+                // Update main object id
+                lD.mainObjectId = lD.layout.layoutId;
 
                 // Select the same object ( that will refresh the layout too )
                 const selectObjectId = lD.selectedObject.id;
@@ -912,6 +923,28 @@ lD.clearTemporaryData = function() {
 };
 
 /**
+ * Get element from the main object ( Layout )
+ * @param {string} type
+ * @param {number} id
+ * @param {number} auxId
+ */
+lD.getElementByTypeAndId = function(type, id, auxId) {
+
+    let element = {};
+
+    if(type === 'layout') {
+        element = lD.layout;
+    } else if(type === 'region') {
+        element = lD.layout.regions['region_' + id];
+    } else if(type === 'widget') {
+        element = lD.layout.regions['region_' + auxId].widgets['widget_' + id];
+    }
+
+    return element;
+};
+
+
+/**
  * Call layout status
  */
 lD.layoutStatus = function() {
@@ -927,7 +960,7 @@ lD.layoutStatus = function() {
         type: linkToAPI.type
     }).done(function(res) {
         if(!res.success) {
-            console.log('Get status error');
+            console.error('Get status error');
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console

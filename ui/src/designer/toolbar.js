@@ -83,8 +83,6 @@ Toolbar.prototype.loadPrefs = function() {
                 self.loadContent(self.openedMenu);
             }
         } else {
-            console.log(res.message);
-
             // Render toolbar even if the user prefs load fail
             self.render();
         }

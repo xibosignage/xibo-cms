@@ -334,8 +334,6 @@ let formHelpers = function() {
                 var linkedTo = $(this).data().linkedTo;
                 var value = e.params.data.imageUrl;
 
-                console.log('Value is ' + value + ", linked control is " + linkedTo);
-
                 if(value !== undefined && value !== "" && linkedTo != null) {
                     if(CKEDITOR.instances[linkedTo] != undefined) {
                         CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
@@ -364,7 +362,7 @@ let formHelpers = function() {
                 CKEDITOR.instances["noDataMessage"].updateElement();
             }
         } catch(e) {
-            console.log("Unable to update CKEditor instances. " + e);
+            console.error("Unable to update CKEditor instances. " + e);
         }
     };
 
@@ -383,7 +381,7 @@ let formHelpers = function() {
                 CKEDITOR.instances["noDataMessage"].destroy();
             }
         } catch(e) {
-            console.log("Unable to remove CKEditor instance. " + e);
+            console.error("Unable to remove CKEditor instance. " + e);
             CKEDITOR.instances = {};
         }
     };

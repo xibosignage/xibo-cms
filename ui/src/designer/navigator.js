@@ -206,7 +206,7 @@ Navigator.prototype.renderNavbar = function() {
             }
         }).catch((error) => { // Fail/error
 
-            console.log(error);
+            console.error(error);
 
             // Show error returned or custom message to the user
             let errorMessage = 'Revert failed: ';
@@ -223,7 +223,8 @@ Navigator.prototype.renderNavbar = function() {
 
     this.navbarContainer.find('#add-btn').click(function() {
         lD.manager.saveAllChanges().then((res) => {
-            toastr.success(res);
+
+            toastr.success('All changes saved!');
 
             lD.layout.addElement('region').then((res) => { // Success
 
