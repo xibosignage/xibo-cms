@@ -648,12 +648,19 @@ class User extends Base
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
             throw new AccessDeniedException(__('Only super and group admins can create users'));
 
+        $defaultUserTypeId = 3;
+        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->GetSetting('defaultUsertype')] ) as $defaultUserType) {
+            $defaultUserTypeId = $defaultUserType->userTypeId;
+        }
+
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
+                'defaultGroupId' => $this->getConfig()->GetSetting('DEFAULT_USERGROUP'),
+                'defaultUserType' => $defaultUserTypeId
             ],
             'help' => [
                 'add' => $this->getHelp()->link('User', 'Add')
