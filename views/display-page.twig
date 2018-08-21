@@ -162,6 +162,15 @@
                         return data;
                     }
                 },
+                createdRow: function (row, data, index) {
+                    if (data.mediaInventoryStatus === 1) {
+                        $(row).addClass('success');
+                    } else if (data.mediaInventoryStatus === 1) {
+                        $(row).addClass('danger');
+                    } else {
+                        $(row).addClass('warning');
+                    }
+                },
                 "columns": [
                     {"data": "displayId"},
                     {

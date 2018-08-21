@@ -29,11 +29,12 @@
                     <table id="entries" class="table table-striped">
                         <thead>
                             <tr>
+                                <th>{% trans "Widget" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Layout" %}</th>
                                 <th>{% trans "Region" %}</th>
                                 <th>{% trans "Playlist" %}</th>
-                                <th>{% trans "Widget" %}</th>
-                                <th>{% trans "Type" %}</th>
                                 <th>{% trans "Display Order" %}</th>
                                 <th></th>
                             </tr>
@@ -55,7 +56,7 @@
         $(document).ready(function() {
             table = $("#entries").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: false,
+                serverSide: true,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
@@ -66,11 +67,24 @@
                     }
                 },
                 "columns": [
-                    {"data": "layout.layout"},
-                    {"data": "region"},
-                    {"data": "playlist"},
                     {"data": "widget"},
                     {"data": "type"},
+                    {
+                        "name": "widgetId",
+                        "data": null,
+                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "widgetId"}
+                    },
+                    {
+                        "data": "layout",
+                        "orderable": false
+                    },
+                    {
+                        "data": "region",
+                        "orderable": false
+                    },
+                    {
+                        "data": "playlist"
+                    },
                     {"data": "displayOrder"},
                     {
                         "orderable": false,
@@ -79,7 +93,45 @@
                 ]
             });
 
-            table.on('draw', dataTableDraw);
+            table.on('draw', function(e, settings) {
+                dataTableDraw(e, settings);
+
+                // Bind to any media replace buttons
+                $("#" + e.target.id).find('.MediaManagerReplaceButton').on('click', function() {
+                    e.preventDefault();
+
+                    // $(this) is the button
+                    var mediaId = $(this).data().mediaId;
+                    var widgetId = $(this).data().widgetId;
+                    var validExtensions = $(this).data().validExtensions;
+
+                    // Open the upload dialog with our options.
+                    openUploadForm({
+                        oldMediaId: mediaId,
+                        widgetId: widgetId,
+                        updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                        deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                        trans: {
+                            addFiles: "{% trans "Add Replacement" %}",
+                            startUpload: "{% trans "Start Replace" %}",
+                            cancelUpload: "{% trans "Cancel Replace" %}",
+                            updateInLayouts: {
+                                title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                                helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                            },
+                            deleteOldRevisions: {
+                                title: "{% trans "Delete the old version?" %}",
+                                helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                            }
+                        },
+                        upload: {
+                            maxSize: {{ libraryUpload.maxSize }},
+                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                            validExt: validExtensions
+                        }
+                    });
+                });
+            });
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
         });

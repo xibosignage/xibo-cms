@@ -125,3 +125,20 @@ CREATE INDEX lkdgdg_parentId_childId_depth_index ON lkdgdg (parentId, childId, d
 CREATE INDEX lkdgdg_childId_parentId_depth_index ON lkdgdg (childId, parentId, depth);
 
 CREATE INDEX media_editedMediaID_index ON media (editedMediaID);
+
+# Tag foreign keys
+ALTER TABLE `lktagcampaign` ADD CONSTRAINT `lktagcampaign_ibfk_1` FOREIGN KEY (`campaignId`) REFERENCES `campaign` (`campaignId`);
+ALTER TABLE `lktaglayout` ADD CONSTRAINT `lktaglayout_ibfk_1` FOREIGN KEY (`layoutId`) REFERENCES `layout` (`layoutId`);
+ALTER TABLE `lktagmedia` ADD CONSTRAINT `lktagmedia_ibfk_1` FOREIGN KEY (`mediaId`) REFERENCES `media` (`mediaId`);
+ALTER TABLE `lktagdisplaygroup` ADD CONSTRAINT `lktagdisplaygroup_ibfk_1` FOREIGN KEY (`displayGroupId`) REFERENCES `displaygroup` (`displayGroupId`);
+
+# Permissions foreign keys and index
+CREATE INDEX permission_objectId_index ON permission (objectId);
+
+ALTER TABLE permission
+  ADD CONSTRAINT permission_group_groupID_fk
+FOREIGN KEY (groupId) REFERENCES `group` (groupID);
+
+ALTER TABLE permission
+  ADD CONSTRAINT permission_permissionentity_entityId_fk
+FOREIGN KEY (entityId) REFERENCES permissionentity (entityId);
