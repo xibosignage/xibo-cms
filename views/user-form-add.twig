@@ -54,7 +54,7 @@
 
                         {% set title %}{% trans "User Type" %}{% endset %}
                         {% set helpText %}{% trans "What is this users type?" %}{% endset %}
-                        {{ forms.dropdown("userTypeId", "single", title, 3, options.userTypes, "userTypeId", "userType", helpText) }}
+                        {{ forms.dropdown("userTypeId", "single", title, options.defaultUserType, options.userTypes, "userTypeId", "userType", helpText) }}
 
                         {% set title %}{% trans "Library Quota" %}{% endset %}
                         {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
@@ -80,7 +80,7 @@
 
                         {% set title %}{% trans "Initial User Group" %}{% endset %}
                         {% set helpText %}{% trans "What is the initial user group for this user?" %}{% endset %}
-                        {{ forms.dropdown("groupId", "single", title, "", options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+                        {{ forms.dropdown("groupId", "single", title, options.defaultGroupId, options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
                     </div>
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}

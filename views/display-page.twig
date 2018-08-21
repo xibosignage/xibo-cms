@@ -248,15 +248,10 @@
                         "visible": false
                     },
                     {
-                        "name": "clientType",
-                        "data": "clientVersion",
-                        "render": function (data, type, row) {
-                            if (type != "display")
-                                return data;
-
-                            return row.clientType + ' ' + row.clientVersion + '-' + row.clientCode;
+                        "name": "clientSort",
+                        "data": function (data) {
+                            return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                         },
-                        "sort": "clientType",
                         "visible": false
                     },
                     {"data": "deviceName", "visible": false},

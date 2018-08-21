@@ -411,6 +411,7 @@ class Library extends Base
         $mediaList = $this->mediaFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
             'name' => $this->getSanitizer()->getString('media'),
+            'nameExact' => $this->getSanitizer()->getString('nameExact'),
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
@@ -458,11 +459,20 @@ class Library extends Base
             }
 
             if ($user->checkDeleteable($media)) {
-                // Delete
+                // Delete Button
                 $media->buttons[] = array(
                     'id' => 'content_button_delete',
                     'url' => $this->urlFor('library.delete.form', ['id' => $media->mediaId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('library.delete', ['id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'content_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
+                    )
                 );
             }
 

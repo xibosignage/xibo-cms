@@ -155,5 +155,6 @@ VOLUME /var/www/cms/custom
 VOLUME /var/www/cms/web/theme/custom
 VOLUME /var/www/backup
 VOLUME /var/www/cms/web/userscripts
+VOLUME /var/www/cms/ca-certs
 
 CMD ["/entrypoint.sh"]
