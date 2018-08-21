@@ -458,7 +458,7 @@ class Library extends Base
                 );
             }
 
-            if ($this->getUser()->checkDeleteable($media)) {
+            if ($user->checkDeleteable($media)) {
                 // Delete Button
                 $media->buttons[] = array(
                     'id' => 'content_button_delete',
