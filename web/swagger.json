@@ -1835,7 +1835,7 @@
             }
         },
         "/display/authorise/{displayId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "display"
                 ],
@@ -1859,12 +1859,12 @@
             }
         },
         "/display/defaultlayout/{displayId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "display"
                 ],
                 "summary": "Set Default Layout",
-                "description": "Sent the default Layout on this Display",
+                "description": "Set the default Layout on this Display",
                 "operationId": "displayDefaultLayout",
                 "parameters": [
                     {
@@ -5283,6 +5283,20 @@
                         "description": "Reference 5",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "newUserWizard",
+                        "in": "formData",
+                        "description": "Flag indicating whether to show the new user guide",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "hideNavigation",
+                        "in": "formData",
+                        "description": "Flag indicating whether to hide the navigation",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5440,7 +5454,7 @@
                 }
             }
         },
-        "/usergroup": {
+        "/group": {
             "get": {
                 "tags": [
                     "usergroup"
@@ -5462,6 +5476,215 @@
                         "description": "Filter by UserGroup Name",
                         "required": false,
                         "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserGroup"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "UserGroup Add",
+                "description": "Add User Group",
+                "operationId": "userGroupAdd",
+                "parameters": [
+                    {
+                        "name": "group",
+                        "in": "formData",
+                        "description": "Name of the User Group",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "libraryQuota",
+                        "in": "formData",
+                        "description": "The quota that should be applied (KiB). Provide 0 for no quota",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isSystemNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive system notifications?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isDisplayNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserGroup"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/group/{userGroupId}": {
+            "put": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "UserGroup Edit",
+                "description": "Edit User Group",
+                "operationId": "userGroupEdit",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "path",
+                        "description": "ID of the User Group",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "group",
+                        "in": "formData",
+                        "description": "Name of the User Group",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "libraryQuota",
+                        "in": "formData",
+                        "description": "The quota that should be applied (KiB). Provide 0 for no quota",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isSystemNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive system notifications?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isDisplayNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserGroup"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "Delete User Group",
+                "description": "Delete User Group",
+                "operationId": "userGroupDelete",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "path",
+                        "description": "The user Group ID to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "group/members/assign/{userGroupId}": {
+            "post": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "Assign User to User Group",
+                "description": "Assign User to User Group",
+                "operationId": "userGroupAssign",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "path",
+                        "description": "ID of the user group to which assign the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Array of userIDs to assign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/UserGroup"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "group/members/unassign/{userGroupId}": {
+            "post": {
+                "tags": [
+                    "usergroup"
+                ],
+                "summary": "Unassign User from User Group",
+                "description": "Unassign User from User Group",
+                "operationId": "userGroupUnassign",
+                "parameters": [
+                    {
+                        "name": "userGroupId",
+                        "in": "path",
+                        "description": "ID of the user group from which to unassign the user",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Array of userIDs to unassign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -8336,6 +8559,18 @@
                 }
             }
         },
+        "PlaylistWidgetList": {
+            "properties": {
+                "widgetId": {
+                    "description": "Widget ID",
+                    "type": "integer"
+                },
+                "position": {
+                    "description": "The position in the Playlist",
+                    "type": "integer"
+                }
+            }
+        },
         "ScheduleCalendarData": {
             "properties": {
                 "id": {
@@ -10068,6 +10303,10 @@
                 "module": {
                     "description": "The Module Object for this Widget",
                     "$ref": "#/definitions/ModuleWidget"
+                },
+                "playlist": {
+                    "description": "The name of the Playlist this Widget is on",
+                    "type": "string"
                 }
             }
         },

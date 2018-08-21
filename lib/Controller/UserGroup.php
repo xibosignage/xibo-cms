@@ -663,7 +663,8 @@ class UserGroup extends Base
      *      in="formData",
      *      description="Array of userIDs to assign",
      *      type="array",
-     *      required=true
+     *      required=true,
+     *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -744,7 +745,8 @@ class UserGroup extends Base
      *      in="formData",
      *      description="Array of userIDs to unassign",
      *      type="array",
-     *      required=true
+     *      required=true,
+     *      @SWG\Items(type="integer")
      *   ),
      *  @SWG\Response(
      *      response=200,
