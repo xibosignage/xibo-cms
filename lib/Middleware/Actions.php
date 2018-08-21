@@ -59,7 +59,7 @@ class Actions extends Middleware
                                 'audit' => false
                             ]);
                         } catch (\Exception $e) {
-                            $app->logService->error('Unable to import layout: ' . $file);
+                            $app->logService->error('Unable to import layout: ' . $file . '. E = ' . $e->getMessage());
                             $app->logService->debug($e->getTraceAsString());
                         }
                     }
