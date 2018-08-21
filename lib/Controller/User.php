@@ -34,6 +34,7 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -43,6 +44,7 @@ use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -111,6 +113,12 @@ class User extends Base
     /** @var SessionFactory */
     private $sessionFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -132,10 +140,12 @@ class User extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
      * @param SessionFactory $sessionFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param WidgetFactory $widgetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -151,6 +161,8 @@ class User extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
         $this->sessionFactory = $sessionFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->widgetFactory = $widgetFactory;
     }
 
     /**
@@ -424,6 +436,20 @@ class User extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="newUserWizard",
+     *      in="formData",
+     *      description="Flag indicating whether to show the new user guide",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="hideNavigation",
+     *      in="formData",
+     *      description="Flag indicating whether to hide the navigation",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -470,6 +496,10 @@ class User extends Base
         $user->ref3 = $this->getSanitizer()->getString('ref3');
         $user->ref4 = $this->getSanitizer()->getString('ref4');
         $user->ref5 = $this->getSanitizer()->getString('ref5');
+
+        // Options
+        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
 
         // Initial user group
         $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
@@ -533,6 +563,10 @@ class User extends Base
         $user->ref4 = $this->getSanitizer()->getString('ref4');
         $user->ref5 = $this->getSanitizer()->getString('ref5');
 
+        // Options
+        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
+
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
             throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
@@ -576,7 +610,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
@@ -614,12 +648,19 @@ class User extends Base
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
             throw new AccessDeniedException(__('Only super and group admins can create users'));
 
+        $defaultUserTypeId = 3;
+        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->GetSetting('defaultUsertype')] ) as $defaultUserType) {
+            $defaultUserTypeId = $defaultUserType->userTypeId;
+        }
+
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
+                'defaultGroupId' => $this->getConfig()->GetSetting('DEFAULT_USERGROUP'),
+                'defaultUserType' => $defaultUserTypeId
             ],
             'help' => [
                 'add' => $this->getHelp()->link('User', 'Add')
@@ -635,6 +676,7 @@ class User extends Base
     public function editForm($userId)
     {
         $user = $this->userFactory->getById($userId);
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
@@ -787,7 +829,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId, ['groupId'], ['setOnly' => 1]) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,

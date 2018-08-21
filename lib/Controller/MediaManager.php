@@ -21,6 +21,9 @@
 namespace Xibo\Controller;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PlaylistFactory;
+use Xibo\Factory\RegionFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -32,15 +35,20 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class MediaManager extends Base
 {
-    /**
-     * @var ModuleFactory
-     */
+    /** @var ModuleFactory */
     private $moduleFactory;
 
-    /**
-     * @var LayoutFactory
-     */
+    /** @var LayoutFactory */
     private $layoutFactory;
+
+    /** @var RegionFactory */
+    private $regionFactory;
+
+    /** @var PlaylistFactory */
+    private $playlistFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
 
     /**
      * Set common dependencies.
@@ -53,12 +61,18 @@ class MediaManager extends Base
      * @param ConfigServiceInterface $config
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
+     * @param RegionFactory $regionFactory
+     * @param PlaylistFactory $playlistFactory
+     * @param WidgetFactory $widgetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $moduleFactory, $layoutFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $moduleFactory, $layoutFactory, $regionFactory, $playlistFactory, $widgetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->moduleFactory = $moduleFactory;
         $this->layoutFactory = $layoutFactory;
+        $this->regionFactory = $regionFactory;
+        $this->playlistFactory = $playlistFactory;
+        $this->widgetFactory = $widgetFactory;
     }
 
     public function displayPage()
@@ -74,78 +88,88 @@ class MediaManager extends Base
     {
         $this->getState()->template = 'grid';
 
-        $filterLayout = $this->getSanitizer()->getString('layout');
-        $filterRegion = $this->getSanitizer()->getString('region');
-        $filterMedia = $this->getSanitizer()->getString('media');
-        $filterType = $this->getSanitizer()->getString('type');
+        $rows = [];
 
-        $rows = array();
+        foreach ($this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
+            'layout' => $this->getSanitizer()->getString('layout'),
+            'region' => $this->getSanitizer()->getString('region'),
+            'media' => $this->getSanitizer()->getString('media'),
+            'type' => $this->getSanitizer()->getString('type'),
+        ])) as $widget) {
 
-        foreach ($this->layoutFactory->query(null, ['layout' => $filterLayout]) as $layout) {
-            /* @var \Xibo\Entity\Layout $layout */
-            // We have edit permissions?
-            if (!$this->getUser()->checkEditable($layout))
+            // Load the widget
+            $widget->load();
+
+            // Create a module
+            $module = $this->moduleFactory->createWithWidget($widget);
+
+            // Get a list of Layouts that this playlist uses
+            $layouts = $this->layoutFactory->query(null, ['playlistId' => $widget->playlistId]);
+
+            $layoutNames = array_map(function($layout) {
+                return $layout->layout;
+            }, $layouts);
+
+            // Get a list of Regions that this playlists uses
+            $regions = $this->regionFactory->getByPlaylistId($widget->playlistId);
+
+            $regionNames = array_map(function($region) {
+                return $region->name;
+            }, $regions);
+
+            // We are good to go
+            $row = [
+                'layout' => implode(',', $layoutNames),
+                'region' => $regionNames,
+                'playlist' => $widget->playlist,
+                'widget' => $module->getName(),
+                'type' => $module->getModuleName(),
+                'displayOrder' => $widget->displayOrder
+            ];
+
+            // Check editable
+            if (!$this->getUser()->checkEditable($widget))
                 continue;
 
-            // Load the layout
-            $layout->load();
+            $row['buttons'] = [];
 
-            //get the regions
-            foreach ($layout->regions as $region) {
-                /* @var \Xibo\Entity\Region $region */
+            $row['buttons'][] = [
+                'id' => 'WidgetEditForm',
+                'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
+                'text' => __('Edit')
+            ];
 
-                // Do we have permission to edit?
-                if (!$this->getUser()->checkEditable($region))
-                    continue;
+            // Thumbnail URL
+            $row['thumbnail'] = '';
+            $row['thumbnailUrl'] = '';
 
-                if ($filterRegion != '' && !stristr($region->name, $filterRegion))
-                    continue;
+            if ($module->getModule()->regionSpecific == 0) {
 
-                // Playlists
-                foreach($region->playlists as $playlist) {
-                    /* @var \Xibo\Entity\Playlist $playlist */
-                    if (!$this->getUser()->checkEditable($playlist))
-                        continue;
-
-                    // Get all the widgets in the playlist
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var \Xibo\Entity\Widget $widget */
-
-                        // Check we've not filtered this out
-                        if ($filterMedia != '' && !stristr($widget->getOptionValue('name', $widget->type), $filterMedia))
-                            continue;
-
-                        if ($filterType != '' && $widget->type != strtolower($filterType))
-                            continue;
-
-                        // Check editable
-                        if (!$this->getUser()->checkEditable($widget))
-                            continue;
-
-                        // Create a module
-                        $module = $this->moduleFactory->createWithWidget($widget);
-
-                        // We are good to go
-                        $rows[] = [
-                            'layout' => $layout,
-                            'region' => $region->name,
-                            'playlist' => $playlist->name,
-                            'widget' => $module->getName(),
-                            'type' => $module->getModuleName(),
-                            'displayOrder' => $widget->displayOrder,
-                            'buttons' => [
-                                [
-                                    'id' => 'WidgetEditForm',
-                                    'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
-                                    'text' => __('Edit')
-                                ]
-                            ]
-                        ];
-                    }
+                if ($widget->type == 'image') {
+                    $download = $this->urlFor('library.download', ['id' => $widget->getPrimaryMediaId()]) . '?preview=1';
+                    $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
+                    $row['thumbnailUrl'] = $download . '&width=100&height=56&cache=1';
                 }
+
+                // Add a replace button directly on the drop down menu
+                $row['buttons'][] = [
+                    'id' => 'MediaReplaceForm',
+                    'url' => '#',
+                    'text' => __('Replace'),
+                    'dataAttributes' => [
+                        ['name' => 'media-id', 'value' => $widget->getPrimaryMediaId()],
+                        ['name' => 'widget-id', 'value' => $widget->widgetId],
+                        ['name' => 'valid-extensions', 'value' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $widget->type]))]
+                    ],
+                    'class' => 'MediaManagerReplaceButton'
+                ];
             }
+
+
+            $rows[] = $row;
         }
 
+        $this->getState()->recordsTotal = $this->widgetFactory->countLast();
         $this->getState()->setData($rows);
     }
 }

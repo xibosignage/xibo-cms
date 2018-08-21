@@ -364,6 +364,8 @@ class Maintenance extends Base
 
     /**
      * Backup the Database
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
      */
     public function export()
     {
@@ -377,6 +379,13 @@ class Maintenance extends Base
         global $dbpass;
         global $dbname;
 
+        // split the dbhost for database host name and port
+        if (strstr($dbhost, ':')) {
+            $hostParts = explode(':', $dbhost);
+            $dbhostName = $hostParts[0];
+            $dbhostPort = $hostParts[1];
+        }
+
         // get temporary file
         $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/';
         $fileNameStructure = $libraryLocation . 'structure.dump';
@@ -384,21 +393,21 @@ class Maintenance extends Base
         $zipFile = $libraryLocation . 'database.tar.gz';
 
         // Run mysqldump structure to a temporary file
-        $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --no-data > ' . escapeshellarg($fileNameStructure) . ' ';
+        $command = 'mysqldump --opt --host=' . $dbhostName . ' --port=' . $dbhostPort . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --no-data > ' . escapeshellarg($fileNameStructure) . ' ';
         exec($command);
 
         // Run mysqldump data to a temporary file
-        $command = 'mysqldump --opt --host=' . $dbhost . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --ignore-table=' . $dbname . '.log --ignore-table=' . $dbname . '.oauth_log  > ' . escapeshellarg($fileNameData) . ' ';
+        $command = 'mysqldump --opt --host=' . $dbhostName . ' --port=' . $dbhostPort . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --ignore-table=' . $dbname . '.log --ignore-table=' . $dbname . '.oauth_log  > ' . escapeshellarg($fileNameData) . ' ';
         exec($command);
 
         // Check it worked
-        if (!file_exists($fileNameStructure) || !file_exists($fileNameData))
+        if (filesize($fileNameStructure) <= 0 || filesize($fileNameData) <= 0 )
             throw new ConfigurationException(__('Database dump failed.'));
 
         // Zippy
         $this->getLog()->debug($zipFile);
         $zip = new \ZipArchive();
-        $zip->open($zipFile, \ZipArchive::OVERWRITE);
+        $zip->open($zipFile, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
         $zip->addFile($fileNameStructure, 'structure.dump');
         $zip->addFile($fileNameData, 'data.dump');
         $zip->close();

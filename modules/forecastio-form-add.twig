@@ -206,7 +206,7 @@
 
                         {% set title %}{% trans "Language" %}{% endset %}
                         {% set helpText %}{% trans "Select the language you would like to use." %}{% endset %}
-                        {{ forms.dropdown("lang", "single", title, translate.jsShortLocale, module.supportedLanguages(), "id", "value", helpText) }}
+                        {{ forms.dropdown("lang", "single", title, module.getWeatherLanguage(), module.supportedLanguages(), "id", "value", helpText) }}
 
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}

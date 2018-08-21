@@ -264,9 +264,15 @@ class Playlist implements \JsonSerializable
 
     /**
      * Save
+     * @param array $options
      */
-    public function save()
+    public function save($options = [])
     {
+        // Default options
+        $options = array_merge([
+            'notify' => true
+        ], $options);
+
         if ($this->playlistId == null || $this->playlistId == 0)
             $this->add();
         else if ($this->hash != $this->hash())
@@ -292,7 +298,7 @@ class Playlist implements \JsonSerializable
             $widget->playlistId = $this->playlistId;
             // Assert the displayOrder
             $widget->displayOrder = $i;
-            $widget->save();
+            $widget->save($options);
         }
     }
 

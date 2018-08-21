@@ -1,0 +1,15 @@
+{
+  "dbVersion": 142,
+  "appVersion": "1.8.11",
+  "steps": [
+    {
+      "step": "Fix database constraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixDatabaseIndexesAndContraints"
+    },
+    {
+      "step": "Default User Group Setting",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('DEFAULT_USERGROUP', '1', 'text', 'The default User Group for new Users', '1', 'users', 1, 'Default User Group', '', 4, '', 1, 'int'); "
+    }
+  ]
+}

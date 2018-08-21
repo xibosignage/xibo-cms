@@ -6,6 +6,7 @@ use Exception;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
+use Xibo\Event\LibraryReplaceEvent;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
@@ -106,6 +107,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Pre-process
                 $module->preProcess($media, $filePath);
+
+                // Raise an event for this media item
+                $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);

@@ -147,6 +147,27 @@ class DisplayFactory extends BaseFactory
         if ($sortOrder === null)
             $sortOrder = ['display'];
 
+        $newSortOrder = [];
+        foreach ($sortOrder as $sort) {
+            $this->getLog()->debug('sortOrder ' . $sort);
+            if ($sort == '`clientSort`') {
+                $newSortOrder[] = '`clientType`';
+                $newSortOrder[] = '`clientCode`';
+                $newSortOrder[] = '`clientVersion`';
+                continue;
+            }
+
+            if ($sort == '`clientSort` DESC') {
+                $this->getLog()->debug('sortOrder ' . $sort);
+                $newSortOrder[] = '`clientType` DESC';
+                $newSortOrder[] = '`clientCode` DESC';
+                $newSortOrder[] = '`clientVersion` DESC';
+                continue;
+            }
+            $newSortOrder[] = $sort;
+        }
+        $sortOrder = $newSortOrder;
+
         // SQL function for ST_X/X and ST_Y/Y dependent on MySQL version
         $version = $this->getStore()->getVersion();
 

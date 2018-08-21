@@ -376,7 +376,8 @@ class Region implements \JsonSerializable
             'saveRegionOptions' => true,
             'manageRegionAssignments' => true,
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'notify' => true
         ], $options);
 
         $this->getLog()->debug('Saving %s. Options = %s', $this, json_encode($options, JSON_PRETTY_PRINT));
@@ -409,7 +410,7 @@ class Region implements \JsonSerializable
 
         if ($options['manageRegionAssignments']) {
             // Manage the assignments to regions
-            $this->manageAssignments();
+            $this->manageAssignments($options);
         }
     }
 
@@ -531,23 +532,27 @@ class Region implements \JsonSerializable
         ));
     }
 
-    private function manageAssignments()
+    /**
+     * @param array $options
+     */
+    private function manageAssignments($options)
     {
-        $this->linkPlaylists();
+        $this->linkPlaylists($options);
         $this->unlinkPlaylists();
     }
 
     /**
      * Link regions
+     * @param array $options
      */
-    private function linkPlaylists()
+    private function linkPlaylists($options)
     {
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */
 
             // The playlist might be new
             if ($playlist->playlistId == 0)
-                $playlist->save();
+                $playlist->save($options);
 
             $this->getStore()->insert('INSERT INTO `lkregionplaylist` (regionId, playlistId, displayOrder) VALUES (:regionId, :playlistId, :displayOrder) ON DUPLICATE KEY UPDATE regionId = regionId', array(
                 'regionId' => $this->regionId,

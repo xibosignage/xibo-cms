@@ -140,6 +140,12 @@ then
 
   SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
   /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
+  
+  # Import any ca-certificate files that might be needed to use a proxy etc
+  echo "Importing ca-certs"
+  cp -v /var/www/cms/ca-certs/*.pem /usr/local/share/ca-certificates
+  cp -v /var/www/cms/ca-certs/*.crt /var/local/share/ca-certificates
+  /usr/sbin/update-ca-certificates
 fi
 
 if [ "$CMS_DEV_MODE" == "false" ]

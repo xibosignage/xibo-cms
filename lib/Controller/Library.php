@@ -21,6 +21,8 @@
 namespace Xibo\Controller;
 
 use Stash\Interfaces\PoolInterface;
+use Stash\Invalidation;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -65,6 +67,9 @@ class Library extends Base
 
     /** @var  PoolInterface */
     private $pool;
+
+    /** @var EventDispatcherInterface */
+    private $dispatcher;
 
     /**
      * @var UserFactory
@@ -140,6 +145,7 @@ class Library extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
+     * @param EventDispatcherInterface $dispatcher
      * @param UserFactory $userFactory
      * @param ModuleFactory $moduleFactory
      * @param TagFactory $tagFactory
@@ -156,7 +162,7 @@ class Library extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -165,6 +171,7 @@ class Library extends Base
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->pool = $pool;
+        $this->dispatcher = $dispatcher;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
         $this->permissionFactory = $permissionFactory;
@@ -177,6 +184,15 @@ class Library extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+    }
+
+    /**
+     * Get Dispatcher
+     * @return EventDispatcherInterface
+     */
+    public function getDispatcher()
+    {
+        return $this->dispatcher;
     }
 
     /**
@@ -395,6 +411,7 @@ class Library extends Base
         $mediaList = $this->mediaFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
             'name' => $this->getSanitizer()->getString('media'),
+            'nameExact' => $this->getSanitizer()->getString('nameExact'),
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
@@ -442,11 +459,20 @@ class Library extends Base
             }
 
             if ($user->checkDeleteable($media)) {
-                // Delete
+                // Delete Button
                 $media->buttons[] = array(
                     'id' => 'content_button_delete',
                     'url' => $this->urlFor('library.delete.form', ['id' => $media->mediaId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('library.delete', ['id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'content_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
+                    )
                 );
             }
 
@@ -1088,12 +1114,16 @@ class Library extends Base
         // Each user has their own font cache (due to permissions) and the displays have their own font cache too
         // Get the item from the cache
         $cssItem = $this->pool->getItem('fontCss/' . $this->getUser()->userId);
+        $cssItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         // Get the CSS
         $cssDetails = $cssItem->get();
 
         if ($options['invalidateCache'] || $cssItem->isMiss()) {
             $this->getLog()->debug('Regenerating font cache');
+
+            // lock the cache
+            $cssItem->lock(60);
 
             // Go through all installed fonts each time and regenerate.
             $fontTemplate = '@font-face {
@@ -1155,24 +1185,23 @@ class Library extends Base
                         $existingLibraryFontsCss = file_get_contents($libraryLocation . 'fonts.css');
                     }
 
+                    // Put the player CSS into the temporary library location
+                    $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
+                    file_put_contents($tempUrl, $css);
+
+                    // Install it (doesn't expire, isn't a system file, force update)
+                    $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
+                    $media->expires = 0;
+                    $media->moduleSystemFile = true;
+                    $media->isSaveRequired = true;
+                    $media->save();
+
+                    // We can remove the temp file
+                    @unlink($tempUrl);
+
                     // Check to see if the existing file is different from the new one
-                    if (md5($existingLibraryFontsCss) !== md5($css)) {
-                        $this->getLog()->info('Detected change in fonts.css file, saving to the library and notifying displays');
-
-                        // Put the player CSS into the temporary library location
-                        $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
-                        file_put_contents($tempUrl, $css);
-
-                        // Install it (doesn't expire, isn't a system file, force update)
-                        $media = $this->mediaFactory->createModuleSystemFile('fonts.css', $tempUrl);
-                        $media->expires = 0;
-                        $media->moduleSystemFile = true;
-                        $media->isSaveRequired = true;
-                        $media->save();
-
-                        // We can remove the temp file
-                        @unlink($tempUrl);
-
+                    if ($existingLibraryFontsCss == '' || md5($existingLibraryFontsCss) !== $media->md5) {
+                        $this->getLog()->info('Detected change in fonts.css file, dropping the Display cache');
                         // Clear the display cache
                         $this->pool->deleteItem('/display');
                     } else {
