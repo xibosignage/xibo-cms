@@ -217,8 +217,10 @@
         });
 
         $(".article_date").each(function(index, element) {
-            // Replace the ISO date with a nice formatted date "for humans"
-            $(this).html(moment($(this).html(), systemDateFormat).fromNow());
+            if($(".article_date").length > 1){
+                // Replace the ISO date with a nice formatted date "for humans"
+                $(this).html(moment($(this).html(), systemDateFormat).fromNow());
+            }
         });
     </script>
 {% endblock %}
