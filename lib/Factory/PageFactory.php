@@ -73,7 +73,7 @@ class PageFactory extends BaseFactory
 
     /**
      * Get by Name
-     * @param int $page
+     * @param string $page
      * @return Page
      * @throws NotFoundException if the page cannot be resolved from the provided route
      */
