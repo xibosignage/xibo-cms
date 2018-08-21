@@ -103,7 +103,7 @@ class User implements \JsonSerializable
      * @SWG\Property(description="A flag indicating whether this user has see the new user wizard")
      * @var int
      */
-    public $newUserWizard;
+    public $newUserWizard = 0;
 
     /**
      * @SWG\Property(description="A flag indicating whether the user is retired")
