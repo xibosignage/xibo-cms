@@ -142,3 +142,7 @@ FOREIGN KEY (groupId) REFERENCES `group` (groupID);
 ALTER TABLE permission
   ADD CONSTRAINT permission_permissionentity_entityId_fk
 FOREIGN KEY (entityId) REFERENCES permissionentity (entityId);
+
+ALTER TABLE datasetrss
+  ADD CONSTRAINT datasetrss_dataset_DataSetID_fk
+FOREIGN KEY (dataSetId) REFERENCES dataset (DataSetID);

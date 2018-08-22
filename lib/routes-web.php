@@ -214,6 +214,11 @@ $app->get('/dataset/:id/column/form/delete/:colId', '\Xibo\Controller\DataSetCol
 $app->get('/dataset/data/form/add/:id', '\Xibo\Controller\DataSetData:addForm')->name('dataSet.data.add.form');
 $app->get('/dataset/data/form/edit/:id/:rowId', '\Xibo\Controller\DataSetData:editForm')->name('dataSet.data.edit.form');
 $app->get('/dataset/data/form/delete/:id/:rowId', '\Xibo\Controller\DataSetData:deleteForm')->name('dataSet.data.delete.form');
+// RSS
+$app->get('/dataset/:id/rss/view', '\Xibo\Controller\DataSetRss:displayPage')->name('dataSet.rss.view');
+$app->get('/dataset/:id/rss/form/add', '\Xibo\Controller\DataSetRss:addForm')->name('dataSet.rss.add.form');
+$app->get('/dataset/:id/rss/form/edit/:rssId', '\Xibo\Controller\DataSetRss:editForm')->name('dataSet.rss.edit.form');
+$app->get('/dataset/:id/rss/form/delete/:rssId', '\Xibo\Controller\DataSetRss:deleteForm')->name('dataSet.rss.delete.form');
 
 //
 // displaygroup

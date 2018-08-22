@@ -184,6 +184,14 @@ class DataSet extends Base
                     'text' => __('View Columns')
                 );
 
+                // View RSS
+                $dataSet->buttons[] = array(
+                    'id' => 'dataset_button_viewrss',
+                    'url' => $this->urlFor('dataSet.rss.view', ['id' => $dataSet->dataSetId]),
+                    'class' => 'XiboRedirectButton',
+                    'text' => __('View RSS')
+                );
+
                 // Divider
                 $dataSet->buttons[] = ['divider' => true];
 
