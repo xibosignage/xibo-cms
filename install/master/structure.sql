@@ -1169,13 +1169,14 @@ CREATE TABLE IF NOT EXISTS `requiredfile` (
 
 CREATE TABLE datasetrss (
   id int PRIMARY KEY AUTO_INCREMENT,
-  dataSetId int,
+  dataSetId int NOT NULL,
   psk varchar(254) NOT NULL,
   title varchar(254),
   author varchar(254),
+  titleColumnId int,
   summaryColumnId int,
   contentColumnId int,
   publishedDateColumnId int,
   sort text,
   filter text
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

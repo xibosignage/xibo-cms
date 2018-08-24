@@ -98,6 +98,7 @@ class DataSetRssFactory extends BaseFactory
             `datasetrss`.psk,
             `datasetrss`.title,
             `datasetrss`.author,
+            `datasetrss`.titleColumnId,
             `datasetrss`.summaryColumnId,
             `datasetrss`.contentColumnId,
             `datasetrss`.publishedDateColumnId,

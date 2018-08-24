@@ -25,12 +25,12 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Add RSS" %}
+    {% trans "Edit RSS" %}
 {% endblock %}
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#dataSetRssAddForm").submit()
+    {% trans "Save" %}, $("#dataSetRssEditForm").submit()
 {% endblock %}
 
 {% block callBack %}configureQueryBuilder{% endblock %}
@@ -123,32 +123,36 @@
                 <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
                 <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
-            <form id="dataSetRssAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.rss.add", {id: dataSet.dataSetId}) }}">
+            <form id="dataSetRssEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.rss.edit", {id: dataSet.dataSetId, rssId: feed.id}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Title" %}{% endset %}
                         {% set helpText %}{% trans "The title for this Rss" %}{% endset %}
-                        {{ forms.input("title", title, "", helpText, "", "required") }}
+                        {{ forms.input("title", title, feed.title, helpText, "", "required") }}
 
                         {% set title %}{% trans "Author" %}{% endset %}
                         {% set helpText %}{% trans "The author for this Rss" %}{% endset %}
-                        {{ forms.input("author", title, "", helpText) }}
+                        {{ forms.input("author", title, feed.author, helpText) }}
 
                         {% set title %}{% trans "Title Column" %}{% endset %}
                         {% set helpText %}{% trans "Please select a column to be the item title" %}{% endset %}
-                        {{ forms.dropdown("titleColumnId", "single", title, titleColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
+                        {{ forms.dropdown("titleColumnId", "single", title, feed.titleColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
 
                         {% set title %}{% trans "Summary Column" %}{% endset %}
                         {% set helpText %}{% trans "Please select a column to be the item summary" %}{% endset %}
-                        {{ forms.dropdown("summaryColumnId", "single", title, summaryColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
+                        {{ forms.dropdown("summaryColumnId", "single", title, feed.summaryColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
 
                         {% set title %}{% trans "Content Column" %}{% endset %}
                         {% set helpText %}{% trans "Please select a column to be the item content" %}{% endset %}
-                        {{ forms.dropdown("contentColumnId", "single", title, contentColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
+                        {{ forms.dropdown("contentColumnId", "single", title, feed.contentColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
 
                         {% set title %}{% trans "Published Date Column" %}{% endset %}
                         {% set helpText %}{% trans "Please select a column to be the item content. We will try to convert this to a date/time and if we can't we will use the current date/time." %}{% endset %}
-                        {{ forms.dropdown("publishedDateColumn", "single", title, publishedDateColumn, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.dateColumns), "dataSetColumnId", "heading", helpText) }}
+                        {{ forms.dropdown("publishedDateColumnId", "single", title, feed.publishedDateColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.dateColumns), "dataSetColumnId", "heading", helpText) }}
+
+                        {% set title %}{% trans "Generate new address?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick this box if you want to generate a new address for this RSS feed. You might want to do this if you think someone is accessing it unauthorised." %}{% endset %}
+                        {{ forms.checkbox("regeneratePsk", title, 0, helpText) }}
                     </div>
                     <div class="tab-pane" id="orderCriteria">
 
@@ -161,11 +165,11 @@
 
                         {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
-                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 0), helpText) }}
+                        {{ forms.checkbox("useOrderingClause", title, extra.useOrderingClause, helpText) }}
 
                         {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
-                        {{ forms.input("ordering", title, module.getOption("ordering"), helpText, "order-clause-field") }}
+                        {{ forms.input("ordering", title, extra.sort, helpText, "order-clause-field") }}
 
                     </div>
                     <div class="tab-pane" id="filterCriteria">
@@ -178,11 +182,11 @@
 
                         {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
-                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 0), helpText) }}
+                        {{ forms.checkbox("useFilteringClause", title, extra.useFilteringClause, helpText) }}
 
                         {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
-                        {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
+                        {{ forms.input("filter", title, extra.filter, helpText, "filter-clause-field") }}
                     </div>
                 </div>
             </form>
