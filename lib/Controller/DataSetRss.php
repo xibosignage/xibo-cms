@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 
 use Carbon\Exceptions\InvalidDateException;
+use Jenssegers\Date\Date;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
 use Stash\Interfaces\PoolInterface;
@@ -589,186 +590,214 @@ class DataSetRss extends Base
             $dataSet = $this->dataSetFactory->getById($feed->dataSetId);
 
             // What is the edit date of this data set
-            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? $this->getDate()->parse() : $this->getDate()->parse($dataSet->lastDataEdit, 'U');
+            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? $this->getDate()->parse()->subMonths(2) : $this->getDate()->parse($dataSet->lastDataEdit, 'U');
 
             // Do we have this feed in the cache?
+            $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
 
-            // Create the start of our feed, its description, etc.
-            $builder = Rss20FeedBuilder::create()
-                ->withTitle($feed->title)
-                ->withAuthor($feed->author)
-                ->withDate($dataSetEditDate);
+            $output = $cache->get();
 
-            $sort = $feed->getSort();
-            $filter = $feed->getFilter();
+            if ($cache->isMiss() || $cache->getCreation() < $dataSetEditDate) {
+                // We need to recache
+                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format('Y-m-d H:i:s') : 'never'));
 
-            // Get results, using the filter criteria
-            // Ordering
-            $ordering = '';
+                $output = $this->generateFeed($feed, $dataSetEditDate, $dataSet);
 
-            if ($sort['useOrderingClause'] == 1) {
-                $ordering = $sort['sort'];
+                $cache->set($output);
+                $cache->expiresAfter(new \DateInterval('P1M'));
+                $this->pool->saveDeferred($cache);
             } else {
-                // Build an order string
-                foreach ($sort['orderClauses'] as $clause) {
-                    $ordering .= $clause['orderClause'] . ' ' . $clause['orderClauseDirection'] . ',';
-                }
-
-                $ordering = rtrim($ordering, ',');
+                $this->getLog()->debug('Serving from Cache');
             }
 
-            // Filtering
-            $filtering = '';
-
-            if ($filter['useFilteringClause'] == 1) {
-                $filtering = $filter['filter'];
-            } else {
-                // Build
-                $i = 0;
-                foreach ($filter['filterClauses'] as $clause) {
-                    $i++;
-                    $criteria = '';
-
-                    switch ($clause['filterClauseCriteria']) {
-
-                        case 'starts-with':
-                            $criteria = 'LIKE \'' . $clause['filterClauseValue'] . '%\'';
-                            break;
-
-                        case 'ends-with':
-                            $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '\'';
-                            break;
-
-                        case 'contains':
-                            $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '%\'';
-                            break;
-
-                        case 'equals':
-                            $criteria = '= \'' . $clause['filterClauseValue'] . '\'';
-                            break;
-
-                        case 'not-contains':
-                            $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '%\'';
-                            break;
-
-                        case 'not-starts-with':
-                            $criteria = 'NOT LIKE \'' . $clause['filterClauseValue'] . '%\'';
-                            break;
-
-                        case 'not-ends-with':
-                            $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '\'';
-                            break;
-
-                        case 'not-equals':
-                            $criteria = '<> \'' . $clause['filterClauseValue'] . '\'';
-                            break;
-
-                        case 'greater-than':
-                            $criteria = '> \'' . $clause['filterClauseValue'] . '\'';
-                            break;
-
-                        case 'less-than':
-                            $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
-                            break;
-
-                        default:
-                            continue;
-                    }
-
-                    if ($i > 1)
-                        $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
-
-                    $filtering .= $clause['filterClause'] . ' ' . $criteria;
-                }
-
-                // Get an array representing the id->heading mappings
-                $mappings = [];
-                $columns = [];
-
-                if ($feed->titleColumnId != 0)
-                    $columns[] = $feed->titleColumnId;
-
-                if ($feed->summaryColumnId != 0)
-                    $columns[] = $feed->summaryColumnId;
-
-                if ($feed->contentColumnId != 0)
-                    $columns[] = $feed->contentColumnId;
-
-                if ($feed->publishedDateColumnId != 0)
-                    $columns[] = $feed->publishedDateColumnId;
-
-                foreach ($columns as $dataSetColumnId) {
-                    // Get the column definition this represents
-                    $column = $dataSet->getColumn($dataSetColumnId);
-                    /* @var \Xibo\Entity\DataSetColumn $column */
-
-                    $mappings[$column->heading] = [
-                        'dataSetColumnId' => $dataSetColumnId,
-                        'heading' => $column->heading,
-                        'dataTypeId' => $column->dataTypeId
-                    ];
-                }
-
-                $filter = [
-                    'filter' => $filtering,
-                    'order' => $ordering
-                ];
-
-                // Set the timezone for SQL
-                $dateNow = $this->getDate()->parse();
-
-                $this->store->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
-
-                // Get the data (complete table, filtered)
-                $dataSetResults = $dataSet->getData($filter);
-
-                foreach ($dataSetResults as $row) {
-                    $item = Rss20ItemBuilder::create($builder);
-
-                    $hasContent = false;
-                    $hasDate = false;
-
-                    // Go through the columns of each row
-                    foreach ($row as $key => $value) {
-                        // Is this one of the columns we're interested in?
-                        if (isset($mappings[$key])) {
-                            // Yes it is - which one?
-                            $hasContent = true;
-
-                            if ($mappings[$key]['dataSetColumnId'] === $feed->titleColumnId) {
-                                $item->withTitle($value);
-                            } else if ($mappings[$key]['dataSetColumnId'] === $feed->summaryColumnId) {
-                                $item->withSummary($value);
-                            } else if ($mappings[$key]['dataSetColumnId'] === $feed->contentColumnId) {
-                                $item->withContent($value);
-                            } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
-                                try {
-                                    $date = $this->getDate()->parse($value, 'U');
-                                } catch (InvalidDateException $dateException) {
-                                    $date = $dataSetEditDate;
-                                }
-
-                                if ($date !== null) {
-                                    $item->withPublishedDate($date);
-                                    $hasDate = true;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!$hasDate)
-                        $item->withPublishedDate($dataSetEditDate);
-
-                    if ($hasContent)
-                        $builder->withItem($item);
-                }
-            }
-
-            // Found, do things
-            echo $builder->build();
+            echo $output;
 
         } catch (NotFoundException $notFoundException) {
             $this->getState()->httpStatus = 404;
         }
+    }
+
+    /**
+     * @param \Xibo\Entity\DataSetRss $feed
+     * @param Date $dataSetEditDate
+     * @param \Xibo\Entity\DataSet $dataSet
+     * @return string
+     * @throws XiboException
+     */
+    private function generateFeed($feed, $dataSetEditDate, $dataSet)
+    {
+        // Create the start of our feed, its description, etc.
+        $builder = Rss20FeedBuilder::create()
+            ->withTitle($feed->title)
+            ->withAuthor($feed->author)
+            ->withDate($dataSetEditDate);
+
+        $sort = $feed->getSort();
+        $filter = $feed->getFilter();
+
+        // Get results, using the filter criteria
+        // Ordering
+        $ordering = '';
+
+        if ($sort['useOrderingClause'] == 1) {
+            $ordering = $sort['sort'];
+        } else {
+            // Build an order string
+            foreach ($sort['orderClauses'] as $clause) {
+                $ordering .= $clause['orderClause'] . ' ' . $clause['orderClauseDirection'] . ',';
+            }
+
+            $ordering = rtrim($ordering, ',');
+        }
+
+        // Filtering
+        $filtering = '';
+
+        if ($filter['useFilteringClause'] == 1) {
+            $filtering = $filter['filter'];
+        } else {
+            // Build
+            $i = 0;
+            foreach ($filter['filterClauses'] as $clause) {
+                $i++;
+                $criteria = '';
+
+                switch ($clause['filterClauseCriteria']) {
+
+                    case 'starts-with':
+                        $criteria = 'LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'ends-with':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'contains':
+                        $criteria = 'LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'equals':
+                        $criteria = '= \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-contains':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-starts-with':
+                        $criteria = 'NOT LIKE \'' . $clause['filterClauseValue'] . '%\'';
+                        break;
+
+                    case 'not-ends-with':
+                        $criteria = 'NOT LIKE \'%' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'not-equals':
+                        $criteria = '<> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'greater-than':
+                        $criteria = '> \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    case 'less-than':
+                        $criteria = '< \'' . $clause['filterClauseValue'] . '\'';
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                if ($i > 1)
+                    $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
+
+                $filtering .= $clause['filterClause'] . ' ' . $criteria;
+            }
+        }
+
+        // Get an array representing the id->heading mappings
+        $mappings = [];
+        $columns = [];
+
+        if ($feed->titleColumnId != 0)
+            $columns[] = $feed->titleColumnId;
+
+        if ($feed->summaryColumnId != 0)
+            $columns[] = $feed->summaryColumnId;
+
+        if ($feed->contentColumnId != 0)
+            $columns[] = $feed->contentColumnId;
+
+        if ($feed->publishedDateColumnId != 0)
+            $columns[] = $feed->publishedDateColumnId;
+
+        foreach ($columns as $dataSetColumnId) {
+            // Get the column definition this represents
+            $column = $dataSet->getColumn($dataSetColumnId);
+            /* @var \Xibo\Entity\DataSetColumn $column */
+
+            $mappings[$column->heading] = [
+                'dataSetColumnId' => $dataSetColumnId,
+                'heading' => $column->heading,
+                'dataTypeId' => $column->dataTypeId
+            ];
+        }
+
+        $filter = [
+            'filter' => $filtering,
+            'order' => $ordering
+        ];
+
+        // Set the timezone for SQL
+        $dateNow = $this->getDate()->parse();
+
+        $this->store->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
+
+        // Get the data (complete table, filtered)
+        $dataSetResults = $dataSet->getData($filter);
+
+        foreach ($dataSetResults as $row) {
+            $item = Rss20ItemBuilder::create($builder);
+
+            $hasContent = false;
+            $hasDate = false;
+
+            // Go through the columns of each row
+            foreach ($row as $key => $value) {
+                // Is this one of the columns we're interested in?
+                if (isset($mappings[$key])) {
+                    // Yes it is - which one?
+                    $hasContent = true;
+
+                    if ($mappings[$key]['dataSetColumnId'] === $feed->titleColumnId) {
+                        $item->withTitle($value);
+                    } else if ($mappings[$key]['dataSetColumnId'] === $feed->summaryColumnId) {
+                        $item->withSummary($value);
+                    } else if ($mappings[$key]['dataSetColumnId'] === $feed->contentColumnId) {
+                        $item->withContent($value);
+                    } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
+                        try {
+                            $date = $this->getDate()->parse($value, 'U');
+                        } catch (InvalidDateException $dateException) {
+                            $date = $dataSetEditDate;
+                        }
+
+                        if ($date !== null) {
+                            $item->withPublishedDate($date);
+                            $hasDate = true;
+                        }
+                    }
+                }
+            }
+
+            if (!$hasDate)
+                $item->withPublishedDate($dataSetEditDate);
+
+            if ($hasContent)
+                $builder->withItem($item);
+        }
+
+        // Found, do things
+        return $builder->build();
     }
 }
