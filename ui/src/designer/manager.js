@@ -23,6 +23,9 @@ const inverseChangeMap = {
     },
     addWidget: {
         inverse: 'delete'
+    },
+    order: {
+        inverse: 'order'
     }
 };
 
@@ -224,12 +227,11 @@ Manager.prototype.revertChange = function() {
             // Get element by type,from the main object
             let element = self.namespace.getElementByTypeAndId(
                 lastChange.target.type, // Type
-                lastChange.target.id// Id
+                lastChange.target.type + '_' + lastChange.target.id // Id
             );
 
             // If the operation needs data parsing
             if(parseData != undefined && parseData) {
-                console.log('Parse Data');
                 data = JSON.parse(data.regions)[0];
             }
 

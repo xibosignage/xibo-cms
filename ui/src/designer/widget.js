@@ -3,13 +3,21 @@
 /**
  * Widget contructor
  * @param {number} id - widget id
- * @param {number} regionId - region where the widget belongs
  * @param {object} data - data from the API request
+ * @param {number} regionId - region where the widget belongs ( if exists )
  */
-let Widget = function(id, regionId, data) {
-    this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
+let Widget = function(id, data, regionId = null, layoutObject = null) {
+    
     this.widgetId = id;
-    this.regionId = 'region_' + regionId;
+
+    if(regionId != null) {
+        this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
+        this.regionId = 'region_' + regionId;
+    } else {
+        this.id = 'widget_' + id; // widget_regionID_widgetID
+    }
+
+    this.layoutObject = layoutObject;
     
     // widget type
     this.type = 'widget';
@@ -36,14 +44,18 @@ let Widget = function(id, regionId, data) {
      */
     this.durationPercentage = function() {
 
+        if(this.layoutObject == null) {
+            return false;
+        }
+
         // Get duration percentage based on the layout
-        const duration = (this.getDuration() / lD.layout.duration) * 100;
+        const duration = (this.getDuration() / this.layoutObject.duration) * 100;
         
         // If the widget doesn't have the loop flag and is a single widget, extend it
         if(!this.loop && this.singleWidget){
             
             // Verify if the widget duration is less than the layout duration 
-            if(parseFloat(this.getDuration()) < parseFloat(lD.layout.duration)) {
+            if(parseFloat(this.getDuration()) < parseFloat(this.layoutObject.duration)) {
                 this.extend = true;
                 this.extendSize = 100 - duration; // Extend size is the rest of the region width
             }
@@ -110,14 +122,15 @@ let Widget = function(id, regionId, data) {
  * Create clone from widget
  */
 Widget.prototype.createClone = function() {
-    
+    const self = this;
+
     const widgetClone = {
         id: 'ghost_' + this.id,
         subType: this.subType,
         duration: this.getDuration(),
         regionId: this.regionId,
         durationPercentage: function() { // so that can be calculated on template rendering time
-            return (this.duration / lD.layout.duration) * 100;
+            return (this.duration / self.layoutObject.duration) * 100;
         }
     };
 

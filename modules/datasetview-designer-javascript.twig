@@ -163,8 +163,11 @@
         CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
         CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
 
+            // Get background color, or use default
+            const backgroundColor = (typeof lD != 'undefined' && typeof lD.layout != 'undefined') ? lD.layout.backgroundColor : '#eee';
+            
             $("#cke_noDataMessage .cke_contents").css({
-                background: lD.layout.backgroundColor
+                background: backgroundColor
             });
 
             $("#cke_noDataMessage iframe").css({
@@ -175,7 +178,7 @@
             CKEDITOR.instances["noDataMessage"].on('contentDom', function () {
 
                 $("#cke_noDataMessage .cke_contents").css({
-                    background: lD.layout.backgroundColor
+                    background: backgroundColor
                 });
 
                 $("#cke_noDataMessage iframe").css({

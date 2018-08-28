@@ -152,7 +152,8 @@ $(document).ready(function() {
 
                 // Initialize properties panel
                 lD.propertiesPanel = new PropertiesPanel(
-                    lD.designerDiv.find('#properties-panel')
+                    lD.designerDiv.find('#properties-panel'),
+                    lD
                 );
 
 
@@ -160,6 +161,9 @@ $(document).ready(function() {
                     // Show checkout screen
                     lD.showCheckoutScreen(lD.layout);
                 }
+
+                // Setup helpers
+                formHelpers.setup(lD, lD.layout);
 
                 // Call layout status every minute
                 setInterval(lD.layoutStatus, 1000 * 60); // Every minute
@@ -810,7 +814,7 @@ lD.dropItemAdd = function(droppable, draggable) {
                 } else {
 
                     // Login Form needed?
-                    if(data.login) {
+                    if(res.login) {
 
                         window.location.href = window.location.href;
                         location.reload(false);
@@ -819,10 +823,10 @@ lD.dropItemAdd = function(droppable, draggable) {
                         toastr.error('Element form load failed!');
 
                         // Just an error we dont know about
-                        if(data.message == undefined) {
-                            console.error(data);
+                        if(res.message == undefined) {
+                            console.error(res);
                         } else {
-                            console.error(data.message);
+                            console.error(res.message);
                         }
 
                         dialog.modal('hide');
@@ -935,9 +939,9 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
     if(type === 'layout') {
         element = lD.layout;
     } else if(type === 'region') {
-        element = lD.layout.regions['region_' + id];
+        element = lD.layout.regions[id];
     } else if(type === 'widget') {
-        element = lD.layout.regions['region_' + auxId].widgets['widget_' + id];
+        element = lD.layout.regions[auxId].widgets[id];
     }
 
     return element;

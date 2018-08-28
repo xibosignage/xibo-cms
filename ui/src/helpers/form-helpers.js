@@ -1,5 +1,23 @@
 let formHelpers = function() {
 
+    // Default params ( might change )
+    this.defaultBackgroundColor = '#111';
+
+    this.defaultDimensions = {
+        width: 600,
+        height: 400
+    };
+
+    /**
+     * Set helpers to work with the tool that is using it
+     * @param {object} namespace - Helper namespace
+     * @param {string} mainObject - Helper main object
+     */
+    this.setup = function(namespace, mainObject) {        
+        this.namespace = namespace;
+        this.mainObject = mainObject;
+    };
+
     /**
      * Use passed main checkbox object's value (checkBoxSelector) to toggle the secondary passed fields (inputFieldsSelector OR inputFieldsSelectorOpposite) inside the form
      * @param {object} form - Form object
@@ -130,25 +148,34 @@ let formHelpers = function() {
      */
     this.textCallback = function(dialog, extraData) {
 
+        const self = this;
+
         var extra = extraData;
 
         if(extraData === undefined || extraData === null) {
             extra = $(dialog).data().extra;
         }
 
+        // COLORS
+        // Background color for the editor
+        var backgroundColor = (typeof this.mainObject.backgroundColor != 'undefined') ? this.mainObject.backgroundColor : this.defaultBackgroundColor;
         // Choose a complementary color
-        var color = $c.complement(lD.layout.backgroundColor);
-        var regionDimensions = null;
+        var color = $c.complement(backgroundColor);
+        
+        // DIMENSIONS
+        var region = {};
 
         // Get region dimensions
-        if(lD.selectedObject.type == 'widget') {
-            regionDimensions = lD.layout.regions[lD.selectedObject.regionId].dimensions;
+        if(this.namespace.selectedObject.type == 'widget') {
+            region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
         } else {
-            regionDimensions = lD.layout.regions[lD.selectedObject.id].dimensions;
+            region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.id);
         }
 
+        var regionDimensions = (typeof region.dimensions != 'undefined') ? region.dimensions : this.defaultDimensions;
+
         // Calculate scale based on the region previewed in the viewer
-        var scale = lD.viewer.containerElementDimensions.width / regionDimensions.width; //$layout.attr('designer_scale');
+        var scale = (typeof this.namespace.viewer != 'undefined') ? this.namespace.viewer.containerElementDimensions.width / regionDimensions.width : 1; //$layout.attr('designer_scale');
 
         var applyContentsToIframe = function(field) {
             $("#cke_" + field + " iframe").contents().find("head").append("" +
@@ -157,7 +184,7 @@ let formHelpers = function() {
                 "width: " + regionDimensions.width + "px; " +
                 "height: " + regionDimensions.height + "px; border:2px solid red; " +
                 "margin-right: 10px; " +
-                "background: " + lD.layout.backgroundColor + "; " +
+                "background: " + backgroundColor + "; " +
                 "transform: scale(" + scale + "); " +
                 "transform-origin: 0 0; }" +
                 "h1, h2, h3, h4, p { margin-top: 0;}" +
@@ -362,7 +389,7 @@ let formHelpers = function() {
                 CKEDITOR.instances["noDataMessage"].updateElement();
             }
         } catch(e) {
-            console.error("Unable to update CKEditor instances. " + e);
+            console.warn("Unable to update CKEditor instances. " + e);
         }
     };
 
@@ -381,7 +408,7 @@ let formHelpers = function() {
                 CKEDITOR.instances["noDataMessage"].destroy();
             }
         } catch(e) {
-            console.error("Unable to remove CKEditor instance. " + e);
+            console.warn("Unable to remove CKEditor instance. " + e);
             CKEDITOR.instances = {};
         }
     };
@@ -393,6 +420,8 @@ let formHelpers = function() {
      */
     this.mediaEditFormOpen = function(dialog) {
         
+        const self = this;
+
         if(dialog.find('form').data().mediaEditable != 1)
             return;
 
@@ -408,7 +437,7 @@ let formHelpers = function() {
             e.preventDefault();
 
             // Open the upload dialog with our options.
-            lD.openUploadForm(
+            self.namespace.openUploadForm(
                 {
                     oldMediaId: mediaId,
                     widgetId: widgetId,
@@ -425,8 +454,8 @@ let formHelpers = function() {
                         label: translations.done,
                         className: 'btn-primary',
                         callback: function() {
-                            lD.timeline.resetZoom();
-                            lD.reloadData(lD.layout);
+                            self.namespace.timeline.resetZoom();
+                            self.namespace.reloadData(self.mainObject);
                         }
                     }
                 }

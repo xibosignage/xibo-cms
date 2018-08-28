@@ -86,8 +86,85 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script src="{{ theme.uri("js/xibo-layout-designer.js") }}?{{ version }}"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
     <script type="text/javascript">
+
+        var modulesList = [];
+
+        {% for module in modules %}
+            modulesList.push({{ module.getModule()|json_encode|raw }});
+        {% endfor %}
+
+        const serverMode = "{{ settings.SERVER_MODE }}";
+
+        const urlsForApi = {
+            playlist: {
+                get: {
+                    url: "{{ urlFor("playlist.timeline.form") }}",
+                    type: 'GET'
+                },
+                getForm: {
+                    url: "{{ urlFor("playlist.edit.form") }}",
+                    type: 'GET'
+                },
+                addMedia: {
+                    url: "{{ urlFor("playlist.library.assign") }}",
+                    type: 'POST'
+                },
+                addWidgetForm: {
+                    url: "{{ urlFor("module.widget.add.form") }}",
+                    type: 'GET'
+                },
+                preview: {
+                    url: "{{ urlFor("region.preview") }}",
+                    type: 'GET'
+                },
+                order: {
+                    url: "{{ urlFor("playlist.order") }}",
+                    type: 'POST'
+                }
+            },
+            widget: {
+                getForm: {
+                    url: "{{ urlFor("module.widget.edit.form") }}",
+                    type: 'GET'
+                },
+                saveForm: {
+                    url: "{{ urlFor("module.widget.edit") }}",
+                    type: 'PUT'
+                },
+                preview: {
+                    url: "{{ urlFor("region.preview") }}",
+                    type: 'GET'
+                },
+                addForm: {
+                    url: "{{ urlFor("module.widget.add.form") }}",
+                    type: 'GET'
+                },
+                delete: {
+                    url: "{{ urlFor("module.widget.delete") }}",
+                    type: 'DELETE'
+                }
+            },
+            library: {
+                get: {
+                    url: "{{ urlFor("library.search") }}",
+                    type: 'GET'
+                }
+            },
+            user: {
+                getPref: {
+                    url: "{{ urlFor("user.pref") }}",
+                    type: 'GET'
+                },
+                savePref: {
+                    url: "{{ urlFor("user.pref") }}",
+                    type: 'POST'
+                }
+            }
+        };
+
+        var libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ urlFor("library.search") }}";
         var libraryAddUrl = "{{ urlFor("library.add") }}";
         var libraryPlaylistAssignUrl = "{{ urlFor("playlist.library.assign.form") }}";
@@ -99,7 +176,8 @@
             addFiles: "{% trans "Add files" %}",
             startUpload: "{% trans "Start upload" %}",
             cancelUpload: "{% trans "Cancel upload" %}",
-            viewLibrary: "{% trans "View Library" %}"
+            viewLibrary: "{% trans "View Library" %}",
+            undo: "{% trans "Undo" %}"
         }
         var playlistAddFilesTrans = {
             uploadMessage: "{% trans "Replace" %}",

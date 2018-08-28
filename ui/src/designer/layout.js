@@ -77,8 +77,9 @@ Layout.prototype.createDataStructure = function(data) {
 
             const newWidget = new Widget(
                 widgets[widget].widgetId,
+                widgets[widget],
                 data.regions[region].regionId,
-                widgets[widget]
+                this
             );
 
             // Add newWidget to the Region widget object
@@ -203,6 +204,51 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
         toastr.error('Save all changes failed!');
     });
     
+};
+
+/**
+ * Save playlist order
+ * @param {object} playlist - playlist
+ * @param {object} widgets - Widgets DOM objects array
+ */
+Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
+
+    // Get playlist's widgets previous order
+    let oldOrder = {};
+    let orderIndex = 1;
+    for(var element in playlist.widgets) {
+        oldOrder[playlist.widgets[element].widgetId] = orderIndex;
+        orderIndex++;
+    }
+
+    // Get new order
+    let newOrder = {};
+
+    for(let index = 0;index < widgets.length;index++) {
+        const widget = lD.getElementByTypeAndId('widget', $(widgets[index]).data('widgetId'), 'region_' + playlist.regionId);
+
+        newOrder[widget.widgetId] = index + 1;
+    }
+
+    if(JSON.stringify(newOrder) === JSON.stringify(oldOrder)) {
+        return Promise.resolve({
+            message: 'List order not Changed!'
+        });
+    }
+
+    return lD.manager.addChange(
+        "order",
+        "playlist",
+        playlist.playlistId,
+        {
+            widgets: oldOrder
+        },
+        {
+            widgets: newOrder
+        }
+    ).catch((error) => {
+        toastr.error('Playlist save order failed! ' + error);
+    });
 };
 
 module.exports = Layout;

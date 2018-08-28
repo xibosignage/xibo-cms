@@ -7,7 +7,10 @@ const propertiesPanel = require('../templates/properties-panel.hbs');
  * Properties panel contructor
  * @param {object} container - the container to render the panel to
  */
-let PropertiesPanel = function(container) {
+let PropertiesPanel = function(container, namespace) {
+    
+    this.namespace = namespace;
+
     this.DOMObject = container;
 
     // Initialy loaded data on the form
@@ -22,6 +25,8 @@ let PropertiesPanel = function(container) {
  */
 PropertiesPanel.prototype.save = function(form, element) {
 
+    const self = this;
+
     // Run form open module optional function
     if(element.type === 'widget' && typeof window[element.subType + '_form_edit_submit'] === 'function') {
         window[element.subType + '_form_edit_submit'].bind(this.DOMObject)();
@@ -30,8 +35,9 @@ PropertiesPanel.prototype.save = function(form, element) {
     if($(this.DOMObject).find('form').valid()) {
 
     const formNewData = $(form).serialize();
+
     // Add a save form change to the history array, with previous form state and the new state
-    lD.manager.addChange(
+    this.namespace.manager.addChange(
         "saveForm",
         element.type, // targetType
         element[element.type + 'Id'], // targetId
@@ -46,11 +52,15 @@ PropertiesPanel.prototype.save = function(form, element) {
     ).then((res) => { // Success
 
         // Behavior if successful 
-        lD.timeline.resetZoom();
+        if(typeof self.namespace.timeline.resetZoom === "function") {
+            // safe to use the function
+            self.namespace.timeline.resetZoom();
+        }
         
         toastr.success(res.message);
 
-        lD.reloadData(lD.layout);
+        const mainObject = self.namespace.getElementByTypeAndId(self.namespace.mainObjectType, self.namespace.mainObjectId);
+        self.namespace.reloadData(mainObject);
     }).catch((error) => { // Fail/error
 
         // Show error returned or custom message to the user
@@ -61,9 +71,8 @@ PropertiesPanel.prototype.save = function(form, element) {
         } else {
             errorMessage += error.errorThrown; 
         }
-
             // Remove added change from the history manager
-            lD.manager.removeLastChange();
+            self.namespace.manager.removeLastChange();
 
             // Display message in form
             formHelpers.displayErrorMessage($(this.DOMObject).find('form'), errorMessage, 'danger');
@@ -81,18 +90,21 @@ PropertiesPanel.prototype.save = function(form, element) {
 PropertiesPanel.prototype.render = function(element) {
 
     // Prevent the panel to render if the layout is not editable
-    if(element.type == 'layout' && !element.editable ) {
-        return;
+    if(typeof element == 'undefined' || $.isEmptyObject(element) || (element.type == 'layout' && !element.editable) ) {
+        // Clean the property panel html
+        this.DOMObject.html('');
+
+        return false;
     }
 
-    const self = this;
-
-    self.DOMObject.html(loadingTemplate());
-    let requestPath = urlsForApi[element.type]['getForm'].url;
+    this.DOMObject.html(loadingTemplate());
+    let requestPath = urlsForApi[element.type].getForm.url;
 
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
     // Get form for the given element
+    const self = this;
+    
     $.get(requestPath).done(function(res) {
 
         // Prevent rendering null html
@@ -108,11 +120,12 @@ PropertiesPanel.prototype.render = function(element) {
                 Save: ''
             };
         } else {
-            res.buttons['Save'] = '';
+            res.buttons.Save = '';
         }
         
         const html = propertiesPanel({
             header: res.dialogTitle,
+            id: element.id,
             style: element.type,
             form: htmlTemplate(element),
             buttons: res.buttons

@@ -7,7 +7,8 @@ module.exports = {
     entry: {
         vendor: './ui/bundle_vendor.js',
         style: './ui/bundle_style.js',
-        layoutDesigner: './ui/src/designer/main.js'
+        layoutDesigner: './ui/src/designer/main.js',
+        playlistEditor: './ui/src/playlist-editor/playlist-editor.js'
     },
     devtool: 'source-map',
     plugins: [

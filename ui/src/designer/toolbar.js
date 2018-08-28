@@ -20,8 +20,8 @@ const defaultMenuItems = [
 /**
  * Bottom toolbar contructor
  * @param {object} container - the container to render the navigator to
- * @param {object[]} customButtons - customized buttons
- * @param {object} customActions - customized actions
+ * @param {object[]} [customButtons] - customized buttons
+ * @param {object} [customActions] - customized actions
  */
 let Toolbar = function(container, customButtons = [], customActions = {}) {
     this.DOMObject = container;
