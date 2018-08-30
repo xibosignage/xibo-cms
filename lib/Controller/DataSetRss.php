@@ -593,9 +593,12 @@ class DataSetRss extends Base
             $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? $this->getDate()->parse()->subMonths(2) : $this->getDate()->parse($dataSet->lastDataEdit, 'U');
 
             // Do we have this feed in the cache?
-            $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
+            $cache = $this->pool->getItem('/dataset/rss/' . md5($feed->id . json_encode($feed->getFilter()) . json_encode($feed->getSort())));
 
             $output = $cache->get();
+
+            // TODO: what if this date is effected by the filter criteria selected - for example, perhaps the
+            // DataSet is filtered by date - we should try and work that out
 
             if ($cache->isMiss() || $cache->getCreation() < $dataSetEditDate) {
                 // We need to recache
@@ -711,7 +714,14 @@ class DataSetRss extends Base
                 if ($i > 1)
                     $filtering .= ' ' . $clause['filterClauseOperator'] . ' ';
 
-                $filtering .= $clause['filterClause'] . ' ' . $criteria;
+                // Ability to filter by not-empty and empty
+                if ($clause['filterClauseCriteria'] == 'is-empty') {
+                    $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') = \'\'';
+                } else if ($clause['filterClauseCriteria'] == 'is-not-empty') {
+                    $filtering .= 'IFNULL(`' . $clause['filterClause'] . '`, \'\') <> \'\'';
+                } else {
+                    $filtering .= $clause['filterClause'] . ' ' . $criteria;
+                }
             }
         }
 

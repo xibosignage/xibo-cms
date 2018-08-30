@@ -11,8 +11,8 @@ namespace Xibo\Helper;
 
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '1.8.11';
-    public static $WEBSITE_VERSION = 142;
+    public static $WEBSITE_VERSION_NAME = '1.8.12';
+    public static $WEBSITE_VERSION = 143;
 
     public static $VERSION_REQUIRED = '5.5';
     public static $VERSION_UNSUPPORTED = '8.0';
