@@ -597,9 +597,6 @@ class DataSetRss extends Base
 
             $output = $cache->get();
 
-            // TODO: what if this date is effected by the filter criteria selected - for example, perhaps the
-            // DataSet is filtered by date - we should try and work that out
-
             if ($cache->isMiss() || $cache->getCreation() < $dataSetEditDate) {
                 // We need to recache
                 $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format('Y-m-d H:i:s') : 'never'));
@@ -607,7 +604,7 @@ class DataSetRss extends Base
                 $output = $this->generateFeed($feed, $dataSetEditDate, $dataSet);
 
                 $cache->set($output);
-                $cache->expiresAfter(new \DateInterval('P1M'));
+                $cache->expiresAfter(new \DateInterval('PT30M'));
                 $this->pool->saveDeferred($cache);
             } else {
                 $this->getLog()->debug('Serving from Cache');
