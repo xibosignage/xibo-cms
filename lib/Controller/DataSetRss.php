@@ -492,6 +492,9 @@ class DataSetRss extends Base
 
         $feed->save();
 
+        // Delete from the cache
+        $this->pool->deleteItem('/dataset/rss/' . $feed->id);
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $feed->title),
@@ -566,6 +569,9 @@ class DataSetRss extends Base
         $feed = $this->dataSetRssFactory->getById($rssId);
         $feed->delete();
 
+        // Delete from the cache
+        $this->pool->deleteItem('/dataset/rss/' . $feed->id);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -593,7 +599,7 @@ class DataSetRss extends Base
             $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? $this->getDate()->parse()->subMonths(2) : $this->getDate()->parse($dataSet->lastDataEdit, 'U');
 
             // Do we have this feed in the cache?
-            $cache = $this->pool->getItem('/dataset/rss/' . md5($feed->id . json_encode($feed->getFilter()) . json_encode($feed->getSort())));
+            $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
 
             $output = $cache->get();
 
@@ -604,7 +610,7 @@ class DataSetRss extends Base
                 $output = $this->generateFeed($feed, $dataSetEditDate, $dataSet);
 
                 $cache->set($output);
-                $cache->expiresAfter(new \DateInterval('PT30M'));
+                $cache->expiresAfter(new \DateInterval('PT5M'));
                 $this->pool->saveDeferred($cache);
             } else {
                 $this->getLog()->debug('Serving from Cache');
