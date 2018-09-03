@@ -86,18 +86,9 @@ pE.loadEditor = function() {
     // Initialize timeline and create data structure
     pE.playlist = new Playlist(playlistId, playlistData);
 
-    // TODO: Initialize viewer ( not for now )
-    /*
-    pE.viewer = new PlaylistViewer(
-        pE.editorDiv.find('#playlist-viewer'),
-        pE.editorDiv.find('#playlist-viewer-navbar')
-    );
-    */
-
     // Initialize properties panel
     pE.propertiesPanel = new PropertiesPanel(
-        pE.editorDiv.find('#playlist-properties-panel'),
-        pE
+        pE.editorDiv.find('#playlist-properties-panel')
     );
 
     // Initialize timeline
@@ -111,8 +102,7 @@ pE.loadEditor = function() {
     // Initialize manager
     pE.manager = new Manager(
         $('.bootbox').find('#layout-manager'),
-        (serverMode == 'Test'),
-        pE
+        (serverMode == 'Test')
     );
 
     // Append toolbar to the bootbox container
@@ -149,6 +139,11 @@ pE.loadEditor = function() {
             pE.playlist.addElement(ui.draggable[0]);
         }
     });
+};
+
+// Get Xibo app
+window.getXiboApp = function() {
+    return pE;
 };
 
 /**
@@ -335,7 +330,6 @@ pE.renderContainer = function(container, element = {}) {
         }
     }
 };
-
 
 /**
  * Reload API data and replace the playlist structure with the new value

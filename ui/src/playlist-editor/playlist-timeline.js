@@ -30,6 +30,14 @@ PlaylistTimeline.prototype.render = function(layout) {
         pE.selectObject($(this));
     });
 
+    // Handle widget attached audio click
+    this.DOMObject.find('.playlist-widget .editProperty').click(function(e) {
+        e.stopPropagation();
+        const widget = pE.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
+
+        widget.editPropertyForm($(this).data('property'));
+    });
+
     // Sortable widgets
     this.DOMObject.find('#timeline-container').sortable();
 };

@@ -32,9 +32,7 @@ const inverseChangeMap = {
 /**
  * History Manager
  */
-let Manager = function(container, visible, namespace) {
-
-    this.namespace = namespace;
+let Manager = function(container, visible) {
 
     this.DOMObject = container;
 
@@ -118,6 +116,7 @@ Manager.prototype.addChange = function(changeType, targetType, targetId, oldValu
 Manager.prototype.uploadChange = function(change, updateId, updateType, customRequestPath) {
 
     const self = this;
+    const app = getXiboApp();
 
     // Test for empty history array
     if(!change || change.uploaded) {
@@ -134,7 +133,7 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
 
         // If the replaceId is not set or the change needs the main object Id
         if(replaceId == null || linkToAPI.useMainObjectId) {
-            replaceId = self.namespace.mainObjectId;
+            replaceId = app.mainObjectId;
         }
 
         requestPath = requestPath.replace(':id', replaceId);
@@ -211,6 +210,8 @@ Manager.prototype.revertChange = function() {
 
     const self = this;
 
+    const app = getXiboApp();
+
     // Get the last change in the array
     const lastChange = this.changeHistory[this.changeHistory.length - 1];
 
@@ -225,7 +226,7 @@ Manager.prototype.revertChange = function() {
             let data = lastChange.oldState;
 
             // Get element by type,from the main object
-            let element = self.namespace.getElementByTypeAndId(
+            let element = app.getElementByTypeAndId(
                 lastChange.target.type, // Type
                 lastChange.target.type + '_' + lastChange.target.id // Id
             );
@@ -258,7 +259,7 @@ Manager.prototype.revertChange = function() {
 
                 // If the replaceId is not set or the change needs the layoutId, set it to the replace var
                 if(replaceId == null || linkToAPI.useMainObjectId) {
-                    replaceId = self.namespace.mainObjectId;
+                    replaceId = app.mainObjectId;
                 }
 
                 requestPath = requestPath.replace(':id', replaceId);
@@ -278,7 +279,7 @@ Manager.prototype.revertChange = function() {
                     if(inverseOperation === 'delete') {
 
                         // Unselect selected object before deleting
-                        self.namespace.selectObject();
+                        app.selectObject();
                     }
 
                     // Resolve promise

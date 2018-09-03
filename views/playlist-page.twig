@@ -144,6 +144,22 @@
                 delete: {
                     url: "{{ urlFor("module.widget.delete") }}",
                     type: 'DELETE'
+                },
+                getAudio: {
+                    url: "{{ urlFor("module.widget.audio.form") }}",
+                    type: 'GET'
+                },
+                saveAudio:  {
+                    url: "{{ urlFor("module.widget.audio") }}",
+                    type: 'PUT'
+                },
+                getExpiry: {
+                    url: "{{ urlFor("module.widget.expiry.form") }}",
+                    type: 'GET'
+                },
+                saveExpiry:  {
+                    url: "{{ urlFor("module.widget.expiry") }}",
+                    type: 'PUT'
                 }
             },
             library: {

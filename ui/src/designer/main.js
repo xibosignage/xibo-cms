@@ -73,6 +73,11 @@ window.lD = {
     propertiesPanel: {},
 };
 
+// Get Xibo app
+window.getXiboApp = function() {
+    return lD;
+};
+
 // Load Layout and build app structure
 $(document).ready(function() {
     // Get layout id
@@ -110,8 +115,7 @@ $(document).ready(function() {
                 // Initialize manager
                 lD.manager = new Manager(
                     lD.designerDiv.find('#layout-manager'),
-                    (serverMode == 'Test'),
-                    lD
+                    (serverMode == 'Test')
                 );
 
                 // Initialize viewer
@@ -147,13 +151,20 @@ $(document).ready(function() {
                     {
                         deleteSelectedObjectAction: lD.deleteSelectedObject,
                         deleteDraggedObjectAction: lD.deleteDraggedObject
+                    },
+                    // jumpList
+                    {
+                        searchLink: urlsForApi.layout.get.url,
+                        designerLink: urlsForApi.layout.designer.url,
+                        layoutId: lD.layout.layoutId,
+                        layoutName: lD.layout.name,
+                        callback: lD.reloadData
                     }
                 );
 
                 // Initialize properties panel
                 lD.propertiesPanel = new PropertiesPanel(
-                    lD.designerDiv.find('#properties-panel'),
-                    lD
+                    lD.designerDiv.find('#properties-panel')
                 );
 
 
@@ -287,11 +298,13 @@ lD.refreshDesigner = function() {
  */
 lD.reloadData = function(layout) {
 
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layout.layoutId + "&embed=regions,playlists,widgets")
+    const layoutId = (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
+
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
             
             if(res.data.length > 0) {
-                lD.layout = new Layout(layout.layoutId, res.data[0]);
+                lD.layout = new Layout(layoutId, res.data[0]);
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;

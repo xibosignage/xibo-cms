@@ -315,41 +315,12 @@ Timeline.prototype.render = function(layout) {
         }
     });
 
-    /*
-    this.DOMObject.find('#regions .designer-widget:not(.designer-widget-ghost)').draggable({
-        connectToSortable: '.designer-region',
-        start: function(event, ui) {
-            $(this).draggable('instance').offset.click = {
-                left: Math.floor(ui.helper.outerWidth() / 2),
-                top: Math.floor(ui.helper.outerHeight() / 2)
-            };
-        },
-        appendTo: $(lD.toolbar.DOMObject),
-        scroll: false,
-        cursor: 'crosshair',
-        opacity: 0.6,
-        zIndex: 100,
-        helper: function(event) {
-            return $('<div class="layout-widget-deletable deletable">' + event.currentTarget.id + '</div>');
-        }
-    });
+    this.DOMObject.find('.designer-widget .editProperty').click(function(e) {
+        e.stopPropagation();
+        const widget = lD.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
-    this.DOMObject.find('#regions .designer-region').draggable({
-        start: function(event, ui) {
-            $(this).draggable('instance').offset.click = {
-                left: Math.floor(ui.helper.outerWidth() / 2),
-                top: Math.floor(ui.helper.outerHeight() / 2)
-            };
-        },
-        appendTo: $(lD.toolbar.DOMObject),
-        scroll: false,
-        cursor: 'crosshair',
-        opacity: 0.6,
-        zIndex: 100,
-        helper: function(event) {
-            return $('<div class="layout-region-deletable deletable">' + event.currentTarget.id + '</div>');
-        }
-    });*/
+        widget.editPropertyForm($(this).data('property'));
+    });
     
     this.DOMObject.find('#regions .designer-region').sortable({
         items: '.designer-widget:not(.designer-widget-ghost)',

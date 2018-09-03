@@ -38,6 +38,11 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.widgetOptions = data.widgetOptions;
     this.calculatedDuration = data.calculatedDuration;
 
+    this.audio = data.audio;
+
+    this.fromDt = data.fromDt;
+    this.toDt = data.toDt;
+
     /**
      * Return the percentage for the widget on the timeline
      * @returns {number} - Widget duration percentage related to the layout duration
@@ -135,6 +140,149 @@ Widget.prototype.createClone = function() {
     };
 
     return widgetClone;
+};
+
+/**
+ * Edit property form
+ *
+ * @param {string} property - property to edit
+ * @param {object} data - data from the API request
+ */
+Widget.prototype.editPropertyForm = function(property) {
+
+    const self = this;
+
+    const app = getXiboApp();
+
+    // Load form the API
+    const linkToAPI = urlsForApi.widget['get' + property];
+
+    let requestPath = linkToAPI.url;
+
+    // Replace playlist id
+    requestPath = requestPath.replace(':id', this.widgetId);
+
+    // Create dialog
+    var calculatedId = new Date().getTime();
+
+    // Create dialog
+    let dialog = bootbox.dialog({
+        className: 'second-dialog',
+        title: 'Load ' + property + ' for widget',
+        message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+        buttons: {
+            cancel: {
+                label: translations.cancel,
+                className: "btn-default"
+            },
+            done: {
+                label: translations.done,
+                className: "btn-primary test",
+                callback: function(res) {
+
+                    const form = dialog.find('form');
+
+                    app.manager.addChange(
+                        'save' + property,
+                        'widget', // targetType 
+                        self.widgetId,  // targetId
+                        null,  // oldValues
+                        form.serialize(), // newValues
+                        {
+                            addToHistory: false // options.addToHistory
+                        }
+                    ).then((res) => { // Success
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+
+                        dialog.modal('hide');
+
+                        app.reloadData(app.layout);
+
+                    }).catch((error) => { // Fail/error
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = '';
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
+                        }
+
+                        // Display message in form
+                        formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                        // Show toast message
+                        toastr.error(errorMessage);
+                    });
+                }
+
+            }
+        }
+    }).attr('id', calculatedId);
+
+    // Request and load element form
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+            // Add title
+            dialog.find('.modal-title').html(res.dialogTitle);
+
+            // Add body main content
+            dialog.find('.bootbox-body').html(res.html);
+
+            dialog.data('extra', res.extra);
+
+            // Call Xibo Init for this form
+            XiboInitialise('#' + dialog.attr('id'));
+
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error(property + ' form load failed!');
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
+                dialog.modal('hide');
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(property + ' form load failed!');
+
+        dialog.modal('hide');
+    });
+};
+
+/**
+ * Edit attached audio
+ */
+Widget.prototype.editAttachedAudio = function() {
+    this.editPropertyForm('Audio');
+};
+
+/**
+ * Edit expiry dates
+ */
+Widget.prototype.editExpiry = function() {
+    this.editPropertyForm('Expiry');
 };
 
 module.exports = Widget;

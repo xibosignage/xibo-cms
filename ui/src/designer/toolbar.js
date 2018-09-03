@@ -2,6 +2,7 @@
 
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
+const ToolbarLayoutJumpList = require('../templates/toolbar-layout-jump-list.hbs');
 
 // Add global helpers
 window.formHelpers = require('../helpers/form-helpers.js');
@@ -23,11 +24,14 @@ const defaultMenuItems = [
  * @param {object[]} [customButtons] - customized buttons
  * @param {object} [customActions] - customized actions
  */
-let Toolbar = function(container, customButtons = [], customActions = {}) {
+let Toolbar = function(container, customButtons = [], customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
     this.menuItems = defaultMenuItems;
     this.menuIndex = 0;
+
+    // Layout jumplist
+    this.jumpList = jumpList;
 
     // Custom buttons
     this.customButtons = customButtons;
@@ -243,6 +247,11 @@ Toolbar.prototype.render = function() {
             this.DOMObject.find('#' + this.customButtons[index].id).prop('disabled', true);
         }
         
+    }
+
+    // Set layout jumpList if exists
+    if(!$.isEmptyObject(this.jumpList) && $('#layoutJumpList').length == 0) {
+        this.setupJumpList($("#layoutJumpListContainer"));
     }
 
     // Set cards width/margin and draggable properties
@@ -499,6 +508,94 @@ Toolbar.prototype.calculatePagination = function(menu) {
         start: currentPage * elementsToDisplay,
         length: elementsToDisplay
     };
+};
+
+
+/**
+* Setup layout jumplist
+* @param {object} jumpListContainer
+*/
+Toolbar.prototype.setupJumpList = function(jumpListContainer) {
+
+    const html = ToolbarLayoutJumpList(this.jumpList);
+    const self = this;
+
+    // Append layout html to the main div
+    jumpListContainer.html(html);
+
+    jumpListContainer.show();
+
+    const jumpList = jumpListContainer.find('#layoutJumpList');
+
+    jumpList.select2({
+        ajax: {
+            url: jumpList.data().url,
+            dataType: "json",
+            data: function(params) {
+                console.log(params.term);
+
+                var query = {
+                    layout: params.term,
+                    start: 0,
+                    length: 10
+                };
+
+                // Set the start parameter based on the page number
+                if(params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                // Find out what is inside the search box for this list, and save it (so we can replay it when the list
+                // is opened again)
+                if(params.term !== undefined) {
+                    localStorage.liveSearchPlaceholder = params.term;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+
+                $.each(data.data, function(index, element) {
+                    results.push({
+                        "id": element.layoutId,
+                        "text": element.layout
+                    });
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                };
+            },
+            delay: 250
+        }
+    });
+
+    jumpList.on("select2:select", function(e) {
+
+        // TODO: Maybe use the layout load without reloading page
+        //self.jumpList.callback(e.params.data.id);
+
+        // Go to the Layout we've selected.
+        window.location = jumpList.data().designerUrl.replace(":id", e.params.data.id);
+    }).on("select2:opening", function(e) {
+        // Set the search box according to the saved value (if we have one)
+        
+        if(localStorage.liveSearchPlaceholder != null && localStorage.liveSearchPlaceholder !== "") {
+            var $search = jumpList.data("select2").dropdown.$search;
+            $search.val(localStorage.liveSearchPlaceholder);
+
+            setTimeout(function() {
+                $search.trigger("input");
+            }, 100);
+        }
+    });
 };
 
 module.exports = Toolbar;
