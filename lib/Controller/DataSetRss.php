@@ -616,6 +616,7 @@ class DataSetRss extends Base
                 $this->getLog()->debug('Serving from Cache');
             }
 
+            $this->getApp()->response()->header('Content-Type', 'application/rss+xml');
             echo $output;
 
         } catch (NotFoundException $notFoundException) {
