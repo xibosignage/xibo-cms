@@ -215,7 +215,6 @@ class UserFactory extends BaseFactory
                 retired,
                 CSPRNG,
                 UserPassword AS password,
-                isPasswordChangeRequired,
                 group.groupId,
                 group.group
         ';
@@ -260,6 +259,12 @@ class UserFactory extends BaseFactory
             $select .= '
                 ,
                 `group`.isDisplayNotification
+            ';
+        }
+
+        if (DBVERSION >= 143) {
+            $select .= '
+                , `user`.isPasswordChangeRequired
             ';
         }
 
@@ -392,7 +397,7 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota']]);
+            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota', 'isPasswordChangeRequired']]);
         }
 
         // Paging

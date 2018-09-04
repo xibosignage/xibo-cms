@@ -106,8 +106,7 @@ class Login extends Base
                     $user = $this->userFactory->getById($validated['userId']);
 
                     // Log in this user
-                    // TODO: set force password change (update touch() to do this too, based on a parameter)
-                    $user->touch();
+                    $user->touch(true);
 
                     $this->getLog()->info($user->userName . ' user logged in via token.');
 

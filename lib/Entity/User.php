@@ -920,11 +920,20 @@ class User implements \JsonSerializable
 
     /**
      * Update the Last Accessed date
+     * @param bool $forcePasswordChange
      */
-    public function touch()
+    public function touch($forcePasswordChange = false)
     {
+        $sql = 'UPDATE `user` SET lastAccessed = :time ';
+
+        if ($forcePasswordChange && DBVERSION >= 143) {
+            $sql .= ' , isPasswordChangeRequired = 1 ';
+        }
+
+        $sql .= ' WHERE userId = :userId';
+
         // This needs to happen on a separate connection
-        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
+        $this->getStore()->update($sql, [
             'userId' => $this->userId,
             'time' => date("Y-m-d H:i:s")
         ]);
