@@ -123,6 +123,9 @@ class Region extends Base
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
                 $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+
+                // Augment with tags
+                $widget->tags = $widget->module->getMediaTags();
             }
         }
 
