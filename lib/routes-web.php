@@ -46,8 +46,9 @@ $app->get('/dashboard/media/data', '\Xibo\Controller\MediaManager:grid')->name('
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
 
-// Login Request
+// Login Requests
 $app->post('/login', '\Xibo\Controller\Login:login');
+$app->post('/login/forgotten', '\Xibo\Controller\Login:forgottenPassword')->name('login.forgotten');
 
 // Logout Request
 $app->get('/logout', '\Xibo\Controller\Login:logout')->name('logout');
