@@ -450,6 +450,13 @@ class User extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="isPasswordChangeRequired",
+     *      in="formData",
+     *      description="A flag indicating whether password change should be forced for this user",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -500,6 +507,7 @@ class User extends Base
         // Options
         $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
         $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
+        $user->isPasswordChangeRequired = $this->getSanitizer()->getCheckbox('isPasswordChangeRequired');
 
         // Initial user group
         $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
@@ -529,8 +537,167 @@ class User extends Base
     }
 
     /**
-     * Edits a user
-     * @param int $userId
+     * Edit a user
+     *
+     * @SWG\Put(
+     *  path="/user/{userId}",
+     *  operationId="userEdit",
+     *  tags={"user"},
+     *  summary="Edit User",
+     *  description="Edit existing User",
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="path",
+     *      description="The user ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userName",
+     *      in="formData",
+     *      description="The User Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="email",
+     *      in="formData",
+     *      description="The user email address",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userTypeId",
+     *      in="formData",
+     *      description="The user type ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="homePageId",
+     *      in="formData",
+     *      description="The homepage to use for this User",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="libraryQuota",
+     *      in="formData",
+     *      description="The users library quota in kilobytes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="newPassword",
+     *      in="formData",
+     *      description="New User password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retypeNewPassword",
+     *      in="formData",
+     *      description="Repeat the new User password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Flag indicating whether to retire this user",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="firstName",
+     *      in="formData",
+     *      description="The users first name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lastName",
+     *      in="formData",
+     *      description="The users last name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="phone",
+     *      in="formData",
+     *      description="The users phone number",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="Reference 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="Reference 2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="Reference 3",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="Reference 4",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="Reference 5",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="newUserWizard",
+     *      in="formData",
+     *      description="Flag indicating whether to show the new user guide",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="hideNavigation",
+     *      in="formData",
+     *      description="Flag indicating whether to hide the navigation",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isPasswordChangeRequired",
+     *      in="formData",
+     *      description="A flag indicating whether password change should be forced for this user",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/User"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     * @param $userId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function edit($userId)
     {
@@ -566,6 +733,7 @@ class User extends Base
         // Options
         $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
         $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
+        $user->isPasswordChangeRequired = $this->getSanitizer()->getCheckbox('isPasswordChangeRequired');
 
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
@@ -598,8 +766,45 @@ class User extends Base
     }
 
     /**
-     * Delete User
-     * @param int $userId
+     * Deletes a User
+     *
+     * @SWG\Delete(
+     *  path="/user/{userId}",
+     *  operationId="userDelete",
+     *  tags={"user"},
+     *  summary="User Delete",
+     *  description="Delete user",
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="path",
+     *      description="Id of the user to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="deleteAllItems",
+     *      in="formData",
+     *      description="Flag indicating whether to delete all items owned by that user",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="reassignUserId",
+     *      in="formData",
+     *      description="Reassign all items owned by this user to the specified user ID",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/User")
+     *      )
+     *  )
+     * )
+     * @param $userId
      * @throws \Xibo\Exception\NotFoundException
      */
     public function delete($userId)
@@ -731,6 +936,7 @@ class User extends Base
 
     /**
      * Change my Password
+     * @throws InvalidArgumentException
      */
     public function changePassword()
     {
@@ -740,13 +946,67 @@ class User extends Base
         $newPassword = $this->getSanitizer()->getString('newPassword');
         $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
+        if ($newPassword == null || $retypeNewPassword == '')
+            throw new InvalidArgumentException(__('Please enter the password'), 'password');
+
         if ($newPassword != $retypeNewPassword)
-            throw new \InvalidArgumentException(__('Passwords do not match'));
+            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
 
         $user->setNewPassword($newPassword, $oldPassword);
         $user->save([
             'passwordUpdate' => true
         ]);
+
+        $user->isPasswordChangeRequired = 0;
+        $user->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Password Changed'),
+            'id' => $user->userId,
+            'data' => $user
+        ]);
+    }
+
+    /**
+     * Force User Password Change
+     */
+    public function forceChangePasswordPage()
+    {
+        $user = $this->getUser();
+
+        // if the flag to force change password is not set to 1 then redirect to the Homepage
+        if ($user->isPasswordChangeRequired != 1) {
+            $this->getApp()->redirectTo('home');
+        }
+
+        $this->getState()->template = 'user-force-change-password-page';
+    }
+
+    /**
+     * Force change my Password
+     * @throws InvalidArgumentException
+     */
+    public function forceChangePassword()
+    {
+        // Save the user
+        $user = $this->getUser();
+        $newPassword = $this->getSanitizer()->getString('newPassword');
+        $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
+
+        if ($newPassword == null || $retypeNewPassword == '')
+            throw new InvalidArgumentException(__('Please enter the password'), 'password');
+
+        if ($newPassword != $retypeNewPassword)
+            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
+
+        $user->setNewPassword($newPassword);
+        $user->save([
+            'passwordUpdate' => true
+        ]);
+
+        $user->isPasswordChangeRequired = 0;
+        $user->save();
 
         // Return
         $this->getState()->hydrate([

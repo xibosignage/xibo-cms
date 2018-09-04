@@ -155,6 +155,7 @@ class BaseFactory
         else {
             $user = $this->getUser();
 
+            if ($user !== null)
             $this->getLog()->debug('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId);
         }
 

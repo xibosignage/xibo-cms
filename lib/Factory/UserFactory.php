@@ -215,6 +215,7 @@ class UserFactory extends BaseFactory
                 retired,
                 CSPRNG,
                 UserPassword AS password,
+                isPasswordChangeRequired,
                 group.groupId,
                 group.group
         ';
