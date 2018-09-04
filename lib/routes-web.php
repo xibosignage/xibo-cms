@@ -46,8 +46,9 @@ $app->get('/dashboard/media/data', '\Xibo\Controller\MediaManager:grid')->name('
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
 
-// Login Request
+// Login Requests
 $app->post('/login', '\Xibo\Controller\Login:login');
+$app->post('/login/forgotten', '\Xibo\Controller\Login:forgottenPassword')->name('login.forgotten');
 
 // Logout Request
 $app->get('/logout', '\Xibo\Controller\Login:logout')->name('logout');
@@ -70,6 +71,9 @@ $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('sche
 $app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
+// Special routes for searching inside the schedule page
+$app->get('/schedule/search/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('schedule.displayGroup.search');
+$app->get('/schedule/search/campaign', '\Xibo\Controller\Campaign:grid')->name('schedule.campaign.search');
 
 //
 // notification

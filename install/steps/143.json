@@ -3,6 +3,10 @@
   "appVersion": "1.8.12",
   "steps": [
     {
+      "step": "Add a setting for allowing users to request a password reminder.",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reminder enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reminder', '', 50, 'Off', 1, 'string'); "
+    },
+    {
       "step": "Add the isPasswordChangeRequired Column",
       "action": "ALTER TABLE user ADD isPasswordChangeRequired tinyint(4) DEFAULT 0 NOT NULL;"
     }
