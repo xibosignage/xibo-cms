@@ -156,6 +156,7 @@ $app->post('/user/welcome', '\Xibo\Controller\User:userWelcomeSetUnseen')->name(
 $app->put('/user/welcome', '\Xibo\Controller\User:userWelcomeSetSeen')->name('welcome.wizard.seen');
 $app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('user.applications');
 $app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->name('user.change.password.form');
+$app->get('/user/page/password', '\Xibo\Controller\User:forceChangePasswordPage')->name('user.force.change.password.page');
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');
 $app->get('/user/form/edit/:id', '\Xibo\Controller\User:editForm')->name('user.edit.form');
 $app->get('/user/form/delete/:id', '\Xibo\Controller\User:deleteForm')->name('user.delete.form');

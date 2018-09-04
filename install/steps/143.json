@@ -1,0 +1,10 @@
+{
+  "dbVersion": 143,
+  "appVersion": "1.8.12",
+  "steps": [
+    {
+      "step": "Add the isPasswordChangeRequired Column",
+      "action": "ALTER TABLE user ADD isPasswordChangeRequired tinyint(4) DEFAULT 0 NOT NULL;"
+    }
+  ]
+}
