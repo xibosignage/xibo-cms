@@ -936,6 +936,7 @@ class User extends Base
 
     /**
      * Change my Password
+     * @throws InvalidArgumentException
      */
     public function changePassword()
     {
@@ -946,10 +947,10 @@ class User extends Base
         $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
         if ($newPassword == null || $retypeNewPassword == '')
-            throw new \InvalidArgumentException(__('Please enter the password'));
+            throw new InvalidArgumentException(__('Please enter the password'), 'password');
 
         if ($newPassword != $retypeNewPassword)
-            throw new \InvalidArgumentException(__('Passwords do not match'));
+            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
 
         $user->setNewPassword($newPassword, $oldPassword);
         $user->save([
@@ -972,11 +973,19 @@ class User extends Base
      */
     public function forceChangePasswordPage()
     {
+        $user = $this->getUser();
+
+        // if the flag to force change password is not set to 1 then redirect to the Homepage
+        if ($user->isPasswordChangeRequired != 1) {
+            $this->getApp()->redirectTo('home');
+        }
+
         $this->getState()->template = 'user-force-change-password-page';
     }
 
     /**
      * Force change my Password
+     * @throws InvalidArgumentException
      */
     public function forceChangePassword()
     {
@@ -986,10 +995,10 @@ class User extends Base
         $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
         if ($newPassword == null || $retypeNewPassword == '')
-            throw new \InvalidArgumentException(__('Please enter the password'));
+            throw new InvalidArgumentException(__('Please enter the password'), 'password');
 
         if ($newPassword != $retypeNewPassword)
-            throw new \InvalidArgumentException(__('Passwords do not match'));
+            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
 
         $user->setNewPassword($newPassword);
         $user->save([
