@@ -249,6 +249,7 @@ class DataSetData extends Base
      * Edit Form
      * @param $dataSetId
      * @param $rowId
+     * @throws \Xibo\Exception\XiboException
      */
     public function editForm($dataSetId, $rowId)
     {
@@ -265,7 +266,11 @@ class DataSetData extends Base
         foreach ($dataSet->getColumn() as $dataSetColumn) {
             if ($dataSetColumn->dataTypeId === 5) {
                 // Add this image object to my row
-                $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
+                try {
+                    $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLog()->debug('DataSet ' . $dataSetId . ' references an image that no longer exists. ID is ' . $row[$dataSetColumn->heading]);
+                }
             }
         }
 
