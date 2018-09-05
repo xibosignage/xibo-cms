@@ -175,6 +175,7 @@ class Notification implements \JsonSerializable
 
     /**
      * Validate
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -187,16 +188,24 @@ class Notification implements \JsonSerializable
 
     /**
      * Load
+     * @param array $options
      */
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'loadUserGroups' => true,
+            'loadDisplayGroups' => true,
+        ], $options);
+
         if ($this->loaded || $this->notificationId == null)
             return;
 
         // Load the Display Groups and User Group Notifications
+        if ($options['loadUserGroups'])
         $this->userGroups = $this->userGroupFactory->getByNotificationId($this->notificationId);
-        $this->displayGroups = $this->displayGroupFactory->getByNotificationId($this->notificationId);
 
+        if ($options['loadDisplayGroups'])
+        $this->displayGroups = $this->displayGroupFactory->getByNotificationId($this->notificationId);
 
         $this->loaded = true;
     }

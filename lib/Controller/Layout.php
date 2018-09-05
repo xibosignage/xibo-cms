@@ -695,7 +695,7 @@ class Layout extends Base
             $layout->thumbnail = '';
 
             if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor('layout.download.background', ['id' => $layout->layoutId]) . '?preview=1';
+                $download = $this->urlFor('layout.download.background', ['id' => $layout->layoutId]) . '?preview=1' . '&backgroundImageId=' . $layout->backgroundImageId;
                 $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
