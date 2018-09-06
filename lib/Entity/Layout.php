@@ -1333,6 +1333,12 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->layoutId
         ]);
 
+        // Update any Displays which use this as their default Layout
+        $this->getStore()->update('UPDATE `display` SET defaultLayoutId = :layoutId WHERE defaultLayoutId = :parentId', [
+            'parentId' => $parent->layoutId,
+            'layoutId' => $this->layoutId
+        ]);
+
         // If this is the global default layout, then add some special handling to make sure we swap the default over
         // to the incoming draft
         if ($this->parentId == $this->config->GetSetting('DEFAULT_LAYOUT')) {
