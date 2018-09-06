@@ -142,3 +142,7 @@ FOREIGN KEY (groupId) REFERENCES `group` (groupID);
 ALTER TABLE permission
   ADD CONSTRAINT permission_permissionentity_entityId_fk
 FOREIGN KEY (entityId) REFERENCES permissionentity (entityId);
+
+ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_1` FOREIGN KEY (`mediaId`) REFERENCES `media` (`mediaId`);
+
+ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_2` FOREIGN KEY (`widgetId`) REFERENCES `widget` (`widgetId`);

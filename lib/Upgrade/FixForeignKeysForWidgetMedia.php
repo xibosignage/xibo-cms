@@ -71,7 +71,7 @@ class FixForeignKeysForWidgetMedia implements Step
                 AND `table_name` = \'lkwidgetmedia\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'widgetId\';', [])) {
 
             // Add the constraint
-            $this->store->update('ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_2` FOREIGN KEY (`widgetId`) REFERENCES `media` (`widgetId`);', []);
+            $this->store->update('ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_2` FOREIGN KEY (`widgetId`) REFERENCES `widget` (`widgetId`);', []);
         }
     }
 }
