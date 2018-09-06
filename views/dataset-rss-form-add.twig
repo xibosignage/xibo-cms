@@ -1,0 +1,191 @@
+{#
+/**
+ * Copyright (C) 2018 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add RSS" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#dataSetRssAddForm").submit()
+{% endblock %}
+
+{% block callBack %}configureQueryBuilder{% endblock %}
+
+{% block formFieldActions %}
+[
+    {
+    "field": "useOrderingClause",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "none" },
+    "#orderClause": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "none" },
+    "#orderClause": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "block" },
+    "#orderClause": { "display": "none" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "block" },
+    "#orderClause": { "display": "none" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
+    }
+    }
+]
+{% endblock %}
+
+{% block extra %}{{ extra|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            </ul>
+            <form id="dataSetRssAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.rss.add", {id: dataSet.dataSetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Title" %}{% endset %}
+                        {% set helpText %}{% trans "The title for this Rss" %}{% endset %}
+                        {{ forms.input("title", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Author" %}{% endset %}
+                        {% set helpText %}{% trans "The author for this Rss" %}{% endset %}
+                        {{ forms.input("author", title, "", helpText) }}
+
+                        {% set title %}{% trans "Title Column" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a column to be the item title" %}{% endset %}
+                        {{ forms.dropdown("titleColumnId", "single", title, titleColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
+
+                        {% set title %}{% trans "Summary Column" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a column to be the item summary" %}{% endset %}
+                        {{ forms.dropdown("summaryColumnId", "single", title, summaryColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
+
+                        {% set title %}{% trans "Content Column" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a column to be the item content" %}{% endset %}
+                        {{ forms.dropdown("contentColumnId", "single", title, contentColumnId, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.columns), "dataSetColumnId", "heading", helpText) }}
+
+                        {% set title %}{% trans "Published Date Column" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a column to be the item content. We will try to convert this to a date/time and if we can't we will use the current date/time." %}{% endset %}
+                        {{ forms.dropdown("publishedDateColumn", "single", title, publishedDateColumn, [{"dataSetColumnId": null, "heading": ""}]|merge(extra.dateColumns), "dataSetColumnId", "heading", helpText) }}
+                    </div>
+                    <div class="tab-pane" id="orderCriteria">
+
+                        {% set message %}{% trans "The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="orderClause">
+
+                        </div>
+
+                        {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
+                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 0), helpText) }}
+
+                        {% set title %}{% trans "Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
+                        {{ forms.input("ordering", title, module.getOption("ordering"), helpText, "order-clause-field") }}
+
+                    </div>
+                    <div class="tab-pane" id="filterCriteria">
+                        {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="filterClause">
+
+                        </div>
+
+                        {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
+                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 0), helpText) }}
+
+                        {% set title %}{% trans "Filter" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
+                        {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
