@@ -179,7 +179,7 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/clock', '/about', '/login/ping', '/rss/:psk');
+        $app->publicRoutes = array('/login', '/login/forgotten', '/clock', '/about', '/login/ping', '/rss/:psk');
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
@@ -702,7 +702,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->session,
-                $container->userFactory
+                $container->userFactory,
+                $container->pool
             );
         });
 

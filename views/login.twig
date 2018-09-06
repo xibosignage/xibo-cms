@@ -11,7 +11,7 @@
     <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet" media="screen">
     <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">
 
-    <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+    <!-- Copyright 2006-2018 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
         body {
             padding-top: 40px;
@@ -65,8 +65,27 @@
             <div class="alert alert-danger">{{ flash.login_message }}</div>
             {% endif %}
 
-            <button class="btn btn-large btn-primary" type="submit">{% trans "Login" %}</button>
+            <p><button class="btn btn-large btn-primary" type="submit">{% trans "Login" %}</button></p>
+
+            {% if passwordReminderEnabled %}<p><a href="#" id="reminder-form-toggle">{% trans "Forgotten your password?" %}</a></p>{% endif %}
         </form>
+
+        {% if passwordReminderEnabled %}
+        <form id="reminder-form" class="form-signin text-center hidden" action="{{ urlFor("login.forgotten") }}" method="post">
+            <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
+
+            <p>{% trans "Please provide your user name" %}</p>
+            <input id="username" class="form-control input-block-level" name="username" type="text" placeholder="{% trans "User" %}">
+
+            {% if flash.login_message %}
+                <div class="alert alert-danger">{{ flash.login_message }}</div>
+            {% endif %}
+
+            <p><button class="btn btn-large btn-primary" type="submit">{% trans "Send Reminder" %}</button></p>
+
+            <p><a href="#" id="login-form-toggle">{% trans "Login instead?" %}</a></p>
+        </form>
+        {% endif %}
 
         <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
             | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
@@ -75,5 +94,22 @@
     </div> <!-- /container -->
     <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
     <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
+    <script type="text/javascript">
+        $(function() {
+            $("#reminder-form-toggle").on("click", function (e) {
+                e.preventDefault();
+
+                $("#login-form").addClass("hidden");
+                $("#reminder-form").removeClass("hidden");
+            });
+
+            $("#login-form-toggle").on("click", function (e) {
+                e.preventDefault();
+
+                $("#login-form").removeClass("hidden");
+                $("#reminder-form").addClass("hidden");
+            });
+        });
+    </script>
 </body>
 </html>

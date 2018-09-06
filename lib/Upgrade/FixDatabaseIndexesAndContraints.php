@@ -162,6 +162,17 @@ class FixDatabaseIndexesAndContraints implements Step
      */
     private function addForeignKeyToTags()
     {
+        if (!$this->store->exists('
+                SELECT * 
+                  FROM information_schema.tables
+                 WHERE table_schema = DATABASE()
+                    AND table_name = \'lktagdisplaygroup\'
+                LIMIT 1;
+            ', [])) {
+                // Don't run this yet
+                return;
+        }
+
         // Does the constraint already exist?
         if (!$this->store->exists('
             SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()

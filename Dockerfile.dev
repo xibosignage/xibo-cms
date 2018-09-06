@@ -29,7 +29,6 @@ RUN apk update && apk upgrade && apk add tar \
     php7-zmq \
     php7-json \
     php7-gd \
-    php7-mcrypt \
     php7-dom \
     php7-pdo \
     php7-zip \

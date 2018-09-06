@@ -167,8 +167,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (3, 'defaultUsertype', 'User', 'dropdown', 'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"', 'User|Group Admin|Super Admin', 'users', 1, 'Default User Type', '', 10, 'User', 1, 'string'),
 (7, 'userModule', 'module_user_general.php', 'dirselect', 'This sets which user authentication module is currently being used.', NULL, 'users', 0, 'User Module', '', 0, 'module_user_general.php', 0, 'string'),
 (11, 'defaultTimezone', 'Europe/London', 'timezone', 'Set the default timezone for the application', 'Europe/London', 'regional', 1, 'Timezone', '', 20, 'Europe/London', 1, 'string'),
-(18, 'mail_to', 'mail@yoursite.com', 'email', 'Errors will be mailed here', NULL, 'maintenance', 1, 'Admin email address', '', 30, 'mail@yoursite.com', 1, 'string'),
-(19, 'mail_from', 'mail@yoursite.com', 'email', 'Mail will be sent from this address', NULL, 'maintenance', 1, 'Sending email address', '', 40, 'mail@yoursite.com', 1, 'string'),
+(18, 'mail_to', '', 'email', 'Errors will be mailed here', NULL, 'maintenance', 1, 'Admin email address', '', 30, '', 1, 'string'),
+(19, 'mail_from', '', 'email', 'Mail will be sent from this address', NULL, 'maintenance', 1, 'Sending email address', '', 40, '', 1, 'string'),
 (30, 'audit', 'Error', 'dropdown', 'Set the level of logging the CMS should record. In production systems "error" is recommended.', 'Emergency|Alert|Critical|Error|Warning|Notice|Info|Debug', 'troubleshooting', 1, 'Log Level', '', 20, 'error', 1, 'word'),
 (33, 'LIBRARY_LOCATION', '', 'text', 'The fully qualified path to the CMS library location.', NULL, 'configuration', 1, 'Library Location', 'required', 10, '', 1, 'string'),
 (34, 'SERVER_KEY', '', 'text', NULL, NULL, 'configuration', 1, 'CMS Secret Key', 'required', 20, '', 1, 'string'),
@@ -239,7 +239,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (100, 'DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox'),
 (101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string'),
 (102, 'SCHEDULE_SHOW_LAYOUT_NAME', '0', 'checkbox', 'If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.', null, 'permissions', 1, 'Show event Layout regardless of User permission?', '', 45, '', 1, 'checkbox'),
-(103, 'DEFAULT_USERGROUP', '1', 'text', 'The default User Group for new Users', '1', 'users', 1, 'Default User Group', '', 4, '', 1, 'int');
+(103, 'DEFAULT_USERGROUP', '1', 'text', 'The default User Group for new Users', '1', 'users', 1, 'Default User Group', '', 4, '', 1, 'int'),
+(104, 'PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reminder enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reminder', '', 50, 'Off', 1, 'string');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

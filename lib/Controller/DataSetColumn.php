@@ -125,7 +125,7 @@ class DataSetColumn extends Base
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
-        $dataSetColumns = $this->dataSetColumnFactory->query(null, [
+        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort(), [
             'dataSetId' => $dataSetId,
             'dataSetColumnId' => $this->getSanitizer()->getInt('dataSetColumnId')
         ]);

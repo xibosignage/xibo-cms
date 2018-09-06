@@ -103,12 +103,17 @@
                                                 </li>
                                             {% endif %}
                                         </ul>
-                                        <div class="timelineMediaDetails {{ coloring }}">
+                                        <div class="timelineMediaDetails {{ coloring }} {% for tag in widget.tags %}tag_{{ tag.tag }} {% endfor %}">
                                             {% if widget.useDuration %}
                                             <h3>{% trans %}{{ name }} ({{ duration }} seconds){% endtrans %}</h3>
                                             {% else %}
                                             <h3>{{ name }}</h3>
                                             {% endif %}
+                                            <div class="timelineMediaTags">
+                                            {% for tag in widget.tags %}
+                                                <span class="label label-default">{{ tag.tag }}</span>
+                                            {% endfor %}
+                                            </div>
                                         </div>
                                         <div class="timelineMediaPreview">
                                             {{ widget.module.hoverPreview()|raw }}
