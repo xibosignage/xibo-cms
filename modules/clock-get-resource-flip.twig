@@ -106,7 +106,7 @@
             clock.setTime(clock.getTime() + (offset * 60 * 1000));
         } else {
             var duration;
-            if (isNaN(parseInt(offset))) {
+            if (isNaN(offset)) {
                 duration = getTimeRemaining(offset).total / 1000;
             } else {
                 duration = {{ duration }};

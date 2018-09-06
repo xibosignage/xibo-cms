@@ -90,12 +90,15 @@ class MediaManager extends Base
 
         $rows = [];
 
-        foreach ($this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'layout' => $this->getSanitizer()->getString('layout'),
             'region' => $this->getSanitizer()->getString('region'),
             'media' => $this->getSanitizer()->getString('media'),
             'type' => $this->getSanitizer()->getString('type'),
-        ])) as $widget) {
+        ]));
+        $widgetsCount = $this->widgetFactory->countLast();
+
+        foreach ($widgets as $widget) {
 
             // Load the widget
             $widget->load();
@@ -120,18 +123,24 @@ class MediaManager extends Base
             // We are good to go
             $row = [
                 'layout' => implode(',', $layoutNames),
-                'region' => $regionNames,
+                'region' => implode(',', $regionNames),
                 'playlist' => $widget->playlist,
                 'widget' => $module->getName(),
+                'widgetId' => $widget->widgetId,
                 'type' => $module->getModuleName(),
-                'displayOrder' => $widget->displayOrder
+                'displayOrder' => $widget->displayOrder,
+                'thumbnail' => '',
+                'thumbnailUrl' => ''
             ];
 
-            // Check editable
-            if (!$this->getUser()->checkEditable($widget))
-                continue;
-
             $row['buttons'] = [];
+
+            // Check editable
+            if (!$this->getUser()->checkEditable($widget)) {
+                $rows[] = $row;
+                continue;
+            }
+
 
             $row['buttons'][] = [
                 'id' => 'WidgetEditForm',
@@ -169,7 +178,7 @@ class MediaManager extends Base
             $rows[] = $row;
         }
 
-        $this->getState()->recordsTotal = $this->widgetFactory->countLast();
+        $this->getState()->recordsTotal = $widgetsCount;
         $this->getState()->setData($rows);
     }
 }

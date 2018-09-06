@@ -155,6 +155,11 @@ class Actions extends Middleware
                     // Drawer not available
                 }
             }
+
+            $resource = $app->router->getCurrentRoute()->getPattern();
+            if (!$app->request()->isAjax() && $app->user->isPasswordChangeRequired == 1 && $resource != '/user/page/password') {
+                $app->redirectTo('user.force.change.password.page');
+            }
         });
 
         $this->next->call();

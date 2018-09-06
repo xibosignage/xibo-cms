@@ -149,7 +149,6 @@ class DisplayFactory extends BaseFactory
 
         $newSortOrder = [];
         foreach ($sortOrder as $sort) {
-            $this->getLog()->debug('sortOrder ' . $sort);
             if ($sort == '`clientSort`') {
                 $newSortOrder[] = '`clientType`';
                 $newSortOrder[] = '`clientCode`';
@@ -158,7 +157,6 @@ class DisplayFactory extends BaseFactory
             }
 
             if ($sort == '`clientSort` DESC') {
-                $this->getLog()->debug('sortOrder ' . $sort);
                 $newSortOrder[] = '`clientType` DESC';
                 $newSortOrder[] = '`clientCode` DESC';
                 $newSortOrder[] = '`clientVersion` DESC';

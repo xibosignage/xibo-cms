@@ -589,6 +589,22 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * @return array
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    final public function getMediaTags()
+    {
+        if ($this->module->regionSpecific == 0) {
+            $media = $this->mediaFactory->getById($this->widget->getPrimaryMediaId());
+            $media->load();
+
+            return $media->tags;
+        } else {
+            return [];
+        }
+    }
+
+    /**
      * Get the duration
      * @param array $options
      * @return int

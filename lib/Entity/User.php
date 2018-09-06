@@ -115,6 +115,12 @@ class User implements \JsonSerializable
     private $password;
 
     /**
+     * @SWG\Property(description="A flag indicating whether password change should be forced for this user")
+     * @var int
+     */
+    public $isPasswordChangeRequired = 0;
+
+    /**
      * @SWG\Property(description="The users user group ID")
      * @var int
      */
@@ -801,13 +807,14 @@ class User implements \JsonSerializable
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, newUserWizard, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
-                     VALUES (:userName, :password, :userTypeId, :newUserWizard, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, isPasswordChangeRequired, usertypeid, newUserWizard, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
+                     VALUES (:userName, :password, :isPasswordChangeRequired, :userTypeId, :newUserWizard, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
         $this->userId = $this->getStore()->insert($sql, [
             'userName' => $this->userName,
             'password' => $this->password,
+            'isPasswordChangeRequired' => $this->isPasswordChangeRequired,
             'userTypeId' => $this->userTypeId,
             'newUserWizard' => $this->newUserWizard,
             'email' => $this->email,
@@ -847,6 +854,7 @@ class User implements \JsonSerializable
                   newUserWizard = :newUserWizard,
                   CSPRNG = :CSPRNG,
                   `UserPassword` = :password,
+                  `isPasswordChangeRequired` = :isPasswordChangeRequired,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -866,6 +874,7 @@ class User implements \JsonSerializable
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
             'password' => $this->password,
+            'isPasswordChangeRequired' => $this->isPasswordChangeRequired,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,
@@ -911,11 +920,20 @@ class User implements \JsonSerializable
 
     /**
      * Update the Last Accessed date
+     * @param bool $forcePasswordChange
      */
-    public function touch()
+    public function touch($forcePasswordChange = false)
     {
+        $sql = 'UPDATE `user` SET lastAccessed = :time ';
+
+        if ($forcePasswordChange && DBVERSION >= 143) {
+            $sql .= ' , isPasswordChangeRequired = 1 ';
+        }
+
+        $sql .= ' WHERE userId = :userId';
+
         // This needs to happen on a separate connection
-        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
+        $this->getStore()->update($sql, [
             'userId' => $this->userId,
             'time' => date("Y-m-d H:i:s")
         ]);

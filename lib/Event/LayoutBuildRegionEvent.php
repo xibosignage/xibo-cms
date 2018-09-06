@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2016-2018 Spring Signage Ltd
+ * Copyright (C) 2016-2018 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
