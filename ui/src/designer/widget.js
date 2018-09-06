@@ -3,13 +3,21 @@
 /**
  * Widget contructor
  * @param {number} id - widget id
- * @param {number} regionId - region where the widget belongs
  * @param {object} data - data from the API request
+ * @param {number} regionId - region where the widget belongs ( if exists )
  */
-let Widget = function(id, regionId, data) {
-    this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
+let Widget = function(id, data, regionId = null, layoutObject = null) {
+    
     this.widgetId = id;
-    this.regionId = 'region_' + regionId;
+
+    if(regionId != null) {
+        this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
+        this.regionId = 'region_' + regionId;
+    } else {
+        this.id = 'widget_' + id; // widget_regionID_widgetID
+    }
+
+    this.layoutObject = layoutObject;
     
     // widget type
     this.type = 'widget';
@@ -30,20 +38,29 @@ let Widget = function(id, regionId, data) {
     this.widgetOptions = data.widgetOptions;
     this.calculatedDuration = data.calculatedDuration;
 
+    this.audio = data.audio;
+
+    this.fromDt = data.fromDt;
+    this.toDt = data.toDt;
+
     /**
      * Return the percentage for the widget on the timeline
      * @returns {number} - Widget duration percentage related to the layout duration
      */
     this.durationPercentage = function() {
 
+        if(this.layoutObject == null) {
+            return false;
+        }
+
         // Get duration percentage based on the layout
-        const duration = (this.getDuration() / lD.layout.duration) * 100;
+        const duration = (this.getDuration() / this.layoutObject.duration) * 100;
         
         // If the widget doesn't have the loop flag and is a single widget, extend it
         if(!this.loop && this.singleWidget){
             
             // Verify if the widget duration is less than the layout duration 
-            if(parseFloat(this.getDuration()) < parseFloat(lD.layout.duration)) {
+            if(parseFloat(this.getDuration()) < parseFloat(this.layoutObject.duration)) {
                 this.extend = true;
                 this.extendSize = 100 - duration; // Extend size is the rest of the region width
             }
@@ -99,7 +116,7 @@ let Widget = function(id, regionId, data) {
             }
             
             // set the duration to the widget
-            this.duration = calculatedDuration
+            this.duration = calculatedDuration;
         }
 
         return this.duration;
@@ -110,18 +127,162 @@ let Widget = function(id, regionId, data) {
  * Create clone from widget
  */
 Widget.prototype.createClone = function() {
-    
+    const self = this;
+
     const widgetClone = {
         id: 'ghost_' + this.id,
         subType: this.subType,
         duration: this.getDuration(),
         regionId: this.regionId,
         durationPercentage: function() { // so that can be calculated on template rendering time
-            return (this.duration / lD.layout.duration) * 100;
+            return (this.duration / self.layoutObject.duration) * 100;
         }
     };
 
     return widgetClone;
+};
+
+/**
+ * Edit property form
+ *
+ * @param {string} property - property to edit
+ * @param {object} data - data from the API request
+ */
+Widget.prototype.editPropertyForm = function(property) {
+
+    const self = this;
+
+    const app = getXiboApp();
+
+    // Load form the API
+    const linkToAPI = urlsForApi.widget['get' + property];
+
+    let requestPath = linkToAPI.url;
+
+    // Replace playlist id
+    requestPath = requestPath.replace(':id', this.widgetId);
+
+    // Create dialog
+    var calculatedId = new Date().getTime();
+
+    // Create dialog
+    let dialog = bootbox.dialog({
+        className: 'second-dialog',
+        title: 'Load ' + property + ' for widget',
+        message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+        buttons: {
+            cancel: {
+                label: translations.cancel,
+                className: "btn-default"
+            },
+            done: {
+                label: translations.done,
+                className: "btn-primary test",
+                callback: function(res) {
+
+                    const form = dialog.find('form');
+
+                    app.manager.addChange(
+                        'save' + property,
+                        'widget', // targetType 
+                        self.widgetId,  // targetId
+                        null,  // oldValues
+                        form.serialize(), // newValues
+                        {
+                            addToHistory: false // options.addToHistory
+                        }
+                    ).then((res) => { // Success
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+
+                        dialog.modal('hide');
+
+                        app.reloadData(app.layout);
+
+                    }).catch((error) => { // Fail/error
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = '';
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
+                        }
+
+                        // Display message in form
+                        formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                        // Show toast message
+                        toastr.error(errorMessage);
+                    });
+                }
+
+            }
+        }
+    }).attr('id', calculatedId);
+
+    // Request and load element form
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+            // Add title
+            dialog.find('.modal-title').html(res.dialogTitle);
+
+            // Add body main content
+            dialog.find('.bootbox-body').html(res.html);
+
+            dialog.data('extra', res.extra);
+
+            // Call Xibo Init for this form
+            XiboInitialise('#' + dialog.attr('id'));
+
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error(property + ' form load failed!');
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
+                dialog.modal('hide');
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(property + ' form load failed!');
+
+        dialog.modal('hide');
+    });
+};
+
+/**
+ * Edit attached audio
+ */
+Widget.prototype.editAttachedAudio = function() {
+    this.editPropertyForm('Audio');
+};
+
+/**
+ * Edit expiry dates
+ */
+Widget.prototype.editExpiry = function() {
+    this.editPropertyForm('Expiry');
 };
 
 module.exports = Widget;

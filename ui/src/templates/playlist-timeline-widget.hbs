@@ -1,0 +1,17 @@
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ id }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}"
+    class="playlist-widget text-right selectable {{#if selected}}selected{{/if}}">
+    {{#if audio}}
+        <i class="fa fa-volume-up pull-left editProperty" data-property="Audio"></i>
+    {{/if}}
+    
+    {{#gt fromDt 0}}
+        <i class="fa fa fa-clock-o pull-left editProperty" data-property="Expiry"></i>
+    {{/gt}}
+
+    <span>{{id}} : {{ subType }} [ {{ duration }}s ]</span>
+    <span class="float-right">
+        <i class="fa fa-arrows"></i>
+    </span>
+</div>
+
+

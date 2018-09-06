@@ -311,41 +311,41 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.find('.designer-region').droppable({
         accept: '.toolbar-card',
         drop: function(event, ui) {
-            lD.toolbar.dropItemAdd(event.target, ui.draggable[0]);
+            lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
 
-    this.DOMObject.find('#regions .designer-widget:not(.designer-widget-ghost)').draggable({
-        start: function(event, ui) {
-            $(this).draggable('instance').offset.click = {
-                left: Math.floor(ui.helper.outerWidth() / 2),
-                top: Math.floor(ui.helper.outerHeight() / 2)
-            };
-        },
-        appendTo: $(lD.toolbar.DOMObject),
-        scroll: false,
-        cursor: 'crosshair',
-        opacity: 0.6,
-        zIndex: 100,
-        helper: function(event) {
-            return $('<div class="layout-widget-deletable deletable">' + event.currentTarget.id + '</div>');
-        }
-    });
+    this.DOMObject.find('.designer-widget .editProperty').click(function(e) {
+        e.stopPropagation();
+        const widget = lD.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
-    this.DOMObject.find('#regions .designer-region').draggable({
-        start: function(event, ui) {
-            $(this).draggable('instance').offset.click = {
-                left: Math.floor(ui.helper.outerWidth() / 2),
-                top: Math.floor(ui.helper.outerHeight() / 2)
-            };
-        },
-        appendTo: $(lD.toolbar.DOMObject),
-        scroll: false,
-        cursor: 'crosshair',
-        opacity: 0.6,
-        zIndex: 100,
-        helper: function(event) {
-            return $('<div class="layout-region-deletable deletable">' + event.currentTarget.id + '</div>');
+        widget.editPropertyForm($(this).data('property'));
+    });
+    
+    this.DOMObject.find('#regions .designer-region').sortable({
+        items: '.designer-widget:not(.designer-widget-ghost)',
+        stop: function() {
+
+            // Get playlist
+            const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
+
+            lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
+
+                // Behavior if successful            
+                toastr.success(res.message);
+                lD.reloadData(lD.layout);
+            }).catch((error) => { // Fail/error
+                // Show error returned or custom message to the user
+                let errorMessage = 'Save order failed: ' + error;
+
+                if(typeof error == 'string') {
+                    errorMessage += error;
+                } else {
+                    errorMessage += error.errorThrown;
+                }
+
+                toastr.error(errorMessage);
+            });
         }
     });
     

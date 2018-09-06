@@ -131,7 +131,11 @@ class Playlist extends Base
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
             'groups' => $this->userGroupFactory->query(),
-            'modules' => array_map(function($element) use ($moduleFactory) { return $moduleFactory->createForInstall($element->class); }, $moduleFactory->getAssignableModules())
+                        'modules' => array_map(function($element) use ($moduleFactory) { 
+                    $module = $moduleFactory->createForInstall($element->class);
+                    $module->setModule($element);
+                    return $module;
+                }, $moduleFactory->getAssignableModules())
         ]);
     }
 

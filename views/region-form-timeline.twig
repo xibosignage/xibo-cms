@@ -15,121 +15,19 @@
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% if region.regionId != -1 %}
-        {% trans "Switch to Grid" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=grid")
-    {% endif %}
-    {% trans "Save Order" %}, XiboTimelineSaveOrder("timelineControl")
-    {% trans "Finished" %}, XiboDialogClose()
+    {% trans "Close" %}, pE.close()
+    {% trans "Save Order" %}, pE.saveOrder() 
+    {% trans "Save and Close" %}, pE.saveOrder(true) 
 {% endblock %}
 
-{% block callBack %}loadTimeLineCallback{% endblock %}
+{% block callBack %}pE.loadEditor{% endblock %}
 
 {% block formHtml %}
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-2">
-                <div class="well module-selector-well">
-                    <ul class="nav nav-list">
-                        <li class="nav-header">{% trans "Add Media" %}</li>
-                        <li class="XiboFormButton" href="{{ urlFor("playlist.library.assign.form", {id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{% trans "Library" %}</a></li>
-                        {% set isAudioEnabled = 0 %}
-                        {% for module in modules %}
-                            {% if module.regionSpecific %}
-                                <li class="XiboFormButton" data-widget-type="{{ module.type }}" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
-                            {% else %}
-                                <li class="libraryUploadForm" data-widget-type="{{ module.type }}" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}" data-max-size="{{ libraryUpload.maxSize }}" data-max-size-message="{{ libraryUpload.maxSizeMessage }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
-                            {% endif %}
+    {# Playlist editor main div #}
+    <div id="playlist-editor" playlist-id="{{ playlist.playlistId }}"></div>
 
-                            {% if module.type == "audio" %}
-                                {% set isAudioEnabled = 1 %}
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-10">
-                <div id="timelineControl" class="timelineColumn" layoutid="{{ region.layoutId }}" regionid="{{ region.regionId }}" data-order-url="{{ urlFor("playlist.order", {id: playlist.playlistId}) }}">
-                    <div class="timelineMediaVerticalList">
-                        <ul id="{{ random() }}" class="timelineSortableListOfMedia">
-                            {% for widget in playlist.widgets %}
-                                {% set name = widget.module.getName() %}
-                                {% set duration = widget.duration %}
-                                {% if options.REGION_OPTIONS_COLOURING == "Permissions" %}
-                                    {% if currentUser.checkEditable(widget) %}
-                                        {% set coloring = "timelineMediaItemColouring_enabled" %}
-                                    {% else %}
-                                        {% set coloring = "timelineMediaItemColouring_disabled" %}
-                                    {% endif %}
-                                {% else %}
-                                    {% set coloring %}timelineMediaItemColouringDefault timelineMediaItemColouring_{{ widget.type }}{% endset %}
-                                {% endif %}
-                                <li class="timelineMediaListItem" widgetid="{{ widget.widgetId }}">
-                                    <div class="timelineMediaInTransition">
-                                        {% if widget.module.getTransition("in") != "None" %}
-                                            <span>{{ widget.module.getTransition("in") }}</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="timelineMediaItem">
-                                        <ul class="timelineMediaItemLinks">
-                                            {% if currentUser.checkEditable(widget) %}
-                                                <li><a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.edit.form", {id: widget.widgetId}) }}" title="{% trans "Click to edit this widget" %}">{% trans "Edit" %}</a></li>
-                                            {% endif %}
-                                            {% if currentUser.checkDeleteable(widget) %}
-                                                <li><a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.delete.form", {id: widget.widgetId}) }}" title="{% trans "Click to delete this widget" %}">{% trans "Delete" %}</a></li>
-                                            {% endif %}
-                                            {% if currentUser.checkPermissionsModifyable(widget) %}
-                                                <li><a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("user.permissions.form", {entity: "Widget", id: widget.widgetId}) }}" title="{% trans "Click to change permissions for this widget" %}">{% trans "Permissions" %}</a></li>
-                                            {% endif %}
-                                            {% if transitions.in|length > 0 %}
-                                                <li><a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.transition.edit.form", {type: "in", id: widget.widgetId}) }}" title="{% trans "Click to edit this transition" %}">{% trans "In Transition" %}</a></li>
-                                            {% endif %}
-                                            {% if transitions.out|length > 0 %}
-                                                <li><a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.transition.edit.form", {type: "out", id: widget.widgetId}) }}" title="{% trans "Click to edit this transition" %}">{% trans "Out Transition" %}</a></li>
-                                            {% endif %}
-                                            {% if isAudioEnabled and widget.type != "audio" and currentUser.checkEditable(widget) %}
-                                                <li>
-                                                    <a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.audio.form", {id: widget.widgetId}) }}" title="{% trans "Click to assign audio to this widget" %}">
-                                                        <span class="fa-stack">
-                                                            {# Do we have audio already assigned? #}
-                                                            {% if widget.countAudio <= 0  %}
-                                                                <i class="fa fa-volume-off fa-stack-2x" style="color:#bebebe"></i>
-                                                                <i class="fa fa-plus-square fa-badge" style="color:#ffffff"></i>
-                                                            {% else %}
-                                                                <i class="fa fa-volume-up fa-stack-2x"></i>
-                                                            {% endif %}
-                                                        </span>
-                                                    </a>
-                                                </li>
-                                            {% endif %}
-                                            <li>
-                                                <a class="XiboFormButton timelineMediaBarLink" href="{{ urlFor("module.widget.expiry.form", {id: widget.widgetId}) }}" title="{% trans "Click to assign a from/to date to this widget" %}">
-                                                    <i class="fa fa-calendar"></i>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                        <div class="timelineMediaDetails {{ coloring }}">
-                                            {% if widget.useDuration %}
-                                            <h3>{% trans %}{{ name }} ({{ duration }} seconds){% endtrans %}{% if widget.isExpired() %} <i class="fa fa-calendar-minus-o" title="{% trans "This Widget is outside its expiry dates" %}"></i>{% endif %}</h3>
-                                            {% else %}
-                                            <h3>{{ name }}{% if widget.isExpired() %} <i class="fa fa-calendar-minus-o" title="{% trans "This Widget is outside its expiry dates" %}"></i>{% endif %}</h3>
-                                            {% endif %}
-                                        </div>
-                                        <div class="timelineMediaPreview">
-                                            {{ widget.module.hoverPreview()|raw }}
-                                        </div>
-                                        <div class="timelineMediaOutTransition">
-                                            {% if widget.module.getTransition("out") != "None" %}
-                                            <span>{{ widget.module.getTransition("out") }}</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div id="timelinePreview"></div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script type="text/javascript">
+        var playlistData = {{ playlist|json_encode|raw }};
+        var transitionsData = {{ transitions|json_encode|raw }};
+    </script>
 {% endblock %}

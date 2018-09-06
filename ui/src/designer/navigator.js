@@ -150,7 +150,7 @@ Navigator.prototype.render = function(layout) {
     this.DOMObject.find('.designer-region').droppable({
         accept: '.toolbar-card',
         drop: function(event, ui) {
-            lD.toolbar.dropItemAdd(event.target, ui.draggable[0]);
+            lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
 
@@ -206,7 +206,7 @@ Navigator.prototype.renderNavbar = function() {
             }
         }).catch((error) => { // Fail/error
 
-            console.log(error);
+            console.error(error);
 
             // Show error returned or custom message to the user
             let errorMessage = 'Revert failed: ';
@@ -223,7 +223,8 @@ Navigator.prototype.renderNavbar = function() {
 
     this.navbarContainer.find('#add-btn').click(function() {
         lD.manager.saveAllChanges().then((res) => {
-            toastr.success(res);
+
+            toastr.success('All changes saved!');
 
             lD.layout.addElement('region').then((res) => { // Success
 

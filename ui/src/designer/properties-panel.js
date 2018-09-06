@@ -8,69 +8,88 @@ const propertiesPanel = require('../templates/properties-panel.hbs');
  * @param {object} container - the container to render the panel to
  */
 let PropertiesPanel = function(container) {
+
     this.DOMObject = container;
 
     // Initialy loaded data on the form
     this.formSerializedLoadData = '';
 };
 
+/**
+ * Call an action on the element object
+ * @param {object} element - the element that the form relates to
+ */
+PropertiesPanel.prototype.elementAction = function(element, subAction) {
+    const app = getXiboApp();
+    const mainElement = app.getElementByTypeAndId(element.type, element.id, element.regionId);
+    mainElement[subAction]();
+};
 
 /**
  * Save properties from the panel form
- * @param {object} form - the form to be saved
  * @param {object} element - the element that the form relates to
  */
-PropertiesPanel.prototype.save = function(form, element) {
+PropertiesPanel.prototype.save = function(element) {
+
+    const self = this;
 
     // Run form open module optional function
     if(element.type === 'widget' && typeof window[element.subType + '_form_edit_submit'] === 'function') {
         window[element.subType + '_form_edit_submit'].bind(this.DOMObject)();
     }
-    // If form is valid, submit it ( add change )
-    if($(this.DOMObject).find('form').valid()) {
 
-    const formNewData = $(form).serialize();
-    // Add a save form change to the history array, with previous form state and the new state
-    lD.manager.addChange(
-        "saveForm",
-        element.type, // targetType
-        element[element.type + 'Id'], // targetId
-        this.formSerializedLoadData, // oldValues
+    const form = $(this.DOMObject).find('form');
+
+    // If form is valid, submit it ( add change )
+    if(form.valid()) {
+
+        const formNewData = form.serialize();
+        const app = getXiboApp();
+
+        // Add a save form change to the history array, with previous form state and the new state
+        app.manager.addChange(
+            "saveForm",
+            element.type, // targetType
+            element[element.type + 'Id'], // targetId
+            this.formSerializedLoadData, // oldValues
             formNewData, // newValues
             {
                 customRequestPath: {
-                    url: $(form).attr('action'),
-                    type: $(form).attr('method')
+                    url: form.attr('action'),
+                    type: form.attr('method')
                 }
             }
-    ).then((res) => { // Success
+        ).then((res) => { // Success
 
-        // Behavior if successful 
-        lD.timeline.resetZoom();
-        
-        toastr.success(res.message);
+            // Behavior if successful 
+            if(typeof app.timeline.resetZoom === "function") {
+                // safe to use the function
+                app.timeline.resetZoom();
+            }
 
-        lD.reloadData(lD.layout);
-    }).catch((error) => { // Fail/error
+            toastr.success(res.message);
 
-        // Show error returned or custom message to the user
+            const mainObject = app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
+            app.reloadData(mainObject);
+        }).catch((error) => { // Fail/error
+
+            // Show error returned or custom message to the user
             let errorMessage = '';
-        
-        if(typeof error == 'string') {
-            errorMessage += error; 
-        } else {
-            errorMessage += error.errorThrown; 
-        }
 
+            if(typeof error == 'string') {
+                errorMessage += error;
+            } else {
+                errorMessage += error.errorThrown;
+            }
             // Remove added change from the history manager
-            lD.manager.removeLastChange();
+            app.manager.removeLastChange();
 
             // Display message in form
-            formHelpers.displayErrorMessage($(this.DOMObject).find('form'), errorMessage, 'danger');
+            formHelpers.displayErrorMessage(form, errorMessage, 'danger');
 
             // Show toast message
-        toastr.error(errorMessage);
-    });
+            toastr.error(errorMessage);
+        });
     }
 };
 
@@ -81,18 +100,21 @@ PropertiesPanel.prototype.save = function(form, element) {
 PropertiesPanel.prototype.render = function(element) {
 
     // Prevent the panel to render if the layout is not editable
-    if(element.type == 'layout' && !element.editable ) {
-        return;
+    if(typeof element == 'undefined' || $.isEmptyObject(element) || (element.type == 'layout' && !element.editable) ) {
+        // Clean the property panel html
+        this.DOMObject.html('');
+
+        return false;
     }
 
-    const self = this;
-
-    self.DOMObject.html(loadingTemplate());
-    let requestPath = urlsForApi[element.type]['getForm'].url;
+    this.DOMObject.html(loadingTemplate());
+    let requestPath = urlsForApi[element.type].getForm.url;
 
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
     // Get form for the given element
+    const self = this;
+    
     $.get(requestPath).done(function(res) {
 
         // Prevent rendering null html
@@ -101,21 +123,52 @@ PropertiesPanel.prototype.render = function(element) {
         }
 
         const htmlTemplate = Handlebars.compile(res.html);
+
+        // Create buttons object
+        let buttons = {};
         
-        // If there are no buttons, create a Save one without onclick event ( handled with a .click() after render )
-        if((res.buttons.length === 0) || element.type == 'layout'){
-            res.buttons = {
-                Save: ''
-            };
-        } else {
-            res.buttons['Save'] = '';
+        // Process buttons from result
+        for(let button in res.buttons) {
+
+            // If button is not a cancel or save button, add it to the button object
+            if(!['Save', 'Cancel'].includes(button)) {
+                buttons[button] = {
+                    name: button,
+                    type: 'btn-default',
+                    click: res.buttons[button]
+                };
+            }
         }
-        
+
+        // Attach audio and expiry buttons if the element is a widget
+        if(element.type === 'widget') {
+            buttons.audio = {
+                name: 'Audio',
+                type: 'btn-warning',
+                action: 'elementAction',
+                subAction: 'editAttachedAudio'
+            };
+
+            buttons.expiry = {
+                name: 'Expiry',
+                type: 'btn-default',
+                action: 'elementAction',
+                subAction: 'editExpiry'
+            };
+        }
+
+        // Add save button
+        buttons.save = {
+            name: 'Save',
+                type: 'btn-info',
+                    action: 'save'
+        };
+
         const html = propertiesPanel({
             header: res.dialogTitle,
             style: element.type,
             form: htmlTemplate(element),
-            buttons: res.buttons
+            buttons: buttons
         });
 
         // Append layout html to the main div
@@ -132,23 +185,9 @@ PropertiesPanel.prototype.render = function(element) {
         // Save form data
         self.formSerializedLoadData = self.DOMObject.find('form').serialize();
 
-        // Handle Save button click
-        self.DOMObject.find('#Save').click(function() {
-
-            self.save(
-                self.DOMObject.find('form'),
-                element
-            );
-        });
-
-        // Form submit handling
-        self.DOMObject.find('form').submit(function(e) {
-            e.preventDefault();
-
-            self.save(
-                this, 
-                element
-            );
+        // Handle buttons click
+        self.DOMObject.find('.properties-panel-btn').click(function(el) {
+            self[$(this).data('action')](element, $(this).data('subAction'));
         });
 
         // Call Xibo Init for this form

@@ -10,45 +10,45 @@ const managerTemplate = require('../templates/manager.hbs');
 const inverseChangeMap = {
     transform: {
         inverse: 'transform',
-        useElement: true
+        parseData: true
     },
     create: {
-        inverse: 'delete',
-        useElement: false
+        inverse: 'delete'
     },
     saveForm: {
-        inverse: 'saveForm',
-        useElement: true
+        inverse: 'saveForm'
     },
     addMedia: {
-        inverse: 'delete',
-        useElement: true
+        inverse: 'delete'
     },
     addWidget: {
-        inverse: 'delete',
-        useElement: true
+        inverse: 'delete'
+    },
+    order: {
+        inverse: 'order'
     }
 };
 
 /**
- * Layout Editor Manager
+ * History Manager
  */
-let Manager = function(container) {
+let Manager = function(container, visible) {
 
     this.DOMObject = container;
 
-    this.visible = true;
+    this.extended = true;
+
+    this.visible = visible;
 
     this.changeUniqueId = 0;
 
     this.changeHistory = []; // Array of changes
 
-    this.toggleVisibility = function() {
-        
-        lD.manager.visible = !lD.manager.visible;
+    this.toggleExtended = function() {  
+        this.extended = !this.extended;
 
         // Render template container
-        lD.manager.render();
+        this.render();
     };
 
     // Return true if there are some not uploaded changes
@@ -62,7 +62,7 @@ let Manager = function(container) {
         }
 
         return false;
-    }
+    };
 };
 
 /**
@@ -115,6 +115,9 @@ Manager.prototype.addChange = function(changeType, targetType, targetId, oldValu
 */
 Manager.prototype.uploadChange = function(change, updateId, updateType, customRequestPath) {
 
+    const self = this;
+    const app = getXiboApp();
+
     // Test for empty history array
     if(!change || change.uploaded) {
         return Promise.reject('Change already uploaded!');
@@ -128,10 +131,9 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
     if(change.target) {
         let replaceId = change.target.id;
 
-        // If the replaceId is not set or the change needs the layoutId, set it to the replace var
-        if(replaceId == null || linkToAPI.useLayoutId) {
-            
-            replaceId = lD.layout.layoutId;
+        // If the replaceId is not set or the change needs the main object Id
+        if(replaceId == null || linkToAPI.useMainObjectId) {
+            replaceId = app.mainObjectId;
         }
 
         requestPath = requestPath.replace(':id', replaceId);
@@ -183,7 +185,7 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
             }
 
             // Render/Update Manager
-            lD.manager.render();
+            self.render();
 
         }.bind(change)).fail(function(jqXHR, textStatus, errorThrown) {
             // Output error to console
@@ -206,69 +208,46 @@ Manager.prototype.revertChange = function() {
         return Promise.reject('There are no changes in history!');
     }
 
+    const self = this;
+
+    const app = getXiboApp();
+
     // Get the last change in the array
     const lastChange = this.changeHistory[this.changeHistory.length - 1];
 
-    const uploadedState = lastChange.uploaded;
     const inverseOperation = inverseChangeMap[lastChange.type].inverse;
-    const useElement = inverseChangeMap[lastChange.type].useElement;
-
-    let operationResultSuccess = false;
+    const parseData = inverseChangeMap[lastChange.type].parseData;
 
     return new Promise(function(resolve, reject) {
 
-        if(!lastChange.uploaded) { // Revert on the client side
+        if(!lastChange.uploaded) { // Revert on the client side ( non uploaded change )
 
-            //FIXME: Check if local revert is used more than with regions transform, if not, refactor this
-            if(useElement) {
-                // Get data to apply
-                let data = lastChange.oldState;
+            // Get data to apply
+            let data = lastChange.oldState;
 
-                // Get element by type
-                let element = {};
+            // Get element by type,from the main object
+            let element = app.getElementByTypeAndId(
+                lastChange.target.type, // Type
+                lastChange.target.type + '_' + lastChange.target.id // Id
+            );
 
-                if(lastChange.target.type === 'layout') {
-                    element = lD.layout;
-                } else if(lastChange.target.type === 'region') {
-                    element = lD.layout.regions['region_' + lastChange.target.id];
-                }
-
-                // If the operation is a transform, parse data
-                if(inverseOperation === 'transform') {
-                    data = JSON.parse(data.regions)[0];
-                }
-
-                // Apply inverse operation to the element
-                element[inverseOperation](data, false);
-
-                // Remove change from history
-                lD.manager.changeHistory.pop();
-
-                resolve({
-                    type: inverseOperation,
-                    target: lastChange.target.type,
-                    message: 'Change reverted',
-                    localRevert: true
-                });
-            } else {
-                const revertSuccess = lD.layout[inverseOperation](lastChange.target.id, lastChange.target.type, lastChange.oldState);
-
-                if(revertSuccess) {
-
-                    // Remove change from history
-                    lD.manager.changeHistory.pop();
-
-                    resolve({
-                        type: inverseOperation,
-                        target: lastChange.target.type,
-                        message: 'Change reverted',
-                        localRevert: true
-                    });
-                } else {
-                    reject('Revert operation failed!');
-                }
+            // If the operation needs data parsing
+            if(parseData != undefined && parseData) {
+                data = JSON.parse(data.regions)[0];
             }
 
+            // Apply inverse operation to the element
+            element[inverseOperation](data, false);
+
+            // Remove change from history
+            self.changeHistory.pop();
+
+            resolve({
+                type: inverseOperation,
+                target: lastChange.target.type,
+                message: 'Change reverted',
+                localRevert: true
+            });
         } else { // Revert using the API
 
             const linkToAPI = urlsForApi[lastChange.target.type][inverseOperation];
@@ -279,9 +258,8 @@ Manager.prototype.revertChange = function() {
                 let replaceId = lastChange.target.id;
 
                 // If the replaceId is not set or the change needs the layoutId, set it to the replace var
-                if(replaceId == null || linkToAPI.useLayoutId) {
-
-                    replaceId = lD.layout.layoutId;
+                if(replaceId == null || linkToAPI.useMainObjectId) {
+                    replaceId = app.mainObjectId;
                 }
 
                 requestPath = requestPath.replace(':id', replaceId);
@@ -295,7 +273,14 @@ Manager.prototype.revertChange = function() {
                 if(data.success) {
 
                     // Remove change from history
-                    lD.manager.changeHistory.pop();
+                    self.changeHistory.pop();
+
+                    // If the operation is a deletion, unselect object before deleting
+                    if(inverseOperation === 'delete') {
+
+                        // Unselect selected object before deleting
+                        app.selectObject();
+                    }
 
                     // Resolve promise
                     resolve(data);
@@ -332,6 +317,8 @@ Manager.prototype.revertChange = function() {
 */
 Manager.prototype.saveAllChanges = async function() {
 
+    const self = this;
+
     // stop method if there are no changes to be saved
     if(!this.changesToUpload()) {
         return Promise.resolve('No changes to upload');
@@ -339,19 +326,19 @@ Manager.prototype.saveAllChanges = async function() {
 
     let promiseArray = [];
         
-    for(let index = 0;index < lD.manager.changeHistory.length;index++) {
+    for(let index = 0;index < self.changeHistory.length;index++) {
 
-        const change = lD.manager.changeHistory[index];
+        const change = self.changeHistory[index];
 
         // skip already uploaded changes
         if(change.uploaded) {
             continue;
         }
         
-        promiseArray.push(await lD.manager.uploadChange(change));
+        promiseArray.push(await self.uploadChange(change));
 
         // Render manager container to update the change
-        lD.manager.render();
+        self.render();
     }
 
     return Promise.all(promiseArray);
@@ -364,15 +351,17 @@ Manager.prototype.saveAllChanges = async function() {
 */
 Manager.prototype.removeAllChanges = function(targetType, targetId) {
 
+    const self = this;
+
     return new Promise(function(resolve, reject) {
         
-        for(let index = 0;index < lD.manager.changeHistory.length;index++) {
+        for(let index = 0;index < self.changeHistory.length;index++) {
 
-            const change = lD.manager.changeHistory[index];
+            const change = self.changeHistory[index];
             
             if(change.target.type === targetType && change.target.id === targetId) {
 
-                lD.manager.changeHistory.splice(index, 1);
+                self.changeHistory.splice(index, 1);
 
                 // When change is removed, we need to decrement the index
                 index--;
@@ -380,7 +369,7 @@ Manager.prototype.removeAllChanges = function(targetType, targetId) {
         }
 
         // Render template container
-        lD.manager.render();
+        self.render();
 
         resolve('All Changes Removed');
     });
@@ -391,14 +380,19 @@ Manager.prototype.removeAllChanges = function(targetType, targetId) {
  * Remove last change
 */
 Manager.prototype.removeLastChange = function() {
-    lD.manager.changeHistory.pop();
-    lD.manager.render();
+    
+    this.changeHistory.pop();
+    this.render();
 };
 
 /**
  * Render Manager
  */
 Manager.prototype.render = function() {
+
+    if(this.visible == false) {
+        return;
+    }
     // Compile layout template with data
     const html = managerTemplate(this);
 
@@ -409,7 +403,7 @@ Manager.prototype.render = function() {
     this.DOMObject.draggable();
 
     //Add toggle visibility event
-    this.DOMObject.find('#layout-manager-header .title').click(this.toggleVisibility);
+    this.DOMObject.find('#layout-manager-header .title').click(this.toggleExtended.bind(this));
 };
 
 module.exports = Manager;

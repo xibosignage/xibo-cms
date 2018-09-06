@@ -40,6 +40,10 @@ require('../css/designer.css');
 // Create layout designer namespace (lD)
 window.lD = {
 
+    // Main object info
+    mainObjectType: 'layout',
+    mainObjectId: '',
+
     // Navigator
     navigator: {},
     navigatorEdit: {},
@@ -69,6 +73,11 @@ window.lD = {
     propertiesPanel: {},
 };
 
+// Get Xibo app
+window.getXiboApp = function() {
+    return lD;
+};
+
 // Load Layout and build app structure
 $(document).ready(function() {
     // Get layout id
@@ -78,7 +87,7 @@ $(document).ready(function() {
     lD.designerDiv.html(loadingTemplate());
 
     // Load layout through an ajax request
-    $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
         .done(function(res) {
 
             if(res.data.length > 0) {
@@ -89,10 +98,13 @@ $(document).ready(function() {
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
 
+                // Update main object id
+                lD.mainObjectId = lD.layout.layoutId;
+
                 // Initialize navigator
                 lD.navigator = new Navigator(
                     // Small container
-                    lD.designerDiv.find('#layout-navigator'),
+                    lD.designerDiv.find('#layout-navigator')
                 );
 
                 // Initialize timeline
@@ -102,7 +114,8 @@ $(document).ready(function() {
 
                 // Initialize manager
                 lD.manager = new Manager(
-                    lD.designerDiv.find('#layout-manager')
+                    lD.designerDiv.find('#layout-manager'),
+                    (serverMode == 'Test')
                 );
 
                 // Initialize viewer
@@ -111,9 +124,42 @@ $(document).ready(function() {
                     lD.designerDiv.find('#layout-viewer-navbar')
                 );
 
-                // Initialize bottom toolbar
+                // Initialize bottom toolbar ( with custom buttons )
                 lD.toolbar = new toolbar(
-                    lD.designerDiv.find('#layout-editor-toolbar')
+                    lD.designerDiv.find('#layout-editor-toolbar'),
+                    // Custom buttons
+                    [
+                        {
+                            id: 'publishLayout',
+                            title: layoutDesignerTrans.publishTitle,
+                            logo: 'fa-check-square-o',
+                            class: 'btn-success',
+                            action: lD.showPublishScreen
+                        },
+                        {
+                            id: 'undoLastAction',
+                            title: layoutDesignerTrans.undo,
+                            logo: 'fa-undo',
+                            class: 'btn-warning',
+                            activeCheck: function(){
+                                return (lD.manager.changeHistory.length > 0);
+                            },
+                            action: lD.undoLastAction
+                        }
+                    ],
+                    // Custom actions
+                    {
+                        deleteSelectedObjectAction: lD.deleteSelectedObject,
+                        deleteDraggedObjectAction: lD.deleteDraggedObject
+                    },
+                    // jumpList
+                    {
+                        searchLink: urlsForApi.layout.get.url,
+                        designerLink: urlsForApi.layout.designer.url,
+                        layoutId: lD.layout.layoutId,
+                        layoutName: lD.layout.name,
+                        callback: lD.reloadData
+                    }
                 );
 
                 // Initialize properties panel
@@ -126,6 +172,12 @@ $(document).ready(function() {
                     // Show checkout screen
                     lD.showCheckoutScreen(lD.layout);
                 }
+
+                // Setup helpers
+                formHelpers.setup(lD, lD.layout);
+
+                // Call layout status every minute
+                setInterval(lD.layoutStatus, 1000 * 60); // Every minute
 
                 // Default selected object is the layout
                 lD.selectObject();
@@ -246,11 +298,16 @@ lD.refreshDesigner = function() {
  */
 lD.reloadData = function(layout) {
 
-    $.get(urlsForApi['layout']['get'].url + '?layoutId=' + layout.layoutId + "&embed=regions,playlists,widgets")
+    const layoutId = (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
+
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
             
             if(res.data.length > 0) {
-                lD.layout = new Layout(layout.layoutId, res.data[0]);
+                lD.layout = new Layout(layoutId, res.data[0]);
+
+                // Update main object id
+                lD.mainObjectId = lD.layout.layoutId;
 
                 // Select the same object ( that will refresh the layout too )
                 const selectObjectId = lD.selectedObject.id;
@@ -271,16 +328,15 @@ lD.reloadData = function(layout) {
 };
 
 /**
- * Reload API data and replace the layout structure with the new value
- * @param {object} layout - previous layout
+ * Checkout layout
  */
-lD.checkoutLayout = function(layout) {
+lD.checkoutLayout = function() {
 
-    const linkToAPI = urlsForApi['layout']['checkout'];
+    const linkToAPI = urlsForApi.layout.checkout;
     let requestPath = linkToAPI.url;
 
     // replace id if necessary/exists
-    requestPath = requestPath.replace(':id', layout.layoutId);
+    requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
     $.ajax({
         url: requestPath,
@@ -302,16 +358,15 @@ lD.checkoutLayout = function(layout) {
 };
 
 /**
- * Reload API data and replace the layout structure with the new value
- * @param {object} layout - previous layout
+ * Publish layout
  */
-lD.publishLayout = function(layout) {
+lD.publishLayout = function() {
 
-    const linkToAPI = urlsForApi['layout']['publish'];
+    const linkToAPI = urlsForApi.layout.publish;
     let requestPath = linkToAPI.url;
 
     // replace id if necessary/exists
-    requestPath = requestPath.replace(':id', layout.parentLayoutId);
+    requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
     $.ajax({
         url: requestPath,
@@ -320,11 +375,7 @@ lD.publishLayout = function(layout) {
         if(res.success) {
             toastr.success(res.message);
 
-            console.log('Back to grid');
-            
-            console.log(urlsForApi['layout']['list']);
-
-            window.location.href = urlsForApi['layout']['list'].url;
+            window.location.href = urlsForApi.layout.list.url;
             
         } else {
             toastr.error(res.message);
@@ -410,21 +461,21 @@ lD.showErrorMessage = function() {
 /**
  * Layout checkout screen
  */
-lD.showCheckoutScreen = function(layout) {
+lD.showCheckoutScreen = function() {
     
     bootbox.dialog({
-        title: 'Checkout ' + layout.name,
-        message: 'Layout is not editable, please checkout!',
+        title: layoutDesignerTrans.checkoutTitle + ' ' + lD.layout.name,
+        message: layoutDesignerTrans.checkoutMessage,
         closeButton: false,
         buttons: {
             done: {
-                label: 'Checkout',
+                label: layoutDesignerTrans.checkoutTitle,
                 className: "btn-primary btn-lg",
                 callback: function(res) {
 
                     $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
 
-                    lD.checkoutLayout(layout);
+                    lD.checkoutLayout();
 
                     // Prevent the modal to close ( close only when chekout layout resolves )
                     return false;
@@ -437,21 +488,24 @@ lD.showCheckoutScreen = function(layout) {
 /**
  * Layout checkout screen
  */
-lD.showPublishScreen = function(layout) {
+lD.showPublishScreen = function() {
 
     bootbox.dialog({
-        title: 'Publish ' + layout.name,
-        message: 'Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed.',
-        closeButton: false,
+        title: layoutDesignerTrans.publishTitle + ' ' + lD.layout.name,
+        message: layoutDesignerTrans.publishMessage,
         buttons: {
+            cancel: {
+                label: translations.cancel,
+                className: "btn-default",
+            },
             done: {
-                label: 'Publish',
+                label: layoutDesignerTrans.publishTitle,
                 className: "btn-primary btn-lg",
                 callback: function(res) {
 
                     $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
 
-                    lD.publishLayout(layout);
+                    lD.publishLayout();
 
                     // Prevent the modal to close ( close only when chekout layout resolves )
                     return false;
@@ -462,10 +516,471 @@ lD.showPublishScreen = function(layout) {
 };
 
 /**
+ * Revert last action
+ */
+lD.undoLastAction = function() {
+    lD.manager.revertChange().then((res) => { // Success
+
+        toastr.success(res.message);
+
+        // Refresh designer according to local or API revert
+        if(res.localRevert) {
+            lD.refreshDesigner();
+        } else {
+            lD.reloadData(lD.layout);
+        }
+    }).catch((error) => { // Fail/error
+
+        // Show error returned or custom message to the user
+        let errorMessage = 'Revert failed: ';
+
+        if(typeof error == 'string') {
+            errorMessage += error;
+        } else {
+            errorMessage += error.errorThrown;
+        }
+
+        toastr.error(errorMessage);
+    });
+};
+
+
+/**
+ * Delete selected object
+ */
+lD.deleteSelectedObject = function() {
+    lD.deleteObject(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type+'Id']);
+};
+
+/**
+ * Delete dragged object
+ * @param {object} draggable - "jqueryui droppable" ui draggable object
+ */
+lD.deleteDraggedObject = function(draggable) {
+    const objectType = draggable.data('type');
+    let objectId = null;
+
+    if(objectType === 'region') {
+        objectId = lD.layout.regions[draggable.attr('id')].regionId;
+    } else if(objectType === 'widget') {
+        objectId = lD.layout.regions[draggable.data('widgetRegion')].widgets[draggable.data('widgetId')].widgetId;
+    }
+
+    lD.deleteObject(objectType, objectId);
+};
+
+/**
+ * Delete object
+ * @param {object} objectToDelete - menu to load content for
+ */
+lD.deleteObject = function(objectType, objectId) {
+
+    if(objectType === 'region' || objectType === 'widget') {
+
+        bootbox.confirm({
+            title: 'Delete ' + objectType,
+            message: 'Are you sure? All changes related to this object will be erased',
+            buttons: {
+                confirm: {
+                    label: 'Yes',
+                    className: 'btn-danger'
+                },
+                cancel: {
+                    label: 'No',
+                    className: 'btn-default'
+                }
+            },
+            callback: function(result) {
+                if(result) {
+
+                    // Delete element from the layout
+                    lD.layout.deleteElement(objectType, objectId).then((res) => { // Success
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+                        lD.reloadData(lD.layout);
+                    }).catch((error) => { // Fail/error
+                        // Show error returned or custom message to the user
+                        let errorMessage = 'Delete element failed: ' + error;
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
+                        }
+
+                        toastr.error(errorMessage);
+                    });
+                }
+            }
+        });
+    }
+};
+
+/**
+ * Add action to take after dropping a draggable item
+ * @param {object} droppable - Target drop are object
+ * @param {object} draggable - Dragged object
+ */
+lD.dropItemAdd = function(droppable, draggable) {
+
+    const droppableId = $(droppable).attr('id');
+    const droppableType = $(droppable).data('type');
+
+    const draggableType = $(draggable).data('type');
+
+    // Get playlist Id
+    const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+
+    /**
+     * Add dragged item to region
+     */
+    if(draggableType == 'media') { // Adding media from search tab to a region
+
+        // Get media Id
+        const mediaToAdd = {
+            media: [
+                $(draggable).data('mediaId')
+            ]
+        };
+
+        // Create change to be uploaded
+        lD.manager.addChange(
+            'addMedia',
+            'playlist', // targetType 
+            playlistId,  // targetId
+            null,  // oldValues
+            mediaToAdd, // newValues
+            {
+                updateTargetId: true,
+                updateTargetType: 'widget'
+            }
+        ).then((res) => { // Success
+
+            // Behavior if successful 
+            toastr.success(res.message);
+            lD.timeline.resetZoom();
+            lD.reloadData(lD.layout);
+        }).catch((error) => { // Fail/error
+
+            // Show error returned or custom message to the user
+            let errorMessage = 'Add media failed: ';
+
+            if(typeof error == 'string') {
+                errorMessage += error;
+            } else {
+                errorMessage += error.errorThrown;
+            }
+
+            toastr.error(errorMessage);
+        });
+    } else { // Add widget/module
+
+        // Get regionSpecific property
+        const regionSpecific = $(draggable).data('regionSpecific');
+
+        if(regionSpecific == 0) { // Upload form if not region specific
+
+            const validExt = $(draggable).data('validExt').replace(/,/g, "|");
+
+            lD.openUploadForm({
+                trans: playlistTrans,
+                upload: {
+                    maxSize: $(draggable).data().maxSize,
+                    maxSizeMessage: $(draggable).data().maxSizeMessage,
+                    validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
+                    validExt: validExt
+                },
+                playlistId: playlistId
+            }, {
+                    main: {
+                        label: translations.done,
+                        className: "btn-primary",
+                        callback: function() {
+                            lD.timeline.resetZoom();
+                            lD.reloadData(lD.layout);
+                        }
+                    }
+                });
+
+        } else { // Load add widget form for region specific
+
+            // Get playlist Id
+            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+
+            // Load form the API
+            const linkToAPI = urlsForApi.playlist.addWidgetForm;
+
+            let requestPath = linkToAPI.url;
+
+            // Replace type
+            requestPath = requestPath.replace(':type', draggableType);
+
+            // Replace playlist id
+            requestPath = requestPath.replace(':id', playlistId);
+
+            // Select region ( and avoid deselect if region was already selected )
+            lD.selectObject($(droppable), true);
+
+            // Create dialog
+            var calculatedId = new Date().getTime();
+
+            let dialog = bootbox.dialog({
+                title: 'Add ' + draggableType + ' widget',
+                message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+                buttons: {
+                    cancel: {
+                        label: translations.cancel,
+                        className: "btn-default"
+                    },
+                    done: {
+                        label: translations.done,
+                        className: "btn-primary test",
+                        callback: function(res) {
+
+                            // Run form open module optional function
+                            if(typeof window[draggableType + '_form_add_submit'] === 'function') {
+                                window[draggableType + '_form_add_submit'].bind(dialog)();
+                            }
+
+                            // If form is valid, submit it ( add change )
+                            if($(dialog).find('form').valid()) {
+
+                                const form = dialog.find('form');
+
+                                lD.manager.addChange(
+                                    'addWidget',
+                                    'playlist', // targetType 
+                                    playlistId,  // targetId
+                                    null,  // oldValues
+                                    form.serialize(), // newValues
+                                    {
+                                        updateTargetId: true,
+                                        updateTargetType: 'widget',
+                                        customRequestPath: {
+                                            url: form.attr('action'),
+                                            type: form.attr('method')
+                                        }
+                                    }
+                                ).then((res) => { // Success
+
+                                    // Behavior if successful 
+                                    toastr.success(res.message);
+
+                                    dialog.modal('hide');
+
+                                    lD.timeline.resetZoom();
+                                    lD.reloadData(lD.layout);
+
+                                }).catch((error) => { // Fail/error
+
+                                    // Show error returned or custom message to the user
+                                    let errorMessage = '';
+
+                                    if(typeof error == 'string') {
+                                        errorMessage += error;
+                                    } else {
+                                        errorMessage += error.errorThrown;
+                                    }
+
+                                    // Remove added change from the history manager
+                                    lD.manager.removeLastChange();
+
+                                    // Display message in form
+                                    formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                                    // Show toast message
+                                    toastr.error(errorMessage);
+                                });
+                            }
+
+                            // Prevent the modal to close ( close only when addChange returns true )
+                            return false;
+                        }
+                    }
+                }
+            }).attr("id", calculatedId);
+
+            // Request and load element form
+            $.ajax({
+                url: requestPath,
+                type: linkToAPI.type
+            }).done(function(res) {
+
+                if(res.success) {
+                    // Add title
+                    dialog.find('.modal-title').html(res.dialogTitle);
+
+                    // Add body main content
+                    dialog.find('.bootbox-body').html(res.html);
+
+                    dialog.data('extra', res.extra);
+
+                    // Call Xibo Init for this form
+                    XiboInitialise("#" + dialog.attr("id"));
+
+                    // Run form open module optional function
+                    if(typeof window[draggableType + '_form_add_open'] === 'function') {
+                        window[draggableType + '_form_add_open'].bind(dialog)();
+                    }
+
+                } else {
+
+                    // Login Form needed?
+                    if(res.login) {
+
+                        window.location.href = window.location.href;
+                        location.reload(false);
+                    } else {
+
+                        toastr.error('Element form load failed!');
+
+                        // Just an error we dont know about
+                        if(res.message == undefined) {
+                            console.error(res);
+                        } else {
+                            console.error(res.message);
+                        }
+
+                        dialog.modal('hide');
+                    }
+                }
+            }).catch(function(jqXHR, textStatus, errorThrown) {
+
+                console.error(jqXHR, textStatus, errorThrown);
+                toastr.error('Element form load failed!');
+
+                dialog.modal('hide');
+            });
+        }
+    }
+};
+
+
+/**
+ * Open Upload Form
+ * @param {object} templateOptions
+ * @param {object} buttons
+ */
+lD.openUploadForm = function(templateOptions, buttons) {
+
+    // Close the current dialog
+    bootbox.hideAll();
+
+    var template = Handlebars.compile($("#template-file-upload").html());
+
+    // Handle bars and open a dialog
+    bootbox.dialog({
+        message: template(templateOptions),
+        title: playlistTrans.uploadMessage,
+        buttons: buttons,
+        animate: false,
+        updateInAllChecked: uploadFormUpdateAllDefault,
+        deleteOldRevisionsChecked: uploadFormDeleteOldDefault
+    });
+
+    lD.openUploadFormModelShown($(".modal-body").find("form"));
+};
+
+/**
+ * Modal shown
+ * @param {object} form
+ */
+lD.openUploadFormModelShown = function(form) {
+
+    // Configure the upload form
+    var url = libraryAddUrl;
+
+    // Initialize the jQuery File Upload widget:
+    form.fileupload({
+        url: url,
+        disableImageResize: true
+    });
+
+    // Upload server status check for browsers with CORS support:
+    if($.support.cors) {
+        $.ajax({
+            url: url,
+            type: 'HEAD'
+        }).fail(function() {
+            $('<span class="alert alert-error"/>')
+                .text('Upload server currently unavailable - ' + new Date())
+                .appendTo(form);
+        });
+    }
+
+    // Enable iframe cross-domain access via redirect option:
+    form.fileupload(
+        'option',
+        'redirect',
+        window.location.href.replace(
+            /\/[^\/]*$/,
+            '/cors/result.html?%s'
+        )
+    );
+
+    form.bind('fileuploadsubmit', function(e, data) {
+        var inputs = data.context.find(':input');
+        if(inputs.filter('[required][value=""]').first().focus().length) {
+            return false;
+        }
+        data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+        inputs.filter("input").prop("disabled", true);
+    });
+};
+
+/**
  * Clear Temporary Data ( Cleaning cached variables )
  */
 lD.clearTemporaryData = function() {
     
     // Remove text callback editor structure variables
     formHelpers.textCallbackDestroy();
+};
+
+/**
+ * Get element from the main object ( Layout )
+ * @param {string} type
+ * @param {number} id
+ * @param {number} auxId
+ */
+lD.getElementByTypeAndId = function(type, id, auxId) {
+
+    let element = {};
+
+    if(type === 'layout') {
+        element = lD.layout;
+    } else if(type === 'region') {
+        element = lD.layout.regions[id];
+    } else if(type === 'widget') {
+        element = lD.layout.regions[auxId].widgets[id];
+    }
+
+    return element;
+};
+
+
+/**
+ * Call layout status
+ */
+lD.layoutStatus = function() {
+    
+    const linkToAPI = urlsForApi.layout.status;
+    let requestPath = linkToAPI.url;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.layoutId);
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+        if(!res.success) {
+            console.error('Get status error');
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
 };

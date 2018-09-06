@@ -38,20 +38,31 @@
     }
 
     function notificationWidgetFormOpen(dialog) {
+
+        // Get background color, or use default
+        const backgroundColor = (typeof lD != 'undefined' && typeof lD.layout != 'undefined') ? lD.layout.backgroundColor : '#eee';
+            
         // Choose a complementary color
-        var color = $c.complement(lD.layout.backgroundColor);
+        var color = $c.complement(backgroundColor);
+
+        // DIMENSIONS
+        var region = {};
 
         var regionDimensions = null;
 
         // Get region dimensions
-        if(lD.selectedObject.type == 'widget') {
-            regionDimensions = lD.layout.regions[lD.selectedObject.regionId].dimensions;
-        } else {
-            regionDimensions = lD.layout.regions[lD.selectedObject.id].dimensions;
+        if(typeof lD != 'undefined') {
+            if(lD.selectedObject.type == 'widget') {
+                region = lD.getElementByTypeAndId('region', lD.selectedObject.regionId);
+            } else {
+                region = lD.getElementByTypeAndId('region', lD.selectedObject.id);
+            }
         }
 
+        var regionDimensions = (typeof region.dimensions != 'undefined') ? region.dimensions : formHelpers.defaultDimensions;
+
         // Calculate scale based on the region previewed in the viewer
-        var scale = lD.viewer.containerElementDimensions.width / regionDimensions.width; //$layout.attr('designer_scale');
+        var scale = (typeof lD != 'undefined' && typeof lD.viewer != 'undefined') ? lD.viewer.containerElementDimensions.width / regionDimensions.width : 1;
 
         var applyContentsToIframe = function(field) {
             $("#cke_" + field + " iframe").contents().find("head").append("" +
@@ -60,7 +71,7 @@
                 "width: " + regionDimensions.width + "px; " +
                 "height: " + regionDimensions.height + "px; border:2px solid red; " +
                 "margin-right: 10px; " +
-                "background: " + lD.layout.backgroundColor + "; " +
+                "background: " + backgroundColor + "; " +
                 "transform: scale(" + scale + "); " +
                 "transform-origin: 0 0; }" +
                 "h1, h2, h3, h4, p { margin-top: 0;}" +

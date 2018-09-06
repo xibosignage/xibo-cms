@@ -1,0 +1,126 @@
+/* Variables */
+@main-background-color: #a7a7a7;
+@min-editor-height: 650px;
+@widget-selected-color: #58b4fe;
+
+
+.modal-dialog {
+    padding-bottom: 160px;
+}
+
+#playlist-editor  {
+    background: @main-background-color;
+    min-height: @min-editor-height;
+    padding: 10px 0;
+}
+
+#playlist-editor #playlist-timeline {
+    background: #d2d9ff;
+    min-height: @min-editor-height;
+}
+
+#playlist-editor #playlist-timeline #timeline-container{
+    padding: 0 5px;
+    height: 615px;
+    overflow: auto;
+}
+
+#playlist-editor #playlist-viewer-container {
+    background: #a0e1a5;
+    min-height: 300px;
+    margin-bottom: 10px;
+}
+
+#playlist-editor #playlist-properties-panel  {
+    background: white;
+    min-height: @min-editor-height;
+    padding: 0;
+}
+
+#playlist-editor #dropzone-container {
+    padding: 10px;
+}
+
+#playlist-editor #dropzone-container .loading-container {
+    padding: 200px;
+    font-size: 100px;
+}
+
+#playlist-editor #dropzone-container .dropzone  {
+    font-size: 30px;
+    border: 2px dashed #0087F7;
+    border-radius: 5px;
+    min-height: 590px;
+    background: white;
+    padding: 270px 0;
+}
+
+#playlist-editor-toolbar .navbar{
+    z-index: 1080;
+}
+
+.form-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.5em;
+    margin-bottom: 5px;
+    color: white;
+    background-color: #3a3eb6;
+    height: 30px;
+}
+
+.form-title-widget {
+    color: #222;
+    background: @widget-selected-color;
+}
+
+.form-title-playlist {
+    background: #8f2ac3;
+}
+
+.editor-toolbar nav {
+    padding-left: 0;
+}
+
+/* Playlist Widget */
+.playlist-widget {
+    background: #b3ddff;
+    color: #222;
+    font-weight: bold;
+    padding: 10px;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid #868686;
+    margin-bottom: 4px;
+}
+
+.playlist-widget.selectable {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+.playlist-widget.selectable:hover {
+    background: #e7f4fe !important;
+}
+
+
+.playlist-widget.selected {
+    background: @widget-selected-color !important;
+}
+
+// Bootbox custom dialogs
+.bootbox .modal-dialog {
+    width: 80% !important;
+}
+
+.second-dialog {
+    z-index:  3100;
+}
+
+.second-dialog + .in.modal-backdrop {
+    z-index:  3000;
+}
