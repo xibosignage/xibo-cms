@@ -31,8 +31,8 @@ class AddForeignKeysToTagsMigration extends AbstractMigration
     public function change()
     {
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktagcampaign\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'campaignId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'lktagcampaign\' AND referenced_table_name = \'campaign\';')) {
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->execute('DELETE FROM `lktagcampaign` WHERE campaignId NOT IN (SELECT campaignId FROM `campaign`)');
             // Add the constraint
@@ -40,8 +40,8 @@ class AddForeignKeysToTagsMigration extends AbstractMigration
         }
 
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktaglayout\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'layoutId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'lktaglayout\' AND referenced_table_name = \'layout\';')) {
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->execute('DELETE FROM `lktaglayout` WHERE layoutId NOT IN (SELECT layoutId FROM `layout`)');
             // Add the constraint
@@ -49,8 +49,8 @@ class AddForeignKeysToTagsMigration extends AbstractMigration
         }
 
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktagmedia\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'mediaId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'lktagmedia\' AND referenced_table_name = \'media\';')) {
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->execute('DELETE FROM `lktagmedia` WHERE mediaId NOT IN (SELECT mediaId FROM `media`)');
             // Add the constraint
@@ -58,8 +58,8 @@ class AddForeignKeysToTagsMigration extends AbstractMigration
         }
 
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lktagdisplaygroup\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'displaygroupId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'lktagdisplaygroup\' AND referenced_table_name = \'displaygroup\';')) {
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->execute('DELETE FROM `lktagdisplaygroup` WHERE displayGroupId NOT IN (SELECT displayGroupId FROM `displaygroup`)');
             // Add the constraint

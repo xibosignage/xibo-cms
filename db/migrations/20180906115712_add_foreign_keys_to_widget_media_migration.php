@@ -31,16 +31,16 @@ class AddForeignKeysToWidgetMediaMigration extends AbstractMigration
     public function change()
     {
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lkwidgetmedia\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'mediaId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'lkwidgetmedia\' AND referenced_table_name = \'media\';')) {
             // Add the constraint
             $this->execute('ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_1` FOREIGN KEY (`mediaId`) REFERENCES `media` (`mediaId`);');
         }
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'lkwidgetmedia\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'widgetId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'lkwidgetmedia\' AND referenced_table_name = \'widget\';')) {
             // Add the constraint
-            $this->execute('ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_2` FOREIGN KEY (`widgetId`) REFERENCES `media` (`widgetId`);');
+            $this->execute('ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_2` FOREIGN KEY (`widgetId`) REFERENCES `widget` (`widgetId`);');
         }
     }
 }

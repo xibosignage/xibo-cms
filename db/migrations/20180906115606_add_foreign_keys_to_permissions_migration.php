@@ -31,8 +31,8 @@ class AddForeignKeysToPermissionsMigration extends AbstractMigration
     public function change()
     {
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'permission\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'groupId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'permission\' AND referenced_table_name = \'group\';')) {
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->execute('DELETE FROM `permission` WHERE groupId NOT IN (SELECT groupId FROM `group`)');
             // Add the constraint
@@ -40,8 +40,8 @@ class AddForeignKeysToPermissionsMigration extends AbstractMigration
         }
 
         if (!$this->fetchRow('
-            SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE()
-                AND `table_name` = \'permission\' AND `index_name` LIKE \'%fk_%\' AND `column_name` = \'entityId\';')) {
+            SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                AND `table_name` = \'permission\' AND referenced_table_name = \'permissionentity\';')) {
             // Delete any records which result in a constraint failure (the records would be orphaned anyway)
             $this->execute('DELETE FROM `permission` WHERE entityId NOT IN (SELECT entityId FROM `permissionentity`)');
             // Add the constraint
