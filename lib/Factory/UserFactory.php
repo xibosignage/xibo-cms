@@ -229,14 +229,9 @@ class UserFactory extends BaseFactory
                 `user`.ref5,
                 IFNULL(group.libraryQuota, 0) AS libraryQuota,
                 `group`.isSystemNotification,
-                `group`.isDisplayNotification
-        ';
-
-        if (DBVERSION >= 143) {
-            $select .= '
-                , `user`.isPasswordChangeRequired
+                `group`.isDisplayNotification, 
+                `user`.isPasswordChangeRequired
             ';
-        }
 
         $body = '
               FROM `user`

@@ -155,7 +155,7 @@ class Login extends Base
         $this->getState()->template = 'login';
         $this->getState()->setData([
             'passwordReminderEnabled' => (($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != ''),
-            'version' => 'version' => Environment::$WEBSITE_VERSION_NAME
+            'version' => Environment::$WEBSITE_VERSION_NAME
         ]);
     }
 
