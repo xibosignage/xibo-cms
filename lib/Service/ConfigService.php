@@ -545,11 +545,6 @@ class ConfigService implements ConfigServiceInterface
             __('PHP DOM XML extension to function.')
         );
 
-        $this->testItem($rows, __('Mcrypt Extension'),
-            Environment::checkMcrypt(),
-            __('PHP Mcrypt extension to function.')
-        );
-
         $this->testItem($rows, __('Allow PHP to open external URLs'),
             Environment::checkAllowUrlFopen(),
             __('You must have allow_url_fopen = On in your PHP.ini file for RSS Feeds / Anonymous statistics gathering to function.'),

@@ -46,7 +46,7 @@
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="displayTab">
-                        {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member of not.{% endtrans %}{% endset %}
+                        {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member or not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayDGView">
                             <div class="XiboFilter well">
@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <div class="tab-pane" id="displayGroupTab">
-                        {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member of not.{% endtrans %}{% endset %}
+                        {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member or not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGroupDGView">
                             <div class="XiboFilter well">

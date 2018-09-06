@@ -232,6 +232,12 @@ class UserFactory extends BaseFactory
                 `group`.isDisplayNotification
         ';
 
+        if (DBVERSION >= 143) {
+            $select .= '
+                , `user`.isPasswordChangeRequired
+            ';
+        }
+
         $body = '
               FROM `user`
                 INNER JOIN lkusergroup
@@ -353,7 +359,7 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota']]);
+            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota', 'isPasswordChangeRequired']]);
         }
 
         // Paging

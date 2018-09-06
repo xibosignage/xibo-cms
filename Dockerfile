@@ -71,7 +71,6 @@ RUN apk update && apk upgrade && apk add tar \
     php7-zmq \
     php7-json \
     php7-gd \
-    php7-mcrypt \
     php7-dom \
     php7-pdo \
     php7-zip \
@@ -184,5 +183,6 @@ VOLUME /var/www/cms/custom
 VOLUME /var/www/cms/web/theme/custom
 VOLUME /var/www/backup
 VOLUME /var/www/cms/web/userscripts
+VOLUME /var/www/cms/ca-certs
 
 CMD ["/entrypoint.sh"]

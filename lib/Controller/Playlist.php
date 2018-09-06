@@ -976,6 +976,22 @@ class Playlist extends Base
     }
 
     /**
+     * @SWG\Definition(
+     *  definition="PlaylistWidgetList",
+     *  @SWG\Property(
+     *      property="widgetId",
+     *      type="integer",
+     *      description="Widget ID"
+     *  ),
+     *  @SWG\Property(
+     *      property="position",
+     *      type="integer",
+     *      description="The position in the Playlist"
+     *  )
+     * )
+     */
+
+    /**
      * Order a playlist and its widgets
      * @param int $playlistId
      *

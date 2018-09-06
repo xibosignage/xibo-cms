@@ -954,7 +954,7 @@ class Chart extends ModuleWidget
     public function getModifiedDate($displayId)
     {
         // Either the Widget Modified Date or the DataSet Edit Date, whichever happens sooner
-        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        $widgetModifiedDt = $this->widget->modifiedDt;
 
         $dataSetId = $this->getOption('dataSetId');
         $dataSet = $this->dataSetFactory->getById($dataSetId);
@@ -971,7 +971,7 @@ class Chart extends ModuleWidget
             $this->getPool()->saveDeferred($dataSetCache);
         }
 
-        return $widgetModifiedDt;
+        return $this->getDate()->parse($widgetModifiedDt, 'U');
     }
 }
 

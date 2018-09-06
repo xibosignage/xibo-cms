@@ -6,6 +6,8 @@ use Exception;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
+use Xibo\Event\LibraryReplaceEvent;
+use Xibo\Event\LibraryReplaceWidgetEvent;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\LibraryFullException;
@@ -107,6 +109,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Pre-process
                 $module->preProcess($media, $filePath);
 
+                // Raise an event for this media item
+                $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
+
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
 
@@ -159,6 +164,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
                             $widget->unassignMedia($oldMedia->mediaId);
                             $widget->assignMedia($media->mediaId);
+
+                            // Raise an event for this media item
+                            $controller->getDispatcher()->dispatch(LibraryReplaceWidgetEvent::$NAME, new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia));
+
+                            // Save
                             $widget->save();
                         }
                     }

@@ -414,7 +414,8 @@ class Playlist implements \JsonSerializable
         // Default options
         $options = array_merge([
             'saveTags' => true,
-            'saveWidgets' => true
+            'saveWidgets' => true,
+            'notify' => true
         ], $options);
 
         if ($this->playlistId == null || $this->playlistId == 0)
@@ -444,7 +445,7 @@ class Playlist implements \JsonSerializable
                 $widget->playlistId = $this->playlistId;
                 // Assert the displayOrder
                 $widget->displayOrder = $i;
-                $widget->save();
+                $widget->save($options);
             }
         }
 

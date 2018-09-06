@@ -91,6 +91,7 @@ $app->post('/access_token', function() use ($app) {
     $app->logService->debug('Issued token: %s', $token);
 
     // Issue an access token
+    $app->response->header('Content-Type', 'application/json');
     $app->halt(200, $token);
 
     // Exceptions are caught by our error controller automatically.

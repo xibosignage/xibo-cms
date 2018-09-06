@@ -123,9 +123,6 @@ class StatsArchiveTask implements TaskInterface
         // Exec
         $statement->execute($params);
 
-        // Store a count of rows for the delete
-        $countRows = 0;
-
         // Do some post processing
         while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
             // Read the columns
@@ -142,9 +139,6 @@ class StatsArchiveTask implements TaskInterface
                 $this->sanitizer->int($row['widgetId']),
                 $this->sanitizer->int($row['mediaID'])
             ]);
-
-            // Increment count of rows
-            $countRows++;
         }
 
         fclose($out);
@@ -168,15 +162,11 @@ class StatsArchiveTask implements TaskInterface
 
         // Delete the stats, incrementally
         $rowsModified = 1;
-        $loops = 0;
-        $loopsRequired = ($countRows / 1000) + 1; // add 1 for good measure, just to make sure our final delete doesn't hit anything
 
         // Prepare a SQL statement
         $delete = $this->store->getConnection()->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT 1000');
 
-        while ($rowsModified > 0 && $loops < $loopsRequired) {
-            $loops++;
-
+        while ($rowsModified > 0) {
             // Run the delete
             $delete->execute($params);
 
