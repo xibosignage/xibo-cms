@@ -9,6 +9,11 @@
     {
       "step": "Add the isPasswordChangeRequired Column",
       "action": "ALTER TABLE user ADD isPasswordChangeRequired tinyint(4) DEFAULT 0 NOT NULL;"
+    },
+    {
+      "step": "Fix database constraints and indexes",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\FixForeignKeysForWidgetMedia"
     }
   ]
 }

@@ -18,8 +18,8 @@
                         <i class="fa fa-desktop"></i>
                     </div>
                     <div class="widget-content pull-left">
-                        <div class="title">{{ displays|length }}</div>
-                        <div class="comment">{% if displays|length == 1 %}{% trans "Display" %}{% else %}{% trans "Displays" %}{% endif %}</div>
+                        <div class="title displays-count">0</div>
+                        <div class="comment displays-comment" data-title="{% trans "Display" %}" data-title-plural="{% trans "Displays" %}"></div>
                     </div>
                     <div class="clearfix"></div>
                 </div>
@@ -291,5 +291,11 @@
         });
 
         table.on('processing.dt', dataTableProcessing);
+        table.on('draw', function(e, settings) {
+            var $displaysComment = $(".displays-comment");
+            var total = table.page.info().recordsTotal;
+            $(".displays-count").html(total);
+            $displaysComment.html((total > 0) ? $displaysComment.data().titlePlural : $displaysComment.data().title)
+        });
     </script>
 {% endblock %}
