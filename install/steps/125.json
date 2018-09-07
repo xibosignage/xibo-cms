@@ -36,7 +36,7 @@
     },
     {
       "step": "Add scopes",
-      "action": "INSERT INTO oauth_scopes (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');"
+      "action": "INSERT INTO oauth_scopes (id, description) VALUES ('all', 'All access');"
     },
     {
       "step": "Add module install name",
