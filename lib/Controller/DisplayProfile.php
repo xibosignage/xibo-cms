@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -101,7 +102,14 @@ class DisplayProfile extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
-     *      description="Filter by DisplayProfile Type (windows|android)",
+     *      description="Filter by DisplayProfile Type (windows|android\lg)",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as config,commands,configWithDefault",
      *      type="string",
      *      required=false
      *   ),
@@ -114,6 +122,7 @@ class DisplayProfile extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\NotFoundException
      */
     function grid()
     {
@@ -123,17 +132,34 @@ class DisplayProfile extends Base
             'type' => $this->getSanitizer()->getString('type')
         ];
 
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
         $profiles = $this->displayProfileFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+
+        if (count($profiles) <= 0)
+            throw new NotFoundException('Display Profile not found', 'DisplayProfile');
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
 
             // Load the config
-            $profile->load();
+            if ((in_array('config', $embed) || in_array('commands', $embed)) && !in_array('configWithDefault', $embed)) {
+                $profile->load([
+                    'loadConfig' => in_array('config', $embed),
+                    'loadCommands' => in_array('commands', $embed),
+                ]);
+            } elseif (in_array('configWithDefault', $embed)) {
+                $profile->load([
+                    'loadConfig' => true,
+                    'loadConfigWithDefault' => true,
+                    'loadCommands' => in_array('commands', $embed)
+                ]);
+                $profile->includeProperty('configDefault');
+            } else {
+                $profile->excludeProperty('config');
+            }
+
 
             if ($this->isApi()) {
-                $profile->excludeProperty('configTabs');
-                $profile->excludeProperty('configDefault');
                 continue;
             }
 
@@ -217,6 +243,48 @@ class DisplayProfile extends Base
         $displayProfile->type = $this->getSanitizer()->getString('type');
         $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
         $displayProfile->userId = $this->getUser()->userId;
+
+        $combined = array();
+
+        $displayProfile->save();
+
+        $displayProfile->load();
+
+        foreach ($displayProfile->configDefault as $setting) {
+            // Validate the parameter
+            $value = null;
+
+            switch ($setting['type']) {
+                case 'string':
+                    $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
+                    break;
+
+                case 'int':
+                    $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
+                    break;
+
+                case 'double':
+                    $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
+                    break;
+
+                case 'checkbox':
+                    $value = $this->getSanitizer()->getCheckbox($setting['name']);
+                    break;
+
+                default:
+                    $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
+            }
+
+            // Add to the combined array
+            $combined[] = array(
+                'name' => $setting['name'],
+                'value' => $value,
+                'type' => $setting['type']
+            );
+        }
+
+        // Recursively merge the arrays and update
+        $displayProfile->config = $combined;
 
         $displayProfile->save();
 
