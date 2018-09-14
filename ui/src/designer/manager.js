@@ -119,9 +119,11 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
     const app = getXiboApp();
 
     // Test for empty history array
-    if(!change || change.uploaded) {
+    if(!change || change.uploaded ) {
         return Promise.reject('Change already uploaded!');
     }
+
+    change.uploading = true;
 
     const linkToAPI = (customRequestPath != null) ? customRequestPath : urlsForApi[change.target.type][change.type];
 
@@ -149,6 +151,7 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
             if(data.success) {
 
                 change.uploaded = true;
+                change.uploading = false;
 
                 // Update the Id of the change with the new element
                 if(updateId) {
@@ -331,9 +334,11 @@ Manager.prototype.saveAllChanges = async function() {
         const change = self.changeHistory[index];
 
         // skip already uploaded changes
-        if(change.uploaded) {
+        if(change.uploaded || change.uploading) {
             continue;
         }
+        
+        change.uploading = true;
         
         promiseArray.push(await self.uploadChange(change));
 

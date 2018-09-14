@@ -47,7 +47,7 @@
                     
                             </div>
                     
-                            <button data-search-id="{{@index}}" class="btn btn-primary search-btn" type="button">                                    
+                            <button data-search-id="{{@index}}" data-test="searchButton" class="btn btn-primary search-btn" type="button">                                    
                                 <span>Search!</span>
                             </button>
                         </form>
@@ -72,7 +72,7 @@
         <ul class="nav navbar-nav navbar-buttons">
             {{#each menuItems}}
                 <li>
-                    <a id="btn-menu-{{@index}}" class="{{state}}">
+                    <a id="btn-menu-{{@index}}" class="{{state}}" data-test="toolbarTabs">
                         <span>{{title}}</span>
                         {{#if search}}
                             <i id="close-btn-menu-{{@index}}" class="fa fa-times close-tab-button"></i>

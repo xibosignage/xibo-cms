@@ -26,6 +26,9 @@ let Change = function(id, type, targetType, targetID, oldState, newState){
 
     // Flag to check if the change was successfully uploaded
     this.uploaded = false;
+
+    // Flag to check if the change was already marked for upload
+    this.uploading = false;
 };
 
 module.exports = Change;

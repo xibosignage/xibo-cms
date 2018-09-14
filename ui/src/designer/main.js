@@ -482,7 +482,7 @@ lD.showCheckoutScreen = function() {
                 }
             }
         }
-    });
+    }).attr('data-test', 'checkoutModal');
 };
 
 /**
@@ -512,7 +512,7 @@ lD.showPublishScreen = function() {
                 }
             }
         }
-    });
+    }).attr('data-test', 'publishModal');
 };
 
 /**
@@ -613,7 +613,7 @@ lD.deleteObject = function(objectType, objectId) {
                     });
                 }
             }
-        });
+        }).attr('data-test', 'deleteObjectModal');
     }
 };
 
@@ -799,7 +799,7 @@ lD.dropItemAdd = function(droppable, draggable) {
                         }
                     }
                 }
-            }).attr("id", calculatedId);
+            }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
 
             // Request and load element form
             $.ajax({
@@ -877,7 +877,7 @@ lD.openUploadForm = function(templateOptions, buttons) {
         animate: false,
         updateInAllChecked: uploadFormUpdateAllDefault,
         deleteOldRevisionsChecked: uploadFormDeleteOldDefault
-    });
+    }).attr('data-test', 'uploadFormModal');
 
     lD.openUploadFormModelShown($(".modal-body").find("form"));
 };

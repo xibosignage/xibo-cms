@@ -324,6 +324,8 @@ Timeline.prototype.render = function(layout) {
     
     this.DOMObject.find('#regions .designer-region').sortable({
         items: '.designer-widget:not(.designer-widget-ghost)',
+        placeholder: 'designer-widget-sortable-highlight',
+        opacity: '.5',
         stop: function() {
 
             // Get playlist

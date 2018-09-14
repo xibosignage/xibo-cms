@@ -221,7 +221,7 @@ Widget.prototype.editPropertyForm = function(property) {
 
             }
         }
-    }).attr('id', calculatedId);
+    }).attr('id', calculatedId).attr('data-test', 'widgetPropertiesForm');
 
     // Request and load element form
     $.ajax({

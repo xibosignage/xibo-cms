@@ -98,6 +98,9 @@ Navigator.prototype.render = function(layout) {
     // Get layout container
     const layoutContainer = this.DOMObject.find('#' + layout.id);
 
+    // Use a complentary colour for the navigator background
+    this.DOMObject.css('background', $c.complement(layout.backgroundColor));
+
     // Find all the regions and enable drag and resize
     if(this.editMode) {
     this.DOMObject.find('#regions .designer-region').resizable({
@@ -286,7 +289,7 @@ Navigator.prototype.renderNavbar = function() {
                                 });
                     }
                 }
-            });
+            }).attr('data-test', 'deleteRegionModal');
         }
     });
 };

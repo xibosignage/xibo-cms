@@ -63,6 +63,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             // Set the name for the return
             $file->name = $layout->layout;
+            $file->id = $layout->layoutId;
 
         } catch (Exception $e) {
             $controller->getLog()->error('Error importing Layout: %s', $e->getMessage());

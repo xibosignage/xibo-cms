@@ -71,11 +71,16 @@ Toolbar.prototype.loadPrefs = function() {
         if(res.success) {
 
             let loadedData = JSON.parse(res.data.value);
-            
-            // Populate the toolbar with the returned data
-            self.menuItems = loadedData.menuItems;
-            self.openedMenu = loadedData.openedMenu;
 
+            // Populate the toolbar with the returned data
+            if(!jQuery.isEmptyObject(loadedData.menuItems)) {
+                self.menuItems = loadedData.menuItems;
+                self.openedMenu = loadedData.openedMenu;
+            } else {
+                self.menuItems = defaultMenuItems;
+                self.openedMenu = -1;
+            }
+            
             // Set menu index
             self.menuIndex = self.menuItems.length;
 
@@ -532,7 +537,6 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
             url: jumpList.data().url,
             dataType: "json",
             data: function(params) {
-                console.log(params.term);
 
                 var query = {
                     layout: params.term,
