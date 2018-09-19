@@ -394,6 +394,20 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="clientType",
+     *      in="formData",
+     *      description="Filter by Client Type",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clientCode",
+     *      in="formData",
+     *      description="Filter by Client Code",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="formData",
      *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
@@ -412,6 +426,27 @@ class Display extends Base
      *      in="formData",
      *      description="Filter by Display Profile",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  *  @SWG\Parameter(
+     *      name="mediaInventoryStatus",
+     *      in="formData",
+     *      description="Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  *  @SWG\Parameter(
+     *      name="loggedIn",
+     *      in="formData",
+     *      description="Filter by Logged In flag",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  *  @SWG\Parameter(
+     *      name="lastAccessed",
+     *      in="formData",
+     *      description="Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -436,12 +471,17 @@ class Display extends Base
             'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
+            'clientType' => $this->getSanitizer()->getString('clientType'),
+            'clientCode' => $this->getSanitizer()->getString('clientCode'),
             'authorised' => $this->getSanitizer()->getInt('authorised'),
             'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'showTags' => true,
-            'clientAddress' => $this->getSanitizer()->getString('clientAddress')
+            'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
+            'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
+            'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
+            'lastAccessed' => $this->getSanitizer()->getDate('lastAccessed', '1899-01-01 00:00:00')->format('U')
         ];
 
         // Get a list of displays
