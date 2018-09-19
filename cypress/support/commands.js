@@ -56,6 +56,63 @@ Cypress.Commands.add('getAccessToken', function() {
     });
 });
 
+Cypress.Commands.add('formRequest', (method, url, formData) => {
+
+    return new Promise(function(resolve, reject) {
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.open(method, url);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + Cypress.env('accessToken'));
+
+        xhr.onload = function() {
+            if(this.status >= 200 && this.status < 300) {
+                resolve(xhr.response);
+            } else {
+                reject({
+                    status: this.status,
+                    statusText: xhr.statusText
+                });
+            }
+        };
+        xhr.onerror = function() {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        };
+
+        xhr.send(formData);
+    });
+});
+
+Cypress.Commands.add('clearToolbarPrefs', function() {
+
+    let preference = [];
+
+    preference[0] =
+    {
+        option: 'toolbar',
+        value: JSON.stringify({
+            menuItems: {},
+            openedMenu: -1
+        })
+    };
+
+    cy.request({
+        method: 'POST',
+        url: '/api/user/pref',
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        }, 
+        body: {
+            preference: preference
+        }
+    });
+});
+
+// Layout
 Cypress.Commands.add('createLayout', function(name) {
 
     cy.request({
@@ -120,36 +177,6 @@ Cypress.Commands.add('importLayout', function(fileName) {
     });
 });
 
-Cypress.Commands.add('formRequest', (method, url, formData) => {
-
-    return new Promise(function(resolve, reject) {
-
-        const xhr = new XMLHttpRequest();
-
-        xhr.open(method, url);
-        xhr.setRequestHeader('Authorization', 'Bearer ' + Cypress.env('accessToken'));
-
-        xhr.onload = function() {
-            if(this.status >= 200 && this.status < 300) {
-                resolve(xhr.response);
-            } else {
-                reject({
-                    status: this.status,
-                    statusText: xhr.statusText
-                });
-            }
-        };
-        xhr.onerror = function() {
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
-        };
-
-        xhr.send(formData);
-    });
-});
-
 Cypress.Commands.add('deleteLayout', function(id) {
 
     cy.request({
@@ -162,28 +189,76 @@ Cypress.Commands.add('deleteLayout', function(id) {
     });
 });
 
-Cypress.Commands.add('clearToolbarPrefs', function() {
-
-    let preference = [];
-
-    preference[0] =
-    {
-        option: 'toolbar',
-        value: JSON.stringify({
-            menuItems: {},
-            openedMenu: -1
-        })
-    };
+// Playlist
+Cypress.Commands.add('createNonDynamicPlaylist', function(name) {
 
     cy.request({
         method: 'POST',
-        url: '/api/user/pref',
+        url: '/api/playlist',
         form: true,
         headers: {
             Authorization: 'Bearer ' + Cypress.env('accessToken')
-        }, 
+        },
         body: {
-            preference: preference
+            name: name
+        }
+    }).then((res) => {
+        return res.body.playlistId;
+    });
+});
+
+
+Cypress.Commands.add('addWidgetToPlaylist', function(playlistId, widgetType, widgetData) {
+
+    cy.request({
+        method: 'POST',
+        url: '/api/playlist/widget/' + widgetType + '/' + playlistId,
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        },
+        body: widgetData
+    });
+});
+
+Cypress.Commands.add('addRandomMediaToPlaylist', function(playlistId) {
+
+    // Get media
+    cy.request({
+        method: 'GET',
+        url: '/api/library?retired=0&assignable=1&start=0&length=1',
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        }
+    }).then((res) => {
+
+        let media = [];
+        media.push(res.body[0].mediaId);
+        
+        // Add media to playlist
+        cy.request({
+            method: 'POST',
+            url: '/api/playlist/library/assign/' + playlistId,
+            form: true,
+            headers: {
+                Authorization: 'Bearer ' + Cypress.env('accessToken')
+            },
+            body: {
+                media: media
+            }
+        });
+    });
+});
+
+Cypress.Commands.add('deletePlaylist', function(id) {
+
+    cy.request({
+        method: 'DELETE',
+        url: '/api/playlist/' + id,
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
         }
     });
 });

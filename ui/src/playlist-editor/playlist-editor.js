@@ -283,7 +283,7 @@ pE.deleteObject = function(objectType, objectId) {
                     });
                 }
             }
-        });
+        }).attr('data-test', 'deleteObjectModal');
         
     }
 };

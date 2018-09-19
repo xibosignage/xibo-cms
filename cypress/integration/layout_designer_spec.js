@@ -118,21 +118,28 @@ describe('Layout Designer', function() {
         it('should load all the layout designer elements', function() {
 
             // Check if the basic elements of the designer loaded
-            expect('#layout-editor').to.exist;
-            expect('#layout-navigator').to.exist;
-            expect('#layout-timeline').to.exist;
-            expect('#layout-viewer-container').to.exist;
-            expect('#properties-panel').to.exist;
+             cy.get('#layout-editor').should('be.visible');
+             cy.get('#layout-navigator').should('be.visible');
+             cy.get('#layout-timeline').should('be.visible');
+             cy.get('#layout-viewer-container').should('be.visible');
+             cy.get('#properties-panel').should('be.visible');
         });
 
         // Toolbar
         it('shows a toast message ("Empty Region") when trying to Publish a layout with an empty region', () => {
+
+            cy.server();
+            cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
             cy.get('#layout-editor-toolbar button#publishLayout').click();
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 
             cy.get('.toast-error').contains('Empty Region');
+
+            cy.wait('@layoutPublish');
+
+            cy.get('[data-test="publishModal"] button#publishLayout').should('not.be.visible');
         });
 
         it('creates a new tab in the toolbar and searches for items', () => {
@@ -218,23 +225,57 @@ describe('Layout Designer', function() {
             cy.get('#layout-timeline [data-type="region"]').should('not.be.visible');
         });
 
+        it('should revert a created region, by deleting it', () => {
+
+            // Create and alias for reload Layout
+            cy.server();
+            cy.route('/layout?layoutId=*').as('reloadLayout');
+
+            // Open navigator edit
+            cy.get('#layout-navigator #edit-btn').click();
+
+            // Click on add region button
+            cy.get('#layout-navigator-edit #add-btn').click();
+
+            // Close the navigator edit
+            cy.get('#layout-navigator-edit #close-btn').click();
+
+            // Check if there are 2 regions in the timeline ( there was 1 by default )
+            cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
+
+            // Click the revert button
+            cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+
+            // Wait for the layout to reload
+            cy.wait('@reloadLayout').then(() => {
+                // Check if there is just 1 region
+                cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 1);
+            });
+        });
+
         ['layout-timeline', 'layout-navigator'].forEach((target) => {
 
             it('creates a new widget by dragging a widget from the toolbar to ' + target + ' region', () => {
 
                 // Create and alias for reload Layout
                 cy.server();
-                cy.route('POST', '**/playlist/widget/clock/*').as('createWidget');
+                cy.route('POST', '**/playlist/widget/currencies/*').as('createWidget');
 
                 // Open toolbar Widgets tab
                 cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click();
 
-                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-type="clock"]').should('be.visible').then(() => {
+                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-type="currencies"]').should('be.visible').then(() => {
                     dragToElement(
-                        '#layout-editor-toolbar .toolbar-pane-content [data-type="clock"]',
+                        '#layout-editor-toolbar .toolbar-pane-content [data-type="currencies"]',
                         '#' + target + ' [data-type="region"]:first-child'
                     ).then(() => {
-                        cy.get('[data-test="addWidgetModal"]').contains('Add Clock');
+                        cy.get('[data-test="addWidgetModal"]').contains('Add Currencies');
+
+                        cy.get('[data-test="addWidgetModal"] [href="#template"]').click();
+
+                        cy.get('[data-test="addWidgetModal"] input[name="items"]').clear().type('EUR');
+
+                        cy.get('[data-test="addWidgetModal"] input[name="base"]').clear().type('GBP');
 
                         cy.get('[data-test="addWidgetModal"] [data-bb-handler="done"]').click();
 
@@ -375,7 +416,7 @@ describe('Layout Designer', function() {
             cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
 
             // Type the new name in the input
-            cy.get('#properties-panel input[name="name"]').type('newName');
+            cy.get('#properties-panel input[name="name"]').clear().type('newName');
 
             // Set a duration
             cy.get('#properties-panel #useDuration').check();
@@ -389,8 +430,51 @@ describe('Layout Designer', function() {
 
             // Check if the values are the same entered after reload
             cy.wait('@reloadWidget').then(() => {
-                cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('include', 'newName');
-                cy.get('#properties-panel input[name="duration"]').should('have.attr', 'value').and('include', 12);
+                cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
+                cy.get('#properties-panel input[name="duration"]').should('have.attr', 'value').and('equal', '12');
+            });
+        });
+
+        it('should revert a saved form to a previous state', () => {
+            let oldName;
+
+            // Create and alias for reload widget
+            cy.server();
+            cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
+            cy.route('PUT', '/playlist/widget/*').as('saveWidget');
+
+            // Select the first widget on timeline ( image )
+            cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
+
+            // Wait for the widget to load
+            cy.wait('@reloadWidget');
+
+            // Get the input field
+            cy.get('#properties-panel input[name="name"]').then(($input) => {
+
+                // Save old name
+                oldName = $input.val();
+
+                //Type the new name in the input
+                cy.get('#properties-panel input[name="name"]').clear().type('newName');
+
+                // Save form
+                cy.get('#properties-panel button[data-action="save"]').click();
+
+                // Should show a notification for the name change
+                cy.get('.toast-success');
+
+                // Wait for the widget to save
+                cy.wait('@reloadWidget');
+
+                // Click the revert button
+                cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+
+                // Wait for the widget to save
+                cy.wait('@saveWidget');
+
+                // Test if the revert made the name go back to the old name
+                cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('equal', oldName);
             });
         });
 
@@ -405,7 +489,7 @@ describe('Layout Designer', function() {
             cy.get('#layout-navigator [data-type="region"]:first-child').click();
 
             // Type the new name in the input
-            cy.get('#properties-panel input[name="name"]').type('newName');
+            cy.get('#properties-panel input[name="name"]').clear().type('newName');
 
             // Set some properties
             cy.get('#properties-panel #loop').check();
@@ -422,7 +506,7 @@ describe('Layout Designer', function() {
 
             // Check if the values are the same entered after reload
             cy.wait('@reloadRegion').then(() => {
-                cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('include', 'newName');
+                cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
                 cy.get('#properties-panel input[name="top"]').should('have.attr', 'value').and('include', 100);
                 cy.get('#properties-panel input[name="left"]').should('have.attr', 'value').and('include', 100);
                 cy.get('#properties-panel input[name="width"]').should('have.attr', 'value').and('include', 400);
@@ -454,7 +538,7 @@ describe('Layout Designer', function() {
 
             // Check if the values are the same entered after reload
             cy.wait('@reloadLayout').then(() => {
-                cy.get('#properties-panel input[name="backgroundColor"]').should('have.attr', 'value').and('include', '#ccc');
+                cy.get('#properties-panel input[name="backgroundColor"]').should('have.attr', 'value').and('equal', '#cccccc');
                 cy.get('#properties-panel select[name="resolutionId"]').should('have.value', '11');
                 cy.get('#properties-panel input[name="backgroundzIndex"]').should('have.value', '1');
             });
@@ -486,8 +570,7 @@ describe('Layout Designer', function() {
                 });
             });
         });
-        
-        // Open attached audio edit form and save
+
         it('should add a audio clip to a widget, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload layout
             cy.server();
@@ -516,7 +599,6 @@ describe('Layout Designer', function() {
             });
         });
 
-        // Open expiry dates and save
         it('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload layout
             cy.server();
@@ -529,11 +611,11 @@ describe('Layout Designer', function() {
             cy.get('#properties-panel button#expiry').click();
 
             // Add dates
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').type('00:00');
+            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').clear().type('2018-01-01');
+            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').clear().type('00:00');
 
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').type('23:45');
+            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').clear().type('2018-01-01');
+            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').clear().type('23:45');
 
             // Save and close the form
             cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
@@ -690,6 +772,52 @@ describe('Layout Designer', function() {
             });
         });
 
+        it('should revert the widgets order when using the undo feature', () => {
+            cy.server();
+            cy.route('POST', '**/playlist/order/*').as('saveOrder');
+            cy.route('/layout?layoutId=*').as('reloadLayout');
+
+            cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($oldWidget) => {
+
+                const offsetX = 50;
+
+                // Move to the second widget position ( plus offset )
+                cy.wrap($oldWidget)
+                    .trigger('mousedown', {
+                        which: 1
+                    })
+                    .trigger('mousemove', {
+                        which: 1,
+                        pageX: $oldWidget.offset().left + $oldWidget.width() * 1.5 + offsetX
+                    })
+                    .trigger('mouseup');
+
+                cy.wait('@saveOrder');
+
+                // Should show a notification for the order change
+                cy.get('.toast-success').contains('Order Changed');
+
+                // Reload layout and check if the new first widget has a different Id
+                cy.wait('@reloadLayout');
+
+                cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($newWidget) => {
+                    expect($oldWidget.attr('id')).not.to.eq($newWidget.attr('id'));
+                });
+
+                // Click the revert button
+                cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+
+                // Wait for the order to save
+                cy.wait('@saveOrder');
+                cy.wait('@reloadLayout');
+
+                // Test if the revert made the name go back to the first widget
+                cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($newWidget) => {
+                    expect($oldWidget.attr('id')).to.eq($newWidget.attr('id'));
+                });
+            });
+        });
+
         it('should play a preview in the viewer, in normal mode', () => {
             // click play
             cy.get('#layout-viewer #play-btn').click();
@@ -719,7 +847,6 @@ describe('Layout Designer', function() {
             // Select last region
             cy.get('#layout-navigator [data-type="region"]:last-child').click();
 
-
             // Wait for the layout to reload
             cy.wait('@regionPreview');
 
@@ -736,6 +863,7 @@ describe('Layout Designer', function() {
             cy.get('#layout-viewer-navbar').contains('text');
             
         });
+
     });
 
     it('publishes the layout and it goes to a published state', () => {

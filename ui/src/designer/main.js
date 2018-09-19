@@ -376,9 +376,11 @@ lD.publishLayout = function() {
             toastr.success(res.message);
 
             window.location.href = urlsForApi.layout.list.url;
-            
         } else {
             toastr.error(res.message);
+
+            // Close dialog
+            bootbox.hideAll();
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console

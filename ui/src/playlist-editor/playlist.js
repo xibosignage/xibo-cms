@@ -269,7 +269,7 @@ Playlist.prototype.addElement = function(draggable) {
                         }
                     }
                 }
-            }).attr("id", calculatedId);
+            }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
 
             // Request and load element form
             $.ajax({
@@ -362,6 +362,12 @@ Playlist.prototype.deleteElement = function(elementType, elementId) {
  * @param {object} widgets - Widgets DOM objects array
  */
 Playlist.prototype.saveOrder = function(widgets) {
+
+    if($.isEmptyObject(pE.playlist.widgets)) {
+        return Promise.resolve({
+            message: 'No widgets need saving!'
+        });
+    }
 
     // Get playlist's widgets previous order
     let oldOrder = {};

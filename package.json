@@ -31,7 +31,7 @@
     "clean-webpack-plugin": "^0.1.17",
     "copy-webpack-plugin": "^4.3.0",
     "css-loader": "^0.9.1",
-    "cypress": "^3.0.2",
+    "cypress": "^3.1.0",
     "del": "^2.2.1",
     "file-loader": "^0.8.1",
     "gulp": "^3.9.1",
