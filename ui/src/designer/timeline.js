@@ -27,8 +27,8 @@ let Timeline = function(container) {
         zoomOutDisable: '',
         scrollPosition: 0, // scroll position
         scrollWidth: 0, // To fix the double scroll reseting to 0 bug
-        widgetMinimumVisibleRatio: 4, // Minimum % value so that the region details are shown
-        widgetMinimumDurationOnStart: 10 // % of the shortest widget to be used to calculate the default zoom 
+        widgetMinimumVisibleRatio: 10, // Minimum % value so that the region details are shown
+        widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
 };
 
@@ -309,7 +309,14 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.designer-region').droppable({
-        accept: '.toolbar-card',
+        accept: '[drop-to="region"]',
+        drop: function(event, ui) {
+            lD.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    });
+
+    this.DOMObject.find('.designer-widget:not(.designer-widget-ghost)').droppable({
+        accept: '[drop-to="widget"]',
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
@@ -319,7 +326,7 @@ Timeline.prototype.render = function(layout) {
         e.stopPropagation();
         const widget = lD.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
-        widget.editPropertyForm($(this).data('property'));
+        widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
     
     this.DOMObject.find('#regions .designer-region').sortable({

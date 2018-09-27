@@ -30,12 +30,19 @@ PlaylistTimeline.prototype.render = function(layout) {
         pE.selectObject($(this));
     });
 
+    this.DOMObject.find('.playlist-widget').droppable({
+        accept: '[drop-to="widget"]',
+        drop: function(event, ui) {
+            pE.playlist.addElement(event.target, ui.draggable[0]);
+        }
+    });
+
     // Handle widget attached audio click
     this.DOMObject.find('.playlist-widget .editProperty').click(function(e) {
         e.stopPropagation();
         const widget = pE.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
-        widget.editPropertyForm($(this).data('property'));
+        widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
 
     // Sortable widgets

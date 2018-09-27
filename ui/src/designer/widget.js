@@ -44,6 +44,34 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.toDt = data.toDt;
 
     /**
+     * Get transitions from options
+     */
+    this.transitions = function() {
+
+        let trans = {};
+
+        if(this.getOptions().transIn) {
+            trans.in = {
+                name: 'transitionIn',
+                type: this.getOptions().transIn,
+                duration: this.getOptions().transInDuration,
+                direction: this.getOptions().transInDirection
+            };
+        }
+
+        if(this.getOptions().transOut) {
+            trans.out = {
+                name: 'transitionIn',
+                type: this.getOptions().transOut,
+                duration: this.getOptions().transOutDuration,
+                direction: this.getOptions().transOutDirection
+            };
+        }
+
+        return trans;
+    };
+
+    /**
      * Return the percentage for the widget on the timeline
      * @returns {number} - Widget duration percentage related to the layout duration
      */
@@ -68,7 +96,6 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
 
         return duration;
     };
-
 
     /**
      * Get an object containing options returned from the back end
@@ -108,7 +135,6 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         if(recalculate || this.duration === null){
 
             let calculatedDuration = parseFloat(this.calculatedDuration);
-            const options = this.getOptions();
 
             // if calculated duration is not calculated, see it to the default duration 
             if(calculatedDuration === 0) {
@@ -148,7 +174,7 @@ Widget.prototype.createClone = function() {
  * @param {string} property - property to edit
  * @param {object} data - data from the API request
  */
-Widget.prototype.editPropertyForm = function(property) {
+Widget.prototype.editPropertyForm = function(property, type) {
 
     const self = this;
 
@@ -159,7 +185,10 @@ Widget.prototype.editPropertyForm = function(property) {
 
     let requestPath = linkToAPI.url;
 
-    // Replace playlist id
+    // Replace type
+    requestPath = requestPath.replace(':type', type);
+
+    // Replace widget id
     requestPath = requestPath.replace(':id', this.widgetId);
 
     // Create dialog
@@ -189,7 +218,11 @@ Widget.prototype.editPropertyForm = function(property) {
                         null,  // oldValues
                         form.serialize(), // newValues
                         {
-                            addToHistory: false // options.addToHistory
+                            addToHistory: false, // options.addToHistory
+                            customRequestReplace: {
+                                tag: ':type',
+                                replace: type
+                            }
                         }
                     ).then((res) => { // Success
 
@@ -283,6 +316,14 @@ Widget.prototype.editAttachedAudio = function() {
  */
 Widget.prototype.editExpiry = function() {
     this.editPropertyForm('Expiry');
+};
+
+/**
+ * Edit transitions dates
+ * @param {string} type - transition type, in or out
+ */
+Widget.prototype.editTransition = function(type) {
+    this.editPropertyForm('Transition', type);
 };
 
 module.exports = Widget;

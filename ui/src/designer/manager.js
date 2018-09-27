@@ -78,8 +78,9 @@ let Manager = function(container, visible) {
  * @param {bool=} [options.updateTargetId = false] - Update change target id with the one returned from the API on upload
  * @param {string=} [options.updateTargetType = null] - Update change target type after upload with the value passed on this variable
  * @param {object=} [options.customRequestPath = null] - Custom Request Path ( url and type )
+ * @param {object=} [options.customRequestReplace = null] - Custom Request replace ( tag and replace )
 */
-Manager.prototype.addChange = function(changeType, targetType, targetId, oldValues, newValues, {upload = true, addToHistory = true, updateTargetId = false, updateTargetType = null, customRequestPath = null} = {}) {
+Manager.prototype.addChange = function(changeType, targetType, targetId, oldValues, newValues, {upload = true, addToHistory = true, updateTargetId = false, updateTargetType = null, customRequestPath = null, customRequestReplace = null} = {}) {
 
     const changeId = this.changeUniqueId++;
 
@@ -103,7 +104,7 @@ Manager.prototype.addChange = function(changeType, targetType, targetId, oldValu
 
     // Upload change
     if(upload) {
-        return this.uploadChange(newChange, updateTargetId, updateTargetType, customRequestPath);
+        return this.uploadChange(newChange, updateTargetId, updateTargetType, customRequestPath, customRequestReplace);
     } else {
         return Promise.resolve('Change added!');
     }
@@ -112,8 +113,14 @@ Manager.prototype.addChange = function(changeType, targetType, targetId, oldValu
 
 /**
  * Upload first change in the history array
-*/
-Manager.prototype.uploadChange = function(change, updateId, updateType, customRequestPath) {
+ * 
+ * @param {object} change 
+ * @param {bool=} updateId 
+ * @param {string=} updateType 
+ * @param {object=} customRequestPath 
+ * @param {object=} customRequestReplace 
+ */
+Manager.prototype.uploadChange = function(change, updateId, updateType, customRequestPath, customRequestReplace) {
 
     const self = this;
     const app = getXiboApp();
@@ -128,6 +135,11 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
     const linkToAPI = (customRequestPath != null) ? customRequestPath : urlsForApi[change.target.type][change.type];
 
     let requestPath = linkToAPI.url;
+
+    // Custom replace tag
+    if(customRequestReplace) {
+        requestPath = requestPath.replace(customRequestReplace.tag, customRequestReplace.replace);
+    }
 
     // replace id if necessary/exists
     if(change.target) {

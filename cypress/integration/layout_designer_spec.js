@@ -13,6 +13,8 @@ describe('Layout Designer', function() {
                 y: $el.offset().top + $el.height() / 2 + window.scrollY
             };
 
+            cy.get(draggableSelector).invoke('show');
+
             cy.get(draggableSelector)
                 .trigger('mousedown', {
                     which: 1
@@ -155,18 +157,24 @@ describe('Layout Designer', function() {
 
         it('creates multiple tabs and then closes them all', () => {
 
-            // Create 3 tabs
-            cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
-            cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
-            cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
+            cy.get('#layout-editor-toolbar [data-test="toolbarTabs"]').then(($el) => {
 
-            // Check if there are 4 tabs in the toolbar ( widgets default one and the 3 created )
-            cy.get('#layout-editor-toolbar [data-test="toolbarTabs"]').should('be.visible').should('have.length', 4);
-            
-            // Close all tabs using the toolbar button and chek if there is just one tab
-            cy.get('#layout-editor-toolbar #deleteAllTabs').click().then(() => {
-                cy.get('#layout-editor-toolbar [data-test="toolbarTabs"]').should('be.visible').should('have.length', 1);
+                const numTabs = $el.length;
+                
+                // Create 3 tabs
+                cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
+                cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
+                cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
+
+                // Check if there are 4 tabs in the toolbar ( widgets default one and the 3 created )
+                cy.get('#layout-editor-toolbar [data-test="toolbarTabs"]').should('be.visible').should('have.length', numTabs + 3);
+
+                // Close all tabs using the toolbar button and chek if there is just one tab
+                cy.get('#layout-editor-toolbar #deleteAllTabs').click().then(() => {
+                    cy.get('#layout-editor-toolbar [data-test="toolbarTabs"]').should('be.visible').should('have.length', numTabs);
+                });
             });
+
         });
 
         it('uses the layout select field to load a new layout', () => {
@@ -202,6 +210,28 @@ describe('Layout Designer', function() {
 
             // Check if there are 2 regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
+        });
+
+        it('creates a region using the toolbar', () => {
+            // Create and alias for reload layout
+            cy.server();
+            cy.route('/layout?layoutId=*').as('reloadLayout');
+
+            // Open toolbar Tools tab
+            cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+
+            // Open the audio form
+            dragToElement(
+                '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="region"] .drag-area',
+                '#layout-navigator [data-type="layout"]'
+            ).then(() => {
+
+                cy.wait('@reloadLayout').then(() => {
+
+                    // Check if there are 2 regions in the timeline ( there was 1 by default )
+                    cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
+                });
+            });
         });
 
         it('should delete an existing region from within the navigator edit', () => {
@@ -262,11 +292,11 @@ describe('Layout Designer', function() {
                 cy.route('POST', '**/playlist/widget/currencies/*').as('createWidget');
 
                 // Open toolbar Widgets tab
-                cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click();
+                cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
-                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-type="currencies"]').should('be.visible').then(() => {
+                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"]').should('be.visible').then(() => {
                     dragToElement(
-                        '#layout-editor-toolbar .toolbar-pane-content [data-type="currencies"]',
+                        '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"] .drag-area',
                         '#' + target + ' [data-type="region"]:first-child'
                     ).then(() => {
                         cy.get('[data-test="addWidgetModal"]').contains('Add Currencies');
@@ -307,7 +337,7 @@ describe('Layout Designer', function() {
                 // Get a card and drag it to the region
                 cy.get('#layout-editor-toolbar .toolbar-pane-content [data-type="media"]').should('be.visible').then(() => {
                     dragToElement(
-                        '#layout-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child',
+                        '#layout-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child .drag-area',
                         '#' + target + ' [data-type="region"]:first-child'
                     ).then(() => {
 
@@ -325,11 +355,11 @@ describe('Layout Designer', function() {
             it('shows the file upload form by dragging a uploadable media from the toolbar to ' + target + ' region', () => {
 
                 // Open toolbar Widgets tab
-                cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click();
+                cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
-                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-type="audio"]').should('be.visible').then(() => {
+                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"]').should('be.visible').then(() => {
                     dragToElement(
-                        '#layout-editor-toolbar .toolbar-pane-content [data-type="audio"]',
+                        '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .drag-area',
                         '#' + target + ' [data-type="region"]:first-child'
                     ).then(() => {
                         cy.get('[data-test="uploadFormModal"]').contains('Upload media');
@@ -576,26 +606,30 @@ describe('Layout Designer', function() {
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
 
-            // Select the first widget from the first region on timeline ( image )
-            cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)').click();
+            // Open toolbar Tools tab
+            cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
             // Open the audio form
-            cy.get('#properties-panel button#audio').click();
+            dragToElement(
+                '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+                '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
+            ).then(() => {
 
-            // Select the 1st option
-            cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
-                cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
-            });
+                // Select the 1st option
+                cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
+                    cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
+                });
 
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
-            
-            // Check if the widget has the audio icon
-            cy.wait('@reloadLayout').then(() => {
-                cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
-                    .find('i[data-property="Audio"]').click();
+                // Save and close the form
+                cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+                
+                // Check if the widget has the audio icon
+                cy.wait('@reloadLayout').then(() => {
+                    cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
+                        .find('i[data-property="Audio"]').click();
 
-                cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
+                    cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
+                });
             });
         });
 
@@ -604,28 +638,64 @@ describe('Layout Designer', function() {
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
 
-            // Select the first widget from the first region on timeline ( image )
-            cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)').click();
+            // Open toolbar Tools tab
+            cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
             // Open the audio form
-            cy.get('#properties-panel button#expiry').click();
+            dragToElement(
+                '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
+                '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
+            ).then(() => {
 
-            // Add dates
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').clear().type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').clear().type('00:00');
+                // Add dates
+                cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').clear().type('2018-01-01');
+                cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').clear().type('00:00');
 
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').clear().type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').clear().type('23:45');
+                cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').clear().type('2018-01-01');
+                cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').clear().type('23:45');
 
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+                // Save and close the form
+                cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
 
-            // Check if the widget has the audio icon
-            cy.wait('@reloadLayout').then(() => {
-                cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
-                    .find('i[data-property="Expiry"]').click();
+                // Check if the widget has the audio icon
+                cy.wait('@reloadLayout').then(() => {
+                    cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
+                        .find('i[data-property="Expiry"]').click();
 
-                cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
+                    cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
+                });
+            });
+        });
+
+        it('adds a transition to a widget, and adds a link to open the form in the timeline', () => {
+            // Create and alias for reload layout
+            cy.server();
+            cy.route('/layout?layoutId=*').as('reloadLayout');
+
+            // Open toolbar Tools tab
+            cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+
+            // Open the audio form
+            dragToElement(
+                '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .drag-area',
+                '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
+            ).then(() => {
+
+                // Select the 1st option
+                cy.get('[data-test="widgetPropertiesForm"] #transitionType > option').eq(1).then(($el) => {
+                    cy.get('[data-test="widgetPropertiesForm"] #transitionType').select($el.val());
+                });
+
+                // Save and close the form
+                cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+
+                // Check if the widget has the audio icon
+                cy.wait('@reloadLayout').then(() => {
+                    cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
+                        .find('i[data-property="Transition"]').click();
+
+                    cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
+                });
             });
         });
 

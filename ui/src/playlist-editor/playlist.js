@@ -96,11 +96,14 @@ Playlist.prototype.calculateTimeValues = function() {
 };
 
 /**
- * Add a new empty element to the playlist
- * @param {string} elementType - element type (widget, region, ...)
+ * Add action to take after dropping a draggable item
+ * @param {object} droppable - Target drop object
+ * @param {object} draggable - Dragged object
  */
-Playlist.prototype.addElement = function(draggable) {
+Playlist.prototype.addElement = function(droppable, draggable) {
+
     const draggableType = $(draggable).data('type');
+    const draggableSubType = $(draggable).data('subType');
 
     // Get playlist Id
     const playlistId = this.playlistId;
@@ -147,7 +150,7 @@ Playlist.prototype.addElement = function(draggable) {
 
             toastr.error(errorMessage);
         });
-    } else { // Add widget/module
+    } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
         const regionSpecific = $(draggable).data('regionSpecific');
@@ -184,7 +187,7 @@ Playlist.prototype.addElement = function(draggable) {
             let requestPath = linkToAPI.url;
 
             // Replace type
-            requestPath = requestPath.replace(':type', draggableType);
+            requestPath = requestPath.replace(':type', draggableSubType);
 
             // Replace playlist id
             requestPath = requestPath.replace(':id', playlistId);
@@ -194,7 +197,7 @@ Playlist.prototype.addElement = function(draggable) {
 
             let dialog = bootbox.dialog({
                 className: 'second-dialog',
-                title: 'Add ' + draggableType + ' widget',
+                title: 'Add ' + draggableSubType + ' widget',
                 message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
                 buttons: {
                     cancel: {
@@ -207,8 +210,8 @@ Playlist.prototype.addElement = function(draggable) {
                         callback: function(res) {
 
                             // Run form open module optional function
-                            if(typeof window[draggableType + '_form_add_submit'] === 'function') {
-                                window[draggableType + '_form_add_submit'].bind(dialog)();
+                            if(typeof window[draggableSubType + '_form_add_submit'] === 'function') {
+                                window[draggableSubType + '_form_add_submit'].bind(dialog)();
                             }
 
                             // If form is valid, submit it ( add change )
@@ -290,8 +293,8 @@ Playlist.prototype.addElement = function(draggable) {
                     XiboInitialise("#" + dialog.attr("id"));
 
                     // Run form open module optional function
-                    if(typeof window[draggableType + '_form_add_open'] === 'function') {
-                        window[draggableType + '_form_add_open'].bind(dialog)();
+                    if(typeof window[draggableSubType + '_form_add_open'] === 'function') {
+                        window[draggableSubType + '_form_add_open'].bind(dialog)();
                     }
 
                 } else {
@@ -322,6 +325,23 @@ Playlist.prototype.addElement = function(draggable) {
 
                 dialog.modal('hide');
             });
+        }
+    } else if(draggableType == 'tool') { // Add tool
+
+        const widgetId = $(droppable).attr('id');
+        const widget = pE.getElementByTypeAndId('widget', widgetId);
+
+        // Select widget ( and avoid deselect if region was already selected )
+        pE.selectObject($(droppable), true);
+
+        if(draggableSubType == 'audio') {
+            widget.editAttachedAudio();
+        } else if(draggableSubType == 'expiry') {
+            widget.editExpiry();
+        } else if(draggableSubType == 'transitionIn') {
+            widget.editTransition('in');
+        } else if(draggableSubType == 'transitionOut') {
+            widget.editTransition('out');
         }
     }
 };

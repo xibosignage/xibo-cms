@@ -1,9 +1,46 @@
-/* Variables */
+// Variables
 @main-background-color: #a7a7a7;
+@widget-main-bg-color:#b3ddff;
+@widget-main-fg-color:#333;
+@widget-hover-bg-color:#e7f4fe;
+@widget-border-color: #868686;
 @min-editor-height: 650px;
 @widget-selected-color: #58b4fe;
+@playlist-viewer-bg: #a0e1a5;
 
+// Mixins
+.border-radius(@radius) {
+  -webkit-border-radius: @radius;
+     -moz-border-radius: @radius;
+          border-radius: @radius;
+}
 
+.user-select-none() {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+.background-stripes(@angle; @main-line-color; @secondary-line-color; @main-line-thickness; @secondary-line-thickness) {
+    background: repeating-linear-gradient(
+        @angle,
+        @main-line-color,
+        @main-line-color @main-line-thickness,
+        @secondary-line-color @main-line-thickness,
+        @secondary-line-color (@main-line-thickness + @secondary-line-thickness)
+    ) !important;
+}
+
+.box-shadow(@params) {
+    -moz-box-shadow: @params !important;
+    -webkit-box-shadow: @params !important;
+    box-shadow: @params !important;
+}
+
+// CSS
 .modal-dialog {
     padding-bottom: 160px;
 }
@@ -12,6 +49,10 @@
     background: @main-background-color;
     min-height: @min-editor-height;
     padding: 10px 0;
+}
+
+#playlist-editor.ui-droppable-active {
+    .background-stripes(45deg; @main-background-color; lighten(@main-background-color, 10%); 10px; 4px);
 }
 
 #playlist-editor #playlist-timeline {
@@ -26,7 +67,7 @@
 }
 
 #playlist-editor #playlist-viewer-container {
-    background: #a0e1a5;
+    background: @playlist-viewer-bg;
     min-height: 300px;
     margin-bottom: 10px;
 }
@@ -84,32 +125,62 @@
 
 /* Playlist Widget */
 .playlist-widget {
-    background: #b3ddff;
-    color: #222;
+    background: @widget-main-bg-color;
+    color: @widget-main-fg-color;
     font-weight: bold;
-    padding: 10px;
+    height: 40px;
     width: 100%;
     border-radius: 4px;
-    border: 1px solid #868686;
+    border: 1px solid @widget-border-color;
     margin-bottom: 4px;
 }
 
 .playlist-widget.selectable {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+    .user-select-none();
 }
-
-.playlist-widget.selectable:hover {
-    background: #e7f4fe !important;
-}
-
 
 .playlist-widget.selected {
     background: @widget-selected-color !important;
+}
+
+.playlist-widget.selectable:hover {
+    background: @widget-hover-bg-color !important;
+}
+
+.playlist-widget.ui-droppable-active {
+    .background-stripes(45deg; @widget-hover-bg-color; lighten(@widget-hover-bg-color, 10%); 10px; 4px);
+}
+
+.playlist-widget i.editProperty {
+    float: right;
+    cursor: pointer;
+    padding: 2px;
+    color: @widget-main-fg-color;
+}
+
+.playlist-widget .widgetLabel {
+    width: 20px;
+    display: inline-block;
+    height: 100%;
+    text-align: center;
+    opacity: 0.85;
+    margin-left: 5px;
+}
+
+.playlist-widget .widgetTitle {
+    display: inline-block;
+}
+
+.playlist-widget i.editProperty:hover {
+    color: lighten(@widget-main-fg-color, 20%);
+}
+
+.ui-droppable-active {
+    .box-shadow(inset 0 0 20px #fff);
+}
+
+.ui-droppable-hover {
+    .box-shadow(inset 0 0 10px #313131);
 }
 
 // Bootbox custom dialogs

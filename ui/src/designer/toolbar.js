@@ -7,7 +7,54 @@ const ToolbarLayoutJumpList = require('../templates/toolbar-layout-jump-list.hbs
 // Add global helpers
 window.formHelpers = require('../helpers/form-helpers.js');
 
+const toolsList = [
+    {
+        name: 'Region',
+        type: 'region',
+        description: 'Add a region to the layout',
+        imageUri: 'designer/region.png',
+        dropTo: 'layout'
+    },
+    {
+        name: 'Audio',
+        type: 'audio',
+        description: 'Attach audio to a widget',
+        imageUri: 'designer/audio.png',
+        dropTo: 'widget'
+    },
+    {
+        name: 'Expiry Dates',
+        type: 'expiry',
+        description: 'Set expiry dates to a widget',
+        imageUri: 'designer/expiry.png',
+        dropTo: 'widget'
+    },
+    {
+        name: 'Transition In',
+        type: 'transitionIn',
+        description: 'Add a in transition to a widget',
+        imageUri: 'designer/transitionIn.png',
+        dropTo: 'widget'
+    },
+    {
+        name: 'Transition Out',
+        type: 'transitionOut',
+        description: 'Add a out transition to a widget',
+        imageUri: 'designer/transitionOut.png',
+        dropTo: 'widget'
+    }
+];
+
 const defaultMenuItems = [
+    {
+        name: 'tools',
+        title: 'Tools',
+        tool: true,
+        pagination: false,
+        page: 0,
+        content: [],
+        state: ''
+    },
     {
         name: 'widgets',
         title: 'Widgets',
@@ -27,8 +74,13 @@ const defaultMenuItems = [
 let Toolbar = function(container, customButtons = [], customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
+    this.previousOpenedMenu = -1;
+
     this.menuItems = defaultMenuItems;
     this.menuIndex = 0;
+
+    // Number of tabs that are fixed ( not removable and always defaulted )
+    this.fixedTabs = defaultMenuItems.length;
 
     // Layout jumplist
     this.jumpList = jumpList;
@@ -45,7 +97,7 @@ let Toolbar = function(container, customButtons = [], customActions = {}, jumpLi
 
     this.cardDimensions = {
         width: 100, // In pixels
-        height: 70, // In pixels
+        height: 80, // In pixels
         margin: 2 // In pixels
     };
 
@@ -73,13 +125,9 @@ Toolbar.prototype.loadPrefs = function() {
             let loadedData = JSON.parse(res.data.value);
 
             // Populate the toolbar with the returned data
-            if(!jQuery.isEmptyObject(loadedData.menuItems)) {
-                self.menuItems = loadedData.menuItems;
-                self.openedMenu = loadedData.openedMenu;
-            } else {
-                self.menuItems = defaultMenuItems;
-                self.openedMenu = -1;
-            }
+            self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
+            self.openedMenu = (loadedData.openedMenu) ? loadedData.openedMenu : -1;
+            self.previousOpenedMenu = (loadedData.previousOpenedMenu) ? loadedData.openedMenu : -1;
             
             // Set menu index
             self.menuIndex = self.menuItems.length;
@@ -92,8 +140,26 @@ Toolbar.prototype.loadPrefs = function() {
                 self.loadContent(self.openedMenu);
             }
         } else {
+
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error('Load prefs failed!');
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
             // Render toolbar even if the user prefs load fail
             self.render();
+        }
         }
 
     }).catch(function(jqXHR, textStatus, errorThrown) {
@@ -106,13 +172,21 @@ Toolbar.prototype.loadPrefs = function() {
 
 /**
  * Save user preferences
+ * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
-Toolbar.prototype.savePrefs = function() {
+Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     
     // Save only some of the tab menu data
     let menuItemsToSave = [];
+    let openedMenu = this.openedMenu;
+    let previousOpenedMenu = this.previousOpenedMenu
 
-    for (let index = 0; index < this.menuItems.length; index++) {
+    if(clearPrefs) {
+        menuItemsToSave = {};
+        openedMenu = -1;
+        previousOpenedMenu = -1;
+    } else {
+        for(let index = this.fixedTabs;index < this.menuItems.length;index++) {
 
         // Make a copy of the current element
         let elementCopy = Object.assign({}, this.menuItems[index]);
@@ -123,6 +197,7 @@ Toolbar.prototype.savePrefs = function() {
         
         menuItemsToSave.push(elementCopy);
     }
+    }
 
     let dataToSave = {
         preference: [
@@ -130,13 +205,14 @@ Toolbar.prototype.savePrefs = function() {
                 option: 'toolbar',
                 value: JSON.stringify({
                     menuItems: menuItemsToSave,
-                    openedMenu: this.openedMenu
+                    openedMenu: openedMenu,
+                    previousOpenedMenu: previousOpenedMenu
                 })
             }
         ]
     };
 
-    // Load using the API
+    // Save using the API
     const linkToAPI = urlsForApi.user.savePref;
 
     // Request elements based on filters
@@ -148,7 +224,25 @@ Toolbar.prototype.savePrefs = function() {
     }).done(function(res) {
 
         if(!res.success) {
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
             toastr.error('User save preferences failed!');
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
+                // Render toolbar even if the user prefs load fail
+                self.render();
+            }
         }
 
     }).catch(function(jqXHR, textStatus, errorThrown) {
@@ -170,7 +264,7 @@ Toolbar.prototype.render = function() {
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
-        tabsCount: (this.menuItems.length > 1),
+        tabsCount: (this.menuItems.length > this.fixedTabs),
         customButtons: this.customButtons
     });
 
@@ -267,7 +361,8 @@ Toolbar.prototype.render = function() {
     ).css(
         'margin', this.cardDimensions.margin
     ).draggable({
-        cursor: "crosshair",
+        cursor: 'crosshair',
+        handle: '.drag-area',
         cursorAt: {
             top: (this.cardDimensions.height + this.cardDimensions.margin) / 2,
             left: (this.cardDimensions.width + this.cardDimensions.margin) / 2
@@ -295,9 +390,23 @@ Toolbar.prototype.loadContent = function(menu = -1) {
     // Replace search button with a spinner icon
     this.DOMObject.find('.search-btn').html('<i class="fa fa-spinner fa-spin"></i>');
 
-    if(menu == 0) {
-        
-        this.menuItems[menu].content = modulesList;
+    if(menu < this.fixedTabs) { // Fixed Tabs
+
+        switch(menu) {
+            // Tools
+            case 0:
+                this.menuItems[menu].content = toolsList;
+                break;
+
+            // Widgets
+            case 1:
+                this.menuItems[menu].content = modulesList;
+                break;
+
+            default:
+                this.menuItems[menu].content = [];
+                break;
+        }
 
         for(let index = 0;index < this.menuItems[menu].content.length;index++) {
             const element = this.menuItems[menu].content[index];
@@ -312,11 +421,14 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         // Enable/Disable page up pagination button according to the page to display and total elements
         this.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= this.menuItems[menu].content.length) ? 'disabled' : '';
         
+        this.menuItems[menu].state = 'active';
+
         // Save user preferences
         this.savePrefs();
 
         this.render();
-    } else {
+
+    } else { // Generated tabs ( search )
 
         // Load using the API
         const linkToAPI = urlsForApi.library.get;
@@ -391,24 +503,40 @@ Toolbar.prototype.loadContent = function(menu = -1) {
  */
 Toolbar.prototype.openTab = function(menu = -1) {
 
-    // Close previous opened menu
-    if(menu == -1 && this.openedMenu != -1) {
+    // Toggle previous opened menu
+    if(menu == -1) {
+
+        if(this.openedMenu != -1) { // Close opened tab
+            this.previousOpenedMenu = this.openedMenu;
         this.menuItems[this.openedMenu].state = '';
         this.openedMenu = -1;
-    } else if(menu != -1) {
+        } else if(this.previousOpenedMenu != -1) { // Reopen previously opened tab
+            this.menuItems[this.previousOpenedMenu].state = 'active';
+            this.openedMenu = this.previousOpenedMenu;
+            this.previousOpenedMenu = -1;
+
+            // If menu is the default/widget, load content
+            if(this.openedMenu < this.fixedTabs && this.openedMenu > -1) {
+                this.loadContent(this.openedMenu);
+                return; // To avoid double save and render
+            }
+        }
+    } else { // Open specific menu
 
         // Close all menus
         for(let index = this.menuItems.length - 1;index >= 0;index--) {
             this.menuItems[index].state = '';
         }
 
-        // If menu is the default/widget, load content
-        if(menu == 0) {
-            this.loadContent(0);
-        }
-
         this.menuItems[menu].state = 'active';
         this.openedMenu = menu;
+        this.previousOpenedMenu = -1;
+
+        // If menu is the default/widget/tools, load content
+        if(menu < this.fixedTabs && menu > -1) {
+            this.loadContent(menu);
+            return; // To avoid double save and render
+        }
     }
 
     // Save user preferences
@@ -468,7 +596,11 @@ Toolbar.prototype.createNewTab = function() {
 Toolbar.prototype.deleteTab = function(menu) {
 
     this.menuItems.splice(menu, 1);
+
+    if(this.openedMenu >= this.fixedTabs) {
     this.openedMenu = -1;
+        this.previousOpenedMenu = -1;
+    }
 
     // Save user preferences
     this.savePrefs();
@@ -481,10 +613,14 @@ Toolbar.prototype.deleteTab = function(menu) {
  */
 Toolbar.prototype.deleteAllTabs = function() {
 
-    for(let index = this.menuItems.length - 1;index > 0;index--) {
+    for(let index = this.menuItems.length - 1;index >= this.fixedTabs;index--) {
         this.menuItems.splice(index, 1);
     }
+    
+    if(this.openedMenu >= this.fixedTabs) {
     this.openedMenu = -1;
+        this.previousOpenedMenu = -1;
+    }
 
     // Save user preferences
     this.savePrefs();

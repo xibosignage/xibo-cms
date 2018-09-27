@@ -42,6 +42,8 @@ describe('Playlist Editor', function() {
                 y: $el.offset().top + $el.height() / 2 + window.scrollY
             };
 
+            cy.get(draggableSelector).invoke('show');
+
             cy.get(draggableSelector)
                 .trigger('mousedown', {
                     which: 1
@@ -89,11 +91,11 @@ describe('Playlist Editor', function() {
             cy.route('POST', '**/playlist/widget/currencies/*').as('createWidget');
 
             // Open toolbar Widgets tab
-            cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
+            cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
-            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-type="currencies"]').should('be.visible').then(() => {
+            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"]').should('be.visible').then(() => {
                 dragToElement(
-                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="currencies"]',
+                    '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"] .drag-area',
                     '#dropzone-container'
                 ).then(() => {
                     cy.get('[data-test="addWidgetModal"]').contains('Add Currencies');
@@ -134,7 +136,7 @@ describe('Playlist Editor', function() {
             // Get a card and drag it to the region
             cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]').should('be.visible').then(() => {
                 dragToElement(
-                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child',
+                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child .drag-area',
                     '#dropzone-container'
                 ).then(() => {
 
@@ -166,7 +168,7 @@ describe('Playlist Editor', function() {
             // Get a card and drag it to the region
             cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]').should('be.visible').then(() => {
                 dragToElement(
-                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child',
+                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child .drag-area',
                     '#dropzone-container'
                 ).then(() => {
 
@@ -308,7 +310,7 @@ describe('Playlist Editor', function() {
 
             cy.get('#timeline-container [data-type="widget"]:first-child').then(($oldWidget) => {
 
-                const offsetY = 50;
+                const offsetY = 40;
 
                 // Move to the second widget position ( plus offset )
                 cy.wrap($oldWidget)
@@ -345,7 +347,7 @@ describe('Playlist Editor', function() {
 
             cy.get('#timeline-container [data-type="widget"]:first-child').then(($oldWidget) => {
 
-                const offsetY = 50;
+                const offsetY = 40;
 
                 // Move to the second widget position ( plus offset )
                 cy.wrap($oldWidget)
@@ -419,52 +421,96 @@ describe('Playlist Editor', function() {
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
 
+            // Open toolbar Tools tab
+            cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+
             // Open the audio form
-            cy.get('#playlist-properties-panel button#audio').click();
+            dragToElement(
+                '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+                '#timeline-container [data-type="widget"]:first-child'
+            ).then(() => {
 
-            // Select the 1st option
-            cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
-                cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
+                // Select the 1st option
+                cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
+                    cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
+                });
+
+                // Save and close the form
+                cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+
+                // Check if the widget has the audio icon
+                cy.wait('@reloadPlaylist');
+                cy.get('#timeline-container [data-type="widget"]:first-child')
+                    .find('i[data-property="Audio"]').click();
+
+                cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
             });
-
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
-
-            // Check if the widget has the audio icon
-            cy.wait('@reloadPlaylist');
-            cy.get('#timeline-container [data-type="widget"]:first-child')
-                .find('i[data-property="Audio"]').click();
-
-            cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
         });
 
         it('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            
+            // Open toolbar Tools tab
+            cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
-            // Select the first widget from the first region on timeline ( image )
-            cy.get('#timeline-container [data-type="widget"]:first-child').click();
+            // Open the expiry form
+            dragToElement(
+                '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
+                '#timeline-container [data-type="widget"]:first-child'
+            ).then(() => {
+
+
+                // Add dates
+                cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').type('2018-01-01');
+                cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').type('00:00');
+
+                cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').type('2018-01-01');
+                cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').type('23:45');
+
+                // Save and close the form
+                cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+
+                // Check if the widget has the audio icon
+                cy.wait('@reloadPlaylist');
+                cy.get('#timeline-container [data-type="widget"]:first-child')
+                    .find('i[data-property="Expiry"]').click();
+
+                cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
+            });
+        });
+
+        it('adds a transition to a widget, and adds a link to open the form in the timeline', () => {
+            // Create and alias for reload playlist
+            cy.server();
+            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+
+            // Open toolbar Tools tab
+            cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
             // Open the audio form
-            cy.get('#playlist-properties-panel button#expiry').click();
+            dragToElement(
+                '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .drag-area',
+                '#timeline-container [data-type="widget"]:nth-child(2)'
+            ).then(() => {
 
-            // Add dates
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').type('00:00');
+                // Select the 1st option
+                cy.get('[data-test="widgetPropertiesForm"] #transitionType > option').eq(1).then(($el) => {
+                    cy.get('[data-test="widgetPropertiesForm"] #transitionType').select($el.val());
+                });
 
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').type('23:45');
+                // Save and close the form
+                cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
 
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+                // Check if the widget has the audio icon
+                cy.wait('@reloadPlaylist').then(() => {
+                    cy.get('#timeline-container [data-type="widget"]:nth-child(2)')
+                        .find('i[data-property="Transition"]').click();
 
-            // Check if the widget has the audio icon
-            cy.wait('@reloadPlaylist');
-            cy.get('#timeline-container [data-type="widget"]:first-child')
-                .find('i[data-property="Expiry"]').click();
-
-            cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
+                    cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
+                });
+            });
         });
     });
 });

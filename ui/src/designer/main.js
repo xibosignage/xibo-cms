@@ -35,7 +35,7 @@ const toolbar = require('./toolbar.js');
 const PropertiesPanel = require('./properties-panel.js');
 
 // Include CSS
-require('../css/designer.css');
+require('../css/designer.less');
 
 // Create layout designer namespace (lD)
 window.lD = {
@@ -349,7 +349,14 @@ lD.checkoutLayout = function() {
 
             bootbox.hideAll();
         } else {
-            toastr.error(res.message);
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console
@@ -377,10 +384,18 @@ lD.publishLayout = function() {
 
             window.location.href = urlsForApi.layout.list.url;
         } else {
-            toastr.error(res.message);
 
-            // Close dialog
-            bootbox.hideAll();
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+
+                // Close dialog
+                bootbox.hideAll();
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console
@@ -621,243 +636,316 @@ lD.deleteObject = function(objectType, objectId) {
 
 /**
  * Add action to take after dropping a draggable item
- * @param {object} droppable - Target drop are object
+ * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
  */
 lD.dropItemAdd = function(droppable, draggable) {
 
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
-
     const draggableType = $(draggable).data('type');
+    const draggableSubType = $(draggable).data('subType');
 
-    // Get playlist Id
-    const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
-
-    /**
-     * Add dragged item to region
-     */
     if(draggableType == 'media') { // Adding media from search tab to a region
 
-        // Get media Id
-        const mediaToAdd = {
-            media: [
-                $(draggable).data('mediaId')
-            ]
-        };
+        // Get playlist Id
+        const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+        const mediaId = $(draggable).data('mediaId');
 
-        // Create change to be uploaded
-        lD.manager.addChange(
-            'addMedia',
-            'playlist', // targetType 
-            playlistId,  // targetId
-            null,  // oldValues
-            mediaToAdd, // newValues
-            {
-                updateTargetId: true,
-                updateTargetType: 'widget'
-            }
-        ).then((res) => { // Success
+        lD.addMediaToPlaylist(playlistId, mediaId);
 
-            // Behavior if successful 
-            toastr.success(res.message);
-            lD.timeline.resetZoom();
-            lD.reloadData(lD.layout);
-        }).catch((error) => { // Fail/error
+    } else if(draggableType == 'module') { // Add widget/module
 
-            // Show error returned or custom message to the user
-            let errorMessage = 'Add media failed: ';
-
-            if(typeof error == 'string') {
-                errorMessage += error;
-            } else {
-                errorMessage += error.errorThrown;
-            }
-
-            toastr.error(errorMessage);
-        });
-    } else { // Add widget/module
+        // Get playlist Id
+        const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
 
         // Get regionSpecific property
-        const regionSpecific = $(draggable).data('regionSpecific');
+        const moduleData = $(draggable).data();
 
-        if(regionSpecific == 0) { // Upload form if not region specific
+        // Select region ( and avoid deselect if region was already selected )
+        lD.selectObject($(droppable), true);
 
-            const validExt = $(draggable).data('validExt').replace(/,/g, "|");
+        lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData);
+    } else if(draggableType == 'tool') { // Add tool
 
-            lD.openUploadForm({
-                trans: playlistTrans,
-                upload: {
-                    maxSize: $(draggable).data().maxSize,
-                    maxSizeMessage: $(draggable).data().maxSizeMessage,
-                    validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
-                    validExt: validExt
-                },
-                playlistId: playlistId
-            }, {
-                    main: {
-                        label: translations.done,
-                        className: "btn-primary",
-                        callback: function() {
-                            lD.timeline.resetZoom();
-                            lD.reloadData(lD.layout);
+        if(droppableType == 'layout') { // Add to layout
+
+            // Select layout
+            lD.selectObject();
+
+            if(draggableSubType == 'region') { // Add region to layout
+
+                lD.manager.saveAllChanges().then((res) => {
+
+                    toastr.success('All changes saved!');
+
+                    lD.layout.addElement('region').then((res) => { // Success
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+                        lD.reloadData(lD.layout);
+                    }).catch((error) => { // Fail/error
+                        // Show error returned or custom message to the user
+                        let errorMessage = 'Create region failed: ' + error;
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
                         }
-                    }
+
+                        toastr.error(errorMessage);
+                    });
+                }).catch((err) => {
+                    toastr.error('Save all changes failed!');
                 });
 
-        } else { // Load add widget form for region specific
+            }
+        } else if(droppableType == 'widget') { // Add to widget
 
-            // Get playlist Id
-            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+            // Get widget
+            const widgetId = $(droppable).attr('id');
+            const widgetRegionId = $(droppable).data('widgetRegion');
+            const widget = lD.getElementByTypeAndId('widget', widgetId, widgetRegionId);
 
-            // Load form the API
-            const linkToAPI = urlsForApi.playlist.addWidgetForm;
-
-            let requestPath = linkToAPI.url;
-
-            // Replace type
-            requestPath = requestPath.replace(':type', draggableType);
-
-            // Replace playlist id
-            requestPath = requestPath.replace(':id', playlistId);
-
-            // Select region ( and avoid deselect if region was already selected )
+            // Select widget ( and avoid deselect if region was already selected )
             lD.selectObject($(droppable), true);
 
-            // Create dialog
-            var calculatedId = new Date().getTime();
-
-            let dialog = bootbox.dialog({
-                title: 'Add ' + draggableType + ' widget',
-                message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
-                buttons: {
-                    cancel: {
-                        label: translations.cancel,
-                        className: "btn-default"
-                    },
-                    done: {
-                        label: translations.done,
-                        className: "btn-primary test",
-                        callback: function(res) {
-
-                            // Run form open module optional function
-                            if(typeof window[draggableType + '_form_add_submit'] === 'function') {
-                                window[draggableType + '_form_add_submit'].bind(dialog)();
-                            }
-
-                            // If form is valid, submit it ( add change )
-                            if($(dialog).find('form').valid()) {
-
-                                const form = dialog.find('form');
-
-                                lD.manager.addChange(
-                                    'addWidget',
-                                    'playlist', // targetType 
-                                    playlistId,  // targetId
-                                    null,  // oldValues
-                                    form.serialize(), // newValues
-                                    {
-                                        updateTargetId: true,
-                                        updateTargetType: 'widget',
-                                        customRequestPath: {
-                                            url: form.attr('action'),
-                                            type: form.attr('method')
-                                        }
-                                    }
-                                ).then((res) => { // Success
-
-                                    // Behavior if successful 
-                                    toastr.success(res.message);
-
-                                    dialog.modal('hide');
-
-                                    lD.timeline.resetZoom();
-                                    lD.reloadData(lD.layout);
-
-                                }).catch((error) => { // Fail/error
-
-                                    // Show error returned or custom message to the user
-                                    let errorMessage = '';
-
-                                    if(typeof error == 'string') {
-                                        errorMessage += error;
-                                    } else {
-                                        errorMessage += error.errorThrown;
-                                    }
-
-                                    // Remove added change from the history manager
-                                    lD.manager.removeLastChange();
-
-                                    // Display message in form
-                                    formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
-
-                                    // Show toast message
-                                    toastr.error(errorMessage);
-                                });
-                            }
-
-                            // Prevent the modal to close ( close only when addChange returns true )
-                            return false;
-                        }
-                    }
-                }
-            }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
-
-            // Request and load element form
-            $.ajax({
-                url: requestPath,
-                type: linkToAPI.type
-            }).done(function(res) {
-
-                if(res.success) {
-                    // Add title
-                    dialog.find('.modal-title').html(res.dialogTitle);
-
-                    // Add body main content
-                    dialog.find('.bootbox-body').html(res.html);
-
-                    dialog.data('extra', res.extra);
-
-                    // Call Xibo Init for this form
-                    XiboInitialise("#" + dialog.attr("id"));
-
-                    // Run form open module optional function
-                    if(typeof window[draggableType + '_form_add_open'] === 'function') {
-                        window[draggableType + '_form_add_open'].bind(dialog)();
-                    }
-
-                } else {
-
-                    // Login Form needed?
-                    if(res.login) {
-
-                        window.location.href = window.location.href;
-                        location.reload(false);
-                    } else {
-
-                        toastr.error('Element form load failed!');
-
-                        // Just an error we dont know about
-                        if(res.message == undefined) {
-                            console.error(res);
-                        } else {
-                            console.error(res.message);
-                        }
-
-                        dialog.modal('hide');
-                    }
-                }
-            }).catch(function(jqXHR, textStatus, errorThrown) {
-
-                console.error(jqXHR, textStatus, errorThrown);
-                toastr.error('Element form load failed!');
-
-                dialog.modal('hide');
-            });
+            if(draggableSubType == 'audio') {
+                widget.editAttachedAudio();
+            } else if(draggableSubType == 'expiry') { 
+                widget.editExpiry();
+            } else if(draggableSubType == 'transitionIn') { 
+                widget.editTransition('in');
+            } else if(draggableSubType == 'transitionOut') { 
+                widget.editTransition('out');
+            }
         }
     }
 };
 
+/**
+ * Add module to playlist
+ * @param {number} playlistId 
+ * @param {string} moduleType 
+ * @param {object} moduleData 
+ */
+lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
+
+    if(moduleData.regionSpecific == 0) { // Upload form if not region specific
+
+        const validExt = moduleData.validExt.replace(/,/g, "|");
+
+        lD.openUploadForm({
+            trans: playlistTrans,
+            upload: {
+                maxSize: moduleData.maxSize,
+                maxSizeMessage: moduleData.maxSizeMessage,
+                validExtensionsMessage: translations.validExtensions + ': ' + moduleData.validExt,
+                validExt: validExt
+            },
+            playlistId: playlistId
+        }, {
+                main: {
+                    label: translations.done,
+                    className: "btn-primary",
+                    callback: function() {
+                        lD.timeline.resetZoom();
+                        lD.reloadData(lD.layout);
+                    }
+                }
+            });
+
+    } else { // Load add widget form for region specific
+
+        // Load form the API
+        const linkToAPI = urlsForApi.playlist.addWidgetForm;
+
+        let requestPath = linkToAPI.url;
+
+        // Replace type
+        requestPath = requestPath.replace(':type', moduleType);
+
+        // Replace playlist id
+        requestPath = requestPath.replace(':id', playlistId);
+
+        // Create dialog
+        var calculatedId = new Date().getTime();
+
+        let dialog = bootbox.dialog({
+            title: 'Add ' + moduleType + ' widget',
+            message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+            buttons: {
+                cancel: {
+                    label: translations.cancel,
+                    className: "btn-default"
+                },
+                done: {
+                    label: translations.done,
+                    className: "btn-primary test",
+                    callback: function(res) {
+
+                        // Run form open module optional function
+                        if(typeof window[moduleType + '_form_add_submit'] === 'function') {
+                            window[moduleType + '_form_add_submit'].bind(dialog)();
+                        }
+
+                        // If form is valid, submit it ( add change )
+                        if($(dialog).find('form').valid()) {
+
+                            const form = dialog.find('form');
+
+                            lD.manager.addChange(
+                                'addWidget',
+                                'playlist', // targetType 
+                                playlistId,  // targetId
+                                null,  // oldValues
+                                form.serialize(), // newValues
+                                {
+                                    updateTargetId: true,
+                                    updateTargetType: 'widget',
+                                    customRequestPath: {
+                                        url: form.attr('action'),
+                                        type: form.attr('method')
+                                    }
+                                }
+                            ).then((res) => { // Success
+
+                                // Behavior if successful 
+                                toastr.success(res.message);
+
+                                dialog.modal('hide');
+
+                                lD.timeline.resetZoom();
+                                lD.reloadData(lD.layout);
+
+                            }).catch((error) => { // Fail/error
+
+                                // Show error returned or custom message to the user
+                                let errorMessage = '';
+
+                                if(typeof error == 'string') {
+                                    errorMessage += error;
+                                } else {
+                                    errorMessage += error.errorThrown;
+                                }
+
+                                // Remove added change from the history manager
+                                lD.manager.removeLastChange();
+
+                                // Display message in form
+                                formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                                // Show toast message
+                                toastr.error(errorMessage);
+                            });
+                        }
+
+                        // Prevent the modal to close ( close only when addChange returns true )
+                        return false;
+                    }
+                }
+            }
+        }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
+
+        // Request and load element form
+        $.ajax({
+            url: requestPath,
+            type: linkToAPI.type
+        }).done(function(res) {
+
+            if(res.success) {
+                // Add title
+                dialog.find('.modal-title').html(res.dialogTitle);
+
+                // Add body main content
+                dialog.find('.bootbox-body').html(res.html);
+
+                dialog.data('extra', res.extra);
+
+                // Call Xibo Init for this form
+                XiboInitialise("#" + dialog.attr("id"));
+
+                // Run form open module optional function
+                if(typeof window[moduleType + '_form_add_open'] === 'function') {
+                    window[moduleType + '_form_add_open'].bind(dialog)();
+                }
+
+            } else {
+
+                // Login Form needed?
+                if(res.login) {
+
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+
+                    toastr.error('Element form load failed!');
+
+                    // Just an error we dont know about
+                    if(res.message == undefined) {
+                        console.error(res);
+                    } else {
+                        console.error(res.message);
+                    }
+
+                    dialog.modal('hide');
+                }
+            }
+        }).catch(function(jqXHR, textStatus, errorThrown) {
+
+            console.error(jqXHR, textStatus, errorThrown);
+            toastr.error('Element form load failed!');
+
+            dialog.modal('hide');
+        });
+    }  
+};
+/**
+ * Add media from library to a playlist
+ * @param {number} playlistId 
+ * @param {number} mediaId 
+ */
+lD.addMediaToPlaylist = function(playlistId, mediaId) {
+
+    // Get media Id
+    const mediaToAdd = {
+        media: [
+            mediaId
+        ]
+    };
+
+    // Create change to be uploaded
+    lD.manager.addChange(
+        'addMedia',
+        'playlist', // targetType 
+        playlistId,  // targetId
+        null,  // oldValues
+        mediaToAdd, // newValues
+        {
+            updateTargetId: true,
+            updateTargetType: 'widget'
+        }
+    ).then((res) => { // Success
+
+        // Behavior if successful 
+        toastr.success(res.message);
+        lD.timeline.resetZoom();
+        lD.reloadData(lD.layout);
+    }).catch((error) => { // Fail/error
+
+        // Show error returned or custom message to the user
+        let errorMessage = 'Add media failed: ';
+
+        if(typeof error == 'string') {
+            errorMessage += error;
+        } else {
+            errorMessage += error.errorThrown;
+        }
+
+        toastr.error(errorMessage);
+    });
+};
 
 /**
  * Open Upload Form
@@ -978,8 +1066,21 @@ lD.layoutStatus = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
+
         if(!res.success) {
-            console.error('Get status error');
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console

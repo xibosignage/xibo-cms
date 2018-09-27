@@ -3,12 +3,21 @@
     data-placement="top" 
     data-media-id="{{mediaId}}" 
     data-type="media" 
-    data-sub-type="{{mediaType}}">
+    data-sub-type="{{mediaType}}"
+    drop-to="region">
+
+    <div class="add-area">
+        <i class="fa fa-plus fa-2x" title="Add"></i>
+    </div>
+    <div class="drag-area" title="Drag">
+        <i class="fa fa-hand-rock-o fa-2x"></i>
+    </div>
+
     <div class="img-container">
         {{#if thumbnailUrl}}
             <img src="{{thumbnailUrl}}">
         {{/if}}
     </div>
     
-    <p class="title">{{name}}</p>
+    <p class="card-title">{{name}}</p>
 </div>

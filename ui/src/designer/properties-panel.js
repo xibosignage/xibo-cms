@@ -140,23 +140,6 @@ PropertiesPanel.prototype.render = function(element) {
             }
         }
 
-        // Attach audio and expiry buttons if the element is a widget
-        if(element.type === 'widget') {
-            buttons.audio = {
-                name: 'Audio',
-                type: 'btn-warning',
-                action: 'elementAction',
-                subAction: 'editAttachedAudio'
-            };
-
-            buttons.expiry = {
-                name: 'Expiry',
-                type: 'btn-default',
-                action: 'elementAction',
-                subAction: 'editExpiry'
-            };
-        }
-
         // Add save button
         buttons.save = {
             name: 'Save',

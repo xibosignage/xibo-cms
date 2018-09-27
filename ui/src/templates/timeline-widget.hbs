@@ -1,14 +1,21 @@
 <div id="{{ id }}" data-type="widget" data-widget-id="{{ id }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}" class="designer-widget selectable {{selectedFlag}}" style="
 width: {{ durationPercentage }}%;">
+    
     {{#if audio}}
         <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
     {{/if}}
+
+    {{#each transitions}}
+        <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
+    {{/each}}
 
     {{#gt fromDt 0}}
         <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
     {{/gt}}
 
-    {{ subType }} :  {{ duration }}
+
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }}">{{ duration }}</div>
+    <div class="widgetTitle">{{ subType }}</div>
 </div>
 
 {{#if extend}}

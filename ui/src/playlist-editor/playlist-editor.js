@@ -32,7 +32,7 @@ const PlaylistTimeline = require('./playlist-timeline.js');
 const Manager = require('../designer/manager.js');
 
 // Include CSS
-require('../css/designer.css');
+require('../css/designer.less');
 require('../css/playlist-editor.less');
 
 // Create layout designer namespace (pE)
@@ -134,9 +134,9 @@ pE.loadEditor = function() {
 
     // Add widget to editor div
     pE.editorDiv.droppable({
-        accept: '.toolbar-card',
+        accept: '[drop-to="region"]',
         drop: function(event, ui) {
-            pE.playlist.addElement(ui.draggable[0]);
+            pE.playlist.addElement(event.target, ui.draggable[0]);
         }
     });
 };

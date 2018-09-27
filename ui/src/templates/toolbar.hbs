@@ -19,6 +19,8 @@
                                     {{!-- Load cards according to type searchItem/Widget --}}
                                     {{#if ../search}}
                                         {{> toolbar-card-media}}
+                                    {{else if ../tool}}
+                                        {{> toolbar-card-tool}}
                                     {{else}}
                                         {{> toolbar-card}}
                                     {{/if}}
@@ -58,8 +60,8 @@
         
         </div>
 
-        <div class="navbar-header navbar-buttons">
-            <a id="btn-menu-toggle" class="navbar-brand">
+        <div class="navbar-header">
+            <a id="btn-menu-toggle" class="navbar-brand btn-menu-tool">
                  
                 {{#if opened}}
                     <i class="fa fa-toggle-on"></i>
@@ -72,7 +74,7 @@
         <ul class="nav navbar-nav navbar-buttons">
             {{#each menuItems}}
                 <li>
-                    <a id="btn-menu-{{@index}}" class="{{state}}" data-test="toolbarTabs">
+                    <a id="btn-menu-{{@index}}" class="btn-menu-tab {{state}}" data-test="toolbarTabs">
                         <span>{{title}}</span>
                         {{#if search}}
                             <i id="close-btn-menu-{{@index}}" class="fa fa-times close-tab-button"></i>
@@ -82,7 +84,7 @@
             {{/each}}
 
             <li>
-                <a id="btn-menu-new-tab">
+                <a id="btn-menu-new-tab" class="btn-menu-tool">
                     <i class="fa fa-search-plus"></i>
                 </a>
             </li>

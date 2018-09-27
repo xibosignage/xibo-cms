@@ -1,17 +1,20 @@
 <div id="{{ id }}" data-type="widget" data-widget-id="{{ id }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}"
-    class="playlist-widget text-right selectable {{#if selected}}selected{{/if}}">
+    class="playlist-widget selectable {{#if selected}}selected{{/if}}">
+    
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }}">{{ duration }}</div>
+    <div class="widgetTitle" title="{{id}}">{{ subType }}</div>
+
     {{#if audio}}
-        <i class="fa fa-volume-up pull-left editProperty" data-property="Audio"></i>
+        <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
     {{/if}}
+
+    {{#each transitions}}
+        <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
+    {{/each}}
     
     {{#gt fromDt 0}}
-        <i class="fa fa fa-clock-o pull-left editProperty" data-property="Expiry"></i>
+        <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
     {{/gt}}
-
-    <span>{{id}} : {{ subType }} [ {{ duration }}s ]</span>
-    <span class="float-right">
-        <i class="fa fa-arrows"></i>
-    </span>
 </div>
 
 

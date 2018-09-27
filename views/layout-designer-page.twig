@@ -134,6 +134,14 @@
                     saveExpiry:  {
                         url: "{{ urlFor("module.widget.expiry") }}",
                         type: 'PUT'
+                    },
+                    getTransition: {
+                        url: "{{ urlFor("module.widget.transition.edit.form") }}",
+                        type: 'GET'
+                    },
+                    saveTransition:  {
+                        url: "{{ urlFor("module.widget.transition.edit") }}",
+                        type: 'PUT'
                     }
                 },
                 library: {
