@@ -66,7 +66,10 @@ Layout.prototype.createDataStructure = function(data) {
 
         let newRegion = new Region(
             data.regions[region].regionId,
-            data.regions[region]
+            data.regions[region], 
+            {
+                backgroundColor: $c.complement(this.backgroundColor)
+            }
         );
 
         // Widgets

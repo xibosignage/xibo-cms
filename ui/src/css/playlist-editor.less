@@ -1,3 +1,7 @@
+// Import
+@import "mixins.less";
+@import "toolbar.less";
+
 // Variables
 @main-background-color: #a7a7a7;
 @widget-main-bg-color:#b3ddff;
@@ -7,38 +11,9 @@
 @min-editor-height: 650px;
 @widget-selected-color: #58b4fe;
 @playlist-viewer-bg: #a0e1a5;
-
-// Mixins
-.border-radius(@radius) {
-  -webkit-border-radius: @radius;
-     -moz-border-radius: @radius;
-          border-radius: @radius;
-}
-
-.user-select-none() {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
-}
-
-.background-stripes(@angle; @main-line-color; @secondary-line-color; @main-line-thickness; @secondary-line-thickness) {
-    background: repeating-linear-gradient(
-        @angle,
-        @main-line-color,
-        @main-line-color @main-line-thickness,
-        @secondary-line-color @main-line-thickness,
-        @secondary-line-color (@main-line-thickness + @secondary-line-thickness)
-    ) !important;
-}
-
-.box-shadow(@params) {
-    -moz-box-shadow: @params !important;
-    -webkit-box-shadow: @params !important;
-    box-shadow: @params !important;
-}
+@playlist-editor-z-index-toolbar: 1080;
+@playlist-editor-z-index-overlay: 1100;
+@playlist-editor-z-index-select: 1110;
 
 // CSS
 .modal-dialog {
@@ -48,11 +23,7 @@
 #playlist-editor  {
     background: @main-background-color;
     min-height: @min-editor-height;
-    padding: 10px 0;
-}
-
-#playlist-editor.ui-droppable-active {
-    .background-stripes(45deg; @main-background-color; lighten(@main-background-color, 10%); 10px; 4px);
+    padding: 10px;
 }
 
 #playlist-editor #playlist-timeline {
@@ -78,6 +49,20 @@
     padding: 0;
 }
 
+#playlist-editor-container.ui-droppable-active {
+    .z-index-set(@playlist-editor-z-index-select);
+    .background-stripes(45deg; @main-background-color; lighten(@main-background-color, 10%); 10px; 4px);
+}
+
+#playlist-editor-container.ui-droppable-active.ui-droppable-hover,
+#playlist-editor-container.ui-droppable-active:hover {
+    .background-stripes(45deg; darken(@main-background-color, 10%); @main-background-color; 10px; 4px);
+}
+
+#playlist-editor-container.ui-droppable-active * {
+    visibility: hidden;
+}
+
 #playlist-editor #dropzone-container {
     padding: 10px;
 }
@@ -97,7 +82,11 @@
 }
 
 #playlist-editor-toolbar .navbar{
-    z-index: 1080;
+    z-index: @playlist-editor-z-index-toolbar;
+}
+
+.custom-overlay{
+    z-index: @playlist-editor-z-index-overlay;
 }
 
 .form-title {
@@ -148,7 +137,17 @@
 }
 
 .playlist-widget.ui-droppable-active {
+    .z-index-set(@playlist-editor-z-index-select);
     .background-stripes(45deg; @widget-hover-bg-color; lighten(@widget-hover-bg-color, 10%); 10px; 4px);
+}
+
+.playlist-widget.ui-droppable-active.ui-droppable-hover,
+.playlist-widget.ui-droppable-active:hover {
+    .background-stripes(45deg; darken(@widget-hover-bg-color, 10%); @widget-hover-bg-color; 10px; 4px);
+}
+
+.playlist-widget.ui-droppable-active * {
+    visibility: hidden;
 }
 
 .playlist-widget i.editProperty {

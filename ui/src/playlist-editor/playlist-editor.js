@@ -116,9 +116,10 @@ pE.loadEditor = function() {
             title: playlistTrans.undo,
             logo: 'fa-undo',
             class: 'btn-warning',
-            activeCheck: function() {
-                return (pE.manager.changeHistory.length > 0);
+            inactiveCheck: function() {
+                return (pE.manager.changeHistory.length <= 0);
             },
+            inactiveCheckClass: 'hidden',
             action: pE.undoLastAction
         }], // Custom buttons
         {
@@ -133,10 +134,18 @@ pE.loadEditor = function() {
     formHelpers.setup(pE, pE.playlist);
 
     // Add widget to editor div
-    pE.editorDiv.droppable({
+    pE.editorDiv.find('#playlist-editor-container').droppable({
         accept: '[drop-to="region"]',
         drop: function(event, ui) {
             pE.playlist.addElement(event.target, ui.draggable[0]);
+        }
+    }).attr('data-type', 'region');
+
+    // Editor container select ( faking drag and drop ) to add a element to the playlist
+    pE.editorDiv.find('#playlist-editor-container').click(function(e) {
+        e.stopPropagation();
+        if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+            pE.selectObject($(this));
         }
     });
 };
@@ -153,52 +162,69 @@ window.getXiboApp = function() {
  */
 pE.selectObject = function(obj = null, forceUnselect = false) {
 
-    let newSelectedId = {};
-    let newSelectedType = {};
+    // If there is a selected card, use the drag&drop simulate to add that item to a object
+    if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-    // If there's no selected object, select a default one ( or nothing if widgets are empty)
-    if(obj == null || typeof obj.data('type') == 'undefined') {
+        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
 
-        if($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
-            this.selectedObject = {};
-        } else {
-            // Select first widget
-            let newId = Object.keys(this.playlist.widgets)[0];
+            // Get card object
+            const card = this.toolbar.selectedCard[0];
 
-            this.playlist.widgets[newId].selected = true;
-            this.selectedObject.type = 'widget';
-            this.selectedObject = this.playlist.widgets[newId];
-            
+            // Deselect cards and drop zones
+            this.toolbar.deselectCardsAndDropZones();
+
+            // Simulate drop item add
+            this.playlist.addElement(obj, card);
         }
+
     } else {
+        let newSelectedId = {};
+        let newSelectedType = {};
 
-        // Get object properties from the DOM ( or set to layout if not defined )
-        newSelectedId = obj.attr('id');
-        newSelectedType = obj.data('type');
+        // If there's no selected object, select a default one ( or nothing if widgets are empty)
+        if(obj == null || typeof obj.data('type') == 'undefined') {
 
-        // Unselect the previous selectedObject object if still selected
-        if(this.selectedObject.selected) {
+            if($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
+                this.selectedObject = {};
+            } else {
+                // Select first widget
+                let newId = Object.keys(this.playlist.widgets)[0];
 
-            if(this.selectedObject.type == 'widget') {
-
-                if(this.playlist.widgets[this.selectedObject.id]) {
-                    this.playlist.widgets[this.selectedObject.id].selected = false;
-                }
-
+                this.playlist.widgets[newId].selected = true;
+                this.selectedObject.type = 'widget';
+                this.selectedObject = this.playlist.widgets[newId];
+                
             }
+        } else {
+
+            // Get object properties from the DOM ( or set to layout if not defined )
+            newSelectedId = obj.attr('id');
+            newSelectedType = obj.data('type');
+
+            // Unselect the previous selectedObject object if still selected
+            if(this.selectedObject.selected) {
+
+                if(this.selectedObject.type == 'widget') {
+
+                    if(this.playlist.widgets[this.selectedObject.id]) {
+                        this.playlist.widgets[this.selectedObject.id].selected = false;
+                    }
+
+                }
+            }
+
+            // Select new object
+            if(newSelectedType === 'widget') {
+                this.playlist.widgets[newSelectedId].selected = true;
+                this.selectedObject = this.playlist.widgets[newSelectedId];
+            }
+
+            this.selectedObject.type = newSelectedType;
         }
 
-        // Select new object
-        if(newSelectedType === 'widget') {
-            this.playlist.widgets[newSelectedId].selected = true;
-            this.selectedObject = this.playlist.widgets[newSelectedId];
-        }
-
-        this.selectedObject.type = newSelectedType;
+        // Refresh the designer containers
+        this.refreshDesigner();
     }
-
-    // Refresh the designer containers
-    this.refreshDesigner();
 };
 
 

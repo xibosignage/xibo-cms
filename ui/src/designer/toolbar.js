@@ -101,6 +101,8 @@ let Toolbar = function(container, customButtons = [], customActions = {}, jumpLi
         margin: 2 // In pixels
     };
 
+    this.selectedCard = {};
+
     // Load user preferences
     this.loadPrefs();
 };
@@ -179,7 +181,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     // Save only some of the tab menu data
     let menuItemsToSave = [];
     let openedMenu = this.openedMenu;
-    let previousOpenedMenu = this.previousOpenedMenu
+    let previousOpenedMenu = this.previousOpenedMenu;
 
     if(clearPrefs) {
         menuItemsToSave = {};
@@ -259,13 +261,18 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
 Toolbar.prototype.render = function() {
 
     let self = this;
+    const app = getXiboApp();
+
+    // Deselect selected card on render
+    this.selectedCard = {};
 
     // Compile layout template with data
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
         tabsCount: (this.menuItems.length > this.fixedTabs),
-        customButtons: this.customButtons
+        customButtons: this.customButtons,
+        trashActive: (app.selectedObject.type === 'region' || app.selectedObject.type === 'widget')
     });
 
     // Append layout html to the main div
@@ -339,13 +346,12 @@ Toolbar.prototype.render = function() {
             this.customButtons[index].action
         );
 
-        // If there is a activeCheck, use that function to switch button state
-        if(this.customButtons[index].activeCheck != undefined && this.customButtons[index].activeCheck()) {
-            this.DOMObject.find('#' + this.customButtons[index].id).prop('disabled', false);
-        } else if(this.customButtons[index].activeCheck != undefined){
-            this.DOMObject.find('#' + this.customButtons[index].id).prop('disabled', true);
+        // If there is a inactiveCheck, use that function to switch button state
+        if(this.customButtons[index].inactiveCheck != undefined) {
+            const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
+            const toggleValue = this.customButtons[index].inactiveCheck();
+            this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
         }
-        
     }
 
     // Set layout jumpList if exists
@@ -368,7 +374,19 @@ Toolbar.prototype.render = function() {
             left: (this.cardDimensions.width + this.cardDimensions.margin) / 2
         },
         opacity: 0.3,
-        helper: 'clone'
+        helper: 'clone',
+        start: function() {
+            $('.custom-overlay').show();
+        }, 
+        stop: function() {
+            // Hide designer overlay
+            $('.custom-overlay').hide();
+        }
+    });
+
+    // Set cards width/margin and draggable properties
+    this.DOMObject.find('.toolbar-card:not(.card-selected) .add-area').click((e) => {
+        self.selectCard($(e.currentTarget).parent()); 
     });
 
     // Initialize tooltips
@@ -651,7 +669,6 @@ Toolbar.prototype.calculatePagination = function(menu) {
     };
 };
 
-
 /**
 * Setup layout jumplist
 * @param {object} jumpListContainer
@@ -718,8 +735,7 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
     });
 
     jumpList.on("select2:select", function(e) {
-
-        // TODO: Maybe use the layout load without reloading page
+        // OPTIMIZE: Maybe use the layout load without reloading page
         //self.jumpList.callback(e.params.data.id);
 
         // Go to the Layout we've selected.
@@ -736,6 +752,54 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
             }, 100);
         }
     });
+};
+
+/**
+ * Select toolbar card so it can be used
+ * @param {object} card - DOM card to select/activate
+ */
+Toolbar.prototype.selectCard = function(card) {
+
+    const previouslySelected = this.selectedCard;
+
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    if(previouslySelected[0] != card[0]) {
+        // Select new card
+        $(card).addClass('card-selected');
+
+        // Get card info
+        const dropTo = $(card).attr('drop-to');
+
+        // Save selected card data
+        this.selectedCard = card;
+
+        // Show designer overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            this.deselectCardsAndDropZones();
+        });
+
+        // Set droppable areas as active
+        $('[data-type="' + dropTo + '"].ui-droppable').addClass('ui-droppable-active');
+    }
+};
+
+/**
+ * Deselect all the cards and remove the overlay on the drop zones
+ */
+Toolbar.prototype.deselectCardsAndDropZones = function() {
+    // Deselect other cards
+    this.DOMObject.find('.toolbar-card.card-selected').removeClass('card-selected');
+
+    // Remove drop class from droppable elements
+    $('.ui-droppable').removeClass('ui-droppable-active');
+
+    // Hide designer overlay
+    $('.custom-overlay').hide().unbind();
+
+    // Deselect card
+    this.selectedCard = {};
 };
 
 module.exports = Toolbar;

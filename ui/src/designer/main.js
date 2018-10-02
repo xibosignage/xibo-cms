@@ -31,7 +31,7 @@ const Navigator = require('./navigator.js');
 const Timeline = require('./timeline.js');
 const Manager = require('./manager.js');
 const Viewer = require('./viewer.js');
-const toolbar = require('./toolbar.js');
+const Toolbar = require('./toolbar.js');
 const PropertiesPanel = require('./properties-panel.js');
 
 // Include CSS
@@ -125,7 +125,7 @@ $(document).ready(function() {
                 );
 
                 // Initialize bottom toolbar ( with custom buttons )
-                lD.toolbar = new toolbar(
+                lD.toolbar = new Toolbar(
                     lD.designerDiv.find('#layout-editor-toolbar'),
                     // Custom buttons
                     [
@@ -134,16 +134,21 @@ $(document).ready(function() {
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
                             class: 'btn-success',
-                            action: lD.showPublishScreen
+                            action: lD.showPublishScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
                         },
                         {
                             id: 'undoLastAction',
                             title: layoutDesignerTrans.undo,
                             logo: 'fa-undo',
                             class: 'btn-warning',
-                            activeCheck: function(){
-                                return (lD.manager.changeHistory.length > 0);
+                            inactiveCheck: function(){
+                                return (lD.manager.changeHistory.length <= 0);
                             },
+                            inactiveCheckClass: 'hidden',
                             action: lD.undoLastAction
                         }
                     ],
@@ -219,56 +224,74 @@ $(document).ready(function() {
  */
 lD.selectObject = function(obj = null, forceSelect = false) {
 
-    // Get object properties from the DOM ( or set to layout if not defined )
-    const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
-    const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+    // If there is a selected card, use the drag&drop simulate to add that item to a object
+    if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-    const oldSelectedId = this.selectedObject.id;
-    const oldSelectedType = this.selectedObject.type;
-    
-    // Unselect the previous selectedObject object if still selected
-    if( this.selectedObject.selected ) {
+        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
 
-        switch(this.selectedObject.type) {
-            case 'region':
-                if(this.layout.regions[this.selectedObject.id]) {
-                    this.layout.regions[this.selectedObject.id].selected = false;
-                }
-                break;
+            // Get card object
+            const card = this.toolbar.selectedCard[0];
 
-            case 'widget':
-                if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
-                    this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
-                }
-                break;
+            // Deselect cards and drop zones
+            this.toolbar.deselectCardsAndDropZones();
 
-            default:
-                break;
+            // Simulate drop item add
+            this.dropItemAdd(obj, card);
+        }
+
+    } else {
+        
+        // Get object properties from the DOM ( or set to layout if not defined )
+        const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
+        const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+
+        const oldSelectedId = this.selectedObject.id;
+        const oldSelectedType = this.selectedObject.type;
+        
+        // Unselect the previous selectedObject object if still selected
+        if( this.selectedObject.selected ) {
+
+            switch(this.selectedObject.type) {
+                case 'region':
+                    if(this.layout.regions[this.selectedObject.id]) {
+                        this.layout.regions[this.selectedObject.id].selected = false;
+                    }
+                    break;
+
+                case 'widget':
+                    if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
+                        this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            
         }
         
-    }
-    
-    // Set to the default object
-    this.selectedObject = this.layout;
-    this.selectedObject.type = 'layout';
+        // Set to the default object
+        this.selectedObject = this.layout;
+        this.selectedObject.type = 'layout';
 
-    // If the selected object was different from the previous, select a new one
-    if(oldSelectedId != newSelectedId || forceSelect) {
+        // If the selected object was different from the previous, select a new one
+        if(oldSelectedId != newSelectedId || forceSelect) {
 
-        // Save the new selected object
-        if(newSelectedType === 'region') {
-            this.layout.regions[newSelectedId].selected = true;
-            this.selectedObject = this.layout.regions[newSelectedId];
-        } else if(newSelectedType === 'widget') {
-            this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
-            this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+            // Save the new selected object
+            if(newSelectedType === 'region') {
+                this.layout.regions[newSelectedId].selected = true;
+                this.selectedObject = this.layout.regions[newSelectedId];
+            } else if(newSelectedType === 'widget') {
+                this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
+                this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+            }
+
+            this.selectedObject.type = newSelectedType;
         }
 
-        this.selectedObject.type = newSelectedType;
+        // Refresh the designer containers
+        this.refreshDesigner();
     }
-
-    // Refresh the designer containers
-    this.refreshDesigner();
 };
 
 /**

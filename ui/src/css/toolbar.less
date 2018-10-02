@@ -1,0 +1,224 @@
+// Import
+@import "mixins.less";
+
+// Variables
+@toolbar-main-color: #337ab7;
+@toolbar-green: #5ac063;
+@toolbar-light-green: #29e73a;
+@toolbar-dark-blue: #3a71df;
+@toolbar-card-color: #5f75a5;
+@toolbar-content-bg-color: #f3f3f3;
+@toolbar-tab-bg-color: #4084be;
+@toolbar-tab-fg-color: #ffffff;
+@toolbar-tab-hover-color: #87b1d5;
+@toolbar-tab-border-color: #4084be;
+
+/* Toolbar */
+.editor-toolbar nav {
+    z-index: 0;
+    background: @toolbar-main-color;
+    padding-left: 180px;
+    border: none;
+}
+
+.editor-toolbar .container-toolbar {
+    padding: 0 15px;
+}
+
+.editor-toolbar .container-toolbar .navbar-bin {
+    background: #e05050;
+    color: white;
+    margin-left: 10px;
+    width: 60px;
+    text-align: center;
+    font-size: 20px;
+    padding: 10px;
+    line-height: 30px;
+    display: none;
+}
+
+.editor-toolbar .container-toolbar .navbar-bin.active {
+    display: block;
+}
+
+.editor-toolbar .container-toolbar .navbar-bin:hover {
+    background: #d92626 !important;
+}
+
+.editor-toolbar .container-toolbar .navbar-right {
+    padding: 0 15px;
+}
+
+.editor-toolbar .toolbar-content {
+    background: @toolbar-content-bg-color;
+}
+
+.editor-toolbar .toolbar-pane-content {
+    display: inline-block;
+    font-size: 0; /* To remove the whitespace between elements */
+    padding: 5px 0;
+}
+
+.editor-toolbar .toolbar-pane {
+    display: none;
+}
+
+.editor-toolbar .toolbar-pane.active {
+    display: block;
+}
+
+.editor-toolbar .toolbar-pane form {
+    background: #fff;
+    padding: 5px 5px;
+}
+
+/* Toolbar - pagination */
+.editor-toolbar .toolbar-content button.pagination-btn {
+    width: 5%;
+    height: 94px;
+    .border-radius(0);
+}
+
+.editor-toolbar .toolbar-content button#pag-btn-left {
+    float: left;
+}
+
+.editor-toolbar .toolbar-content button#pag-btn-right {
+    float: right;
+}
+
+/* Toolbar - card */
+.editor-toolbar .toolbar-content .toolbar-card {
+    display: inline-block;
+    background: @toolbar-card-color;
+    color: white;
+    text-align: center;
+    height: 70px;
+    font-size: 12px;
+    .border-radius(4px);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .card-title {
+    white-space: nowrap;
+    overflow: hidden;
+    height: 20px;
+    margin: 0 5%;
+    padding: 0 5%;
+    text-overflow: ellipsis;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .img-container {
+    width: 90%;
+    height: 50px;
+    margin: 0 5%;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .add-area {
+    display: none;
+    position: absolute;
+    width: inherit;
+    height: 30px;    
+    padding: 3px 0;
+    .border-radius(4px 4px 0 0);
+    .set-transparent-color(background-color; #252525; 70%);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card.card-selected .add-area {
+    display: block;
+    height: 80px;
+    .set-transparent-color(background-color; @toolbar-light-green; 90%);
+    .border-radius(4px);
+    padding-top: 21px;
+    font-size: 22px;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .drag-area {
+    display: none;
+    position: absolute;
+    width: inherit;
+    height: 50px;
+    margin-top: 30px;
+    cursor: move;
+    padding: 13px 0;
+    .border-radius(0 0 4px 4px);
+    .set-transparent-color(background-color; #595959; 70%);
+    
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .img-container img {
+    max-height: 100%;
+    max-width: 100%;
+    padding: 5px;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .add-area {
+    display: block;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .drag-area {
+    display: block;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .add-area:hover {
+    .set-transparent-color(background-color; @toolbar-green; 70%);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .add-area:active {
+    .box-shadow(inset 0 0 10px #fff)
+}
+
+.editor-toolbar .toolbar-content .toolbar-card:hover .drag-area:hover {
+    .set-transparent-color(background-color; @toolbar-dark-blue; 70%);
+}
+
+/* Toolbar - buttons */
+.editor-toolbar a {
+    color: white;
+    cursor: pointer;
+}
+
+.editor-toolbar .navbar-buttons a.active {
+    background: white;
+    color: #444;
+}
+
+.editor-toolbar .btn-menu-tab {
+    background-color: @toolbar-tab-bg-color;
+    color: @toolbar-tab-fg-color;
+    border: 1px @toolbar-tab-border-color solid;
+}
+
+.editor-toolbar .btn-menu-tab:hover {
+    background: @toolbar-tab-hover-color !important;
+}
+
+.editor-toolbar .btn-menu-tool {
+    color: lightgray;
+}
+
+.editor-toolbar .btn-menu-tool:hover {
+    color: white;
+}
+
+
+.editor-toolbar .navbar-buttons a .close-tab-button {
+    display: none;
+    top: 0;
+    right: 0;
+    position: absolute;
+    padding: 2px 5px;
+}
+
+.editor-toolbar .navbar-buttons a:hover .close-tab-button {
+    display: block;
+}
+
+.editor-toolbar .navbar-buttons a:hover .close-tab-button:hover {
+    color: #c92121 !important;
+}
+
+@media (max-width: 768px) {
+    .editor-toolbar nav {
+        padding-left: 0;
+    }
+}

@@ -98,50 +98,42 @@ Navigator.prototype.render = function(layout) {
     // Get layout container
     const layoutContainer = this.DOMObject.find('#' + layout.id);
 
+    // Set background color as a darken version of the complementary color
+    const darkerValue = 50;
+    let complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
+
+    // Darken color
+    complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue;
+    complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue;
+    complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue;
+
     // Use a complentary colour for the navigator background
-    this.DOMObject.css('background', $c.complement(layout.backgroundColor));
+    this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
 
     // Find all the regions and enable drag and resize
     if(this.editMode) {
-    this.DOMObject.find('#regions .designer-region').resizable({
-            containment: layoutContainer
-    }).draggable({
-            containment: layoutContainer
-    }).on("resizestop dragstop",
-        function(event, ui) {
+        this.DOMObject.find('#regions .designer-region').resizable({
+                containment: layoutContainer
+        }).draggable({
+                containment: layoutContainer
+        }).on("resizestop dragstop",
+            function(event, ui) {
 
-            const scale = scaledLayout.scaledDimensions.scale;
-            
-            layout.regions[$(this).attr('id')].transform(
-                {
-                    'width': parseFloat(($(this).width() / scale).toFixed(2)),
-                    'height': parseFloat(($(this).height() / scale).toFixed(2)),
-                    'top': parseFloat(($(this).position().top / scale).toFixed(2)),
-                    'left': parseFloat(($(this).position().left / scale).toFixed(2))
-                }
-            );
+                const scale = scaledLayout.scaledDimensions.scale;
+                
+                layout.regions[$(this).attr('id')].transform(
+                    {
+                        'width': parseFloat(($(this).width() / scale).toFixed(2)),
+                        'height': parseFloat(($(this).height() / scale).toFixed(2)),
+                        'top': parseFloat(($(this).position().top / scale).toFixed(2)),
+                        'left': parseFloat(($(this).position().left / scale).toFixed(2))
+                    }
+                );
 
-            // Render navbar to calculate changes and refresh buttons
-            lD.navigatorEdit.renderNavbar();
-        }
-    );
-    } else {
-        this.DOMObject.find('#regions .designer-region').draggable({
-            start: function(event, ui) {
-                $(this).draggable('instance').offset.click = {
-                    left: Math.floor(ui.helper.outerWidth() / 2),
-                    top: Math.floor(ui.helper.outerHeight() / 2)
-                };
-            },
-            appendTo: $(lD.toolbar.DOMObject),
-            scroll: false,
-            cursor: 'crosshair',
-            opacity: 0.6,
-            zIndex: 100,
-            helper: function(event) {
-                return $('<div class="layout-region-deletable deletable">' + event.currentTarget.id + '</div>');
+                // Render navbar to calculate changes and refresh buttons
+                lD.navigatorEdit.renderNavbar();
             }
-        });
+        );
     }
 
     // Enable select for each layout/region
@@ -153,6 +145,10 @@ Navigator.prototype.render = function(layout) {
     this.DOMObject.find('[data-type="layout"]').droppable({
         accept: '[drop-to="layout"]',
         drop: function(event, ui) {
+            console.log(event.target);
+            console.log(ui.draggable[0]);
+            
+            
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
