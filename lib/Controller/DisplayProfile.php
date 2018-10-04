@@ -102,7 +102,7 @@ class DisplayProfile extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="formData",
-     *      description="Filter by DisplayProfile Type (windows|android\lg)",
+     *      description="Filter by DisplayProfile Type (windows|android|lg)",
      *      type="string",
      *      required=false
      *   ),
