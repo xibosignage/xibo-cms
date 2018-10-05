@@ -205,6 +205,9 @@ describe('Layout Designer', function() {
             // Click on add region button
             cy.get('#layout-navigator-edit #add-btn').click();
 
+            // Wait for the loading overlay to close
+            cy.get('.loading-overlay.loading').should('not.be.visible');
+
             // Close the navigator edit
             cy.get('#layout-navigator-edit #close-btn').click();
 
@@ -266,6 +269,9 @@ describe('Layout Designer', function() {
 
             // Click on add region button
             cy.get('#layout-navigator-edit #add-btn').click();
+
+            // Wait for the loading overlay to close
+            cy.get('.loading-overlay.loading').should('not.be.visible');
 
             // Close the navigator edit
             cy.get('#layout-navigator-edit #close-btn').click();

@@ -501,7 +501,8 @@
 }
 
 // Overlay and loading
-.custom-overlay {
+.custom-overlay,
+.loading-overlay {
     display: none;
     position: fixed;
     width: 100%;
@@ -513,12 +514,12 @@
     z-index: 2;
 }
 
-.custom-overlay.loading {
+.loading-overlay.loading {
     display: block;
     z-index: @loading-overlay-z-index;
 }
 
-.custom-overlay.loading .loading-icon {
+.loading-overlay.loading .loading-icon {
     display: block;
     font-size: 60px;
     position: absolute;

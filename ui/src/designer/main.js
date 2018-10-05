@@ -24,13 +24,13 @@ const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
 // Include modules
-const Layout = require('./layout.js');
-const Navigator = require('./navigator.js');
-const Timeline = require('./timeline.js');
-const Manager = require('./manager.js');
-const Viewer = require('./viewer.js');
-const Toolbar = require('./toolbar.js');
-const PropertiesPanel = require('./properties-panel.js');
+const Layout = require('../designer/layout.js');
+const Navigator = require('../designer/navigator.js');
+const Timeline = require('../designer/timeline.js');
+const Viewer = require('../designer/viewer.js');
+const PropertiesPanel = require('../designer/properties-panel.js');
+const Manager = require('../core/manager.js');
+const Toolbar = require('../core/toolbar.js');
 
 // Common funtions/tools
 const Common = require('../core/common.js');

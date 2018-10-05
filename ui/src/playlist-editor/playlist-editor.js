@@ -26,11 +26,11 @@ const dropZoneTemplate = require('../templates/drop-zone.hbs');
 const formButtonsTemplate = require('../templates/form-buttons.hbs');
 
 // Include modules
-const Playlist = require('./playlist.js');
-const Toolbar = require('../designer/toolbar.js');
+const Playlist = require('../playlist-editor/playlist.js');
+const PlaylistTimeline = require('../playlist-editor/playlist-timeline.js');
+const Toolbar = require('../core/toolbar.js');
 const PropertiesPanel = require('../designer/properties-panel.js');
-const PlaylistTimeline = require('./playlist-timeline.js');
-const Manager = require('../designer/manager.js');
+const Manager = require('../core/manager.js');
 
 // Include CSS
 require('../css/designer.less');

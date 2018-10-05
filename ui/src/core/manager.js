@@ -3,7 +3,7 @@
  * History manager, that stores all the changes and operations that can be applied to them (upload/revert)
  */
 
-const Change = require('./change.js');
+const Change = require('../core/change.js');
 const managerTemplate = require('../templates/manager.hbs');
 
 // Map from a operation to its inverse, and detail if the operation is done on the element or the layout
