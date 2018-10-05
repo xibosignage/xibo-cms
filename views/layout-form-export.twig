@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (layout-form-export.twig)
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Export" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, layoutExportFormSubmit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutExportForm" class="form-horizontal" method="get" action="{{ urlFor("layout.export",  {id: layout.layoutId}) }}">
+                {% set layoutName = layout.layout %}
+                {% set helpText %}{% trans %}You have selected {{ layoutName }} for export. A ZIP file will be downloaded which contains the layout, its widgets and media. It will also contain the structure for associated DataSets.{% endtrans %}{% endset %}
+                {{ forms.message(helpText) }}
+
+                {% set title %}{% trans "Include DataSet data?" %}{% endset %}
+                {% set helpText %}{% trans "Do you want to include the DataSet data?" %}{% endset %}
+                {{ forms.checkbox("includeData", title, 0, helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

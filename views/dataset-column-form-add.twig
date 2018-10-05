@@ -1,0 +1,96 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Column" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#dataSetColumnAddForm").submit()    
+{% endblock %}
+
+{% block formFieldActions %}
+[
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "1",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "block" }, ".remoteField": { "display": "none" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "1",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "block" }, ".remoteField": { "display": "none" } }
+    },
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "2",
+      "actions": { ".formula": { "display": "block" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "2",
+      "actions": { ".formula": { "display": "block" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+    },
+    {
+      "field": "dataSetColumnTypeId", "trigger": "init",
+      "operation": "equals", "value": "3",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "block" } }
+    },{
+      "field": "dataSetColumnTypeId", "trigger": "change",
+      "operation": "equals", "value": "3",
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "block" } }
+    }
+]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="dataSetColumnAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.column.add", {id: dataSet.dataSetId}) }}">
+                    {% set title %}{% trans "Heading" %}{% endset %}
+                    {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
+                    {{ forms.input("heading", title, "", helpText, "", "required") }}
+
+                    {% set title %}{% trans "Column Type" %}{% endset %}
+                    {% set helpText %}{% trans "Whether this column is a value or a formula" %}{% endset %}
+                    {{ forms.dropdown("dataSetColumnTypeId", "single", title, "", dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
+
+                    {% set title %}{% trans "Data Type" %}{% endset %}
+                    {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
+                    {{ forms.dropdown("dataTypeId", "single", title, "", dataTypes, "dataTypeId", "dataType", helpText) }}
+
+                    {% set title %}{% trans "List Content" %}{% endset %}
+                    {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
+                    {{ forms.input("listContent", title, "", helpText, "listContent") }}
+                    
+                    {% set title %}{% trans "Remote Data Path" %}{% endset %}
+                    {% set helpText %}{% trans "Give the JSON-path in the remote data for the value that you want to fill this column. This path should be relative to the DataRoot configured on the DataSet." %}{% endset %}
+                    {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
+
+                    {% set title %}{% trans "Column Order" %}{% endset %}
+                    {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
+                    {{ forms.number("columnOrder", title, "", helpText) }}
+
+                    {% set title %}{% trans "Formula" %}{% endset %}
+                    {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
+                    {{ forms.input("formula", title, "", helpText, "formula") }}
+
+                    {% set title %}{% trans "Filter?" %}{% endset %}
+                    {% set helpText %}{% trans "Show as a filter option on the Data Entry Page?" %}{% endset %}
+                    {{ forms.checkbox("showFilter", title, "", helpText) }}
+
+                    {% set title %}{% trans "Sort?" %}{% endset %}
+                    {% set helpText %}{% trans "Enable sorting on the Data Entry Page? We recommend that the number of sortable columns is kept to a minimum." %}{% endset %}
+                    {{ forms.checkbox("showSort", title, "", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

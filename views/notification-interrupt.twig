@@ -1,0 +1,30 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{{ notification.subject }}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-12">
+                    {% set readDt %}<span class="notification-date">{{ notification.readDt }}</span>{% endset %}
+                    <p>{% trans "Published" %} <span class="notification-date">{{ notification.releaseDt }}</span>, {% trans %}you read this {{ readDt }}.{% endtrans %}</p>
+                    {{ notification.body|raw }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <p><a href="{{ flash.interruptedUrl }}">{% trans "Continue..." %}</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

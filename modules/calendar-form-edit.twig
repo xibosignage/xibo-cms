@@ -1,0 +1,289 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Calendar" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#calendarFormEdit").submit()
+{% endblock %}
+
+{% block callBack %}calendarFormOpen{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useCurrentTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".current-event-template": { "display": "none" }
+    }
+    },{
+    "field": "useCurrentTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".current-event-template": { "display": "none" }
+    }
+    },{
+    "field": "useCurrentTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".current-event-template": { "display": "block" }
+    }
+    },{
+    "field": "useCurrentTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".current-event-template": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
+                <li><a href="#formatTab" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
+                <li><a href="#advancedTab" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="calendarFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="generalTab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Feed URL" %}{% endset %}
+                        {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
+                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {# What range are we looking to return #}
+                        {% set title %}{% trans "Interval" %}{% endset %}
+                        {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
+                        {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
+
+                    </div>
+                    <div class="tab-pane" id="templateTab">
+                        <div class="col-sm-6">
+                            <div class="well">
+                                <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
+                                <ul id="TickerDataSetColumns">
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Name</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Summary</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Description</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">Location</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">StartDate</li>
+                                    <li class="ckeditor_snippits" linkedto="ta_text">EndDate</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group well">
+                                <label class="col-sm-2 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                <div class="col-sm-10">
+                                    <select id="ckeditor_library_select2"
+                                            class="ckeditor_library_select form-control"
+                                            data-width="100%"
+                                            data-linked-to="ta_text"
+                                            data-search-url="{{ urlFor("library.search") }}"
+                                            data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% set helpText %}
+                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10) }}
+
+                        {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
+                        {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
+                        {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
+
+                        {% set helpText %}
+                            {% trans "Enter the alternative template for events that are current." %}
+                        {% endset %}
+                        {{ forms.textarea("currentEventTemplate", "", module.getRawNode("currentEventTemplate"), helpText, "current-event-template", "", 10) }}
+                    </div>
+                    <div class="tab-pane" id="formatTab">
+
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
+                        {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+
+                        {% set title %}{% trans "Number of Items" %}{% endset %}
+                        {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
+                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+
+                        {% set title %}{% trans "Items per page" %}{% endset %}
+                        {% set helpText %}{% trans "If an effect has been selected how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
+                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+
+                        {% set title %}{% trans "Show items side by side?" %}{% endset %}
+                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
+                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
+
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+
+                        {% set showAll %}{% trans "Show all items" %}{% endset %}
+                        {% set showPaged %}{% trans "Paged" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set optionGroups = [
+                            {id: "showAll", label: showAll},
+                            {id: "showPaged", label: showPaged}
+                        ] %}
+
+                        {% set noneOption %}{% trans "No effect - all items are shown" %}{% endset %}
+                        {% set showAllOptions = [
+                            { effectid: "none", effect: noneOption },
+                            { effectid: "marqueeLeft", effect: marqueeLeft},
+                            { effectid: "marqueeRight", effect: marqueeRight},
+                            { effectid: "marqueeUp", effect: marqueeUp},
+                            { effectid: "marqueeDown", effect: marqueeDown}
+                        ] %}
+
+                        {% set noTransitionOption %}{% trans "No transition" %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "Shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set showPagedOptions = [
+                            { effectid: "noTransition", effect: noTransitionOption },
+                            { effectid: "fade", effect: fade },
+                            { effectid: "fadeout", effect: fadeout},
+                            { effectid: "scrollHorz", effect: scrollHorz},
+                            { effectid: "scrollVert", effect: scrollVert},
+                            { effectid: "flipHorz", effect: flipHorz},
+                            { effectid: "flipVert", effect: flipVert},
+                            { effectid: "shuffle", effect: shuffle},
+                            { effectid: "tileSlide", effect: tileSlide},
+                            { effectid: "tileBlind", effect: tileBlind}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l", "", "", "", "", optionGroups) }}
+                    </div>
+
+                    <div class="tab-pane" id="advancedTab">
+
+                        {% set title %}{% trans "Exclude all day events?" %}{% endset %}
+                        {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                        <div class="col-md-6 col-md-offset-6">
+                            <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
+                            <div class="col-sm-10">
+                                <select id="ckeditor_library_select"
+                                        class="ckeditor_library_select form-control"
+                                        data-linked-to="noDataMessage"
+                                        data-width="100%"
+                                        data-search-url="{{ urlFor("library.search") }}"
+                                        data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                </select>
+                            </div>
+                        </div>
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+
+                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), title, "", "", 10) }}
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

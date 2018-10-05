@@ -1,0 +1,132 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("notification.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Notification" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Notification Centre" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="notifications" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Subject" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Email?" %}</th>
+                                <th>{% trans "Interrupt?" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#notifications").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=notificationGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "notificationGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 1, "desc"]],
+            ajax: {
+                "url": "{{ urlFor("notification.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#notifications").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "subject" },
+                {
+                    "data": "releaseDt",
+                    "render": dataTableDateFromUnix
+                },
+                {
+                    "data": "isEmail",
+                    "render": dataTableTickCrossColumn
+                },
+                {
+                    "data": "isInterrupt",
+                    "render": dataTableTickCrossColumn
+                },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+        function notificationFormOpen(dialog) {
+            // Conjure up a text editor
+            CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
+
+            // Make sure when we close the dialog we also destroy the editor
+            dialog.on("hide.bs.modal", function(event) {
+                if (event.target.className == "bootbox modal in" && CKEDITOR.instances["body"] != undefined) {
+                    CKEDITOR.instances["body"].destroy();
+                }
+            });
+        }
+    </script>
+{% endblock %}

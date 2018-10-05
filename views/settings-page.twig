@@ -1,0 +1,288 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        {% if settings.SETTING_IMPORT_ENABLED %}
+            <li class="btn btn-success btn-xs"><a id="layoutUploadForm" class="btns" title="{% trans "Import a database" %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
+        {% endif %}
+
+        <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ urlFor("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
+
+        {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
+            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+        {% endif %}
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Settings" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="nav nav-tabs" role="tablist">
+                        {% set first = true %}
+                        {% for category in categories %}
+                            {% set transCatTabName = category.tabName %}
+                            <li {% if first %}class="active"{% endif %}><a href="#{{ category.tabId }}" role="tab" data-toggle="tab"><span>{% trans transCatTabName %}</span></a></li>
+                            {% set first = false %}
+                        {% endfor %}
+                    </ul>
+                    <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("settings.update") }}">
+                        <div class="tab-content">
+                            {% for field in fields %}
+                                {% if currentCat != field.cat %}
+                                    {% if currentCat != "" %}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="tab-pane {% if currentCat == "" %}active{% endif %}" id="{{ field.catId }}">
+                                    {% set currentCat = field.cat %}
+                                    {% set transFieldCat = field.cat %}
+                                    <h3 class="section-heading">{% trans transFieldCat %}</h3>
+                                {% endif %}
+                                {# Now we have to output the relevant form field #}
+                                {% if field.enabled != 1 %}
+                                    {{ forms.disabled(field.name, field.title, field.value, field.helpText) }}
+                                {% elseif field.fieldType == "text" %}
+                                    {{ forms.input(field.name, field.title, field.value, field.helpText) }}
+                                {% elseif field.fieldType == "number" %}
+                                    {{ forms.number(field.name, field.title, field.value, field.helpText) }}
+                                {% elseif field.fieldType == "email" %}
+                                    {{ forms.email(field.name, field.title, field.value, field.helpText) }}
+                                {% elseif field.fieldType == "checkbox" %}
+                                    {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
+                                {% elseif field.fieldType == "dropdown" and field.name == "DEFAULT_LAYOUT" %}
+                                    {% set attributes = [
+                                        { name: "data-width", value: "100%" },
+                                        { name: "data-search-url", value: urlFor("layout.search") },
+                                        { name: "data-search-term", value: "layout" },
+                                        { name: "data-id-property", value: "layoutId" },
+                                        { name: "data-text-property", value: "layout" }
+                                    ] %}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "layoutId", "layout", field.helpText, "pagedSelect", "", "", "", attributes) }}
+                                {% elseif field.fieldType == 'dropdown' and field.name == "DEFAULT_USERGROUP" %}
+                                    {% set attributes = [
+                                    { name: "data-width", value: "100%" },
+                                    { name: "data-search-url", value: urlFor("group.search") },
+                                    { name: "data-search-term", value: "group" },
+                                    { name: "data-id-property", value: "groupId" },
+                                    { name: "data-text-property", value: "group" }
+                                    ] %}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "groupId", "group", field.helpText, "pagedSelect", "", "", "", attributes) }}
+                                {% elseif field.fieldType == "dropdown" %}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
+                                {% elseif field.fieldType == "timezone" %}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
+                                {% elseif field.fieldType == "datetime" %}
+                                    {{ forms.datetime(field.name, field.title, field.value, field.helpText) }}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <button class="btn btn-save btn-block btn-success" href="#"><span>{% trans "Save" %}</span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $("#layoutUploadForm").click(function() {
+
+            var template = Handlebars.compile($("#template-backup-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template({
+                    trans: {
+                        addFiles: "{% trans "Add Backup File" %}",
+                        startUpload: "{% trans "Start upload" %}",
+                        cancelUpload: "{% trans "Cancel upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: "{{ libraryUpload.validExt }}"
+                    }
+                }),
+                title: "{% trans "Upload Backup" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("maintenance.import") }}";
+                var form = $(this).find("form");
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: true
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
+            });
+        });
+
+        function dbExportFormSubmit() {
+            $("#exportForm").submit();
+            XiboDialogClose();
+        }
+    </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% raw %}
+
+    <script type="text/x-handlebars-template" id="template-backup-upload">
+        <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)tar.gz/i">
+            <div class="row fileupload-buttonbar">
+                <div class="col-md-7">
+                    <div class="well">
+                        {{ upload.maxSizeMessage }}
+                    </div>
+                    <!-- The fileinput-button span is used to style the file input field as button -->
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <span>{{ trans.addFiles }}</span>
+                        <input type="file" name="files[]">
+                    </span>
+                    <button type="submit" class="btn btn-primary start">
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <span>{{ trans.startUpload }}</span>
+                    </button>
+                    <button type="reset" class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <span>{{ trans.cancelUpload }}</span>
+                    </button>
+                    <!-- The loading indicator is shown during file processing -->
+                    <span class="fileupload-loading"></span>
+                </div>
+                <!-- The global progress information -->
+                <div class="col-md-4 fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                </div>
+            </div>
+            <!-- The table listing the files available for upload/download -->
+            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        </form>
+    </script>
+
+    <!-- The template to display files available for upload -->
+    <script id="template-backup-upload" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-upload fade">
+                <td>
+                    <span class="fileupload-preview"></span>
+                </td>
+                <td class="title">
+                    {% if (file.error) { %}
+                        <div><span class="label label-danger">{%=file.error%}</span></div>
+                    {% } %}
+                    {% if (!file.error) { %}
+                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
+                    {% } %}
+                </td>
+                <td>
+                    <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                    {% if (!o.files.error) { %}
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                                <div class="sr-only"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% } %}
+                </td>
+                <td>
+                    {% if (!o.files.error && !i && !o.options.autoUpload) { %}
+                        <button class="btn btn-primary start">
+                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        </button>
+                    {% } %}
+                    {% if (!i) { %}
+                        <button class="btn btn-warning cancel">
+                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        </button>
+                    {% } %}
+                </td>
+            </tr>
+        {% } %}
+        </script>
+    <!-- The template to display files available for download -->
+    <script id="template-backup-download" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-download fade">
+               <td>
+                    <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
+                        {%=file.name%}
+                    </p>
+                    {% if (file.error) { %}
+                        <div><span class="label label-danger">{%=file.error%}</span></div>
+                    {% } %}
+                </td>
+                <td>
+                    <span class="size">{%=o.formatFileSize(file.size)%}</span>
+                </td>
+            </tr>
+        {% } %}
+        </script>
+
+    {% endraw %}
+{% endblock %}

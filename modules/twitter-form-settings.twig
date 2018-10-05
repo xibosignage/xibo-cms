@@ -1,0 +1,29 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+    {% set title %}{% trans "API Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Key from Twitter." %}{% endset %}
+    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}
+
+    {% set title %}{% trans "API Secret" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Secret from Twitter." %}{% endset %}
+    {{ forms.input("apiSecret", title, module.getSetting("apiSecret"), helpText) }}
+
+    {% set title %}{% trans "Cache Period" %}{% endset %}
+    {% set helpText %}{% trans "Enter the number of seconds you would like to cache twitter search results." %}{% endset %}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText) }}
+
+    {% set title %}{% trans "Cache Period for Images" %}{% endset %}
+    {% set helpText %}{% trans "Enter the number of hours you would like to cache twitter images." %}{% endset %}
+    {{ forms.input("cachePeriodImages", title, module.getSetting("cachePeriodImages", 24), helpText) }}
+
+{% endblock %}

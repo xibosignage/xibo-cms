@@ -1,0 +1,5 @@
+{
+  "name": "Maintenance Regular",
+  "class": "\\Xibo\\XTR\\MaintenanceRegularTask",
+  "options": []
+}

@@ -1,0 +1,34 @@
+{#
+/*
+ * Spring Signage Ltd - https://xibo.org.uk
+ * Copyright (C) 2018 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Output Audit Trail as CSV" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Export" %}, auditLogExportFormSubmit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="auditLogExportForm" class="XiboManualForm form-horizontal" method="get" action="{{ urlFor("auditLog.export") }}">
+                {% set title %}{% trans "From Date" %}{% endset %}
+                {{ forms.date("filterFromDt", title) }}
+
+                {% set title %}{% trans "To Date" %}{% endset %}
+                {{ forms.date("filterToDt", title) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

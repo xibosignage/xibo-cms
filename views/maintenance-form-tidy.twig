@@ -1,0 +1,43 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Tidy Library" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#tidyLibraryForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="tidyLibraryForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("maintenance.tidy") }}">
+                {% set message %}{% trans "Tidying the Library will delete any temporary files. Are you sure you want to proceed?" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Remove old revisions" %}{% endset %}
+                {% set helpText %}{% trans "Cleaning up old revisions of media will result in any unused media revisions being permanently deleted." %}{% endset %}
+                {{ forms.checkbox("tidyOldRevisions", title, 0, helpText) }}
+
+                {% set title %}{% trans "Remove all media not currently in use?" %}{% endset %}
+                {% set helpText %}{% trans "Selecting this option will remove any media that is not currently being used in Layouts or linked to Displays. This process cannot be reversed." %}{% endset %}
+                {{ forms.checkbox("cleanUnusedFiles", title, 0, helpText) }}
+
+                {% set title %}{% trans "Delete Generic Files?" %}{% endset %}
+                {% set helpText %}{% trans "Selecting this option will remove any generic files that is are not currently linked to Displays. This process cannot be reversed." %}{% endset %}
+                {{ forms.checkbox("tidyGenericFiles", title, 0, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

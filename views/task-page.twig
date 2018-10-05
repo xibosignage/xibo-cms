@@ -1,0 +1,198 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * (task-page.twig)
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        {% if settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</a></li>
+        {% endif %}
+        <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Tasks" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="tasks" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Next Run" %}</th>
+                                <th>{% trans "Run Now" %}</th>
+                                <th>{% trans "Last Run" %}</th>
+                                <th>{% trans "Last Status" %}</th>
+                                <th>{% trans "Last Duration" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#tasks").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=taskGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        if (json.success)
+                            data = JSON.parse(json.data.value);
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "taskGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("task.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#tasks").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "taskId" },
+                { "data": "name" },
+                {
+                    "data": "isActive",
+                    "render": dataTableTickCrossColumn
+                },
+                {
+                    "data": "status",
+                    "render": function (data, type, row) {
+                        if (type !== "display")
+                            return data;
+
+                        var icon = "";
+                        var title = "";
+                        if (data === 1) {
+                            title = "PID: " + row.pid + " (" + moment(row.lastRunStartDt, "X").tz(timezone).format(jsDateFormat) + ")";
+                            icon = "fa-cogs";
+                        }
+                        else if (data === 3) {
+                            title = "Exit: " + row.lastRunExitCode;
+                            icon = "fa-bug";
+                        }
+                        else if (data === 5) {
+                            title = "Time out";
+                            icon = "fa-hourglass-o";
+                        }
+                        else {
+                            title = "";
+                            icon = "fa-clock-o";
+                        }
+
+                        return "<span class='fa " + icon + "' title='" + title + "'></span>";
+                    }
+                },
+                {
+                    "data": "nextRunDt",
+                    "render": dataTableDateFromUnix
+                },
+                {
+                    "data": "runNow",
+                    "render": dataTableTickCrossColumn
+                },
+                {
+                    "data": "lastRunDt",
+                    "render": dataTableDateFromUnix
+                },
+                {
+                    "data": "lastRunStatus",
+                    "render": function (data, type, row) {
+                        if (type !== "display")
+                            return data;
+
+                        var icon = "";
+                        if (data === 4)
+                            icon = "fa-check";
+                        else
+                            icon = "fa-times";
+
+                        return "<span class='fa " + icon + "' title='" + ((row.lastRunMessage === null) ? "" : row.lastRunMessage) + "'></span>";
+                    }
+                },
+                {
+                    "data": "lastRunDuration",
+                    "render": function (data, type, row) {
+                        if (type !== "display")
+                            return data;
+
+                        return (data === null) ? 0 : moment().startOf("day").seconds(data).format("H:mm:ss");
+                    }
+                },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+        $("#refreshLog").click(function () {
+            table.ajax.reload();
+        });
+    </script>
+{% endblock %}

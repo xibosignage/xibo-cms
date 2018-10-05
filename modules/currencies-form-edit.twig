@@ -1,0 +1,269 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Currencies" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Get Results" %}, requestTab("results"| "{{ urlFor("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#currenciesEditForm").submit()
+{% endblock %}
+
+{% block callBack %}financeFormSetup{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".effect-controls": { "display": "none" },
+    ".background-color-group": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".effect-controls": { "display": "none" },
+    ".background-color-group": { "display": "none" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".effect-controls": { "display": "block" },
+    ".background-color-group": { "display": "block" }
+    }
+    },{
+    "field": "effect",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".effect-controls": { "display": "block" },
+    ".background-color-group": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+                <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#template" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "Apperance" %}</span></a></li>
+                <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li><a href="#results" role="tab" data-toggle="tab"><span>{% trans "Results" %}</span></a></li>
+            </ul>
+            <form id="currenciesEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                 <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="template">
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
+
+                        {% set title %}{% trans "Items" %}{% endset %}
+                        {% set helpText %}{% trans "The items wanted, can be comma separated. For the best results enter no more than 5 items." %}{% endset %}
+                        {{ forms.input("items", title, module.getOption("items"), helpText, "", "required") }}
+                        
+                        {% set title %}{% trans "Base" %}{% endset %}
+                        {% set helpText %}{% trans "The base currency." %}{% endset %}
+                        {{ forms.input("base", title, module.getOption("base"), helpText, "", "required") }}
+                        
+                        {% set title %}{% trans "Reverse conversion?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like your base currency to be used as the comparison currency for each currency you've entered. For example base/compare becomes compare/base - USD/GBP becomes GBP/USD." %}{% endset %}
+                        {{ forms.checkbox("reverseConversion", title, module.getOption("reverseConversion", 0), helpText) }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
+
+                        {% set title %}{% trans "Original Width" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended width of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
+                        {{ forms.number("widgetOriginalWidth", title, module.getOption("widgetOriginalWidth", undefined), helpText, "template-override-controls", "", "number") }}
+
+                        {% set title %}{% trans "Original Height" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended height of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
+                        {{ forms.number("widgetOriginalHeight", title, module.getOption("widgetOriginalHeight", undefined), helpText, "template-override-controls", "", "number") }}
+
+                        {% set title %}{% trans "Items per Page" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended number of items on each page." %}{% endset %}
+                        {{ forms.number("maxItemsPerPage", title, module.getOption("maxItemsPerPage", undefined), helpText, "template-override-controls", "required") }}
+
+                        {% set helpText %}{% trans "Enter the main template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
+                        {{ forms.textarea("mainTemplate", "",  module.getRawNode("mainTemplate"), helpText, "template-override-controls", "", 10) }}
+                    
+                        {% set helpText %}{% trans "Enter the template for each item. Replaces [itemsTemplate] in main template." %}{% endset %}
+                        {{ forms.textarea("itemTemplate", "",  module.getRawNode("itemTemplate"), helpText, "template-override-controls", "", 10) }}
+
+                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), title, "template-override-controls", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="effectTab">
+                        {% set title %}{% trans "Effect" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
+                        {% set fade %}{% trans "Fade" %}{% endset %}
+                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
+                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
+                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
+                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
+                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
+                        {% set shuffle %}{% trans "Shuffle" %}{% endset %}
+                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
+                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
+                        {% set options = [
+                        { effectid: "none", effect: noneOption },
+                        { effectid: "fade", effect: fade },
+                        { effectid: "fadeout", effect: fadeout},
+                        { effectid: "scrollHorz", effect: scrollHorz},
+                        { effectid: "scrollVert", effect: scrollVert},
+                        { effectid: "flipHorz", effect: flipHorz},
+                        { effectid: "flipVert", effect: flipVert},
+                        { effectid: "shuffle", effect: shuffle},
+                        { effectid: "tileSlide", effect: tileSlide},
+                        { effectid: "tileBlind", effect: tileBlind}
+                        ] %}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
+
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+                        {% set title %}{% trans "Duration is per page" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerPage", title, module.getOption("durationIsPerPage"), helpText) }}
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        
+                        {% set title %}{% trans "No records" %}{% endset %}
+                        {% set helpText %}{% trans "A message to display when there are no records returned by the search query" %}{% endset %}
+                        {{ forms.input("noRecordsMessage", title, module.getOption("noTweetsMessage"), helpText) }}
+
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
+                    </div>
+    
+                    <div class="tab-pane" id="results"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

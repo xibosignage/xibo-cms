@@ -1,0 +1,93 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = module.getName() %}
+    {% trans %}Edit {{ type }} Transition for {{ name }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#moduleTransitionEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "init",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+    ".transition-group": { "display": "none" }
+    }
+    },{
+    "field": "transitionType",
+    "trigger": "change",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+    ".transition-group": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.transition.edit", {type: type, id: module.widget.widgetId}) }}">
+                {% if type == "in" %}
+                    {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.in) %}
+                    {% set trans = module.getOption("transIn") %}
+                    {% set transDuration = module.getOption("transInDuration") %}
+                    {% set transDirection = module.getOption("transInDirection") %}
+                {% elseif type == "out" %}
+                    {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.out) %}
+                    {% set trans = module.getOption("transOut") %}
+                    {% set transDuration = module.getOption("transOutDuration") %}
+                    {% set transDirection = module.getOption("transOutDirection") %}
+                {% else %}
+                    {% set message %}{% trans "Unknown Transition Type Requested" %}{% endset %}
+                    {{ forms.message(message) }}
+                {% endif %}
+
+                {% set title %}{% trans "Transition" %}{% endset %}
+                {% set helpText %}{% trans "What transition should be applied when this item is finished?" %}{% endset %}
+                {{ forms.dropdown("transitionType", "single", title, trans, transitionsWithEmpty, "code", "transition", helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration for this transition, in milliseconds." %}{% endset %}
+                {{ forms.number("transitionDuration", title, transDuration, helpText, "", "transition-group") }}
+
+                {% set title %}{% trans "Direction" %}{% endset %}
+                {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
+                {{ forms.dropdown("transitionDirection", "single", title, transDirection, transitions.compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

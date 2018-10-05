@@ -1,0 +1,10 @@
+{
+ "id":"weather-module6h",
+ "value":"Template 13 - Landscape - Current day details, 4 day forecast",
+ "main":"<div class=\"container\">\r\n    <div class=\"row text-center\">\r\n        <div class=\"col-xs-4\">\r\n            <div class=\"current-condition\">[summary]<\/div>\r\n            <div class=\"info1\">Wind [windDirection] [windSpeed] [windSpeedUnit]<\/div>\r\n            <div class=\"info2\">Humidity [humidityPercent]%<\/div>\r\n            <div class=\"powered\">Powered by DarkSky<\/div>\r\n        <\/div>\r\n        [dailyForecast|4|1]\r\n    <\/div>\r\n<\/div>",
+ "daily":"<div class=\"col-xs-2\">\r\n    <div class=\"day\">[time|D]<\/div>\r\n    <div class=\"icon\"><i class=\"wi [wicon]\"><\/i><\/div>\r\n    <div class=\"temp\">[temperatureMaxRound] \u00ba [temperatureUnit]<\/div>\r\n<\/div>",
+ "css":"body {\r\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\r\n    line-height: 1;\r\n}\r\n\r\n.container {\r\n    background-color: #000;\r\n    width: 960px !important;\r\n    height: 180px !important;\r\n    color: #fff;\r\n    padding-top: 30px;\r\n}\r\n\r\n.current-condition {\r\n    font-weight: bold;\r\n    font-size: 23px;\r\n}\r\n\r\n.info1 {\r\n    font-size: 14px;\r\n    padding: 20px 0px;\r\n}\r\n\r\n.day {\r\n    font-size: 18px;\r\n    font-weight: lighter;\r\n    font-style: italic;\r\n}\r\n\r\n.icon {\r\n    font-size: 50px;\r\n    padding: 20px 0px;\r\n}\r\n\r\n.temp {\r\n    font-size: 15px;\r\n}\r\n\r\n.powered {\r\n    font-weight: bold;\r\n    color: #DDD;\r\n    font-style: italic;\r\n    padding-top: 26px;\r\n    font-size: 1.2em;\r\n}",
+ "widgetOriginalWidth": "960",
+ "widgetOriginalHeight": "180",
+ "image":"modules/forecastio/template-thumbs/weather6h.png"
+}

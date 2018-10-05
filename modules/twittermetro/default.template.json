@@ -1,0 +1,6 @@
+{
+    "id": "default",
+    "value": "Colours 1 - Default",
+    "colors": ["#99b433","#00a300","#ff0097","#9f00a7","#00aba9","#2b5797","#da532c","#b91d47"],
+    "image": "modules/twittermetro/template-thumbs/colours1.png"
+}

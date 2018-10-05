@@ -1,0 +1,38 @@
+{
+  "dbVersion": 137,
+  "appVersion": "1.8.6",
+  "steps": [
+    {
+      "step": "DayPart columns to indicate always and custom",
+      "action": "ALTER TABLE daypart ADD isAlways TINYINT DEFAULT 0 NOT NULL, ADD isCustom TINYINT DEFAULT 0 NOT NULL;"
+    },
+    {
+      "step": "Insert the always/custom day parts",
+      "action": "INSERT INTO daypart (name, description, isRetired, userid, startTime, endTime, exceptions, isAlways, isCustom) VALUES ('Custom', 'User specifies the from/to date', 0, 1, '', '', '', 0, 1),('Always', 'Event runs always', 0, 1, '', '', '', 1, 0);"
+    },
+    {
+      "step": "Back fill the existing schedules with the correct day parts - always",
+      "action": "UPDATE `schedule` SET dayPartId = (SELECT dayPartId FROM daypart WHERE isAlways = 1) WHERE dayPartId = 1;"
+    },
+    {
+      "step": "Back fill the existing schedules with the correct day parts - custom",
+      "action": "UPDATE `schedule` SET dayPartId = (SELECT dayPartId FROM daypart WHERE isCustom = 1) WHERE dayPartId = 0;"
+    },
+    {
+      "step": "Add email from setting",
+      "action": "INSERT INTO setting (setting, value, fieldType, helptext, options, cat, userChange, title, validation, ordering, `default`, userSee, type) VALUES ('mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string');"
+    },
+    {
+      "step": "Drop parent/child/depth unique keys on Display Group closure",
+      "action": "DROP INDEX parentId ON lkdgdg; DROP INDEX childId ON lkdgdg;"
+    },
+    {
+      "step": "Create parent/child/depth index on Display Group closure",
+      "action": "CREATE INDEX lkdgdg_parentId_childId_depth_index ON lkdgdg (parentId, childId, depth);"
+    },
+    {
+      "step": "Create parent/child/depth index on Display Group closure",
+      "action": "CREATE INDEX lkdgdg_childId_parentId_depth_index ON lkdgdg (childId, parentId, depth);"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Notification" %}
+{% endblock %}
+
+{% block callBack %}notificationFormOpen{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#notificationForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#message-body" role="tab" data-toggle="tab"><span>{% trans "Message" %}</span></a></li>
+                <li><a href="#audience" role="tab" data-toggle="tab"><span>{% trans "Audience" %}</span></a></li>
+            </ul>
+            <form id="notificationForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("notification.edit", {id: notification.notificationId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Subject" %}{% endset %}
+                        {% set helpText %}{% trans "A subject line for the notification - used as a title." %}{% endset %}
+                        {{ forms.input("subject", title, notification.subject, helpText, "", "required") }}
+
+                        {% set title %}{% trans "Release Date" %}{% endset %}
+                        {% set helpText %}{% trans "The date when this notification will be published" %}{% endset %}
+                        {{ forms.dateTime("releaseDt", title, notification.releaseDt, helpText, "starttime-control", "required") }}
+
+                        {% set title %}{% trans "Email?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the notification be emailed?" %}{% endset %}
+                        {{ forms.checkBox("isEmail", title, notification.isEmail, helpText) }}
+
+                        {% set title %}{% trans "Interrupt?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the notification interrupt nagivation in the Web Portal? Including Login." %}{% endset %}
+                        {{ forms.checkBox("isInterrupt", title, notification.isInterrupt, helpText) }}
+
+                    </div>
+                    <div class="tab-pane" id="message-body">
+                        {% set title %}{% trans "Add the body of your message in the box below. If you are going to target this message to a Display/DisplayGroup be aware that the formatting you apply here will be removed." %}{% endset %}
+                        {{ forms.message(title) }}
+
+                        {{ forms.textarea("body", "", notification.body, "", "", 10) }}
+                    </div>
+                    <div class="tab-pane" id="audience">
+                        {% set title %}{% trans "Users" %}{% endset %}
+                        {% set helpText %}{% trans "Please select one or more users / groups who will receive this notification." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" }
+                        ] %}
+                        {% set transUserGroups %}{% trans "Groups" %}{% endset %}
+                        {% set transUsers %}{% trans "Users" %}{% endset %}
+                        {% set optionGroups = [
+                        {id: "group", label: transUserGroups},
+                        {id: "user", label: transUsers}
+                        ] %}
+                        {{ forms.dropdown("userGroupIds[]", "dropdownmulti", title, userGroupIds, {group: userGroups, user: users}, "groupId", "group", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
+
+
+                        {% set title %}{% trans "Displays" %}{% endset %}
+                        {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" }
+                        ] %}
+                        {% set transGroups %}{% trans "Groups" %}{% endset %}
+                        {% set transDisplays %}{% trans "Display" %}{% endset %}
+                        {% set optionGroups = [
+                        {id: "group", label: transGroups},
+                        {id: "display", label: transDisplays}
+                        ] %}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

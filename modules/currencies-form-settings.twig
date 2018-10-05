@@ -1,0 +1,22 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+
+    {% set title %}{% trans "API Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Key from Alpha Advantage: https://www.alphavantage.co/support/#api-key." %}{% endset %}
+    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}
+
+    {% set title %}{% trans "Cache Period" %}{% endset %}
+    {% set helpText %}{% trans "This module uses 3rd party data. Please enter the number of seconds you would like to cache results." %}{% endset %}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 3600), helpText) }}
+
+{% endblock %}

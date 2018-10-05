@@ -1,0 +1,46 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Save this Layout as a Template?" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#templateAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("template.add.from.layout", {id: layout.layoutId}) }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
+                {% set templateName %}{{ layout.layout }} {% trans "Template" %}{% endset %}
+                {{ forms.input("name", title, templateName, helpText) }}
+
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tags for this Template - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                {{ forms.input("tags", title, layout.tags, helpText) }}
+
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "An optional description of the Template. (1 - 250 characters)" %}{% endset %}
+                {{ forms.textarea("description", title, layout.description, helpText) }}
+
+                {% set title %}{% trans "Include Widgets?" %}{% endset %}
+                {% set helpText %}{% trans "Add all the widgets to the template?" %}{% endset %}
+                {{ forms.checkbox("includeWidgets", title, 0, helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

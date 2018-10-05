@@ -1,0 +1,175 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"> <i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Audit Log" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="auditView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title) }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("toDt", title) }}
+
+                            {% set title %}{% trans "User" %}{% endset %}
+                            {{ inline.input("user", title) }}
+
+                            {% set title %}{% trans "Entity" %}{% endset %}
+                            {{ inline.input("entity", title) }}
+
+                            {% set title %}{% trans "Entity ID" %}{% endset %}
+                            {{ inline.input("entityId", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="logs" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "User" %}</th>
+                                <th>{% trans "Entity" %}</th>
+                                <th>{% trans "Entity ID" %}</th>
+                                <th>{% trans "Message" %}</th>
+                                <th>{% trans "Object" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    {% raw %}
+    <script type="text/x-handlebars-template" id="table-array-viewer">
+        <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
+        <table class="arrayViewer table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ col1 }}</th>
+                    <th>{{ col2 }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr>
+                    <td>{{ @key }}</td>
+                    <td>{{ this }}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </script>
+    {% endraw %}
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
+
+            var table = $("#logs").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=auditlogGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "auditlogGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "desc"]],
+                ajax: {
+                    url: "{{ urlFor("auditLog.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "logId"},
+                    {"data": "logDate", "render": dataTableDateFromUnix},
+                    {"data": "userName"},
+                    {"data": "entity"},
+                    {"data": "entityId"},
+                    {"data": "message"},
+                    {
+                        "data": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            return arrayViewer({"col1": "{% trans "Property" %}", "col2": "{% trans "Value" %}", "items": data.objectAfter});
+                        },
+                        "sortable": false
+                    }
+                ]
+            });
+
+            table.on('draw', function (e, settings) {
+                dataTableDraw(e, settings);
+
+                $(".arrayViewerToggle").click(function () {
+                    $(this).parent().find(".arrayViewer").toggle();
+                });
+            });
+            table.on('processing.dt', dataTableProcessing);
+
+            $("#refreshLog").click(function () {
+                table.ajax.reload();
+            });
+        });
+
+        function auditLogExportFormSubmit() {
+            $("#auditLogExportForm").submit();
+            XiboDialogClose();
+        }
+    </script>
+{% endblock %}

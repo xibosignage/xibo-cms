@@ -1,0 +1,24 @@
+{% for region in regions %}
+    {{ region.name }} - {{ region.width }} x {{ region.height }} [{{ region.top }},{{ region.left }}]
+
+    <table class="table table-bordered">
+        <thead>
+            <th>{% trans "Playlist" %}</th>
+            <th>{% trans "Name" %}</th>
+            <th>{% trans "Type" %}</th>
+            <th>{% trans "Duration" %}</th>
+        </thead>
+        <tbody>
+        {% for playlist in region.playlists %}
+            {% for widget in playlist.widgets %}
+                <tr>
+                    <td>{{ playlist.name }}</td>
+                    <td>{{ widget.module.getName() }}</td>
+                    <td>{{ widget.module.getModuleName() }}</td>
+                    <td>{{ widget.calculatedDuration }}</td>
+                </tr>
+            {% endfor %}
+        {% endfor %}
+        </tbody>
+    </table>
+{% endfor %}

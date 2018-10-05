@@ -1,0 +1,40 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Help Link" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#helpEditForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="helpEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("help.edit", {id: help.helpId}) }}">
+                    {% set title %}{% trans "Topic" %}{% endset %}
+                    {% set helpText %}{% trans "The Topic for this Help Link" %}{% endset %}
+                    {{ forms.input("topic", title, help.topic, helpText) }}
+                        
+                    {% set title %}{% trans "Category" %}{% endset %}
+                    {% set helpText %}{% trans "he Category for this Help Link" %}{% endset %}
+                    {{ forms.input("category", title, help.category, helpText) }}
+                       
+                    {% set title %}{% trans "Link" %}{% endset %}
+                    {% set helpText %}{% trans "The Link to open for this help topic and category" %}{% endset %}
+                    {{ forms.input("link", title, help.link, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base-install.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block jumboTron %}
+    <div class="jumbotron">
+        <div class="container">
+            {% set themeName = theme.getThemeConfig("app_name") %}
+            {% set header %}{% trans %}{{ themeName }} Error{% endtrans %}{% endset %}
+            <h1>{{ header }}</h1>
+            <p>{% trans %}We are really sorry, but there has been an error. It has been logged in install_log.txt and printed below.{% endtrans %}</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block stepContent %}
+    <div class="row">
+        <div class="col-md-12">
+            <p class="alert alert-danger">{{ error }}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well">
+                <code>{{ trace }}</code>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Export Database Backup" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Export Database" %}, dbExportFormSubmit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="exportForm" class="form-horizontal" method="get" action="{{ urlFor("maintenance.export") }}">
+                {% set message %}{% trans "This will create a dump file of your database that you can restore later using the import functionality." %}{% endset %}
+                {{ forms.message(message) }}
+                
+                {% set message %}{% trans "You should also manually take a backup of your library." %}{% endset %}
+                {{ forms.message(message) }}
+                
+                {% set message %}{% trans "Please note: The folder location for mysqldump must be available in your path environment variable for this to work and the php exec command must be enabled." %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

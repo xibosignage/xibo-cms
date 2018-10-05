@@ -1,0 +1,82 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Daypart" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#dayPartAddForm").submit()
+{% endblock %}
+
+{% block extra %}{{ extra|json_encode|raw }}{% endblock %}
+
+{% block callBack %}dayPartFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+                <li><a href="#exceptions" role="tab" data-toggle="tab"><span>{% trans "Exceptions" %}</span></a></li>
+            </ul>
+            <form id="dayPartAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("daypart.add") }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name for this Daypart" %}{% endset %}
+                        {{ forms.input("name", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Retired" %}{% endset %}
+                        {% set helpText %}{% trans "Retire? It will no longer be visible when scheduling" %}{% endset %}
+                        {{ forms.checkbox("retired", title, dayPart.isRetired, helpText) }}
+
+                        {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the start time for this daypart" %}{% endset %}
+                        {{ forms.time("startTime", title, "00:00", helpText) }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the end time for this daypart. If the end time is before the start time, then the daypart will cross midnight." %}{% endset %}
+                        {{ forms.time("endTime", title, "00:00", helpText) }}
+
+                    </div>
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "A Description of Daypart" %}{% endset %}
+                        {{ forms.textarea("description", title, "", helpText) }}
+                    </div>
+                    <div class="tab-pane" id="exceptions">
+                        {% set title %}{% trans "If there are any exceptions enter them below by selecting the Day from the list and entering a start/end time." %}{% endset %}
+                        {{ forms.message(title) }}
+                        <div id="dayPartExceptions">
+
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

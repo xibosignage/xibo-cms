@@ -1,6 +1,0 @@
-{
- "id":"prominent-title-with-desc-and-name-separator",
- "value":"Prominent title with description and name separator",
- "template":"<p style=\"font-family: Arial, Verdana, sans-serif;\"><span style=\"font-size:28px;\"><span style=\"color: #Color#;\">[Name]<\/span><\/span><\/p><p style=\"font-family: Arial, Verdana, sans-serif;\"><span style=\"font-size:48px;\"><span style=\"color: #Color#;\"><strong>[Title]<\/strong><\/span><\/span><\/p><p style=\"font-family: Arial, Verdana, sans-serif;\"><span style=\"font-size:48px;\"><span style=\"color: #Color#;\">[Description]<\/span><\/span><\/p>",
- "css":""
-}

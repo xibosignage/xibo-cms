@@ -1,0 +1,77 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "inline.twig" as inline %}
+
+{# TODO: We will need to design a playlist selector #}
+{% set playlist = region.playlists[0] %}
+
+{% block formTitle %}
+    {% trans "Region Timeline" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Close" %}, XiboDialogClose()
+    {% trans "Switch to Timeline" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=timeline")
+{% endblock %}
+
+{% block callBack %}timelineGridCallback{% endblock %}
+
+{% block formHtml %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="well">
+                    <ul class="nav nav-list">
+                        <li class="nav-header">{% trans "Add Media" %}</li>
+                        <li class="XiboFormButton" href="{{ urlFor("playlist.library.assign.form", {id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{% trans "Library" %}</a></li>
+                        {% for module in modules %}
+                            {% if module.regionSpecific %}
+                                <li class="XiboFormButton" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                            {% else %}
+                                <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-10">
+                <div class="XiboGrid" id="{{ random() }}">
+                    <div class="">
+                        <div class="FilterDiv hidden" id="">
+                            <form class="form-inline">
+                                {% set title %}{% trans "Playlist" %}{% endset %}
+                                {{ inline.dropdown("playlistId", "single", title, playlist.playlistId, region.playlists, "playlistId", "name") }}
+                            </form>
+                        </div>
+                    </div>
+                    <div class="XiboData">
+                        <table id="timelineWidgets" class="table table-striped" data-region-id="{{ region.regionId }}">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Order" %}</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Duration" %}</th>
+                                <th>{% trans "Transition" %}</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

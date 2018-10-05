@@ -1,0 +1,76 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.delete }}")
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#userDeleteForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "deleteAllItems",
+    "trigger": "init",
+    "value": 1,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "none" }
+    }
+    },{
+    "field": "deleteAllItems",
+    "trigger": "change",
+    "value": 1,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "none" }
+    }
+    },{
+    "field": "deleteAllItems",
+    "trigger": "init",
+    "value": 0,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "block" }
+    }
+    },{
+    "field": "deleteAllItems",
+    "trigger": "change",
+    "value": 0,
+    "operation": "is:checked",
+    "actions": {
+    ".user-selector-group": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("user.delete", {id: user.userId}) }}">
+                {% set message %}{% trans "Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button." %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Delete all items owned by this User?" %}{% endset %}
+                {% set helpText %}{% trans "Check to delete all items owned by this user, including Layouts, Media, Schedules, etc." %}{% endset %}
+                {{ forms.checkbox("deleteAllItems", title, 0, helpText) }}
+
+                {% set title %}{% trans "Reassign items to another User" %}{% endset %}
+                {% set helpText %}{% trans "Reassign all items this User owns to the selected User." %}{% endset %}
+                {{ forms.dropdown("reassignUserId", "single", title, 0, [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "user-selector-group") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

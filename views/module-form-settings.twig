@@ -1,0 +1,57 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Module" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#moduleEditForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.settings", {id: module.module.moduleId}) }}">
+
+                {% set title %}{% trans "Default Duration" %}{% endset %}
+                {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}
+                {{ forms.input("defaultDuration", title, module.module.defaultDuration, helpText) }}
+
+                {% set title %}{% trans "Valid Extensions" %}{% endset %}
+                {% set helpText %}{% trans "The Extensions allowed on files uploaded using this module. Comma Separated." %}{% endset %}
+                {{ forms.input("validExtensions", title, module.module.validExtensions, helpText) }}
+
+                {% set title %}{% trans "Image Uri" %}{% endset %}
+                {% set helpText %}{% trans "The Image to display for this module. This should be a path relative to the root of the installation." %}{% endset %}
+                {% if moduleConfigLocked %}
+                    {{ forms.disabled("imageUri", title, module.module.imageUri, helpText) }}
+                {% else %}
+                    {{ forms.input("imageUri", title, module.module.imageUri, helpText) }}
+                {% endif %}
+
+                {% set title %}{% trans "Preview Enabled?" %}{% endset %}
+                {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout designer." %}{% endset %}
+                {{ forms.checkbox("previewEnabled", title, module.module.previewEnabled, helpText) }}
+
+                {% set title %}{% trans "Enabled?" %}{% endset %}
+                {% set helpText %}{% trans "When Enabled users will be able to add media using this module." %}{% endset %}
+                {{ forms.checkbox("enabled", title, module.module.enabled, helpText) }}
+
+                {% block moduleFormFields %}
+
+                {% endblock %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

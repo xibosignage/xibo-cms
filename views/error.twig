@@ -1,0 +1,22 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+{% extends "non-authed.twig" %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Error" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-12">
+                    {{ flash.globalError }}
+                    {{ flash.message }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

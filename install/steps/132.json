@@ -1,0 +1,18 @@
+{
+  "dbVersion": 132,
+  "appVersion": "1.8.1",
+  "steps": [
+    {
+      "step": "Convert all always schedules to use 2038 as infinity time",
+      "action": "UPDATE `schedule` SET toDt = 2147483647 WHERE toDt = 2556057600;"
+    },
+    {
+      "step": "Migrate display permissions over to Display Group link",
+      "action": "UPDATE `permission` SET entityId = (SELECT entityId FROM permissionentity WHERE entity = 'Xibo\\\\Entity\\\\DisplayGroup'), objectId = (SELECT lkdisplaydg.DisplayGroupID FROM `lkdisplaydg` INNER JOIN `displaygroup` ON `displaygroup`.DisplayGroupID = `lkdisplaydg`.DisplayGroupID AND `displaygroup`.IsDisplaySpecific = 1 WHERE permission.objectId = `lkdisplaydg`.DisplayID) WHERE entityId IN (SELECT entityId FROM permissionentity WHERE entity = 'Xibo\\\\Entity\\\\Display');"
+    },
+    {
+      "step": "Remove Display Permission Entity",
+      "action": "DELETE FROM `permissionentity` WHERE `entity` = 'Xibo\\\\Entity\\\\Display';"
+    }
+  ]
+}

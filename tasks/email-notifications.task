@@ -1,0 +1,5 @@
+{
+  "name": "Email Notifications",
+  "class": "\\Xibo\\XTR\\EmailNotificationsTask",
+  "options": []
+}

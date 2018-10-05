@@ -1,0 +1,19 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Licence Information" %}</div>
+        <div class="widget-body">
+            {% include "licence.twig" %}
+        </div>
+    </div>
+{% endblock %}

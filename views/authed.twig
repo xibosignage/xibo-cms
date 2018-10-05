@@ -1,0 +1,306 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
+    <div {% if hideNavigation == "0" %}id="page-wrapper"{% endif %} class="active">
+
+        {% if hideNavigation == "0" %}
+        <div class="collapse navbar-collapse" id="navbar-collapse-1">
+            {% include "authed-sidebar.twig" %}
+        </div>
+        {% endif %}
+
+        <div id="content-wrapper">
+            <div class="page-content">
+                <div class="row header">
+                    <div class="col-sm-12">
+                        <div class="meta pull-left">
+                            <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
+                        </div>
+                        <div class="user pull-right">
+                            <button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </button>
+                            <div class="item dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <img src="{{ theme.uri("img/avatar.jpg") }}" />
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-right">
+                                    <li class="dropdown-header">{{ currentUser.userName }}<br/>
+                                        <div id="XiboClock">{{ clock }}</div>
+                                    </li>
+                                    <li class="divider"></li>
+                                    <li><a class="XiboFormButton" href="{{ urlFor("user.change.password.form") }}" title="{% trans "Change Password" %}">{% trans "Change Password" %}</a></li>
+                                    <li><a id="reshowWelcomeMenuItem" href="#">{% trans "Reshow welcome" %}</a></li>
+                                    <li><a class="XiboHelpButton" href="{{ helpService.link() }}">{% trans "Help" %}</a></li>
+                                    <li class="divider"></li>
+                                    <li><a title="{% trans "Logout" %}" href="{{ logoutUrl }}">{% trans "Logout" %}</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        {% if currentUser.routeViewable("/drawer") %}
+                        <div class="user pull-right">
+                            <div class="item dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    <i class="fa fa-bell"></i> {% if notificationCount > 0 %}<span class="badge red">{{ notificationCount }}</span>{% endif %}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-right notification-drawer">
+                                    <li class="dropdown-header">{% trans "Notifications" %}<br/>
+
+                                    </li>
+                                    {% if notifications|length > 0 %}
+                                    <li class="divider"></li>
+                                    {% endif %}
+                                    {% for notification in notifications %}
+                                    <li>
+                                        <div class="notification">
+                                            {% if notification.notificationId %}
+                                            <a class="XiboFormButton" href="{{ urlFor("notification.show", {id: notification.notificationId}) }}"><span class="{% if notification.read %}notification-unread{% else %}notification-read{% endif %}">{{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span></span></a>
+                                            {% else %}
+                                            <span class="fa fa-exclamation-circle"></span> {{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+
+                                    {% if currentUser.routeViewable("/notification") %}
+                                    <li class="divider"></li>
+
+                                    <li><a href="{{ urlFor("notification.view") }}">{% trans "Notification Centre" %}</a></li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% block actionMenu %}{% endblock %}
+                        {% block pageContent %}{% endblock %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% block pageFooter %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+
+    <script type="text/javascript">
+        {% set userPreferences = currentUser.getUserOptions() %}
+        var userPreferences = {{ userPreferences|json_encode|raw }};
+        var userPreferencesUrl = "{{ urlFor("user.pref") }}";
+    </script>
+
+    {% raw %}
+    <script type="text/x-handlebars-template" id="buttons-template">
+        <div class="btn-group pull-right">
+            <button class="btn dropdown-toggle" data-toggle="dropdown">
+                <span class="fa fa-caret-down"></span>
+            </button>
+            <ul class="dropdown-menu">
+                {{#each buttons}}
+                    {{#if divider}}
+                    <li class="divider"></li>
+                    {{else}}
+                        {{#if external}}
+                        <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}">{{ text }}</a></li>
+                        {{/if}}
+
+                        {{#unless external}}
+                            <li {{#each dataAttributes}}
+                                data-{{ name }}="{{ value }}"
+                                {{/each}}
+                                class="{{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"><a tabindex="-1" href="#">{{ text }}</a>
+                            </li>
+                        {{/unless}}
+                    {{/if}}
+                {{/each}}
+            </ul>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="multiselect-button-template">
+        <div class="btn-group">
+            <button class="btn select-all" data-toggle="selectAll">
+                {{ selectAll }}
+            </button>
+            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <span class="fa fa-caret-down"></span>
+                {{ withSelected }}
+            </button>
+            <ul class="dropdown-menu">
+                {{#each buttons}}
+                <li class="XiboMultiSelectFormButton" data-button-id="{{ id }}" data-grid-id="{{ gridId }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                {{/each}}
+            </ul>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="template-file-upload">
+        <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/){{ upload.validExt }}$/i">
+            {{#if playlistId}}
+                <input type="hidden" name="playlistId" value="{{ playlistId }}" />
+            {{/if}}
+            {{#if widgetId}}
+                <input type="hidden" name="widgetId" value="{{ widgetId }}" />
+            {{/if}}
+            {{#if oldMediaId}}
+                <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
+            {{/if}}
+            <div class="row fileupload-buttonbar">
+                <div class="col-md-7">
+                    <div class="well">
+                        {{ upload.maxSizeMessage }}
+                    </div>
+                    <!-- The fileinput-button span is used to style the file input field as button -->
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <span>{{ trans.addFiles }}</span>
+                        {{#if oldMediaId }}
+                        <input type="file" name="files[]">
+                        {{else}}
+                        <input type="file" name="files[]" multiple>
+                        {{/if}}
+                    </span>
+                    <button type="submit" class="btn btn-primary start">
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <span>{{ trans.startUpload }}</span>
+                    </button>
+                    <button type="reset" class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <span>{{ trans.cancelUpload }}</span>
+                    </button>
+                    <!-- The loading indicator is shown during file processing -->
+                    <span class="fileupload-loading"></span>
+                </div>
+                <!-- The global progress information -->
+                <div class="col-md-4 fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                </div>
+            </div>
+            {{#if oldMediaId}}
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="updateInLayouts" title="{{ trans.updateInLayouts.helpText }}">
+                        <input type="checkbox" id="updateInLayouts" name="updateInLayouts" {{#if updateInAllChecked}}checked{{/if}}>
+                        {{ trans.updateInLayouts.title }}
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <label for="deleteOldRevisions" title="{{ trans.deleteOldRevisions.helpText }}">
+                        <input type="checkbox" id="deleteOldRevisions" name="deleteOldRevisions" {{#if deleteOldRevisionsChecked}}checked{{/if}}>
+                        {{ trans.deleteOldRevisions.title }}
+                    </label>
+                </div>
+            </div>
+            {{/if}}
+            <!-- The table listing the files available for upload/download -->
+            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        </form>
+    </script>
+
+    <!-- The template to display files available for upload -->
+    <script id="template-upload" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+        <tr class="template-upload fade">
+            <td>
+                <span class="preview"></span>
+            </td>
+            <td class="title">
+                <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
+                <div><span class="error"></span></div>
+            </td>
+            <td>
+                <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                {% if (!i && !o.options.autoUpload) { %}
+                    <button class="btn btn-primary start" disabled>
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                    </button>
+                {% } %}
+                {% if (!i) { %}
+                    <button class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                    </button>
+                {% } %}
+            </td>
+        </tr>
+    {% } %}
+    </script>
+    <!-- The template to display files available for download -->
+    <script id="template-download" type="text/x-tmpl">
+    {% for (var i=0, file; file=o.files[i]; i++) { %}
+        <tr class="template-download fade">
+           <td>
+                <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
+                    {%=file.name%}
+                </p>
+                {% if (file.error) { %}
+                    <div><span class="label label-danger">{%=file.error%}</span></div>
+                {% } %}
+            </td>
+            <td>
+                <span class="size">{%=o.formatFileSize(file.size)%}</span>
+            </td>
+        </tr>
+    {% } %}
+    </script>
+    {% endraw %}
+
+    <script type="text/x-handlebars-template" id="layout-background-image-upload-template">
+        <form method="post" action="{{ urlFor("library.add") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/){{ libraryUpload.validImageExt }}$/i">
+            <div class="row">
+                <div class="col-md-4">
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <span>{% trans "Add a new background image?" %}</span> <input type="file" name="files[]">
+                    </span>
+                </div>
+                <div class="col-md-8">
+                    <span class="fileupload-loading"></span>
+                    <div class="fileupload-progress fade">
+                        <!-- The global progress bar -->
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                                <div class="sr-only"></div>
+                            </div>
+                        </div>
+                        <!-- The extended global progress information -->
+                        <div class="progress-extended">&nbsp;</div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <!-- The table listing the files available for upload/download -->
+                    <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+                </div>
+            </div>
+        </form>
+    </script>
+
+{% endblock %}

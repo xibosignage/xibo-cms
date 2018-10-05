@@ -1,0 +1,106 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Transitions" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="transitions" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Has Duration" %}</th>
+                                <th>{% trans "Has Direction" %}</th>
+                                <th>{% trans "Enabled for In" %}</th>
+                                <th>{% trans "Enabled for Out" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#transitions").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=transitionGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "transitionGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("transition.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#transitions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "transition" },
+                { "data": "hasDuration", "render": dataTableTickCrossColumn },
+                { "data": "hasDirection", "render": dataTableTickCrossColumn },
+                { "data": "availableAsIn", "render": dataTableTickCrossColumn },
+                { "data": "availableAsOut", "render": dataTableTickCrossColumn },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+    </script>
+{% endblock %}

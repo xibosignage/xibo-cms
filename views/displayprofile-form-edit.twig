@@ -1,0 +1,95 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Profile" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayProfileForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                {% set first = true %}
+                {% for tab in displayProfile.configTabs %}
+                    <li{% if first %} class="active"{% endif %}><a href="#{{ tab.id }}" role="tab" data-toggle="tab">{{ tab.name }}</a></li>
+                    {% set first = false %}
+                {% endfor %}
+                {% if commands|length > 0 %}
+                    <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
+                {% endif %}
+            </ul>
+            <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
+                <div class="tab-content">
+                {% for field in displayProfile.configDefault %}
+                    {% if currentCat != field.tabId %}
+                        {% if currentCat != "" %}
+                            </div>
+                        {% endif %}
+                        <div class="tab-pane{% if currentCat == "" %} active{% endif %}" id="{{ field.tabId }}">
+                            {% if field.tabId == "general" %}
+                                {% set title %}{% trans "Name" %}{% endset %}
+                                {% set helpText %}{% trans "The Name of the Profile - (1 - 50 characters)" %}{% endset %}
+                                {{ forms.input("name", title, displayProfile.name, helpText) }}
+
+                                {% set title %}{% trans "Default Profile?" %}{% endset %}
+                                {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
+                                {{ forms.checkbox("isDefault", title, displayProfile.isDefault, helpText) }}
+                            {% endif %}
+
+                        {% set currentCat = field.tabId %}
+                    {% endif %}
+                    {# Now we have to output the relevant form field #}
+                    {% if field.enabled != 1 %}
+                        {{ forms.disabled(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "text" %}
+                        {{ forms.input(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "number" %}
+                        {{ forms.number(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "email" %}
+                        {{ forms.email(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "checkbox" %}
+                        {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "timePicker" %}
+                        {{ forms.time(field.name, field.title, field.value, field.helpText) }}
+                    {% elseif field.fieldType == "dropdown" %}
+                        {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
+                    {% endif %}
+                {% endfor %}
+                </div>
+                {% if commands|length > 0 %}
+                    <div class="tab-pane" id="commands">
+                        {% for field in commands %}
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ forms.disabled("command", title, field.command, field.description) }}
+
+                            {% set fieldId = "commandString_" ~ field.commandId %}
+                            {% set title %}{% trans "Command" %}{% endset %}
+                            {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
+                            {{ forms.input(fieldId, title, field.commandString, helpText) }}
+
+                            {% set fieldId = "validationString_" ~ field.commandId %}
+                            {% set title %}{% trans "Validation" %}{% endset %}
+                            {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
+                            {{ forms.input(fieldId, title, field.validationString, helpText) }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

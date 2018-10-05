@@ -1,0 +1,67 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Assign a Layout" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, layoutAssignSubmit()
+{% endblock %}
+
+{% block callBack %}layoutFormCallBack{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-warning">
+                {% trans "Assigning a Layout to a Display/DisplayGroup does NOT schedule that Layout to be shown. Please use the Schedule to show Layouts." %}
+            </div>
+            <div id="FileAssociationsAssign" class="well" data-url="{{ urlFor("displayGroup.assign.layout", {id: displayGroup.displayGroupId}) }}">
+                <div>
+                    <ul id="FileAssociationsSortable">
+                        {% for item in layouts %}
+                        <li data-layout-id="{{ item.layoutId }}" class="btn btn-sm btn-default">{{ item.layout }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="FilterDiv">
+                    <form onsubmit="false">
+
+                    </form>
+                </div>
+                <div class="XiboData">
+                    <table id="layoutAssignments" data-url="{{ urlFor("layout.search") }}" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Name" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

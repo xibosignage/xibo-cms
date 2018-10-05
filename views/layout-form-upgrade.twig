@@ -1,0 +1,60 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+$formFields = array();
+        $formFields[] = FormManager::AddMessage(__('Are you sure you want to upgrade this layout?'));
+        $formFields[] = FormManager::AddMessage(__('Layouts are now designed at the display resolution allowing better positioning, smoother scrolling and much more. To upgrade this layout you need to select the intended resolution.'));
+        $formFields[] = FormManager::AddCombo(
+                    'resolutionId',
+                    __('Resolution'),
+                    NULL,
+                    $this->user->ResolutionList(),
+                    'resolutionid',
+                    'resolution',
+                    __('The regions will be resized to fit with the new resolution, but you may need to adjust the content manually.'),
+                    'r', 'required');
+
+        // Provide a check box which will attempt to scale up the contents of all media items
+        $formFields[] = FormManager::AddCheckbox('scaleContent', __('Upscale?'), 1,
+            __('Automatically upscale all media content on this Layout to fit with the new resolution selected. Manual adjustment may still be required.'),
+            's');
+
+        Theme::Set('form_fields', $formFields);
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Upgrade Layout" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Upgrade" %}, $("#layoutUpgradeForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutUpgradeForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("layout.upgrade", {id: layout.layoutId}) }}">
+                {% set message %}{% trans "Are you sure you want to upgrade this layout?" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set message %}{% trans "Layouts are now designed at the display resolution allowing better positioning, smoother scrolling and much more. To upgrade this layout you need to select the intended resolution." %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set title %}{% trans "Resolution" %}{% endset %}
+                {% set helpText %}{% trans "The regions will be resized to fit with the new resolution, but you may need to adjust the content manually." %}{% endset %}
+                {{ forms.dropdown("single", "resolutionId", title, "", resolutions, "resolutionId", "resolution", helpText) }}
+
+                {% set title %}{% trans "Upscale?" %}{% endset %}
+                {% set helpText %}{% trans "Automatically upscale all media content on this Layout to fit with the new resolution selected. Manual adjustment may still be required." %}{% endset %}
+                {{ forms.checkbox("scaleContent", title, 1, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

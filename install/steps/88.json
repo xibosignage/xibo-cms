@@ -1,0 +1,18 @@
+{
+  "dbVersion": 88,
+  "appVersion": "1.7.4",
+  "steps": [
+    {
+      "step": "Create the Audit Log Table",
+      "action": "CREATE TABLE IF NOT EXISTS `auditlog` (`logId` int(11) NOT NULL AUTO_INCREMENT,`logDate` int(11) NOT NULL,`userId` int(11) NOT NULL,`message` varchar(254) NOT NULL,`entity` varchar(50) NOT NULL,`entityId` int(11) NOT NULL,`objectAfter` text NOT NULL,PRIMARY KEY (`logId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add the Audit Log Page",
+      "action": "INSERT INTO `pages` (`name`, `pagegroupID`) SELECT 'auditlog', pagegroupID FROM `pagegroup` WHERE pagegroup.pagegroup = 'Reports';"
+    },
+    {
+      "step": "Add the User/Group Library Quota",
+      "action": "ALTER TABLE  `group` ADD  `libraryQuota` INT NULL;"
+    }
+  ]
+}

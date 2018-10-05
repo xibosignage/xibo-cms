@@ -1,0 +1,195 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+It is done, I mean this twig is probably fine, the 'name' in the settings at the end isn't quite right, but it's not a problem with this form.
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Display" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayEditForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#location" role="tab" data-toggle="tab"><span>{% trans "Location" %}</span></a></li>
+                <li><a href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                <li><a href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="displayEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+
+                        {% set title %}{% trans "Display" %}{% endset %}
+                        {% if displayLockName %}
+                            {% set helpText %}{% trans "The Name of the Display - your administrator has locked this to the device name" %}{% endset %}
+                            {{ forms.disabled("display", title, display.display, helpText, "", "required") }}
+                        {% else %}
+                            {% set helpText %}{% trans "The Name of the Display - (1 - 50 characters)." %}{% endset %}
+                            {{ forms.input("display", title, display.display, helpText, "", "required") }}
+                        {% endif %}
+                
+                        {% set title %}{% trans "Display's Hardware Key" %}{% endset %}
+                        {% set helpText %}{% trans "A unique identifier for this display." %}{% endset %}
+                        {{ forms.input("license", title, display.license, helpText, "", "required", "", false) }}
+
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
+                        {{ forms.input("description", title, display.description, helpText) }}
+
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
+                        {{ forms.inputWithTags("tags", title, display.tags, helpText) }}
+
+                        {% set title %}{% trans "Authorise display?" %}{% endset %}
+                        {% set helpText %}{% trans "Use one of the available slots for this display?" %}{% endset %}
+                        {% set yes %}{% trans "Yes" %}{% endset %}
+                        {% set no %}{% trans "No" %}{% endset %}
+                        {% set options = [
+                        { licensedid: 1, licensed: yes },
+                        { licensedid: 0, licensed: no }
+                        ] %}
+                        {{ forms.dropdown("licensed", "single", title, display.licensed, options, "licensedid", "licensed", helpText) }}
+
+                        {% set title %}{% trans "Default Layout" %}{% endset %}
+                        {% set helpText %}{% trans "The Default Layout to Display where there is no other content." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: urlFor("layout.search") },
+                            { name: "data-search-term", value: "layout" },
+                            { name: "data-id-property", value: "layoutId" },
+                            { name: "data-text-property", value: "layout" }
+                        ] %}
+                        {{ forms.dropdown("defaultLayoutId", "single", title, display.defaultLayoutId, layouts, "layoutId", "layout", helpText, "pagedSelect", "", "", "", attributes) }}
+                    </div>
+                    <div class="tab-pane" id="location">
+                        {% set title %}{% trans "Latitude" %}{% endset %}
+                        {% set helpText %}{% trans "The Latitude of this display" %}{% endset %}
+                        {{ forms.number("latitude", title, display.latitude, helpText) }}
+                        
+                        {% set title %}{% trans "Longitude" %}{% endset %}
+                        {% set helpText %}{% trans "The Longitude of this Display" %}{% endset %}
+                        {{ forms.number("longitude", title, display.longitude, helpText) }}
+
+                        {% set attributes = [
+                        { name: "data-width", value: "100%" }
+                        ] %}
+                        {% set title %}{% trans "Timezone" %}{% endset %}
+                        {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}
+                        {{ forms.dropdown("timeZone", "single", title, display.timeZone, [{id:"", value:""}]|merge(timeZones), "id", "value", helpText, "selectPicker", "", "", "", attributes) }}
+                    </div>
+                    <div class="tab-pane" id="maintenance">
+
+                        {% set title %}{% trans "Email Alerts" %}{% endset %}
+                        {% set helpText %}{% trans "Do you want to be notified by email if there is a problem with this display?" %}{% endset %}
+                        {% set yes %}{% trans "Yes" %}{% endset %}
+                        {% set no %}{% trans "No" %}{% endset %}
+                        {% set options = [
+                        { id: 0, value: no },
+                        { id: 1, value: yes }
+                        ] %}
+                        {{ forms.dropdown("emailAlert", "single", title, display.emailAlert, options, "id", "value", helpText) }}
+
+
+                        {% set title %}{% trans "Use the Global Timeout?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this display be tested against the global time out or the client collection interval?" %}{% endset %}
+                        {{ forms.checkbox("alertTimeout", title, display.alertTimeout, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="wol">
+
+                        {% set title %}{% trans "Enable Wake on LAN" %}{% endset %}
+                        {% set helpText %}{% trans "Wake on Lan requires the correct network configuration to route the magic packet to the display PC" %}{% endset %}
+                        {{ forms.checkbox("wakeOnLanEnabled", title, display.wakeOnLanEnabled, helpText) }}
+
+                        {% set title %}{% trans "BroadCast Address" %}{% endset %}
+                        {% set helpText %}{% trans "The IP address of the remote host\'s broadcast address (or gateway)" %}{% endset %}
+                        {{ forms.input("broadCastAddress", title, display.broadCastAddress, helpText) }}
+
+                        {% set title %}{% trans "Wake on LAN SecureOn" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a hexadecimal password of a SecureOn enabled Network Interface Card (NIC) of the remote host. Enter a value in this pattern: \'xx-xx-xx-xx-xx-xx\'. Leave the following field empty, if SecureOn is not used (for example, because the NIC of the remote host does not support SecureOn)." %}{% endset %}
+                        {{ forms.input("secureOn", title, display.secureOn, helpText) }}
+
+                        {% set title %}{% trans "Wake on LAN Time" %}{% endset %}
+                        {% set helpText %}{% trans "The time this display should receive the WOL command, using the 24hr clock - e.g. 19:00. Maintenance must be enabled." %}{% endset %}
+                        {{ forms.input("wakeOnLanTime", title, display.wakeOnLanTime, helpText) }}
+
+
+                        {% set title %}{% trans "Wake on LAN CIDR" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field." %}{% endset %}
+                        {{ forms.input("cidr", title, display.cidr, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="advanced">
+
+                        {% set title %}{% trans "Settings Profile?" %}{% endset %}
+                        {% set helpText %}{% trans "What display profile should this display use? To use the default profile leave this empty." %}{% endset %}
+                        {{ forms.dropdown("displayProfileId", "single", title, display.displayProfileId, [{displayProfileId: null, name: ""}]|merge(profiles), "displayProfileId", "name", helpText) }}
+ 
+
+                        {% set title %}{% trans "Interleave Default" %}{% endset %}
+                        {% set helpText %}{% trans "Whether to always put the default layout into the cycle." %}{% endset %}
+                        {% set yes %}{% trans "Yes" %}{% endset %}
+                        {% set no %}{% trans "No" %}{% endset %}
+                        {% set options = [
+                        { id: 0, value: no },
+                        { id: 1, value: yes }
+                        ] %}
+                        {{ forms.dropdown("incSchedule", "single", title, display.incSchedule, options, "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Auditing until" %}{% endset %}
+                        {% set helpText %}{% trans "Collect auditing from this client. Should only be used if there is a problem with the display." %}{% endset %}
+                        {% if display.isAuditing() %}
+                            {% set auditing = display.auditingUntilIso %}
+                        {% else %}
+                            {% set auditing = "" %}
+                        {% endif %}
+                        {{ forms.datetime("auditingUntil", title, auditing, helpText) }}
+
+                        {% set title %}{% trans "Clear Cached Data" %}{% endset %}
+                        {% set helpText %}{% trans "Remove any cached data for this display." %}{% endset %}
+                        {{ forms.checkbox("clearCachedData", title, 1, helpText) }}
+
+                        {% set title %}{% trans "Reconfigure XMR" %}{% endset %}
+                        {% set helpText %}{% trans "Remove the XMR configuration for this Player and send a rekey action." %}{% endset %}
+                        {{ forms.checkbox("rekeyXmr", title, 0, helpText) }}
+
+                        {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Setting" %}</th>
+                                    <th>{% trans "Value" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in settings %}
+                                <tr>
+                                    <td>{{item.title}}</td>
+                                    <td>{{item.valueString}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>    
+            </form>
+        </div>
+    </div>
+{% endblock %}

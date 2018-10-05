@@ -1,0 +1,11 @@
+{
+    "id": "tweet-with-profileimage-right",
+    "value": "Template 5 - text, profile image",
+    "template": "<div class=\"twitter-container\">\r\n<div class=\"col-xs-11 tweet vcenter\">[Tweet]<\/div>\r\n\r\n<div class=\"col-xs-1 profilepic vcenter\">[ProfileImage|normal]<\/div>\r\n<\/div>\r\n",
+    "css": ".emojione {\r\n    width: 20px;\r\n    height: 20px\r\n}\r\n\r\n.twitter-container {\r\n    width: 800px !important;\r\n    height: 100px !important;\r\n    font-size: 19px;\r\n    font-family: lucida sans unicode, lucida grande, sans-serif;\r\n    line-height: 1.1;\r\n    padding: 10px;\r\n    display: table;\r\n    table-layout: fixed;\r\n}\r\n\r\n.item {\r\n    float: left;\r\n}\r\n\r\n.vcenter {\r\n    display: table-cell;\r\n    vertical-align: middle;\r\n    float: none;\r\n    padding-right: 0;\r\n}",
+    "widgetOriginalWidth": "800",
+    "widgetOriginalHeight": "100",
+    "widgetOriginalPadding": "10",
+    "resultContent": "1",
+    "image":"modules/twitter/template-thumbs/profileright.png"
+}

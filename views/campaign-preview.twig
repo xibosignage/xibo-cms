@@ -1,0 +1,75 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (campaign-page.twig)
+ */
+This is the template for the campaign page
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">
+            {% set campaignName = campaign.campaign %}
+            {% if campaign.isLayoutSpecific %}
+                {% trans %}Layout Preview for {{ campaignName }}{% endtrans %}
+            {% else %}
+                {% trans %}Campaign Preview for {{ campaignName }}{% endtrans %}
+            {% endif %}
+        </div>
+        <div class="widget-body">
+            <p><b>{% trans "total duration" %}</b> {{ duration|datehms }} <i>({% trans "hours:min:sec" %})</i></p>
+            <p><b>{% trans "number of layouts" %}</b> : {{ campaign.numberLayouts }} </p>
+            <div class="row clearfix">
+                {% for extendedLayout in extendedLayouts %}
+                    <div class="col-sm-6 col-md-4 col-lg-3">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="embed-responsive embed-responsive-4by3">
+                                    <div class="embed-responsive-item preview-container"
+                                         data-url="{{ urlFor('layout.preview', { "id": extendedLayout.layout.layoutId }) }}'">
+                                        {% include 'layout-preview-partial.twig' with {'layout': extendedLayout.layout, 'previewOptions': extendedLayout.previewOptions } %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <small>{% trans "id" %}:</small> {{ extendedLayout.layout.layoutId }}<br/>
+                                <small>{% trans "name" %}:</small> {{ extendedLayout.layout.layout }}<br/>
+                                <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|datehms }}<br/>
+                            </div>
+                            <div class="col-sm-4">
+                                <a class="btn btn-default btn-sm" href="{{ urlFor("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
+                                    {% trans "Open full screen" %}
+                                    <span class="fa fa-tablet"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+    <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
+    <script src="{{ theme.uri("js/html-preview.js") }}"></script>
+    <script type="text/javascript">
+        (function($){
+          $(document).ready(function(){
+            {% for extendedLayout in extendedLayouts %}
+              dsInit({{ extendedLayout.layout.layoutId }}, {{ extendedLayout.previewOptions|json_encode()|raw }}, false);
+            {% endfor %}
+          });
+        }(jQuery));
+    </script>
+{% endblock %}
+
+{% block headContent %}
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
+{% endblock %}

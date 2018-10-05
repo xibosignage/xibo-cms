@@ -1,0 +1,607 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    {# Get the display width / height #}
+    {% set designerScale = min((resolution.designerWidth / layout.width), (resolution.designerHeight / layout.height)) %}
+
+    {# Version 2 layout can support zooming? #}
+    {% if layout.schemaVersion > 1 %}
+        {% set designerScale = designerScale * zoom %}
+    {% endif %}
+
+    {# Reset the designer width / height based on the zoom #}
+    {% set width = layout.width * designerScale %}
+    {% set height = layout.height * designerScale %}
+
+    {# Layout Background #}
+    {% if layout.backgroundImageId == 0 %}
+        {% set backgroundCss = layout.backgroundColor %}
+    {% else %}
+        {% set backgroundCss %}url('{{ urlFor("layout.download.background", {id: layout.layoutId}) }}?preview=1&width={{ width }}&height={{ height }}&proportional=0&layoutBackgroundId={{ layout.backgroundImageId }}') top center no-repeat; background-color: {{ layout.backgroundColor }}{% endset %}
+    {% endif %}
+
+
+    <div class="layout-toolbox row">
+        <div class="col-md-12">
+            <div class="panel bttm-fix with-nav-tabs panel-primary">
+                <div class="panel-heading">
+                    <ul class="nav nav-tabs">
+                        <li class="active tab-design">
+                            <a class="text-center" id="designer-tab" href="#tab1primary" data-toggle="tab"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Designer" %}</a>
+                        </li>
+                        <li class="tab-design">
+                            <a class="text-center" id="action-tab" href="#tab2primary" data-toggle="tab"><i class="fa fa-bell" aria-hidden="true"></i>   {% trans "Actions" %}</a>
+                        </li>
+                        <div class="pull-right layout-designer-right-pane">
+                            <span class="text-center" data-toggle="tooltip" data-placement="bottom" data-title="{% trans "Layout Duration: Duration may change depending on the exact number of items in ticker/twitter media items." %}">
+                                <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                <span id="layout-duration" class="label label-success big-duration"></span></span>
+                            <span>| <b> {% trans "Currently Editing" %}</b></span>
+                            <select id="layoutJumpList" data-width="200px" data-url="{{ urlFor("layout.search") }}" data-designer-url="{{ urlFor("layout.designer") }}">
+                                <option value="{{ layout.layoutId }}">{{ layout.layout }}</option>
+                            </select>
+                        </div>  
+                    </ul>
+                </div>
+                <div class="panel-body">
+                    <div class="tab-content">
+                        <div class="tab-pane no-pad fade in active" id="tab1primary">
+                            <div class="col-md-3 text-center">
+
+                                <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                                    <div class="btn-group" role="group">
+                                        <a class="XiboFormButton btn btn-default btn-sm" role="button" href="{{ urlFor("layout.edit.form", {id: layout.layoutId}) }}" title="{% trans "Edit the Layout Properties" %}"><span><i class="fa fa-picture-o" aria-hidden="true"></i> {% trans "Background" %}</span></a>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-info btn-sm" id="regionAddButton" role="button" href="{{ urlFor("region.add", {id: layout.layoutId}) }}"><span><i class="fa fa-plus" aria-hidden="true"></i> {% trans "Region" %}</span></a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-2 text-center">
+                                {% if currentUser.routeViewable("/user") %}
+                                <div class="designer-control-panel-checkbox override-layout">
+                                    <input type="checkbox" class="switch-check-box" name="lockPosition"  data-size="small" data-off-color="danger" data-on-color="success" data-label-width="100" data-label-text="{% trans "Lock Positions" %}" {% if currentUser.getOptionValue("lockPosition", "false") == "true" %}checked="checked"{% endif %}
+                                           data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}"/>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2 text-center">
+                                {% if currentUser.routeViewable("/user") %}
+                                <div class="designer-control-panel-checkbox override-layout">
+                                    <input type="checkbox"  data-size="small" data-off-color="danger" data-on-color="success" class="switch-check-box" data-label-text="{% trans "Hide Controls" %}" data-label-width="100" name="hideControls" {% if currentUser.getOptionValue("hideControls", "false") == "true" %}checked="checked"{% endif %}
+                                           data-on-text="{% trans "On" %}" data-off-text="{% trans "Off" %}"/>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-2 text-center">
+                                <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                                    <div class="btn-group" role="group">
+
+                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Decrease the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom - 0.3 }}" ><span><i class="fa fa-search-minus"  aria-hidden="true"></i></span> </a>
+                                    </div>
+                                    <div class="btn-group" role="group">
+
+                                        <a class="btn btn-default btn-sm" data-toggle="tooltip" data-placement="bottom" title="{% trans "Increase the canvas size" %}" role="button" href="{{ urlFor("layout.designer", {id: layout.layoutId}) }}?zoom={{ zoom + 0.3 }}"><span><i class="fa fa-search-plus" aria-hidden="true"></i></span></a>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button id="saveDesignerSize" data-toggle="tooltip" data-placement="bottom" title="{% trans "Save canvas size as default" %}" class="btn btn-success btn-sm " role="button" data-designer-size="{{ zoom }}">
+                                            <i class="fa fa-floppy-o" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                <div class="btn-group" role="group" aria-label="...">
+                                <div class="btn-group" role="group">
+                                    <button id="layout-revert" class="btn btn-warning btn-sm disabled btn-block">
+                                        <i class="fa fa-undo" aria-hidden="true"></i> {% trans "Undo" %}</button>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <button id="layout-save-all" class="btn btn-success btn-sm disabled btn-block">
+                                        <i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Save Region Positions" %}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="tab-pane no-pad fade" id="tab2primary">
+                        <div class="col-md-6">
+                            <div class="btn-group btn-group-justified" role="group" aria-label="...">
+                                <div class="btn-group" role="group">
+                                    <a class="btn btn-success btn-sm" role="button" href="{{ urlFor("layout.preview", {id: layout.layoutId}) }}" target="_blank"><span><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Preview Layout" %}</span></a>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <a class="XiboFormButton btn btn-info btn-sm" id="schedule-btn" role="button" href="{{ urlFor("schedule.now.form", {id: layout.campaignId, from: "Campaign"}) }}"><span><i class="fa fa-clock-o" aria-hidden="true"></i> {% trans "Schedule Now" %}</span></a>
+                                </div>
+                                <div class="btn-group" role="group">
+                                    <a class="XiboFormButton btn btn-warning btn-sm" role="button" href="{{ urlFor("template.from.layout.form", {id: layout.layoutId}) }}"><span><i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Save Template" %}</span></a>
+                                </div>
+                                {% if layout.schemaVersion < 2 %}
+                                    <div class="btn-group" role="group">
+                                        <a class="XiboFormButton btn btn-warning btn-sm" role="button" href="{{ urlFor("layout.upgrade.form", {id: layout.layoutId}) }}"><span><i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Upgrade Layout" %}</span></a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            {% if isTemplate %}
+                                <div class="alert no-pad alert-info text-right">{% trans "Editing a Template will only affect future Layouts." %}</div>
+                            {% else %}
+                                <div id="layout-status" class="alert no-pad text-center" style="margin-bottom: 0px;"></div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="layout" zoom="{{ zoom }}" tip_scale="1" designer_scale="{{ designerScale }}" class="layout center-block" layoutid="{{ layout.layoutId }}" data-background-color="{{ layout.backgroundColor }}" data-status-url="{{ urlFor("layout.status", {id: layout.layoutId}) }}" data-position-all-url="{{ urlFor("region.position.all", {id: layout.layoutId}) }}" style="position:relative; width:{{ width }}px; height:{{ height }}px; background:{{ backgroundCss }};">
+
+                {% for region in layout.regions %}
+                    {% set regionWidth = region.width * designerScale %}
+                    {% set regionHeight = region.height * designerScale %}
+                    {% set regionLeft = region.left * designerScale %}
+                    {% set regionTop = region.top * designerScale %}
+
+                    {# Disabled / Enabled CSS #}
+                    {% if currentUser.checkEditable(region) %}
+                        {% set disabledCss = "region" %}
+                        {% set trasparencyCss = "" %}
+                    {% else %}
+                        {% set disabledCss = "regionDis" %}
+                        {% set trasparencyCss = "regionDisabled" %}
+                    {% endif %}
+
+                    {% if currentUser.checkViewable(region) %}
+                        {% set previewCss = "regionPreview" %}
+                    {% else %}
+                        {% set previewCss = "" %}
+                    {% endif %}
+
+                    <div id="region_{{ region.regionId }}" regionEnabled="{{ currentUser.checkEditable(region) }}" regionid="{{ region.regionId }}" layoutid="{{ layout.layoutId }}" zindex="{{ region.zIndex }}" tip_scale="1" designer_scale="{{ designerScale }}" width="{{ region.width }}" height="{{ region.height }}" href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}" {% if currentUser.checkEditable(region) %}ondblclick="XiboFormRender($(this))"{% endif %} class="{{ disabledCss }} {{ previewCss }}" data-preview-url="{{ urlFor("region.preview", {id: region.regionId}) }}" style="position:absolute; width:{{ regionWidth }}px; height:{{ regionHeight }}px; top: {{ regionTop }}px; left:{{ regionLeft }}px; z-index: {{ region.zIndex }};">
+                        <div class="regionTransparency {{ transparencyCss }}" style="width:100%; height:100%;"></div>
+
+                        {% if currentUser.checkEditable(region) %}
+                            <div class="btn-group regionInfo pull-right">
+                                <button class="btn dropdown-toggle" data-toggle="dropdown">
+                                    <span class="region-tip">{{ region.width|round }} x {{ region.height|round }} ({{ region.left|round }} ,{{ region.top|round }})</span> <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="XiboFormButton" href="{{ urlFor("region.timeline.form", {id: region.regionId}) }}">{% trans "Edit Timeline" %}</a>
+                                    </li>
+                                    <li>
+                                        <a class="RegionOptionsMenuItem" href="{{ urlFor("region.edit.form", {id: region.regionId}) }}">{% trans "Options" %}</a>
+                                    </li>
+                                    <li>
+                                        <a class="XiboFormButton" href="{{ urlFor("region.delete.form", {id: region.regionId}) }}">{% trans "Delete" %}</a>
+                                    </li>
+                                    <li>
+                                        <a class="XiboFormButton" href="{{ urlFor("user.permissions.form", {entity: "Region", id: region.regionId}) }}">{% trans "Permissions" %}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% elseif layout.schemaVersion >= 2 and currentUser.checkViewable(region) %}
+                            <div class="regionInfo">
+                                <span class="region-tip">{{ region.width|round }} x {{ region.height|round }}
+                                    ({{ region.left|round }}
+                                    ,{{ region.top|round }})</span>
+                            </div>
+                        {% endif %}
+                        <div class="preview">
+                            <div class="previewContent">
+
+                            </div>
+                            <div class="previewNav label label-info"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+    {% if layout.schemaVersion < 2 %}
+        <div class="row">
+            <div class="col-sm-12">
+                <p class="alert alert-danger">{% trans "This is an old format layout, please consider upgrading using Actions tab" %}</p>
+            </div>
+        </div>
+    {% endif %}
+    {% if designerScale < 0.41 %}
+        <div class="row">
+            <div class="col-sm-12">
+                <p class="alert alert-danger">{% trans "This Layout is very large, so we have disabled region drag and drop. You could enlarge the designer from the options menu or use Region Options to Manually Position your regions." %}</p>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+    {% block javaScript %}
+        <script src="{{ theme.uri("js/xibo-layout-designer.js") }}?{{ version }}"></script>
+        <script type="text/javascript">
+            var translation = {
+                savePositionsFirst: "{% autoescape "js" %}{{ "Please save the pending position changes first by clicking Save Positions or cancel by clicking Undo."|trans }}{% endautoescape %}"
+            };
+
+            // Callback for the media form
+            function mediaFormCallBack(dialog) {
+                
+                $(dialog).closest(".modal").addClass("modal-big");
+                
+                // prevent filter form submit
+                $("#libraryAssignFilterOptions").find("form").on("submit", function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+
+                var mediaTable = $("#mediaAssignments").DataTable({
+                    "language": dataTablesLanguage,
+                    serverSide: true, stateSave: true, stateDuration: 0,
+                    searchDelay: 3000,
+                    "order": [[1, "asc"]],
+                    "filter": false,
+                    ajax: {
+                        url: "{{ urlFor("library.search") }}",
+                        "data": function (d) {
+                            $.extend(d, $("#libraryAssignFilterOptions").find("form").serializeObject());
+                        }
+                    },
+                    "columns": [
+                        {"data": "mediaId"},
+                        {"data": "name"},
+                        {"data": "mediaType"},
+                        {
+                            "name": "mediaId",
+                            "data": null,
+                            "render": function (data, type, row, meta) {
+                                if (type === "display") {
+                                    // Return only the image part of the data
+                                    if (data.thumbnailUrl === '')
+                                        return '';
+                                    else
+                                        return '<img src="' + data.thumbnailUrl + '"/>';
+                                    return data;
+                                } else {
+                                    return row.mediaId;
+                                }
+                            }
+                        },
+                        {
+                            "sortable": false,
+                            "data": function (data, type, row, meta) {
+                                if (type !== "display")
+                                    return "";
+
+                                // Create a click-able span
+                                return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                            }
+                        }
+                    ]
+                });
+
+                mediaTable.on('draw', function (e, settings) {
+                    dataTableDraw(e, settings);
+
+                    // Clicky on the +spans
+                    $(".assignItem", "#mediaAssignments").click(function () {
+                        // Get the row that this is in.
+                        var data = mediaTable.row($(this).closest("tr")).data();
+
+                        // Construct a new list item for the lower list and append it.
+                        var newItem = $("<li/>", {
+                            "text": " " + data.name,
+                            "data-media-id": data.mediaId,
+                            "class": "li-sortable",
+                            "dblclick": function () {
+                                $(this).remove();
+                            }
+                        });
+
+                        newItem.appendTo("#LibraryAssignSortable");
+
+                        // Add a span to that new item
+                        $("<span/>", {
+                            "class": "glyphicon glyphicon-minus-sign",
+                            click: function () {
+                                $(this).parent().remove();
+                            }
+                        }).prependTo(newItem);
+                    });
+                });
+                mediaTable.on('processing.dt', dataTableProcessing);
+
+                // Make our little list sortable
+                $("#LibraryAssignSortable").sortable();
+
+                // Bind the filter form
+                $("#libraryAssignFilterOptions").find("input, select").change(function () {
+                    mediaTable.ajax.reload();
+                });
+            }
+
+            /**
+             * Open Upload Form
+             */
+            function openUploadForm(templateOptions, buttons) {
+
+                // Close the current dialog
+                XiboDialogClose();
+
+                var template = Handlebars.compile($("#template-file-upload").html());
+
+                // Handle bars and open a dialog
+                bootbox.dialog({
+                    message: template(templateOptions),
+                    title: "{% trans "Upload media" %}",
+                    buttons: buttons,
+                    animate: false,
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
+                });
+
+                openUploadFormModelShown($(".modal-body").find("form"));
+            }
+
+            /**
+             * Modal shown
+             */
+            function openUploadFormModelShown(form) {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: true
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                            .text('Upload server currently unavailable - ' + new Date())
+                            .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                    'option',
+                    'redirect',
+                    window.location.href.replace(
+                        /\/[^\/]*$/,
+                        '/cors/result.html?%s'
+                    )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
+            }
+
+            // Click Handler for Library Upload Buttons (image, video, powerpoint, flash)
+            function libraryUploadClick(e) {
+                e.preventDefault();
+
+                var validExt = $(this).data().validExt.replace(/,/g, "|");
+                var playlistId = $(this).data().playlistId;
+
+                openUploadForm({
+                    trans: {
+                        addFiles: "{% trans "Add files" %}",
+                        startUpload: "{% trans "Start upload" %}",
+                        cancelUpload: "{% trans "Cancel upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                        validExt: validExt
+                    },
+                    playlistId: playlistId
+                }, {
+                    library: {
+                        label: "{% trans "View Library" %}",
+                        callback: function () {
+                            XiboFormRender("{{ urlFor("playlist.library.assign.form") }}".replace(":id", playlistId));
+                        }
+                    },
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function () {
+                            XiboFormRender(timelineForm.url, timelineForm.value);
+                        }
+                    }
+                });
+            }
+
+            /**
+             * Media Edit form
+             */
+            function mediaEditFormOpen(dialog) {
+
+                if (dialog.find("form").data().mediaEditable != 1)
+                    return;
+
+                // Create a new button
+                var footer = dialog.find(".modal-footer");
+                var mediaId = dialog.find("form").data().mediaId;
+                var widgetId = dialog.find("form").data().widgetId;
+                var validExtensions = dialog.find("form").data().validExtensions;
+
+                // Append
+                var replaceButton = $('<button class="btn btn-warning">').html("{% trans "Replace" %}");
+                replaceButton.click(function (e) {
+                    e.preventDefault();
+
+                    // Open the upload dialog with our options.
+                    openUploadForm({
+                        oldMediaId: mediaId,
+                        widgetId: widgetId,
+                        {% if config.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                        updateInAllChecked: true,
+                        {% else %}
+                        updateInAllChecked: false,
+                        {% endif %}
+                        trans: {
+                            addFiles: "{% trans "Add Replacement" %}",
+                            startUpload: "{% trans "Start Replace" %}",
+                            cancelUpload: "{% trans "Cancel Replace" %}",
+                            updateInLayouts: {
+                                title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                                helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                            },
+                            deleteOldRevisions: {
+                                title: "{% trans "Delete the old version?" %}",
+                                helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                            }
+                        },
+                        upload: {
+                            maxSize: {{ libraryUpload.maxSize }},
+                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                            validExt: validExtensions
+                        }
+                    }, {
+                        main: {
+                            label: "{% trans "Done" %}",
+                            className: "btn-primary",
+                            callback: function () {
+                                XiboFormRender(timelineForm.url, timelineForm.value);
+                            }
+                        }
+                    });
+                });
+
+                footer.find(".btn-primary").before(replaceButton);
+            }
+
+            function timelineGridCallback(dialog) {
+
+                dialog.addClass("modal-big");
+
+                var timelineWidgetTabel = $("#timelineWidgets").DataTable({
+                    "language": dataTablesLanguage,
+                    serverSide: true, stateSave: true, stateDuration: 0,
+                    filter: false,
+                    searchDelay: 3000,
+                    "order": [[0, "asc"]],
+                    ajax: {
+                        url: "{{ urlFor("playlist.widget.search") }}",
+                        "data": function (d) {
+                            $.extend(d, $("#timelineWidgets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                        }
+                    },
+                    "columns": [
+                        {"data": "displayOrder"},
+                        {"data": "name", "orderable": false},
+                        {"data": "type"},
+                        {
+                            "data": "calculatedDuration",
+                            "render": function(data) {
+                                return (data == 0) ? 'N/A' : data;
+                            }
+                        },
+                        {"data": "transition"},
+                        {
+                            "orderable": false,
+                            "data": dataTableButtonsColumn
+                        }
+                    ]
+                });
+
+                timelineWidgetTabel.on('draw', dataTableDraw);
+                timelineWidgetTabel.on('processing.dt', dataTableProcessing);
+
+                // Hook up the library Upload Buttons
+                $(".libraryUploadForm").click(libraryUploadClick);
+            }
+
+            function DeleteRegion(form, regionId) {
+                $.ajax({
+                    type: form.attr("method"),
+                    url: form.attr("action"),
+                    cache: false,
+                    dataType: "json",
+                    data: form.serialize(),
+                    success: function (xhr, textStatus, error) {
+
+                        XiboSubmitResponse(xhr, form);
+
+                        if (xhr.success)
+                            $("#region_" + regionId).remove();
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        SystemMessage(xhr.responseText, false);
+                    }
+                });
+            }
+
+            // Bind to the add button when we load
+            $(document).ready(function () {
+
+                // Add region button
+                $("#regionAddButton").click(function (e) {
+                    e.preventDefault();
+
+                    if (!$("#layout-save-all").hasClass("disabled")) {
+                        SystemMessage(translation.savePositionsFirst, true);
+                        return;
+                    }
+
+                    $.ajax({
+                        type: "post",
+                        url: $(this).attr("href"),
+                        cache: false,
+                        dataType: "json",
+                        success: function (xhr, textStatus, error) {
+
+                            XiboSubmitResponse(xhr);
+
+                            if (xhr.success) {
+                                // Reload the designer
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            });
+
+            $("[name='my-checkbox']").bootstrapSwitch();
+
+
+
+        </script>
+
+
+        {% for module in modules %}
+            {% if module.layoutDesignerJavaScript() != "" %}
+                {% include module.layoutDesignerJavaScript() ~ ".twig" %}
+            {% endif %}
+        {% endfor %}
+
+    {% endblock %}

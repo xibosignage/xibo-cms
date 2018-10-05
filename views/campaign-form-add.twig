@@ -1,0 +1,36 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Campaign" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#campaignAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="campaignAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("campaign.add") }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+                
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tags for this campaign - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                {{ forms.inputWithTags("tags", title, "", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

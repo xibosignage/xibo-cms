@@ -1,0 +1,419 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (library-page)
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+    <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
+        {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
+            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+        {% endif %}
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Library" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="libraryView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("media", title) }}
+
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                            {% set attributes = [
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" }
+                            ] %}
+
+                            {% set title %}{% trans "Owner" %}{% endset %}
+                            {% set users = [{userId: null, userName: ""}]|merge(users) %}
+                            {{ inline.dropdown("ownerId", "single", title, null, users, "userId", "userName", "", "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Owner User Group" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
+                            {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {{ inline.dropdown("type", "single", title, "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
+
+                            {% set title %}{% trans "Retired" %}{% endset %}
+                            {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                            {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="libraryItems" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Tag" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Duration" %}</th>
+                                <th>{% trans "Duration (seconds)" %}</th>
+                                <th>{% trans "Size" %}</th>
+                                <th>{% trans "Size (bytes)" %}</th>
+                                <th>{% trans "Owner" %}</th>
+                                <th>{% trans "Permissions" %}</th>
+                                <th>{% trans "Revised" %}</th>
+                                <th>{% trans "File Name" %}</th>
+                                <th>{% trans "Created" %}</th>
+                                <th>{% trans "Modified" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table;
+        $(document).ready(function() {
+            table = $("#libraryItems").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=libraryGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "libraryGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "mediaId"},
+                    {"data": "name", "render": dataTableSpacingPreformatted },
+                    {"data": "mediaType"},
+                    {
+                        "sortable": false,
+                        "visible": false,
+                        "data": dataTableCreateTags
+                    },
+                    {
+                        "name": "mediaId",
+                        "data": null,
+                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                    },
+                    {
+                        "name": "duration",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.duration;
+
+                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                        }
+                    },
+                    {"data": "duration", "visible": false},
+                    {
+                        "name": "fileSize",
+                        "data": null,
+                        "render": {"_": "fileSize", "display": "fileSizeFormatted", "sort": "fileSize"}
+                    },
+                    {"data": "fileSize", "visible": false},
+                    {"data": "owner"},
+                    {
+                        "data": "groupsWithPermissions",
+                        "render": dataTableCreatePermissions
+                    },
+                    {"data": "revised", "render": dataTableTickCrossColumn, "visible": false},
+                    {"data": "fileName"},
+                    {
+                        "data": "createdDt",
+                        "render": dataTableDateFromIso,
+                        "visible": false
+                    },
+                    {
+                        "data": "modifiedDt",
+                        "render": dataTableDateFromIso,
+                        "visible": false
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('draw', { form: $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
+        });
+
+        $("#libraryUploadForm").click(function(e) {
+            e.preventDefault();
+
+            openUploadForm({
+                trans: {
+                    addFiles: "{% trans "Add files" %}",
+                    startUpload: "{% trans "Start upload" %}",
+                    cancelUpload: "{% trans "Cancel upload" %}"
+                },
+                upload: {
+                    maxSize: {{ libraryUpload.maxSize }},
+                    maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                    validExt: "{{ libraryUpload.validExt }}"
+                },
+                updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
+            });
+        });
+
+        /**
+         * Media Edit form
+         */
+        function mediaEditFormOpen(dialog) {
+            // Create a new button
+            var footer = dialog.find(".modal-footer");
+            var mediaId = dialog.find("#mediaEditForm").data().mediaId;
+            var validExtensions = dialog.find("#mediaEditForm").data().validExtensions;
+
+            // Append
+            var replaceButton = $('<button class="btn btn-warning">').html("{% trans "Replace" %}");
+            replaceButton.click(function(e) {
+                e.preventDefault();
+
+                // Open the upload dialog with our options.
+                openUploadForm({
+                    oldMediaId: mediaId,
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    trans: {
+                        addFiles: "{% trans "Add Replacement" %}",
+                        startUpload: "{% trans "Start Replace" %}",
+                        cancelUpload: "{% trans "Cancel Replace" %}",
+                        updateInLayouts: {
+                            title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                            helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                        },
+                        deleteOldRevisions: {
+                            title: "{% trans "Delete the old version?" %}",
+                            helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                        }
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: validExtensions
+                    }
+                });
+            });
+
+            footer.find(".btn-primary").before(replaceButton);
+        }
+
+        /**
+         * Opens the upload form
+         * @param templateOptions
+         */
+        function openUploadForm(templateOptions) {
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template(templateOptions),
+                title: "{% trans "Upload media" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+                var refreshSessionInterval;
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: true,
+                    previewMaxWidth: 100,
+                    previewMaxHeight: 100,
+                    previewCrop: true
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                }).bind('fileuploadstart', function (e, data) {
+                    if (form.fileupload("active") <= 0)
+                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+
+                    return true;
+                }).bind('fileuploaddone', function (e, data) {
+                    if (refreshSessionInterval != null && form.fileupload("active") <= 0)
+                        clearInterval(refreshSessionInterval);
+                });
+            });
+        }
+
+        ///
+        /// Library Usage Form
+        ///
+        function usageFormOpen(dialog) {
+            // Displays tab
+            var usageTable = $("#usageReportTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true, stateDuration: 0,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.usage") }}".replace(":id", $("#usageReportTable").data().mediaId),
+                    "data": function(dataDisplay) {
+                        $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
+                        return dataDisplay;
+                    }
+                },
+                "columns": [
+                    { "data": "displayId"},
+                    { "data": "display" },
+                    { "data": "description" }
+                ]
+            });
+
+            usageTable.on('draw', dataTableDraw);
+            usageTable.on('processing.dt', dataTableProcessing);
+
+            $("#mediaEventDateLink").datetimepicker({
+                format: bootstrapDateFormatDateOnly,
+                autoclose: true,
+                language: language,
+                calendarType: calendarType,
+                minView: 2,
+                todayHighlight: true
+            });
+
+            $("#dateClearButton").on("click", function () {
+                $("#mediaEventDateLink").val("")
+                $("#mediaEventDate").val("");
+                $("#mediaEventDateLink").datetimepicker("update");
+                usageTable.ajax.reload();
+            });
+
+            // Layouts tab
+            var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true, stateDuration: 0,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("library.usage.layouts") }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
+                },
+                "columns": [
+                    { "data": "layoutId"},
+                    { "data": "layout" },
+                    { "data": "description" },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            usageTableLayouts.on('draw', dataTableDraw);
+            usageTableLayouts.on('processing.dt', dataTableProcessing);
+        }
+
+        function setDefaultMultiSelectFormOpen(dialog) {
+            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {% trans %} Force delete from any existing layouts, assignments, etc {% endtrans %} </input>');
+            $input.on('change', function() {
+                dialog.data().commitData = {forceDelete: $(this).val()};
+            });
+            $(dialog).find('.modal-body').append($input);
+        }
+    </script>
+{% endblock %}

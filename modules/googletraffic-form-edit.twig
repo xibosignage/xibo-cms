@@ -1,0 +1,135 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Google Traffic" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#googleTrafficForm").submit()
+{% endblock %}
+
+{% block callBack %}forecastIoFormSetup{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDisplayLocation",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "block" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "block" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "none" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="googleTrafficForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this item should be displayed." %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Use the Display Location" %}{% endset %}
+                {% set helpText %}{% trans "Use the location configured on the display" %}{% endset %}
+                {{ forms.checkbox("useDisplayLocation", title, module.getOption("useDisplayLocation"), helpText) }}
+
+                {% set title %}{% trans "Latitude" %}{% endset %}
+                {% set helpText %}{% trans "The Latitude for this widget" %}{% endset %}
+                {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "locationControls") }}
+
+                {% set title %}{% trans "Longitude" %}{% endset %}
+                {% set helpText %}{% trans "The Longitude for this widget" %}{% endset %}
+                {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
+
+                {% set title %}{% trans "Zoom" %}{% endset %}
+                {% set helpText %}{% trans "How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe." %}{% endset %}
+                {{ forms.number("zoom", title, module.getOption("zoom"), helpText) }}
+
+                {% set message %}{% trans "This module is rendered on the Player which means the Player must have an internet connection." %}{% endset %}
+                {{ forms.message(message, "alert alert-info") }}
+
+                {% if module.getSetting("apiKey") == "" %}
+                    {% set message %}{% trans "The Traffic Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
+                    {{ forms.message(message, "alert alert-danger") }}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

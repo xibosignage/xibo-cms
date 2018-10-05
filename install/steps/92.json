@@ -1,0 +1,18 @@
+{
+  "dbVersion": 92,
+  "appVersion": "1.7.7",
+  "steps": [
+    {
+      "step": "Add a setting for CDN",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES('CDN_URL', '', 'text', 'Content Delivery Network Address for serving file requests to Players', '', 'network', 0, 'CDN Address', '', 33, '', 0, 'text');"
+    },
+    {
+      "step": "Increase the size of dataset column list content",
+      "action": "ALTER TABLE  `datasetcolumn` CHANGE  `ListContent`  `ListContent` VARCHAR( 1000 ) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL;"
+    },
+    {
+      "step": "Add an index to the stat table",
+      "action": "ALTER TABLE `stat` ADD INDEX Type (`displayID`, `end`, `Type`);"
+    }
+  ]
+}

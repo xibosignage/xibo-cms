@@ -1,0 +1,209 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (statistics-page.twig)
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Bandwidth" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="bandwidthFilter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.dateMonth("bandwidthFromDt", title, defaults.fromDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.dateMonth("bandwidthToDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="widget">
+        <div class="widget-title">{% trans "Time Disconnected" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="availabilityFilter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("availabilityFromDt", title, defaults.fromDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("availabilityToDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
+                            {{ inline.checkbox("onlyLoggedIn", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData" style="margin-top: 25px;">
+                    <canvas id="availabilityChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        var bandwidthChart = null;
+
+        function setBandwidthChart() {
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("stats.bandwidth.data") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#bandwidthFilter").find("form").serialize(),
+                success: function(response) {
+
+                    if (bandwidthChart !== undefined && bandwidthChart !== null) {
+                        console.log('Destroying Chart');
+                        bandwidthChart.destroy();
+                    }
+
+                    if (response.extra.data.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    bandwidthChart = new Chart($("#bandwidthChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: "{% trans "Bandwidth" %}",
+                                backgroundColor: "rgb(11, 98, 164)",
+                                data: response.extra.data
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: response.extra.postUnits,
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setBandwidthChart();
+
+            // Bind to form change
+            $("#bandwidthFilter input, #bandwidthFilter select").change(function() {
+                setBandwidthChart();
+            });
+        });
+
+        var availabilityChart = null;
+
+        function setAvailabilityChart() {
+
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("stats.availability.data") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#availabilityFilter").find("form").serialize(),
+                success: function(response) {
+                    if (availabilityChart !== undefined && availabilityChart !== null) {
+                        console.log('Destroying Chart');
+                        availabilityChart.destroy();
+                    }
+
+                    if (response.extra.data.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    availabilityChart = new Chart($("#availabilityChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: "{% trans "Downtime" %}",
+                                backgroundColor: "rgb(11, 98, 164)",
+                                data: response.extra.data
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: response.extra.postUnits,
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            setAvailabilityChart();
+
+            // Bind to form change
+            $("#availabilityFilter input, #availabilityFilter select").change(function() {
+                setAvailabilityChart();
+            });
+        });
+    </script>
+{% endblock %}

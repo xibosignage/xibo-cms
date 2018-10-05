@@ -1,0 +1,17 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+    <div class="alert alert-info">
+    {% set message %}{% trans "Please configure your Twitter API key/secret on the Twitter Module." %}{% endset %}
+    {{ forms.message(message) }}
+    </div>
+{% endblock %}

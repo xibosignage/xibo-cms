@@ -1,0 +1,175 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Event" %}
+{% endblock %}
+
+{% block callBack %}setupScheduleForm{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("schedule.delete.form", {id: event.eventId}) }}")
+    {% trans "Save" %}, $("#scheduleEditForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+            </ul>
+            {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
+            {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
+            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
+                  data-daypart-message="{{ dayPartMessage }}"
+                  data-not-daypart-message="{{ notDayPartMessage }}"
+                  data-add-url="{{ urlFor("schedule.add") }}"
+                  data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Event Type" %}{% endset %}
+                        {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
+                        {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
+                        {% set commandEventType %}{% trans "Command" %}{% endset %}
+                        {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
+                        {% set eventTypes = [
+                        {id: 1, label: layoutEventType},
+                        {id: 2, label: commandEventType},
+                        {id: 3, label: overlayEventType}
+                        ] %}
+                        {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
+
+                        {% set title %}{% trans "Display" %}{% endset %}
+                        {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value:  urlFor("schedule.displayGroup.search") },
+                            { name: "data-trans-groups", value:  "Groups"|trans },
+                            { name: "data-trans-display", value:  "Display"|trans }
+                        ] %}
+                        {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, displayGroups, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Dayparting" %}{% endset %}
+                        {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
+                        <div class="form-group day-part-control">
+                            <label class="col-sm-2 control-label" for="dayPartId">{{ title }}</label>
+                            <div class="col-sm-10">
+                                <select class="form-control" name="dayPartId" id="dayPartId">
+                                    {% for dayPart in dayParts %}
+                                        <option {% if dayPart.dayPartId == event.dayPartId %}selected{% endif %}
+                                                value="{{ dayPart.dayPartId }}"
+                                                data-is-always="{{ dayPart.isAlways }}"
+                                                data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                        </div>
+
+                        {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
+                        {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "starttime-control", "required", "") }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
+                        {{ forms.dateTime("toDt", title, event.toDt, helpText, "endtime-control", "required", "") }}
+
+                        {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                        {% set attributes = [
+                            { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
+                            { name: "data-trans-campaigns", value:  "Campaigns"|trans },
+                            { name: "data-trans-layouts", value:  "Layouts"|trans }
+                        ] %}
+
+                        {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
+
+                        <div class="form-group preview-button-container">
+                            <div class="col-md-offset-2 col-md-10">
+                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
+                            </div>
+                        </div>
+
+                        {% set title %}{% trans "Command" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
+                        {{ forms.dropdown("commandId", "single", title, event.commandId, [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
+
+                        {% set title %}{% trans "Display Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
+                        {{ forms.number("displayOrder", title, event.displayOrder, helpText) }}
+
+                        {% set title %}{% trans "Priority" %}{% endset %}
+                        {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
+                        {{ forms.number("isPriority", title, event.isPriority, helpText) }}
+
+                        {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
+                        {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
+                        {{ forms.checkbox("syncTimezone", title, event.syncTimezone, helpText) }}
+
+                    </div>
+                    
+                    <div class="tab-pane" id="repeats">
+                        {% set title %}{% trans "Repeats" %}{% endset %}
+                        {% set helpText %}{% trans "What type of repeat is required?" %}{% endset %}
+                        {% set noneOption %}{% trans "None" %}{% endset %}
+                        {% set minute %}{% trans "Per Minute" %}{% endset %}
+                        {% set hourly %}{% trans "Hourly" %}{% endset %}
+                        {% set daily %}{% trans "Daily" %}{% endset %}
+                        {% set weekly %}{% trans "Weekly" %}{% endset %}
+                        {% set monthly %}{% trans "Monthly" %}{% endset %}
+                        {% set yearly %}{% trans "Yearly" %}{% endset %}
+                        {% set options = [
+                        { id: "", name: noneOption },
+                        { id: "Minute", name: minute },
+                        { id: "Hour", name: hourly},
+                        { id: "Day", name: daily},
+                        { id: "Week", name: weekly},
+                        { id: "Month", name: monthly},
+                        { id: "Year", name: yearly}
+                        ] %}
+                        {{ forms.dropdown("recurrenceType", "single", title, event.recurrenceType, options, "id", "name", helpText) }}
+
+                        {% set helpText %}{% trans "Which days of the week does this event repeat?" %}{% endset %}
+                        {% set monday %}{% trans "Monday" %}{% endset %}
+                        {% set tuesday %}{% trans "Tuesday" %}{% endset %}
+                        {% set wednesday %}{% trans "Wednesday" %}{% endset %}
+                        {% set thursday %}{% trans "Thursday" %}{% endset %}
+                        {% set friday %}{% trans "Friday" %}{% endset %}
+                        {% set saturday %}{% trans "Saturday" %}{% endset %}
+                        {% set sunday %}{% trans "Sunday" %}{% endset %}
+                        {% set options = [
+                        { id: 1, name: monday },
+                        { id: 2, name: tuesday },
+                        { id: 3, name: wednesday },
+                        { id: 4, name: thursday },
+                        { id: 5, name: friday },
+                        { id: 6, name: saturday },
+                        { id: 7, name: sunday },
+                        ] %}
+                        {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
+
+                        {% set title %}{% trans "Repeat every" %}{% endset %}
+                        {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
+                        {{ forms.number("recurrenceDetail", title, event.recurrenceDetail, helpText, "repeat-control-group") }}
+
+                        {% set title %}{% trans "Until" %}{% endset %}
+                        {% set helpText %}{% trans "When should this event stop repeating? Leave empty to repeat forever." %}{% endset %}
+                        {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange, helpText, "repeat-control-group", "", "") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

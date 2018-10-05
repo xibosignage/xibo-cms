@@ -1,0 +1,135 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (video-form-edit.twig)
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Video" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#videoEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "duration",
+    "trigger": "init",
+    "value": "0",
+    "operation": "equals",
+    "actions": {
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "change",
+    "value": "0",
+    "operation": "equals",
+    "actions": {
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "init",
+    "value": "0",
+    "operation": "not",
+    "actions": {
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "duration",
+    "trigger": "change",
+    "value": "0",
+    "operation": "not",
+    "actions": {
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" },
+    ".loop-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" },
+    ".loop-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" },
+    ".loop-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block callBack %}mediaEditFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Scale type" %}{% endset %}
+                {% set helpText %}
+                    {% trans "How should this video be scaled?" %}
+                    {% trans "Please note that video scaling is only supported by Xibo for Android at the current time." %}
+                {% endset %}
+                {% set aspect %}{% trans "Aspect" %}{% endset %}
+                {% set stretch %}{% trans "Stretch" %}{% endset %}
+                {% set options = [
+                { scaleTypeId: "aspect", scaleType: aspect },
+                { scaleTypeId: "stretch", scaleType: stretch }
+                ] %}
+                {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
+
+                {% set title %}{% trans "Loop?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video loop if it finishes before the provided duration?" %}{% endset %}
+                {{ forms.checkbox("loop", title, module.getOption("loop", 0), helpText, "loop-fields") }}
+                
+                {% set title %}{% trans "Mute?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
+                {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

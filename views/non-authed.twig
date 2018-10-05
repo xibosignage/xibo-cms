@@ -1,0 +1,48 @@
+{% extends "base.twig" %}
+
+{% block content %}
+    <div id="page-wrapper" class="active">
+        <div class="collapse navbar-collapse" id="navbar-collapse-1">
+            <div id="sidebar-wrapper">
+                <ul class="sidebar">
+                    <li class="sidebar-main"><a href="{{ urlFor("home") }}">{% trans "Dashboard" %}</a></li>
+                </ul>
+
+                <div class="sidebar-footer">
+                    <div class="col-sm-6">
+                        <a class="XiboFormButton" href="{{ urlFor("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{{ helpService.address() }}" target="_blank" title="{% trans "Open the Manual in a new Window" %}">{% trans "Manual" %}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content-wrapper">
+            <div class="page-content">
+                <div class="row header">
+                    <div class="col-sm-12">
+                        <div class="meta pull-left">
+                            <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
+                        </div>
+                        <div class="user pull-right">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% block actionMenu %}{% endblock %}
+                        {% block pageContent %}{% endblock %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        {% block pageFooter %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

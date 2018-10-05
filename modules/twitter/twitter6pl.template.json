@@ -1,0 +1,11 @@
+{
+    "id": "tweet-6PL",
+    "value": "Template 10 - text, photo, twitter logo",
+    "template": "<div class=\"twitpic\">\r\n<div class=\"mainpic\">[Photo]<\/div>\r\n\r\n<div class=\"main-tweet \">[Tweet]<\/div>\r\n\r\n<div class=\"footer\">\r\n<div class=\"col-xs-2 center-block\"><img class=\"center-block img-responsive\" src=\"[TwitterLogoWhite]\" \/><\/div>\r\n\r\n<div class=\"col-xs-10 user\">[ScreenName]<\/div>\r\n<\/div>\r\n<\/div>\r\n",
+    "css": ".item {\r\n    float: left;\r\n}\r\n\r\n.emojione {\r\n    width: 10px;\r\n    height: 10px\r\n}\r\n\r\nbody {\r\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\r\n    line-height: 1;\r\n}\r\n\r\n.nopic {\r\n    height: 160px !important;\r\n    width: 400px !important;\r\n    float: left;\r\n    border: 1px solid #ddd;\r\n}\r\n\r\n.twitpic {\r\n    height: 450px !important;\r\n    width: 400px !important;\r\n    float: left;\r\n    border: 1px solid #ddd;\r\n    background: #FFF;\r\n}\r\n\r\n.main-tweet {\r\n    font-size: 14px;\r\n    padding: 30px;\r\n    line-height: 140%;\r\n    color: #434343;\r\n    height: 112px;\r\n    text-align: justify;\r\n}\r\n\r\n.mainpic {\r\n    height: 300px;\r\n    width: 400px;\r\n}\r\n\r\n.mainpic img {\r\n    display: block;\r\n    width: 400px;\r\n    clip: rect(0px, 398px, 299px, 0px);\r\n    position: absolute;\r\n}\r\n\r\n.footer {\r\n    background: #1da1f2;\r\n    width: 100%;\r\n    height: 37px;\r\n}\r\n\r\n.user {\r\n    font-size: 14px;\r\n    font-weight: bold;\r\n    color: #fff;\r\n    margin-top: 9px;\r\n    letter-spacing: 1px;\r\n    padding-left: 0px;\r\n}",
+    "widgetOriginalWidth": "400",
+    "widgetOriginalHeight": "450",
+    "widgetOriginalPadding": "10",
+    "resultContent": "2",
+    "image":"modules/twitter/template-thumbs/twitter6pl.png"
+}

@@ -1,7 +1,0 @@
-{
-"id":"current-day",
-"value":"Current Day",
-"main":"<div class=\"container\">\r\n    <div class=\"icon\"><i class=\"font-icon wi [wicon]\"><\/i> [temperatureFloor]<i class=\"wi wi-degrees\"><\/i><\/div>\r\n    <div class=\"desc\">[summary]<\/div>\r\n    <div class=\"powered-by\">Powered by Forecast<\/div>\r\n<\/div>",
-"daily":"",
-"css":"body {\r\n    font-family:Arial;\r\n    margin:0;\r\n    padding-top: 5px;\r\n}\r\n\r\n.container {\r\n    text-align: center;\r\n}\r\n\r\n.icon {\r\n    font-size: 36px;\r\n}\r\n\r\n.font-icon {\r\n    font-size: 62px;\r\n}\r\n\r\n.desc {\r\n    margin-top: 10px;\r\n    font-size: 30px;\r\n}\r\n\r\n.powered-by {\r\n    font-size: 12px;\r\n    clear: both;\r\n}\r\n\r\n.day {\r\n    margin-top: 10px;\r\n    font-size: 48px;\r\n}"
-}

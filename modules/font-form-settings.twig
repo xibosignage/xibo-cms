@@ -1,0 +1,19 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+
+    {% set title %}{% trans "Rebuild Fonts?" %}{% endset %}
+    {% set helpText %}{% trans "Will rebuild all fonts in the CMS and generate new font files for the Players to download. Do this if there are problems showing fonts." %}{% endset %}
+    {{ forms.checkbox("rebuildFonts", title, 0, helpText) }}
+
+{% endblock %}

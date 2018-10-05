@@ -1,0 +1,107 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Display Group" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayGroupAddForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "isDynamic",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "none" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "none" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "block" }
+    }
+    },{
+    "field": "isDynamic",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".dynamic-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block callBack %}displayGroupFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.add") }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
+                {{ forms.input("displayGroup", title, "", helpText) }}
+
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "A short description of this Display Group" %}{% endset %}
+                {{ forms.input("description", title, "", helpText) }}
+
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, "", helpText) }}
+
+                {% set title %}{% trans "Dynamic Group?" %}{% endset %}
+                {% set helpText %}{% trans "Are the members of this group dynamic?" %}{% endset %}
+                {{ forms.checkbox("isDynamic", title, 0, helpText) }}
+
+                {% set title %}{% trans "Criteria" %}{% endset %}
+                {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
+                {{ forms.input("dynamicCriteria", title, "", helpText, "dynamic-fields") }}
+            </form>
+        </div>
+    </div>
+    <div class="row dynamic-fields">
+        <div class="col-md-12">
+            <h4>Displays</h4>
+            <div id="displayGroupDisplayList" class="well">
+                <table id="displays" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>{% trans "ID" %}</th>
+                        <th>{% trans "Display" %}</th>
+                        <th>{% trans "Status" %}</th>
+                        <th>{% trans "Licence" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

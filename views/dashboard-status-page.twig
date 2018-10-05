@@ -1,0 +1,301 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="row">
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon orange pull-left">
+                        <i class="fa fa-desktop"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        <div class="title displays-count">0</div>
+                        <div class="comment displays-comment" data-title="{% trans "Display" %}" data-title-plural="{% trans "Displays" %}"></div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon red pull-left">
+                        <i class="fa fa-tasks"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        <div class="title">{{ librarySize }}</div>
+                        <div class="comment">{% trans "Library Size" %}</div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon green pull-left">
+                        <i class="fa fa-users"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        <div class="title">{{ countUsers }}</div>
+                        <div class="comment">{% if countUsers == 1 %}{% trans "User" %}{% else %}{% trans "Users" %}{% endif %}</div>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-xs-12">
+            <div class="widget">
+                <div class="widget-body">
+                    <div class="widget-icon blue pull-left">
+                        <i class="fa fa-cogs"></i>
+                    </div>
+                    <div class="widget-content pull-left">
+                        {% if embeddedWidget != "" %}
+                            {{ embeddedWidget|raw }}
+                        {% else %}
+                            <div class="title">{{ nowShowing }}</div>
+                            <div class="comment">{% trans "Now Showing" %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-cloud-download"></i>
+                    {% if xmdsLimit != "" %}
+                        {% trans %}Bandwidth Usage. Limit {{ xmdsLimit }}{% endtrans %}
+                    {% else %}
+                        {% trans %}Bandwidth Usage ({{ bandwidthSuffix }}){% endtrans %}
+                    {% endif %}
+                    {% if currentUser.routeViewable("/stats") %}
+                    <a class="pull-right" href="{{ urlFor("stats.view") }}">{% trans "More Statistics" %}</a>
+                    {% endif %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <canvas id="bandwidthChart" style="clear:both;" height="230"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-tasks"></i>
+                    {% if libraryLimitSet != "" %}
+                        {% trans %}Library Usage. Limit {{ libraryLimit }}{% endtrans %}
+                    {% else %}
+                        {% trans "Library Usage" %}
+                    {% endif %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <canvas id="libraryChart" style="clear:both;" width="350" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-desktop"></i>
+                    {% trans "Display Activity" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <div class="table-responsive">
+                        <table id="displays" class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Logged In" %}</th>
+                                <th>{% trans "Authorised" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget news-widget">
+                <div class="widget-title">
+                    <i class="fa fa-book"></i>
+                    {% trans "Latest News" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium">
+                    {% if latestNews|length > 0 %}
+                        {% for news in latestNews %}
+                            <div class="article">
+                                <h4 class="article_title">{{ news.title }} <small class="article_date">{{ news.date }}</small></h4>
+                                <p>{{ news.description|raw }} {% if news.link %}<a href="{{ news.link }}" title="Read" target="_blank">{% trans "Full Article" %}</a>.{% endif %}</p>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        // Create our chart
+        var bandwidthChart = new Chart($("#bandwidthChart"), {
+            type: "bar",
+            data: {{ bandwidthWidget|raw }},
+            options: {
+                scales: {
+                    xAxes: [{
+                        stacked: {% if xmdsLimit %}true{% else %}false{% endif %}
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: "{{ bandwidthSuffix }}",
+                        },
+                        stacked: {% if xmdsLimit %}true{% else %}false{% endif %}
+                    }]
+                },
+                legend: {
+                    display: false
+                },
+                maintainAspectRatio: false,
+            }
+        });
+
+        var libraryData = {{ libraryWidgetData|raw }};
+        var colours = new Array();
+        for(var i = 0; i < libraryData.length; i++) {
+            colours.push($c.rand());
+        }
+        var libraryChart = new Chart($("#libraryChart"), {
+            type: 'pie',
+            data: {
+                datasets: [{
+                    data: libraryData,
+                    backgroundColor: colours
+                }],
+                labels: {{ libraryWidgetLabels|raw }}
+            },
+            options: {
+                maintainAspectRatio: false
+            }
+        });
+
+        $(".article_date").each(function(index, element) {
+            if($(".article_date").length > 1){
+                // Replace the ISO date with a nice formatted date "for humans"
+                $(this).html(moment($(this).html(), systemDateFormat).fromNow());
+            }
+        });
+
+        var table = $("#displays").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data = {};
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=statusDashboardDisplays",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "statusDashboardDisplays",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            order: [[0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("statusdashboard.displays") }}",
+                "data": function (dataToSend) {
+                    //make a new object so as not to destroy the input.
+                    var data = {};
+                    data.draw = dataToSend.draw;
+                    data.length = dataToSend.length;
+                    data.start = dataToSend.start;
+                    data.order = dataToSend.order;
+                    data.columns = [];
+
+                    $.each(dataToSend.columns, function (index, e) {
+                        var col = {};
+                        col.data = e.data;
+                        if (e.name != null && e.name !== "")
+                            col.name = e.name;
+                        data.columns.push(col);
+                    });
+
+                    $.extend(data, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+
+                    return data;
+                }
+            },
+            createdRow: function (row, data, index) {
+                if (data.mediaInventoryStatus === 1) {
+                    $(row).addClass('success');
+                } else if (data.mediaInventoryStatus === 1) {
+                    $(row).addClass('danger');
+                } else {
+                    $(row).addClass('warning');
+                }
+            },
+            lengthChange: false,
+            "columns": [
+                {"data": "display"},
+                {"data": "loggedIn", "render": dataTableTickCrossColumn},
+                {"data": "licensed", "render": dataTableTickCrossColumn}
+            ]
+        });
+
+        table.on('processing.dt', dataTableProcessing);
+        table.on('draw', function(e, settings) {
+            var $displaysComment = $(".displays-comment");
+            var total = table.page.info().recordsTotal;
+            $(".displays-count").html(total);
+            $displaysComment.html((total > 0) ? $displaysComment.data().titlePlural : $displaysComment.data().title)
+        });
+    </script>
+{% endblock %}

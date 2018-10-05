@@ -1,0 +1,32 @@
+{
+  "name": "xibo-cms",
+  "version": "1.0.0",
+  "description": "Xibo - Digital Signage - http://www.xibo.org.uk Copyright (C) 2006-2018 Daniel Garner and Contributors.",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cypress:open": "cypress open"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xibosignage/xibo-cms.git"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/xibosignage/xibo/issues"
+  },
+  "homepage": "https://github.com/xibosignage/xibo-cms#readme",
+  "devDependencies": {
+    "cypress": "^2.1.0",
+    "del": "^2.2.1",
+    "gulp": "^3.9.1",
+    "gulp-composer": "^0.4.0",
+    "gulp-gzip": "^1.4.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-tar": "^1.9.0"
+  }
+}

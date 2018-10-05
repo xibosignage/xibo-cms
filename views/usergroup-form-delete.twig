@@ -1,0 +1,33 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.delete }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#groupDeleteForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="groupDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("group.delete", {id: group.groupId}) }}">
+                {% set groupName = group.group %}
+                {% set deleteMessage %}{% trans %}Are you sure you want to delete {{ groupName }}?{% endtrans %}{% endset %}
+                {{ forms.message(deleteMessage) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

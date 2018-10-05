@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{{ theme.getThemeConfig("theme_title") }}</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="token" content="{{ csrfToken }}"/>
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+
+        <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap.min.css") }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("libraries/bootstrap/css/bootstrap-theme.min.css") }}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}" rel="stylesheet">
+        <link href="{{ theme.uri("css/install.css") }}" rel="stylesheet" media="screen">
+    </head>
+
+    <body>
+        <!-- Copyright 2006-2015 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    {% set themeName = theme.getThemeConfig("app_name") %}
+                    {% set header %}{% trans %}{{ themeName }} Installation{% endtrans %}{% endset %}
+                    <a class="navbar-brand" href="#">{{ header }}</a>
+                </div>
+            </div>
+        </div>
+
+        {% block jumboTron %}
+
+        {% endblock %}
+
+        <div class="container main-container">
+            {% if flash.error %}
+                <div class="alert alert-danger">
+                    {{ flash.error }}
+                </div>
+            {% endif %}
+
+            {% block stepContent %}
+
+            {% endblock %}
+        </div>
+
+        <div class="footer">
+            <div class="container text-center">
+                <img class="logo" src="{{ theme.uri("img/xibologo.png") }}">
+            </div>
+        </div>
+
+        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/jquery/jquery.validate.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/bootstrap/js/bootstrap.min.js") }}"></script>
+        <script src="{{ theme.uri("js/install.js") }}"></script>
+    </body>
+</html>

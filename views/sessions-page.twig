@@ -1,0 +1,125 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Sessions" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="sessionsView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set activeTrans %}{% trans "Active" %}{% endset %}
+                            {% set guestTrans %}{% trans "Guest" %}{% endset %}
+                            {% set expiredTrans %}{% trans "Expired" %}{% endset %}
+                            {% set typeOptions = [
+                            { id: null, value: "" },
+                            { id: "active", value: activeTrans },
+                            { id: "guest", value: guestTrans},
+                            { id: "expired", value: expiredTrans}
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", typeOptions, "id", "value") }}
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="sessions" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Last Accessed" %}</th>
+                                <th>{% trans "Active" %}</th>
+                                <th>{% trans "User Name" %}</th>
+                                <th>{% trans "IP Address" %}</th>
+                                <th>{% trans "Browser" %}</th>
+                                <th>{% trans "Expires At" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#sessions").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=sessionsGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "sessionsGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("sessions.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#sessions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "lastAccessed", "render": dataTableDateFromIso},
+                    {"data": "isExpired", "render": dataTableTickCrossInverseColumn},
+                    {"data": "userName"},
+                    {"data": "remoteAddress"},
+                    {"data": "userAgent"},
+                    {"data": "expiresAt", "render": dataTableDateFromUnix},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
+    </script>
+{% endblock %}

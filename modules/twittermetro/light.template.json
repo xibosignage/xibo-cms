@@ -1,0 +1,6 @@
+{
+    "id": "light",
+    "value": "Colours 4 - Light",
+    "colors": ["#fffd98","#bde4a7","#b3d2b2","#9fbbcc","#7a9cc6"],
+    "image":"modules/twittermetro/template-thumbs/colours4.png"
+}

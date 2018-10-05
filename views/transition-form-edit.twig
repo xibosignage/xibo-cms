@@ -1,0 +1,37 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Transition" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#transitionEditForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="transitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
+                {% set title %}{% trans "Available for In Transitions?" %}{% endset %}
+                {% set helpText %}{% trans "Can this transition be used for media start?" %}{% endset %}
+                {{ forms.checkbox("availableAsIn", title, transition.availableAsIn, helpText) }}
+
+                {% set title %}{% trans "Available for Out Transitions?" %}{% endset %}
+                {% set helpText %}{% trans "Can this transition be used for media end?" %}{% endset %}
+                {{ forms.checkbox("availableAsOut", title, transition.availableAsOut, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

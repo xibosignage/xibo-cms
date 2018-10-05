@@ -1,0 +1,33 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2018 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set layout = layout.layout %}
+    {% trans %}Retire {{ layout }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.retire }}")
+    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("layout.delete.form", {id: layout.layoutId}) }}")
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#layoutRetireForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutRetireForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.retire", {id: layout.layoutId}) }}">
+                {% set title %}{% trans "Are you sure you want to retire this layout?" %}{% endset %}
+                {{ forms.message(title) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

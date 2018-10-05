@@ -1,0 +1,33 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Authorize Request" %}</div>
+        <div class="widget-body">
+            <h1>{{ authParams.client.getName() }} would like access</h1>
+
+            <ul>
+                {% for scope in authParams.scopes %}
+                <li>
+                    {{ scope.getName() }}: {{ scope.getDescription() }}
+                </li>
+                {% endfor %}
+            </ul>
+
+            <form method="post" action="{{ urlFor("application.authorize") }}">
+                <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
+                <input type="submit" value="Approve" name="authorization">
+                <input type="submit" value="Deny" name="authorization">
+            </form>
+        </div>
+    </div>
+{% endblock %}

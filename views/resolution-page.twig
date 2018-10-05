@@ -1,0 +1,120 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (resolution-page.twig)
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ urlFor("resolution.add.form") }}"><span class="glyphicon glyphicon-plus-sign"></span> {% trans "Add Resolution" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Resolution" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="resolutionView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Enabled" %}{% endset %}
+                            {% set option1 %}{% trans "Yes" %}{% endset %}
+                            {% set option2 %}{% trans "No" %}{% endset %}
+                            {% set values = [{id: 1, value: option1}, {id: 0, value: option2}] %}
+                            {{ inline.dropdown("enabled", "single", title, 1, values, "id", "value") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="resolutions" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Resolution" %}</th>
+                                <th>{% trans "Width" %}</th>
+                                <th>{% trans "Height" %}</th>
+                                <th>{% trans "Enabled?" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#resolutions").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=resolutionGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "resolutionGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("resolution.search") }}",
+                    data: function (d) {
+                        $.extend(d, $("#resolutions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "resolutionId"},
+                    {"data": "resolution"},
+                    {"data": "width"},
+                    {"data": "height"},
+                    {"data": "enabled"},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
+    </script>
+{% endblock %}

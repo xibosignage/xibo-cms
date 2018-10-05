@@ -1,0 +1,52 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% set randomId = random() %}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Manage Membership" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.permissions }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, membersFormSubmit("{{ randomId }}")
+{% endblock %}
+
+{% block callBack %}membersFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div id="{{ randomId }}" class="div-horizontal"
+                 data-param="userId"
+                 data-param-unassign="unassignUserId"
+                 data-url="{{ urlFor("group.members.assign", {id: group.groupId}) }}"
+                    >
+                {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member or not.{% endtrans %}{% endset %}
+                {{ forms.message(helpText) }}
+                <table class="table table-bordered membersTable">
+                    <tr>
+                        <th>{{ group.group }}</th>
+                        <th>{% trans "Member" %}</th>
+                    </tr>
+                    {% for item in checkboxes %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td><input type="checkbox" data-member-id="{{ item.id }}" {{ item.value_checked }}></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

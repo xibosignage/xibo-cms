@@ -1,0 +1,22 @@
+{
+  "dbVersion": 126,
+  "appVersion": "1.8.0-beta",
+  "steps": [
+    {
+      "step": "Add the WidgetId to the Stat Table",
+      "action": "ALTER TABLE `stat` ADD widgetId INT NULL;"
+    },
+    {
+      "step": "Display Event Table",
+      "action": "CREATE TABLE IF NOT EXISTS `displayevent` (`displayEventId` bigint(20) NOT NULL AUTO_INCREMENT,`eventDate` int(11) NOT NULL,`displayId` int(4) NOT NULL,`start` INT(11) NOT NULL,`end` INT(11) DEFAULT NULL,PRIMARY KEY (`displayEventId`),KEY `eventDate` (`eventDate`),KEY `displayId` (`displayID`,`end`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Insert old Display down events into new table",
+      "action": "INSERT INTO displayevent (eventDate, displayId, start, end) SELECT UNIX_TIMESTAMP(statDate), displayID, UNIX_TIMESTAMP(start), UNIX_TIMESTAMP(end) FROM stat WHERE Type = 'displaydown';"
+    },
+    {
+      "step": "Remove old stat records",
+      "action": "DELETE FROM stat WHERE Type = 'displaydown';"
+    }
+  ]
+}

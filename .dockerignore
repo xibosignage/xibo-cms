@@ -1,0 +1,37 @@
+# Development related files and folders are excluded from the build context
+.idea
+.git/
+.git*
+
+# Containers
+containers/
+
+# Test sources aren't included in the production container (they are mounted by dev/ci)
+tests/
+phpunit.xml
+results.xml
+
+# Vendor will be built by Dockerfile - don't include any of our local vendor files
+#vendor/
+node_modules/
+
+# Cache should be empty so that it gets built internally
+cache/
+
+# User spaces should be empty
+library/*
+custom/*
+!custom/README.md
+web/theme/custom/*
+!web/theme/custom/README.md
+
+Dockerfile*
+docker-compose.yml
+CONTRIBUTING.md
+
+# Our own container's settings.php shouldn't be included
+web/settings.php
+
+# Our own build files
+build.sh
+build-composer.sh

@@ -1,0 +1,75 @@
+{
+  "dbVersion": 121,
+  "appVersion": "1.8.0-alpha2",
+  "steps" : [
+    {
+      "step": "Add XMR Columns to the Display Table",
+      "action": "ALTER TABLE  `display` ADD  `xmrChannel` VARCHAR( 254 ) NULL, ADD  `xmrPubKey` TEXT NULL;"
+    },
+    {
+      "step": "Add settings for XMR public/private address",
+      "action": "INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES (NULL, 'XMR_ADDRESS', 'tcp:://localhost:5555', 'text', 'Please enter the private address for XMR.', NULL, 'displays', '1', 'XMR Private Address', '', '5', 'tcp:://localhost:5555', '1', 'string'),(NULL, 'XMR_PUB_ADDRESS', 'tcp:://localhost:5556', 'text', 'Please enter the public address for XMR.', NULL, 'displays', '1', 'XMR Public Address', '', '6', 'tcp:://localhost:5556', '1', 'string');"
+    },
+    {
+      "step": "Add the Layout/Display Group link table for assigning Layouts to Displays",
+      "action": "CREATE TABLE IF NOT EXISTS `lklayoutdisplaygroup` (`id` int(11) NOT NULL AUTO_INCREMENT, `layoutId` int(11) NOT NULL, `displayGroupId` int(11) NOT NULL, PRIMARY KEY (`id`), UNIQUE KEY `layoutId` (`layoutId`,`displaygroupid`)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Layout associations directly to Display Groups' AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Add the Commands Page",
+      "action": "INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES (NULL, 'command', 'Commands', '1');"
+    },
+    {
+      "step": "Create the Command Table",
+      "action": "CREATE TABLE IF NOT EXISTS `command` (`commandId` int(11) NOT NULL AUTO_INCREMENT, `command` varchar(254) NOT NULL, `code` varchar(50) NOT NULL, `description` varchar(1000) DEFAULT NULL, `userId` int(11) NOT NULL, PRIMARY KEY (`commandId`)) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;"
+    },
+    {
+      "step": "Create the Command/Display Profile Link Table",
+      "action": "CREATE TABLE IF NOT EXISTS `lkcommanddisplayprofile` (`commandId` int(11) NOT NULL, `displayProfileId` int(11) NOT NULL, `commandString` varchar(1000) NOT NULL, `validationString` varchar(1000) DEFAULT NULL, PRIMARY KEY (`commandId`,`displayProfileId`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "Add the Last Command Success Field to the Display Table",
+      "action": "ALTER TABLE  `display` ADD  `lastCommandSuccess` TINYINT NOT NULL DEFAULT 2;"
+    },
+    {
+      "step": "Allow Events to be saved without a Campaign Id",
+      "action": "ALTER TABLE  `schedule` CHANGE  `CampaignID`  `CampaignID` INT( 11 ) NULL;"
+    },
+    {
+      "step": "Add Event Type to Events",
+      "action": "ALTER TABLE  `schedule` ADD  `eventTypeId` TINYINT NOT NULL AFTER  `eventID`;"
+    },
+    {
+      "step": "Update all existing events to have an Event Type of 1 - Layout",
+      "action": "UPDATE `schedule` SET `eventTypeId` = 1;"
+    },
+    {
+      "step": "Add the Command field to the Event Table",
+      "action": "ALTER TABLE  `schedule` ADD  `commandId` INT NULL AFTER  `CampaignID`;"
+    },
+    {
+      "step": "Allow Events to have an empty to date",
+      "action": "ALTER TABLE  `schedule` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;"
+    },
+    {
+      "step": "Allow Events to have an empty to date",
+      "action": "ALTER TABLE  `schedule_detail` CHANGE  `ToDT`  `ToDT` BIGINT( 20 ) NULL DEFAULT NULL;"
+    },
+    {
+      "step": "Add released and api ref to media table",
+      "action": "ALTER TABLE `media` ADD released tinyint(4) NOT NULL DEFAULT 1, ADD apiRef varchar(254) NULL;"
+    },
+    {
+      "step": "Update all Videos with their real duration",
+      "type": "php",
+      "action": "Xibo\\Upgrade\\VideoDurationStep"
+    },
+    {
+      "step": "Update Users with additional fields",
+      "action": "ALTER TABLE  `user` ADD  `firstName` VARCHAR( 254 ) NULL ,ADD  `lastName` VARCHAR( 254 ) NULL ,ADD  `phone` VARCHAR( 254 ) NULL ,ADD  `ref1` VARCHAR( 254 ) NULL ,ADD  `ref2` VARCHAR( 254 ) NULL ,ADD  `ref3` VARCHAR( 254 ) NULL ,ADD  `ref4` VARCHAR( 254 ) NULL ,ADD  `ref5` VARCHAR( 254 ) NULL;"
+    },
+    {
+      "step": "Update XMDS Version to 5",
+      "action": "UPDATE `version` SET `XmdsVersion` = 5;"
+    }
+  ]
+}

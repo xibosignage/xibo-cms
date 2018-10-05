@@ -1,0 +1,46 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Request Screen Shot" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayRequestScreenshotForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayRequestScreenshotForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.requestscreenshot", {id: display.displayId}) }}">
+                {% set message %}{% trans "Are you sure you want to request a screenshot?" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set message %}{% trans "If the Player is configured for push messaging, screenshots are requested immediately and should be seen when the form closed. In some circumstances it may be necessary to refresh the page after a few seconds." %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set message %}{% trans "Screenshots can be seen in the Display Grid by selecting Column Visibility and enabling the Screenshot column." %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% if display.xmrChannel is empty %}
+                    <div class="alert alert-info">
+                        {% set message %}{% trans %}XMR is not working on this Player yet, the screenshot will be requested the next time the Player connects on its collection interval, expected {{ nextCollect }}.{% endtrans %}{% endset %}
+                        {{ forms.message(message) }}
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

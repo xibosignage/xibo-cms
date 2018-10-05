@@ -1,0 +1,140 @@
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2009-2013 Daniel Garner
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version. 
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+ .xibo-calendar-controls {
+ 	margin-left: 20px;
+ }
+ 
+ 
+ .xibo-calendar-controls #dateInput {
+ 	background: white;
+    border: none;
+    padding: 0;
+    margin: 0;
+ }
+ 
+ .xibo-calendar-controls #dateInput .input-group-addon {
+ 	color: #428bca;
+ 	width: 0px;
+ 	font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    background: none;
+ 	border-radius: 4px;
+    border: 1px solid #ccc;
+ }
+ 
+
+ #cal-week-box {
+ 	z-index: 1000;
+ }
+
+ .cal-legend ul {
+ 	list-style: none;
+ }
+
+ .day-highlight {
+ 	overflow: hidden;
+ }
+ 
+.agenda-table {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border-radius: 4px;
+}
+
+.agenda-table thead {
+    background-color: #e3e3e3;
+}
+
+.agenda-table .table-title {
+    background-color: #30426a;
+    color: #fff;
+}
+
+.agenda-panel .panel-body {
+    background-color: #f5f5f5;
+}
+
+.agenda-panel .panel-heading {
+    background-color: white;
+}
+
+.agenda-panel .nav-tabs>li.active>a, .nav-tabs>li.active>a:hover, .nav-tabs>li.active>a:focus {
+    background-color: #ddd;
+}
+
+.agenda-panel .text-danger {
+    text-align: center;
+    vertical-align: middle;
+    line-height: 90px;
+}
+
+.agenda-table tbody tr.low-priority {
+    color: grey;
+}
+
+.agenda-table tbody tr:hover {
+    cursor: pointer;
+    color: #428bca;
+}
+
+.agenda-table tbody tr.selected {
+    cursor: pointer;
+    background-color: #428bca;
+    color: white;
+}
+
+.agenda-table tbody tr.selected-linked {
+    cursor: pointer;
+    background-color: #83acd0;
+    color: white;
+}
+
+.agenda-table .btn-tag {
+    padding: 0px 5px;
+    cursor: default;
+}
+
+.cal-event-time-bar .slider.slider-horizontal {
+    width: 100%;
+}
+
+.cal-event-time-bar .slider .tooltip.top {
+    margin-top: -36px;
+    z-index: 10;
+}
+
+.cal-event-time-bar .slider .tooltip-inner {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.cal-event-time-bar {
+    margin-top: 30px;
+}
+
+.cal-context .tab-pane {
+    padding-top: 35px;
+}
+
+.cal-event-breadcrumb-trail #content {
+    text-align: center;
+}

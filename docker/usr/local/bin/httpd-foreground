@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+# Apache gets grumpy about PID files pre-existing
+rm -rf /run/apache2/*
+
+/usr/sbin/httpd -DFOREGROUND

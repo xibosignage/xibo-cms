@@ -1,0 +1,7 @@
+{
+  "id":"media-rss-with-left-hand-text",
+  "value":"Image overlaid with the Feed Content on the Left",
+  "template":"<div class=\"image\">[Link|image]\r\n<div class=\"cycle-overlay\">\r\n<p style=\"font-family: Arial, Verdana, sans-serif; font-size:52px; color:#Color#; margin-top:300px;\">[Title]<\/p>\r\n\r\n<p style=\"font-family: Arial, Verdana, sans-serif; font-size:48px; margin-top:25px;\">[Description]<\/p>\r\n<\/div>\r\n<\/div>",
+  "css":".image img { width:100%;}.cycle-overlay {color: white;background: black;opacity: .6;filter: alpha(opacity=60);position: absolute;bottom: 0;width: 20%;height:100%;padding: 15px;}",
+  "image":"modules/ticker/media-rss-with-left-hand-text.png"
+}

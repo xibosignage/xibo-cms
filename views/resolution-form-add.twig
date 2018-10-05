@@ -1,0 +1,41 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Resolution" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#resolutionAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="resolutionAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("resolution.add") }}">
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "A name for this Resolution" %}{% endset %}
+                        {{ forms.input("resolution", title, "", helpText) }}
+                        
+                        {% set title %}{% trans "Width" %}{% endset %}
+                        {% set helpText %}{% trans "The Width for this Resolution" %}{% endset %}
+                        {{ forms.input("width", title, "", helpText) }}
+                       
+                        {% set title %}{% trans "Height" %}{% endset %}
+                        {% set helpText %}{% trans "The Height for this Resolution" %}{% endset %}
+                        {{ forms.input("height", title, "", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

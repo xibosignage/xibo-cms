@@ -1,0 +1,87 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div id="dashbuttons">
+        {% if currentUser.routeViewable("/schedule") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("schedule.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/scheduleview.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Schedule" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/layout") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("layout.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/presentations.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Layouts" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/library") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("library.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/content.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Library" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/template") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("template.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/layouts.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Templates" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/user") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+            <div class="dashicons">
+                <a href="{{ urlFor("user.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/users.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Users" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/admin") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("admin.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/settings.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Settings" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/license") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("license.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/license.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "About" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+        {% if currentUser.routeViewable("/fault") %}
+            <div class="dashicons">
+                <a href="{{ urlFor("fault.view") }}">
+                    <img src="{{ theme.uri("img/dashboard/help.png") }}" class="dash_button" />
+                    <span class="dash_text">{% trans "Report Fault" %}</span>
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+{% endblock %}

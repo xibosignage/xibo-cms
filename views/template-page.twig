@@ -1,0 +1,112 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (template-page.twig)
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Templates" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="templateView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("template", title) }}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {{ inline.input("tags", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="templates" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Owner" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Tags" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Permissions" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#templates").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=templateGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "templateGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 1, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("template.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#templates").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "layout"},
+                { "data": "owner"},
+                { "data": "descriptionWithMarkup"},
+                { "data": "tags", "visible": false },
+                { "data": "thumbnail"},
+                { "data": "permissions"},
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#templates_wrapper').find('.col-sm-6').eq(1));
+    </script>
+{% endblock %}

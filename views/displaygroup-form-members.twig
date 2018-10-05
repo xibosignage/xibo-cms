@@ -1,0 +1,125 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% set randomId = random() %}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% set displayGroupName = displayGroup.displayGroup %}
+    {% trans %}Manage Membership for {{ displayGroupName }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, displayGroupMembersFormSubmit("{{ randomId }}")
+{% endblock %}
+
+{% block callBack %}displayGroupMembersFormOpen{% endblock %}
+
+{% block extra %}{{ extra|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div id="{{ randomId }}" class="div-horizontal controlDiv"
+                 data-param="displayId"
+                 data-param-unassign="unassignDisplayId"
+                 data-url="{{ urlFor("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
+                 data-groups-param="displayGroupId"
+                 data-groups-param-unassign="unassignDisplayGroupId"
+                 data-groups-url="{{ urlFor("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
+            >
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="active"><a href="#displayTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                    <li><a href="#displayGroupTab" role="tab" data-toggle="tab"><span>{% trans "Display Groups" %}</span></a></li>
+                    <li><a href="#treeTab" role="tab" data-toggle="tab"><span>{% trans "Relationship Tree" %}</span></a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="displayTab">
+                        {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member or not.{% endtrans %}{% endset %}
+                        {{ forms.message(helpText) }}
+                        <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayDGView">
+                            <div class="XiboFilter well">
+                                <div class="FilterDiv" id="Filter">
+                                    <form class="form-inline" id="displayForm">
+                                        {% set title %}{% trans "Name" %}{% endset %}
+                                        {{ inline.input("display", title) }}
+                                        
+                                        {% set title %}{% trans "Authorised" %}{% endset %}
+                                        {% set values = [{id: -1, value: ""}, {id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                                        {{ inline.dropdown("authorised", "single", title, -1, values, "id", "value") }}
+                                    </form>
+                                </div>
+                            </div>
+                            <table id="displaysMembersTable" class="table table-bordered membersTable">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Logged In" %}</th>
+                                        <th>{% trans "Version" %}</th>
+                                        <th>{% trans "Member" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="displayGroupTab">
+                        {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member or not.{% endtrans %}{% endset %}
+                        {{ forms.message(helpText) }}
+                        <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGroupDGView">
+                            <div class="XiboFilter well">
+                                <div class="FilterDiv" id="Filter">
+                                    <form class="form-inline" id="displayGroupForm">
+                                        {% set title %}{% trans "Name" %}{% endset %}
+                                        {{ inline.input("displayGroup", title) }}
+                                    </form>
+                                </div>
+                            </div>
+                            <table id="displaysGroupsMembersTable" class="table table-bordered membersTable">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display Group" %}</th>
+                                        <th>{% trans "Member" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane" id="treeTab">
+                        {% set helpText %}{% trans %}Below is the family tree for this Display Group.{% endtrans %}{% endset %}
+                        {{ forms.message(helpText) }}
+
+                        {% set helpText %}{% trans %}The Display Group being edited is in bold. The list is ordered so that items above the current Display Group are its ancestors and items below are its descendants.{% endtrans %}{% endset %}
+                        {{ forms.message(helpText) }}
+                        <ul>
+                            {% for group in tree %}
+                                {% if group.displayGroup == displayGroup.displayGroup %}
+                                    <li><strong>{{ group.displayGroup }}</strong></li>
+                                {% else %}
+                                    <li><a class="XiboFormButton" href="{{ urlFor("displayGroup.members.form", {"id": group.displayGroupId}) }}">{{ group.displayGroup }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

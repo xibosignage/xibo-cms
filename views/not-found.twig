@@ -1,0 +1,25 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+{% extends "non-authed.twig" %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Page not found" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>
+                    {{ flash.globalError }}
+                    {{ flash.message }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

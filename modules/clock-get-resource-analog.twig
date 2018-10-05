@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Xibo Open Source Digital Signage</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width={{ viewPortWidth }}" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <!-- Copyright 2006-2014 Daniel Garner. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+    <style type="text/css">
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+        }
+
+        h1, h2, h3, h4, p {
+            margin-top: 0;
+        }
+
+        .hero-circle {
+            margin: 0 auto;
+            position: relative;
+            background-image: url(data:image/png;base64,{{ clockFace|raw }});
+        }
+
+        .hero-circle-bg-image {
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .hero-face {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hero-face:after {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            margin: -6px 0 0 -6px;
+            border-radius: 6px;
+            content: "";
+            display: block;
+        }
+
+        .light .hero-face:after {
+            background: #fff;
+        }
+
+        .dark .hero-face:after {
+            background: #000;
+        }
+
+        .hero-hour {
+            width: 0;
+            height: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -4px 0 -4px -25%;
+            padding: 4px 0 4px 25%;
+            -webkit-transform-origin: 100% 50%;
+            -ms-transform-origin: 100% 50%;
+            transform-origin: 100% 50%;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .dark .hero-hour, .dark .hero-minute, .dark .hero-second {
+            background: #000;
+        }
+
+        .light .hero-hour, .light .hero-minute, .light .hero-second {
+            background: #FFF;
+        }
+
+        .hero-minute{width:0;height:0;position:absolute;top:50%;left:50%;margin:-40% -3px 0;padding:40% 3px 0;-webkit-transform-origin:50% 100%;-ms-transform-origin:50% 100%;transform-origin:50% 100%;border-radius:3px 3px 0 0;}
+
+        .hero-second{width:0;height:0;position:absolute;top:50%;left:50%;margin:-40% -1px 0 0;padding:40% 1px 0;-webkit-transform-origin:50% 100%;-ms-transform-origin:50% 100%;transform-origin:50% 100%;}
+    </style>
+    {{ head|raw }}
+</head>
+<body class="{{ clockTheme }}">
+<div id="clock" class="hero-circle hero-circle-transparent hero-circle-bg-image">
+    <div class="hero-face">
+        <div id="hour" class="hero-hour"></div>
+        <div id="minute" class="hero-minute"></div>
+        <div id="second" class="hero-second"></div>
+    </div>
+</div>
+{{ body|raw }}
+</body>
+{{ javaScript|raw }}
+<script type="text/javascript">
+    function updateClock(){
+        var now = moment().add({{ offset }}, "m"),
+                second = now.seconds() * 6,
+                minute = now.minutes() * 6 + second / 60,
+                hour = ((now.hours() % 12) / 12) * 360 + 90 + minute / 12;
+
+        $('#hour').css("transform", "rotate(" + hour + "deg)");
+        $('#minute').css("transform", "rotate(" + minute + "deg)");
+        $('#second').css("transform", "rotate(" + second + "deg)");
+    }
+
+    $(document).ready(function() {
+
+        var options = {{ options|raw }};
+        var previewWidth = options.previewWidth;
+        var previewHeight = options.previewHeight;
+
+        if (previewWidth == 0 || previewHeight == 0)
+            var size = Math.min($(window).width(), $(window).height());
+        else
+            var size = Math.min(previewWidth, previewHeight);
+
+        // Shrink by 2px to get a bit of space to the side.
+        size -= 2;
+
+        $(".hero-circle").css({
+            width: size + "px",
+            height: size + "px"
+        });
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    });
+</script>
+</html>
+{{ controlMeta|raw }}

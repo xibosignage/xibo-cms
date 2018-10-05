@@ -1,0 +1,11 @@
+{
+    "id": "tweet-only",
+    "value": "Template 3 - text",
+    "template": "<div class=\"twitter-container\">\r\n<p><span style=\"font-family:lucida sans unicode,lucida grande,sans-serif;\"><span>[Tweet]<\/span> <\/span><\/p>\r\n<\/div>\r\n",
+    "css": ".emojione {\r\n    width: 22px;\r\n    height: 22px\r\n}\r\n\r\n.twitter-container {\r\n    width: 600px !important;\r\n    height: 100px !important;\r\n    font-size: 20px;\r\n    line-height: 1.2;\r\n    padding: 10px;\r\n}\r\n\r\n.item {\r\n    float: left;\r\n}",
+    "widgetOriginalWidth": "600",
+    "widgetOriginalHeight": "100",
+    "widgetOriginalPadding": "10",
+    "resultContent": "1",
+    "image":"modules/twitter/template-thumbs/textonly.png"
+}

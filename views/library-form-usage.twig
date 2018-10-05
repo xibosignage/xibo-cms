@@ -1,0 +1,104 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (library-usage-form.twig)
+ */
+#}
+
+{% set randomId = random() %}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% set mediaName = media.name %}
+    {% trans %}Usage Report for {{ mediaName }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Close" %}, XiboDialogClose()
+{% endblock %}
+
+{% block callBack %}usageFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                <li><a href="#layouts" role="tab" data-toggle="tab"><span>{% trans "Layouts" %}</span></a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="displays">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p class="alert alert-info">
+                                {% trans %}This media is directly assigned to {{ countDisplays }} displays, the ones you have permission to see are shown below.{% endtrans %}
+                                {% trans %}Direct assignment is where Layouts/Media are assigned to a Display/DisplayGroup without being in a Schedule.{% endtrans %}
+                                <br>
+                                <br>
+                                {% trans %}If the media is used in scheduled events it is also shown below. To restrict to a specific time enter a date in the filter below.{% endtrans %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="XiboGrid" id="{{ random() }}" data-grid-name="usageReport">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="XiboFilter">
+                                    <div class="FilterDiv" id="Filter">
+                                        <form class="form-inline" id="usageReportForm">
+                                            {% set title %}{% trans "Date" %}{% endset %}
+                                            <input type="hidden" name="mediaEventDate" id="mediaEventDate" />
+                                            <div class="input-group">
+                                                <span class="input-group-addon">{{ title }}</span>
+                                                <input class="form-control" name="mediaEventDateLink" type="text" id="mediaEventDateLink" data-link-field="mediaEventDate" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
+                                                <span id="dateClearButton" class="input-group-addon" role="button">X</span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="usageReportTable" class="table table-bordered membersTable" data-media-id="{{ media.mediaId }}">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "ID" %}</th>
+                                            <th>{% trans "Display" %}</th>
+                                            <th>{% trans "Description" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="layouts">
+                    <div class="XiboGrid" id="{{ random() }}" data-grid-name="usageReportLayouts">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="usageReportLayoutsTable" class="table table-bordered" data-media-id="{{ media.mediaId }}">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

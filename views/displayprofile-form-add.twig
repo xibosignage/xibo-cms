@@ -1,0 +1,52 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+In theory it is fine, although  it may be better to user clientTypes from controller??
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Profile" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayProfileAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayProfileAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.add") }}"
+                  data-next-form-url="{{ urlFor("displayProfile.edit.form") }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Display Profile" %}{% endset %}
+                {{ forms.input("name", title, "", helpText,"","required") }}
+
+                {% set title %}{% trans "Client Type" %}{% endset %}
+                {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
+                {% set windows %}{% trans "Windows" %}{% endset %}
+                {% set android %}{% trans "Android" %}{% endset %}
+                {% set lg %}{% trans "LG" %}{% endset %}
+                {% set options = [
+                { typeid: "android", type: android },
+                { typeid: "lg", type: lg },
+                { typeid: "windows", type: windows }
+                ] %}
+                {{ forms.dropdown("type", "single", title,"", options, "typeid","type", helpText) }} 
+
+                {% set title %}{% trans "Default Profile?" %}{% endset %}
+                {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
+                {{ forms.checkbox("isDefault", title, isDefault, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

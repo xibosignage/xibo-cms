@@ -1,0 +1,166 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li><a title="{% trans "Open the Filter Form" %}" href="{{ theme.getThemeConfig("cms_release_notes_url") }}">{% trans "Release Notes" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    {% set appName = theme.getThemeConfig("app_name") %}
+    <div class="widget">
+        <div class="widget-title">{% trans %}Welcome to the {{ appName }} Upgrade{% endtrans %}</div>
+        <div class="widget-body">
+            <p>{% trans "The steps involved in this upgrade have been listed below, clicking the start button will run through the steps one by one." %}
+                {% trans "Please read through the release notes before you begin as they contain important information about this new release." %}</p>
+            <p>{% trans "If you encounter an error, please contact support providing a screenshot of this page, making sure you include the step that experienced the error." %}</p>
+            <p><button id="startButton" class="btn btn-default">{% trans "Start" %}</button></p>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>{% trans "Step #" %}</th>
+                        <th>{% trans "Version" %}</th>
+                        <th>{% trans "Step" %}</th>
+                        <th>{% trans "Requested On" %}</th>
+                        <th>{% trans "Complete?" %}</th>
+                        <th>{% trans "Run On" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set priorComplete = true %}
+                    {% for item in steps %}
+                        <tr data-step-id="{{ item.stepId }}" data-step-url="{{ urlFor("upgrade.doStep") }}">
+                            <td>
+                                {% if not priorComplete or item.complete %}
+                                {{ item.stepId  }}
+                                {% else %}
+                                <button class="doStep btn btn-sm">{{ item.stepId }}</button>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.appVersion  }}</td>
+                            <td class="stepDescription">{{ item.step  }}</td>
+                            <td>{{ item.requestDate|date  }}</td>
+                            <td><span class="stepResult fa {% if item.complete %}fa-check{% else %}fa-times{% endif %}"></span></td>
+                            <td>{% if item.lastTryDate %}{{ item.lastTryDate|date  }}{% endif %}</td>
+                        </tr>
+                        {% set priorComplete = item.complete %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+
+    <script type="text/javascript">
+        var finishedTemplate;
+        var startButtonUsed = false;
+
+        $(document).ready(function() {
+
+            // Bind to the active do step button
+            $("button.doStep").click(clickStep);
+
+            // Bind the start button
+            $("#startButton").click(function() {
+                // Find and "click" the button on the next step
+                startButtonUsed = true;
+                $("button.doStep").click();
+            });
+
+            finishedTemplate = Handlebars.compile($("#upgrade-finished").html());
+        });
+
+        var row, stepId, url;
+
+        function clickStep(e) {
+            e.preventDefault();
+
+            row = $(this).closest("tr");
+            stepId = row.data().stepId;
+            url = row.data().stepUrl;
+
+            // Add a spinner
+            row.find("span.stepResult").addClass("fa-cog fa-spin").removeClass("fa-times fa-check");
+
+            // Fire off a POST to do this step.
+            $.ajax({
+                method: "POST",
+                url: url.replace(":id", stepId),
+                dataType: "json",
+                success: stepResponse,
+                error: function (response) {
+                    SystemMessage(response.responseText);
+                }
+            });
+        }
+
+        function stepResponse(response) {
+
+            row.find("span.stepResult").removeClass("fa-cog fa-spin");
+
+            if (response.success) {
+
+                // Update the status
+                row.find("button.doStep").parent().html(stepId);
+                row.find("span.stepResult").removeClass("fa-times").addClass("fa-check").parent().next().html(moment().format(jsDateFormat));
+                row.find("td.stepDescription div.error").remove();
+
+                // We want to move down (see if there is another step)
+                var subsequentStep = row.next();
+
+                if (subsequentStep.length == 0) {
+                    // Replace the whole page with the "finished" template and bomb out
+                    $(".widget-body").html(finishedTemplate());
+                    return;
+                }
+
+                var button = $("<button/>").addClass("doStep").addClass("btn").addClass("btn-sm").click(clickStep).html(subsequentStep.data().stepId);
+
+                subsequentStep.children().eq(0).html(button);
+
+                // Do the next one
+                if (startButtonUsed)
+                    button.click();
+            }
+            else {
+                startButtonUsed = false;
+
+                row.find("span.stepResult").addClass("fa-times").removeClass("fa-check");
+
+                toastr.error(response.message);
+
+                // Append the error message under the step description
+                var skipButton = $("<span class=\"badge\">{%  trans "Skip this step" %} <i class=\"fa fa-times\"></i></span>").on("click", function() {
+                    $.ajax({
+                        method: "DELETE",
+                        url: url.replace(":id", stepId),
+                        success: stepResponse,
+                        error: function(response) {
+                            SystemMessage(response.responseText);
+                        }
+                    })
+                });
+
+                var error = $("<div/>").addClass("error").html(response.message).append(skipButton);
+                row.find("td.stepDescription").append(error);
+            }
+        }
+    </script>
+
+    <script type="text/x-handlebars-template" id="upgrade-finished">
+        <h3>{% trans "Upgrade Finished" %}</h3>
+        <p>{% trans "Thank you for upgrading" %}. <a href="{{ urlFor("home") }}">{% trans "Please click here to continue" %}</a>.</p>
+    </script>
+
+{% endblock %}

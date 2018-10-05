@@ -1,0 +1,226 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+        // Append the Templates to the response
+        $response->extra = $this->module->settings['templates'];
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Weather" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#forecastAddForm").submit()
+{% endblock %}
+
+{% block callBack %}forecastIoFormSetup{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDisplayLocation",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "block" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "block" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "none" }
+    }
+    },{
+    "field": "useDisplayLocation",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".locationControls": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".reloadTemplateButton": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".reloadTemplateButton": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".reloadTemplateButton": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".reloadTemplateButton": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#appearence" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="forecastAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, "", helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed." %}{% endset %}
+                        {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Use the Display Location" %}{% endset %}
+                        {% set helpText %}{% trans "Use the location configured on the display" %}{% endset %}
+                        {{ forms.checkbox("useDisplayLocation", title, 1, helpText) }}
+
+                        {% set title %}{% trans "Latitude" %}{% endset %}
+                        {% set helpText %}{% trans "The Latitude for this widget" %}{% endset %}
+                        {{ forms.number("latitude", title, module.getOption("latitude"), helpText, "locationControls") }}
+
+                        {% set title %}{% trans "Longitude" %}{% endset %}
+                        {% set helpText %}{% trans "The Longitude for this widget" %}{% endset %}
+                        {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
+                    </div>
+
+                    <div class="tab-pane" id="appearence">
+
+                        {% set title %}{% trans "Weather Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, 0, helpText) }}
+                        
+                        {% set title %}{% trans "Original Width" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended width of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
+                        {{ forms.number("widgetOriginalWidth", title, module.getOption("widgetOriginalWidth", undefined), helpText, "template-override-controls", "", "number") }}
+
+                        {% set title %}{% trans "Original Height" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended height of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
+                        {{ forms.number("widgetOriginalHeight", title, module.getOption("widgetOriginalHeight", undefined), helpText, "template-override-controls", "", "number") }}
+
+                        {% set title %}{% trans "Template for Current Forecast" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Request Forecast below." %}{% endset %}
+                        {{ forms.textarea("currentTemplate", title, "", helpText, "template-override-controls", "required", 10) }}
+
+                        {% set title %}{% trans "Template for Daily Forecast" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}
+                        {{ forms.textarea("dailyTemplate", title, "", helpText, "template-override-controls", "", 10) }}
+
+                        {% set title %}{% trans "CSS Style Sheet" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a CSS style sheet to style the weather widget" %}{% endset %}
+                        {{ forms.textarea("styleSheet", title, "", helpText, "template-override-controls", "required", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+                        {% set title %}{% trans "Units" %}{% endset %}
+                        {% set helpText %}{% trans "Select the units you would like to use." %}{% endset %}
+                        {{ forms.dropdown("units", "single", title, module.getOption("units"), module.unitsAvailable(), "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Language" %}{% endset %}
+                        {% set helpText %}{% trans "Select the language you would like to use." %}{% endset %}
+                        {{ forms.dropdown("lang", "single", title, module.getWeatherLanguage(), module.supportedLanguages(), "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Only show Daytime weather conditions" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to only show the Daytime weather conditions." %}{% endset %}
+                        {{ forms.checkbox("dayConditionsOnly", title, 1, helpText) }}
+
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

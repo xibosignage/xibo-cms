@@ -1,0 +1,193 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Clock" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#clockFormAdd").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+        "field": "clockTypeId",
+        "trigger": "init",
+        "value": 1,
+        "operation": "equals",
+        "actions": {
+            ".analogue-control-group": { "display": "block" },
+            ".digital-control-group": { "display": "none" },
+            ".flip-control-group": { "display": "none" }
+        }
+    },{
+        "field": "clockTypeId",
+        "trigger": "change",
+        "value": 1,
+        "operation": "equals",
+        "actions": {
+            ".analogue-control-group": { "display": "block" },
+            ".digital-control-group": { "display": "none" },
+            ".flip-control-group": { "display": "none" }
+        }
+    },{
+        "field": "clockTypeId",
+        "trigger": "init",
+        "value": 2,
+        "operation": "equals",
+        "actions": {
+            ".analogue-control-group": { "display": "none" },
+            ".digital-control-group": { "display": "block" },
+            ".flip-control-group": { "display": "none" }
+        }
+    },{
+        "field": "clockTypeId",
+        "trigger": "change",
+        "value": 2,
+        "operation": "equals",
+        "actions": {
+            ".analogue-control-group": { "display": "none" },
+            ".digital-control-group": { "display": "block" },
+            ".flip-control-group": { "display": "none" }
+        }
+    },{
+        "field": "clockTypeId",
+        "trigger": "init",
+        "value": 3,
+        "operation": "equals",
+        "actions": {
+            ".analogue-control-group": { "display": "none" },
+            ".digital-control-group": { "display": "none" },
+            ".flip-control-group": { "display": "block" }
+        }
+    },{
+        "field": "clockTypeId",
+        "trigger": "change",
+        "value": 3,
+        "operation": "equals",
+        "actions": {
+            ".analogue-control-group": { "display": "none" },
+            ".digital-control-group": { "display": "none" },
+            ".flip-control-group": { "display": "block" }
+        }
+    },{
+        "field": "useDuration",
+        "trigger": "init",
+        "value": false,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "none" }
+        }
+        },{
+        "field": "useDuration",
+        "trigger": "change",
+        "value": false,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "none" }
+        }
+        },{
+        "field": "useDuration",
+        "trigger": "init",
+        "value": true,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "block" }
+        }
+        },{
+        "field": "useDuration",
+        "trigger": "change",
+        "value": true,
+        "operation": "is:checked",
+        "actions": {
+        ".duration-fields": { "display": "block" }
+        }
+    }]
+{% endblock %}
+
+{% block callBack %}text_callback{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="clockFormAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Clock Type" %}{% endset %}
+                {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
+                {% set analog %}{% trans "Analog" %}{% endset %}
+                {% set digital %}{% trans "Digital" %}{% endset %}
+                {% set flip %}{% trans "Flip Clock" %}{% endset %}
+                {% set options = [
+                    { id: 1, value: analog },
+                    { id: 2, value: digital },
+                    { id: 3, value: flip },
+                ] %}
+                {{ forms.dropdown("clockTypeId", "single", title, "", options, "id", "value", helpText) }}
+
+                {% set title %}{% trans "Clock Face" %}{% endset %}
+                {% set helpText %}{% trans "Please select a clock face." %}{% endset %}
+                {{ forms.dropdown("clockFace", "single", title, "TwentyFourHourClock", module.clockFaces(), "id", "value", helpText, "flip-control-group") }}
+
+                {% set title %}{% trans "Offset" %}{% endset %}
+                {% set helpText %}{% trans "The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s." %}{% endset %}
+                {{ forms.input("offset", title, "", helpText) }}
+
+                {% set title %}{% trans "Show Seconds?" %}{% endset %}
+                {% set helpText %}{% trans "Should the clock show seconds or not?" %}{% endset %}
+                {{ forms.checkbox("showSeconds", title, 1, helpText, "flip-control-group") }}
+
+                {% set title %}{% trans "Theme" %}{% endset %}
+                {% set helpText %}{% trans "Please select a theme for the clock." %}{% endset %}
+                {% set light %}{% trans "Light" %}{% endset %}
+                {% set dark %}{% trans "Dark" %}{% endset %}
+                {% set options = [
+                { id: 1, value: light },
+                { id: 2, value: dark }
+                ] %}
+                {{ forms.dropdown("themeId", "single", title, "", options, "id", "value", helpText, "analogue-control-group") }}
+
+                {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
+                {{ forms.message(message, "digital-control-group", "[HH:mm]") }}
+
+                {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
+                {{ forms.textarea("ta_text", "", "[HH:mm]", helpText, "digital-control-group") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

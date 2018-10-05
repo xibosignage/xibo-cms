@@ -1,0 +1,7 @@
+{
+  "title": "Twitter Metro Module",
+  "author": "Spring Signage Ltd",
+  "description": "A module for displaying Tweets in a Metro Layout. Uses the Twitter API",
+  "name": "twittermetro",
+  "class": "Xibo\\Widget\\TwitterMetro"
+}

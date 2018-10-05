@@ -1,0 +1,224 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-warning btn-xs"><a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ urlFor("log.truncate.form") }}"> <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Logs" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="logView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="active"><a href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+                            <li><a href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+                        </ul>
+                        <form class="form-inline">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="general">
+                                    {% set title %}{% trans "Level" %}{% endset %}
+                                    {{ inline.input("level", title) }}
+
+                                    {% set title %}{% trans "Interval" %}{% endset %}
+                                    {% set secondsTrans %}{% trans "Seconds" %}{% endset %}
+                                    {% set minutesTrans %}{% trans "Minutes" %}{% endset %}
+                                    {% set hoursTrans %}{% trans "Hours" %}{% endset %}
+                                    {% set intervalTypeOptions = [
+                                    { id: 1, value: secondsTrans },
+                                    { id: 60, value: minutesTrans },
+                                    { id: 3600, value: hoursTrans },
+                                    ] %}
+                                    {{ inline.dropdown("intervalType", "single", title, 1, intervalTypeOptions, "id", "value") }}
+
+                                    {% set title %}{% trans "Duration back" %}{% endset %}
+                                    {{ inline.number("seconds", title, 120) }}
+
+                                    {% set title %}{% trans "Run" %}{% endset %}
+                                    {{ inline.input("runNo", title) }}
+
+                                    {% set title %}{% trans "User" %}{% endset %}
+                                    {{ inline.dropdown("userId", "single", title, "", [{userId: null, userName: ""}]|merge(users), "userId", "userName") }}
+                                </div>
+                                <div class="tab-pane" id="advanced">
+                                    {% set title %}{% trans "From Date" %}{% endset %}
+                                    <div class="form-group">
+                                        <label class="control-label" for="fromDt">{{ title }}</label>
+                                        <div class="input-group date" style="display:table;">
+                                            <input type="hidden" name="fromDt" id="fromDt" />
+                                            <input class="form-control datePicker dateControl" name="fromDtLink"
+                                                   type="text" id="fromDtLink" data-link-field="fromDt"
+                                                   data-link-format="yyyy-mm-dd hh:ii:ss" readonly />
+                                            <span class="input-group-addon" id="fromDateControlCancel">
+                                                <span class="fa fa-times-circle"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {% set title %}{% trans "Channel" %}{% endset %}
+                                    {{ inline.input("channel", title) }}
+
+                                    {% set title %}{% trans "Page" %}{% endset %}
+                                    {{ inline.input("page", title) }}
+
+                                    {% set title %}{% trans "Function" %}{% endset %}
+                                    {% set getTrans %}{% trans "GET" %}{% endset %}
+                                    {% set postTrans %}{% trans "POST" %}{% endset %}
+                                    {% set putTrans %}{% trans "PUT" %}{% endset %}
+                                    {% set deleteTrans %}{% trans "DELETE" %}{% endset %}
+                                    {% set headTrans %}{% trans "HEAD" %}{% endset %}
+                                    {% set patchTrans %}{% trans "PATCH" %}{% endset %}
+                                    {% set functionOptions = [
+                                    { id: "", value: "" },
+                                    { id: "GET", value: getTrans },
+                                    { id: "POST", value: postTrans},
+                                    { id: "PUT", value: putTrans},
+                                    { id: "DELETE", value: deleteTrans},
+                                    { id: "HEAD", value: headTrans},
+                                    { id: "PATCH", value: patchTrans},
+                                    ] %}
+                                    {{ inline.dropdown("function", "single", title, "", functionOptions, "id", "value") }}
+
+                                    {% set title %}{% trans "Display" %}{% endset %}
+                                    {% set attributes = [
+                                        { name: "data-width", value: "200px" },
+                                        { name: "data-allow-clear", value: "true" },
+                                        { name: "data-placeholder--id", value: null },
+                                        { name: "data-placeholder--value", value: "" },
+                                        { name: "data-search-url", value: urlFor("display.search") },
+                                        { name: "data-search-term", value: "display" },
+                                        { name: "data-id-property", value: "displayId" },
+                                        { name: "data-text-property", value: "display" }
+                                    ] %}
+                                    {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                                    {% set title %}{% trans "Message" %}{% endset %}
+                                    {{ inline.input("message", title) }}
+
+                                    {% set title %}{% trans "Exclude logs common to each request?" %}{% endset %}
+                                    {{ inline.checkbox("excludeLog", title, 1) }}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="logs" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Run" %}</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Channel" %}</th>
+                                <th>{% trans "Function" %}</th>
+                                <th>{% trans "Level" %}</th>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Page" %}</th>
+                                <th style="width: 50%">{% trans "Message" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#logs").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=logGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "logGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "desc"]],
+                ajax: {
+                    url: "{{ urlFor("log.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "logId"},
+                    {"data": "runNo"},
+                    {"data": "logDate", "render": dataTableDateFromIso},
+                    {"data": "channel"},
+                    {"data": "function"},
+                    {"data": "type"},
+                    {"data": "display"},
+                    {"data": "page"},
+                    {"data": "message"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#logs_wrapper').find('.col-sm-6').eq(1));
+
+            $("#refreshLog").click(function() {
+                table.ajax.reload();
+            });
+
+            $("#fromDateControlCancel").on('click', function() {
+                // Clear the date picker
+                var $fromDt = $("#fromDt");
+                $fromDt.val("");
+                $("#fromDtLink").val("");
+
+                table.ajax.reload();
+
+                // Reset local storage
+                localStorage.setItem("logView", JSON.stringify($fromDt.closest("form").serializeArray()));
+            });
+        });
+    </script>
+{% endblock %}

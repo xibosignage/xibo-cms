@@ -1,0 +1,60 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015-16 Spring Signage Ltd
+ * (usergroup-form-add.twig)
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add User Group" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.add }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#userGroupAddForm").submit()
+{% endblock %}
+
+{% block callBack %}userGroupFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userGroupAddForm" class="UserGroupForm form-horizontal" method="post" action="{{ urlFor("group.add") }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
+                {{ forms.input("group", title, "", helpText, "", "required maxlength='50'") }}
+
+                {% set title %}{% trans "Library Quota" %}{% endset %}
+                {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" />
+                        <span class="help-block">{{ helpText }}</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <select name="libraryQuotaUnits" class="form-control">
+                            <option value="kb">KiB</option>
+                            <option value="mb">MiB</option>
+                            <option value="gb">GiB</option>
+                        </select>
+                    </div>
+                </div>
+
+                {% if currentUser.userTypeId == 1 %}
+                    {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                    {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
+                    {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
+
+                    {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
+                    {% set helpText %}{% trans "Should members of this Group receive Display notifications for Displays they have permission to see?" %}{% endset %}
+                    {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

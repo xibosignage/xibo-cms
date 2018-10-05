@@ -1,0 +1,143 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Image" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#imageEditForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "scaleTypeId",
+    "trigger": "init",
+    "value": "center",
+    "operation": "equals",
+    "actions": {
+    ".align-fields": { "display": "block" }
+    }
+    },{
+    "field": "scaleTypeId",
+    "trigger": "change",
+    "value": "center",
+    "operation": "equals",
+    "actions": {
+    ".align-fields": { "display": "block" }
+    }
+    },{
+    "field": "scaleTypeId",
+    "trigger": "init",
+    "value": "center",
+    "operation": "not",
+    "actions": {
+    ".align-fields": { "display": "none" }
+    }
+    },{
+    "field": "scaleTypeId",
+    "trigger": "change",
+    "value": "center",
+    "operation": "not",
+    "actions": {
+    ".align-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block callBack %}mediaEditFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="imageEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Scale type" %}{% endset %}
+                {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
+                {% set center %}{% trans "Centre" %}{% endset %}
+                {% set stretch %}{% trans "Stretch" %}{% endset %}
+                {% set options = [
+                { scaleTypeId: "center", scaleType: center },
+                { scaleTypeId: "stretch", scaleType: stretch }
+                ] %}
+                {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
+
+                {% set title %}{% trans "Horizontal Align" %}{% endset %}
+                {% set helpText %}{% trans "How should this image be aligned?" %}{% endset %}
+                {% set left %}{% trans "Left" %}{% endset %}
+                {% set center %}{% trans "Centre" %}{% endset %}
+                {% set right %}{% trans "Right" %}{% endset %}
+                {% set options = [
+                { alignId: "left", align: left },
+                { alignId: "center", align: center },
+                { alignId: "right", align: right }
+                ] %}
+                {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "align-fields") }}
+
+                {% set title %}{% trans "Vertical Align" %}{% endset %}
+                {% set helpText %}{% trans "How should this image be vertically aligned?" %}{% endset %}
+                {% set top %}{% trans "Top" %}{% endset %}
+                {% set middle %}{% trans "Middle" %}{% endset %}
+                {% set bottom %}{% trans "Bottom" %}{% endset %}
+                {% set options = [
+                { valignId: "top", valign: top },
+                { valignId: "middle", valign: middle },
+                { valignId: "bottom", valign: bottom }
+                ] %}
+                {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "align-fields") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

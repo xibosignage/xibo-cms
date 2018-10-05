@@ -1,0 +1,142 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add an Application" %}" href="{{ urlFor("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Applications" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="applications" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Owner" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#applications").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=applicationsGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "applicationsGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: "{{ urlFor("application.search") }}",
+            "columns": [
+                { "data": "name", "render": dataTableSpacingPreformatted },
+                { "data": "owner" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        
+        function copyFromSecretInput() {
+            // Initialize the tooltip.
+            $('#copy-button').tooltip();
+
+
+
+            $('#copy-button').bind('click', function() {
+                
+              var input = $('#clientSecret');
+              
+              // Select the input to copy 
+              input.focus();
+              input.select();
+              
+              // Try to copy to clipboard and give feedback
+              try {
+                var success = document.execCommand('copy');
+                if (success) {
+                  $('#copy-button').trigger('copied', ['Copied!']);
+                } else {
+                  $('#copy-button').trigger('copied', ['Could not copy']);
+                }
+              } catch (err) {
+                $('#copy-button').trigger('copied', ['Could not copy']);
+              }
+              
+              // Unselect the input
+              input.blur();
+            });
+
+            // Handler for updating the tooltip message.
+            $('#copy-button').bind('copied', function(event, message) {
+              $(this).attr('title', message)
+                  .tooltip('fixTitle')
+                  .tooltip('show')
+                  .attr('title', "Copy to Clipboard")
+                  .tooltip('fixTitle');
+            });
+            
+        }
+    </script>
+{% endblock %}

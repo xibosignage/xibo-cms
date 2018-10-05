@@ -1,0 +1,341 @@
+{#
+/*
+ * Xibo - Digital Signage - https://www.xibo.org.uk
+ * Copyright (C) 2012-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set dataSetName = module.getExtra().dataSet.dataSet %}
+    {% trans %}Edit DataSet View: DataSet is {{ dataSetName }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Apply" %}, DataSetViewSubmit(1)
+    {% trans "Save" %}, DataSetViewSubmit(0)
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "none" },
+    ".template-selector-control": { "display": "block" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "overrideTemplate",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".template-override-controls": { "display": "block" },
+    ".template-selector-control": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "none" },
+    "#orderClause": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "none" },
+    "#orderClause": { "display": "block" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "block" },
+    "#orderClause": { "display": "none" }
+    }
+    },{
+    "field": "useOrderingClause",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".order-clause-field": { "display": "block" },
+    "#orderClause": { "display": "none" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "none" },
+    "#filterClause": { "display": "block" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
+    }
+    },{
+    "field": "useFilteringClause",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".filter-clause-field": { "display": "block" },
+    "#filterClause": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
+{% block callBack %}dataSetFormSetup{% endblock %}
+
+{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#appearance" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+            </ul>
+            <form id="dataSetViewEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
+
+                        {% set message %}{% trans "Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div class="row">
+                            <div class="col-md-10 col-md-offset-2">
+                                <div class="connectedlist col-sm-6">
+                                    <p class="text-info">{% trans "Columns Selected" %}</p>
+                                    <ul id="columnsIn" class="connectedSortable">
+                                        {% for column in module.dataSetColumnsSelected() %}
+                                            <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                <div class="connectedlist col-sm-6">
+                                    <p class="text-info">{% trans "Columns Available" %}</p>
+                                    <ul id="columnsOut" class="connectedSortable">
+                                        {% for column in module.dataSetColumnsNotSelected() %}
+                                            <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="tab-pane" id="appearance">
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText) }}
+
+                        {% set title %}{% trans "Border Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
+                        {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText) }}
+
+                        {% set title %}{% trans "Font Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
+
+                        {% set title %}{% trans "Font" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: urlFor("library.font.list") },
+                            { name: "data-value", value: module.getOption("fontFamily") }
+                        ] %}
+                        {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Font Size" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
+
+                        {% set title %}{% trans "Show the table headings?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}
+                        {{ forms.checkbox("showHeadings", title, module.getOption("showHeadings"), helpText) }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "1"), helpText) }}
+
+                        {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "template-override-controls", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="orderCriteria">
+
+                        {% set message %}{% trans "The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="orderClause">
+
+                        </div>
+
+                        {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
+                        {{ forms.checkbox("useOrderingClause", title, module.getOption("useOrderingClause", 0), helpText) }}
+
+                        {% set title %}{% trans "Order" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
+                        {{ forms.input("ordering", title, module.getOption("ordering"), helpText, "order-clause-field") }}
+
+                    </div>
+
+                    <div class="tab-pane" id="filterCriteria">
+                        {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div id="filterClause">
+
+                        </div>
+
+                        {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
+                        {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
+                        {{ forms.checkbox("useFilteringClause", title, module.getOption("useFilteringClause", 0), helpText) }}
+
+                        {% set title %}{% trans "Filter" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
+                        {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
+                    </div>
+
+                    <div class="tab-pane" id="advanced">
+                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)')" %}{% endset %}
+                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
+
+                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText ) }}
+
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Rows per page" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the number of rows per page. 0 for no pages." %}{% endset %}
+                        {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
+
+                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+
+                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

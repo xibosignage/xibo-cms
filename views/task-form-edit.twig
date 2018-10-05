@@ -1,0 +1,51 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (task-form-edit.twig)
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Task" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#taskEdit").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+            </ul>
+            <form id="taskEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("task.edit", {id: task.taskId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name for this Task" %}{% endset %}
+                        {{ forms.input("name", title, task.name, helpText, "", "required") }}
+
+                        {% set title %}{% trans "Schedule" %}{% endset %}
+                        {% set helpText %}{% trans "The schedule for this task in CRON syntax" %}{% endset %}
+                        {{ forms.input("schedule", title, task.schedule, helpText, "", "required") }}
+
+                        {% set title %}{% trans "Active" %}{% endset %}
+                        {% set helpText %}{% trans "Is the task active?" %}{% endset %}
+                        {{ forms.checkbox("isActive", title, task.isActive, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="options">
+                        {% for option,value in task.options %}
+                            {{ forms.input(option, option, value) }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

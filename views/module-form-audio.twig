@@ -1,0 +1,59 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = module.getName() %}
+    {% trans %}Audio for {{ name }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#widgetAudioForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+
+    {% if module.widget.countAudio > 0 %}
+        {% set audio = module.widget.audio[0] %}
+        {% set mediaId = audio.mediaId %}
+        {% set volume = audio.volume %}
+        {% set loop = audio.loop %}
+    {% else %}
+        {% set mediaId = 0 %}
+        {% set volume = 100 %}
+        {% set loop = 0 %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <form id="widgetAudioForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.audio", {id: module.widget.widgetId}) }}">
+
+                {% set title %}{% trans "Audio Media" %}{% endset %}
+                {% set helpText %}{% trans "Select the audio file that should be played when this Widget starts." %}{% endset %}
+                {{ forms.dropdown("mediaId", "single", title, mediaId, [{mediaId: 0, name: ""}]|merge(media), "mediaId", "name", helpText) }}
+
+                {% if not isAudioAvailable %}
+                    {% set message %}{% trans "The currently selected audio has been retired, please select a new item or cancel to keep the current one." %}{% endset %}
+                    {{ forms.message(message, "alert alert-danger") }}
+                {% endif %}
+
+                {% set title %}{% trans "Volume" %}{% endset %}
+                {% set helpText %}{% trans "Enter the volume percentage for this audio to play at." %}{% endset %}
+                {{ forms.number("volume", title, volume, helpText) }}
+
+                {% set title %}{% trans "Loop?" %}{% endset %}
+                {% set helpText %}{% trans "Should the audio loop if it finishes before the widget has finished?" %}{% endset %}
+                {{ forms.checkbox("loop", title, loop, helpText, "loop-fields") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

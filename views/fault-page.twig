@@ -1,0 +1,394 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+{% extends "authed.twig" %}
+
+{% block pageContent %}
+
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Report Fault" %}</div>
+        <div class="widget-body">
+            <div class="row">
+                <div class="board">
+                    <div class="board-inner">
+                        <ul class="nav fault nav-tabs" id="fault">
+                            <div class="liner"></div>
+                            <li class="active">
+                                <a href="#home" data-toggle="tab">
+                                    <span class="round-tabs one"> <i class="glyphicon glyphicon-home"></i> </span> </a>
+                            </li>
+                            <li class="">
+                                <a href="#checklist" data-toggle="tab">
+                                    <span class="round-tabs two"> <i class="fa fa-check-square-o" aria-hidden="true"></i> </span>
+                                </a>
+                            </li>
+                            <li class="">
+                                <a href="#turnons" data-toggle="tab">
+                                    <span class="round-tabs three"> <i class="fa fa-bug" aria-hidden="true"></i> </span>
+                                </a>
+                            </li>
+                            <li class="">
+                                <a href="#replicate" data-toggle="tab">
+                                    <span class="round-tabs four"> <i class="fa fa-clone" aria-hidden="true"></i> </span>
+                                </a>
+                            </li>
+                            <li class="">
+                                <a href="#collect" data-toggle="tab">
+                                    <span class="round-tabs five"> <i class="fa fa-floppy-o" aria-hidden="true"></i> </span>
+                                </a>
+                            </li>
+                            <li class="">
+                                <a href="#turnoff" data-toggle="tab">
+                                    <span class="round-tabs six">  <span><i class="fa fa-bug"></i><i class="fa fa-ban fa-stack-2x"></i></span> </span>
+                                </a>
+                            </li>
+                            <li class="">
+                                <a href="#ask" data-toggle="tab">
+                                    <span class="round-tabs seven"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane fade in active" id="home">
+                            <h3 class="head text-center">{% trans "Report an application fault" %}
+                                <span style="color:#f48260;"></span>
+                            </h3>
+
+                            {% if urlError %}
+                                <p class="alert alert-info">{% trans "CMS configuration warning, it is very unlikely that /web/ should be in the URL. This usually means that the DocumentRoot of the web server is wrong and may put your CMS at risk if not corrected." %}</p>
+                            {% endif %}
+
+                            {% if binLogError %}
+                                <p class="alert alert-info">{% trans "The CMS may not be working as expected because MySQL BINLOG format is set to STATEMENT. This can effect sessions and should be set to ROW or MIXED." %}</p>
+                            {% endif %}
+
+                            <p class="narrow text-center">{% trans "Before reporting a fault it would be appreciated if you follow the steps. Click start " %}</p>
+
+                            <form class="form-horizontal text-center" id="home_form" name="home_form" role="form">
+                                <fieldset>
+                                    <button type="submit" href="#checklist" name="home_form" class="btn-submit btn btn-success">
+                                        {% trans "Start" %}
+                                        <i class="fa fa-chevron-circle-right" aria-hidden="true"></i></button>
+                                </fieldset>
+                            </form>
+                        </div>
+                        <div class="tab-pane fade" id="checklist">
+                            <p class="text-center">{% trans "Check that the Environment passes all the CMS Environment checks." %}</p>
+
+                            {% if environmentFault %}
+                                <p class="alert alert-danger narrow text-center">{% trans "There is a critical error that you should resolve first." %}</p>
+                            {% elseif environmentWarning %}
+                                <p class="alert alert-warning narrow text-center">{% trans "There is a warning on the checklist that you should resolve." %}</p>
+                            {% else %}
+                                <p class="alert alert-success narrow text-center">{% trans "All checks pass. Click next to continue" %}</p>
+                            {% endif %}
+
+                            <br/>
+                            {% if environmentFault or environmentWarning %}
+                                <table id="checksWithFaults" class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Item" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Advice" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for check in environmentCheck %}
+                                        {% if check.status != 1 %}
+                                            <tr>
+                                                <td>{{ check.item }}</td>
+                                                <td>
+                                                    {% if check.status == 0 %}
+                                                        <span class="fa fa-times"></span>
+                                                    {% else %}
+                                                        <span class="fa fa-exclamation"></span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ check.advice }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+
+                                <p class="text-center"><b>{% trans "All other checks passed" %}</b></p>
+
+                            {% endif %}
+                            <div class="row text-center">
+                                <a id="toggler" href="#" class="btn btn-info">{% trans "I want to see the list anyway." %}</a>
+                            </div>
+                            <br/>
+                            {% if environmentCheck %}
+                                <table id="checksWithSuccess" class="table table-striped hide-table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Item" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Advice" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for check in environmentCheck %}
+                                        {% if check.status == 1 %}
+                                            <tr>
+                                                <td>{{ check.item }}</td>
+                                                <td>
+                                                    {% if check.status == 1 %}
+                                                        <span class="fa fa-check fa-2x text-success"></span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ check.advice }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+
+
+                            <form class="form-horizontal text-center" id="checklist_form" name="checklist_form" role="form">
+                                <fieldset>
+                                    <button type="submit" href="#home" name="home_form" class="btn-submit btn btn-info">
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
+                                    </button>
+                                    <button type="submit" href="#turnons" name="checklist_form" class="btn-submit btn btn-primary">
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
+                                </fieldset>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="turnons">
+
+                            <p class="narrow text-center">{% trans "Turn ON full auditing and debugging." %}</p>
+                            <form id="1" class="XiboAutoForm text-center " action="{{ urlFor("fault.debug.on") }}" method="put" onsubmit="return checkFormOn(this);">
+                                <input class="btn btn-success" type="submit" name="onDeb" value="{% trans " Turn ON Debugging" %}"></input>
+                            </form>
+                            <br/>
+                            <form class="form-horizontal text-center" id="turnons_form" name="turnons_form" role="form">
+                                <fieldset>
+                                    <button type="submit" href="#checklist" name="turnons_form" class="btn-submit btn btn-info">
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
+                                    </button>
+                                    <button type="submit" href="#replicate" name="turnons_form" class="btn-submit btn btn-primary">
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
+                                </fieldset>
+                            </form>
+
+                        </div>
+
+
+                        <div class="tab-pane fade text-center" id="replicate">
+                            <p class="narrow">{% trans "Recreate the Problem in a new window." %}</p>
+                            <p class="narrow">{% trans "Please open a new window and recreate the problem. While you do that we are going to log all of the actions taken in a text based log. We won't capture screenshots or videos, so if you feel that this would be useful please capture those manually and add them to the zip file you will download in the next step." %}</p>
+                            <br/>
+                            <a href="{{ urlFor("home") }}" target="_blank" class="btn btn-success"><i class="fa fa-external-link"></i> {% trans "Open a new window" %}</a>
+                            <br/>
+                            <br/>
+                            <form class="form-horizontal text-center" id="replicate_form" name="replicate_form" role="form">
+                                <fieldset>
+                                    <button type="submit" href="#turnons" name="replicate_form" class="btn-submit btn btn btn-info">
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
+                                    </button>
+                                    <button type="submit" href="#collect" name="replicate_form" class="btn-submit btn btn-primary">
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
+                                </fieldset>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="collect">
+                            <p class="narrow text-center">
+                                {% trans "Automatically collect and export relevant information into a text file." %}
+                                {% trans "Please save this file to your PC." %}
+                            </p>
+                            <p class="narrow text-center">
+                                {% trans "What items would you like to save?" %}
+                            </p>
+                            <div class="col-md-6 col-md-offset-3 ">
+                                <div class="funkyradio">
+                                    <div class="funkyradio-primary">
+                                        <input type="checkbox" name="outputVersion" id="outputVersion" checked/>
+                                        <label for="outputVersion">{% trans "Version Information" %}</label>
+                                    </div>
+                                    <div class="funkyradio-primary">
+                                        <input type="checkbox" name="outputLog" id="outputLog" checked/>
+                                        <label for="outputLog">{% trans "Log" %}</label>
+                                    </div>
+                                    <div class="funkyradio-primary">
+                                        <input type="checkbox" name="outputEnvCheck" id="outputEnvCheck" checked/>
+                                        <label for="outputEnvCheck">{% trans "Environment Check" %}</label>
+                                    </div>
+                                    <div class="funkyradio-primary">
+                                        <input type="checkbox" name="outputSettings" id="outputSettings" checked/>
+                                        <label for="outputSettings">{% trans "Settings" %}</label>
+                                    </div>
+                                    <div class="funkyradio-primary">
+                                        <input type="checkbox" name="outputDisplays" id="outputDisplays" checked/>
+                                        <label for="outputDisplays">{% trans "Display List" %}</label>
+                                    </div>
+                                    <div class="funkyradio-primary">
+                                        <input type="checkbox" name="outputDisplayProfile" id="outputDisplayProfile" checked/>
+                                        <label for="outputDisplayProfile">{% trans "Display Settings Profile (included with each display)" %}</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 text-center">
+                                <a id="dldata" class="btn btn-success text-center" type="submit" href="#" data-base-href="{{ urlFor("fault.collect") }}">
+                                    <i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Collect and Save Data" %}
+                                </a> <br/><br/>
+                                <form class="form-horizontal text-center" id="collect_form" name="collect_form" role="form">
+                                    <button type="submit" href="#replicate" name="collect_form" class="btn-submit btn btn-info">
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i>{% trans "Previous" %}
+                                    </button>
+                                    <button type="submit" href="#turnoff" name="collect_form" class="btn-submit btn btn-primary">
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+
+                        </div>
+
+                        <div class="tab-pane fade text-center" id="turnoff">
+                            <p class="narrow">{% trans "Turn full auditing and debugging OFF." %}</p>
+
+                            <form id="2" class="XiboAutoForm text-center " action="{{ urlFor("fault.debug.off") }}" method="put" onsubmit="return checkFormOff(this);">
+                                <input class="btn btn-danger" type="submit" name="offDeb" value="{% trans " Turn OFF Debugging" %}"></input>
+                            </form>
+                            <br/>
+                            <form class="form-horizontal text-center" id="turnoff_form" name="turnoff_form" role="form">
+                                <fieldset>
+                                    <button type="submit" href="#collect" name="turnoff_form" class="btn-submit btn btn-info">
+                                        <i class="fa fa-chevron-circle-left" aria-hidden="true"></i> {% trans "Previous" %}
+                                    </button>
+                                    <button type="submit" href="#ask" name="turnoff_form" class="btn-submit btn btn-primary">
+                                        {% trans "Next" %} <i class="fa fa-chevron-circle-right" aria-hidden="true"></i>
+                                    </button>
+                                </fieldset>
+                            </form>
+                        </div>
+
+
+                        <div class="tab-pane fade" id="ask">
+                            <div class="text-center"><i class="img-intro icon-checkmark-circle"></i></div>
+                            <h3 class="head text-center">
+                                {% trans "That's it!" %}
+                            </h3>
+                            <p class="narrow text-center">
+                                {% trans "Click on the below link to open the bug report page for this release." %}
+                                {% trans "Describe the problem and upload the file you obtained earlier." %}
+                            </p>
+                            <form class="text-center">
+                                <fieldset>
+                                    <a class="btn btn-success" href="{{ theme.getThemeConfig("product_support_url", "https://community.xibo.org.uk/c/support") }}" target="_blank">
+                                        <i class="fa fa-question" aria-hidden="true"></i> {% trans "Ask a question" %}
+                                    </a>
+                                    <button type="submit" href="#home" name="turnoff_form" class="btn-submit btn btn-info">
+                                        <i class="fa fa-home" aria-hidden="true"></i> {% trans "Start again" %}
+                                    </button>
+                                </fieldset>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}
+
+
+    {% block javaScript %}
+        <script type="text/javascript">
+            // Fault Page List switcher
+            $(function () {
+                $('a[title]').tooltip();
+                $('.btn-submit').on('click', function (e) {
+                    var formname = $(this).attr('name');
+                    var tabname = $(this).attr('href');
+                    if ($('#' + formname)[0].checkValidity()) { /* Only works in Firefox/Chrome need polyfill for IE9, Safari. */
+                        e.preventDefault();
+                        $('ul.nav li a[href="' + tabname + '"]').parent().removeClass('disabled');
+                        $('ul.nav li a[href="' + tabname + '"]').trigger('click');
+                    }
+                });
+                $('ul.nav li').on('click', function (e) {
+                    if ($(this).hasClass('disabled')) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            });
+
+        </script>
+
+
+        <script type="text/javascript">
+
+            $(function () {
+                $('[data-toggle="popover"]').popover()
+            })
+
+
+            function checkFormOn(form) {
+                form.onDeb.disabled = true;
+                form.onDeb.value = "Debugging mode ON";
+                return true;
+            }
+
+            function checkFormOff(form) {
+                form.offDeb.disabled = true;
+                form.offDeb.value = "Debugging mode Off";
+                return true;
+            }
+
+            $("#dldata").on("click", function (event) {
+                if ($(this).hasClass("disabled")) {
+                    event.preventDefault();
+                }
+
+                // Disable download button when downloading
+                $(this).addClass("btn-success disabled");
+                $("#dldata").text('{% trans "Downloading file" %}');
+                $("#dldata").prop("href", $("#dldata").data().baseHref + "?" + $(".funkyradio").find("input[type=checkbox]").serialize());
+
+
+                //Re Enables download button after new checkbox selection
+                $('.funkyradio').click(function () {
+                    if ($(this).is(':checked')) {
+                        $('#dldata').removeClass('disabled');
+
+                    } else {
+                        $('#dldata').removeClass('disabled').attr('enabled');
+                        ;
+                        $("#dldata").text('{% trans "Download selected items" %}');
+                    }
+                });
+
+            });
+
+
+        </script>
+
+        <script>
+            $("#toggler").click(function () {
+                $(this).text(function (i, v) {
+                    return v === '{% trans "Hide Environment checks" %}' ? '{% trans "Show Environment checks" %}' : '{% trans "Hide Environment checks" %}'
+                })
+                $("#checksWithSuccess").toggle();
+            });
+
+        </script>
+
+
+    {% endblock %}

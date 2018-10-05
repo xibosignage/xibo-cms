@@ -1,0 +1,16 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+    {% set title %}{% trans "Default Mute?" %}{% endset %}
+    {% set helpText %}{% trans "Should new Video Widgets default to Muted?" %}{% endset %}
+    {{ forms.checkbox("defaultMute", title, module.getSetting("defaultMute", 0), helpText) }}
+{% endblock %}

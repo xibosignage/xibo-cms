@@ -1,0 +1,11 @@
+{
+    "id": "currencies1",
+    "value": "Currencies 1",
+    "main": "<div class=\"container-main\">\r\n    <div class=\"container \">\r\n        <div class=\"row row-header\">\r\n            <div class=\"col-xs-2 col-xs-offset-10 text-center value\">RATE<\/div>\r\n        <\/div>\r\n        <div id=\"cycle-container\">\r\n            [itemsTemplate]\r\n        <\/div>\r\n    <\/div>\r\n<\/div>",
+    "item": "<div class=\"row row-finance\">\r\n    <div class=\"col-xs-1 flags\">\r\n        <img class=\"img-circle center-block \" src=\"[CurrencyFlag]\">\r\n    <\/div>\r\n    <div class=\"col-xs-3 value \">[NameShort]<\/div>\r\n    <div class=\"col-xs-2 col-xs-offset-6 text-center value\">[LastTradePriceOnly]<\/div>\r\n<\/div>",
+    "css": "body {\r\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\r\n    line-height: 1;\r\n}\r\n\r\n.container-main {\r\n    height: 420px !important;\r\n    width: 820px !important;\r\n}\r\n\r\n.container {\r\n    height: 420px !important;\r\n    width: 820px !important;\r\n    float: left;\r\n    margin-top: 20px;\r\n}\r\n\r\n.row-finance {\r\n    height: 60px;\r\n    background: rgba(0, 0, 0, 0.87);\r\n    margin-bottom: 20px;\r\n}\r\n\r\n.row {\r\n    margin-right: 0;\r\n    margin-left: 0;\r\n}\r\n\r\n.row-header {\r\n    margin-right: -15px;\r\n    margin-left: -15px;\r\n    margin-bottom: 20px;\r\n}\r\n\r\n#cycle-container {\r\n    margin-left: -15px;\r\n    margin-right: -15px;\r\n}\r\n\r\n.value {\r\n    font-size: 20px;\r\n    padding-top: 20px;\r\n    font-weight: bold;\r\n    color: #fff;\r\n}\r\n\r\n.down-arrow {\r\n    font-size: 20px;\r\n    color: red;\r\n    padding-top: 17px;\r\n}\r\n\r\n.up-arrow {\r\n    font-size: 20px;\r\n    color: green;\r\n    padding-top: 17px;\r\n}\r\n\r\n.variant {\r\n    font-size: 20px;\r\n    padding-top: 17px;\r\n}\r\n\r\n.flags {\r\n    padding-top: 4px;\r\n}\r\n\r\n.center-block {\r\n    width: 50px;\r\n    height: 50px;\r\n}",
+    "maxItemsPerPage": 4,
+    "widgetOriginalWidth": "820",
+    "widgetOriginalHeight": "420",
+    "image": "modules/currencies/template-thumbs/currencies1.png"
+}

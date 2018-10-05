@@ -1,0 +1,116 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add Column" %}" href="{{ urlFor("dataSet.column.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Column" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" title="{% trans "View Data" %}" href="{{ urlFor("dataSet.view.data", {id: dataSet.dataSetId}) }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "View Data" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    {% set dataSetName = dataSet.dataSet %}
+    {% set widgetTitle %}{% trans %}Columns for {{ dataSetName }}{% endtrans %}{% endset %}
+    <div class="widget">
+        <div class="widget-title">{{ widgetTitle }}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="datasets" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Heading" %}</th>
+                                <th>{% trans "DataType" %}</th>
+                                <th>{% trans "Column Type" %}</th>
+                                <th>{% trans "List Content" %}</th>
+                                <th>{% trans "Order" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=dataSetColumnGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "dataSetColumnGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("dataSet.column.search", {id: dataSet.dataSetId}) }}",
+                "data": function(d) {
+                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "heading", "render": dataTableSpacingPreformatted },
+                { "data": "dataType" },
+                { "data": "dataSetColumnType" },
+                { "data": "listContent" },
+                { "data": "columnOrder" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+    </script>
+{% endblock %}

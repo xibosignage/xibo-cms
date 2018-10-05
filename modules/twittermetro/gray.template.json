@@ -1,0 +1,6 @@
+{
+    "id": "gray",
+    "value": "Colours 3 - Gray Scale",
+    "colors": ["#757575","#989898","#666666","#404040"],
+    "image":"modules/twittermetro/template-thumbs/colours3.png"
+}

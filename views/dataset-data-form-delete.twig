@@ -1,0 +1,32 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+{ action missing }
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete Row" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#dataSetDataDelete").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="dataSetDataDelete" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.data.delete", {id: dataSet.dataSetId, rowId: row.id}) }}">
+                {% set message %}{% trans "Are you sure you want to delete this row?" %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

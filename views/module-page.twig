@@ -1,0 +1,134 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        {% if modulesToInstall|length > 0 %}
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Modules available to Install" %}" href="{{ urlFor("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</a></li>
+        {% endif %}
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ urlFor("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</a></li>
+        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Modules" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="modules" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Library Media" %}</th>
+                                <th>{% trans "Default Duration" %}</th>
+                                <th>{% trans "Valid Extensions" %}</th>
+                                <th>{% trans "Image Uri" %}</th>
+                                <th>{% trans "Preview Enabled" %}</th>
+                                <th title="{% trans "Can this module be assigned to a Layout?" %}">{% trans "Assignable" %}</th>
+                                <th>{% trans "Enabled" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#modules").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=moduleGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "moduleGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("module.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#modules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "name" },
+                { "data": "description" },
+                { "data": "regionSpecific", "render": dataTableTickCrossInverseColumn },
+                { "data": "defaultDuration" },
+                { "data": "validExtensions" },
+                { "data": "imageUri" },
+                { "data": "previewEnabled", "render": dataTableTickCrossColumn },
+                { "data": "assignable", "render": dataTableTickCrossColumn },
+                { "data": "enabled", "render": dataTableTickCrossColumn },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+
+
+        function installModuleComplete()
+        {
+            $("#moduleInstallForm").data("refresh", true);
+        }
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
+    </script>
+{% endblock %}

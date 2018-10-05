@@ -1,0 +1,106 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Schedule Now" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, scheduleNowFormSubmit($("#scheduleNowForm"))
+{% endblock %}
+
+{% block callBack %}setupScheduleNowForm{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+                {{ forms.hidden("eventTypeId", "1") }}
+                {{ forms.hidden("dayPartId", customDayPart.dayPartId) }}
+                {{ forms.hidden("alwaysDayPartId", alwaysDayPart.dayPartId) }}
+                {{ forms.hidden("customDayPartId", customDayPart.dayPartId) }}
+                {{ forms.hidden("fromDt", "") }}
+                {{ forms.hidden("toDt", "") }}
+                {{ forms.hidden("syncTimezone", "1") }}
+
+                {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                {% set layoutOptions = [] %}
+                {% set campaignOptions = [] %}
+
+                {% for item in campaigns %}
+                    {% if item.isLayoutSpecific == 1 %}
+                        {% set layoutOptions = [{id: item.campaignId, value: item.campaign}]|merge(layoutOptions) %}
+                    {% else %}
+                        {% set campaignOptions = [{id: item.campaignId, value: item.campaign}]|merge(campaignOptions) %}
+                    {% endif %}
+                {% endfor %}
+
+                {% set campaigns %}{% trans "Campaigns" %}{% endset %}
+                {% set layouts %}{% trans "Layouts" %}{% endset %}
+                {% set optionGroups = [
+                {id: "campaign", label: campaigns},
+                {id: "layout", label: layouts}
+                ] %}
+                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                {% set attributes = [
+                    { name: "data-live-search", value: "true" },
+                    { name: "data-selected-text-format", value: "count > 4" }
+                ] %}
+                {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", attributes, optionGroups) }}
+
+                {% set title %}{% trans "Always?" %}{% endset %}
+                {% set helpText %}{% trans "Run this event from now and dont stop." %}{% endset %}
+                {{ forms.checkbox("always", title, "", helpText) }}
+
+                {% set title %}{% trans "Hours" %}{% endset %}
+                {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
+                {{ forms.number("hours", title, "", helpText, "duration-part") }}
+                
+                {% set title %}{% trans "Minutes" %}{% endset %}
+                {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
+                {{ forms.number("minutes", title, "", helpText, "duration-part") }}
+                
+                {% set title %}{% trans "Seconds" %}{% endset %}
+                {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
+                {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field duration-part") }}
+
+                {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
+                <div class="alert alert-info scheduleNowMessage hidden" data-template="{{ title }}"></div>
+
+                {% set title %}{% trans "Display" %}{% endset %}
+                {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
+                {% set attributes = [
+                { name: "data-live-search", value: "true" },
+                { name: "data-selected-text-format", value: "count > 4" }
+                ] %}
+                {% set transGroups %}{% trans "Groups" %}{% endset %}
+                {% set transDisplays %}{% trans "Display" %}{% endset %}
+                {% set optionGroups = [
+                {id: "group", label: transGroups},
+                {id: "display", label: transDisplays}
+                ] %}
+                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, [displayGroupId], {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+
+                {% set title %}{% trans "Display Order" %}{% endset %}
+                {% set helpText %}{% trans "Should this event have an order?" %}{% endset %}
+                {{ forms.number("displayOrder", title, displayOrder, helpText) }}
+                
+                {% set title %}{% trans "Priority" %}{% endset %}
+                {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
+                {{ forms.number("isPriority", title, isPriority, helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

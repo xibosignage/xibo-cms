@@ -1,0 +1,137 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+
+{% raw %}
+<script type="text/x-handlebars-template" id="metroTwitterColorFormTemplate">
+    <div class="form-group form-colors">
+        <label class="col-sm-2 control-label" for="{{ colorId }}" accesskey="">{{ title }}</label>
+        <div class="col-sm-9">
+            <input class="form-control" name="color[]" id="{{ colorId }}" type="text" value="{{ value }}">
+        </div>
+        <div class="col-sm-1">
+            <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+        </div>
+    </div>
+</script>
+{% endraw %}
+
+<script type="text/javascript">
+    
+    function metroFormSetup(dialog) {
+        configureColoursForm(dialog, $('.bootbox').data().extra);
+        
+        // Register an onchange listener to do the same if the template is changed
+        $("#colorTemplateId").on('change', function() {
+            configureColoursForm(dialog, $('.bootbox').data().extra);
+        });
+    }
+
+    function configureColoursForm(dialog, extra) {
+        
+        if (extra == null) {
+            extra = $('.bootbox').data().extra;
+        }
+        
+        var chosenColors = extra.colors;
+        var availableTemplates = extra.templates;
+        
+        // Get the empty div field and check if exists
+        var templateColorsFields = $("#templateColors");
+        if (templateColorsFields.length == 0)
+            return;
+        
+        // Reset all the fields and the click event  
+        templateColorsFields.unbind( "click" ); 
+        templateColorsFields.empty();
+
+        // Get the template
+        var templateColorsTemplate = Handlebars.compile($("#metroTwitterColorFormTemplate").html());
+        
+        var colorsUsed;
+        if(chosenColors != null && chosenColors.length > 0 && $("#overrideColorTemplate").is(":checked")){
+            colorsUsed = chosenColors.split("|");
+        } else {
+            // Get the current template selected
+            var templateColoursId = $("#colorTemplateId").val();
+            
+            // Get the current template id and fill the text field with its colour values
+            for (var i = 0; i < availableTemplates.length; i++) {
+                if (availableTemplates[i].id == templateColoursId) {
+                    colorsUsed = availableTemplates[i].colors;
+                }
+            }    
+        }
+        
+        var colorTitle = "{% trans "Colour" %}";
+
+        if(colorsUsed == null || colorsUsed.length == 0){
+            // Add a empty row
+            var itemTitle = colorTitle + " " + 1;
+            var context = {value: "", title: itemTitle, colorId: "color1", buttonGlyph: "fa-plus"};
+            templateColorsFields.append(templateColorsTemplate(context));
+            
+            // Transform to a color picker field
+            $("#color1").colorpicker();
+        } else {
+        
+            for (var i = 0; i < colorsUsed.length; i++) {
+                var itemTitle = colorTitle + " " + (i+1);
+                var colorId = "color" + i;
+                var context = {value: colorsUsed[i], title: itemTitle, colorId: colorId, buttonGlyph: ((i == (colorsUsed.length-1)) ? "fa-plus" : "fa-minus")};
+
+                templateColorsFields.append(templateColorsTemplate(context));
+                
+                // Transform to a color picker field
+                $("#"+colorId).colorpicker();
+                $("#"+colorId).css('background-color', colorsUsed[i]);
+            }
+        }
+
+        // Create an event to add/remove color input fields
+        templateColorsFields.on("click", "button", function (e) {
+            e.preventDefault();
+
+            // find the glyph
+            if ($(this).find("i").hasClass("fa-plus")) {
+                // Add a empty row
+                var itemTitle = colorTitle + " " + (templateColorsFields.find('.form-group').length + 1);
+                var colorId = "color" + templateColorsFields.find('.form-group').length;
+                var context = {value: "", title: itemTitle, colorId: colorId, buttonGlyph: "fa-plus"};
+                
+                // Change the clicked button to a minus button
+                $(this).find("i").addClass("fa-minus")
+                $(this).find("i").removeClass("fa-plus")
+                
+                templateColorsFields.append(templateColorsTemplate(context));
+                
+                // Transform to a color picker field
+                $("#"+colorId).colorpicker();
+                
+                // Create an event for the new button
+                $("#"+colorId).focusout(function (e) {
+                    e.preventDefault();
+                    $(this).css('background-color', $(this).val());
+                });
+            } else if ($(this).find("i").hasClass("fa-minus")) {
+                // Remove this row
+                $(this).closest(".form-group").remove();
+            }
+        });
+        
+        // Create an event to add/remove color input fields
+        templateColorsFields.find("input").focusout(function (e) {
+            e.preventDefault();
+            $(this).css('background-color', $(this).val());
+        });
+        
+        // Turn the background colour into a picker
+        $("#backgroundColor").colorpicker();
+    }
+</script>

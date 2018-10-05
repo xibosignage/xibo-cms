@@ -1,0 +1,61 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Media" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#mediaEditForm").submit()
+{% endblock %}
+
+{% block callBack %}mediaEditFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}">
+                {% if media.mediaType != "font" %}
+
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
+                    {{ forms.input("name", title, media.name, helpText) }}
+
+                    {% set title %}{% trans "Duration" %}{% endset %}
+                    {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                    {{ forms.number("duration", title, media.duration, helpText) }}
+
+                    {% set title %}{% trans "Tags" %}{% endset %}
+                    {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
+                    {{ forms.inputWithTags("tags", title, media.tags, helpText) }}
+
+                    {% set title %}{% trans "Retire this media?" %}{% endset %}
+                    {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
+                    {{ forms.checkbox("retired", title, media.retired, helpText) }}
+
+                    {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
+                    {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
+                    {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                        {% set checked = 1 %}
+                    {% endif %}
+                    {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
+
+                {% else %}
+                    {% set message %}{% trans "Sorry, Fonts do not have any editable properties." %}{% endset %}
+                    {{ forms.message(message) }}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

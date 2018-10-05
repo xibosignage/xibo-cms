@@ -1,0 +1,146 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add User" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.add }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#userAddForm").submit()
+{% endblock %}
+
+{% block callBack %}userFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
+                <li><a href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
+                {% if currentUser.userTypeId == 1 %}
+                    <li><a href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
+                {% endif %}
+                <li><a href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+            </ul>
+            <form id="userAddForm" class="UserForm form-horizontal" method="post" action="{{ urlFor("user.add") }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "User Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Login Name of the user." %}{% endset %}
+                        {{ forms.input("userName", title, "", helpText, "", "required maxlength='50'") }}
+
+                        {% set title %}{% trans "Password" %}{% endset %}
+                        {% set helpText %}{% trans "The Password for this user." %}{% endset %}
+                        {{ forms.password("password", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Email" %}{% endset %}
+                        {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
+                        {{ forms.email("email", title, "", helpText) }}
+
+                        {% set title %}{% trans "Homepage" %}{% endset %}
+                        {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
+                        {{ forms.dropdown("homePageId", "single", title, 1, options.homepage, "pageId", "title", helpText) }}
+
+                        {% set title %}{% trans "User Type" %}{% endset %}
+                        {% set helpText %}{% trans "What is this users type?" %}{% endset %}
+                        {{ forms.dropdown("userTypeId", "single", title, options.defaultUserType, options.userTypes, "userTypeId", "userType", helpText) }}
+
+                        {% set title %}{% trans "Library Quota" %}{% endset %}
+                        {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" />
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                            <div class="col-sm-4">
+                                <select name="libraryQuotaUnits" class="form-control">
+                                    <option value="kb">KiB</option>
+                                    <option value="mb">MiB</option>
+                                    <option value="gb">GiB</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {% set attributes = [
+                        { name: "data-live-search", value: "true" },
+                        { name: "data-selected-text-format", value: "count > 4" }
+                        ] %}
+
+                        {% set title %}{% trans "Initial User Group" %}{% endset %}
+                        {% set helpText %}{% trans "What is the initial user group for this user?" %}{% endset %}
+                        {{ forms.dropdown("groupId", "single", title, options.defaultGroupId, options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+                    </div>
+                    <div class="tab-pane" id="reference">
+                        {% set title %}{% trans "First Name" %}{% endset %}
+                        {% set helpText %}{% trans "The User's First Name." %}{% endset %}
+                        {{ forms.input("firstName", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Last Name" %}{% endset %}
+                        {% set helpText %}{% trans "The User's Last Name." %}{% endset %}
+                        {{ forms.input("lastName", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Phone Number" %}{% endset %}
+                        {% set helpText %}{% trans "The User's Phone Number." %}{% endset %}
+                        {{ forms.input("phone", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Reference 1" %}{% endset %}
+                        {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
+                        {{ forms.input("ref1", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Reference 2" %}{% endset %}
+                        {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
+                        {{ forms.input("ref2", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Reference 3" %}{% endset %}
+                        {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
+                        {{ forms.input("ref3", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Reference 4" %}{% endset %}
+                        {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
+                        {{ forms.input("ref4", title, "", helpText, "", "maxlength='254'") }}
+
+                        {% set title %}{% trans "Reference 5" %}{% endset %}
+                        {% set helpText %}{% trans "A reference field for custom user data" %}{% endset %}
+                        {{ forms.input("ref5", title, "", helpText, "", "maxlength='254'") }}
+                    </div>
+                    {% if currentUser.userTypeId == 1 %}
+                    <div class="tab-pane" id="notifications">
+                        {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive system notifications?" %}{% endset %}
+                        {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive Display notifications for Displays they have permission to see?" %}{% endset %}
+                        {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
+                    </div>
+                    {% endif %}
+                    <div class="tab-pane" id="optionsTab">
+                        {% set title %}{% trans "Hide navigation?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the navigation side bar be hidden for this User?" %}{% endset %}
+                        {{ forms.checkbox("hideNavigation", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Hide User Guide?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User see the new user guide when they log in?" %}{% endset %}
+                        {{ forms.checkbox("newUserWizard", title, 1, helpText) }}
+
+                        {% set title %}{% trans "Force Password Change" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User be forced to change password next time they log in?" %}{% endset %}
+                        {{ forms.checkbox("isPasswordChangeRequired", title, 0, helpText) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

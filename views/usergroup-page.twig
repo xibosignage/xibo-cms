@@ -1,0 +1,163 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        {% if currentUser.isSuperAdmin() %}
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new User Group" %}" href="{{ urlFor("group.add.form") }}"> <i class="fa fa-users" aria-hidden="true"></i> {% trans "Add User Group" %}</a></li>
+        {% endif %}
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "User Groups" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="userGroupView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("userGroup", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="userGroups" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "User Group" %}</th>
+                                <th>{% trans "Library Quota" %}</th>
+                                <th>{% trans "Receive System Notifications?" %}</th>
+                                <th>{% trans "Receive Display Notifications?" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $("#userGroups").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=userGroupGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "userGroupGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                searchDelay: 3000,
+                filter: false,
+                "order": [[0, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("group.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#userGroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "group", "render": dataTableSpacingPreformatted },
+                    {
+                        "name": "libraryQuota",
+                        "data": null,
+                        "render": {"_": "libraryQuota", "display": "libraryQuotaFormatted", "sort": "libraryQuota"}
+                    },
+                    {
+                        "data": "isSystemNotification",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {
+                        "data": "isDisplayNotification",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
+
+        function userGroupFormOpen() {
+            // Bind to the add form submit
+            $(".UserGroupForm").validate({
+                submitHandler: function (form) {
+                    // Grab and alter the value in the library quota field
+                    var libraryQuotaField = $(form).find("input[name=libraryQuota]");
+                    var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
+                    var libraryQuota = libraryQuotaField.val();
+
+                    if (libraryQuotaUnitsField.val() == 'mb') {
+                        libraryQuota = libraryQuota * 1024;
+                    } else if (libraryQuotaUnitsField.val() == 'gb') {
+                        libraryQuota = libraryQuota * 1024 * 1024;
+                    }
+
+                    // Set the field
+                    libraryQuotaField.prop('value', libraryQuota);
+
+                    XiboFormSubmit(form);
+                },
+                errorElement: "span",
+                highlight: function(element) {
+                    $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+                },
+                success: function(element) {
+                    $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+                },
+                invalidHandler: function(event, validator) {
+                    // Remove the spinner
+                    $(this).closest(".modal-dialog").find(".saving").remove();
+                    // https://github.com/xibosignage/xibo/issues/1589
+                    $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
+                }
+            });
+        }
+    </script>
+{% endblock %}

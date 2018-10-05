@@ -1,0 +1,48 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+Good in theory, but it is giving back 0 and 0 at the moment
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Tidy Library" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#libraryTidyForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="libraryTidyForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.tidy") }}">
+                {% set message %}{% trans "Tidying your Library will delete any media that is not currently in use." %}{% endset %}
+                {{ forms.message(message) }}              
+
+                {% if countExcludingGeneric > 0 %}
+                    {% set message %}{% trans %}There is {{sumExcludingGeneric}} of data stored in {{countExcludingGeneric}} files . Are you sure you want to proceed?{% endtrans %}{% endset %}
+                    {{ forms.message(message) }}
+                {% else %}
+                    {% set message %}{% trans %}You do not have any library files that are not in use.{% endtrans %}{% endset %}
+                    {{ forms.message(message) }}
+                {% endif %}
+
+                {% if countGeneric > 0 %}
+                    {% set title %}{% trans %}Delete Generic Files?{% endtrans %}{% endset %}
+                    {% set helpText %}{% trans %}There is {{sumGeneric}} of data stored in {{countGeneric}} generic files. To delete these check here{% endtrans %}{% endset %}
+                    {{ forms.checkbox("tidyGenericFiles", title, 0, helpText) }}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

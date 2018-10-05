@@ -1,0 +1,82 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+
+{% extends "form-base.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Assign an item from the Library" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, LibraryAssignSubmit({{ playlist.playlistId }})
+{% endblock %}
+
+{% block callBack %}mediaFormCallBack{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-9">
+            <div id="libraryAssignFilterOptions">
+                <form onsubmit="false">
+                    {{ inline.hidden("retired", 0) }}
+                    {{ inline.hidden("assignable", 1) }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("media", title) }}
+                        </div>
+                        <div class="col-md-6">
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {{ inline.dropdown("type", "single", title, "", [{type: null, name: ""}]|merge(modules), "type", "name") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboData">
+                    <table id="mediaAssignments" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Thumbnail" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div id="LibraryAssign" class="well" data-url="{{ urlFor("playlist.library.assign", {id: playlist.playlistId}) }}">
+                <h4>{% trans "Assignments" %}</h4>
+                <div>
+                    <ul id="LibraryAssignSortable">
+                        {% for item in media %}
+                            <li id="MediaID_{{ item.mediaId }}" class="li-sortable">{{ item.name }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% set title %}{% trans "Use library duration?" %}{% endset %}
+            {% set helpText %}{% trans "Check this option to use the duration from the Library for this assignment" %}{% endset %}
+            <label for="useDuration">
+                <input type="checkbox" name="useDuration" id="useDuration">{{ title }}
+            </label>
+            <span class="help-block">{{ helpText }}</span>
+        </div>
+    </div>
+{% endblock %}

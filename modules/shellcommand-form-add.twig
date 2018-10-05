@@ -1,0 +1,150 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2012-2015 Spring Signage Ltd - http://www.springsignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Shell Command" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#shellCommandAddForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "commandCode",
+    "trigger": "init",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".non-command-fields": { "display": "block" }
+    }
+    },{
+    "field": "commandCode",
+    "trigger": "init",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".non-command-fields": { "display": "none" }
+    }
+    },{
+    "field": "commandCode",
+    "trigger": "change",
+    "value": "",
+    "operation": "equals",
+    "actions": {
+    ".non-command-fields": { "display": "block" }
+    }
+    },{
+    "field": "commandCode",
+    "trigger": "change",
+    "value": "",
+    "operation": "not",
+    "actions": {
+    ".non-command-fields": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="shellCommandAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Command" %}{% endset %}
+                {% set helpText %}{% trans "Pick a command" %}{% endset %}
+                {{ forms.dropdown("commandCode", "single", title, "", [{code:"", command: ""}]|merge(commands), "code", "command", helpText) }}
+
+                {% set title %}{% trans "Windows Command" %}{% endset %}
+                {% set helpText %}{% trans "Enter a Windows Command Line compatible command" %}{% endset %}
+                {{ forms.input("windowsCommand", title, "", helpText, "non-command-fields") }}
+
+                {% set title %}{% trans "Launch the command via Windows Command Line" %}{% endset %}
+                {% set helpText %}{% trans "On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated." %}{% endset %}
+                {{ forms.checkbox("launchThroughCmd", title, 1, helpText, "non-command-fields") }}
+
+                {% set title %}{% trans "Android / Linux Command" %}{% endset %}
+                {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
+                {{ forms.input("linuxCommand", title, "", helpText, "non-command-fields") }}
+
+                {% set title %}{% trans "webOS Command" %}{% endset %}
+                {% set helpText %}{% trans "Enter a webOS Command Line compatible command. Supported from R12 onward" %}{% endset %}
+                {{ forms.hidden("webosCommand", title, "", helpText, "non-command-fields") }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Terminate the command once the duration elapses?" %}{% endset %}
+                {% set helpText %}{% trans "Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally." %}{% endset %}
+                {{ forms.checkbox("terminateCommand", title, 0, helpText) }}
+
+                {% set title %}{% trans "Use taskkill to terminate commands?" %}{% endset %}
+                {% set helpText %}{% trans "On Windows, should the player use taskkill to terminate commands." %}{% endset %}
+                {{ forms.checkbox("useTaskkill", title, 0, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

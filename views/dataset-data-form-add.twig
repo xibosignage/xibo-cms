@@ -1,0 +1,68 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Data" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Next" %}, XiboDialogApply("#dataSetDataAdd")
+    {% trans "Save" %}, $("#dataSetDataAdd").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="dataSetDataAdd" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.data.add", {id: dataSet.dataSetId}) }}">
+                {% for col in dataSet.getColumn() %}
+                    {% if col.dataSetColumnTypeId == 1 or col.dataSetColumnTypeId == 3  %}
+                        {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}
+
+                        {# Field depending on what data type we have #}
+                        {% if col.dataTypeId == 2 %}
+                            {{ forms.number(fieldId, col.heading) }}
+                        {% elseif col.dataTypeId == 3 %}
+                            {{ forms.dateTime(fieldId, col.heading) }}
+                        {% elseif col.dataTypeId == 5 %}
+                            {% set attributes = [
+                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" },
+                                { name: "data-filter-options", value: '{"type":"image"}' }
+                            ] %}
+                            {{ forms.dropdown(fieldId, "single", col.heading, "", null, "mediaId", "name", "", "pagedSelect", "", "", "", attributes) }}
+                        {% elseif col.listContent != "" %}
+                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [""]|merge(col.listContentArray())) }}
+                        {% else %}
+                            {{ forms.input(fieldId, col.heading) }}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

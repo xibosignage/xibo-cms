@@ -1,0 +1,42 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Command" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#commandAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="commandAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("command.add") }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
+                {{ forms.input("command", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Reference" %}{% endset %}
+                {% set helpText %}{% trans "A reference code for this command which is used to identify the command internally." %}{% endset %}
+                {{ forms.input("code", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "Description of Command. This should be a textual description of what the command is trying to achieve. It should not be the actual command string - that is entered on the Display Settings Profile." %}{% endset %}
+                {{ forms.textarea("description", title, "", helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

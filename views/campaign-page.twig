@@ -1,0 +1,348 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+This is the template for the campaign page
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Campaign" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Campaigns" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="campaignView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("name", title) }}
+                            
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
+                            
+                            {% set title %}{% trans "Layouts" %}{% endset %}
+                            {% set values = [{id: 0, value: ""}, {id: 2, value: "Yes"}, {id: 1, value: "No"}] %}
+                            {{ inline.dropdown("hasLayouts", "single", title, 0, values, "id", "value") }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="campaigns" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "# Layouts" %}</th>
+                                <th>{% trans "Tags" %}</th>
+                                <th>{% trans "Duration" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        // Configure the DataTable
+        var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=campaignGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "campaignGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            "filter": false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                url: "{{ urlFor("campaign.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                {
+                    "data": "campaign" ,
+                    "render": dataTableSpacingPreformatted
+                },
+                { "data": "numberLayouts" },
+                {
+                    "sortable": false,
+                    "data": dataTableCreateTags
+                },
+                { "data": "totalDuration" },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        // Data Table events
+        table.on('draw', dataTableDraw);
+        table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+        table.on('processing.dt', dataTableProcessing);
+
+        // Callback for the media form
+        // Fired when the media form opens
+        function campaignAssignLayoutsFormOpen(dialog) {
+
+            // Convert our filter form tags inputs into actual tag inputs
+            $(dialog).find("#tags").tagsinput();
+
+            // Hold a container for the layouts we have assigned already
+            var container = $("#LayoutAssign");
+
+            // Assignment table
+            var $layoutAssignments = $("#layoutAssignments");
+
+            // Layout DataTable
+            var layoutTable = $layoutAssignments.DataTable({ "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data;
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=campaignLayoutAssignGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "campaignLayoutAssignGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                searchDelay: 3000,
+                "order": [[ 0, "asc"]],
+                "filter": false,
+                ajax: {
+                    url: "{{ urlFor("layout.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $layoutAssignments.closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
+                    }
+                },
+                "columns": [
+                    { "data": "layoutId" },
+                    {
+                        "data": "layout",
+                        "render": dataTableSpacingPreformatted
+                    },
+                    {
+                        "sortable": false,
+                        "data": function(data, type, row, meta) {
+                            if (type !== "display")
+                                return "";
+
+                            // Create a click-able span
+                            return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                        }
+                    }
+                ]
+            });
+
+            layoutTable.on('draw', { form: $layoutAssignments.closest(".XiboGrid").find("form") }, function(e, settings) {
+                dataTableDraw(e, settings);
+                dataTableCreateTagEvents(e, settings);
+
+                // Bind a click event to each table rows + button (span)
+                $layoutAssignments.find(".assignItem").on("click", function() {
+                    // Get the row that this is in.
+                    var data = layoutTable.row($(this).closest("tr")).data();
+
+                    // Append to our layouts list
+                    // Construct a new item for the assigned box
+                    var newItem = $("<li/>", {
+                        "text": data.layout,
+                        "data-layout-id": data.layoutId,
+                        "data-display-order": $("#LayoutAssign li").length,
+                        "class": "btn btn-sm btn-default"
+                    });
+
+                    newItem.appendTo("#LayoutAssignSortable");
+
+                    // Add a span to that new item
+                    $("<span/>", {
+                        "class": "glyphicon glyphicon-minus-sign",
+                        click: function(){
+                            $(this).parent().remove();
+                        }
+                    }).appendTo(newItem);
+                });
+            });
+            layoutTable.on('processing.dt', dataTableProcessing);
+
+            // Make our little list sortable
+            var $layoutAssignSortable = $("#LayoutAssignSortable");
+            $layoutAssignSortable.sortable({
+                items: "li:not(.ui-state-disabled)"
+            });
+
+            // Bind to the existing items in the list
+            $layoutAssignSortable.find('li span').on("click", function () {
+                $(this).parent().remove();
+            });
+
+            // Bind the filter form
+            $(".layoutAssignFilterOptions").find("input, select").change(function() {
+                layoutTable.ajax.reload();
+            });
+            
+            // Get the original sortable positions
+            container.data().originalLayoutPositions = [];
+            $layoutAssignSortable.find("li").each(function(){
+                container.data().originalLayoutPositions.push($(this).data("layoutId"));
+            });
+        }
+
+        function layoutAssignSubmit() {
+            
+            // Collect our media
+            var container = $("#LayoutAssign");
+            
+            var originalLayoutPositions = container.data().originalLayoutPositions;
+            var originalPositionsLength = originalLayoutPositions.length;
+            
+            var finalLayoutPositions = [];
+            
+            // Get the final sortable positions
+            finalLayoutPositions = [];
+            $("#LayoutAssignSortable").find("li").each(function(){
+                finalLayoutPositions.push($(this).data("layoutId"));
+            });
+            
+            // Build an array of id's to assign and an array to unassign
+            var assign = [];
+            var unassign = [];
+            
+            for (var i = 0; i < finalLayoutPositions.length; i++) {
+                var elem = finalLayoutPositions[i];
+                var finalPosition = i;
+
+                // Search for the element on the original layout
+                if (originalLayoutPositions.indexOf(elem) !== -1) {
+                    
+                    var originalPosition = originalLayoutPositions.indexOf(elem);
+
+                    // If the original position is different from the final, make the swap
+                    if (originalPosition !== finalPosition) {
+                        // Remove from the original position
+                        unassign.push({layoutId: elem, displayOrder: originalPosition+1});
+                        
+                        // Assign to the new position
+                        assign.push({layoutId: elem, displayOrder: finalPosition+1});
+                    }
+                    
+                    // Clean picked element from the original list
+                    originalLayoutPositions[originalPosition] = -1;
+                } else {
+                    // We can't find this element, so we add it to the assign list.
+                    assign.push({layoutId: elem, displayOrder: finalPosition+1});
+                }
+            }
+            
+            // Remove all non processed elements
+            for (i = 0; i < originalLayoutPositions.length; i++) {
+                if (originalLayoutPositions[i] !== -1) {
+                    var elem = originalLayoutPositions[i];
+
+                    // Remove from the original position
+                    unassign.push({layoutId: elem, displayOrder: i+1});
+                }
+            }
+            
+            assignLayoutsToCampaign(container.data().url, assign, unassign);
+        }
+
+        function assignLayoutsToCampaign(url, layout, unassign) {
+            toastr.info(layout, "Assign Layouts to Campaign");
+            
+            $.ajax({
+                type: "post",
+                url: url,
+                cache: false,
+                dataType: "json",
+                data: {layoutId: layout, unassignLayoutId: unassign},
+                success: XiboSubmitResponse
+            });
+        }
+    </script>
+{% endblock %}

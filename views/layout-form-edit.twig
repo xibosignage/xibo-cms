@@ -1,0 +1,111 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Layout" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#layoutEditForm").submit()
+{% endblock %}
+
+{% block callBack %}backGroundFormSetup{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+                <li><a href="#background" role="tab" data-toggle="tab"><span>{% trans "Background" %}</span></a></li>
+            </ul>
+            <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ urlFor("layout.edit", {id: layout.layoutId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
+                        {{ forms.input("name", title, layout.layout, helpText) }}
+
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {% set helpText %}{% trans "Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.inputWithTags("tags", title, layout.tags, helpText) }}
+
+                        {% set title %}{% trans "Retired" %}{% endset %}
+                        {% set helpText %}{% trans "Retire this layout or not? It will no longer be visible in lists" %}{% endset %}
+                        {{ forms.checkbox("retired", title, layout.retired, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, layout.description, helpText) }}
+                    </div>
+                    <div class="tab-pane" id="background">
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                        {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
+
+                        {% set title %}{% trans "Background Image" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-allow-clear", value: "true" },
+                            { name: "data-placeholder--id", value: null },
+                            { name: "data-placeholder--value", value: "" },
+                            { name: "data-search-url", value: urlFor("library.search") },
+                            { name: "data-search-term", value: "media" },
+                            { name: "data-width", value: "100%" },
+                            { name: "data-id-property", value: "mediaId" },
+                            { name: "data-text-property", value: "name" },
+                            { name: "data-filter-options", value: '{"type":"image"}' }
+                        ] %}
+                        {% set helpText %}{% trans "Pick the background image from the library. It is recommended to pick JPG images as Windows Players can only show JPG background images." %}{% endset %}
+                        {% set noneMessage %}{% trans "None" %}{% endset %}
+                        {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
+                        {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}
+
+                        {% set title %}{% trans "Add a new background image?" %}{% endset %}
+                        {{ forms.button(title, "", "", "background-image-fields background-image-add-button", "backgroundAddButton") }}
+
+                        <div class="col-md-offset-2 col-md-10">
+                            <div id="layoutEditFormBackgroundUpload"></div>
+                        </div>
+
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "Change the resolution" %}{% endset %}
+                        {{ forms.dropdown("resolutionId", "single", title, resolution.resolutionId, resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
+
+                        {% set title %}{% trans "Layer" %}{% endset %}
+                        {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
+                        {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
+
+                        <div class="col-md-offset-2">
+                            <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=100&height=56" data-not-found-url="{{ theme.uri("img/forms/filenotfound.gif") }}" alt="{% trans "Background thumbnail" %}" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

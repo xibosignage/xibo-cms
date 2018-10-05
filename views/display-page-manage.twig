@@ -1,0 +1,321 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+
+{% block pageContent %}
+    {% set displayName = display.display %}
+    {% set displayLastAccessed = display.lastAccessed %}
+    {% if display.loggedIn == 1 %}
+        {% set title %}{% trans %}Display {{ displayName }} is currently logged-in, seen {{ timeAgo }}.{% endtrans %}{% endset %}
+    {% else %}
+        {% set title %}{% trans %}Display {{ displayName }} is not logged in at the moment and last accessed at <span class="unixDate">{{ displayLastAccessed }}</span>{% endtrans %}{% endset %}
+    {% endif %}
+    <h1 class="text-center">{{ title }}</h1>
+    {% if display.mediaInventoryStatus == 3 %}
+    <p class="text-center">{% trans "This Display hasn't connected since updates have been made in the CMS. The below information will be updated when it has." %}</p>
+    {% endif %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">{% trans "File Status - Count of Files" %}</div>
+                <div class="widget-body">
+                    <canvas id="downloadedCountPie" style="clear:both; margin-top:25px;" width="230"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">{% trans "File Status - Size of Files" %}</div>
+                <div class="widget-body">
+                    <canvas id="downloadedSizePie" style="clear:both; margin-top:25px;" width="230"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <button id="refreshLog" class="btn btn-sm pull-right"><span class="fa fa-refresh"></span></button>
+                    {% trans "Errors in the Last 12 hours" %}
+                </div>
+                <div class="widget-body medium no-padding">
+                    <table id="logs" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Message" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">{% trans "Layouts" %}</div>
+                <div class="widget-body medium no-padding">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Size" %}</th>
+                            <th>{% trans "Complete" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory.layouts %}
+                                <tr>
+                                    <td>{{ item.itemId }}</td>
+                                    <td>{{ item.layout }}</td>
+                                    <td>{{ item.size|byteFormat }}</td>
+                                    <td>
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    {% trans "Media" %}
+                </div>
+                <div class="widget-body medium no-padding">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "File Name" %}</th>
+                            <th>{% trans "Size" %}</th>
+                            <th>{% trans "Complete" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory.media %}
+                                <tr>
+                                    <td>{{ item.itemId }}</td>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.type }}</td>
+                                    <td>{{ item.storedAs }}</td>
+                                    <td>{{ item.size|byteFormat }}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">{% trans "Widgets" %}</div>
+                <div class="widget-body medium no-padding">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Complete" %}</th>
+                            <th>{% trans "Downloaded" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory.widgets %}
+                                <tr>
+                                    <td>{{ item.itemId }}</td>
+                                    <td>{{ item.widgetName }}</td>
+                                    <td>{{ item.type }}</td>
+                                    <td title="{% if item.lastUsed == 0 %}{{ nonceNotUsed }}{% else %}{{ nonceUsed }}{% endif %}">
+                                        <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
+                                    </td>
+                                    <td>{{ item.bytesRequested|byteFormat }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if currentUser.routeViewable("/stats") %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="widget">
+                <div class="widget-title">{% trans "Bandwidth" %}</div>
+                <div class="widget-body">
+                    <div class="XiboGrid" id="{{ random() }}">
+                        <div class="XiboFilter">
+                            <div class="FilterDiv" id="bandwidthFilter">
+                                <form class="form-inline">
+                                    {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "") }}
+                                    {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "") }}
+                                    {{ inline.hidden("displayId", display.displayId) }}
+                                </form>
+                            </div>
+                        </div>
+                        <div class="XiboData">
+                            <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            var table = $("#logs").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "desc"]],
+                ajax: {
+                    url: "{{ urlFor("log.search") }}?{{ errorSearch|raw }}",
+                },
+                "columns": [
+                    {"data": "logId"},
+                    {"data": "logDate", "render": dataTableDateFromIso},
+                    {"data": "message"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+
+            $("#refreshLog").click(function () {
+                table.ajax.reload();
+            });
+        });
+
+        var bandwidthChart = null;
+
+        function setBandwidthChart() {
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("stats.bandwidth.data") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#bandwidthFilter").find("form").serialize(),
+                success: function(response) {
+                    if (bandwidthChart !== undefined && bandwidthChart !== null) {
+                        console.log('Destroying Chart');
+                        bandwidthChart.destroy();
+                    }
+
+                    if (response.extra.data.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    bandwidthChart = new Chart($("#bandwidthChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: "{% trans "Bandwidth" %}",
+                                backgroundColor: "rgb(11, 98, 164)",
+                                data: response.extra.data
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: response.extra.postUnits,
+                                    }
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+
+            {% if currentUser.routeViewable("/stats") %}
+            setBandwidthChart();
+
+            // Bind to form change
+            $("#bandwidthFilter input, #bandwidthFilter select").change(function() {
+                setBandwidthChart();
+            });
+            {% endif %}
+
+            // Find all Unix Dates and sort them out
+            $("span.unixDate").each(function() {
+                $(this).html(moment($(this).html(), "X").format(jsDateFormat));
+            });
+
+            // Find all ISO Dates and sort them out
+            $("span.isoDate").each(function() {
+                $(this).html(moment($(this).html()).format(jsDateFormat));
+            });
+
+            // Handle the Pie chart for download status
+            var downloadedCountPie = new Chart($("#downloadedCountPie"), {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [{{ status.countComplete }}, {{ status.countRemaining }}],
+                        backgroundColor: ["#00CC00", "#FF0000"]
+                    }],
+                    labels: [
+                        "{% trans "Downloaded" %}", "{% trans "Pending" %}"
+                    ]
+                }
+            });
+
+            var downloadedSizePie = new Chart($("#downloadedSizePie"), {
+                type: 'pie',
+                data: {
+                    datasets: [{
+                        data: [{{ status.sizeComplete }}, {{ status.sizeRemaining }}],
+                        backgroundColor: ["#00CC00", "#FF0000"]
+                    }],
+                    labels: [
+                        "{% trans "Downloaded" %}" + " {{ status.units }}", "{% trans "Pending" %}" + " {{ status.units }}"
+                    ]
+                },
+            });
+        });
+    </script>
+{% endblock %}

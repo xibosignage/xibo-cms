@@ -1,0 +1,82 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2015-2018 Spring Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% set campaignName = campaign.campaign %}
+    {% trans %}Layouts on {{ campaignName }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, layoutAssignSubmit()
+{% endblock %}
+
+{% block callBack %}campaignAssignLayoutsFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div id="LayoutAssign" class="well" data-url="{{ urlFor("campaign.assign.layout", {id: campaign.campaignId}) }}">
+                <div>
+                    <ul id="LayoutAssignSortable">
+                        {% for item in layouts %}
+                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-default {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="glyphicon glyphicon-minus-sign"></span>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
+                <div class="layoutAssignFilterOptions XiboFilter">
+                    <form class="form-inline" onsubmit="false">
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {{ inline.input("layout", title) }}
+
+                    {% set title %}{% trans "Tags" %}{% endset %}
+                    {{ inline.inputWithTags("tags", title) }}
+                    </form>
+                </div>
+                <div class="XiboData">
+                    <table id="layoutAssignments" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

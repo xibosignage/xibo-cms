@@ -1,0 +1,423 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ urlFor("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "DataSets" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("dataSet", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="datasets" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Description" %}</th>
+                                <th>{% trans "Code" %}</th>
+                                <th>{% trans "Remote?" %}</th>
+                                <th>{% trans "Owner" %}</th>
+                                <th>{% trans "Permissions" %}</th>
+                                <th>{% trans "Last Sync" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data;
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=dataSetGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "dataSetGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("dataSet.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "dataSetId" },
+                { "data": "dataSet", "render": dataTableSpacingPreformatted },
+                { "data": "description" },
+                { "data": "code" },
+                {
+                    "data": "isRemote",
+                    "render": dataTableTickCrossColumn
+                },
+                { "data": "owner" },
+                {
+                    "data": "groupsWithPermissions",
+                    "render": dataTableCreatePermissions
+                },
+                {
+                    "data": "lastSync",
+                    "render": dataTableDateFromUnix
+                },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', function(e, settings) {
+            dataTableDraw(e, settings);
+
+            // Upload form
+            $(".dataSetImportForm").click(function() {
+
+                var template = Handlebars.compile($("#template-dataset-upload").html());
+                var data = table.row($(this).closest("tr")).data();
+                var columns = [];
+                var i = 1;
+
+                $.each(data.columns, function (index, element) {
+                    if (element.dataSetColumnTypeId === 1) {
+                        element.index = i;
+                        columns.push(element);
+                        i++;
+                    }
+                });
+
+                // Handle bars and open a dialog
+                bootbox.dialog({
+                    message: template({
+                        trans: {
+                            addFiles: "{% trans "Add CSV Files" %}",
+                            startUpload: "{% trans "Start upload" %}",
+                            cancelUpload: "{% trans "Cancel upload" %}"
+                        },
+                        upload: {
+                            maxSize: {{ libraryUpload.maxSize }},
+                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                            validExt: "{{ libraryUpload.validExt }}",
+                            utf8Message: "{% trans "If the CSV file contains non-ASCII characters please ensure the file is UTF-8 encoded" %}"
+                        },
+                        columns: columns
+                    }),
+                    title: "{% trans "CSV Import" %}",
+                    buttons: {
+                        main: {
+                            label: "{% trans "Done" %}",
+                            className: "btn-primary",
+                            callback: function() {
+                                table.ajax.reload();
+                                XiboDialogClose();
+                            }
+                        },
+                        help: {
+                            label: "{% trans "Help" %}",
+                            className: "default",
+                            callback: function() {
+                                XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
+                            }
+                        }
+                    }
+                }).on('shown.bs.modal', function() {
+                    // Configure the upload form
+                    var url = "{{ urlFor("dataSet.import") }}".replace(":id", data.dataSetId);
+                    var form = $(this).find("form");
+                    var refreshSessionInterval;
+
+                    // Initialize the jQuery File Upload widget:
+                    form.fileupload({
+                        url: url,
+                        disableImageResize: true
+                    });
+
+                    // Upload server status check for browsers with CORS support:
+                    if ($.support.cors) {
+                        $.ajax({
+                            url: url,
+                            type: 'HEAD'
+                        }).fail(function () {
+                            $('<span class="alert alert-error"/>')
+                                    .text('Upload server currently unavailable - ' + new Date())
+                                    .appendTo(form);
+                        });
+                    }
+
+                    // Enable iframe cross-domain access via redirect option:
+                    form.fileupload(
+                            'option',
+                            'redirect',
+                            window.location.href.replace(
+                                    /\/[^\/]*$/,
+                                    '/cors/result.html?%s'
+                            )
+                    );
+
+                    form.bind('fileuploadsubmit', function (e, data) {
+                        var inputs = data.context.find(':input');
+                        if (inputs.filter('[required][value=""]').first().focus().length) {
+                            return false;
+                        }
+                        data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                        inputs.filter("input").prop("disabled", true);
+                    }).bind('fileuploadstart', function (e, data) {
+                        if (form.fileupload("active") <= 0)
+                            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+
+                        return true;
+                    }).bind('fileuploaddone', function (e, data) {
+                        if (refreshSessionInterval != null && form.fileupload("active") <= 0)
+                            clearInterval(refreshSessionInterval);
+                    });
+                });
+            });
+        });
+        table.on('processing.dt', dataTableProcessing);
+
+        function dataSetFormOpen(dialog) {
+            // Bind the test button
+            $(dialog).find("#dataSetRemoteTestButton").on('click', function() {
+                var $form = $(dialog).find("form");
+                XiboRemoteRequest("{{ urlFor("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
+                    $("#datasetRemoteTestRequestResult").html('<pre style="height: 300px; overflow: scroll">' + JSON.stringify(response.data, null, 3) + '</pre>');
+                });
+            });
+
+            // Set up some dependencies between the isRemote checkbox and the tabs related to remote datasets
+            onRemoteFieldChanged(dialog);
+
+            $(dialog).find("#isRemote").on('change', function() {
+                onRemoteFieldChanged(dialog);
+            });
+
+            // Auth field
+            onAuthenticationFieldChanged(dialog);
+
+            $(dialog).find("#authentication").on('change', function() {
+                onAuthenticationFieldChanged(dialog);
+            });
+        }
+
+        function onRemoteFieldChanged(dialog) {
+            var isRemote = $(dialog).find("#isRemote").is(":checked");
+            var $remoteTabs = $(dialog).find(".tabForRemoteDataSet");
+
+            if (isRemote) {
+                $remoteTabs.removeClass("hidden");
+            } else {
+                $remoteTabs.addClass("hidden");
+            }
+        }
+
+        function onAuthenticationFieldChanged(dialog) {
+            var authentication = $(dialog).find("#authentication").val();
+            var $authFieldUserName = $(dialog).find(".auth-field-username");
+            var $authFieldPassword = $(dialog).find(".auth-field-password");
+
+            if (authentication === "none") {
+                $authFieldUserName.addClass("hidden");
+                $authFieldPassword.addClass("hidden");
+            } else if (authentication === "bearer") {
+                $authFieldUserName.addClass("hidden");
+                $authFieldPassword.removeClass("hidden");
+            } else {
+                $authFieldUserName.removeClass("hidden");
+                $authFieldPassword.removeClass("hidden");
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% raw %}
+
+    <script type="text/x-handlebars-template" id="template-dataset-upload">
+        <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
+            <div class="row fileupload-buttonbar">
+                <div class="well">
+                    {{ upload.maxSizeMessage }} <br>
+                    {{ upload.utf8Message }}
+                </div>
+                <div class="col-md-7">
+                    <!-- The fileinput-button span is used to style the file input field as button -->
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <span>{{ trans.addFiles }}</span>
+                        <input type="file" name="files">
+                    </span>
+                    <button type="submit" class="btn btn-primary start">
+                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <span>{{ trans.startUpload }}</span>
+                    </button>
+                    <button type="reset" class="btn btn-warning cancel">
+                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <span>{{ trans.cancelUpload }}</span>
+                    </button>
+                    <!-- The loading indicator is shown during file processing -->
+                    <span class="fileupload-loading"></span>
+                </div>
+                <!-- The global progress information -->
+                <div class="col-md-4 fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+        {% endraw %}
+                    {% set title %}{% trans "Overwrite existing data?" %}{% endset %}
+                    {% set helpText %}{% trans "Erase all content in this DataSet and overwrite it with the new content in this import." %}{% endset %}
+                    {{ forms.checkbox("overwrite", title, "", helpText) }}
+
+                    {% set title %}{% trans "Ignore first row?" %}{% endset %}
+                    {% set helpText %}{% trans "Ignore the first row? Useful if the CSV has headings." %}{% endset %}
+                    {{ forms.checkbox("ignorefirstrow", title, "", helpText) }}
+
+                    {% set message %}{% trans "In the fields below please enter the column number in the CSV file that corresponds to the Column Heading listed. This should be done before Adding the file." %}{% endset %}
+                    {{ forms.message(message) }}
+
+        {% raw %}
+                    {{#each columns}}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
+                        <div class="col-sm-10">
+                            <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="{{ index }}" />
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+            <!-- The table listing the files available for upload/download -->
+            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        </form>
+    </script>
+
+    <!-- The template to display files available for upload -->
+    <script id="template-dataset-upload" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-upload fade">
+                <td>
+                    <span class="fileupload-preview"></span>
+                </td>
+                <td class="title">
+                    {% if (file.error) { %}
+                        <div><span class="label label-danger">{%=file.error%}</span></div>
+                    {% } %}
+                    {% if (!file.error) { %}
+                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
+                    {% } %}
+                </td>
+                <td>
+                    <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                    {% if (!o.files.error) { %}
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                                <div class="sr-only"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% } %}
+                </td>
+                <td>
+                    {% if (!o.files.error && !i && !o.options.autoUpload) { %}
+                        <button class="btn btn-primary start">
+                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        </button>
+                    {% } %}
+                    {% if (!i) { %}
+                        <button class="btn btn-warning cancel">
+                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        </button>
+                    {% } %}
+                </td>
+            </tr>
+        {% } %}
+        </script>
+    <!-- The template to display files available for download -->
+    <script id="template-dataset-download" type="text/x-tmpl">
+        {% for (var i=0, file; file=o.files[i]; i++) { %}
+            <tr class="template-download fade">
+               <td>
+                    <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
+                        {%=file.name%}
+                    </p>
+                    {% if (file.error) { %}
+                        <div><span class="label label-danger">{%=file.error%}</span></div>
+                    {% } %}
+                </td>
+                <td>
+                    <span class="size">{%=o.formatFileSize(file.size)%}</span>
+                </td>
+            </tr>
+        {% } %}
+        </script>
+
+    {% endraw %}
+{% endblock %}

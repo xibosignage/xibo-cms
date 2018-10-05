@@ -1,0 +1,8 @@
+{
+    "title": {% filter json_encode|raw %}{% block formTitle %}{% endblock %}{% endfilter %},
+    "html": {% filter json_encode|raw %}{% block formHtml %}{% endblock %}{% endfilter %},
+    "buttons": {% filter json_encode|raw %}{% block formButtons %}{% endblock %}{% endfilter %},
+    "fieldActions": {% filter json_encode|raw %}{% block formFieldActions %}{% endblock %}{% endfilter %},
+    "callBack": {% filter json_encode|raw %}{% block callBack %}{% endblock %}{% endfilter %},
+    "extra": {% block extra %}[]{% endblock %}
+}

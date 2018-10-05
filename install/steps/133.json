@@ -1,0 +1,18 @@
+{
+  "dbVersion": 133,
+  "appVersion": "1.8.2",
+  "steps": [
+    {
+      "step": "Add an index to the link table between Regions and Playlists",
+      "action": "CREATE INDEX idx_lkregionplaylist_playlistId ON lkregionplaylist (playlistId);"
+    },
+    {
+      "step": "Add a setting to lock the display name to the device name",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('DISPLAY_LOCK_NAME_TO_DEVICENAME', '0', 'checkbox', NULL, NULL, 'displays', 1, 'Lock the Display Name to the device name provided by the Player?', '', 80, '0', 1, 'checkbox');"
+    },
+    {
+      "step": "Add last run start date to tasks",
+      "action": "ALTER TABLE `task` ADD lastRunStartDt INT NULL;"
+    }
+  ]
+}

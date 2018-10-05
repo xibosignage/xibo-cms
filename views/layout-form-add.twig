@@ -1,0 +1,80 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Layout" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#layoutAddForm").submit()
+{% endblock %}
+
+{% block callBack %}layoutAddFormOpen{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "layoutId",
+    "trigger": "change",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+        ".resolution-group": { "display": "block" }
+    }
+    },{
+    "field": "layoutId",
+    "trigger": "change",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+        ".resolution-group": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+            </ul>
+            <form id="layoutAddForm" class="form-horizontal" method="post" action="{{ urlFor("layout.add") }}" data-redirect="{{ urlFor("layout.designer") }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
+                        {{ forms.input("name", title, "", helpText) }}
+
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {% set helpText %}{% trans "Tags for this layout - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.inputWithTags("tags", title, "", helpText) }}
+
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally choose a template you have saved before." %}{% endset %}
+                        {% set layouts = [{layoutId: null, layout: ""}]|merge(layouts) %}
+                        {{ forms.dropdown("layoutId", "single", title, "", layouts, "layoutId", "layout", helpText) }}
+
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "Choose the resolution this Layout should be designed for." %}{% endset %}
+                        {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
+                    </div>
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, "", helpText) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

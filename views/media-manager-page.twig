@@ -1,0 +1,258 @@
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "All Layouts and Media" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="mediaManagerView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {{ inline.input("layout", title) }}
+
+                            {% set title %}{% trans "Region" %}{% endset %}
+                            {{ inline.input("region", title) }}
+
+                            {% set title %}{% trans "Media" %}{% endset %}
+                            {{ inline.input("media", title) }}
+
+                            {% set title %}{% trans "Module" %}{% endset %}
+                            {{ inline.dropdown("type", "single", title, "", [{type:null, name:""}]|merge(modules), "type", "name") }}
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="entries" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Widget" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Layout" %}</th>
+                                <th>{% trans "Region" %}</th>
+                                <th>{% trans "Playlist" %}</th>
+                                <th>{% trans "Display Order" %}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table;
+
+        $(document).ready(function() {
+            table = $("#entries").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    url: "{{ urlFor("mediaManager.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#entries").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "widget"},
+                    {"data": "type"},
+                    {
+                        "name": "widgetId",
+                        "data": null,
+                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "widgetId"}
+                    },
+                    {
+                        "data": "layout",
+                        "orderable": false
+                    },
+                    {
+                        "data": "region",
+                        "orderable": false
+                    },
+                    {
+                        "data": "playlist"
+                    },
+                    {"data": "displayOrder"},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', function(e, settings) {
+                dataTableDraw(e, settings);
+
+                // Bind to any media replace buttons
+                $("#" + e.target.id).find('.MediaManagerReplaceButton').on('click', function() {
+                    e.preventDefault();
+
+                    // $(this) is the button
+                    var mediaId = $(this).data().mediaId;
+                    var widgetId = $(this).data().widgetId;
+                    var validExtensions = $(this).data().validExtensions;
+
+                    // Open the upload dialog with our options.
+                    openUploadForm({
+                        oldMediaId: mediaId,
+                        widgetId: widgetId,
+                        updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                        deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                        trans: {
+                            addFiles: "{% trans "Add Replacement" %}",
+                            startUpload: "{% trans "Start Replace" %}",
+                            cancelUpload: "{% trans "Cancel Replace" %}",
+                            updateInLayouts: {
+                                title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                                helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                            },
+                            deleteOldRevisions: {
+                                title: "{% trans "Delete the old version?" %}",
+                                helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                            }
+                        },
+                        upload: {
+                            maxSize: {{ libraryUpload.maxSize }},
+                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                            validExt: validExtensions
+                        }
+                    });
+                });
+            });
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
+        });
+
+        /**
+         * Open Upload Form
+         */
+        function openUploadForm(templateOptions) {
+
+            // Close the current dialog
+            XiboDialogClose();
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template(templateOptions),
+                title: "{% trans "Upload media" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+
+                // Initialize the jQuery File Upload widget:
+                form.fileupload({
+                    url: url,
+                    disableImageResize: true
+                });
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                                .text('Upload server currently unavailable - ' + new Date())
+                                .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                        'option',
+                        'redirect',
+                        window.location.href.replace(
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
+                        )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                });
+            });
+        }
+
+        /**
+         * Media Edit form
+         */
+        function mediaEditFormOpen(dialog) {
+
+            if (dialog.find("form").data().mediaEditable != 1)
+                return;
+
+            // Create a new button
+            var footer = dialog.find(".modal-footer");
+            var mediaId = dialog.find("form").data().mediaId;
+            var widgetId = dialog.find("form").data().widgetId;
+            var validExtensions = dialog.find("form").data().validExtensions;
+
+            // Append
+            var replaceButton = $('<button class="btn btn-warning">').html("{% trans "Replace" %}");
+            replaceButton.click(function(e) {
+                e.preventDefault();
+
+                // Open the upload dialog with our options.
+                openUploadForm({
+                    oldMediaId: mediaId,
+                    widgetId: widgetId,
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %},
+                    trans: {
+                        addFiles: "{% trans "Add Replacement" %}",
+                        startUpload: "{% trans "Start Replace" %}",
+                        cancelUpload: "{% trans "Cancel Replace" %}",
+                        updateInLayouts: {
+                            title: "{% trans "Update this media in all layouts it is assigned to?" %}",
+                            helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                        },
+                        deleteOldRevisions: {
+                            title: "{% trans "Delete the old version?" %}",
+                            helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                        }
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                        validExt: validExtensions
+                    }
+                });
+            });
+
+            footer.find(".btn-primary").before(replaceButton);
+        }
+    </script>
+{% endblock %}
+

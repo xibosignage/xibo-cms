@@ -1,0 +1,5 @@
+{
+  "id": "empty",
+  "value": "Plain Table",
+  "css": "table.DataSetTable {width: 100%; border-collapse: collapse;\n\n}\n\ntr.HeaderRow {\n\n}\n\ntr#row_1 {\n\n}\n\ntd#column_1 {\n\n}\n\ntd.DataSetColumn {\n\n}\n\ntr.DataSetRow {\n\n}\n\ntr.DataSetRowOdd {\n\n}\n\ntr.DataSetRowEven {\n\n}\n\nth.DataSetColumnHeaderCell {\n\n}\n\nspan#1_1 {\n\n}\n\nspan.DataSetColumnSpan {\n\n}"
+}

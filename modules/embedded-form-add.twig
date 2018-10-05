@@ -1,0 +1,109 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Embedded" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#embeddedForm").submit()
+{% endblock %}
+
+{% block formFieldActions %}
+    [{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "none" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    },{
+    "field": "useDuration",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".duration-fields": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="embeddedForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.widget.add", {type: module.widget.type, id: playlist.playlistId}) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, 0, helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Background transparent?" %}{% endset %}
+                {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not current available on the Windows Display Client." %}{% endset %}
+                {{ forms.checkbox("transparency", title, 0, helpText) }}
+
+                {% set title %}{% trans "Scale Content?" %}{% endset %}
+                {% set helpText %}{% trans "Should the embedded content be scaled along with the layout?" %}{% endset %}
+                {{ forms.checkbox("scaleContent", title, 1, helpText) }}
+
+                {% set helpText %}{% trans "HTML to Embed" %}{% endset %}
+                {{ forms.textarea("embedHtml", "", "", helpText, "", "", 10) }}
+
+{% set styleDefault %}
+<style type="text/css">
+
+</style>
+{% endset %}
+                {% set helpText %}{% trans "Custom Style Sheets" %}{% endset %}
+                {{ forms.textarea("embedStyle", "", styleDefault, helpText, "", "", 10) }}
+
+{% set scriptDefault %}
+<script type="text/javascript">
+    function EmbedInit()
+    {
+        // Init will be called when this page is loaded in the client.
+
+        return;
+    }
+</script>
+{% endset %}
+                {% set helpText %}{% trans "HEAD content to Embed (including script tags)" %}{% endset %}
+                {{ forms.textarea("embedScript", "", scriptDefault, helpText, "", "", 10) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2015 Spring Signage Ltd
+ * (${FILE_NAME})
+ */
+#}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% trans "Preview for Layout" %} {{ layout.layoutId }}</title>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
+        <link rel="stylesheet" type="text/css" href="{{ theme.uri("libraries/font-awesome/css/font-awesome.min.css") }}" />
+        
+    </head>
+    <body>
+        {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions} %}
+        <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
+        <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
+        <script src="{{ theme.uri("js/html-preview.js") }}"></script>
+        <script type="text/javascript">
+        
+            var emptyRegionMessage = "{% trans "Empty Region" %}"; 
+        
+            (function($){
+              $(document).ready(function(){
+                dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode()|raw }}, true)
+              });
+            }(jQuery));
+        </script>
+    </body>
+</html>
