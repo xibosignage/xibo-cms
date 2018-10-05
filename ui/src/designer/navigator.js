@@ -145,10 +145,6 @@ Navigator.prototype.render = function(layout) {
     this.DOMObject.find('[data-type="layout"]').droppable({
         accept: '[drop-to="layout"]',
         drop: function(event, ui) {
-            console.log(event.target);
-            console.log(ui.draggable[0]);
-            
-            
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
@@ -188,9 +184,13 @@ Navigator.prototype.renderNavbar = function() {
 
     // Navbar buttons
     this.navbarContainer.find('#close-btn').click(function() {
+        lD.common.showLoadingScreen();
+
         lD.manager.saveAllChanges().then((res) => {   
+            lD.common.hideLoadingScreen(); 
             lD.toggleNavigatorEditing(false);
         }).catch((err) => {
+            lD.common.hideLoadingScreen();
             if(err) {
                 toastr.error('Save all changes failed: ' + err);
             } else {
@@ -200,7 +200,11 @@ Navigator.prototype.renderNavbar = function() {
     });
 
     this.navbarContainer.find('#undo-btn').click(function() {
+        lD.common.showLoadingScreen();
+
         lD.manager.revertChange().then((res) => { // Success
+
+            lD.common.hideLoadingScreen();
 
             toastr.success(res.message);
 
@@ -211,6 +215,8 @@ Navigator.prototype.renderNavbar = function() {
                 lD.reloadData(lD.layout);
             }
         }).catch((error) => { // Fail/error
+
+            lD.common.hideLoadingScreen();
 
             console.error(error);
 
@@ -228,16 +234,22 @@ Navigator.prototype.renderNavbar = function() {
     });
 
     this.navbarContainer.find('#add-btn').click(function() {
+        lD.common.showLoadingScreen();
+        
         lD.manager.saveAllChanges().then((res) => {
 
             toastr.success('All changes saved!');
 
             lD.layout.addElement('region').then((res) => { // Success
 
+                lD.common.hideLoadingScreen(); 
+
                 // Behavior if successful 
                 toastr.success(res.message);
                 lD.reloadData(lD.layout);
             }).catch((error) => { // Fail/error
+
+                lD.common.hideLoadingScreen(); 
                 // Show error returned or custom message to the user
                 let errorMessage = 'Create region failed: ' + error;
 
@@ -250,6 +262,8 @@ Navigator.prototype.renderNavbar = function() {
                 toastr.error(errorMessage);
             });
         }).catch((err) => {
+
+            lD.common.hideLoadingScreen(); 
             toastr.error('Save all changes failed!');
         });
     });
@@ -273,12 +287,21 @@ Navigator.prototype.renderNavbar = function() {
                 },
                 callback: function(result) {
                     if(result) {
+
+                        lD.common.showLoadingScreen();
+
                                 // Delete element from the layout
                                 lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
+                            
+                            lD.common.hideLoadingScreen();
+
                                     // Behavior if successful 
                                     toastr.success(res.message);
                                     lD.reloadData(lD.layout);
                                 }).catch((error) => { // Fail/error
+
+                            lD.common.hideLoadingScreen();
+                            
                                     // Show error returned or custom message to the user
                                     let errorMessage = 'Delete element failed: ' + error;
 

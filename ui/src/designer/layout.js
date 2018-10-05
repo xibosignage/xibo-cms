@@ -179,6 +179,8 @@ Layout.prototype.addElement = function(elementType) {
  */
 Layout.prototype.deleteElement = function(elementType, elementId) {
     
+    lD.common.showLoadingScreen(); 
+
     // Save all changes first
     return lD.manager.saveAllChanges().then((res) =>  {
 
@@ -187,6 +189,8 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
 
             // Unselect selected object before deleting
             lD.selectObject();
+
+            lD.common.hideLoadingScreen(); 
 
             // Create a delete type change, upload it but don't add it to the history array
             return lD.manager.addChange(
@@ -201,9 +205,15 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
             );
 
         }).catch(function() {
+
+            lD.common.hideLoadingScreen(); 
+
             toastr.error('Remove all changes failed!');
         });
     }).catch(function() {
+
+        lD.common.hideLoadingScreen(); 
+        
         toastr.error('Save all changes failed!');
     });
     

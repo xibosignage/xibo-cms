@@ -12,7 +12,11 @@
 {% block pageContent %}
 
     <!-- Editor structure -->
-    <div id="layout-editor" data-layout-id="{{ layout.layoutId }}"></div>    
+    <div id="layout-editor" data-layout-id="{{ layout.layoutId }}"></div>
+
+    <div class="custom-overlay">
+        <i class="fa fa-spinner fa-spin loading-icon"></i>
+    </div>
 
 {% endblock %}
 

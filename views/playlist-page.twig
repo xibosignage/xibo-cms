@@ -80,9 +80,14 @@
         </div>
     </div>
 
-    <div id="dummyLayout" style="display:none">
+    <div id="dummyLayout" style="display:none"></div>
 
+    <div id="editor-container"></div>
+
+    <div class="custom-overlay">
+        <i class="fa fa-spinner fa-spin loading-icon"></i>
     </div>
+    
 {% endblock %}
 
 {% block javaScript %}
@@ -324,6 +329,15 @@
         var mediaTable;
         var nameFilter;
         var tagFilter;
+
+        function playlistEditorFormOpen(formData) {
+
+            // Clear container
+            $('#editor-container').empty();
+
+            // Append form
+            $('#editor-container').append(formData.message);
+        }
 
         function playlistFormOpen(dialog) {
             mediaTable = null;

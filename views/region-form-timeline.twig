@@ -7,27 +7,68 @@
 #}
 
 {% extends "form-base.twig" %}
-{% import "forms.twig" as forms %}
 
-{% block formTitle %}
-    {% trans "Edit Playlist" %}
-{% endblock %}
-
-{% block formButtons %}
-    {% trans "Help" %}, XiboHelpRender("{{ help }}")
-    {% trans "Close" %}, pE.close()
-    {% trans "Save Order" %}, pE.saveOrder() 
-    {% trans "Save and Close" %}, pE.saveOrder(true) 
-{% endblock %}
-
-{% block callBack %}pE.loadEditor{% endblock %}
+{% block callBack %}playlistEditorFormOpen{% endblock %}
 
 {% block formHtml %}
     {# Playlist editor main div #}
-    <div id="playlist-editor" playlist-id="{{ playlist.playlistId }}"></div>
+    <div class="modal editor-modal">  
+        <div class="modal-dialog editor-modal-dialog">
+            <div class="modal-content editor-modal-content">
+                <div class="modal-header editor-modal-header">
+                    <button type="button" class="close" onclick="pE.close()">×</button>
+                    <h4 class="modal-title editor-modal-title">{% trans "Edit Playlist" %}</h4>
+                </div>
+
+                <div class="modal-body editor-modal-body">
+                    <div id="playlist-editor" playlist-id="{{ playlist.playlistId }}"></div>
+                </div>
+
+                <div class="modal-footer editor-modal-footer">
+                    <div id="playlist-buttons" class="editor-modal-buttons"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script type="text/javascript">
         var playlistData = {{ playlist|json_encode|raw }};
         var transitionsData = {{ transitions|json_encode|raw }};
+
+        var formButtons = [
+            {
+                id: 'btn-help',
+                title: 'Help',
+                class: 'btn-default',
+                action: 'XiboHelpRender("{{ help }}")'
+            },
+            {
+                id: 'btn-cancel',
+                title: 'Cancel',
+                class: 'btn-default',
+                action: 'pE.close()'
+            },
+            {
+                id: 'btn-save-order',
+                title: 'Save Order',
+                class: 'btn-primary',
+                action: 'pE.saveOrder() '
+            },
+            {
+                id: 'btn-save-close',
+                title: 'Save and Close',
+                class: 'btn-primary',
+                action: 'pE.saveOrder(true)'
+            }
+        ];
+
+        // Load the editor to populate the modal
+        pE.loadEditor();
+
+        // Use the close button to clear the editor container
+        $('.editor-modal-background button.close').click(function() {
+            $('#editor-container').empty();
+        });
+
     </script>
 {% endblock %}

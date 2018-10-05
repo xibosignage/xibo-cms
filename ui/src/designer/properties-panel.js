@@ -46,6 +46,8 @@ PropertiesPanel.prototype.save = function(element) {
         const formNewData = form.serialize();
         const app = getXiboApp();
 
+        app.common.showLoadingScreen();
+
         // Add a save form change to the history array, with previous form state and the new state
         app.manager.addChange(
             "saveForm",
@@ -61,6 +63,8 @@ PropertiesPanel.prototype.save = function(element) {
             }
         ).then((res) => { // Success
 
+            app.common.hideLoadingScreen();
+
             // Behavior if successful 
             if(typeof app.timeline.resetZoom === "function") {
                 // safe to use the function
@@ -72,6 +76,8 @@ PropertiesPanel.prototype.save = function(element) {
             const mainObject = app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
             app.reloadData(mainObject);
         }).catch((error) => { // Fail/error
+
+            app.common.hideLoadingScreen();
 
             // Show error returned or custom message to the user
             let errorMessage = '';

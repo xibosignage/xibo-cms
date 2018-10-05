@@ -11,13 +11,20 @@
 @toolbar-tab-bg-color: #4084be;
 @toolbar-tab-fg-color: #ffffff;
 @toolbar-tab-hover-color: #87b1d5;
-@toolbar-tab-border-color: #4084be;
+@toolbar-tab-border-color: #337ab7;
+@toolbar-tab-min-width: 80px; 
+@toolbar-z-index: 1040;
 
-/* Toolbar */
+// CSS
+.sidebar-footer {
+    height: 50px;
+    padding-top: 4px;
+}
+
 .editor-toolbar nav {
-    z-index: 0;
+    z-index: @toolbar-z-index;
     background: @toolbar-main-color;
-    padding-left: 180px;
+    margin-left: 180px;
     border: none;
 }
 
@@ -68,7 +75,7 @@
 }
 
 .editor-toolbar .toolbar-pane form {
-    background: #fff;
+    background: #1c65a3;
     padding: 5px 5px;
 }
 
@@ -140,6 +147,7 @@
     margin-top: 30px;
     cursor: move;
     padding: 13px 0;
+    z-index: inherit;
     .border-radius(0 0 4px 4px);
     .set-transparent-color(background-color; #595959; 70%);
     
@@ -185,7 +193,11 @@
 .editor-toolbar .btn-menu-tab {
     background-color: @toolbar-tab-bg-color;
     color: @toolbar-tab-fg-color;
-    border: 1px @toolbar-tab-border-color solid;
+    border-style: solid;
+    border-color: @toolbar-tab-border-color;
+    border-width: 0 1px 0 0;
+    min-width: @toolbar-tab-min-width;
+    text-align: center;
 }
 
 .editor-toolbar .btn-menu-tab:hover {
@@ -194,6 +206,10 @@
 
 .editor-toolbar .btn-menu-tool {
     color: lightgray;
+    border-style: solid;
+    border-color: @toolbar-tab-border-color;
+    border-width: 0 1px 0 0;
+    margin-left: 0 !important;
 }
 
 .editor-toolbar .btn-menu-tool:hover {
@@ -219,6 +235,6 @@
 
 @media (max-width: 768px) {
     .editor-toolbar nav {
-        padding-left: 0;
+        margin-left: 0;
     }
 }

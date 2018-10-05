@@ -211,6 +211,8 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
                     const form = dialog.find('form');
 
+                    app.common.showLoadingScreen();
+
                     app.manager.addChange(
                         'save' + property,
                         'widget', // targetType 
@@ -226,6 +228,8 @@ Widget.prototype.editPropertyForm = function(property, type) {
                         }
                     ).then((res) => { // Success
 
+                        app.common.hideLoadingScreen();
+
                         // Behavior if successful 
                         toastr.success(res.message);
 
@@ -235,6 +239,8 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
                     }).catch((error) => { // Fail/error
 
+                        app.common.hideLoadingScreen();
+                        
                         // Show error returned or custom message to the user
                         let errorMessage = '';
 

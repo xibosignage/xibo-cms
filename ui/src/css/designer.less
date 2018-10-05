@@ -29,6 +29,9 @@
 @timeline-ghost-bg-color: #c5c5c5;
 @timeline-ghost-fg-color: #fff;
 
+@designer-overlay-z-index: 1050;
+@loading-overlay-z-index: 2000;
+
 // CSS
 #layout-editor  {
     background: @designer-bg-color;
@@ -82,16 +85,11 @@
     padding: 7px;
 }
 
-#layout-editor #layout-timeline #labels-container {
-    font-size: 10px;
-    float: left;
-    width: 4%;
-    padding-top: 38px;
-}
-
 #layout-editor #layout-timeline #timeline-container {
     float: left;
-    width: 96%
+    width: 100%;
+    padding: 10px;
+    background: #536693;
 }
 
 #layout-editor #layout-timeline .label-region {
@@ -198,7 +196,7 @@
 
 #layout-editor #layout-viewer.fullscreen {
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: @designer-overlay-z-index; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -325,7 +323,7 @@
 #layout-editor #layout-navigator-edit {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: @designer-overlay-z-index; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
@@ -427,7 +425,7 @@
     .box-shadow(inset 0 0 10px #313131);
 }
 
-/* Properties Panel */
+/* Layout Manager */
 #layout-manager {
     left: 0;
     z-index: 1;
@@ -502,43 +500,6 @@
     }
 }
 
-/* Properties Panel */
-#layout-manager {
-    left: 0;
-    z-index: 1;
-    position: fixed;
-    top: 0;
-    width: 15%;
-    opacity: 0.95;
-}
-
-#layout-manager #layout-manager-header {
-    background: #2d2d2d;
-    color: white;
-    font-weight: bold;
-    padding: 5px;
-    border: #212121 3px solid;
-}
-
-#layout-manager #layout-manager-container {
-    display: grid;
-    grid-template-columns: auto;
-    grid-gap: 2px;
-    color: #444;
-    padding: 2px;
-}
-
-#layout-manager .change {
-    color: black;
-    background-color: #c3c3c3;
-    padding: 2px;
-    .border-radius(2px);
-}
-
-#layout-manager .change.uploaded {
-    background-color: #8dffa6;
-}
-
 // Overlay and loading
 .custom-overlay {
     display: none;
@@ -552,12 +513,13 @@
     z-index: 2;
 }
 
-.custom-overlay:active {
+.custom-overlay.loading {
     display: block;
+    z-index: @loading-overlay-z-index;
 }
 
-.custom-overlay .loading-icon {
-    display: none;
+.custom-overlay.loading .loading-icon {
+    display: block;
     font-size: 60px;
     position: absolute;
     left: 20px;

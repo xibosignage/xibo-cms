@@ -24,9 +24,7 @@ const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
 // Include modules
-const Region = require('./region.js');
 const Layout = require('./layout.js');
-const Widget = require('./widget.js');
 const Navigator = require('./navigator.js');
 const Timeline = require('./timeline.js');
 const Manager = require('./manager.js');
@@ -34,11 +32,17 @@ const Viewer = require('./viewer.js');
 const Toolbar = require('./toolbar.js');
 const PropertiesPanel = require('./properties-panel.js');
 
+// Common funtions/tools
+const Common = require('../core/common.js');
+
 // Include CSS
 require('../css/designer.less');
 
 // Create layout designer namespace (lD)
 window.lD = {
+
+    // Attach common functions to layout designer
+    common: Common,
 
     // Main object info
     mainObjectType: 'layout',
@@ -83,14 +87,21 @@ $(document).ready(function() {
     // Get layout id
     const layoutId = lD.designerDiv.attr("data-layout-id");
     
+    lD.common.showLoadingScreen();
+
     // Append loading html to the main div
     lD.designerDiv.html(loadingTemplate());
+
+    // Change toastr positioning
+    toastr.options.positionClass = 'toast-top-right';
 
     // Load layout through an ajax request
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
         .done(function(res) {
 
             if(res.data.length > 0) {
+
+                lD.common.hideLoadingScreen();
 
                 // Append layout html to the main div
                 lD.designerDiv.html(designerMainTemplate());
@@ -323,8 +334,12 @@ lD.reloadData = function(layout) {
 
     const layoutId = (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
+    lD.common.showLoadingScreen();
+
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
+            
+            lD.common.hideLoadingScreen();
             
             if(res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -341,6 +356,8 @@ lD.reloadData = function(layout) {
                 lD.showErrorMessage();
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
+
+            lD.common.hideLoadingScreen();
 
             // Output error to console
             console.error(jqXHR, textStatus, errorThrown);
@@ -395,6 +412,8 @@ lD.publishLayout = function() {
     const linkToAPI = urlsForApi.layout.publish;
     let requestPath = linkToAPI.url;
 
+    lD.common.showLoadingScreen();
+
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
@@ -402,6 +421,9 @@ lD.publishLayout = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
+
+        lD.common.hideLoadingScreen();
+
         if(res.success) {
             toastr.success(res.message);
 
@@ -421,6 +443,8 @@ lD.publishLayout = function() {
             }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+        
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
     });
@@ -559,7 +583,11 @@ lD.showPublishScreen = function() {
  * Revert last action
  */
 lD.undoLastAction = function() {
+    lD.common.showLoadingScreen();
+
     lD.manager.revertChange().then((res) => { // Success
+
+        lD.common.hideLoadingScreen();
 
         toastr.success(res.message);
 
@@ -570,6 +598,8 @@ lD.undoLastAction = function() {
             lD.reloadData(lD.layout);
         }
     }).catch((error) => { // Fail/error
+
+        lD.common.hideLoadingScreen();
 
         // Show error returned or custom message to the user
         let errorMessage = 'Revert failed: ';
@@ -633,13 +663,20 @@ lD.deleteObject = function(objectType, objectId) {
             callback: function(result) {
                 if(result) {
 
+                    lD.common.showLoadingScreen();
+
                     // Delete element from the layout
                     lD.layout.deleteElement(objectType, objectId).then((res) => { // Success
+
+                        lD.common.hideLoadingScreen();
 
                         // Behavior if successful 
                         toastr.success(res.message);
                         lD.reloadData(lD.layout);
                     }).catch((error) => { // Fail/error
+
+                        lD.common.hideLoadingScreen();
+
                         // Show error returned or custom message to the user
                         let errorMessage = 'Delete element failed: ' + error;
 
@@ -698,16 +735,23 @@ lD.dropItemAdd = function(droppable, draggable) {
 
             if(draggableSubType == 'region') { // Add region to layout
 
+                lD.common.showLoadingScreen(); 
+
                 lD.manager.saveAllChanges().then((res) => {
 
                     toastr.success('All changes saved!');
 
                     lD.layout.addElement('region').then((res) => { // Success
 
+                        lD.common.hideLoadingScreen(); 
+
                         // Behavior if successful 
                         toastr.success(res.message);
                         lD.reloadData(lD.layout);
                     }).catch((error) => { // Fail/error
+
+                        lD.common.hideLoadingScreen(); 
+
                         // Show error returned or custom message to the user
                         let errorMessage = 'Create region failed: ' + error;
 
@@ -720,6 +764,9 @@ lD.dropItemAdd = function(droppable, draggable) {
                         toastr.error(errorMessage);
                     });
                 }).catch((err) => {
+
+                    lD.common.hideLoadingScreen(); 
+
                     toastr.error('Save all changes failed!');
                 });
 
@@ -1072,7 +1119,6 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
 
     return element;
 };
-
 
 /**
  * Call layout status

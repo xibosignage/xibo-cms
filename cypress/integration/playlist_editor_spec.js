@@ -416,7 +416,7 @@ describe('Playlist Editor', function() {
             });
         });
 
-        it('should add a audio clip to a widget, and adds a link to open the form in the timeline', () => {
+        it('should add a audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
@@ -447,7 +447,7 @@ describe('Playlist Editor', function() {
             });
         });
 
-        it('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
+        it('attaches expiry dates to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
@@ -481,7 +481,7 @@ describe('Playlist Editor', function() {
             });
         });
 
-        it('adds a transition to a widget, and adds a link to open the form in the timeline', () => {
+        it('adds a transition to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
@@ -511,6 +511,26 @@ describe('Playlist Editor', function() {
                     cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
                 });
             });
+        });
+
+        it('check if the form to attach a transition to a widget by click to add appears', () => {
+            // Create and alias for reload playlist
+            cy.server();
+            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+
+            // Open toolbar Tools tab
+            cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+
+
+            // Activate the Add button
+            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .add-area').invoke('show').click();
+
+                // Click on the widget to add
+            cy.get('#timeline-container [data-type="widget"]:nth-child(2)').click();
+
+            // Check if the right form appears
+            cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
+
         });
     });
 });

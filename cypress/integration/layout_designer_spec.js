@@ -366,6 +366,22 @@ describe('Layout Designer', function() {
                     });
                 });
             });
+
+            it('shows the file upload form by using the Add button on a card with uploadable media from the toolbar to ' + target + ' region', () => {
+
+                // Open toolbar Widgets tab
+                cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
+
+                // Activate the Add button
+                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click();
+
+                // Click on the region to add
+                cy.get('#' + target + ' [data-type="region"]:first-child').click();
+
+                // Check if the form opened
+                cy.get('[data-test="uploadFormModal"]').contains('Upload media');
+            
+            });
         });
     });
 

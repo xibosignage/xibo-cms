@@ -335,15 +335,22 @@ Timeline.prototype.render = function(layout) {
         opacity: '.5',
         stop: function() {
 
+            lD.common.showLoadingScreen();
+
             // Get playlist
             const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
 
             lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
 
+                lD.common.hideLoadingScreen();
+
                 // Behavior if successful            
                 toastr.success(res.message);
                 lD.reloadData(lD.layout);
             }).catch((error) => { // Fail/error
+                
+                lD.common.hideLoadingScreen();
+
                 // Show error returned or custom message to the user
                 let errorMessage = 'Save order failed: ' + error;
 
