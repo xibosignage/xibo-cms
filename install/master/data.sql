@@ -240,7 +240,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string'),
 (102, 'SCHEDULE_SHOW_LAYOUT_NAME', '0', 'checkbox', 'If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.', null, 'permissions', 1, 'Show event Layout regardless of User permission?', '', 45, '', 1, 'checkbox'),
 (103, 'DEFAULT_USERGROUP', '1', 'text', 'The default User Group for new Users', '1', 'users', 1, 'Default User Group', '', 4, '', 1, 'int'),
-(104, 'PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reminder enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reminder', '', 50, 'Off', 1, 'string');
+(104, 'PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reminder enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reminder', '', 50, 'Off', 1, 'string'),
+(105, 'DISPLAY_AUTO_AUTH', '0', 'checkbox', 'If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.', null, 'displays', 1, 'Automatically authorise new Displays?', '', 25, '', 1, 'checkbox');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),

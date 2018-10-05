@@ -92,11 +92,16 @@ div.timelineMediaDetails h3 {
     float: left;
     padding-left: 20px;
     color: whiteSmoke;
+    max-width: 350px;
+    max-height: 60px;
+    overflow: hidden;
+    margin-top: 1px;
 }
 
 div.timelineMediaDetails .timelineMediaTags {
     float: right;
-    max-width: 250px;
+    max-width: 150px;
+    max-height: 60px;
     overflow: hidden;
 }
 

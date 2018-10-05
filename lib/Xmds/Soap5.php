@@ -190,11 +190,15 @@ class Soap5 extends Soap4
                 $display->auditingUntil = 0;
                 $display->defaultLayoutId = $this->getConfig()->GetSetting('DEFAULT_LAYOUT', 4);
                 $display->license = $hardwareKey;
-                $display->licensed = 0;
+                $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
                 $display->incSchedule = 0;
                 $display->clientAddress = $this->getIp();
                 $display->xmrChannel = $xmrChannel;
                 $display->xmrPubKey = $xmrPubKey;
+
+                if (!$display->isDisplaySlotAvailable()) {
+                    $display->licensed = 0;
+                }
             }
             catch (\InvalidArgumentException $e) {
                 throw new \SoapFault('Sender', $e->getMessage());
@@ -202,7 +206,10 @@ class Soap5 extends Soap4
 
             $displayElement->setAttribute('status', 1);
             $displayElement->setAttribute('code', 'ADDED');
-            $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
+            if ($display->licensed == 0)
+                $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
+            else
+                $displayElement->setAttribute('message', 'Display is active and ready to start.');
         }
 
 

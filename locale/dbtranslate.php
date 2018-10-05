@@ -205,6 +205,8 @@ echo __('The default User Group for new Users');
 echo __('Password Reminder');
 echo __('Is password reminder enabled?');
 echo __('On except Admin');
+echo __('Automatically authorise new Displays?');
+echo __('If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.');
 
 
 // Transitions

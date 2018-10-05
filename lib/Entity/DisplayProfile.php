@@ -192,51 +192,77 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Load
+     * @param array $options
      */
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'loadConfig' => true,
+            'loadCommands' => true,
+            'loadConfigWithDefault' => false
+        ], $options);
+
+        $combined = array();
+
         if ($this->loaded)
             return;
 
-        $this->config = json_decode($this->config, true);
-        $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
+        if ($options['loadConfig']) {
 
-        $this->configDefault = $this->loadFromFile();
+            $this->config = json_decode($this->config, true);
+            $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
-        if (array_key_exists($this->type, $this->configDefault)) {
-            $this->configTabs = $this->configDefault[$this->type]['tabs'];
-            $this->configDefault = $this->configDefault[$this->type]['settings'];
-        } else {
-            $this->getLog()->debug('Unknown type for Display Profile: ' . $this->type);
-            $this->configTabs = $this->configDefault['unknown']['tabs'];
-            $this->configDefault = $this->configDefault['unknown']['settings'];
-        }
+            $this->configDefault = $this->loadFromFile();
 
-        // We've loaded a profile
-        // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
-        // continue further.
-        $this->dispatcher->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
+            if (array_key_exists($this->type, $this->configDefault)) {
+                $this->configTabs = $this->configDefault[$this->type]['tabs'];
+                $this->configDefault = $this->configDefault[$this->type]['settings'];
+            } else {
+                $this->getLog()->debug('Unknown type for Display Profile: ' . $this->type);
+                $this->configTabs = $this->configDefault['unknown']['tabs'];
+                $this->configDefault = $this->configDefault['unknown']['settings'];
+            }
 
-        // Just populate the values with the defaults if the values aren't set already
-        for ($i = 0; $i < count($this->configDefault); $i++) {
-            $this->configDefault[$i]['value'] = isset($this->configDefault[$i]['value']) ? $this->configDefault[$i]['value'] : $this->configDefault[$i]['default'];
-        }
+            // We've loaded a profile
+            // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
+            // continue further.
+            $this->dispatcher->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
 
-        // Override the defaults
-        for ($i = 0; $i < count($this->configDefault); $i++) {
-            // Does this setting exist in our store?
-            for ($j = 0; $j < count($this->config); $j++) {
-                // If we have found our default config setting
-                if ($this->configDefault[$i]['name'] == $this->config[$j]['name']) {
-                    // Override the the default with our setting
-                    $this->configDefault[$i]['value'] = $this->config[$j]['value'];
-                    break;
+            // Just populate the values with the defaults if the values aren't set already
+            for ($i = 0; $i < count($this->configDefault); $i++) {
+                $this->configDefault[$i]['value'] = isset($this->configDefault[$i]['value']) ? $this->configDefault[$i]['value'] : $this->configDefault[$i]['default'];
+            }
+
+            for ($i = 0; $i < count($this->configDefault); $i++) {
+                $combined[] = array(
+                    'title' => $this->configDefault[$i]['title'],
+                    'name' => $this->configDefault[$i]['name'],
+                    'value' => $this->configDefault[$i]['value'],
+                    'type' => $this->configDefault[$i]['type']
+                );
+            }
+
+            // Override the defaults
+            for ($i = 0; $i < count($this->configDefault); $i++) {
+                // Does this setting exist in our store?
+                for ($j = 0; $j < count($this->config); $j++) {
+                    // If we have found our default config setting
+                    if ($this->configDefault[$i]['name'] == $this->config[$j]['name']) {
+                        // Override the the default with our setting
+                        $this->configDefault[$i]['value'] = $this->config[$j]['value'];
+                        break;
+                    }
                 }
             }
         }
 
+        if ($options['loadConfigWithDefault']) {
+            $this->configDefault = $combined;
+        }
+
         // Load any commands
-        $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId);
+        if ($options['loadCommands'])
+            $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId);
 
         // We are loaded
         $this->loaded = true;

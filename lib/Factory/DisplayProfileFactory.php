@@ -212,7 +212,11 @@ class DisplayProfileFactory extends BaseFactory
 
 
             foreach ($this->getStore()->select($sql, $params) as $row) {
-                $profiles[] = $this->createEmpty()->hydrate($row);
+                $profile = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDefault']]);
+
+                $profile->excludeProperty('configDefault');
+                $profile->excludeProperty('configTabs');
+                $profiles[] = $profile;
             }
 
             // Paging

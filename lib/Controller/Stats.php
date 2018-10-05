@@ -271,7 +271,8 @@ class Stats extends Base
               MAX(end) AS MaxEnd,
               layout.layoutId,
               stat.mediaId,
-              stat.widgetId
+              stat.widgetId,
+              stat.displayId
         ';
 
         $body = '
@@ -341,7 +342,7 @@ class Stats extends Base
             $params['displayId'] = $displayId;
         }
 
-        $body .= 'GROUP BY stat.type, display.Display, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
+        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         // Sorting?
         $filterBy = $this->gridRenderFilter();
@@ -369,6 +370,7 @@ class Stats extends Base
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
             $entry['type'] = $this->getSanitizer()->string($row['type']);
+            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
             $entry['display'] = $this->getSanitizer()->string($row['Display']);
             $entry['layout'] = $this->getSanitizer()->string($row['Layout']);
             $entry['media'] = $widgetName;
