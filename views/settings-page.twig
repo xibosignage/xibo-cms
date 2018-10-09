@@ -70,6 +70,15 @@
                                         { name: "data-text-property", value: "layout" }
                                     ] %}
                                     {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "layoutId", "layout", field.helpText, "pagedSelect", "", "", "", attributes) }}
+                                {% elseif field.fieldType == 'dropdown' and field.name == "DEFAULT_USERGROUP" %}
+                                    {% set attributes = [
+                                    { name: "data-width", value: "100%" },
+                                    { name: "data-search-url", value: urlFor("group.search") },
+                                    { name: "data-search-term", value: "group" },
+                                    { name: "data-id-property", value: "groupId" },
+                                    { name: "data-text-property", value: "group" }
+                                    ] %}
+                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "groupId", "group", field.helpText, "pagedSelect", "", "", "", attributes) }}
                                 {% elseif field.fieldType == "dropdown" %}
                                     {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
                                 {% elseif field.fieldType == "timezone" %}
@@ -161,6 +170,11 @@
                 });
             });
         });
+
+        function dbExportFormSubmit() {
+            $("#exportForm").submit();
+            XiboDialogClose();
+        }
     </script>
 {% endblock %}
 

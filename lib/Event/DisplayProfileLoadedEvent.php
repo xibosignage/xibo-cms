@@ -9,7 +9,6 @@
 namespace Xibo\Event;
 
 
-use Symfony\Component\EventDispatcher\Event;
 use Xibo\Entity\DisplayProfile;
 
 /**

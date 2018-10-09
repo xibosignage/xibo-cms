@@ -177,6 +177,11 @@ class WidgetFactory extends BaseFactory
         return $widget;
     }
 
+    /**
+     * @param null $sortOrder
+     * @param array $filterBy
+     * @return Widget[]
+     */
     public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
@@ -197,11 +202,28 @@ class WidgetFactory extends BaseFactory
               `widget`.fromDt,
               `widget`.toDt, 
               `widget`.createdDt, 
-              `widget`.modifiedDt
+              `widget`.modifiedDt,
+              `widget`.calculatedDuration,
+              `playlist`.name AS playlist
         ';
+
+        if (is_array($sortOrder) && (in_array('`widget`', $sortOrder) || in_array('`widget` DESC', $sortOrder))) {
+            // output a pseudo column for the widget name
+            $select .= '
+                , IFNULL((
+                    SELECT `value` AS name
+                      FROM `widgetoption`
+                     WHERE `widgetoption`.widgetId = `widget`.widgetId
+                        AND `widgetoption`.type = \'attrib\'
+                        AND `widgetoption`.option = \'name\'
+                ), `widget`.type) AS widget
+            ';
+        }
 
         $body = '
           FROM `widget`
+            INNER JOIN `playlist`
+            ON `playlist`.playlistId = `widget`.playlistId
         ';
 
         if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
@@ -219,13 +241,57 @@ class WidgetFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
         if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
-            $body .= ' AND playlistId = :playlistId';
+            $body .= ' AND `widget`.playlistId = :playlistId';
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
-            $body .= ' AND widgetId = :widgetId';
+            $body .= ' AND `widget`.widgetId = :widgetId';
             $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('type', $filterBy) !== null) {
+            $body .= ' AND `widget`.type = :type';
+            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('layout', $filterBy) !== null) {
+            $body .= ' AND widget.widgetId IN (
+                SELECT widgetId
+                  FROM `widget`
+                    INNER JOIN `lkregionplaylist`
+                    ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    INNER JOIN `layout`
+                    ON `layout`.layoutId = `region`.layoutId
+                 WHERE layout.layout LIKE :layout
+            )';
+            $params['layout'] = '%' . $this->getSanitizer()->getString('layout', $filterBy) . '%';
+        }
+
+        if ($this->getSanitizer()->getString('region', $filterBy) !== null) {
+            $body .= ' AND widget.widgetId IN (
+                SELECT widgetId
+                  FROM `widget`
+                    INNER JOIN `lkregionplaylist`
+                    ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `lkregionplaylist`.regionId
+                 WHERE region.name LIKE :region
+            )';
+            $params['region'] = '%' . $this->getSanitizer()->getString('region', $filterBy) . '%';
+        }
+
+        if ($this->getSanitizer()->getString('media', $filterBy) !== null) {
+            $body .= ' AND widget.widgetId IN (
+                SELECT widgetId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `media`
+                    ON `media`.mediaId = `lkwidgetmedia`.mediaId
+                 WHERE media.name LIKE :media
+            )';
+            $params['media'] = '%' . $this->getSanitizer()->getString('media', $filterBy) . '%';
         }
 
         // Sorting?

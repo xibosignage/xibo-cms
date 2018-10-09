@@ -32,6 +32,7 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -40,6 +41,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserOptionFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\Pbkdf2Hash;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -101,7 +103,7 @@ class User implements \JsonSerializable
      * @SWG\Property(description="A flag indicating whether this user has see the new user wizard")
      * @var int
      */
-    public $newUserWizard;
+    public $newUserWizard = 0;
 
     /**
      * @SWG\Property(description="A flag indicating whether the user is retired")
@@ -111,6 +113,12 @@ class User implements \JsonSerializable
 
     private $CSPRNG;
     private $password;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether password change should be forced for this user")
+     * @var int
+     */
+    public $isPasswordChangeRequired = 0;
 
     /**
      * @SWG\Property(description="The users user group ID")
@@ -299,6 +307,12 @@ class User implements \JsonSerializable
     /** @var  ApplicationScopeFactory */
     private $applicationScopeFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -352,15 +366,19 @@ class User implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param WidgetFactory $widgetFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->widgetFactory = $widgetFactory;
         return $this;
     }
 
@@ -719,6 +737,7 @@ class User implements \JsonSerializable
             // Save all Options
             foreach ($this->userOptions as $userOption) {
                 /* @var UserOption $userOption */
+                $userOption->userId = $this->userId;
                 $userOption->save();
             }
         }
@@ -773,6 +792,7 @@ class User implements \JsonSerializable
         // Delete any media
         foreach ($this->media as $media) {
             /* @var Media $media */
+            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
             $media->delete();
         }
 
@@ -787,14 +807,16 @@ class User implements \JsonSerializable
      */
     private function add()
     {
-        $sql = 'INSERT INTO `user` (UserName, UserPassword, usertypeid, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
-                     VALUES (:userName, :password, :userTypeId, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
+        $sql = 'INSERT INTO `user` (UserName, UserPassword, isPasswordChangeRequired, usertypeid, newUserWizard, email, homePageId, CSPRNG, firstName, lastName, phone, ref1, ref2, ref3, ref4, ref5)
+                     VALUES (:userName, :password, :isPasswordChangeRequired, :userTypeId, :newUserWizard, :email, :homePageId, :CSPRNG, :firstName, :lastName, :phone, :ref1, :ref2, :ref3, :ref4, :ref5)';
 
         // Get the ID of the record we just inserted
         $this->userId = $this->getStore()->insert($sql, [
             'userName' => $this->userName,
             'password' => $this->password,
+            'isPasswordChangeRequired' => $this->isPasswordChangeRequired,
             'userTypeId' => $this->userTypeId,
+            'newUserWizard' => $this->newUserWizard,
             'email' => $this->email,
             'homePageId' => $this->homePageId,
             'CSPRNG' => $this->CSPRNG,
@@ -832,6 +854,7 @@ class User implements \JsonSerializable
                   newUserWizard = :newUserWizard,
                   CSPRNG = :CSPRNG,
                   `UserPassword` = :password,
+                  `isPasswordChangeRequired` = :isPasswordChangeRequired,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -851,6 +874,7 @@ class User implements \JsonSerializable
             'newUserWizard' => $this->newUserWizard,
             'CSPRNG' => $this->CSPRNG,
             'password' => $this->password,
+            'isPasswordChangeRequired' => $this->isPasswordChangeRequired,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,
@@ -896,11 +920,20 @@ class User implements \JsonSerializable
 
     /**
      * Update the Last Accessed date
+     * @param bool $forcePasswordChange
      */
-    public function touch()
+    public function touch($forcePasswordChange = false)
     {
+        $sql = 'UPDATE `user` SET lastAccessed = :time ';
+
+        if ($forcePasswordChange && DBVERSION >= 143) {
+            $sql .= ' , isPasswordChangeRequired = 1 ';
+        }
+
+        $sql .= ' WHERE userId = :userId';
+
         // This needs to happen on a separate connection
-        $this->getStore()->update('UPDATE `user` SET lastAccessed = :time WHERE userId = :userId', [
+        $this->getStore()->update($sql, [
             'userId' => $this->userId,
             'time' => date("Y-m-d H:i:s")
         ]);

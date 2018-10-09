@@ -181,9 +181,11 @@ function XiboInitialise(scope) {
         success: function(element) {
             $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
         },
-        invalidHandler: function() {
+        invalidHandler: function(event, validator) {
             // Remove the spinner
             $(this).closest(".modal-dialog").find(".saving").remove();
+            // https://github.com/xibosignage/xibo/issues/1589
+            $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
         }
     });
 

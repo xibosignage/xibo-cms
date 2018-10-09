@@ -79,6 +79,11 @@ class UserTypeFactory extends BaseFactory
                 $sql .= ' AND `userTypeId` = 3 ';
             }
 
+            if ($this->getSanitizer()->getString('userType', $filterBy) !== null) {
+                $sql .= ' AND userType = :userType ';
+                $params['userType'] = $this->getSanitizer()->getString('userType', $filterBy);
+            }
+
             // Sorting?
             if (is_array($sortOrder))
                 $sql .= 'ORDER BY ' . implode(',', $sortOrder);

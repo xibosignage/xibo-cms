@@ -209,7 +209,8 @@ var text_callback = function(dialog, extraData) {
                     }
                 },
                 delay: 250
-            }
+            },
+            dropdownParent: $(dialog)
         }).on('select2:select', function (e) {
                 var linkedTo = $(this).data().linkedTo;
                 var value = e.params.data.imageUrl;
@@ -600,6 +601,10 @@ function permissionsFormOpen(dialog) {
     table.on('draw', function (e, settings) {
         dataTableDraw(e, settings);
 
+        // permissions should be an object not an array
+        if (grid.data().permissions.length <= 0)
+            grid.data().permissions = {};
+
         // Bind to the checkboxes change event
         var target = $("#" + e.target.id);
         target.find("input[type=checkbox]").change(function() {
@@ -608,9 +613,11 @@ function permissionsFormOpen(dialog) {
             var permission = $(this).data().permission;
             var value = $(this).is(":checked");
             //console.log("Setting permissions on groupId: " + groupId + ". Permission " + permission + ". Value: " + value);
-
+            if (grid.data().permissions[groupId] === undefined) {
+                grid.data().permissions[groupId] = {};
+            }
             grid.data().permissions[groupId][permission] = (value) ? 1 : 0;
-        })
+        });
     });
     table.on('processing.dt', dataTableProcessing);
 

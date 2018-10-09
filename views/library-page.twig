@@ -407,5 +407,13 @@
             usageTableLayouts.on('draw', dataTableDraw);
             usageTableLayouts.on('processing.dt', dataTableProcessing);
         }
+
+        function setDefaultMultiSelectFormOpen(dialog) {
+            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {% trans %} Force delete from any existing layouts, assignments, etc {% endtrans %} </input>');
+            $input.on('change', function() {
+                dialog.data().commitData = {forceDelete: $(this).val()};
+            });
+            $(dialog).find('.modal-body').append($input);
+        }
     </script>
 {% endblock %}

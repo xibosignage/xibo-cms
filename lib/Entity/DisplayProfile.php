@@ -954,7 +954,8 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'dropdown',
                         'options' => array(
                             array('id' => 0, 'value' => 'Hide'),
-                            array('id' => 1, 'value' => 'Timed')
+                            array('id' => 1, 'value' => 'Timed'),
+                            array('id' => 2, 'value' => 'Run Intent')
                         ),
                         'default' => 1,
                         'helpText' => __('How should the action bar behave?'),
@@ -970,6 +971,17 @@ class DisplayProfile implements \JsonSerializable
                         'default' => 30,
                         'helpText' => __('How long should the Action Bar be shown for, in seconds?'),
                         'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'actionBarIntent',
+                        'tabId' => 'advanced',
+                        'title' => __('Action Bar Intent'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('When set to Run Intent, which intent should be run. Format is: Action|ExtraKey,ExtraMsg'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),

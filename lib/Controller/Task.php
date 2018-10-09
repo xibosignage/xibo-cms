@@ -384,7 +384,7 @@ class Task extends Base
         $task->runNow = 0;
 
         // Save (on the XTR connection)
-        $task->save(['connection' => 'xtr', 'validate' => false]);
+        $task->save(['connection' => 'xtr', 'validate' => false, 'reconnect' => true]);
 
         $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . $this->getDate()->getLocalDate());
 

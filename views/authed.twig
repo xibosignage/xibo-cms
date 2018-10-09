@@ -1,10 +1,14 @@
 {% extends "base.twig" %}
 
 {% block content %}
-    <div id="page-wrapper" class="active">
+    {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
+    <div {% if hideNavigation == "0" %}id="page-wrapper"{% endif %} class="active">
+
+        {% if hideNavigation == "0" %}
         <div class="collapse navbar-collapse" id="navbar-collapse-1">
             {% include "authed-sidebar.twig" %}
         </div>
+        {% endif %}
 
         <div id="content-wrapper">
             <div class="page-content">

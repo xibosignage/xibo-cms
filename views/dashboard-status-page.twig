@@ -18,8 +18,8 @@
                         <i class="fa fa-desktop"></i>
                     </div>
                     <div class="widget-content pull-left">
-                        <div class="title">{{ displays|length }}</div>
-                        <div class="comment">{% if displays|length == 1 %}{% trans "Display" %}{% else %}{% trans "Displays" %}{% endif %}</div>
+                        <div class="title displays-count">0</div>
+                        <div class="comment displays-comment" data-title="{% trans "Display" %}" data-title-plural="{% trans "Displays" %}"></div>
                     </div>
                     <div class="clearfix"></div>
                 </div>
@@ -119,7 +119,7 @@
                 </div>
                 <div class="widget-body medium no-padding">
                     <div class="table-responsive">
-                        <table class="table">
+                        <table id="displays" class="table">
                             <thead>
                             <tr>
                                 <th>{% trans "Display" %}</th>
@@ -128,20 +128,7 @@
                             </tr>
                             </thead>
                             <tbody>
-                            {% for row in displays %}
-                                {% if row.mediaInventoryStatus == 1 %}
-                                    {% set class = "success" %}
-                                {% elseif row.mediaInventoryStatus == 2 %}
-                                    {% set class = "danger" %}
-                                {% else %}
-                                    {% set class = "warning" %}
-                                {% endif %}
-                                <tr class="{{ class }}">
-                                    <td>{{ row.display }}</td>
-                                    <td><span class="glyphicon {% if row.loggedIn == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
-                                    <td><span class="glyphicon {% if row.licensed == 1 %}glyphicon-ok{% else %}glyphicon-remove{% endif %}"></span></td>
-                                </tr>
-                            {% endfor %}
+
                             </tbody>
                         </table>
                     </div>
@@ -217,8 +204,98 @@
         });
 
         $(".article_date").each(function(index, element) {
-            // Replace the ISO date with a nice formatted date "for humans"
-            $(this).html(moment($(this).html(), systemDateFormat).fromNow());
+            if($(".article_date").length > 1){
+                // Replace the ISO date with a nice formatted date "for humans"
+                $(this).html(moment($(this).html(), systemDateFormat).fromNow());
+            }
+        });
+
+        var table = $("#displays").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data = {};
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=statusDashboardDisplays",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "statusDashboardDisplays",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            order: [[0, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("statusdashboard.displays") }}",
+                "data": function (dataToSend) {
+                    //make a new object so as not to destroy the input.
+                    var data = {};
+                    data.draw = dataToSend.draw;
+                    data.length = dataToSend.length;
+                    data.start = dataToSend.start;
+                    data.order = dataToSend.order;
+                    data.columns = [];
+
+                    $.each(dataToSend.columns, function (index, e) {
+                        var col = {};
+                        col.data = e.data;
+                        if (e.name != null && e.name !== "")
+                            col.name = e.name;
+                        data.columns.push(col);
+                    });
+
+                    $.extend(data, $("#displays").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+
+                    return data;
+                }
+            },
+            createdRow: function (row, data, index) {
+                if (data.mediaInventoryStatus === 1) {
+                    $(row).addClass('success');
+                } else if (data.mediaInventoryStatus === 1) {
+                    $(row).addClass('danger');
+                } else {
+                    $(row).addClass('warning');
+                }
+            },
+            lengthChange: false,
+            "columns": [
+                {"data": "display"},
+                {"data": "loggedIn", "render": dataTableTickCrossColumn},
+                {"data": "licensed", "render": dataTableTickCrossColumn}
+            ]
+        });
+
+        table.on('processing.dt', dataTableProcessing);
+        table.on('draw', function(e, settings) {
+            var $displaysComment = $(".displays-comment");
+            var total = table.page.info().recordsTotal;
+            $(".displays-count").html(total);
+            $displaysComment.html((total > 0) ? $displaysComment.data().titlePlural : $displaysComment.data().title)
         });
     </script>
 {% endblock %}

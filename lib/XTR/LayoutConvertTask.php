@@ -101,7 +101,7 @@ class LayoutConvertTask implements TaskInterface
                 }
 
                 // Save the layout
-                $layout->save(['notify' => false]);
+                $layout->save(['notify' => false, 'audit' => false]);
 
                 // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
                 foreach ($layout->regions as $region) {

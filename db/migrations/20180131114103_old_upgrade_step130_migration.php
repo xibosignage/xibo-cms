@@ -25,12 +25,9 @@ class OldUpgradeStep130Migration extends AbstractMigration
 
                 $this->execute('UPDATE `permissionentity` SET entity = \'Xibo\\Entity\\Notification\' WHERE entity = \'XiboEntityNotification\';');
 
-                if (!$this->fetchRow('SELECT *
-                    FROM INFORMATION_SCHEMA.STATISTICS
-                    WHERE table_schema=DATABASE()
-                          AND table_name = \'oauth_clients\'
-                    AND index_name LIKE \'%_fk\'
-                    AND column_name = \'userId\'')) {
+                if (!$this->fetchRow('
+                    SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
+                        AND `table_name` = \'oauth_clients%\' AND referenced_table_name = \'user\';')) {
 
                     $this->execute('UPDATE `oauth_clients` SET userId = (SELECT userId FROM `user` WHERE userTypeId = 1 LIMIT 1)
                        WHERE userId NOT IN (SELECT userId FROM `user`);');

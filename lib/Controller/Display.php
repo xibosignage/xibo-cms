@@ -1445,7 +1445,7 @@ class Display extends Base
      * Toggle Authorise on this Display
      * @param int $displayId
      *
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/display/authorise/{displayId}",
      *  operationId="displayToggleAuthorise",
      *  tags={"display"},
@@ -1477,7 +1477,7 @@ class Display extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Default Layout set for %s'), $display->display),
+            'message' => sprintf(__('Authorised set to %d for %s'), $display->licensed, $display->display),
             'id' => $display->displayId
         ]);
     }
@@ -1511,12 +1511,12 @@ class Display extends Base
      * Set the Default Layout for this Display
      * @param int $displayId
      *
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/display/defaultlayout/{displayId}",
      *  operationId="displayDefaultLayout",
      *  tags={"display"},
      *  summary="Set Default Layout",
-     *  description="Sent the default Layout on this Display",
+     *  description="Set the default Layout on this Display",
      *  @SWG\Parameter(
      *      name="displayId",
      *      in="path",
@@ -1559,7 +1559,7 @@ class Display extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Default Layout set for %s'), $display->display),
+            'message' => sprintf(__('Default Layout with name %s set for %s'), $layout->layout, $display->display),
             'id' => $display->displayId
         ]);
     }
