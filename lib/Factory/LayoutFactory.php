@@ -1053,6 +1053,46 @@ class LayoutFactory extends BaseFactory
             $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
+        // MediaID
+        if ($this->getSanitizer()->getInt('mediaId', 0, $filterBy) != 0) {
+            $body .= ' INNER JOIN (
+                SELECT DISTINCT `region`.layoutId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `playlist`.regionId
+                 WHERE `lkwidgetmedia`.mediaId = :mediaId
+                ) layoutsWithMedia
+                ON layoutsWithMedia.layoutId = `layout`.layoutId
+            ';
+
+            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
+        }
+
+        // Media Like
+        if ($this->getSanitizer()->getString('mediaLike', $filterBy) !== null) {
+            $body .= ' INNER JOIN (
+                SELECT DISTINCT `region`.layoutId
+                  FROM `lkwidgetmedia`
+                    INNER JOIN `widget`
+                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `playlist`
+                    ON `playlist`.playlistId = `widget`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `playlist`.regionId
+                    INNER JOIN `media` 
+                    ON `lkwidgetmedia`.mediaId = `media`.mediaId
+                 WHERE `media`.name LIKE :mediaLike
+                ) layoutsWithMediaLike
+                ON layoutsWithMediaLike.layoutId = `layout`.layoutId
+            ';
+
+            $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
+        }
+
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -1227,42 +1267,18 @@ class LayoutFactory extends BaseFactory
             }
         }
 
-        // MediaID
-        if ($this->getSanitizer()->getInt('mediaId', 0, $filterBy) != 0) {
+        // PlaylistID
+        if ($this->getSanitizer()->getInt('playlistId', 0, $filterBy) != 0) {
             $body .= ' AND layout.layoutId IN (
                 SELECT DISTINCT `region`.layoutId
-                  FROM `lkwidgetmedia`
-                    INNER JOIN `widget`
-                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
+                   FROM `playlist`
                     INNER JOIN `region`
                     ON `region`.regionId = `playlist`.regionId
-                 WHERE `lkwidgetmedia`.mediaId = :mediaId
+                 WHERE `playlist`.playlistId = :playlistId
                 )
             ';
 
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
-        }
-
-        // Media Like
-        if ($this->getSanitizer()->getString('mediaLike', $filterBy) !== null) {
-            $body .= ' AND layout.layoutId IN (
-                SELECT DISTINCT `region`.layoutId
-                  FROM `lkwidgetmedia`
-                    INNER JOIN `widget`
-                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
-                    INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
-                    INNER JOIN `media` 
-                    ON `lkwidgetmedia`.mediaId = `media`.mediaId
-                 WHERE `media`.name LIKE :mediaLike
-                )
-            ';
-
-            $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', 0, $filterBy);
         }
 
         // Sorting?

@@ -230,7 +230,7 @@ class TagFactory extends BaseFactory
             $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignMedia($displayGroupId);
+            $tag->assignDisplayGroup($displayGroupId);
 
             $tags[] = $tag;
         }

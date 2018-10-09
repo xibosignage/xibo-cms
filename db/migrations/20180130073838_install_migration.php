@@ -770,8 +770,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('id', 'string', ['limit' => 254])
             ->addColumn('description', 'string', ['limit' => 1000])
             ->insert([
-                ['id' => 'all', 'description' => 'All'],
-                ['id' => 'mcaas', 'description' => 'Media Conversion as a Service']
+                ['id' => 'all', 'description' => 'All']
             ])
             ->save();
 

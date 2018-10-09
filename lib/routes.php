@@ -305,6 +305,12 @@ $app->get('/dataset/data/:id', '\Xibo\Controller\DataSetData:grid')->name('dataS
 $app->post('/dataset/data/:id', '\Xibo\Controller\DataSetData:add')->name('dataSet.data.add');
 $app->put('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:edit')->name('dataSet.data.edit');
 $app->delete('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:delete')->name('dataSet.data.delete');
+// RSS
+$app->get('/dataset/:id/rss', '\Xibo\Controller\DataSetRss:grid')->name('dataSet.rss.search');
+$app->post('/dataset/:id/rss', '\Xibo\Controller\DataSetRss:add')->name('dataSet.rss.add');
+$app->put('/dataset/:id/rss/:rssId', '\Xibo\Controller\DataSetRss:edit')->name('dataSet.rss.edit');
+$app->delete('/dataset/:id/rss/:rssId', '\Xibo\Controller\DataSetRss:delete')->name('dataSet.rss.delete');
+$app->get('/rss/:psk', '\Xibo\Controller\DataSetRss:feed')->name('dataSet.rss.feed');
 
 /**
  * Statistics
@@ -339,6 +345,7 @@ $app->get('/user/me', '\Xibo\Controller\User:myDetails')->name('user.me');
 $app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
 $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
 $app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
+$app->put('/user/password/forceChange', '\Xibo\Controller\User:forceChangePassword')->name('user.force.change.password');
 $app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
 $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
 $app->post('/user/:id/usergroup/assign', '\Xibo\Controller\User:assignUserGroup')->name('user.assign.userGroup');

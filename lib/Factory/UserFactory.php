@@ -229,8 +229,9 @@ class UserFactory extends BaseFactory
                 `user`.ref5,
                 IFNULL(group.libraryQuota, 0) AS libraryQuota,
                 `group`.isSystemNotification,
-                `group`.isDisplayNotification
-        ';
+                `group`.isDisplayNotification, 
+                `user`.isPasswordChangeRequired
+            ';
 
         $body = '
               FROM `user`
@@ -353,7 +354,7 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota']]);
+            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota', 'isPasswordChangeRequired']]);
         }
 
         // Paging

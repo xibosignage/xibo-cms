@@ -389,7 +389,8 @@ class Calendar extends ModuleWidget
 
         // Get a date format
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
-
+        $iCal->defaultTimeZone = $iCal->calendarTimeZone();
+        
         // Decide on the Range we're interested in
         // $iCal->eventsFromInterval only works for future events
         $excludeAllDay = $this->getOption('excludeAllDay', 0) == 1;
@@ -462,11 +463,11 @@ class Calendar extends ModuleWidget
                     break;
 
                 case '[StartDate]':
-                    $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtstart), $dateFormat);
+                    $replace = $iCal->iCalDateToDateTime($event->dtstart, true)->format($dateFormat);
                     break;
 
                 case '[EndDate]':
-                    $replace = $this->getDate()->getLocalDate($iCal->iCalDateToUnixTimestamp($event->dtend), $dateFormat);
+                    $replace = $iCal->iCalDateToDateTime($event->dtend, true)->format($dateFormat);
                     break;
             }
 

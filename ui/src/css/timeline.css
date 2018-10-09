@@ -93,6 +93,13 @@ div.timelineMediaDetails h3 {
     padding-left: 20px;
     color: whiteSmoke;
 }
+
+div.timelineMediaDetails .timelineMediaTags {
+    float: right;
+    max-width: 250px;
+    overflow: hidden;
+}
+
 div.timelineMediaItemColouringDefault {
     background-color: green;
 }

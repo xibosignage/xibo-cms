@@ -811,7 +811,7 @@ class DataSetView extends ModuleWidget
                             : '<img src="' . $file->storedAs . '" />';
                     }
 
-                    $table .= '<td class="DataSetColumn" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
+                    $table .= '<td class="DataSetColumn DataSetColumn_' . $i . '" id="column_' . ($i + 1) . '"><span class="DataSetCellSpan DataSetCellSpan_' . $rowCount . '_' . $i .'" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></td>';
                 }
 
                 // Process queued downloads
@@ -836,7 +836,7 @@ class DataSetView extends ModuleWidget
             return $table;
         }
         catch (NotFoundException $e) {
-            $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             return '';
         }
@@ -855,7 +855,7 @@ class DataSetView extends ModuleWidget
     /** @inheritdoc */
     public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        $widgetModifiedDt = $this->widget->modifiedDt;
 
         $dataSetId = $this->getOption('dataSetId');
         $dataSet = $this->dataSetFactory->getById($dataSetId);
@@ -872,7 +872,7 @@ class DataSetView extends ModuleWidget
             $this->getPool()->saveDeferred($dataSetCache);
         }
 
-        return $widgetModifiedDt;
+        return $this->getDate()->parse($widgetModifiedDt, 'U');
     }
 
     /** @inheritdoc */

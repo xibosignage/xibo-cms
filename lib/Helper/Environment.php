@@ -108,15 +108,6 @@ class Environment
     }
 
     /**
-     * Check PHP has the Mcrypt functionality installed
-     * @return bool
-     */
-    public static function checkMcrypt()
-    {
-        return extension_loaded("mcrypt");
-    }
-
-    /**
      * Check PHP has the DOM functionality installed
      * @return bool
      */

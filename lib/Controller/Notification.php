@@ -127,6 +127,13 @@ class Notification extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as userGroups,displayGroups",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -143,14 +150,21 @@ class Notification extends Base
             'notificationId' => $this->getSanitizer()->getInt('notificationId'),
             'subject' => $this->getSanitizer()->getString('subject')
         ];
-
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
         $notifications = $this->notificationFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($notifications as $notification) {
             /* @var \Xibo\Entity\Notification $notification */
 
+            if (in_array('userGroups', $embed) || in_array('displayGroups', $embed)) {
+                $notification->load([
+                    'loadUserGroups' => in_array('userGroups', $embed),
+                    'loadDisplayGroups' => in_array('displayGroups', $embed),
+                ]);
+            }
+
             if ($this->isApi())
-                return;
+                continue;
 
             $notification->includeProperty('buttons');
 
@@ -480,6 +494,7 @@ class Notification extends Base
     public function edit($notificationId)
     {
         $notification = $this->notificationFactory->getById($notificationId);
+        $notification->load();
 
         // Check Permissions
         if (!$this->getUser()->checkEditable($notification))

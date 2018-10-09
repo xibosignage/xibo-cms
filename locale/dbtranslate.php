@@ -200,6 +200,12 @@ echo __('Network');
 echo __('Regional');
 echo __('Show event Layout regardless of User permission?');
 echo __('If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.');
+echo __('Default User Group');
+echo __('The default User Group for new Users');
+echo __('Password Reminder');
+echo __('Is password reminder enabled?');
+echo __('On except Admin');
+
 
 // Transitions
 echo __('Fade In');

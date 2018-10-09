@@ -154,6 +154,12 @@ class Widget implements \JsonSerializable
     public $module;
 
     /**
+     * @SWG\Property(description="The name of the Playlist this Widget is on")
+     * @var string $playlist
+     */
+    public $playlist;
+
+    /**
      * Hash Key of Media Assignments
      * @var string
      */

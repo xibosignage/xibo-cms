@@ -34,6 +34,7 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
@@ -43,6 +44,7 @@ use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -111,6 +113,12 @@ class User extends Base
     /** @var SessionFactory */
     private $sessionFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    /** @var WidgetFactory */
+    private $widgetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -132,10 +140,12 @@ class User extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
      * @param SessionFactory $sessionFactory
+     * @param DisplayGroupFactory $displayGroupFactory
+     * @param WidgetFactory $widgetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -151,6 +161,8 @@ class User extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->displayFactory = $displayFactory;
         $this->sessionFactory = $sessionFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+        $this->widgetFactory = $widgetFactory;
     }
 
     /**
@@ -424,6 +436,27 @@ class User extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="newUserWizard",
+     *      in="formData",
+     *      description="Flag indicating whether to show the new user guide",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="hideNavigation",
+     *      in="formData",
+     *      description="Flag indicating whether to hide the navigation",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isPasswordChangeRequired",
+     *      in="formData",
+     *      description="A flag indicating whether password change should be forced for this user",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -471,6 +504,11 @@ class User extends Base
         $user->ref4 = $this->getSanitizer()->getString('ref4');
         $user->ref5 = $this->getSanitizer()->getString('ref5');
 
+        // Options
+        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
+        $user->isPasswordChangeRequired = $this->getSanitizer()->getCheckbox('isPasswordChangeRequired');
+
         // Initial user group
         $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
 
@@ -499,8 +537,167 @@ class User extends Base
     }
 
     /**
-     * Edits a user
-     * @param int $userId
+     * Edit a user
+     *
+     * @SWG\Put(
+     *  path="/user/{userId}",
+     *  operationId="userEdit",
+     *  tags={"user"},
+     *  summary="Edit User",
+     *  description="Edit existing User",
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="path",
+     *      description="The user ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userName",
+     *      in="formData",
+     *      description="The User Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="email",
+     *      in="formData",
+     *      description="The user email address",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userTypeId",
+     *      in="formData",
+     *      description="The user type ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="homePageId",
+     *      in="formData",
+     *      description="The homepage to use for this User",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="libraryQuota",
+     *      in="formData",
+     *      description="The users library quota in kilobytes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="newPassword",
+     *      in="formData",
+     *      description="New User password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retypeNewPassword",
+     *      in="formData",
+     *      description="Repeat the new User password",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="retired",
+     *      in="formData",
+     *      description="Flag indicating whether to retire this user",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="firstName",
+     *      in="formData",
+     *      description="The users first name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="lastName",
+     *      in="formData",
+     *      description="The users last name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="phone",
+     *      in="formData",
+     *      description="The users phone number",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref1",
+     *      in="formData",
+     *      description="Reference 1",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref2",
+     *      in="formData",
+     *      description="Reference 2",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref3",
+     *      in="formData",
+     *      description="Reference 3",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref4",
+     *      in="formData",
+     *      description="Reference 4",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ref5",
+     *      in="formData",
+     *      description="Reference 5",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="newUserWizard",
+     *      in="formData",
+     *      description="Flag indicating whether to show the new user guide",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="hideNavigation",
+     *      in="formData",
+     *      description="Flag indicating whether to hide the navigation",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isPasswordChangeRequired",
+     *      in="formData",
+     *      description="A flag indicating whether password change should be forced for this user",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/User"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     * @param $userId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function edit($userId)
     {
@@ -533,6 +730,11 @@ class User extends Base
         $user->ref4 = $this->getSanitizer()->getString('ref4');
         $user->ref5 = $this->getSanitizer()->getString('ref5');
 
+        // Options
+        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
+        $user->isPasswordChangeRequired = $this->getSanitizer()->getCheckbox('isPasswordChangeRequired');
+
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
             throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
@@ -564,8 +766,45 @@ class User extends Base
     }
 
     /**
-     * Delete User
-     * @param int $userId
+     * Deletes a User
+     *
+     * @SWG\Delete(
+     *  path="/user/{userId}",
+     *  operationId="userDelete",
+     *  tags={"user"},
+     *  summary="User Delete",
+     *  description="Delete user",
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="path",
+     *      description="Id of the user to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="deleteAllItems",
+     *      in="formData",
+     *      description="Flag indicating whether to delete all items owned by that user",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="reassignUserId",
+     *      in="formData",
+     *      description="Reassign all items owned by this user to the specified user ID",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/User")
+     *      )
+     *  )
+     * )
+     * @param $userId
      * @throws \Xibo\Exception\NotFoundException
      */
     public function delete($userId)
@@ -576,7 +815,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
@@ -614,12 +853,19 @@ class User extends Base
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
             throw new AccessDeniedException(__('Only super and group admins can create users'));
 
+        $defaultUserTypeId = 3;
+        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->GetSetting('defaultUsertype')] ) as $defaultUserType) {
+            $defaultUserTypeId = $defaultUserType->userTypeId;
+        }
+
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
+                'defaultGroupId' => $this->getConfig()->GetSetting('DEFAULT_USERGROUP'),
+                'defaultUserType' => $defaultUserTypeId
             ],
             'help' => [
                 'add' => $this->getHelp()->link('User', 'Add')
@@ -635,6 +881,7 @@ class User extends Base
     public function editForm($userId)
     {
         $user = $this->userFactory->getById($userId);
+        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
         if (!$this->getUser()->checkEditable($user))
             throw new AccessDeniedException();
@@ -689,6 +936,7 @@ class User extends Base
 
     /**
      * Change my Password
+     * @throws InvalidArgumentException
      */
     public function changePassword()
     {
@@ -698,13 +946,67 @@ class User extends Base
         $newPassword = $this->getSanitizer()->getString('newPassword');
         $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
 
+        if ($newPassword == null || $retypeNewPassword == '')
+            throw new InvalidArgumentException(__('Please enter the password'), 'password');
+
         if ($newPassword != $retypeNewPassword)
-            throw new \InvalidArgumentException(__('Passwords do not match'));
+            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
 
         $user->setNewPassword($newPassword, $oldPassword);
         $user->save([
             'passwordUpdate' => true
         ]);
+
+        $user->isPasswordChangeRequired = 0;
+        $user->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => __('Password Changed'),
+            'id' => $user->userId,
+            'data' => $user
+        ]);
+    }
+
+    /**
+     * Force User Password Change
+     */
+    public function forceChangePasswordPage()
+    {
+        $user = $this->getUser();
+
+        // if the flag to force change password is not set to 1 then redirect to the Homepage
+        if ($user->isPasswordChangeRequired != 1) {
+            $this->getApp()->redirectTo('home');
+        }
+
+        $this->getState()->template = 'user-force-change-password-page';
+    }
+
+    /**
+     * Force change my Password
+     * @throws InvalidArgumentException
+     */
+    public function forceChangePassword()
+    {
+        // Save the user
+        $user = $this->getUser();
+        $newPassword = $this->getSanitizer()->getString('newPassword');
+        $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
+
+        if ($newPassword == null || $retypeNewPassword == '')
+            throw new InvalidArgumentException(__('Please enter the password'), 'password');
+
+        if ($newPassword != $retypeNewPassword)
+            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
+
+        $user->setNewPassword($newPassword);
+        $user->save([
+            'passwordUpdate' => true
+        ]);
+
+        $user->isPasswordChangeRequired = 0;
+        $user->save();
 
         // Return
         $this->getState()->hydrate([
@@ -787,7 +1089,7 @@ class User extends Base
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId, ['groupId'], ['setOnly' => 1]) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,

@@ -176,7 +176,7 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/clock', '/about', '/login/ping');
+        $app->publicRoutes = array('/login', '/login/forgotten', '/clock', '/about', '/login/ping', '/rss/:psk');
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
@@ -465,6 +465,23 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\DataSetRss', function($container) {
+            return new \Xibo\Controller\DataSetRss(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->dataSetRssFactory,
+                $container->dataSetFactory,
+                $container->dataSetColumnFactory,
+                $container->pool,
+                $container->store
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\DayPart', function($container) {
             return new \Xibo\Controller\DayPart(
                 $container->logService,
@@ -634,6 +651,7 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->pool,
+                $container->dispatcher,
                 $container->userFactory,
                 $container->moduleFactory,
                 $container->tagFactory,
@@ -678,7 +696,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->session,
-                $container->userFactory
+                $container->userFactory,
+                $container->pool
             );
         });
 
@@ -712,7 +731,10 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->moduleFactory,
-                $container->layoutFactory
+                $container->layoutFactory,
+                $container->regionFactory,
+                $container->playlistFactory,
+                $container->widgetFactory
             );
         });
 
@@ -873,7 +895,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->settingsFactory,
-                $container->layoutFactory
+                $container->layoutFactory,
+                $container->userGroupFactory
             );
         });
 
@@ -982,7 +1005,9 @@ class State extends Middleware
                 $container->mediaFactory,
                 $container->scheduleFactory,
                 $container->displayFactory,
-                $container->sessionFactory
+                $container->sessionFactory,
+                $container->displayGroupFactory,
+                $container->widgetFactory
             );
         });
 
@@ -1107,6 +1132,16 @@ class State extends Middleware
                 $container->permissionFactory,
                 $container->displayFactory,
                 $container->dateService
+            );
+        });
+
+        $container->singleton('dataSetRssFactory', function($container) {
+            return new \Xibo\Factory\DataSetRssFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory
             );
         });
 

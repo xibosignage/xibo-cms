@@ -90,13 +90,13 @@ class DataSetColumn implements \JsonSerializable
      * @SWG\Property(description="Does this column show a filter on the data entry page?")
      * @var string
      */
-    public $showFilter;
+    public $showFilter = 0;
 
     /**
      * @SWG\Property(description="Does this column allow a sorting on the data entry page?")
      * @var string
      */
-    public $showSort;
+    public $showSort = 0;
 
     /**
      * @SWG\Property(description="The column type for this Column")

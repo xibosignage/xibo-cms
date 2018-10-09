@@ -706,7 +706,7 @@ class Ticker extends ModuleWidget
             if ($noDataMessage != '') {
                 $items[] = $noDataMessage;
             } else {
-                $this->getLog()->error('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
+                $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
                 return '';
             }
         }
@@ -1364,7 +1364,7 @@ class Ticker extends ModuleWidget
     /** @inheritdoc */
     public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        $widgetModifiedDt = $this->widget->modifiedDt;
         if ($this->getOption('sourceId', 1) == 2) {
 
             $dataSetId = $this->getOption('dataSetId');
@@ -1383,7 +1383,7 @@ class Ticker extends ModuleWidget
             }
         }
 
-        return $widgetModifiedDt;
+        return $this->getDate()->parse($widgetModifiedDt, 'U');
     }
 
     /** @inheritdoc */

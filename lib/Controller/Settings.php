@@ -24,6 +24,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\SettingsFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -43,6 +44,9 @@ class Settings extends Base
     /** @var  LayoutFactory */
     private $layoutFactory;
 
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -54,13 +58,15 @@ class Settings extends Base
      * @param ConfigServiceInterface $config
      * @param SettingsFactory $settingsFactory
      * @param LayoutFactory $layoutFactory
+     * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $settingsFactory, $layoutFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $settingsFactory, $layoutFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->settingsFactory = $settingsFactory;
         $this->layoutFactory = $layoutFactory;
+        $this->userGroupFactory = $userGroupFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -141,6 +147,21 @@ class Settings extends Base
                 try {
                     /** @var \Xibo\Entity\Layout $layout */
                     $options[] = $this->layoutFactory->getById($setting['value']);
+                } catch (NotFoundException $notFoundException) {
+                    $options = [];
+                }
+
+            } else if ($setting['setting'] == 'DEFAULT_USERGROUP') {
+
+                // Show a list of all user groups in the system
+                // convert to a dropdown
+                $setting['fieldType'] = 'dropdown';
+
+                try {
+                    /** @var \Xibo\Entity\UserGroup $userGroup */
+                    foreach ($this->userGroupFactory->query(null, ['disableUserCheck' => 1, 'isUserSpecific' => 0]) as $group) {
+                        $options[] = ['groupId' => $group->groupId, 'group' => $group->group];
+                    }
                 } catch (NotFoundException $notFoundException) {
                     $options = [];
                 }

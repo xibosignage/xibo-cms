@@ -367,7 +367,8 @@ class Region implements \JsonSerializable
         $options = array_merge([
             'saveRegionOptions' => true,
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'notify' => true
         ], $options);
 
         $this->getLog()->debug('Saving ' . $this . '. Options = ' . json_encode($options, JSON_PRETTY_PRINT));

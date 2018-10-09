@@ -476,4 +476,14 @@ class Session implements \SessionHandlerInterface
         }
         return $clientIp;
     }
+
+    /**
+     * @param $userId
+     */
+    public function expireAllSessionsForUser($userId)
+    {
+        $this->getDb()->update('UPDATE `session` SET IsExpired = 1 WHERE userID  = :userId', [
+            'userId' => $userId
+        ]);
+    }
 }
