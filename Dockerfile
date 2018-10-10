@@ -4,10 +4,10 @@
 FROM alpine:3.6 as sendfile
 ADD docker/mod_xsendfile.c /mod_xsendfile.c
 RUN apk update && apk upgrade && apk add \
-        gcc \
-        musl-dev \
-        apache2-dev \
-        apache2
+    gcc \
+    musl-dev \
+    apache2-dev \
+    apache2
 
 RUN cd / && \
     apxs -cia mod_xsendfile.c
@@ -24,16 +24,16 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader
 # remove non-required vendor files
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \
-  find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
-  find -type d -name 'tests' -exec rm -r {} + && \
-  find -type d -name 'benchmarks' -exec rm -r {} + && \
-  find -type d -name 'smoketests' -exec rm -r {} + && \
-  find -type d -name 'demo' -exec rm -r {} + && \
-  find -type d -name 'doc' -exec rm -r {} + && \
-  find -type d -name 'docs' -exec rm -r {} + && \
-  find -type d -name 'examples' -exec rm -r {} + && \
-  find -type f -name 'phpunit.xml' -exec rm -r {} + && \
-  find -type f -name '*.md' -exec rm -r {} +
+    find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
+    find -type d -name 'tests' -exec rm -r {} + && \
+    find -type d -name 'benchmarks' -exec rm -r {} + && \
+    find -type d -name 'smoketests' -exec rm -r {} + && \
+    find -type d -name 'demo' -exec rm -r {} + && \
+    find -type d -name 'doc' -exec rm -r {} + && \
+    find -type d -name 'docs' -exec rm -r {} + && \
+    find -type d -name 'examples' -exec rm -r {} + && \
+    find -type f -name 'phpunit.xml' -exec rm -r {} + && \
+    find -type f -name '*.md' -exec rm -r {} +
 
 
 # Stage 2
@@ -146,13 +146,15 @@ COPY --from=composer /app /var/www/cms
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
-# All other files (.dockerignore excludes things we don't want)
+# All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY . /var/www/cms
 
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
     rm -r /var/www/cms/docker && \
+    rm -r /var/www/cms/tests && \
     rm /var/www/cms/.dockerignore && \
+    rm /var/www/cms/phpunit.xml && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
     rm /var/www/cms/cypress.json && \
@@ -168,7 +170,7 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /var/www/cms/web/userscripts && \
     chown -R apache:apache /var/www/cms && \
     chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
-             /etc/periodic/15min/cms-db-backup && \
+    /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
