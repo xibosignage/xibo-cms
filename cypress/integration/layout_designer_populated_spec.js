@@ -1,4 +1,4 @@
-describe('Layout Designer (Populated)', function() {
+describe.skip('Layout Designer (Populated)', function() {
 
     /**
      * Drag one element to another one

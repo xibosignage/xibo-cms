@@ -417,28 +417,4 @@ describe('Layout Designer (Empty)', function() {
             });
         });
     });
-
-    it('publishes the layout and it goes to a published state', () => {
-
-        cy.server();
-        cy.route('PUT', '/layout/publish/*').as('layoutPublish');
-
-        // Import existing
-        cy.importLayout('../assets/export_test_layout.zip').then((layoutId) => {
-
-            cy.checkoutLayout(layoutId);
-
-            goToLayoutAndLoadPrefs(layoutId);
-
-            cy.get('#layout-editor-toolbar button#publishLayout').click();
-
-            cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
-
-            // Get the id from the published layout and check if its on the layouts table as published
-            cy.wait('@layoutPublish').then((res) => {
-                cy.get('table#layouts tbody [role="row"]:first-child').contains(res.response.body.data.layoutId);
-                cy.get('table#layouts tbody [role="row"]:first-child').contains('Published');
-            });
-        });
-    });
 });
