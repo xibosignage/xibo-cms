@@ -51,8 +51,7 @@ Cypress.Commands.add('getAccessToken', function() {
             'grant_type': 'client_credentials'
         }
     }).then((res) => {
-        const parsedJSON = JSON.parse(res.body);
-        Cypress.env('accessToken', parsedJSON.access_token);
+        Cypress.env('accessToken', res.body.access_token);
     });
 });
 
@@ -139,6 +138,38 @@ Cypress.Commands.add('checkoutLayout', function(id) {
         headers: {
             Authorization: 'Bearer ' + Cypress.env('accessToken')
         }
+    });
+});
+
+Cypress.Commands.add('addMediaToLibrary', function(fileName) {
+
+    //Declarations
+    const method = 'POST';
+    const url = '/api/library';
+    const fileType = '*/*';
+
+    // Get file from fixtures as binary
+    cy.fixture(fileName, 'binary').then((zipBin) => {
+
+        // File in binary format gets converted to blob so it can be sent as Form data
+        Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
+
+            // Build up the form
+            const formData = new FormData();
+
+            formData.set('files[]', blob, fileName); //adding a file to the form
+            
+            // Perform the request
+            cy.formRequest(method, url, formData).then((res) => {
+
+                const parsedJSON = JSON.parse(res);
+
+                expect(typeof parsedJSON.files[0].name).to.eq('string');
+
+                // Return id
+                return parsedJSON.files[0].name;
+            });
+        });
     });
 });
 

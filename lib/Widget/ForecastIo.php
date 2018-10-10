@@ -27,7 +27,6 @@ use Illuminate\Support\Str;
 use Xibo\Exception\InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;

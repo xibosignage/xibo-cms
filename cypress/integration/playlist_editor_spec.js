@@ -4,10 +4,11 @@ describe('Playlist Editor', function() {
      * Open playlist editor modal and wait for toolbar user prefs to load
      * @param {String} playlistName
      */
-    function openPlaylistEditorAndLoadPrefs(playlistName) {
+    function openPlaylistEditorAndLoadPrefs(playlistName, playlistId) {
 
         cy.server();
         cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+        cy.route('/playlist?draw=*').as('playlistGridSearch');
 
         // Reload playlist table page
         cy.visit('/playlist/view');
@@ -18,15 +19,21 @@ describe('Playlist Editor', function() {
         // Filter for the created playlist
         cy.get('#Filter input[name="name"]').type(playlistName);
 
-        // Open playlist editor modal by getting only one element from the filter
-        cy.get('table#playlists tbody tr').should('be.visible').should('have.length', 1).then(($el) => {
-            $el.find('.dropdown-toggle').click();
+        cy.wait('@playlistGridSearch');
 
-            $el.find('.playlist_timeline_button_edit').click();
+        cy.get('[href="/playlist/form/timeline/' + playlistId + '"]').click({force: true});
 
-            // Wait for user prefs to load
-            cy.wait('@userPrefsLoad');
-        });
+        // Wait for user prefs to load
+        cy.wait('@userPrefsLoad');
+
+    }
+
+    /**
+     * Add media items to library
+     */
+    function populateLibraryWithMedia() {
+        // Add audio media to library
+        cy.addMediaToLibrary('../assets/audioSample.mp3');
     }
 
     /**
@@ -69,7 +76,7 @@ describe('Playlist Editor', function() {
 
             // Create a new layout and go to the layout's designer page
             cy.createNonDynamicPlaylist(uuid).as('testPlaylistId').then((res) => {
-                openPlaylistEditorAndLoadPrefs(uuid);
+                openPlaylistEditorAndLoadPrefs(uuid, res);
             });
         });
 
@@ -121,6 +128,8 @@ describe('Playlist Editor', function() {
         });
 
         it('creates a new widget by dragging a searched media from the toolbar to the editor', () => {
+
+            populateLibraryWithMedia();
 
             // Create and alias for reload playlist
             cy.server();
@@ -217,7 +226,7 @@ describe('Playlist Editor', function() {
                     name: 'Clock Widget'
                 });
 
-                openPlaylistEditorAndLoadPrefs(uuid);
+                openPlaylistEditorAndLoadPrefs(uuid, res);
             });
         });
 
@@ -417,6 +426,9 @@ describe('Playlist Editor', function() {
         });
 
         it('should add a audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
+            
+            populateLibraryWithMedia();
+
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
@@ -461,7 +473,6 @@ describe('Playlist Editor', function() {
                 '#timeline-container [data-type="widget"]:first-child'
             ).then(() => {
 
-
                 // Add dates
                 cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').type('2018-01-01');
                 cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').type('00:00');
@@ -472,7 +483,7 @@ describe('Playlist Editor', function() {
                 // Save and close the form
                 cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
 
-                // Check if the widget has the audio icon
+                // Check if the widget has the expiry dates icon
                 cy.wait('@reloadPlaylist');
                 cy.get('#timeline-container [data-type="widget"]:first-child')
                     .find('i[data-property="Expiry"]').click();
@@ -489,7 +500,7 @@ describe('Playlist Editor', function() {
             // Open toolbar Tools tab
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
-            // Open the audio form
+            // Open the transition form
             dragToElement(
                 '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .drag-area',
                 '#timeline-container [data-type="widget"]:nth-child(2)'
@@ -503,7 +514,7 @@ describe('Playlist Editor', function() {
                 // Save and close the form
                 cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
 
-                // Check if the widget has the audio icon
+                // Check if the widget has the transition icon
                 cy.wait('@reloadPlaylist').then(() => {
                     cy.get('#timeline-container [data-type="widget"]:nth-child(2)')
                         .find('i[data-property="Transition"]').click();

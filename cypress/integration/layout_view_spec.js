@@ -1,4 +1,4 @@
-describe('Layout Designer', function() {
+describe('Layout View', function() {
 
     beforeEach(function() {
         cy.login();
@@ -26,23 +26,30 @@ describe('Layout Designer', function() {
 
     it('search and delete existing layout', function() {
         
+        cy.server();
+        cy.route('/layout?draw=*').as('layoutGridLoad');
+        cy.route('DELETE', '/layout/*').as('deleteLayout');
+
         // Filter for the created layout
-        cy.get('#Filter #layout')
+        cy.get('#Filter input[name="layout"]')
             .type(this.layout_view_test_layout);
 
+        // Wait for the filter to make effect
+        cy.wait(2000);
+        cy.wait('@layoutGridLoad');
+
         // Click on the first row element to open the designer
-        if(cy.get('#layouts tr:first-child .dropdown-toggle')) {
-            cy.get('#layouts tr:first-child .dropdown-toggle').click();
+        cy.get('#layouts tr:first-child .dropdown-toggle').click();
 
-            cy.get('#layouts tr:first-child .layout_button_delete').click();
+        cy.get('#layouts tr:first-child .layout_button_delete').click();
 
-            // Delete test layout
-            cy.get('.bootbox .save-button').click();
-        }
+        // Delete test layout
+        cy.get('.bootbox .save-button').click();
 
-        // Check if layout is deleted
-        cy.visit('/layout/view');
+        // Wait for the widget to save
+        cy.wait('@deleteLayout');
 
-        cy.get('table#layouts').contains('No data available in table');
+        // Check if layout is deleted in toast message
+        cy.get('.toast').contains('Deleted ' + this.layout_view_test_layout);
     });
 });
