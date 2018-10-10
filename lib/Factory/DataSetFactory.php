@@ -632,7 +632,7 @@ class DataSetFactory extends BaseFactory
                             break;
                         case 3:
                             // This expects an ISO date
-                            $result[$column->heading] = $this->getSanitizer()->getDate($value[1]);
+                            $result[$column->heading] = $this->getSanitizer()->getDate($value[0], null, $entry);
                             break;
                         case 5:
                             $result[$column->heading] = $this->getSanitizer()->int($value[1]);
