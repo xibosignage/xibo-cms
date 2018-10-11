@@ -223,11 +223,8 @@ describe('Layout Designer (Empty)', function() {
             // Click on add region button
             cy.get('#layout-navigator-edit #add-btn').click();
 
-            // Wait for the loading overlay to close
-            cy.get('.loading-overlay.loading').should('not.be.visible');
-
             // Close the navigator edit
-            cy.get('#layout-navigator-edit #close-btn').click();
+            cy.get('#layout-navigator-edit #close-btn').click({force: true});
 
             // Check if there are 2 regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
@@ -269,11 +266,8 @@ describe('Layout Designer (Empty)', function() {
             // Confirm modal
             cy.get('[data-test="deleteRegionModal"]').should('be.visible').find('button[data-bb-handler="confirm"]').click();
 
-            // Wait for the loading overlay to close
-            cy.get('.loading-overlay.loading').should('not.be.visible');
-
             // Close the navigator edit
-            cy.get('#layout-navigator-edit #close-btn').click();
+            cy.get('#layout-navigator-edit #close-btn').click({force: true});
 
             // Check if there are no regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('not.be.visible');
@@ -291,11 +285,8 @@ describe('Layout Designer (Empty)', function() {
             // Click on add region button
             cy.get('#layout-navigator-edit #add-btn').click();
 
-            // Wait for the loading overlay to close
-            cy.get('.loading-overlay.loading').should('not.be.visible');
-
             // Close the navigator edit
-            cy.get('#layout-navigator-edit #close-btn').click();
+            cy.get('#layout-navigator-edit #close-btn').click({force: true});
 
             // Check if there are 2 regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
