@@ -316,23 +316,19 @@ describe('Layout Designer (Empty)', function() {
 
                 // Create and alias for reload Layout
                 cy.server();
-                cy.route('POST', '**/playlist/widget/currencies/*').as('createWidget');
+                cy.route('POST', '**/playlist/widget/embedded/*').as('createWidget');
 
                 // Open toolbar Widgets tab
                 cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
-                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"]').should('be.visible').then(() => {
+                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"]').should('be.visible').then(() => {
                     dragToElement(
-                        '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"] .drag-area',
+                        '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"] .drag-area',
                         '#' + target + ' [data-type="region"]:first-child'
                     ).then(() => {
-                        cy.get('[data-test="addWidgetModal"]').contains('Add currencies');
+                        cy.get('[data-test="addWidgetModal"]').contains('Add embedded');
 
-                        cy.get('[data-test="addWidgetModal"] [href="#template"]').click();
-
-                        cy.get('[data-test="addWidgetModal"] input[name="items"]').clear().type('EUR');
-
-                        cy.get('[data-test="addWidgetModal"] input[name="base"]').clear().type('GBP');
+                        cy.get('[data-test="addWidgetModal"] input[name="name"]').clear().type('Embedded Widget');
 
                         cy.get('[data-test="addWidgetModal"] [data-bb-handler="done"]').click();
 

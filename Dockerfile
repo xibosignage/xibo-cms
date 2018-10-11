@@ -49,7 +49,7 @@ COPY webpack.config.js .
 COPY package.json .
 
 # Install npm packages
-RUN npm install
+RUN npm install --only=prod
 
 # Copy ui folder
 COPY ./ui ./ui

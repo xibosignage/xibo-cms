@@ -95,23 +95,19 @@ describe('Playlist Editor', function() {
 
             // Create and alias for reload playlist
             cy.server();
-            cy.route('POST', '**/playlist/widget/currencies/*').as('createWidget');
+            cy.route('POST', '**/playlist/widget/embedded/*').as('createWidget');
 
             // Open toolbar Widgets tab
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
-            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"]').should('be.visible').then(() => {
+            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"]').should('be.visible').then(() => {
                 dragToElement(
-                    '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="currencies"] .drag-area',
+                    '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"] .drag-area',
                     '#dropzone-container'
                 ).then(() => {
-                    cy.get('[data-test="addWidgetModal"]').contains('Add Currencies');
+                    cy.get('[data-test="addWidgetModal"]').contains('Add embedded');
 
-                    cy.get('[data-test="addWidgetModal"] [href="#template"]').click();
-
-                    cy.get('[data-test="addWidgetModal"] input[name="items"]').type('EUR');
-
-                    cy.get('[data-test="addWidgetModal"] input[name="base"]').type('GBP');
+                    cy.get('[data-test="addWidgetModal"] input[name="name"]').clear().type('Embedded Widget');
 
                     cy.get('[data-test="addWidgetModal"] [data-bb-handler="done"]').click();
 
@@ -213,11 +209,8 @@ describe('Playlist Editor', function() {
             cy.createNonDynamicPlaylist(uuid).as('testPlaylistId').then((res) => {
 
                 // Populate playlist with some widgets and media
-                cy.addWidgetToPlaylist(res, 'currencies', {
-                    name: 'Currencies Widget',
-                    templateId: 'currencies1',
-                    items: 'EUR',
-                    base: 'USD'
+                cy.addWidgetToPlaylist(res, 'embedded', {
+                    name: 'Embedded Widget'
                 });
 
                 cy.addRandomMediaToPlaylist(res);

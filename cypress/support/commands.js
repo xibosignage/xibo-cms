@@ -152,7 +152,7 @@ Cypress.Commands.add('addMediaToLibrary', function(fileName) {
     cy.fixture(fileName, 'binary').then((zipBin) => {
 
         // File in binary format gets converted to blob so it can be sent as Form data
-        Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
+        return Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
 
             // Build up the form
             const formData = new FormData();
@@ -184,7 +184,7 @@ Cypress.Commands.add('importLayout', function(fileName) {
     cy.fixture(fileName, 'binary').then((zipBin) => {
 
         // File in binary format gets converted to blob so it can be sent as Form data
-        Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
+        return Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
 
             // Build up the form
             const formData = new FormData();
