@@ -121,6 +121,18 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             this.DOMObject.find('.viewer-element').css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
         }
 
+        // Set background color as a darken version of the complementary color
+        const darkerValue = 50;
+        const complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
+
+        // Darken color
+        complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue; 
+        complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue; 
+        complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue; 
+
+        // Use a complentary colour for the navigator background
+        this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
+
         // Handle play button
         this.DOMObject.find('#play-btn').click(function() {
             this.playPreview(requestPath, this.containerElementDimensions);

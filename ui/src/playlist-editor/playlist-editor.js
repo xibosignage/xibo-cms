@@ -23,20 +23,27 @@ const playlistEditorTemplate = require('../templates/playlist-editor.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const dropZoneTemplate = require('../templates/drop-zone.hbs');
+const formButtonsTemplate = require('../templates/form-buttons.hbs');
 
 // Include modules
-const Playlist = require('./playlist.js');
-const Toolbar = require('../designer/toolbar.js');
+const Playlist = require('../playlist-editor/playlist.js');
+const PlaylistTimeline = require('../playlist-editor/playlist-timeline.js');
+const Toolbar = require('../core/toolbar.js');
 const PropertiesPanel = require('../designer/properties-panel.js');
-const PlaylistTimeline = require('./playlist-timeline.js');
-const Manager = require('../designer/manager.js');
+const Manager = require('../core/manager.js');
 
 // Include CSS
-require('../css/designer.css');
+require('../css/designer.less');
 require('../css/playlist-editor.less');
+
+// Common funtions/tools
+const Common = require('../core/common.js');
 
 // Create layout designer namespace (pE)
 window.pE = {
+
+    // Attach common functions to layout designer
+    common: Common,
 
     // Main object info
     mainObjectType: 'playlist',
@@ -71,6 +78,12 @@ window.pE = {
 // Load Layout and build app structure
 pE.loadEditor = function() {
 
+    pE.common.showLoadingScreen();
+
+    // Save and change toastr positioning
+    pE.toastrPosition = toastr.options.positionClass;
+    toastr.options.positionClass = 'toast-top-right';
+
     // Get DOM main object
     pE.editorDiv = $('#playlist-editor');
 
@@ -96,29 +109,30 @@ pE.loadEditor = function() {
         pE.editorDiv.find('#playlist-timeline')
     );
 
-    // Append manager to the bootbox container
-    $("#layout-manager").appendTo(".bootbox");
+    // Append manager to the modal container
+    $("#layout-manager").appendTo("#playlist-editor");
 
     // Initialize manager
     pE.manager = new Manager(
-        $('.bootbox').find('#layout-manager'),
+        $('#playlist-editor').find('#layout-manager'),
         (serverMode == 'Test')
     );
 
-    // Append toolbar to the bootbox container
-    $("#playlist-editor-toolbar").appendTo(".bootbox");
+    // Append toolbar to the modal container
+    $("#playlist-editor-toolbar").appendTo("#playlist-editor");
 
     // Initialize bottom toolbar
     pE.toolbar = new Toolbar(
-        $('.bootbox').find('#playlist-editor-toolbar'),
+        $('#playlist-editor').find('#playlist-editor-toolbar'),
         [{
             id: 'undoLastAction',
             title: playlistTrans.undo,
             logo: 'fa-undo',
             class: 'btn-warning',
-            activeCheck: function() {
-                return (pE.manager.changeHistory.length > 0);
+            inactiveCheck: function() {
+                return (pE.manager.changeHistory.length <= 0);
             },
+            inactiveCheckClass: 'hidden',
             action: pE.undoLastAction
         }], // Custom buttons
         {
@@ -133,12 +147,27 @@ pE.loadEditor = function() {
     formHelpers.setup(pE, pE.playlist);
 
     // Add widget to editor div
-    pE.editorDiv.droppable({
-        accept: '.toolbar-card',
+    pE.editorDiv.find('#playlist-editor-container').droppable({
+        accept: '[drop-to="region"]',
         drop: function(event, ui) {
-            pE.playlist.addElement(ui.draggable[0]);
+            pE.playlist.addElement(event.target, ui.draggable[0]);
+        }
+    }).attr('data-type', 'region');
+
+    // Editor container select ( faking drag and drop ) to add a element to the playlist
+    pE.editorDiv.find('#playlist-editor-container').click(function(e) {
+        e.stopPropagation();
+        if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+            pE.selectObject($(this));
         }
     });
+
+    // Append buttons to form
+    $('.editor-modal-content #playlist-buttons').append(formButtonsTemplate({
+        buttons: formButtons
+    }));
+
+    pE.common.hideLoadingScreen();
 };
 
 // Get Xibo app
@@ -153,60 +182,81 @@ window.getXiboApp = function() {
  */
 pE.selectObject = function(obj = null, forceUnselect = false) {
 
-    let newSelectedId = {};
-    let newSelectedType = {};
+    // If there is a selected card, use the drag&drop simulate to add that item to a object
+    if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-    // If there's no selected object, select a default one ( or nothing if widgets are empty)
-    if(obj == null || typeof obj.data('type') == 'undefined') {
+        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
 
-        if($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
-            this.selectedObject = {};
-        } else {
-            // Select first widget
-            let newId = Object.keys(this.playlist.widgets)[0];
+            // Get card object
+            const card = this.toolbar.selectedCard[0];
 
-            this.playlist.widgets[newId].selected = true;
-            this.selectedObject.type = 'widget';
-            this.selectedObject = this.playlist.widgets[newId];
-            
+            // Deselect cards and drop zones
+            this.toolbar.deselectCardsAndDropZones();
+
+            // Simulate drop item add
+            this.playlist.addElement(obj, card);
         }
+
     } else {
+        let newSelectedId = {};
+        let newSelectedType = {};
 
-        // Get object properties from the DOM ( or set to layout if not defined )
-        newSelectedId = obj.attr('id');
-        newSelectedType = obj.data('type');
+        // If there's no selected object, select a default one ( or nothing if widgets are empty)
+        if(obj == null || typeof obj.data('type') == 'undefined') {
 
-        // Unselect the previous selectedObject object if still selected
-        if(this.selectedObject.selected) {
+            if($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
+                this.selectedObject = {};
+            } else {
+                // Select first widget
+                let newId = Object.keys(this.playlist.widgets)[0];
 
-            if(this.selectedObject.type == 'widget') {
-
-                if(this.playlist.widgets[this.selectedObject.id]) {
-                    this.playlist.widgets[this.selectedObject.id].selected = false;
-                }
-
+                this.playlist.widgets[newId].selected = true;
+                this.selectedObject.type = 'widget';
+                this.selectedObject = this.playlist.widgets[newId];
+                
             }
+        } else {
+
+            // Get object properties from the DOM ( or set to layout if not defined )
+            newSelectedId = obj.attr('id');
+            newSelectedType = obj.data('type');
+
+            // Unselect the previous selectedObject object if still selected
+            if(this.selectedObject.selected) {
+
+                if(this.selectedObject.type == 'widget') {
+
+                    if(this.playlist.widgets[this.selectedObject.id]) {
+                        this.playlist.widgets[this.selectedObject.id].selected = false;
+                    }
+
+                }
+            }
+
+            // Select new object
+            if(newSelectedType === 'widget') {
+                this.playlist.widgets[newSelectedId].selected = true;
+                this.selectedObject = this.playlist.widgets[newSelectedId];
+            }
+
+            this.selectedObject.type = newSelectedType;
         }
 
-        // Select new object
-        if(newSelectedType === 'widget') {
-            this.playlist.widgets[newSelectedId].selected = true;
-            this.selectedObject = this.playlist.widgets[newSelectedId];
-        }
-
-        this.selectedObject.type = newSelectedType;
+        // Refresh the designer containers
+        this.refreshDesigner();
     }
-
-    // Refresh the designer containers
-    this.refreshDesigner();
 };
-
 
 /**
  * Revert last action
  */
 pE.undoLastAction = function() {
+
+    pE.common.showLoadingScreen();
+
     pE.manager.revertChange().then((res) => { // Success
+
+        pE.common.hideLoadingScreen();
 
         toastr.success(res.message);
 
@@ -217,6 +267,8 @@ pE.undoLastAction = function() {
             pE.reloadData();
         }
     }).catch((error) => { // Fail/error
+
+        pE.common.hideLoadingScreen();
 
         // Show error returned or custom message to the user
         let errorMessage = 'Revert failed: ';
@@ -263,13 +315,20 @@ pE.deleteObject = function(objectType, objectId) {
             callback: function(result) {
                 if(result) {
 
+                    pE.common.showLoadingScreen();
+
                     // Delete element from the layout
                     pE.playlist.deleteElement(objectType, objectId).then((res) => { // Success
+
+                        pE.common.hideLoadingScreen();
 
                         // Behavior if successful 
                         toastr.success(res.message);
                         pE.reloadData();
                     }).catch((error) => { // Fail/error
+
+                        pE.common.hideLoadingScreen();
+
                         // Show error returned or custom message to the user
                         let errorMessage = 'Delete element failed: ' + error;
 
@@ -283,7 +342,7 @@ pE.deleteObject = function(objectType, objectId) {
                     });
                 }
             }
-        });
+        }).attr('data-test', 'deleteObjectModal');
         
     }
 };
@@ -303,12 +362,12 @@ pE.refreshDesigner = function() {
         this.renderContainer(this.propertiesPanel, this.selectedObject);
         this.renderContainer(this.timeline);
 
-        this.editorDiv.find('#playlist-container').show();
+        this.editorDiv.find('#editing-container').show();
         this.editorDiv.find('#dropzone-container').hide();
     } else {
         this.editorDiv.find('#dropzone-container').html(dropZoneTemplate());
 
-        this.editorDiv.find('#playlist-container').hide();
+        this.editorDiv.find('#editing-container').hide();
         this.editorDiv.find('#dropzone-container').show();
     }
 };
@@ -342,9 +401,14 @@ pE.reloadData = function() {
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', pE.playlist.playlistId);
 
+    pE.common.showLoadingScreen();
+
     $.get(
         requestPath
     ).done(function(res) {
+
+        pE.common.hideLoadingScreen();
+
         if(res.success) {
             pE.playlist = new Playlist(pE.playlist.playlistId, res.data.playlist);
 
@@ -355,6 +419,8 @@ pE.reloadData = function() {
             pE.showErrorMessage();
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+
+        pE.common.hideLoadingScreen();
 
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
@@ -384,9 +450,13 @@ pE.showErrorMessage = function() {
 pE.saveOrder = function(saveAndClose = false) {
 
     const self = this;
+
+    pE.common.showLoadingScreen();
     
     this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
         
+        pE.common.hideLoadingScreen();
+
         // Behavior if successful            
         toastr.success(res.message);
 
@@ -397,6 +467,9 @@ pE.saveOrder = function(saveAndClose = false) {
         }
         
     }).catch((error) => { // Fail/error
+
+        pE.common.hideLoadingScreen();
+
         // Show error returned or custom message to the user
         let errorMessage = 'Save order failed: ' + error;
 
@@ -415,13 +488,16 @@ pE.saveOrder = function(saveAndClose = false) {
  */
 pE.close = function() {
 
-    bootbox.hideAll();
+    // Restore toastr positioning
+    toastr.options.positionClass = this.toastrPosition;
+
+    $('#editor-container').empty();
 };
 
 /**
  * Close playlist editor
  */
-pE.showLoadingScreen = function() {
+pE.showLocalLoadingScreen = function() {
     // If there are no widgets, render the loading template in the drop zone
     if($.isEmptyObject(pE.playlist.widgets)) {
         pE.editorDiv.find('#dropzone-container').html(loadingTemplate());

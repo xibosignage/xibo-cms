@@ -173,6 +173,7 @@ class Playlist extends Base
                     // Timeline edit
                     $playlist->buttons[] = array(
                         'id' => 'playlist_timeline_button_edit',
+                        'class' => 'XiboCustomFormButton',
                         'url' => $this->urlFor('playlist.timeline.form', ['id' => $playlist->playlistId]),
                         'text' => __('Timeline')
                     );

@@ -27,8 +27,8 @@ let Timeline = function(container) {
         zoomOutDisable: '',
         scrollPosition: 0, // scroll position
         scrollWidth: 0, // To fix the double scroll reseting to 0 bug
-        widgetMinimumVisibleRatio: 4, // Minimum % value so that the region details are shown
-        widgetMinimumDurationOnStart: 10 // % of the shortest widget to be used to calculate the default zoom 
+        widgetMinimumVisibleRatio: 10, // Minimum % value so that the region details are shown
+        widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
 };
 
@@ -309,7 +309,14 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.designer-region').droppable({
-        accept: '.toolbar-card',
+        accept: '[drop-to="region"]',
+        drop: function(event, ui) {
+            lD.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    });
+
+    this.DOMObject.find('.designer-widget:not(.designer-widget-ghost)').droppable({
+        accept: '[drop-to="widget"]',
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
@@ -319,22 +326,31 @@ Timeline.prototype.render = function(layout) {
         e.stopPropagation();
         const widget = lD.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
-        widget.editPropertyForm($(this).data('property'));
+        widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
     
     this.DOMObject.find('#regions .designer-region').sortable({
         items: '.designer-widget:not(.designer-widget-ghost)',
+        placeholder: 'designer-widget-sortable-highlight',
+        opacity: '.5',
         stop: function() {
+
+            lD.common.showLoadingScreen();
 
             // Get playlist
             const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
 
             lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
 
+                lD.common.hideLoadingScreen();
+
                 // Behavior if successful            
                 toastr.success(res.message);
                 lD.reloadData(lD.layout);
             }).catch((error) => { // Fail/error
+                
+                lD.common.hideLoadingScreen();
+
                 // Show error returned or custom message to the user
                 let errorMessage = 'Save order failed: ' + error;
 

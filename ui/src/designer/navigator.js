@@ -98,47 +98,42 @@ Navigator.prototype.render = function(layout) {
     // Get layout container
     const layoutContainer = this.DOMObject.find('#' + layout.id);
 
+    // Set background color as a darken version of the complementary color
+    const darkerValue = 50;
+    let complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
+
+    // Darken color
+    complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue;
+    complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue;
+    complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue;
+
+    // Use a complentary colour for the navigator background
+    this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
+
     // Find all the regions and enable drag and resize
     if(this.editMode) {
-    this.DOMObject.find('#regions .designer-region').resizable({
-            containment: layoutContainer
-    }).draggable({
-            containment: layoutContainer
-    }).on("resizestop dragstop",
-        function(event, ui) {
+        this.DOMObject.find('#regions .designer-region').resizable({
+                containment: layoutContainer
+        }).draggable({
+                containment: layoutContainer
+        }).on("resizestop dragstop",
+            function(event, ui) {
 
-            const scale = scaledLayout.scaledDimensions.scale;
-            
-            layout.regions[$(this).attr('id')].transform(
-                {
-                    'width': parseFloat(($(this).width() / scale).toFixed(2)),
-                    'height': parseFloat(($(this).height() / scale).toFixed(2)),
-                    'top': parseFloat(($(this).position().top / scale).toFixed(2)),
-                    'left': parseFloat(($(this).position().left / scale).toFixed(2))
-                }
-            );
+                const scale = scaledLayout.scaledDimensions.scale;
+                
+                layout.regions[$(this).attr('id')].transform(
+                    {
+                        'width': parseFloat(($(this).width() / scale).toFixed(2)),
+                        'height': parseFloat(($(this).height() / scale).toFixed(2)),
+                        'top': parseFloat(($(this).position().top / scale).toFixed(2)),
+                        'left': parseFloat(($(this).position().left / scale).toFixed(2))
+                    }
+                );
 
-            // Render navbar to calculate changes and refresh buttons
-            lD.navigatorEdit.renderNavbar();
-        }
-    );
-    } else {
-        this.DOMObject.find('#regions .designer-region').draggable({
-            start: function(event, ui) {
-                $(this).draggable('instance').offset.click = {
-                    left: Math.floor(ui.helper.outerWidth() / 2),
-                    top: Math.floor(ui.helper.outerHeight() / 2)
-                };
-            },
-            appendTo: $(lD.toolbar.DOMObject),
-            scroll: false,
-            cursor: 'crosshair',
-            opacity: 0.6,
-            zIndex: 100,
-            helper: function(event) {
-                return $('<div class="layout-region-deletable deletable">' + event.currentTarget.id + '</div>');
+                // Render navbar to calculate changes and refresh buttons
+                lD.navigatorEdit.renderNavbar();
             }
-        });
+        );
     }
 
     // Enable select for each layout/region
@@ -147,8 +142,15 @@ Navigator.prototype.render = function(layout) {
         lD.selectObject($(this));
     });
 
+    this.DOMObject.find('[data-type="layout"]').droppable({
+        accept: '[drop-to="layout"]',
+        drop: function(event, ui) {
+            lD.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    });
+
     this.DOMObject.find('.designer-region').droppable({
-        accept: '.toolbar-card',
+        accept: '[drop-to="region"]',
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
@@ -182,9 +184,13 @@ Navigator.prototype.renderNavbar = function() {
 
     // Navbar buttons
     this.navbarContainer.find('#close-btn').click(function() {
+        lD.common.showLoadingScreen();
+
         lD.manager.saveAllChanges().then((res) => {   
+            lD.common.hideLoadingScreen(); 
             lD.toggleNavigatorEditing(false);
         }).catch((err) => {
+            lD.common.hideLoadingScreen();
             if(err) {
                 toastr.error('Save all changes failed: ' + err);
             } else {
@@ -194,7 +200,11 @@ Navigator.prototype.renderNavbar = function() {
     });
 
     this.navbarContainer.find('#undo-btn').click(function() {
+        lD.common.showLoadingScreen();
+
         lD.manager.revertChange().then((res) => { // Success
+
+            lD.common.hideLoadingScreen();
 
             toastr.success(res.message);
 
@@ -205,6 +215,8 @@ Navigator.prototype.renderNavbar = function() {
                 lD.reloadData(lD.layout);
             }
         }).catch((error) => { // Fail/error
+
+            lD.common.hideLoadingScreen();
 
             console.error(error);
 
@@ -222,16 +234,22 @@ Navigator.prototype.renderNavbar = function() {
     });
 
     this.navbarContainer.find('#add-btn').click(function() {
+        lD.common.showLoadingScreen();
+        
         lD.manager.saveAllChanges().then((res) => {
 
             toastr.success('All changes saved!');
 
             lD.layout.addElement('region').then((res) => { // Success
 
+                lD.common.hideLoadingScreen(); 
+
                 // Behavior if successful 
                 toastr.success(res.message);
                 lD.reloadData(lD.layout);
             }).catch((error) => { // Fail/error
+
+                lD.common.hideLoadingScreen(); 
                 // Show error returned or custom message to the user
                 let errorMessage = 'Create region failed: ' + error;
 
@@ -244,6 +262,8 @@ Navigator.prototype.renderNavbar = function() {
                 toastr.error(errorMessage);
             });
         }).catch((err) => {
+
+            lD.common.hideLoadingScreen(); 
             toastr.error('Save all changes failed!');
         });
     });
@@ -267,12 +287,21 @@ Navigator.prototype.renderNavbar = function() {
                 },
                 callback: function(result) {
                     if(result) {
+
+                        lD.common.showLoadingScreen();
+
                                 // Delete element from the layout
                                 lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
+                            
+                            lD.common.hideLoadingScreen();
+
                                     // Behavior if successful 
                                     toastr.success(res.message);
                                     lD.reloadData(lD.layout);
                                 }).catch((error) => { // Fail/error
+
+                            lD.common.hideLoadingScreen();
+                            
                                     // Show error returned or custom message to the user
                                     let errorMessage = 'Delete element failed: ' + error;
 
@@ -286,7 +315,7 @@ Navigator.prototype.renderNavbar = function() {
                                 });
                     }
                 }
-            });
+            }).attr('data-test', 'deleteRegionModal');
         }
     });
 };

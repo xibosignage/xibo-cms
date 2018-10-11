@@ -4,10 +4,10 @@
 FROM alpine:3.6 as sendfile
 ADD docker/mod_xsendfile.c /mod_xsendfile.c
 RUN apk update && apk upgrade && apk add \
-        gcc \
-        musl-dev \
-        apache2-dev \
-        apache2
+    gcc \
+    musl-dev \
+    apache2-dev \
+    apache2
 
 RUN cd / && \
     apxs -cia mod_xsendfile.c
@@ -24,16 +24,16 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader
 # remove non-required vendor files
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \
-  find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
-  find -type d -name 'tests' -exec rm -r {} + && \
-  find -type d -name 'benchmarks' -exec rm -r {} + && \
-  find -type d -name 'smoketests' -exec rm -r {} + && \
-  find -type d -name 'demo' -exec rm -r {} + && \
-  find -type d -name 'doc' -exec rm -r {} + && \
-  find -type d -name 'docs' -exec rm -r {} + && \
-  find -type d -name 'examples' -exec rm -r {} + && \
-  find -type f -name 'phpunit.xml' -exec rm -r {} + && \
-  find -type f -name '*.md' -exec rm -r {} +
+    find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
+    find -type d -name 'tests' -exec rm -r {} + && \
+    find -type d -name 'benchmarks' -exec rm -r {} + && \
+    find -type d -name 'smoketests' -exec rm -r {} + && \
+    find -type d -name 'demo' -exec rm -r {} + && \
+    find -type d -name 'doc' -exec rm -r {} + && \
+    find -type d -name 'docs' -exec rm -r {} + && \
+    find -type d -name 'examples' -exec rm -r {} + && \
+    find -type f -name 'phpunit.xml' -exec rm -r {} + && \
+    find -type f -name '*.md' -exec rm -r {} +
 
 
 # Stage 2
@@ -49,7 +49,7 @@ COPY webpack.config.js .
 COPY package.json .
 
 # Install npm packages
-RUN npm install
+RUN npm install --only=prod
 
 # Copy ui folder
 COPY ./ui ./ui
@@ -170,7 +170,7 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /var/www/cms/web/userscripts && \
     chown -R apache:apache /var/www/cms && \
     chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
-             /etc/periodic/15min/cms-db-backup && \
+    /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \

@@ -11,6 +11,7 @@ let Region = function(id, data, {backgroundColor = '#555555'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
     this.type = 'region';
+    this.name = data.name;
 
     this.playlists = data.regionPlaylist;
 

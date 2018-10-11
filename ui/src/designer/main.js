@@ -24,21 +24,25 @@ const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
 // Include modules
-const Region = require('./region.js');
-const Layout = require('./layout.js');
-const Widget = require('./widget.js');
-const Navigator = require('./navigator.js');
-const Timeline = require('./timeline.js');
-const Manager = require('./manager.js');
-const Viewer = require('./viewer.js');
-const toolbar = require('./toolbar.js');
-const PropertiesPanel = require('./properties-panel.js');
+const Layout = require('../designer/layout.js');
+const Navigator = require('../designer/navigator.js');
+const Timeline = require('../designer/timeline.js');
+const Viewer = require('../designer/viewer.js');
+const PropertiesPanel = require('../designer/properties-panel.js');
+const Manager = require('../core/manager.js');
+const Toolbar = require('../core/toolbar.js');
+
+// Common funtions/tools
+const Common = require('../core/common.js');
 
 // Include CSS
-require('../css/designer.css');
+require('../css/designer.less');
 
 // Create layout designer namespace (lD)
 window.lD = {
+
+    // Attach common functions to layout designer
+    common: Common,
 
     // Main object info
     mainObjectType: 'layout',
@@ -83,14 +87,21 @@ $(document).ready(function() {
     // Get layout id
     const layoutId = lD.designerDiv.attr("data-layout-id");
     
+    lD.common.showLoadingScreen();
+
     // Append loading html to the main div
     lD.designerDiv.html(loadingTemplate());
+
+    // Change toastr positioning
+    toastr.options.positionClass = 'toast-top-right';
 
     // Load layout through an ajax request
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
         .done(function(res) {
 
             if(res.data.length > 0) {
+
+                lD.common.hideLoadingScreen();
 
                 // Append layout html to the main div
                 lD.designerDiv.html(designerMainTemplate());
@@ -125,7 +136,7 @@ $(document).ready(function() {
                 );
 
                 // Initialize bottom toolbar ( with custom buttons )
-                lD.toolbar = new toolbar(
+                lD.toolbar = new Toolbar(
                     lD.designerDiv.find('#layout-editor-toolbar'),
                     // Custom buttons
                     [
@@ -134,16 +145,21 @@ $(document).ready(function() {
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
                             class: 'btn-success',
-                            action: lD.showPublishScreen
+                            action: lD.showPublishScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
                         },
                         {
                             id: 'undoLastAction',
                             title: layoutDesignerTrans.undo,
                             logo: 'fa-undo',
                             class: 'btn-warning',
-                            activeCheck: function(){
-                                return (lD.manager.changeHistory.length > 0);
+                            inactiveCheck: function(){
+                                return (lD.manager.changeHistory.length <= 0);
                             },
+                            inactiveCheckClass: 'hidden',
                             action: lD.undoLastAction
                         }
                     ],
@@ -219,56 +235,74 @@ $(document).ready(function() {
  */
 lD.selectObject = function(obj = null, forceSelect = false) {
 
-    // Get object properties from the DOM ( or set to layout if not defined )
-    const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
-    const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+    // If there is a selected card, use the drag&drop simulate to add that item to a object
+    if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-    const oldSelectedId = this.selectedObject.id;
-    const oldSelectedType = this.selectedObject.type;
-    
-    // Unselect the previous selectedObject object if still selected
-    if( this.selectedObject.selected ) {
+        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
 
-        switch(this.selectedObject.type) {
-            case 'region':
-                if(this.layout.regions[this.selectedObject.id]) {
-                    this.layout.regions[this.selectedObject.id].selected = false;
-                }
-                break;
+            // Get card object
+            const card = this.toolbar.selectedCard[0];
 
-            case 'widget':
-                if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
-                    this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
-                }
-                break;
+            // Deselect cards and drop zones
+            this.toolbar.deselectCardsAndDropZones();
 
-            default:
-                break;
+            // Simulate drop item add
+            this.dropItemAdd(obj, card);
+        }
+
+    } else {
+        
+        // Get object properties from the DOM ( or set to layout if not defined )
+        const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
+        const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+
+        const oldSelectedId = this.selectedObject.id;
+        const oldSelectedType = this.selectedObject.type;
+        
+        // Unselect the previous selectedObject object if still selected
+        if( this.selectedObject.selected ) {
+
+            switch(this.selectedObject.type) {
+                case 'region':
+                    if(this.layout.regions[this.selectedObject.id]) {
+                        this.layout.regions[this.selectedObject.id].selected = false;
+                    }
+                    break;
+
+                case 'widget':
+                    if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
+                        this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+            
         }
         
-    }
-    
-    // Set to the default object
-    this.selectedObject = this.layout;
-    this.selectedObject.type = 'layout';
+        // Set to the default object
+        this.selectedObject = this.layout;
+        this.selectedObject.type = 'layout';
 
-    // If the selected object was different from the previous, select a new one
-    if(oldSelectedId != newSelectedId || forceSelect) {
+        // If the selected object was different from the previous, select a new one
+        if(oldSelectedId != newSelectedId || forceSelect) {
 
-        // Save the new selected object
-        if(newSelectedType === 'region') {
-            this.layout.regions[newSelectedId].selected = true;
-            this.selectedObject = this.layout.regions[newSelectedId];
-        } else if(newSelectedType === 'widget') {
-            this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
-            this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+            // Save the new selected object
+            if(newSelectedType === 'region') {
+                this.layout.regions[newSelectedId].selected = true;
+                this.selectedObject = this.layout.regions[newSelectedId];
+            } else if(newSelectedType === 'widget') {
+                this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
+                this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+            }
+
+            this.selectedObject.type = newSelectedType;
         }
 
-        this.selectedObject.type = newSelectedType;
+        // Refresh the designer containers
+        this.refreshDesigner();
     }
-
-    // Refresh the designer containers
-    this.refreshDesigner();
 };
 
 /**
@@ -300,8 +334,12 @@ lD.reloadData = function(layout) {
 
     const layoutId = (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
+    lD.common.showLoadingScreen();
+
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets")
         .done(function(res) {
+            
+            lD.common.hideLoadingScreen();
             
             if(res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -318,6 +356,8 @@ lD.reloadData = function(layout) {
                 lD.showErrorMessage();
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
+
+            lD.common.hideLoadingScreen();
 
             // Output error to console
             console.error(jqXHR, textStatus, errorThrown);
@@ -349,7 +389,14 @@ lD.checkoutLayout = function() {
 
             bootbox.hideAll();
         } else {
-            toastr.error(res.message);
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console
@@ -365,6 +412,8 @@ lD.publishLayout = function() {
     const linkToAPI = urlsForApi.layout.publish;
     let requestPath = linkToAPI.url;
 
+    lD.common.showLoadingScreen();
+
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
@@ -372,15 +421,30 @@ lD.publishLayout = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
+
+        lD.common.hideLoadingScreen();
+
         if(res.success) {
             toastr.success(res.message);
 
             window.location.href = urlsForApi.layout.list.url;
-            
         } else {
-            toastr.error(res.message);
+
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+
+                // Close dialog
+                bootbox.hideAll();
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+        
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
     });
@@ -482,7 +546,7 @@ lD.showCheckoutScreen = function() {
                 }
             }
         }
-    });
+    }).attr('data-test', 'checkoutModal');
 };
 
 /**
@@ -512,14 +576,18 @@ lD.showPublishScreen = function() {
                 }
             }
         }
-    });
+    }).attr('data-test', 'publishModal');
 };
 
 /**
  * Revert last action
  */
 lD.undoLastAction = function() {
+    lD.common.showLoadingScreen();
+
     lD.manager.revertChange().then((res) => { // Success
+
+        lD.common.hideLoadingScreen();
 
         toastr.success(res.message);
 
@@ -530,6 +598,8 @@ lD.undoLastAction = function() {
             lD.reloadData(lD.layout);
         }
     }).catch((error) => { // Fail/error
+
+        lD.common.hideLoadingScreen();
 
         // Show error returned or custom message to the user
         let errorMessage = 'Revert failed: ';
@@ -593,13 +663,20 @@ lD.deleteObject = function(objectType, objectId) {
             callback: function(result) {
                 if(result) {
 
+                    lD.common.showLoadingScreen();
+
                     // Delete element from the layout
                     lD.layout.deleteElement(objectType, objectId).then((res) => { // Success
+
+                        lD.common.hideLoadingScreen();
 
                         // Behavior if successful 
                         toastr.success(res.message);
                         lD.reloadData(lD.layout);
                     }).catch((error) => { // Fail/error
+
+                        lD.common.hideLoadingScreen();
+
                         // Show error returned or custom message to the user
                         let errorMessage = 'Delete element failed: ' + error;
 
@@ -613,249 +690,332 @@ lD.deleteObject = function(objectType, objectId) {
                     });
                 }
             }
-        });
+        }).attr('data-test', 'deleteObjectModal');
     }
 };
 
 /**
  * Add action to take after dropping a draggable item
- * @param {object} droppable - Target drop are object
+ * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
  */
 lD.dropItemAdd = function(droppable, draggable) {
 
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
-
     const draggableType = $(draggable).data('type');
+    const draggableSubType = $(draggable).data('subType');
 
-    // Get playlist Id
-    const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
-
-    /**
-     * Add dragged item to region
-     */
     if(draggableType == 'media') { // Adding media from search tab to a region
 
-        // Get media Id
-        const mediaToAdd = {
-            media: [
-                $(draggable).data('mediaId')
-            ]
-        };
+        // Get playlist Id
+        const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+        const mediaId = $(draggable).data('mediaId');
 
-        // Create change to be uploaded
-        lD.manager.addChange(
-            'addMedia',
-            'playlist', // targetType 
-            playlistId,  // targetId
-            null,  // oldValues
-            mediaToAdd, // newValues
-            {
-                updateTargetId: true,
-                updateTargetType: 'widget'
-            }
-        ).then((res) => { // Success
+        lD.addMediaToPlaylist(playlistId, mediaId);
 
-            // Behavior if successful 
-            toastr.success(res.message);
-            lD.timeline.resetZoom();
-            lD.reloadData(lD.layout);
-        }).catch((error) => { // Fail/error
+    } else if(draggableType == 'module') { // Add widget/module
 
-            // Show error returned or custom message to the user
-            let errorMessage = 'Add media failed: ';
-
-            if(typeof error == 'string') {
-                errorMessage += error;
-            } else {
-                errorMessage += error.errorThrown;
-            }
-
-            toastr.error(errorMessage);
-        });
-    } else { // Add widget/module
+        // Get playlist Id
+        const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
 
         // Get regionSpecific property
-        const regionSpecific = $(draggable).data('regionSpecific');
+        const moduleData = $(draggable).data();
 
-        if(regionSpecific == 0) { // Upload form if not region specific
+        // Select region ( and avoid deselect if region was already selected )
+        lD.selectObject($(droppable), true);
 
-            const validExt = $(draggable).data('validExt').replace(/,/g, "|");
+        lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData);
+    } else if(draggableType == 'tool') { // Add tool
 
-            lD.openUploadForm({
-                trans: playlistTrans,
-                upload: {
-                    maxSize: $(draggable).data().maxSize,
-                    maxSizeMessage: $(draggable).data().maxSizeMessage,
-                    validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
-                    validExt: validExt
-                },
-                playlistId: playlistId
-            }, {
-                    main: {
-                        label: translations.done,
-                        className: "btn-primary",
-                        callback: function() {
-                            lD.timeline.resetZoom();
-                            lD.reloadData(lD.layout);
+        if(droppableType == 'layout') { // Add to layout
+
+            // Select layout
+            lD.selectObject();
+
+            if(draggableSubType == 'region') { // Add region to layout
+
+                lD.common.showLoadingScreen(); 
+
+                lD.manager.saveAllChanges().then((res) => {
+
+                    toastr.success('All changes saved!');
+
+                    lD.layout.addElement('region').then((res) => { // Success
+
+                        lD.common.hideLoadingScreen(); 
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+                        lD.reloadData(lD.layout);
+                    }).catch((error) => { // Fail/error
+
+                        lD.common.hideLoadingScreen(); 
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = 'Create region failed: ' + error;
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
                         }
-                    }
+
+                        toastr.error(errorMessage);
+                    });
+                }).catch((err) => {
+
+                    lD.common.hideLoadingScreen(); 
+
+                    toastr.error('Save all changes failed!');
                 });
 
-        } else { // Load add widget form for region specific
+            }
+        } else if(droppableType == 'widget') { // Add to widget
 
-            // Get playlist Id
-            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+            // Get widget
+            const widgetId = $(droppable).attr('id');
+            const widgetRegionId = $(droppable).data('widgetRegion');
+            const widget = lD.getElementByTypeAndId('widget', widgetId, widgetRegionId);
 
-            // Load form the API
-            const linkToAPI = urlsForApi.playlist.addWidgetForm;
-
-            let requestPath = linkToAPI.url;
-
-            // Replace type
-            requestPath = requestPath.replace(':type', draggableType);
-
-            // Replace playlist id
-            requestPath = requestPath.replace(':id', playlistId);
-
-            // Select region ( and avoid deselect if region was already selected )
+            // Select widget ( and avoid deselect if region was already selected )
             lD.selectObject($(droppable), true);
 
-            // Create dialog
-            var calculatedId = new Date().getTime();
-
-            let dialog = bootbox.dialog({
-                title: 'Add ' + draggableType + ' widget',
-                message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
-                buttons: {
-                    cancel: {
-                        label: translations.cancel,
-                        className: "btn-default"
-                    },
-                    done: {
-                        label: translations.done,
-                        className: "btn-primary test",
-                        callback: function(res) {
-
-                            // Run form open module optional function
-                            if(typeof window[draggableType + '_form_add_submit'] === 'function') {
-                                window[draggableType + '_form_add_submit'].bind(dialog)();
-                            }
-
-                            // If form is valid, submit it ( add change )
-                            if($(dialog).find('form').valid()) {
-
-                                const form = dialog.find('form');
-
-                                lD.manager.addChange(
-                                    'addWidget',
-                                    'playlist', // targetType 
-                                    playlistId,  // targetId
-                                    null,  // oldValues
-                                    form.serialize(), // newValues
-                                    {
-                                        updateTargetId: true,
-                                        updateTargetType: 'widget',
-                                        customRequestPath: {
-                                            url: form.attr('action'),
-                                            type: form.attr('method')
-                                        }
-                                    }
-                                ).then((res) => { // Success
-
-                                    // Behavior if successful 
-                                    toastr.success(res.message);
-
-                                    dialog.modal('hide');
-
-                                    lD.timeline.resetZoom();
-                                    lD.reloadData(lD.layout);
-
-                                }).catch((error) => { // Fail/error
-
-                                    // Show error returned or custom message to the user
-                                    let errorMessage = '';
-
-                                    if(typeof error == 'string') {
-                                        errorMessage += error;
-                                    } else {
-                                        errorMessage += error.errorThrown;
-                                    }
-
-                                    // Remove added change from the history manager
-                                    lD.manager.removeLastChange();
-
-                                    // Display message in form
-                                    formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
-
-                                    // Show toast message
-                                    toastr.error(errorMessage);
-                                });
-                            }
-
-                            // Prevent the modal to close ( close only when addChange returns true )
-                            return false;
-                        }
-                    }
-                }
-            }).attr("id", calculatedId);
-
-            // Request and load element form
-            $.ajax({
-                url: requestPath,
-                type: linkToAPI.type
-            }).done(function(res) {
-
-                if(res.success) {
-                    // Add title
-                    dialog.find('.modal-title').html(res.dialogTitle);
-
-                    // Add body main content
-                    dialog.find('.bootbox-body').html(res.html);
-
-                    dialog.data('extra', res.extra);
-
-                    // Call Xibo Init for this form
-                    XiboInitialise("#" + dialog.attr("id"));
-
-                    // Run form open module optional function
-                    if(typeof window[draggableType + '_form_add_open'] === 'function') {
-                        window[draggableType + '_form_add_open'].bind(dialog)();
-                    }
-
-                } else {
-
-                    // Login Form needed?
-                    if(res.login) {
-
-                        window.location.href = window.location.href;
-                        location.reload(false);
-                    } else {
-
-                        toastr.error('Element form load failed!');
-
-                        // Just an error we dont know about
-                        if(res.message == undefined) {
-                            console.error(res);
-                        } else {
-                            console.error(res.message);
-                        }
-
-                        dialog.modal('hide');
-                    }
-                }
-            }).catch(function(jqXHR, textStatus, errorThrown) {
-
-                console.error(jqXHR, textStatus, errorThrown);
-                toastr.error('Element form load failed!');
-
-                dialog.modal('hide');
-            });
+            if(draggableSubType == 'audio') {
+                widget.editAttachedAudio();
+            } else if(draggableSubType == 'expiry') { 
+                widget.editExpiry();
+            } else if(draggableSubType == 'transitionIn') { 
+                widget.editTransition('in');
+            } else if(draggableSubType == 'transitionOut') { 
+                widget.editTransition('out');
+            }
         }
     }
 };
 
+/**
+ * Add module to playlist
+ * @param {number} playlistId 
+ * @param {string} moduleType 
+ * @param {object} moduleData 
+ */
+lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
+
+    if(moduleData.regionSpecific == 0) { // Upload form if not region specific
+
+        const validExt = moduleData.validExt.replace(/,/g, "|");
+
+        lD.openUploadForm({
+            trans: playlistTrans,
+            upload: {
+                maxSize: moduleData.maxSize,
+                maxSizeMessage: moduleData.maxSizeMessage,
+                validExtensionsMessage: translations.validExtensions + ': ' + moduleData.validExt,
+                validExt: validExt
+            },
+            playlistId: playlistId
+        }, {
+                main: {
+                    label: translations.done,
+                    className: "btn-primary",
+                    callback: function() {
+                        lD.timeline.resetZoom();
+                        lD.reloadData(lD.layout);
+                    }
+                }
+            });
+
+    } else { // Load add widget form for region specific
+
+        // Load form the API
+        const linkToAPI = urlsForApi.playlist.addWidgetForm;
+
+        let requestPath = linkToAPI.url;
+
+        // Replace type
+        requestPath = requestPath.replace(':type', moduleType);
+
+        // Replace playlist id
+        requestPath = requestPath.replace(':id', playlistId);
+
+        // Create dialog
+        var calculatedId = new Date().getTime();
+
+        let dialog = bootbox.dialog({
+            title: 'Add ' + moduleType + ' widget',
+            message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+            buttons: {
+                cancel: {
+                    label: translations.cancel,
+                    className: "btn-default"
+                },
+                done: {
+                    label: translations.done,
+                    className: "btn-primary test",
+                    callback: function(res) {
+
+                        // Run form open module optional function
+                        if(typeof window[moduleType + '_form_add_submit'] === 'function') {
+                            window[moduleType + '_form_add_submit'].bind(dialog)();
+                        }
+
+                        // If form is valid, submit it ( add change )
+                        if($(dialog).find('form').valid()) {
+
+                            const form = dialog.find('form');
+
+                            lD.manager.addChange(
+                                'addWidget',
+                                'playlist', // targetType 
+                                playlistId,  // targetId
+                                null,  // oldValues
+                                form.serialize(), // newValues
+                                {
+                                    updateTargetId: true,
+                                    updateTargetType: 'widget',
+                                    customRequestPath: {
+                                        url: form.attr('action'),
+                                        type: form.attr('method')
+                                    }
+                                }
+                            ).then((res) => { // Success
+
+                                // Behavior if successful 
+                                toastr.success(res.message);
+
+                                dialog.modal('hide');
+
+                                lD.timeline.resetZoom();
+                                lD.reloadData(lD.layout);
+
+                            }).catch((error) => { // Fail/error
+
+                                // Show error returned or custom message to the user
+                                let errorMessage = '';
+
+                                if(typeof error == 'string') {
+                                    errorMessage += error;
+                                } else {
+                                    errorMessage += error.errorThrown;
+                                }
+
+                                // Remove added change from the history manager
+                                lD.manager.removeLastChange();
+
+                                // Display message in form
+                                formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                                // Show toast message
+                                toastr.error(errorMessage);
+                            });
+                        }
+
+                        // Prevent the modal to close ( close only when addChange returns true )
+                        return false;
+                    }
+                }
+            }
+        }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
+
+        // Request and load element form
+        $.ajax({
+            url: requestPath,
+            type: linkToAPI.type
+        }).done(function(res) {
+
+            if(res.success) {
+                // Add title
+                dialog.find('.modal-title').html(res.dialogTitle);
+
+                // Add body main content
+                dialog.find('.bootbox-body').html(res.html);
+
+                dialog.data('extra', res.extra);
+
+                // Call Xibo Init for this form
+                XiboInitialise("#" + dialog.attr("id"));
+
+                // Run form open module optional function
+                if(typeof window[moduleType + '_form_add_open'] === 'function') {
+                    window[moduleType + '_form_add_open'].bind(dialog)();
+                }
+
+            } else {
+
+                // Login Form needed?
+                if(res.login) {
+
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+
+                    toastr.error('Element form load failed!');
+
+                    // Just an error we dont know about
+                    if(res.message == undefined) {
+                        console.error(res);
+                    } else {
+                        console.error(res.message);
+                    }
+
+                    dialog.modal('hide');
+                }
+            }
+        }).catch(function(jqXHR, textStatus, errorThrown) {
+
+            console.error(jqXHR, textStatus, errorThrown);
+            toastr.error('Element form load failed!');
+
+            dialog.modal('hide');
+        });
+    }  
+};
+/**
+ * Add media from library to a playlist
+ * @param {number} playlistId 
+ * @param {number} mediaId 
+ */
+lD.addMediaToPlaylist = function(playlistId, mediaId) {
+
+    // Get media Id
+    const mediaToAdd = {
+        media: [
+            mediaId
+        ]
+    };
+
+    // Create change to be uploaded
+    lD.manager.addChange(
+        'addMedia',
+        'playlist', // targetType 
+        playlistId,  // targetId
+        null,  // oldValues
+        mediaToAdd, // newValues
+        {
+            updateTargetId: true,
+            updateTargetType: 'widget'
+        }
+    ).then((res) => { // Success
+
+        // Behavior if successful 
+        toastr.success(res.message);
+        lD.timeline.resetZoom();
+        lD.reloadData(lD.layout);
+    }).catch((error) => { // Fail/error
+
+        // Show error returned or custom message to the user
+        let errorMessage = 'Add media failed: ';
+
+        if(typeof error == 'string') {
+            errorMessage += error;
+        } else {
+            errorMessage += error.errorThrown;
+        }
+
+        toastr.error(errorMessage);
+    });
+};
 
 /**
  * Open Upload Form
@@ -877,7 +1037,7 @@ lD.openUploadForm = function(templateOptions, buttons) {
         animate: false,
         updateInAllChecked: uploadFormUpdateAllDefault,
         deleteOldRevisionsChecked: uploadFormDeleteOldDefault
-    });
+    }).attr('data-test', 'uploadFormModal');
 
     lD.openUploadFormModelShown($(".modal-body").find("form"));
 };
@@ -960,7 +1120,6 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
     return element;
 };
 
-
 /**
  * Call layout status
  */
@@ -976,8 +1135,21 @@ lD.layoutStatus = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
+
         if(!res.success) {
-            console.error('Get status error');
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console

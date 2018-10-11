@@ -96,11 +96,14 @@ Playlist.prototype.calculateTimeValues = function() {
 };
 
 /**
- * Add a new empty element to the playlist
- * @param {string} elementType - element type (widget, region, ...)
+ * Add action to take after dropping a draggable item
+ * @param {object} droppable - Target drop object
+ * @param {object} draggable - Dragged object
  */
-Playlist.prototype.addElement = function(draggable) {
+Playlist.prototype.addElement = function(droppable, draggable) {
+
     const draggableType = $(draggable).data('type');
+    const draggableSubType = $(draggable).data('subType');
 
     // Get playlist Id
     const playlistId = this.playlistId;
@@ -116,7 +119,9 @@ Playlist.prototype.addElement = function(draggable) {
         };
 
         // Show loading screen in the dropzone
-        pE.showLoadingScreen();
+        pE.showLocalLoadingScreen();
+
+        pE.common.showLoadingScreen();
 
         // Create change to be uploaded
         pE.manager.addChange(
@@ -131,10 +136,14 @@ Playlist.prototype.addElement = function(draggable) {
             }
         ).then((res) => { // Success
 
+            pE.common.hideLoadingScreen();
+
             // Behavior if successful            
             toastr.success(res.message);
             pE.reloadData();
         }).catch((error) => { // Fail/error
+
+            pE.common.hideLoadingScreen();
 
             // Show error returned or custom message to the user
             let errorMessage = 'Add media failed: ';
@@ -147,7 +156,7 @@ Playlist.prototype.addElement = function(draggable) {
 
             toastr.error(errorMessage);
         });
-    } else { // Add widget/module
+    } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
         const regionSpecific = $(draggable).data('regionSpecific');
@@ -184,7 +193,7 @@ Playlist.prototype.addElement = function(draggable) {
             let requestPath = linkToAPI.url;
 
             // Replace type
-            requestPath = requestPath.replace(':type', draggableType);
+            requestPath = requestPath.replace(':type', draggableSubType);
 
             // Replace playlist id
             requestPath = requestPath.replace(':id', playlistId);
@@ -194,7 +203,7 @@ Playlist.prototype.addElement = function(draggable) {
 
             let dialog = bootbox.dialog({
                 className: 'second-dialog',
-                title: 'Add ' + draggableType + ' widget',
+                title: 'Add ' + draggableSubType + ' widget',
                 message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
                 buttons: {
                     cancel: {
@@ -207,8 +216,8 @@ Playlist.prototype.addElement = function(draggable) {
                         callback: function(res) {
 
                             // Run form open module optional function
-                            if(typeof window[draggableType + '_form_add_submit'] === 'function') {
-                                window[draggableType + '_form_add_submit'].bind(dialog)();
+                            if(typeof window[draggableSubType + '_form_add_submit'] === 'function') {
+                                window[draggableSubType + '_form_add_submit'].bind(dialog)();
                             }
 
                             // If form is valid, submit it ( add change )
@@ -217,7 +226,9 @@ Playlist.prototype.addElement = function(draggable) {
                                 const form = dialog.find('form');
 
                                 // Show loading screen in the dropzone
-                                pE.showLoadingScreen();
+                                pE.showLocalLoadingScreen();
+
+                                pE.common.showLoadingScreen();
 
                                 pE.manager.addChange(
                                     'addWidget',
@@ -235,6 +246,8 @@ Playlist.prototype.addElement = function(draggable) {
                                     }
                                 ).then((res) => { // Success
 
+                                    pE.common.hideLoadingScreen();
+
                                     // Behavior if successful 
                                     toastr.success(res.message);
 
@@ -243,6 +256,8 @@ Playlist.prototype.addElement = function(draggable) {
                                     pE.reloadData();
 
                                 }).catch((error) => { // Fail/error
+
+                                    pE.common.hideLoadingScreen();
 
                                     // Show error returned or custom message to the user
                                     let errorMessage = '';
@@ -269,13 +284,17 @@ Playlist.prototype.addElement = function(draggable) {
                         }
                     }
                 }
-            }).attr("id", calculatedId);
+            }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
+
+            pE.common.showLoadingScreen();
 
             // Request and load element form
             $.ajax({
                 url: requestPath,
                 type: linkToAPI.type
             }).done(function(res) {
+
+                pE.common.hideLoadingScreen();
 
                 if(res.success) {
                     // Add title
@@ -290,8 +309,8 @@ Playlist.prototype.addElement = function(draggable) {
                     XiboInitialise("#" + dialog.attr("id"));
 
                     // Run form open module optional function
-                    if(typeof window[draggableType + '_form_add_open'] === 'function') {
-                        window[draggableType + '_form_add_open'].bind(dialog)();
+                    if(typeof window[draggableSubType + '_form_add_open'] === 'function') {
+                        window[draggableSubType + '_form_add_open'].bind(dialog)();
                     }
 
                 } else {
@@ -317,11 +336,30 @@ Playlist.prototype.addElement = function(draggable) {
                 }
             }).catch(function(jqXHR, textStatus, errorThrown) {
 
+                pE.common.hideLoadingScreen();
+
                 console.error(jqXHR, textStatus, errorThrown);
                 toastr.error('Element form load failed!');
 
                 dialog.modal('hide');
             });
+        }
+    } else if(draggableType == 'tool') { // Add tool
+
+        const widgetId = $(droppable).attr('id');
+        const widget = pE.getElementByTypeAndId('widget', widgetId);
+
+        // Select widget ( and avoid deselect if region was already selected )
+        pE.selectObject($(droppable), true);
+
+        if(draggableSubType == 'audio') {
+            widget.editAttachedAudio();
+        } else if(draggableSubType == 'expiry') {
+            widget.editExpiry();
+        } else if(draggableSubType == 'transitionIn') {
+            widget.editTransition('in');
+        } else if(draggableSubType == 'transitionOut') {
+            widget.editTransition('out');
         }
     }
 };
@@ -333,8 +371,12 @@ Playlist.prototype.addElement = function(draggable) {
  */
 Playlist.prototype.deleteElement = function(elementType, elementId) {
 
+    pE.common.showLoadingScreen(); 
+
     // Remove changes from the history array
     return pE.manager.removeAllChanges(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']).then((res) =>  {
+
+        pE.common.hideLoadingScreen(); 
 
         // Unselect selected object before deleting
         pE.selectObject(null, true);
@@ -352,6 +394,8 @@ Playlist.prototype.deleteElement = function(elementType, elementId) {
         );
 
     }).catch(function() {
+        pE.common.hideLoadingScreen(); 
+        
         toastr.error('Remove all changes failed!');
     });
     
@@ -362,6 +406,12 @@ Playlist.prototype.deleteElement = function(elementType, elementId) {
  * @param {object} widgets - Widgets DOM objects array
  */
 Playlist.prototype.saveOrder = function(widgets) {
+
+    if($.isEmptyObject(pE.playlist.widgets)) {
+        return Promise.resolve({
+            message: 'No widgets need saving!'
+        });
+    }
 
     // Get playlist's widgets previous order
     let oldOrder = {};

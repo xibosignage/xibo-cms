@@ -1,40 +1,86 @@
-/* Variables */
-@main-background-color: #a7a7a7;
-@min-editor-height: 650px;
-@widget-selected-color: #58b4fe;
+// Import
+@import "mixins.less";
+@import "toolbar.less";
 
+// Variables
+@playlist-editor-main-background-color: #fff;
+@playlist-editor-min-content-height: 40vh;
+@playlist-editor-max-content-height: 65vh;
 
-.modal-dialog {
-    padding-bottom: 160px;
+@playlist-editor-widget-bg-color:#b3ddff;
+@playlist-editor-widget-fg-color:#333;
+@playlist-editor-widget-selected-color: #58b4fe;
+@playlist-editor-widget-hover-bg-color:#e7f4fe;
+@playlist-editor-widget-border-color: #868686;
+
+@playlist-editor-z-index-background: 1011;
+@playlist-editor-z-index-overlay: 1012;
+@playlist-editor-z-index-select: 1013;
+
+@playlist-editor-timeline-fg-color: #3a3eb6;
+
+// CSS
+.editor-modal {
+    display: block;
+    z-index: @playlist-editor-z-index-background;
+    overflow: auto;
+    .set-transparent-color(background; #000; 60%);
 }
 
-#playlist-editor  {
-    background: @main-background-color;
-    min-height: @min-editor-height;
-    padding: 10px 0;
+.editor-modal-dialog {
+    margin-top: 20px;
+}
+
+@media (min-width: 1200px) {
+    .editor-modal-dialog {
+        width: 1050px;
+    }
+}
+
+.editor-modal-content {
+    background: @playlist-editor-main-background-color;
+    margin-bottom: 160px;
+}
+
+.editor-modal-body {
+    padding: 15px 0 0 0;
+}
+
+.editor-modal-title {
+    line-height: 1;
 }
 
 #playlist-editor #playlist-timeline {
-    background: #d2d9ff;
-    min-height: @min-editor-height;
+    background: #f3f3f3;
+    border-radius: 6px;
+    border: 2px solid @playlist-editor-timeline-fg-color;
 }
 
 #playlist-editor #playlist-timeline #timeline-container{
     padding: 0 5px;
-    height: 615px;
+    height: @playlist-editor-max-content-height;
     overflow: auto;
 }
 
-#playlist-editor #playlist-viewer-container {
-    background: #a0e1a5;
-    min-height: 300px;
-    margin-bottom: 10px;
+#playlist-editor #playlist-properties-panel  {
+    background: #f3f3f3;
+    padding: 0;
+    border-radius: 6px;
+    border: 2px solid @playlist-editor-widget-selected-color;
 }
 
-#playlist-editor #playlist-properties-panel  {
-    background: white;
-    min-height: @min-editor-height;
-    padding: 0;
+#playlist-editor-container.ui-droppable-active {
+    .z-index-set(@playlist-editor-z-index-select);
+    .background-stripes(45deg; darken(@playlist-editor-main-background-color, 10%); darken(@playlist-editor-main-background-color, 20%); 10px; 4px);
+}
+
+#playlist-editor-container.ui-droppable-active.ui-droppable-hover,
+#playlist-editor-container.ui-droppable-active:hover {
+    .background-stripes(45deg; darken(@playlist-editor-main-background-color, 30%); darken(@playlist-editor-main-background-color, 40%); 10px; 4px);
+}
+
+#playlist-editor-container.ui-droppable-active * {
+    visibility: hidden;
 }
 
 #playlist-editor #dropzone-container {
@@ -55,8 +101,12 @@
     padding: 270px 0;
 }
 
-#playlist-editor-toolbar .navbar{
-    z-index: 1080;
+#playlist-editor-toolbar nav{
+    margin-left: 0;
+}
+
+.custom-overlay{
+    z-index: @playlist-editor-z-index-overlay;
 }
 
 .form-title {
@@ -65,13 +115,13 @@
     font-size: 1.5em;
     margin-bottom: 5px;
     color: white;
-    background-color: #3a3eb6;
+    background-color: @playlist-editor-timeline-fg-color;
     height: 30px;
 }
 
 .form-title-widget {
     color: #222;
-    background: @widget-selected-color;
+    background: @playlist-editor-widget-selected-color;
 }
 
 .form-title-playlist {
@@ -84,32 +134,72 @@
 
 /* Playlist Widget */
 .playlist-widget {
-    background: #b3ddff;
-    color: #222;
+    background: @playlist-editor-widget-bg-color;
+    color: @playlist-editor-widget-fg-color;
     font-weight: bold;
-    padding: 10px;
+    height: 40px;
     width: 100%;
     border-radius: 4px;
-    border: 1px solid #868686;
+    border: 1px solid @playlist-editor-widget-border-color;
     margin-bottom: 4px;
 }
 
 .playlist-widget.selectable {
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-    -moz-user-select: none; /* Firefox */
-    -ms-user-select: none; /* Internet Explorer/Edge */
-    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+    .user-select-none();
+}
+
+.playlist-widget.selected {
+    background: @playlist-editor-widget-selected-color !important;
 }
 
 .playlist-widget.selectable:hover {
-    background: #e7f4fe !important;
+    background: @playlist-editor-widget-hover-bg-color !important;
 }
 
+.playlist-widget.ui-droppable-active {
+    .z-index-set(@playlist-editor-z-index-select);
+    .background-stripes(45deg; darken(@playlist-editor-widget-hover-bg-color, 30%); darken(@playlist-editor-widget-hover-bg-color, 40%); 10px; 4px);
+}
 
-.playlist-widget.selected {
-    background: @widget-selected-color !important;
+.playlist-widget.ui-droppable-active.ui-droppable-hover,
+.playlist-widget.ui-droppable-active:hover {
+    .background-stripes(45deg; darken(@playlist-editor-widget-hover-bg-color, 50%); darken(@playlist-editor-widget-hover-bg-color, 60%); 10px; 4px);
+}
+
+.playlist-widget.ui-droppable-active * {
+    visibility: hidden;
+}
+
+.playlist-widget i.editProperty {
+    float: right;
+    cursor: pointer;
+    padding: 2px;
+    color: @playlist-editor-widget-fg-color;
+}
+
+.playlist-widget .widgetLabel {
+    color: @playlist-editor-main-background-color;
+    width: 25px;
+    display: inline-block;
+    height: 100%;
+    text-align: center;
+    margin-left: 8px;
+}
+
+.playlist-widget .widgetTitle {
+    display: inline-block;
+}
+
+.playlist-widget i.editProperty:hover {
+    color: lighten(@playlist-editor-widget-fg-color, 20%);
+}
+
+.ui-droppable-active {
+    .box-shadow(inset 0 0 20px #fff);
+}
+
+.ui-droppable-hover {
+    .box-shadow(inset 0 0 10px #313131);
 }
 
 // Bootbox custom dialogs
