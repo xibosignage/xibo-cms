@@ -945,9 +945,9 @@ class InstallMigration extends AbstractMigration
             ->addColumn('availableAsIn', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('availableAsOut', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->insert([
-                ['transition' => 'Fade In', 'code' => 'fadeIn', 'hasDuration' => 1, 'hasDirection' => 0, 'availableAsIn' => 0, 'availableAsOut' => 0],
-                ['transition' => 'Fade Out', 'code' => 'fadeOut', 'hasDuration' => 1, 'hasDirection' => 0, 'availableAsIn' => 0, 'availableAsOut' => 0],
-                ['transition' => 'Fly', 'code' => 'fly', 'hasDuration' => 1, 'hasDirection' => 1, 'availableAsIn' => 0, 'availableAsOut' => 0],
+                ['transition' => 'Fade In', 'code' => 'fadeIn', 'hasDuration' => 1, 'hasDirection' => 0, 'availableAsIn' => 1, 'availableAsOut' => 0],
+                ['transition' => 'Fade Out', 'code' => 'fadeOut', 'hasDuration' => 1, 'hasDirection' => 0, 'availableAsIn' => 0, 'availableAsOut' => 1],
+                ['transition' => 'Fly', 'code' => 'fly', 'hasDuration' => 1, 'hasDirection' => 1, 'availableAsIn' => 1, 'availableAsOut' => 1],
             ])
             ->save();
 
