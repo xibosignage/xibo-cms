@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2018 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,6 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Controller;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
@@ -295,13 +297,13 @@ class Settings extends Base
                 $newElevateUntil = $value;
             }
 
-            $this->getConfig()->ChangeSetting($setting['setting'], $value, false);
+            $this->getConfig()->changeSetting($setting['setting'], $value, false);
         }
 
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'), false);
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'), false);
         }
 
         // Return

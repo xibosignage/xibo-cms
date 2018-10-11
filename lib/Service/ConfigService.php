@@ -226,7 +226,7 @@ class ConfigService implements ConfigServiceInterface
     public function loadTheme($themeName = null)
     {
         // What is the currently selected theme?
-        $globalTheme = ($themeName == NULL) ? $this->GetSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
+        $globalTheme = ($themeName == NULL) ? $this->getSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
 
         // Is this theme valid?
         $systemTheme = (is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme) && file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'));
@@ -318,8 +318,11 @@ class ConfigService implements ConfigServiceInterface
         }
     }
 
-    /** @inheritdoc */
-    public function getSettings()
+    /**
+     * Get settings
+     * @return array|mixed|null
+     */
+    private function getSettings()
     {
         $item = null;
 
@@ -363,7 +366,7 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /** @inheritdoc */
-    public function GetSetting($setting, $default = NULL)
+    public function getSetting($setting, $default = NULL)
     {
         $this->getSettings();
 
@@ -371,24 +374,33 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /** @inheritdoc */
-    public function ChangeSetting($setting, $value)
+    public function changeSetting($setting, $value)
     {
         $this->getSettings();
 
-        if (isset($this->settings[$setting])) {
-            // Update in memory cache
-            $this->settings[$setting] = $value;
+        // Update in memory cache
+        $this->settings[$setting] = $value;
 
+        if (isset($this->settings[$setting])) {
+            // We've already got this setting recorded, update it for
             // Update in database
             $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
-                'setting' => $setting, 'value' => $value
+                'setting' => $setting,
+                'value' => $value
             ]);
+        } else {
+            // A new setting we've not seen before.
+            // record it in the settings table.
+            $this->getStore()->insert('INSERT INTO `setting` (`value`, setting) VALUES (:value, :setting);', [
+                'setting' => $setting,
+                'value' => $value
+            ]);
+        }
 
-            // Drop the cache if we've not already done so this time around
-            if (!$this->settingsCacheDropped && $this->getPool() !== null) {
-                $this->getPool()->deleteItem($this->settingCacheKey);
-                $this->settingsCacheDropped = true;
-            }
+        // Drop the cache if we've not already done so this time around
+        if (!$this->settingsCacheDropped && $this->getPool() !== null) {
+            $this->getPool()->deleteItem($this->settingCacheKey);
+            $this->settingsCacheDropped = true;
         }
     }
 
@@ -399,7 +411,7 @@ class ConfigService implements ConfigServiceInterface
     */
     public function isProxyException($host)
     {
-        $proxyExceptions = $this->GetSetting('PROXY_EXCEPTIONS');
+        $proxyExceptions = $this->getSetting('PROXY_EXCEPTIONS');
 
         // If empty, cannot be an exception
         if (empty($proxyExceptions))
@@ -434,14 +446,14 @@ class ConfigService implements ConfigServiceInterface
     public function getGuzzleProxy($httpOptions = [])
     {
         // Proxy support
-        if ($this->GetSetting('PROXY_HOST') != '') {
+        if ($this->getSetting('PROXY_HOST') != '') {
 
-            $proxy = $this->GetSetting('PROXY_HOST') . ':' . $this->GetSetting('PROXY_PORT');
+            $proxy = $this->getSetting('PROXY_HOST') . ':' . $this->getSetting('PROXY_PORT');
 
-            if ($this->GetSetting('PROXY_AUTH') != '') {
+            if ($this->getSetting('PROXY_AUTH') != '') {
                 $scheme = explode('://', $proxy);
 
-                $proxy = $scheme[0] . $this->GetSetting('PROXY_AUTH') . '@' . $scheme[1];
+                $proxy = $scheme[0] . $this->getSetting('PROXY_AUTH') . '@' . $scheme[1];
             }
 
             $httpOptions['proxy'] = [
@@ -449,8 +461,8 @@ class ConfigService implements ConfigServiceInterface
                 'https' => $proxy
             ];
 
-            if ($this->GetSetting('PROXY_EXCEPTIONS') != '') {
-                $httpOptions['proxy']['no'] = explode(',', $this->GetSetting('PROXY_EXCEPTIONS'));
+            if ($this->getSetting('PROXY_EXCEPTIONS') != '') {
+                $httpOptions['proxy']['no'] = explode(',', $this->getSetting('PROXY_EXCEPTIONS'));
             }
         }
 
@@ -481,7 +493,7 @@ class ConfigService implements ConfigServiceInterface
      * Checks the Environment and Determines if it is suitable
      * @return array
      */
-    public function CheckEnvironment()
+    public function checkEnvironment()
     {
         $rows = array();
 

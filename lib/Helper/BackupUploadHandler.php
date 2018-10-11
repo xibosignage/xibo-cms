@@ -23,7 +23,7 @@ class BackupUploadHandler extends BlueImpUploadHandler
         // Upload and Save
         try {
             // Move the uploaded file to a temporary location in the library
-            $destination = tempnam($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/', 'dmp');
+            $destination = tempnam($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/', 'dmp');
             rename($fileName, $destination);
 
             global $dbuser;

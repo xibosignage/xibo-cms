@@ -32,7 +32,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         // Handle form data, e.g. $_REQUEST['description'][$index]
         // Link the file to the module
         $fileName = $file->name;
-        $filePath = $controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
+        $filePath = $controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
 
         $controller->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
 
@@ -258,7 +258,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $module->postProcess($media);
 
                 // Permissions
-                foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->GetSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
+                foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->getSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -310,7 +310,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Handle permissions
                 // https://github.com/xibosignage/xibo/issues/1274
-                if ($controller->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+                if ($controller->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                     // Apply permissions from the Parent
                     foreach ($playlist->permissions as $permission) {
                         /* @var Permission $permission */
@@ -318,7 +318,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         $permission->save();
                     }
                 } else {
-                    foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($widget), $widget->getId(), $controller->getConfig()->GetSetting('LAYOUT_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
+                    foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($widget), $widget->getId(), $controller->getConfig()->getSetting('LAYOUT_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
                         /* @var Permission $permission */
                         $permission->save();
                     }

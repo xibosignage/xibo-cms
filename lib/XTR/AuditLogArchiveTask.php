@@ -125,7 +125,7 @@ class AuditLogArchiveTask implements TaskInterface
         }
 
         // Create a temporary file for this
-        $fileName = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp/auditlog.csv';
+        $fileName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/auditlog.csv';
 
         $out = fopen($fileName, 'w');
         fputcsv($out, ['logId', 'logDate', 'userId', 'message', 'entity', 'entityId', 'objectAfter']);

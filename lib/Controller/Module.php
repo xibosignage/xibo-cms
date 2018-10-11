@@ -224,7 +224,7 @@ class Module extends Base
     public function settingsForm($moduleId)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
+        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
@@ -250,7 +250,7 @@ class Module extends Base
     public function settings($moduleId)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
+        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
@@ -461,7 +461,7 @@ class Module extends Base
         $module->add();
 
         // Permissions
-        if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+        if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
             // Apply permissions from the Parent
             foreach ($playlist->permissions as $permission) {
                 /* @var Permission $permission */
@@ -469,7 +469,7 @@ class Module extends Base
                 $permission->save();
             }
         } else {
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -1066,7 +1066,7 @@ class Module extends Base
         $modules = [];
 
         // Do we have any modules to install?!
-        if ($this->getConfig()->GetSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+        if ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
             $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
 

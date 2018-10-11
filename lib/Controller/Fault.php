@@ -76,7 +76,7 @@ class Fault extends Base
 
         $config = $this->getConfig();
         $data = [
-            'environmentCheck' => $config->CheckEnvironment(),
+            'environmentCheck' => $config->checkEnvironment(),
             'environmentFault' => $config->envFault,
             'environmentWarning' => $config->envWarning,
             'binLogError' => ($config->checkBinLogEnabled() && !$config->checkBinLogFormat()),
@@ -92,7 +92,7 @@ class Fault extends Base
         $this->setNoOutput(true);
 
         // Create a ZIP file
-        $tempFileName = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString();
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString();
         $zip = new \ZipArchive();
 
         $result = $zip->open($tempFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
@@ -117,7 +117,7 @@ class Fault extends Base
 
         // Should we output a log?
         if ($outputLog) {
-            $tempLogFile = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/log_' . Random::generateString();
+            $tempLogFile = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/log_' . Random::generateString();
             $out = fopen($tempLogFile, 'w');
             fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
@@ -137,7 +137,7 @@ class Fault extends Base
             $zip->addFromString('environment.json', json_encode(array_map(function ($element) {
                 unset($element['advice']);
                 return $element;
-            }, $this->getConfig()->CheckEnvironment()), JSON_PRETTY_PRINT));
+            }, $this->getConfig()->checkEnvironment()), JSON_PRETTY_PRINT));
         }
 
         // Output Settings
@@ -180,12 +180,12 @@ class Fault extends Base
         header('Content-Length: ' . filesize($tempFileName));
 
         // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $tempFileName");
             $this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
+        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($tempFileName));
             $this->getApp()->halt(200);
         }
@@ -200,8 +200,8 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $this->getConfig()->ChangeSetting('audit', 'DEBUG');
-        $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
+        $this->getConfig()->changeSetting('audit', 'DEBUG');
+        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
 
         // Return
         $this->getState()->hydrate([
@@ -214,8 +214,8 @@ class Fault extends Base
         if ($this->getUser()->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $this->getConfig()->ChangeSetting('audit', $this->getConfig()->GetSetting('RESTING_LOG_LEVEL'));
-        $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', '');
+        $this->getConfig()->changeSetting('audit', $this->getConfig()->getSetting('RESTING_LOG_LEVEL'));
+        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', '');
 
         // Return
         $this->getState()->hydrate([

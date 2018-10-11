@@ -68,7 +68,7 @@ class PlayerActionService implements PlayerActionServiceInterface
 
         // XMR network address
         if ($this->xmrAddress == null)
-            $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
+            $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
 
         if (!is_array($displays))
             $displays = [$displays];
@@ -111,7 +111,7 @@ class PlayerActionService implements PlayerActionServiceInterface
 
         // XMR network address
         if ($this->xmrAddress == null)
-            $this->xmrAddress = $this->getConfig()->GetSetting('XMR_ADDRESS');
+            $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
 
         $failures = 0;
 

@@ -384,7 +384,7 @@ class DataSet implements \JsonSerializable
         // Sanitize the filter options provided
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->GetSetting('DEFAULT_LAT') . " " . $this->config->GetSetting('DEFAULT_LONG') . ")')";
+            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->getSetting('DEFAULT_LAT') . " " . $this->config->getSetting('DEFAULT_LONG') . ")')";
         }
         else {
             $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
@@ -735,7 +735,7 @@ class DataSet implements \JsonSerializable
         // Touch this dataSet
         $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
         $dataSetCache->set('true');
-        $dataSetCache->expiresAfter(intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
+        $dataSetCache->expiresAfter(intval($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
         $this->pool->saveDeferred($dataSetCache);
     }
 

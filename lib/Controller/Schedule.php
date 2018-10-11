@@ -205,7 +205,7 @@ class Schedule extends Base
         }
 
         // Setting for whether we show Layouts with out permissions
-        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+        $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
@@ -387,7 +387,7 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Setting for whether we show Layouts with out permissions
-        $showLayoutName = ($this->getConfig()->GetSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+        $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
         $date = $this->getSanitizer()->getDate('date');
 
@@ -821,7 +821,7 @@ class Schedule extends Base
                 if ($recurrenceRange != null)
                     $schedule->recurrenceRange = $recurrenceRange->format('U');
 
-            } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+            } else if (!($this->isApi() || str_contains($this->getConfig()->getSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
                 // event comes from the UI.
@@ -1072,7 +1072,7 @@ class Schedule extends Base
                 $schedule->toDt = null;
                 $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->format('U');
 
-            } else if (!($this->isApi() || str_contains($this->getConfig()->GetSetting('DATE_FORMAT'), 's'))) {
+            } else if (!($this->isApi() || str_contains($this->getConfig()->getSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
                 // event comes from the UI.
@@ -1176,7 +1176,7 @@ class Schedule extends Base
      */
     private function isEventEditable($displayGroups)
     {
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
@@ -1206,7 +1206,7 @@ class Schedule extends Base
     {
         $groups = array();
         $displays = array();
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */

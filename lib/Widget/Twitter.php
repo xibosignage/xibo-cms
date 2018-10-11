@@ -481,8 +481,8 @@ class Twitter extends TwitterBase
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
-                $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
-                $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
+                $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
+                $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
             }
 
             // Built the geoCode string.
@@ -598,7 +598,7 @@ class Twitter extends TwitterBase
         $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {

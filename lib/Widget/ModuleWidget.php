@@ -707,7 +707,7 @@ abstract class ModuleWidget implements ModuleInterface
     /** @inheritdoc */
     public function delete()
     {
-        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
+        $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION')
             . 'widget'
             . DIRECTORY_SEPARATOR
             . $this->getWidgetId()
@@ -1099,7 +1099,7 @@ abstract class ModuleWidget implements ModuleInterface
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // The file path
-        $libraryPath = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $media->storedAs;
+        $libraryPath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . $media->storedAs;
 
         // Set the content length
         $headers = $this->getApp()->response()->headers();
@@ -1126,11 +1126,11 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         // Output the file
-        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             // Send via Apache X-Sendfile header?
             $headers->set('X-Sendfile', $libraryPath);
         }
-        else if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
+        else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
             $headers->set('X-Accel-Redirect', '/download/' . $media->storedAs);
         }
@@ -1393,7 +1393,7 @@ abstract class ModuleWidget implements ModuleInterface
         $modifiedDt = $this->getModifiedDate($displayId);
         $cachedDt = $this->getCacheDate($displayId);
         $cacheDuration = $this->getCacheDuration();
-        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
+        $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION')
             . 'widget'
             . DIRECTORY_SEPARATOR
             . $this->getWidgetId()

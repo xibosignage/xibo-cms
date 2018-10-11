@@ -24,9 +24,9 @@ namespace Xibo\Widget;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
-use Xibo\Exception\InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
@@ -486,8 +486,8 @@ class ForecastIo extends ModuleWidget
      */
     private function getForecastData($displayId)
     {
-        $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
-        $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
+        $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
 
         if ($this->getOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.

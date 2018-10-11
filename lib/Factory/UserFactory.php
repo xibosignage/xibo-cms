@@ -185,7 +185,7 @@ class UserFactory extends BaseFactory
         $user->userId = 1;
         $user->userName = 'system';
         $user->userTypeId = 1;
-        $user->email = $this->configService->GetSetting('mail_to');
+        $user->email = $this->configService->getSetting('mail_to');
 
         return $user;
     }

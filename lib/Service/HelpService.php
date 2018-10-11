@@ -121,7 +121,7 @@ class HelpService implements HelpServiceInterface
      */
     private function getBaseUrl()
     {
-        $helpBase = $this->getConfig()->GetSetting('HELP_BASE');
+        $helpBase = $this->getConfig()->getSetting('HELP_BASE');
 
         if (stripos($helpBase, 'http://') === false && stripos($helpBase, 'https://') === false) {
             // We need to convert the URL to a full URL

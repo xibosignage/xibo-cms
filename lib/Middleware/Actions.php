@@ -46,7 +46,7 @@ class Actions extends Middleware
         $app->hook('slim.before.dispatch', function() use ($app) {
 
             // Process Actions
-            if (!Environment::migrationPending() && $app->configService->GetSetting('DEFAULTS_IMPORTED') == 0) {
+            if (!Environment::migrationPending() && $app->configService->getSetting('DEFAULTS_IMPORTED') == 0) {
 
                 $folder = $app->configService->uri('layouts', true);
 
@@ -66,7 +66,7 @@ class Actions extends Middleware
                 }
 
                 // Layouts imported
-                $app->configService->ChangeSetting('DEFAULTS_IMPORTED', 1);
+                $app->configService->changeSetting('DEFAULTS_IMPORTED', 1);
 
                 // Install files
                 $app->container->get('\Xibo\Controller\Library')->installAllModuleFiles();

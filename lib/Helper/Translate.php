@@ -46,7 +46,7 @@ class Translate
     public static function InitLocale($config, $language = NULL)
     {
         // The default language
-        $default = ($language === null) ? $config->GetSetting('DEFAULT_LANGUAGE') : $language;
+        $default = ($language === null) ? $config->getSetting('DEFAULT_LANGUAGE') : $language;
 
         // Build an array of supported languages
         $localeDir = PROJECT_ROOT . '/locale';
@@ -66,7 +66,7 @@ class Translate
                 $foundLanguage = self::$requestedLanguage;
             }
         }
-        else if ($config->GetSetting('DETECT_LANGUAGE') == 1) {
+        else if ($config->getSetting('DETECT_LANGUAGE') == 1) {
             // Detect the language, try from HTTP accept
             // Parse the language header and build a preference array
             $languagePreferenceArray = Translate::parseHttpAcceptLanguageHeader();

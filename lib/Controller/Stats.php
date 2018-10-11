@@ -682,7 +682,7 @@ class Stats extends Base
             if ($this->getUser()->libraryQuota != 0) {
                 $libraryLimit = $this->getUser()->libraryQuota * 1024;
             } else {
-                $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+                $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
             // Library Size in Bytes

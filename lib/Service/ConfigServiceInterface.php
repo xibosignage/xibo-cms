@@ -39,23 +39,20 @@ interface ConfigServiceInterface
      */
     public function getDatabaseConfig();
 
-    /** @return array */
-    public function getSettings();
-
     /**
      * Gets the requested setting from the DB object given
      * @param $setting string
      * @param string[optional] $default
      * @return string
      */
-    public function GetSetting($setting, $default = NULL);
+    public function getSetting($setting, $default = NULL);
 
     /**
      * Change Setting
      * @param string $setting
      * @param mixed $value
      */
-    public function ChangeSetting($setting, $value);
+    public function changeSetting($setting, $value);
 
     /**
      * Should the host be considered a proxy exception
@@ -75,7 +72,7 @@ interface ConfigServiceInterface
      * Checks the Environment and Determines if it is suitable
      * @return string
      */
-    public function CheckEnvironment();
+    public function checkEnvironment();
 
     /**
      * Loads the theme

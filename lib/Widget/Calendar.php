@@ -388,7 +388,7 @@ class Calendar extends ModuleWidget
         }
 
         // Get a date format
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
         $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         
         // Decide on the Range we're interested in

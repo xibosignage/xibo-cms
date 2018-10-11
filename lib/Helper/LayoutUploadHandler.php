@@ -46,7 +46,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
-                $controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
+                $controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
                 $name,
                 $this->options['userId'],
                 $template,
@@ -59,7 +59,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $layout->save();
 
-            @unlink($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
+            @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
             // Set the name for the return
             $file->name = $layout->layout;

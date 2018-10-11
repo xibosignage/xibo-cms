@@ -1300,11 +1300,11 @@ class User implements \JsonSerializable
     public function testPasswordAgainstPolicy($password)
     {
         // Check password complexity
-        $policy = $this->configService->GetSetting('USER_PASSWORD_POLICY');
+        $policy = $this->configService->getSetting('USER_PASSWORD_POLICY');
 
         if ($policy != '')
         {
-            $policyError = $this->configService->GetSetting('USER_PASSWORD_ERROR');
+            $policyError = $this->configService->getSetting('USER_PASSWORD_ERROR');
             $policyError = ($policyError == '') ? __('Your password does not meet the required complexity') : $policyError;
 
             if(!preg_match($policy, $password, $matches))

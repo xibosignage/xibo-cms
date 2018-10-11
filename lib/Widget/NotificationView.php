@@ -190,7 +190,7 @@ class NotificationView extends ModuleWidget
     private function getNotifications($isPreview, $displayId = null)
     {
         // Date format
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
         $age = $this->getOption('age', 0);
 
         // Parse the text template

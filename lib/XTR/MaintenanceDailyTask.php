@@ -72,9 +72,9 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Tidy Logs') . PHP_EOL;
 
-        if ($this->config->GetSetting('MAINTENANCE_LOG_MAXAGE') != 0) {
+        if ($this->config->getSetting('MAINTENANCE_LOG_MAXAGE') != 0) {
 
-            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->GetSetting('MAINTENANCE_LOG_MAXAGE'))));
+            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_LOG_MAXAGE'))));
 
             try {
                 $this->store->update('DELETE FROM `log` WHERE logdate < :maxage', ['maxage' => $maxage]);
@@ -98,9 +98,9 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Tidy Stats') . PHP_EOL;
 
-        if ($this->config->GetSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
+        if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
 
-            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->GetSetting('MAINTENANCE_STAT_MAXAGE'))));
+            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE'))));
 
             try {
                 $i = 0;
@@ -154,7 +154,7 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Import Layouts') . PHP_EOL;
 
-        if ($this->config->GetSetting('DEFAULTS_IMPORTED') == 0) {
+        if ($this->config->getSetting('DEFAULTS_IMPORTED') == 0) {
 
             $folder = $this->config->uri('layouts', true);
 
@@ -178,7 +178,7 @@ class MaintenanceDailyTask implements TaskInterface
                 }
             }
 
-            $this->config->ChangeSetting('DEFAULTS_IMPORTED', 1);
+            $this->config->changeSetting('DEFAULTS_IMPORTED', 1);
 
             $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
         } else {
