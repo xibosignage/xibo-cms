@@ -485,7 +485,8 @@ describe('Playlist Editor', function() {
             });
         });
 
-        it('adds a transition to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
+        // NOTE: Test skipped for now until transitions are enabled by default
+        it.skip('adds a transition to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');

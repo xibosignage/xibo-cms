@@ -149,9 +149,6 @@ Toolbar.prototype.loadPrefs = function() {
                 window.location.href = window.location.href;
                 location.reload(false);
             } else {
-
-                toastr.error('Load prefs failed!');
-
                 // Just an error we dont know about
                 if(res.message == undefined) {
                     console.error(res);
@@ -159,9 +156,9 @@ Toolbar.prototype.loadPrefs = function() {
                     console.error(res.message);
                 }
 
-            // Render toolbar even if the user prefs load fail
-            self.render();
-        }
+                // Render toolbar even if the user prefs load fail
+                self.render();
+            }
         }
 
     }).catch(function(jqXHR, textStatus, errorThrown) {
