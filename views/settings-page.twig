@@ -640,8 +640,8 @@
                                     {% set options = [
                                         { id: "private", value: privateOption },
                                         { id: "group", value: groupOption },
-                                        { id: "group write", value: groupWriteOption }
-                                        { id: "public", value: publicOption }
+                                        { id: "group write", value: groupWriteOption },
+                                        { id: "public", value: publicOption },
                                         { id: "public write", value: publicWriteOption }
                                     ] %}
                                     {% if theme.isSettingEditable("LAYOUT_DEFAULT") %}
@@ -663,8 +663,8 @@
                                     {% set options = [
                                         { id: "private", value: privateOption },
                                         { id: "group", value: groupOption },
-                                        { id: "group write", value: groupWriteOption }
-                                        { id: "public", value: publicOption }
+                                        { id: "group write", value: groupWriteOption },
+                                        { id: "public", value: publicOption },
                                         { id: "public write", value: publicWriteOption }
                                     ] %}
                                     {% if theme.isSettingEditable("MEDIA_DEFAULT") %}
@@ -798,8 +798,8 @@
                                     {% set errorOption %}{% trans "Error" %}{% endset %}
                                     {% set options = [
                                         { id: "emergency", value: emergencyOption },
-                                        { id: "alert", value: alertOption }
-                                        { id: "critical", value: criticalOption }
+                                        { id: "alert", value: alertOption },
+                                        { id: "critical", value: criticalOption },
                                         { id: "error", value: errorOption }
                                     ] %}
                                     {% if theme.isSettingEditable("RESTING_LOG_LEVEL") %}
@@ -823,12 +823,12 @@
                                     {% set debugOption %}{% trans "Debug" %}{% endset %}
                                     {% set options = [
                                         { id: "emergency", value: emergencyOption },
-                                        { id: "alert", value: alertOption }
-                                        { id: "critical", value: criticalOption }
-                                        { id: "error", value: errorOption }
-                                        { id: "warning", value: warningOption }
-                                        { id: "notice", value: noticeOption }
-                                        { id: "info", value: infoOption }
+                                        { id: "alert", value: alertOption },
+                                        { id: "critical", value: criticalOption },
+                                        { id: "error", value: errorOption },
+                                        { id: "warning", value: warningOption },
+                                        { id: "notice", value: noticeOption },
+                                        { id: "info", value: infoOption },
                                         { id: "debug", value: debugOption }
                                     ] %}
                                     {% if theme.isSettingEditable("audit") %}
@@ -843,9 +843,9 @@
                                     {% set helpText %}{% trans "Elevate the log level until this date." %}{% endset %}
 
                                     {% if theme.isSettingEditable("ELEVATE_LOG_UNTIL") %}
-                                        {{ forms.datetime("ELEVATE_LOG_UNTIL", title, theme.getSetting("ELEVATE_LOG_UNTIL"), helpText) }}
+                                        {{ forms.datetime("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
                                     {% else %}
-                                        {{ forms.disabled("ELEVATE_LOG_UNTIL", title, theme.getSetting("ELEVATE_LOG_UNTIL"), helpText) }}
+                                        {{ forms.disabled("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
                                     {% endif %}
                                 {% endif %}
 

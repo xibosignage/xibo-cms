@@ -232,7 +232,7 @@ class State extends Middleware
                 $elevateUntil = $app->configService->getSetting('ELEVATE_LOG_UNTIL');
 
                 if (intval($elevateUntil) < time()) {
-                    // Elevation has expired, revery log level
+                    // Elevation has expired, revert log level
                     $app->configService->changeSetting('audit', $app->configService->getSetting('RESTING_LOG_LEVEL'));
 
                     $level = $restingLevel;

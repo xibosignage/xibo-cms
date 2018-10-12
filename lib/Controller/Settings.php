@@ -114,6 +114,8 @@ class Settings extends Base
         $languages = [];
         $localeDir = PROJECT_ROOT . '/locale';
         foreach (array_map('basename', glob($localeDir . '/*.mo')) as $lang) {
+            // Trim the .mo off the end
+            $lang = str_replace('.mo', '', $lang);
             $languages[] = ['id' => $lang, 'value' => $lang];
         }
 
@@ -131,6 +133,19 @@ class Settings extends Base
             $defaultUserGroup = null;
         }
 
+        // Work out whether we're in a valid elevate log period
+        $elevateLogUntil = $this->getConfig()->getSetting('ELEVATE_LOG_UNTIL');
+
+        if ($elevateLogUntil != null) {
+            $elevateLogUntil = intval($elevateLogUntil);
+
+            if ($elevateLogUntil <= time()) {
+                $elevateLogUntil = null;
+            } else {
+                $elevateLogUntil = $this->getDate()->getLocalDate($elevateLogUntil);
+            }
+        }
+
         // Render the Theme and output
         $this->getState()->template = 'settings-page';
         $this->getState()->setData([
@@ -140,6 +155,7 @@ class Settings extends Base
             'timeZones' => $timeZones,
             'defaultLayout' => $defaultLayout,
             'defaultUserGroup' => $defaultUserGroup,
+            'elevateLogUntil' => $elevateLogUntil
         ]);
     }
 
@@ -470,7 +486,7 @@ class Settings extends Base
         }
 
         if ($this->getConfig()->isSettingEditable('ELEVATE_LOG_UNTIL')) {
-            $newElevateUntil = $this->getSanitizer()->getString('ELEVATE_LOG_UNTIL');
+            $newElevateUntil = $this->getSanitizer()->getDate('ELEVATE_LOG_UNTIL')->format('U');
             $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $newElevateUntil);
         }
 
