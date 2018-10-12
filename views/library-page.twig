@@ -342,6 +342,10 @@
                 }).bind('fileuploaddone', function (e, data) {
                     if (refreshSessionInterval != null && form.fileupload("active") <= 0)
                         clearInterval(refreshSessionInterval);
+                    if (templateOptions.oldMediaId !== undefined && templateOptions.oldMediaId !== null) {
+                        XiboDialogClose();
+                        table.ajax.reload();
+                    }
                 });
             });
         }
