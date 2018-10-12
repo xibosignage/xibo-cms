@@ -141,7 +141,7 @@ class Task extends Base
             );
 
             // Don't show any edit buttons if the config is locked.
-            if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked')
+            if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') == 'Checked')
                 continue;
 
             // Edit Button
@@ -173,7 +173,7 @@ class Task extends Base
         $data = ['tasksAvailable' => []];
 
         // Do we have any modules to install?!
-        if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked') {
+        if ($this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 0 && $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
             $files = array_merge(glob(PROJECT_ROOT . '/tasks/*.task'), glob(PROJECT_ROOT . '/custom/*.task'));
 

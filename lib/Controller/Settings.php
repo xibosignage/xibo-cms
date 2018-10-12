@@ -23,6 +23,7 @@
 namespace Xibo\Controller;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\SettingsFactory;
@@ -38,11 +39,6 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class Settings extends Base
 {
-    /**
-     * @var SettingsFactory
-     */
-    private $settingsFactory;
-
     /** @var  LayoutFactory */
     private $layoutFactory;
 
@@ -58,15 +54,13 @@ class Settings extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
-     * @param SettingsFactory $settingsFactory
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $settingsFactory, $layoutFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $userGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
-        $this->settingsFactory = $settingsFactory;
         $this->layoutFactory = $layoutFactory;
         $this->userGroupFactory = $userGroupFactory;
 
@@ -75,235 +69,439 @@ class Settings extends Base
     }
 
     /**
-     *
+     * Display Page
      */
-    function displayPage()
+    public function displayPage()
     {
-        // Get all of the settings in an array
-        $settings = $this->settingsFactory->query(null, ['userSee' => 1]);
-
-        $currentCategory = '';
-        $categories = array();
-        $formFields = array();
-
         // Should we hide other themes?
+        $themes = [];
         $hideThemes = $this->getConfig()->getThemeConfig('hide_others');
 
-        // Go through each setting, validate it and add it to the array
-        foreach ($settings as $setting) {
+        if (!$hideThemes) {
+            // Get all theme options
+            $directory = new \RecursiveDirectoryIterator(PROJECT_ROOT . '/web/theme', \FilesystemIterator::SKIP_DOTS);
+            $filter = new \RecursiveCallbackFilterIterator($directory, function($current, $key, $iterator) {
 
-            $options = [];
+                if ($current->isDir()) {
+                    return true;
+                }
 
-            if ($currentCategory != $setting['cat']) {
-                $currentCategory = $setting['cat'];
-                $categories[] = array('tabId' => $setting['cat'], 'tabName' => ucfirst($setting['cat']));
+                return strpos($current->getFilename(), 'config.php') === 0;
+            });
+
+            $iterator = new \RecursiveIteratorIterator($filter);
+
+            // Add options for all themes installed
+            foreach($iterator as $file) {
+                /* @var \SplFileInfo $file */
+                $this->getLog()->debug('Found ' . $file->getPath());
+
+                // Include the config file
+                include $file->getPath() . '/' . $file->getFilename();
+
+                $themes[] = ['id' => basename($file->getPath()), 'value' => $config['theme_name']];
             }
-
-            // Special handling for the theme selector
-            if (!$hideThemes && $setting['setting'] == 'GLOBAL_THEME_NAME') {
-                // Convert to a drop down containing the theme names that are available
-                $setting['fieldType'] = 'dropdown';
-
-                $directory = new \RecursiveDirectoryIterator(PROJECT_ROOT . '/web/theme', \FilesystemIterator::SKIP_DOTS);
-                $filter = new \RecursiveCallbackFilterIterator($directory, function($current, $key, $iterator) {
-
-                    if ($current->isDir()) {
-                        return true;
-                    }
-
-                    return strpos($current->getFilename(), 'config.php') === 0;
-                });
-
-                $iterator = new \RecursiveIteratorIterator($filter);
-
-                // Add options for all themes installed
-                $options = [];
-                foreach($iterator as $file) {
-                    /* @var \SplFileInfo $file */
-                    $this->getLog()->debug('Found %s', $file->getPath());
-
-                    // Include the config file
-                    include $file->getPath() . '/' . $file->getFilename();
-
-                    $options[] = ['id' => basename($file->getPath()), 'value' => $config['theme_name']];
-                }
-
-            } else if ($setting['setting'] == 'ELEVATE_LOG_UNTIL') {
-
-                // If we are less that the current date, then show as empty
-                if (intval($setting['value']) >= time()) {
-                    $setting['value'] = $this->getDate()->getLocalDate($setting['value']);
-                } else if ($setting['userChange'] == 0) {
-                    // Set to be now, plus 1 hour
-                    $setting['value'] = $this->getDate()->getLocalDate($this->getDate()->parse()->addHour(1));
-                } else {
-                    $setting['value'] = null;
-                }
-
-            }  else if ($setting['setting'] == 'DEFAULT_LAYOUT') {
-
-                // Show a list of all layouts in the system
-                // convert to a dropdown
-                $setting['fieldType'] = 'dropdown';
-
-                try {
-                    /** @var \Xibo\Entity\Layout $layout */
-                    $options[] = $this->layoutFactory->getById($setting['value']);
-                } catch (NotFoundException $notFoundException) {
-                    $options = [];
-                }
-
-            } else if ($setting['setting'] == 'DEFAULT_USERGROUP') {
-
-                // Show a list of all user groups in the system
-                // convert to a dropdown
-                $setting['fieldType'] = 'dropdown';
-
-                try {
-                    /** @var \Xibo\Entity\UserGroup $userGroup */
-                    foreach ($this->userGroupFactory->query(null, ['disableUserCheck' => 1, 'isUserSpecific' => 0]) as $group) {
-                        $options[] = ['groupId' => $group->groupId, 'group' => $group->group];
-                    }
-                } catch (NotFoundException $notFoundException) {
-                    $options = [];
-                }
-
-            } else {
-                // Are there any options
-                $options = NULL;
-                if (!empty($setting['options'])) {
-                    // Change to an id=>value array
-                    foreach (explode('|', $setting['options']) as $tempOption)
-                        $options[] = array('id' => $tempOption, 'value' => $tempOption);
-                }
-            }
-
-            // Validate the current setting
-            if ($setting['type'] == 'checkbox' && isset($setting['value']))
-                $validated = $setting['value'];
-            else if (isset($setting['value']))
-                $validated = $setting['value'];
-            else
-                $validated = $setting['default'];
-
-            // Time zone type requires special handling.
-            if ($setting['fieldType'] == 'timezone') {
-                $options = [];
-                foreach ($this->getDate()->timezoneList() as $key => $value) {
-                    $options[] = ['id' => $key, 'value' => $value];
-                }
-            }
-
-            // Get a list of settings and assign them to the settings field
-            $formFields[] = array(
-                'name' => $setting['setting'],
-                'type' => $setting['type'],
-                'fieldType' => $setting['fieldType'],
-                'helpText' => str_replace('<br />', PHP_EOL, (($setting['helpText'] == '') ? '' : __($setting['helpText']))),
-                'title' => __($setting['title']),
-                'options' => $options,
-                'validation' => $setting['validation'],
-                'value' => $validated,
-                'enabled' => $setting['userChange'],
-                'catId' => $setting['cat'],
-                'cat' => ucfirst($setting['cat'])
-            );
         }
 
-        $data = [
-            'categories' => $categories,
-            'fields' => $formFields
-        ];
+        // A list of timezones
+        $timeZones = [];
+        foreach ($this->getDate()->timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
+        // A list of languages
+        // Build an array of supported languages
+        $languages = [];
+        $localeDir = PROJECT_ROOT . '/locale';
+        foreach (array_map('basename', glob($localeDir . '/*.mo')) as $lang) {
+            $languages[] = ['id' => $lang, 'value' => $lang];
+        }
+
+        // The default layout
+        try {
+            $defaultLayout = $this->layoutFactory->getById($this->getConfig()->getSetting('DEFAULT_LAYOUT'));
+        } catch (NotFoundException $notFoundException) {
+            $defaultLayout = null;
+        }
+
+        // The default user group
+        try {
+            $defaultUserGroup = $this->userGroupFactory->getById($this->getConfig()->getSetting('DEFAULT_USERGROUP'));
+        } catch (NotFoundException $notFoundException) {
+            $defaultUserGroup = null;
+        }
 
         // Render the Theme and output
         $this->getState()->template = 'settings-page';
-        $this->getState()->setData($data);
+        $this->getState()->setData([
+            'hideThemes' => $hideThemes,
+            'themes' => $themes,
+            'languages' => $languages,
+            'timeZones' => $timeZones,
+            'defaultLayout' => $defaultLayout,
+            'defaultUserGroup' => $defaultUserGroup,
+        ]);
     }
 
     /**
      * Update settings
+     * @throws \Xibo\Exception\XiboException
      */
     public function update()
     {
-        if (!$this->getUser()->userTypeId == 1)
+        if (!$this->getUser()->isSuperAdmin())
             throw new AccessDeniedException();
 
-        // Get all of the settings in an array
-        $settings = $this->settingsFactory->query(null, ['userChange' => 1, 'userSee' => 1]);
+        // Pull in all of the settings we're expecting to be submitted with this form.
+
+        if ($this->getConfig()->isSettingEditable('LIBRARY_LOCATION')) {
+            $libraryLocation = $this->getSanitizer()->getString('LIBRARY_LOCATION');
+
+            // Validate library location
+            // Check for a trailing slash and add it if its not there
+            $libraryLocation = rtrim($libraryLocation, '/');
+            $libraryLocation = rtrim($libraryLocation, '\\') . DIRECTORY_SEPARATOR;
+
+            // Attempt to add the directory specified
+            if (!file_exists($libraryLocation . 'temp'))
+                // Make the directory with broad permissions recursively (so will add the whole path)
+                mkdir($libraryLocation . 'temp', 0777, true);
+
+            if (!is_writable($libraryLocation . 'temp'))
+                throw new InvalidArgumentException(__('The Library Location you have picked is not writeable'), 'LIBRARY_LOCATION');
+
+            $this->getConfig()->changeSetting('LIBRARY_LOCATION', $libraryLocation);
+        }
+
+        if ($this->getConfig()->isSettingEditable('SERVER_KEY')) {
+            $this->getConfig()->changeSetting('SERVER_KEY', $this->getSanitizer()->getString('SERVER_KEY'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('GLOBAL_THEME_NAME')) {
+            $this->getConfig()->changeSetting('GLOBAL_THEME_NAME', $this->getSanitizer()->getString('GLOBAL_THEME_NAME'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_UPDATEINALL_CHECKB')) {
+            $this->getConfig()->changeSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_UPDATEINALL_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LAYOUT_COPY_MEDIA_CHECKB')) {
+            $this->getConfig()->changeSetting('LAYOUT_COPY_MEDIA_CHECKB', $this->getSanitizer()->getCheckbox('LAYOUT_COPY_MEDIA_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_DELETEOLDVER_CHECKB')) {
+            $this->getConfig()->changeSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_DELETEOLDVER_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
+            $this->getConfig()->changeSetting('DEFAULT_LAYOUT', $this->getSanitizer()->getInt('DEFAULT_LAYOUT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('XMR_ADDRESS')) {
+            $this->getConfig()->changeSetting('XMR_ADDRESS', $this->getSanitizer()->getString('XMR_ADDRESS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('XMR_PUB_ADDRESS')) {
+            $this->getConfig()->changeSetting('XMR_PUB_ADDRESS', $this->getSanitizer()->getString('XMR_PUB_ADDRESS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_LAT')) {
+            $value = $this->getSanitizer()->getString('DEFAULT_LAT');
+            $this->getConfig()->changeSetting('DEFAULT_LAT', $value);
+
+            if (!v::latitude()->validate($value)) {
+                throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'DEFAULT_LAT');
+            }
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_LONG')) {
+            $value = $this->getSanitizer()->getString('DEFAULT_LONG');
+            $this->getConfig()->changeSetting('DEFAULT_LONG', $value);
+
+            if (!v::longitude()->validate($value)) {
+                throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'DEFAULT_LONG');
+            }
+        }
+
+        if ($this->getConfig()->isSettingEditable('SHOW_DISPLAY_AS_VNCLINK')) {
+            $this->getConfig()->changeSetting('SHOW_DISPLAY_AS_VNCLINK', $this->getSanitizer()->getString('SHOW_DISPLAY_AS_VNCLINK'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SHOW_DISPLAY_AS_VNC_TGT')) {
+            $this->getConfig()->changeSetting('SHOW_DISPLAY_AS_VNC_TGT', $this->getSanitizer()->getString('SHOW_DISPLAY_AS_VNC_TGT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAX_LICENSED_DISPLAYS')) {
+            $this->getConfig()->changeSetting('MAX_LICENSED_DISPLAYS', $this->getSanitizer()->getInt('MAX_LICENSED_DISPLAYS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_STATS_DEFAULT')) {
+            $this->getConfig()->changeSetting('DISPLAY_PROFILE_STATS_DEFAULT', $this->getSanitizer()->getCheckbox('DISPLAY_PROFILE_STATS_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED')) {
+            $this->getConfig()->changeSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', $this->getSanitizer()->getCheckbox('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DISPLAY_LOCK_NAME_TO_DEVICENAME')) {
+            $this->getConfig()->changeSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME', $this->getSanitizer()->getCheckbox('DISPLAY_LOCK_NAME_TO_DEVICENAME'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED')) {
+            $this->getConfig()->changeSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', $this->getSanitizer()->getCheckbox('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT')) {
+            $this->getConfig()->changeSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', $this->getSanitizer()->getInt('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('HELP_BASE')) {
+            $this->getConfig()->changeSetting('HELP_BASE', $this->getSanitizer()->getString('HELP_BASE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PHONE_HOME')) {
+            $this->getConfig()->changeSetting('PHONE_HOME', $this->getSanitizer()->getCheckbox('PHONE_HOME'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PHONE_HOME_KEY')) {
+            $this->getConfig()->changeSetting('PHONE_HOME_KEY', $this->getSanitizer()->getString('PHONE_HOME_KEY'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PHONE_HOME_DATE')) {
+            $this->getConfig()->changeSetting('PHONE_HOME_DATE', $this->getSanitizer()->getInt('PHONE_HOME_DATE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PHONE_HOME_URL')) {
+            $this->getConfig()->changeSetting('PHONE_HOME_URL', $this->getSanitizer()->getString('PHONE_HOME_URL'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SCHEDULE_LOOKAHEAD')) {
+            $this->getConfig()->changeSetting('SCHEDULE_LOOKAHEAD', $this->getSanitizer()->getCheckbox('SCHEDULE_LOOKAHEAD'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('REQUIRED_FILES_LOOKAHEAD')) {
+            $this->getConfig()->changeSetting('REQUIRED_FILES_LOOKAHEAD', $this->getSanitizer()->getInt('REQUIRED_FILES_LOOKAHEAD'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SETTING_IMPORT_ENABLED')) {
+            $this->getConfig()->changeSetting('SETTING_IMPORT_ENABLED', $this->getSanitizer()->getCheckbox('SETTING_IMPORT_ENABLED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SETTING_LIBRARY_TIDY_ENABLED')) {
+            $this->getConfig()->changeSetting('SETTING_LIBRARY_TIDY_ENABLED', $this->getSanitizer()->getCheckbox('SETTING_LIBRARY_TIDY_ENABLED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('EMBEDDED_STATUS_WIDGET')) {
+            $this->getConfig()->changeSetting('EMBEDDED_STATUS_WIDGET', $this->getSanitizer()->getString('EMBEDDED_STATUS_WIDGET'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULTS_IMPORTED')) {
+            $this->getConfig()->changeSetting('DEFAULTS_IMPORTED', $this->getSanitizer()->getCheckbox('DEFAULTS_IMPORTED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DASHBOARD_LATEST_NEWS_ENABLED')) {
+            $this->getConfig()->changeSetting('DASHBOARD_LATEST_NEWS_ENABLED', $this->getSanitizer()->getCheckbox('DASHBOARD_LATEST_NEWS_ENABLED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('INSTANCE_SUSPENDED')) {
+            $this->getConfig()->changeSetting('INSTANCE_SUSPENDED', $this->getSanitizer()->getCheckbox('INSTANCE_SUSPENDED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LATEST_NEWS_URL')) {
+            $this->getConfig()->changeSetting('LATEST_NEWS_URL', $this->getSanitizer()->getString('LATEST_NEWS_URL'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_ENABLED')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_ENABLED', $this->getSanitizer()->getString('MAINTENANCE_ENABLED'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_EMAIL_ALERTS')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_EMAIL_ALERTS', $this->getSanitizer()->getCheckbox('MAINTENANCE_EMAIL_ALERTS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_KEY')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_KEY', $this->getSanitizer()->getString('MAINTENANCE_KEY'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_LOG_MAXAGE')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_LOG_MAXAGE', $this->getSanitizer()->getInt('MAINTENANCE_LOG_MAXAGE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_STAT_MAXAGE')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_STAT_MAXAGE', $this->getSanitizer()->getInt('MAINTENANCE_STAT_MAXAGE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_ALERT_TOUT')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_ALERT_TOUT', $this->getSanitizer()->getInt('MAINTENANCE_ALERT_TOUT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MAINTENANCE_ALWAYS_ALERT')) {
+            $this->getConfig()->changeSetting('MAINTENANCE_ALWAYS_ALERT', $this->getSanitizer()->getCheckbox('MAINTENANCE_ALWAYS_ALERT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('mail_to')) {
+            $this->getConfig()->changeSetting('mail_to', $this->getSanitizer()->getString('mail_to'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('mail_from')) {
+            $this->getConfig()->changeSetting('mail_from', $this->getSanitizer()->getString('mail_from'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('mail_from_name')) {
+            $this->getConfig()->changeSetting('mail_from_name', $this->getSanitizer()->getString('mail_from_name'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SENDFILE_MODE')) {
+            $this->getConfig()->changeSetting('SENDFILE_MODE', $this->getSanitizer()->getString('SENDFILE_MODE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PROXY_HOST')) {
+            $this->getConfig()->changeSetting('PROXY_HOST', $this->getSanitizer()->getString('PROXY_HOST'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PROXY_PORT')) {
+            $this->getConfig()->changeSetting('PROXY_PORT', $this->getSanitizer()->getString('PROXY_PORT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PROXY_AUTH')) {
+            $this->getConfig()->changeSetting('PROXY_AUTH', $this->getSanitizer()->getString('PROXY_AUTH'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PROXY_EXCEPTIONS')) {
+            $this->getConfig()->changeSetting('PROXY_EXCEPTIONS', $this->getSanitizer()->getString('PROXY_EXCEPTIONS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('CDN_URL')) {
+            $this->getConfig()->changeSetting('CDN_URL', $this->getSanitizer()->getString('CDN_URL'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MONTHLY_XMDS_TRANSFER_LIMIT_KB')) {
+            $this->getConfig()->changeSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB', $this->getSanitizer()->getInt('MONTHLY_XMDS_TRANSFER_LIMIT_KB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LIBRARY_SIZE_LIMIT_KB')) {
+            $this->getConfig()->changeSetting('LIBRARY_SIZE_LIMIT_KB', $this->getSanitizer()->getInt('LIBRARY_SIZE_LIMIT_KB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('FORCE_HTTPS')) {
+            $this->getConfig()->changeSetting('FORCE_HTTPS', $this->getSanitizer()->getCheckbox('FORCE_HTTPS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('ISSUE_STS')) {
+            $this->getConfig()->changeSetting('ISSUE_STS', $this->getSanitizer()->getCheckbox('ISSUE_STS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('STS_TTL')) {
+            $this->getConfig()->changeSetting('STS_TTL', $this->getSanitizer()->getInt('STS_TTL'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('WHITELIST_LOAD_BALANCERS')) {
+            $this->getConfig()->changeSetting('WHITELIST_LOAD_BALANCERS', $this->getSanitizer()->getString('WHITELIST_LOAD_BALANCERS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LAYOUT_DEFAULT')) {
+            $this->getConfig()->changeSetting('LAYOUT_DEFAULT', $this->getSanitizer()->getString('LAYOUT_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MEDIA_DEFAULT')) {
+            $this->getConfig()->changeSetting('MEDIA_DEFAULT', $this->getSanitizer()->getString('MEDIA_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('REGION_OPTIONS_COLOURING')) {
+            $this->getConfig()->changeSetting('REGION_OPTIONS_COLOURING', $this->getSanitizer()->getString('REGION_OPTIONS_COLOURING'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SCHEDULE_WITH_VIEW_PERMISSION')) {
+            $this->getConfig()->changeSetting('SCHEDULE_WITH_VIEW_PERMISSION', $this->getSanitizer()->getCheckbox('SCHEDULE_WITH_VIEW_PERMISSION'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SCHEDULE_SHOW_LAYOUT_NAME')) {
+            $this->getConfig()->changeSetting('SCHEDULE_SHOW_LAYOUT_NAME', $this->getSanitizer()->getCheckbox('SCHEDULE_SHOW_LAYOUT_NAME'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('INHERIT_PARENT_PERMISSIONS')) {
+            $this->getConfig()->changeSetting('INHERIT_PARENT_PERMISSIONS', $this->getSanitizer()->getCheckbox('INHERIT_PARENT_PERMISSIONS'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MODULE_CONFIG_LOCKED_CHECKB')) {
+            $this->getConfig()->changeSetting('MODULE_CONFIG_LOCKED_CHECKB', $this->getSanitizer()->getCheckbox('MODULE_CONFIG_LOCKED_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('TASK_CONFIG_LOCKED_CHECKB')) {
+            $this->getConfig()->changeSetting('TASK_CONFIG_LOCKED_CHECKB', $this->getSanitizer()->getCheckbox('TASK_CONFIG_LOCKED_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('TRANSITION_CONFIG_LOCKED_CHECKB')) {
+            $this->getConfig()->changeSetting('TRANSITION_CONFIG_LOCKED_CHECKB', $this->getSanitizer()->getCheckbox('TRANSITION_CONFIG_LOCKED_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_LANGUAGE')) {
+            $this->getConfig()->changeSetting('DEFAULT_LANGUAGE', $this->getSanitizer()->getString('DEFAULT_LANGUAGE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('defaultTimezone')) {
+            $this->getConfig()->changeSetting('defaultTimezone', $this->getSanitizer()->getString('defaultTimezone'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DATE_FORMAT')) {
+            $this->getConfig()->changeSetting('DATE_FORMAT', $this->getSanitizer()->getString('DATE_FORMAT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DETECT_LANGUAGE')) {
+            $this->getConfig()->changeSetting('DETECT_LANGUAGE', $this->getSanitizer()->getCheckbox('DETECT_LANGUAGE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('CALENDAR_TYPE')) {
+            $this->getConfig()->changeSetting('CALENDAR_TYPE', $this->getSanitizer()->getString('CALENDAR_TYPE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('RESTING_LOG_LEVEL')) {
+            $this->getConfig()->changeSetting('RESTING_LOG_LEVEL', $this->getSanitizer()->getString('RESTING_LOG_LEVEL'));
+        }
 
         // Handle changes to log level
-        $currentLogLevel = null;
         $newLogLevel = null;
         $newElevateUntil = null;
+        $currentLogLevel = $this->getConfig()->getSetting('audit');
 
-        // Go through each setting, validate it and add it to the array
-        foreach ($settings as $setting) {
-            // Check to see if we have a setting that matches in the provided POST vars.
-            switch ($setting['type']) {
-                case 'string':
-                    $value = $this->getSanitizer()->getString($setting['setting'], $setting['default']);
-                    break;
+        if ($this->getConfig()->isSettingEditable('audit')) {
+            $newLogLevel = $this->getSanitizer()->getString('audit');
+            $this->getConfig()->changeSetting('audit', $newLogLevel);
+        }
 
-                case 'int':
-                    $value = $this->getSanitizer()->getInt($setting['setting'], $setting['default']);
-                    break;
-
-                case 'double':
-                    $value = $this->getSanitizer()->getDouble($setting['setting'], $setting['default']);
-                    break;
-
-                case 'checkbox':
-                    $value = $this->getSanitizer()->getCheckbox($setting['setting']);
-                    break;
-
-                case 'datetime':
-                    $value = $this->getSanitizer()->getDate($setting['setting']);
-
-                    if ($value !== null)
-                        $value = $value->format('U');
-                    else
-                        $value = '';
-
-                    break;
-
-                default:
-                    $value = $this->getSanitizer()->getParam($setting['setting'], $setting['default']);
-            }
-
-            // Check the library location setting
-            if ($setting['setting'] == 'LIBRARY_LOCATION') {
-                // Check for a trailing slash and add it if its not there
-                $value = rtrim($value, '/');
-                $value = rtrim($value, '\\') . DIRECTORY_SEPARATOR;
-
-                // Attempt to add the directory specified
-                if (!file_exists($value . 'temp'))
-                    // Make the directory with broad permissions recursively (so will add the whole path)
-                    mkdir($value . 'temp', 0777, true);
-
-                if (!is_writable($value . 'temp'))
-                    throw new \InvalidArgumentException(__('The Library Location you have picked is not writeable'));
-
-            } else if ($setting['setting'] == 'DEFAULT_LAT') {
-                if (!v::latitude()->validate($value))
-                    throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
-            } else if ($setting['setting'] == 'DEFAULT_LONG') {
-                if (!v::longitude()->validate($value))
-                    throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
-            } else if ($setting['setting'] == 'audit') {
-                $currentLogLevel = $setting['value'];
-                $newLogLevel = $value;
-            } else if ($setting['setting'] == 'ELEVATE_LOG_UNTIL') {
-                $newElevateUntil = $value;
-            }
-
-            $this->getConfig()->changeSetting($setting['setting'], $value, false);
+        if ($this->getConfig()->isSettingEditable('ELEVATE_LOG_UNTIL')) {
+            $newElevateUntil = $this->getSanitizer()->getString('ELEVATE_LOG_UNTIL');
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $newElevateUntil);
         }
 
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'), false);
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SERVER_MODE')) {
+            $this->getConfig()->changeSetting('SERVER_MODE', $this->getSanitizer()->getString('SERVER_MODE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_USERGROUP')) {
+            $this->getConfig()->changeSetting('DEFAULT_USERGROUP', $this->getSanitizer()->getInt('DEFAULT_USERGROUP'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('defaultUsertype')) {
+            $this->getConfig()->changeSetting('defaultUsertype', $this->getSanitizer()->getString('defaultUsertype'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('USER_PASSWORD_POLICY')) {
+            $this->getConfig()->changeSetting('USER_PASSWORD_POLICY', $this->getSanitizer()->getString('USER_PASSWORD_POLICY'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('USER_PASSWORD_ERROR')) {
+            $this->getConfig()->changeSetting('USER_PASSWORD_ERROR', $this->getSanitizer()->getString('USER_PASSWORD_ERROR'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('PASSWORD_REMINDER_ENABLED')) {
+            $this->getConfig()->changeSetting('PASSWORD_REMINDER_ENABLED', $this->getSanitizer()->getString('PASSWORD_REMINDER_ENABLED'));
         }
 
         // Return

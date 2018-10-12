@@ -224,7 +224,7 @@ class Module extends Base
     public function settingsForm($moduleId)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
+        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
@@ -250,7 +250,7 @@ class Module extends Base
     public function settings($moduleId)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
+        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
@@ -1066,7 +1066,7 @@ class Module extends Base
         $modules = [];
 
         // Do we have any modules to install?!
-        if ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
+        if ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') != 1 && $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') != 'Checked') {
             // Get a list of matching files in the modules folder
             $files = array_merge(glob(PROJECT_ROOT . '/modules/*.json'), glob(PROJECT_ROOT . '/custom/*.json'));
 

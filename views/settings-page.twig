@@ -44,63 +44,909 @@
             <div class="row">
                 <div class="col-md-12">
                     <ul class="nav nav-tabs" role="tablist">
-                        {% set first = true %}
-                        {% for category in categories %}
-                            {% set transCatTabName = category.tabName %}
-                            <li {% if first %}class="active"{% endif %}><a href="#{{ category.tabId }}" role="tab" data-toggle="tab"><span>{% trans transCatTabName %}</span></a></li>
-                            {% set first = false %}
-                        {% endfor %}
+                        <li class="active"><a href="#tab_config" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+                        <li><a href="#tab_defaults" role="tab" data-toggle="tab"><span>{% trans "Defaults" %}</span></a></li>
+                        <li><a href="#tab_displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                        <li><a href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                        <li><a href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                        <li><a href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
+                        <li><a href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+                        <li><a href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
+                        <li><a href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
+                        <li><a href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                     </ul>
                     <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("settings.update") }}">
                         <div class="tab-content">
-                            {% for field in fields %}
-                                {% if currentCat != field.cat %}
-                                    {% if currentCat != "" %}
-                                    </div>
-                                    {% endif %}
+                            <div class="tab-pane active" id="tab_config">
+                                <h3 class="section-heading">{% trans "Configuration" %}</h3>
 
-                                    <div class="tab-pane {% if currentCat == "" %}active{% endif %}" id="{{ field.catId }}">
-                                    {% set currentCat = field.cat %}
-                                    {% set transFieldCat = field.cat %}
-                                    <h3 class="section-heading">{% trans transFieldCat %}</h3>
+                                {% if theme.isSettingVisible("LIBRARY_LOCATION") %}
+                                    {% set title %}{% trans "Library Location" %}{% endset %}
+                                    {% set helpText %}{% trans "The fully qualified path to the CMS library location." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("LIBRARY_LOCATION") %}
+                                        {{ forms.input("LIBRARY_LOCATION", title, theme.getSetting("LIBRARY_LOCATION"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("LIBRARY_LOCATION", title, theme.getSetting("LIBRARY_LOCATION"), helpText) }}
+                                    {% endif %}
                                 {% endif %}
-                                {# Now we have to output the relevant form field #}
-                                {% if field.enabled != 1 %}
-                                    {{ forms.disabled(field.name, field.title, field.value, field.helpText) }}
-                                {% elseif field.fieldType == "text" %}
-                                    {{ forms.input(field.name, field.title, field.value, field.helpText) }}
-                                {% elseif field.fieldType == "number" %}
-                                    {{ forms.number(field.name, field.title, field.value, field.helpText) }}
-                                {% elseif field.fieldType == "email" %}
-                                    {{ forms.email(field.name, field.title, field.value, field.helpText) }}
-                                {% elseif field.fieldType == "checkbox" %}
-                                    {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
-                                {% elseif field.fieldType == "dropdown" and field.name == "DEFAULT_LAYOUT" %}
-                                    {% set attributes = [
-                                        { name: "data-width", value: "100%" },
-                                        { name: "data-search-url", value: urlFor("layout.search") },
-                                        { name: "data-search-term", value: "layout" },
-                                        { name: "data-id-property", value: "layoutId" },
-                                        { name: "data-text-property", value: "layout" }
-                                    ] %}
-                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "layoutId", "layout", field.helpText, "pagedSelect", "", "", "", attributes) }}
-                                {% elseif field.fieldType == 'dropdown' and field.name == "DEFAULT_USERGROUP" %}
-                                    {% set attributes = [
-                                    { name: "data-width", value: "100%" },
-                                    { name: "data-search-url", value: urlFor("group.search") },
-                                    { name: "data-search-term", value: "group" },
-                                    { name: "data-id-property", value: "groupId" },
-                                    { name: "data-text-property", value: "group" }
-                                    ] %}
-                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "groupId", "group", field.helpText, "pagedSelect", "", "", "", attributes) }}
-                                {% elseif field.fieldType == "dropdown" %}
-                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
-                                {% elseif field.fieldType == "timezone" %}
-                                    {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
-                                {% elseif field.fieldType == "datetime" %}
-                                    {{ forms.datetime(field.name, field.title, field.value, field.helpText) }}
+
+                                {% if theme.isSettingVisible("SERVER_KEY") %}
+                                    {% set title %}{% trans "CMS Secret Key" %}{% endset %}
+                                    {% set helpText %}{% trans "This key must be entered into each Player to authenticate the Player with the CMS." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("SERVER_KEY") %}
+                                        {{ forms.input("SERVER_KEY", title, theme.getSetting("SERVER_KEY"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("SERVER_KEY", title, theme.getSetting("SERVER_KEY"), helpText) }}
+                                    {% endif %}
                                 {% endif %}
-                            {% endfor %}
+
+                                {% if theme.isSettingVisible("GLOBAL_THEME_NAME") %}
+                                    {% set title %}{% trans "CMS Theme" %}{% endset %}
+                                    {% set helpText %}{% trans "The Theme to apply to all pages by default" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("GLOBAL_THEME_NAME") %}
+                                        {% if hideThemes %}
+                                            {# Show a edit box  #}
+                                            {{ forms.input("GLOBAL_THEME_NAME", title, theme.getSetting("GLOBAL_THEME_NAME"), helpText) }}
+                                        {% else %}
+                                            {{ forms.dropdown("GLOBAL_THEME_NAME", "single", title, theme.getSetting("GLOBAL_THEME_NAME"), themes, "id", "value", helpText) }}
+                                        {% endif %}
+                                    {% else %}
+                                        {{ forms.disabled("GLOBAL_THEME_NAME", title, theme.getSetting("GLOBAL_THEME_NAME"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_defaults">
+                                <h3 class="section-heading">{% trans "Defaults" %}</h3>
+
+                                {% if theme.isSettingVisible("LIBRARY_MEDIA_UPDATEINALL_CHECKB") %}
+                                    {% set title %}{% trans "Default update media in all layouts" %}{% endset %}
+                                    {% set helpText %}{% trans "Default the checkbox for updating media on all layouts when editing in the library" %}{% endset %}
+
+                                    {{ forms.checkbox("LIBRARY_MEDIA_UPDATEINALL_CHECKB", title, theme.getSetting("LIBRARY_MEDIA_UPDATEINALL_CHECKB"), helpText, "", "", not theme.isSettingEditable("LIBRARY_MEDIA_UPDATEINALL_CHECKB")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("LAYOUT_COPY_MEDIA_CHECKB") %}
+                                    {% set title %}{% trans "Default copy media when copying a layout?" %}{% endset %}
+                                    {% set helpText %}{% trans "Default the checkbox for making duplicates of media when copying layouts" %}{% endset %}
+
+                                    {{ forms.checkbox("LAYOUT_COPY_MEDIA_CHECKB", title, theme.getSetting("LAYOUT_COPY_MEDIA_CHECKB"), helpText, "", "", not theme.isSettingEditable("LIBRARY_MEDIA_UPDATEINALL_CHECKB")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("LIBRARY_MEDIA_DELETEOLDVER_CHECKB") %}
+                                    {% set title %}{% trans "Default for \"Delete old version of Media\" checkbox. Shown when Editing Library Media." %}{% endset %}
+                                    {% set helpText %}{% trans "Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library." %}{% endset %}
+
+                                    {{ forms.checkbox("LIBRARY_MEDIA_DELETEOLDVER_CHECKB", title, theme.getSetting("LIBRARY_MEDIA_DELETEOLDVER_CHECKB"), helpText, "", "", not theme.isSettingEditable("LIBRARY_MEDIA_UPDATEINALL_CHECKB")) }}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_displays">
+                                <h3 class="section-heading">{% trans "Displays" %}</h3>
+
+                                {% if theme.isSettingVisible("DEFAULT_LAYOUT") %}
+                                    {% set title %}{% trans "Default Layout" %}{% endset %}
+                                    {% set helpText %}{% trans "The default layout to assign for new displays and displays which have their current default deleted." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_LAYOUT") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: urlFor("layout.search") },
+                                            { name: "data-search-term", value: "layout" },
+                                            { name: "data-id-property", value: "layoutId" },
+                                            { name: "data-text-property", value: "layout" }
+                                        ] %}
+                                        {{ forms.dropdown("DEFAULT_LAYOUT", "single", title, defaultLayout.layoutId, [defaultLayout], "layoutId", "layout", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_LAYOUT", title, theme.getSetting("DEFAULT_LAYOUT"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("XMR_ADDRESS") %}
+                                    {% set title %}{% trans "XMR Private Address" %}{% endset %}
+                                    {% set helpText %}{% trans "Please enter the private address for XMR." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("XMR_ADDRESS") %}
+                                        {{ forms.input("XMR_ADDRESS", title, theme.getSetting("XMR_ADDRESS", "tcp:://localhost:5555"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("XMR_ADDRESS", title, theme.getSetting("XMR_ADDRESS", "tcp:://localhost:5555"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("XMR_PUB_ADDRESS") %}
+                                    {% set title %}{% trans "XMR Public Address" %}{% endset %}
+                                    {% set helpText %}{% trans "Please enter the public address for XMR." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("XMR_PUB_ADDRESS") %}
+                                        {{ forms.input("XMR_PUB_ADDRESS", title, theme.getSetting("XMR_PUB_ADDRESS"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("XMR_PUB_ADDRESS", title, theme.getSetting("XMR_PUB_ADDRESS"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_LAT") %}
+                                    {% set title %}{% trans "Default Latitude" %}{% endset %}
+                                    {% set helpText %}{% trans "The Latitude to apply for any Geo aware Previews" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_LAT") %}
+                                        {{ forms.input("DEFAULT_LAT", title, theme.getSetting("DEFAULT_LAT", "51.504"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_LAT", title, theme.getSetting("DEFAULT_LAT", "51.504"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_LONG") %}
+                                    {% set title %}{% trans "Default Longitude" %}{% endset %}
+                                    {% set helpText %}{% trans "The longitude to apply for any Geo aware Previews" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_LONG") %}
+                                        {{ forms.input("DEFAULT_LONG", title, theme.getSetting("DEFAULT_LONG", "-0.104"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_LONG", title, theme.getSetting("DEFAULT_LONG", "-0.104"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SHOW_DISPLAY_AS_VNCLINK") %}
+                                    {% set title %}{% trans "Add a link to the Display name using this format mask?" %}{% endset %}
+                                    {% set helpText %}{% trans "Turn the display name in display management into a link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("SHOW_DISPLAY_AS_VNCLINK") %}
+                                        {{ forms.input("SHOW_DISPLAY_AS_VNCLINK", title, theme.getSetting("SHOW_DISPLAY_AS_VNCLINK"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("SHOW_DISPLAY_AS_VNCLINK", title, theme.getSetting("SHOW_DISPLAY_AS_VNCLINK"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SHOW_DISPLAY_AS_VNC_TGT") %}
+                                    {% set title %}{% trans "The target attribute for the above link" %}{% endset %}
+                                    {% set helpText %}{% trans "If the display name is shown as a link in display management, what target should the link have? Set _top to open the link in the same window or _blank to open in a new window." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("SHOW_DISPLAY_AS_VNC_TGT") %}
+                                        {{ forms.input("SHOW_DISPLAY_AS_VNC_TGT", title, theme.getSetting("SHOW_DISPLAY_AS_VNC_TGT", "_top"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("SHOW_DISPLAY_AS_VNC_TGT", title, theme.getSetting("SHOW_DISPLAY_AS_VNC_TGT", "_top"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAX_LICENSED_DISPLAYS") %}
+                                    {% set title %}{% trans "Number of display slots" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum number of licensed clients for this server installation. 0 = unlimited" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("MAX_LICENSED_DISPLAYS") %}
+                                        {{ forms.number("MAX_LICENSED_DISPLAYS", title, theme.getSetting("MAX_LICENSED_DISPLAYS", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MAX_LICENSED_DISPLAYS", title, theme.getSetting("MAX_LICENSED_DISPLAYS", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_PROFILE_STATS_DEFAULT") %}
+                                    {% set title %}{% trans "Default setting for Statistics Enabled?" %}{% endset %}
+                                    {{ forms.checkbox("DISPLAY_PROFILE_STATS_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_STATS_DEFAULT"), "", "", "", not theme.isSettingEditable("DISPLAY_PROFILE_STATS_DEFAULT")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED") %}
+                                    {% set title %}{% trans "Enable the option to report the current layout status?" %}{% endset %}
+                                    {{ forms.checkbox("DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED", title, theme.getSetting("DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED"), "", "", "", not theme.isSettingEditable("DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_LOCK_NAME_TO_DEVICENAME") %}
+                                    {% set title %}{% trans "Lock the Display Name to the device name provided by the Player?" %}{% endset %}
+                                    {{ forms.checkbox("DISPLAY_LOCK_NAME_TO_DEVICENAME", title, theme.getSetting("DISPLAY_LOCK_NAME_TO_DEVICENAME"), "", "", "", not theme.isSettingEditable("DISPLAY_LOCK_NAME_TO_DEVICENAME")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED") %}
+                                    {% set title %}{% trans "Enable the option to set the screenshot interval?" %}{% endset %}
+                                    {{ forms.checkbox("DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED", title, theme.getSetting("DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED"), "", "", "", not theme.isSettingEditable("DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT") %}
+                                    {% set title %}{% trans "Display Screenshot Default Size" %}{% endset %}
+                                    {% set helpText %}{% trans "The default size in pixels for the Display Screenshots" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT") %}
+                                        {{ forms.number("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", 200), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", 200), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_general">
+                                <h3 class="section-heading">{% trans "General" %}</h3>
+
+                                {% if theme.isSettingVisible("HELP_BASE") %}
+                                    {% set title %}{% trans "Location of the Manual" %}{% endset %}
+                                    {% set helpText %}{% trans "The address of the user manual, which will be used as a prefix for all help links." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("HELP_BASE") %}
+                                        {{ forms.input("HELP_BASE", title, theme.getSetting("HELP_BASE", "https://xibo.org.uk/manual/"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("HELP_BASE", title, theme.getSetting("HELP_BASE", "https://xibo.org.uk/manual/"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PHONE_HOME") %}
+                                    {% set title %}{% trans "Allow usage tracking?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should the CMS send anonymous statistics to help improve the software?" %}{% endset %}
+
+                                    {{ forms.checkbox("PHONE_HOME", title, theme.getSetting("PHONE_HOME"), helpText, "", "", not theme.isSettingEditable("PHONE_HOME")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PHONE_HOME_KEY") %}
+                                    {% set title %}{% trans "Phone home key" %}{% endset %}
+                                    {% set helpText %}{% trans "Key used to distinguish each CMS instance. This is generated randomly based on the time you first installed the CMS, and is completely untraceable." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PHONE_HOME_KEY") %}
+                                        {{ forms.input("PHONE_HOME_KEY", title, theme.getSetting("PHONE_HOME_KEY"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PHONE_HOME_KEY", title, theme.getSetting("PHONE_HOME_KEY"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PHONE_HOME_DATE") %}
+                                    {% set title %}{% trans "Phone home time" %}{% endset %}
+                                    {% set helpText %}{% trans "The last time we PHONED_HOME in seconds since the epoch" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PHONE_HOME_DATE") %}
+                                        {{ forms.input("PHONE_HOME_DATE", title, theme.getSetting("PHONE_HOME_DATE"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PHONE_HOME_DATE", title, theme.getSetting("PHONE_HOME_DATE"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PHONE_HOME_URL") %}
+                                    {% set title %}{% trans "Phone home URL" %}{% endset %}
+                                    {% set helpText %}{% trans "The URL to connect to to PHONE_HOME (if enabled)" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PHONE_HOME_URL") %}
+                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "http://www.xibo.org.uk/stats/track.php"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "http://www.xibo.org.uk/stats/track.php"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SCHEDULE_LOOKAHEAD") %}
+                                    {% set title %}{% trans "Send Schedule in advance?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should the CMS send future schedule information to clients?" %}{% endset %}
+
+                                    {{ forms.checkbox("SCHEDULE_LOOKAHEAD", title, theme.getSetting("SCHEDULE_LOOKAHEAD", 1), helpText, "", "", not theme.isSettingEditable("SCHEDULE_LOOKAHEAD")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("REQUIRED_FILES_LOOKAHEAD") %}
+                                    {% set title %}{% trans "Send files in advance?" %}{% endset %}
+                                    {% set helpText %}{% trans "How many seconds in to the future should the calls to RequiredFiles look?" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("REQUIRED_FILES_LOOKAHEAD") %}
+                                        {{ forms.number("REQUIRED_FILES_LOOKAHEAD", title, theme.getSetting("REQUIRED_FILES_LOOKAHEAD", "172800"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("REQUIRED_FILES_LOOKAHEAD", title, theme.getSetting("REQUIRED_FILES_LOOKAHEAD", "172800"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SETTING_IMPORT_ENABLED") %}
+                                    {% set title %}{% trans "Allow Import?" %}{% endset %}
+
+                                    {{ forms.checkbox("SETTING_IMPORT_ENABLED", title, theme.getSetting("SETTING_IMPORT_ENABLED", 0), "", "", "", not theme.isSettingEditable("SETTING_IMPORT_ENABLED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SETTING_LIBRARY_TIDY_ENABLED") %}
+                                    {% set title %}{% trans "Enable Library Tidy?" %}{% endset %}
+
+                                    {{ forms.checkbox("SETTING_LIBRARY_TIDY_ENABLED", title, theme.getSetting("SETTING_LIBRARY_TIDY_ENABLED", 1), "", "", "", not theme.isSettingEditable("SETTING_LIBRARY_TIDY_ENABLED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("EMBEDDED_STATUS_WIDGET") %}
+                                    {% set title %}{% trans "Status Dashboard Widget" %}{% endset %}
+                                    {% set helpText %}{% trans "HTML to embed in an iframe on the Status Dashboard" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("EMBEDDED_STATUS_WIDGET") %}
+                                        {{ forms.input("EMBEDDED_STATUS_WIDGET", title, theme.getSetting("EMBEDDED_STATUS_WIDGET"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("EMBEDDED_STATUS_WIDGET", title, theme.getSetting("EMBEDDED_STATUS_WIDGET"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULTS_IMPORTED") %}
+                                    {% set title %}{% trans "Defaults Imported?" %}{% endset %}
+                                    {% set helpText %}{% trans "Has the default layout been imported?" %}{% endset %}
+
+                                    {{ forms.checkbox("DEFAULTS_IMPORTED", title, theme.getSetting("DEFAULTS_IMPORTED", 0), helpText, "", "", not theme.isSettingEditable("DEFAULTS_IMPORTED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DASHBOARD_LATEST_NEWS_ENABLED") %}
+                                    {% set title %}{% trans "Enable Latest News?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should the Dashboard show latest news? The address is provided by the theme." %}{% endset %}
+
+                                    {{ forms.checkbox("DASHBOARD_LATEST_NEWS_ENABLED", title, theme.getSetting("DASHBOARD_LATEST_NEWS_ENABLED", 1), helpText, "", "", not theme.isSettingEditable("DASHBOARD_LATEST_NEWS_ENABLED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("INSTANCE_SUSPENDED") %}
+                                    {% set title %}{% trans "Instance Suspended" %}{% endset %}
+                                    {% set helpText %}{% trans "Is this instance suspended?" %}{% endset %}
+
+                                    {{ forms.checkbox("INSTANCE_SUSPENDED", title, theme.getSetting("INSTANCE_SUSPENDED", 0), helpText, "", "", not theme.isSettingEditable("INSTANCE_SUSPENDED")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("LATEST_NEWS_URL") %}
+                                    {% set title %}{% trans "Latest News URL" %}{% endset %}
+                                    {% set helpText %}{% trans "RSS/Atom Feed to be displayed on the Status Dashboard" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("LATEST_NEWS_URL") %}
+                                        {{ forms.input("LATEST_NEWS_URL", title, theme.getSetting("LATEST_NEWS_URL"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("LATEST_NEWS_URL", title, theme.getSetting("LATEST_NEWS_URL"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_maint">
+                                <h3 class="section-heading">{% trans "Maintenance" %}</h3>
+
+                                {% if theme.isSettingVisible("MAINTENANCE_ENABLED") %}
+                                    {% set title %}{% trans "Enable Maintenance?" %}{% endset %}
+                                    {% set helpText %}{% trans "Allow the maintenance script to run if it is called?" %}{% endset %}
+
+                                    {% set offOption %}{% trans "Off" %}{% endset %}
+                                    {% set onOption %}{% trans "On" %}{% endset %}
+                                    {% set protectedOption %}{% trans "Protected" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Off", value: offOption },
+                                        { id: "On", value: onOption },
+                                        { id: "Protected", value: protectedOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("MAINTENANCE_ENABLED") %}
+                                        {{ forms.dropdown("MAINTENANCE_ENABLED", "single", title, theme.getSetting("MAINTENANCE_ENABLED", "Off"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MAINTENANCE_ENABLED", title, theme.getSetting("MAINTENANCE_ENABLED", "Off"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAINTENANCE_EMAIL_ALERTS") %}
+                                    {% set title %}{% trans "Enable Email Alerts?" %}{% endset %}
+                                    {% set helpText %}{% trans "Global switch for email alerts to be sent" %}{% endset %}
+
+                                    {{ forms.checkbox("MAINTENANCE_EMAIL_ALERTS", title, theme.getSetting("MAINTENANCE_EMAIL_ALERTS", 1), helpText, "", "", not theme.isSettingEditable("MAINTENANCE_EMAIL_ALERTS")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAINTENANCE_KEY") %}
+                                    {% set title %}{% trans "Maintenance Key" %}{% endset %}
+                                    {% set helpText %}{% trans "String appended to the maintenance script to prevent malicious calls to the script." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("MAINTENANCE_KEY") %}
+                                        {{ forms.input("MAINTENANCE_KEY", title, theme.getSetting("MAINTENANCE_KEY", "changeme"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MAINTENANCE_KEY", title, theme.getSetting("MAINTENANCE_KEY", "changeme"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAINTENANCE_LOG_MAXAGE") %}
+                                    {% set title %}{% trans "Max Log Age" %}{% endset %}
+                                    {% set helpText %}{% trans "Maximum age for log entries in days. Set to 0 to keep logs indefinitely." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("MAINTENANCE_LOG_MAXAGE") %}
+                                        {{ forms.number("MAINTENANCE_LOG_MAXAGE", title, theme.getSetting("MAINTENANCE_LOG_MAXAGE", 30), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MAINTENANCE_LOG_MAXAGE", title, theme.getSetting("MAINTENANCE_LOG_MAXAGE", 30), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAINTENANCE_STAT_MAXAGE") %}
+                                    {% set title %}{% trans "Max Statistics Age" %}{% endset %}
+                                    {% set helpText %}{% trans "Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("MAINTENANCE_STAT_MAXAGE") %}
+                                        {{ forms.number("MAINTENANCE_STAT_MAXAGE", title, theme.getSetting("MAINTENANCE_STAT_MAXAGE", 30), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MAINTENANCE_STAT_MAXAGE", title, theme.getSetting("MAINTENANCE_STAT_MAXAGE", 30), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAINTENANCE_ALERT_TOUT") %}
+                                    {% set title %}{% trans "Max Display Timeout" %}{% endset %}
+                                    {% set helpText %}{% trans "How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("MAINTENANCE_ALERT_TOUT") %}
+                                        {{ forms.number("MAINTENANCE_ALERT_TOUT", title, theme.getSetting("MAINTENANCE_ALERT_TOUT", 12), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MAINTENANCE_ALERT_TOUT", title, theme.getSetting("MAINTENANCE_ALERT_TOUT", 12), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MAINTENANCE_ALWAYS_ALERT") %}
+                                    {% set title %}{% trans "Send repeat Display Timeouts" %}{% endset %}
+                                    {% set helpText %}{% trans "Should the CMS send an email if a display is in an error state every time maintenance runs?" %}{% endset %}
+
+                                    {{ forms.checkbox("MAINTENANCE_ALWAYS_ALERT", title, theme.getSetting("MAINTENANCE_ALWAYS_ALERT", 0), helpText, "", "", not theme.isSettingEditable("MAINTENANCE_ALWAYS_ALERT")) }}
+                                {% endif %}
+
+                            </div>
+                            <div class="tab-pane" id="tab_network">
+                                <h3 class="section-heading">{% trans "Network" %}</h3>
+
+                                {% if theme.isSettingVisible("mail_to") %}
+                                    {% set title %}{% trans "Admin email address" %}{% endset %}
+                                    {% set helpText %}{% trans "This is the overall CMS adminstrator who will receive copies of all email notifications generated by the CMS." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("mail_to") %}
+                                        {{ forms.input("mail_to", title, theme.getSetting("mail_to"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("mail_to", title, theme.getSetting("mail_to"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("mail_from") %}
+                                    {% set title %}{% trans "Sending email address" %}{% endset %}
+                                    {% set helpText %}{% trans "Mail will be sent from this address" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("mail_from") %}
+                                        {{ forms.input("mail_from", title, theme.getSetting("mail_from"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("mail_from", title, theme.getSetting("mail_from"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("mail_from_name") %}
+                                    {% set title %}{% trans "Sending email name" %}{% endset %}
+                                    {% set helpText %}{% trans "Mail will be sent under this name" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("mail_from_name") %}
+                                        {{ forms.input("mail_from_name", title, theme.getSetting("mail_from_name"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("mail_from_name", title, theme.getSetting("mail_from_name"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SENDFILE_MODE") %}
+                                    {% set title %}{% trans "File download mode" %}{% endset %}
+                                    {% set helpText %}{% trans "Should the CMS use Apache X-Sendfile, Nginx X-Accel, or PHP (Off) to return the files from the library?" %}{% endset %}
+
+                                    {% set offOption %}{% trans "Off" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Off", value: offOption },
+                                        { id: "Apache", value: "Apache" },
+                                        { id: "Nginx", value: "Nginx" }
+                                    ] %}
+                                    {% if theme.isSettingEditable("SENDFILE_MODE") %}
+                                        {{ forms.dropdown("SENDFILE_MODE", "single", title, theme.getSetting("SENDFILE_MODE", "Off"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("SENDFILE_MODE", title, theme.getSetting("SENDFILE_MODE", "Off"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PROXY_HOST") %}
+                                    {% set title %}{% trans "Proxy URL" %}{% endset %}
+                                    {% set helpText %}{% trans "The Proxy URL" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PROXY_HOST") %}
+                                        {{ forms.input("PROXY_HOST", title, theme.getSetting("PROXY_HOST"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PROXY_HOST", title, theme.getSetting("PROXY_HOST"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PROXY_PORT") %}
+                                    {% set title %}{% trans "Proxy Port" %}{% endset %}
+                                    {% set helpText %}{% trans "The Proxy Port" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PROXY_PORT") %}
+                                        {{ forms.number("PROXY_PORT", title, theme.getSetting("PROXY_PORT", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PROXY_PORT", title, theme.getSetting("PROXY_PORT", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PROXY_AUTH") %}
+                                    {% set title %}{% trans "Proxy Credentials" %}{% endset %}
+                                    {% set helpText %}{% trans "The Authentication information for this proxy. username:password" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PROXY_AUTH") %}
+                                        {{ forms.input("PROXY_AUTH", title, theme.getSetting("PROXY_AUTH"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PROXY_AUTH", title, theme.getSetting("PROXY_AUTH"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PROXY_EXCEPTIONS") %}
+                                    {% set title %}{% trans "Proxy Exceptions" %}{% endset %}
+                                    {% set helpText %}{% trans "Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("PROXY_EXCEPTIONS") %}
+                                        {{ forms.input("PROXY_EXCEPTIONS", title, theme.getSetting("PROXY_EXCEPTIONS"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PROXY_EXCEPTIONS", title, theme.getSetting("PROXY_EXCEPTIONS"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("CDN_URL") %}
+                                    {% set title %}{% trans "CDN Address" %}{% endset %}
+                                    {% set helpText %}{% trans "Content Delivery Network Address for serving file requests to Players" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("CDN_URL") %}
+                                        {{ forms.input("CDN_URL", title, theme.getSetting("CDN_URL"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("CDN_URL", title, theme.getSetting("CDN_URL"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MONTHLY_XMDS_TRANSFER_LIMIT_KB") %}
+                                    {% set title %}{% trans "Monthly bandwidth Limit" %}{% endset %}
+                                    {% set helpText %}{% trans "XMDS Transfer Limit in KB/month" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("MONTHLY_XMDS_TRANSFER_LIMIT_KB") %}
+                                        {{ forms.number("MONTHLY_XMDS_TRANSFER_LIMIT_KB", title, theme.getSetting("MONTHLY_XMDS_TRANSFER_LIMIT_KB"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MONTHLY_XMDS_TRANSFER_LIMIT_KB", title, theme.getSetting("MONTHLY_XMDS_TRANSFER_LIMIT_KB"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("LIBRARY_SIZE_LIMIT_KB") %}
+                                    {% set title %}{% trans "Library Size Limit" %}{% endset %}
+                                    {% set helpText %}{% trans "The Limit for the Library Size in KB" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("LIBRARY_SIZE_LIMIT_KB") %}
+                                        {{ forms.number("LIBRARY_SIZE_LIMIT_KB", title, theme.getSetting("LIBRARY_SIZE_LIMIT_KB"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("LIBRARY_SIZE_LIMIT_KB", title, theme.getSetting("LIBRARY_SIZE_LIMIT_KB"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("FORCE_HTTPS") %}
+                                    {% set title %}{% trans "Force HTTPS?" %}{% endset %}
+                                    {% set helpText %}{% trans "Force the portal into HTTPS?" %}{% endset %}
+
+                                    {{ forms.checkbox("FORCE_HTTPS", title, theme.getSetting("FORCE_HTTPS", 0), helpText, "", "", not theme.isSettingEditable("FORCE_HTTPS")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("ISSUE_STS") %}
+                                    {% set title %}{% trans "Enable STS?" %}{% endset %}
+                                    {% set helpText %}{% trans "Add STS to the response headers? Make sure you fully understand STS before turning it on as it will prevent access via HTTP after the first successful HTTPS connection." %}{% endset %}
+
+                                    {{ forms.checkbox("ISSUE_STS", title, theme.getSetting("ISSUE_STS", 0), helpText, "", "", not theme.isSettingEditable("ISSUE_STS")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("STS_TTL") %}
+                                    {% set title %}{% trans "STS Time out" %}{% endset %}
+                                    {% set helpText %}{% trans "The Time to Live (maxage) of the STS header expressed in seconds." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("STS_TTL") %}
+                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("WHITELIST_LOAD_BALANCERS") %}
+                                    {% set title %}{% trans "Whitelist Load Balancers" %}{% endset %}
+                                    {% set helpText %}{% trans "If the CMS is behind a load balancer, what are the load balancer IP addresses, comma delimited." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("WHITELIST_LOAD_BALANCERS") %}
+                                        {{ forms.input("WHITELIST_LOAD_BALANCERS", title, theme.getSetting("WHITELIST_LOAD_BALANCERS"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("WHITELIST_LOAD_BALANCERS", title, theme.getSetting("WHITELIST_LOAD_BALANCERS"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_permissions">
+                                <h3 class="section-heading">{% trans "Permissions" %}</h3>
+
+                                {% if theme.isSettingVisible("LAYOUT_DEFAULT") %}
+                                    {% set title %}{% trans "Layout Permissions" %}{% endset %}
+                                    {% set helpText %}{% trans "New layouts will be created with these settings. If public everyone will be able to view and use this layout." %}{% endset %}
+
+                                    {% set privateOption %}{% trans "Private" %}{% endset %}
+                                    {% set groupOption %}{% trans "Group Read" %}{% endset %}
+                                    {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
+                                    {% set publicOption %}{% trans "Public Read" %}{% endset %}
+                                    {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
+                                    {% set options = [
+                                        { id: "private", value: privateOption },
+                                        { id: "group", value: groupOption },
+                                        { id: "group write", value: groupWriteOption }
+                                        { id: "public", value: publicOption }
+                                        { id: "public write", value: publicWriteOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("LAYOUT_DEFAULT") %}
+                                        {{ forms.dropdown("LAYOUT_DEFAULT", "single", title, theme.getSetting("LAYOUT_DEFAULT", "private"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("LAYOUT_DEFAULT", title, theme.getSetting("LAYOUT_DEFAULT", "private"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MEDIA_DEFAULT") %}
+                                    {% set title %}{% trans "Media Permissions" %}{% endset %}
+                                    {% set helpText %}{% trans "Media will be created with these settings. If public everyone will be able to view and use this media." %}{% endset %}
+
+                                    {% set privateOption %}{% trans "Private" %}{% endset %}
+                                    {% set groupOption %}{% trans "Group Read" %}{% endset %}
+                                    {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
+                                    {% set publicOption %}{% trans "Public Read" %}{% endset %}
+                                    {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
+                                    {% set options = [
+                                        { id: "private", value: privateOption },
+                                        { id: "group", value: groupOption },
+                                        { id: "group write", value: groupWriteOption }
+                                        { id: "public", value: publicOption }
+                                        { id: "public write", value: publicWriteOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("MEDIA_DEFAULT") %}
+                                        {{ forms.dropdown("MEDIA_DEFAULT", "single", title, theme.getSetting("MEDIA_DEFAULT", "private"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MEDIA_DEFAULT", title, theme.getSetting("MEDIA_DEFAULT", "private"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("REGION_OPTIONS_COLOURING") %}
+                                    {% set title %}{% trans "How to colour Media on the Region Timeline" %}{% endset %}
+
+                                    {% set privateOption %}{% trans "Media Colouring" %}{% endset %}
+                                    {% set groupOption %}{% trans "Permissions Colouring" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Media Colouring", value: privateOption },
+                                        { id: "Permissions Colouring", value: groupOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("REGION_OPTIONS_COLOURING") %}
+                                        {{ forms.dropdown("REGION_OPTIONS_COLOURING", "single", title, theme.getSetting("REGION_OPTIONS_COLOURING", "Media Colouring"), options, "id", "value") }}
+                                    {% else %}
+                                        {{ forms.disabled("REGION_OPTIONS_COLOURING", title, theme.getSetting("REGION_OPTIONS_COLOURING", "Media Colouring"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SCHEDULE_WITH_VIEW_PERMISSION") %}
+                                    {% set title %}{% trans "Schedule with view permissions?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should users with View permissions on displays be allowed to schedule to them?" %}{% endset %}
+                                    {{ forms.checkbox("SCHEDULE_WITH_VIEW_PERMISSION", title, theme.getSetting("SCHEDULE_WITH_VIEW_PERMISSION", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_WITH_VIEW_PERMISSION")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SCHEDULE_SHOW_LAYOUT_NAME") %}
+                                    {% set title %}{% trans "Show event Layout regardless of User permission?" %}{% endset %}
+                                    {% set helpText %}{% trans "If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout." %}{% endset %}
+                                    {{ forms.checkbox("SCHEDULE_SHOW_LAYOUT_NAME", title, theme.getSetting("SCHEDULE_SHOW_LAYOUT_NAME", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_SHOW_LAYOUT_NAME")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("INHERIT_PARENT_PERMISSIONS") %}
+                                    {% set title %}{% trans "Inherit permissions" %}{% endset %}
+                                    {% set helpText %}{% trans "Inherit permissions from Parent when adding a new item?" %}{% endset %}
+                                    {{ forms.checkbox("INHERIT_PARENT_PERMISSIONS", title, theme.getSetting("INHERIT_PARENT_PERMISSIONS", 1), helpText, "", "", not theme.isSettingEditable("INHERIT_PARENT_PERMISSIONS")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MODULE_CONFIG_LOCKED_CHECKB") %}
+                                    {% set title %}{% trans "Lock Module Config" %}{% endset %}
+                                    {% set helpText %}{% trans "Is the module config locked? Useful for Service providers." %}{% endset %}
+                                    {{ forms.checkbox("MODULE_CONFIG_LOCKED_CHECKB", title, theme.getSetting("MODULE_CONFIG_LOCKED_CHECKB"), helpText, "", "", not theme.isSettingEditable("MODULE_CONFIG_LOCKED_CHECKB")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("TASK_CONFIG_LOCKED_CHECKB") %}
+                                    {% set title %}{% trans "Lock Task Config" %}{% endset %}
+                                    {% set helpText %}{% trans "Is the task config locked? Useful for Service providers." %}{% endset %}
+                                    {{ forms.checkbox("TASK_CONFIG_LOCKED_CHECKB", title, theme.getSetting("TASK_CONFIG_LOCKED_CHECKB"), helpText, "", "", not theme.isSettingEditable("TASK_CONFIG_LOCKED_CHECKB")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("TRANSITION_CONFIG_LOCKED_CHECKB") %}
+                                    {% set title %}{% trans "Is the Transition config locked?" %}{% endset %}
+                                    {% set helpText %}{% trans "Allow modifications to the transition configuration?" %}{% endset %}
+                                    {{ forms.checkbox("TRANSITION_CONFIG_LOCKED_CHECKB", title, theme.getSetting("TRANSITION_CONFIG_LOCKED_CHECKB"), helpText, "", "", not theme.isSettingEditable("TRANSITION_CONFIG_LOCKED_CHECKB")) }}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_regional">
+                                <h3 class="section-heading">{% trans "Regional" %}</h3>
+
+                                {% if theme.isSettingVisible("DEFAULT_LANGUAGE") %}
+                                    {% set title %}{% trans "Default Language" %}{% endset %}
+                                    {% set helpText %}{% trans "The default language to use" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_LANGUAGE") %}
+                                        {{ forms.dropdown("DEFAULT_LANGUAGE", "single", title, theme.getSetting("DEFAULT_LANGUAGE", "en_GB"), languages, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_LANGUAGE", title, theme.getSetting("DEFAULT_LANGUAGE", "en_GB"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("defaultTimezone") %}
+                                    {% set title %}{% trans "Timezone" %}{% endset %}
+                                    {% set helpText %}{% trans "Set the default timezone for the application" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("defaultTimezone") %}
+                                        {{ forms.dropdown("defaultTimezone", "single", title, theme.getSetting("defaultTimezone", "Europe/London"), timeZones, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("defaultTimezone", title, theme.getSetting("defaultTimezone", "Europe/London"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DATE_FORMAT") %}
+                                    {% set title %}{% trans "Date Format" %}{% endset %}
+                                    {% set helpText %}{% trans "The Date Format to use when displaying dates in the CMS." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DATE_FORMAT") %}
+                                        {{ forms.input("DATE_FORMAT", title, theme.getSetting("DATE_FORMAT", "Y-m-d"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("DATE_FORMAT", title, theme.getSetting("DATE_FORMAT", "Y-m-d"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DETECT_LANGUAGE") %}
+                                    {% set title %}{% trans "Detect language?" %}{% endset %}
+                                    {% set helpText %}{% trans "Detect the browser language?" %}{% endset %}
+                                    {{ forms.checkbox("DETECT_LANGUAGE", title, theme.getSetting("DETECT_LANGUAGE"), helpText, "", "", not theme.isSettingEditable("DETECT_LANGUAGE")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("CALENDAR_TYPE") %}
+                                    {% set title %}{% trans "Calendar Type" %}{% endset %}
+                                    {% set helpText %}{% trans "Which Calendar Type should the CMS use?" %}{% endset %}
+
+                                    {% set gregorianOption %}{% trans "Gregorian" %}{% endset %}
+                                    {% set jalaliOption %}{% trans "Jalali" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Gregorian", value: gregorianOption },
+                                        { id: "Jalali", value: jalaliOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("CALENDAR_TYPE") %}
+                                        {{ forms.dropdown("CALENDAR_TYPE", "single", title, theme.getSetting("CALENDAR_TYPE", "Gregorian"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("CALENDAR_TYPE", title, theme.getSetting("CALENDAR_TYPE", "Gregorian"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_troubleshooting">
+                                <h3 class="section-heading">{% trans "Troubleshooting" %}</h3>
+
+                                {% if theme.isSettingVisible("RESTING_LOG_LEVEL") %}
+                                    {% set title %}{% trans "Resting Log Level" %}{% endset %}
+                                    {% set helpText %}{% trans "Set the level of the resting log level. The CMS will revert to this log level after an elevated period ends. In production systems \"error\" is recommended." %}{% endset %}
+
+                                    {% set emergencyOption %}{% trans "Emergency" %}{% endset %}
+                                    {% set alertOption %}{% trans "Alert" %}{% endset %}
+                                    {% set criticalOption %}{% trans "Critical" %}{% endset %}
+                                    {% set errorOption %}{% trans "Error" %}{% endset %}
+                                    {% set options = [
+                                        { id: "emergency", value: emergencyOption },
+                                        { id: "alert", value: alertOption }
+                                        { id: "critical", value: criticalOption }
+                                        { id: "error", value: errorOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("RESTING_LOG_LEVEL") %}
+                                        {{ forms.dropdown("RESTING_LOG_LEVEL", "single", title, theme.getSetting("RESTING_LOG_LEVEL", "error"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("RESTING_LOG_LEVEL", title, theme.getSetting("RESTING_LOG_LEVEL", "error"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("audit") %}
+                                    {% set title %}{% trans "Log Level" %}{% endset %}
+                                    {% set helpText %}{% trans "Set the level of logging the CMS should record. In production systems \"error\" is recommended." %}{% endset %}
+
+                                    {% set emergencyOption %}{% trans "Emergency" %}{% endset %}
+                                    {% set alertOption %}{% trans "Alert" %}{% endset %}
+                                    {% set criticalOption %}{% trans "Critical" %}{% endset %}
+                                    {% set errorOption %}{% trans "Error" %}{% endset %}
+                                    {% set warningOption %}{% trans "Warning" %}{% endset %}
+                                    {% set noticeOption %}{% trans "Notice" %}{% endset %}
+                                    {% set infoOption %}{% trans "Information" %}{% endset %}
+                                    {% set debugOption %}{% trans "Debug" %}{% endset %}
+                                    {% set options = [
+                                        { id: "emergency", value: emergencyOption },
+                                        { id: "alert", value: alertOption }
+                                        { id: "critical", value: criticalOption }
+                                        { id: "error", value: errorOption }
+                                        { id: "warning", value: warningOption }
+                                        { id: "notice", value: noticeOption }
+                                        { id: "info", value: infoOption }
+                                        { id: "debug", value: debugOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("audit") %}
+                                        {{ forms.dropdown("audit", "single", title, theme.getSetting("audit", "error"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("audit", title, theme.getSetting("audit", "error"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("ELEVATE_LOG_UNTIL") %}
+                                    {% set title %}{% trans "Elevate Log Until" %}{% endset %}
+                                    {% set helpText %}{% trans "Elevate the log level until this date." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("ELEVATE_LOG_UNTIL") %}
+                                        {{ forms.datetime("ELEVATE_LOG_UNTIL", title, theme.getSetting("ELEVATE_LOG_UNTIL"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("ELEVATE_LOG_UNTIL", title, theme.getSetting("ELEVATE_LOG_UNTIL"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("SERVER_MODE") %}
+                                    {% set title %}{% trans "Server Mode" %}{% endset %}
+                                    {% set helpText %}{% trans "This should only be set if you want to display the maximum allowed error messaging through the user interface. <br /> Useful for capturing critical php errors and environment issues." %}{% endset %}
+
+                                    {% set productionOption %}{% trans "Production" %}{% endset %}
+                                    {% set testOption %}{% trans "Test" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Production", value: productionOption },
+                                        { id: "Test", value: testOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("SERVER_MODE") %}
+                                        {{ forms.dropdown("SERVER_MODE", "single", title, theme.getSetting("SERVER_MODE", "Production"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("SERVER_MODE", title, theme.getSetting("SERVER_MODE", "Production"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="tab-pane" id="tab_users">
+                                <h3 class="section-heading">{% trans "Users" %}</h3>
+
+                                {% if theme.isSettingVisible("DEFAULT_USERGROUP") %}
+                                    {% set title %}{% trans "Default User Group" %}{% endset %}
+                                    {% set helpText %}{% trans "The default User Group for new Users" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_USERGROUP") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: urlFor("group.search") },
+                                            { name: "data-search-term", value: "group" },
+                                            { name: "data-id-property", value: "groupId" },
+                                            { name: "data-text-property", value: "group" }
+                                        ] %}
+                                        {{ forms.dropdown("DEFAULT_USERGROUP", "single", title, defaultUserGroup.groupId, [defaultUserGroup], "groupId", "group", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_USERGROUP", title, theme.getSetting("DEFAULT_USERGROUP"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("defaultUsertype") %}
+                                    {% set title %}{% trans "Default User Type" %}{% endset %}
+                                    {% set helpText %}{% trans "Sets the default user type selected when creating a user. We recommend that this is set to User" %}{% endset %}
+
+                                    {% set option1 %}{% trans "User" %}{% endset %}
+                                    {% set option2 %}{% trans "Group Admin" %}{% endset %}
+                                    {% set option3 %}{% trans "Super Admin" %}{% endset %}
+                                    {% set options = [
+                                        { id: "User", value: option1 },
+                                        { id: "Group Admin", value: option2 },
+                                        { id: "Super Admin", value: option3 }
+                                    ] %}
+                                    {% if theme.isSettingEditable("defaultUsertype") %}
+                                        {{ forms.dropdown("defaultUsertype", "single", title, theme.getSetting("defaultUsertype", "User"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("defaultUsertype", title, theme.getSetting("defaultUsertype", "User"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("USER_PASSWORD_POLICY") %}
+                                    {% set title %}{% trans "Password Policy Regular Expression" %}{% endset %}
+                                    {% set helpText %}{% trans "Regular Expression for password complexity, leave blank for no policy." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("USER_PASSWORD_POLICY") %}
+                                        {{ forms.input("USER_PASSWORD_POLICY", title, theme.getSetting("USER_PASSWORD_POLICY"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("USER_PASSWORD_POLICY", title, theme.getSetting("USER_PASSWORD_POLICY"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("USER_PASSWORD_ERROR") %}
+                                    {% set title %}{% trans "Description of Password Policy" %}{% endset %}
+                                    {% set helpText %}{% trans "A text description of this password policy. Will be show to users when their password does not meet the required policy" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("USER_PASSWORD_ERROR") %}
+                                        {{ forms.input("USER_PASSWORD_ERROR", title, theme.getSetting("USER_PASSWORD_ERROR"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("USER_PASSWORD_ERROR", title, theme.getSetting("USER_PASSWORD_ERROR"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("PASSWORD_REMINDER_ENABLED") %}
+                                    {% set title %}{% trans "Password Reminder" %}{% endset %}
+                                    {% set helpText %}{% trans "Is password reminder enabled?" %}{% endset %}
+
+                                    {% set option1 %}{% trans "Off" %}{% endset %}
+                                    {% set option2 %}{% trans "On except Admin" %}{% endset %}
+                                    {% set option3 %}{% trans "On" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Off", value: option1 },
+                                        { id: "On except Admin", value: option2 },
+                                        { id: "On", value: option3 }
+                                    ] %}
+                                    {% if theme.isSettingEditable("PASSWORD_REMINDER_ENABLED") %}
+                                        {{ forms.dropdown("PASSWORD_REMINDER_ENABLED", "single", title, theme.getSetting("PASSWORD_REMINDER_ENABLED", "Off"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PASSWORD_REMINDER_ENABLED", title, theme.getSetting("PASSWORD_REMINDER_ENABLED", "Off"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
                         <button class="btn btn-save btn-block btn-success" href="#"><span>{% trans "Save" %}</span></button>
                     </form>

@@ -1176,7 +1176,7 @@ class Schedule extends Base
      */
     private function isEventEditable($displayGroups)
     {
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         // Work out if this event is editable or not. To do this we need to compare the permissions
         // of each display group this event is associated with
@@ -1206,7 +1206,7 @@ class Schedule extends Base
     {
         $groups = array();
         $displays = array();
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */

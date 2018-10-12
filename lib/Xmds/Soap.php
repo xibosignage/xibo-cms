@@ -302,7 +302,7 @@ class Soap
         // Start at the current hour
         $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
 
-        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1)
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         else
             $toFilter = $fromFilter->copy()->addHour();
@@ -788,7 +788,7 @@ class Soap
         }
 
         // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
-        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 'On') {
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1) {
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         } else {
             $toFilter = $fromFilter->copy()->addHour();
@@ -1635,7 +1635,7 @@ class Soap
      */
     protected function phoneHome()
     {
-        if ($this->getConfig()->getSetting('PHONE_HOME') == 'On') {
+        if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
             if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
@@ -1720,7 +1720,7 @@ class Soap
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+                && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);

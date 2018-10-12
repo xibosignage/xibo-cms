@@ -75,7 +75,7 @@ class Transition extends Base
             /* @var \Xibo\Entity\Transition $transition */
 
             // If the module config is not locked, present some buttons
-            if ($this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked') {
+            if ($this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 1 && $this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') != 'Checked' ) {
 
                 // Edit button
                 $transition->buttons[] = array(
@@ -98,7 +98,7 @@ class Transition extends Base
      */
     public function editForm($transitionId)
     {
-        if ($this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
         $transition = $this->transitionFactory->getById($transitionId);
@@ -116,7 +116,7 @@ class Transition extends Base
      */
     public function edit($transitionId)
     {
-        if ($this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
+        if ($this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('TRANSITION_CONFIG_LOCKED_CHECKB') == 'Checked')
             throw new AccessDeniedException(__('Transition Config Locked'));
 
         $transition = $this->transitionFactory->getById($transitionId);

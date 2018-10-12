@@ -40,12 +40,19 @@ interface ConfigServiceInterface
     public function getDatabaseConfig();
 
     /**
+     * Get settings
+     * @return array|mixed|null
+     */
+    public function getSettings();
+
+    /**
      * Gets the requested setting from the DB object given
      * @param $setting string
      * @param string[optional] $default
+     * @param bool[optional] $full
      * @return string
      */
-    public function getSetting($setting, $default = NULL);
+    public function getSetting($setting, $default = NULL, $full = false);
 
     /**
      * Change Setting
@@ -53,6 +60,20 @@ interface ConfigServiceInterface
      * @param mixed $value
      */
     public function changeSetting($setting, $value);
+
+    /**
+     * Is the provided setting visible
+     * @param string $setting
+     * @return bool
+     */
+    public function isSettingVisible($setting);
+
+    /**
+     * Is the provided setting editable
+     * @param string $setting
+     * @return bool
+     */
+    public function isSettingEditable($setting);
 
     /**
      * Should the host be considered a proxy exception

@@ -894,7 +894,6 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->settingsFactory,
                 $container->layoutFactory,
                 $container->userGroupFactory
             );
@@ -1382,14 +1381,6 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->dateService
-            );
-        });
-
-        $container->singleton('settingsFactory', function($container) {
-            return new \Xibo\Factory\SettingsFactory(
-                $container->store,
-                $container->logService,
-                $container->sanitizerService
             );
         });
 

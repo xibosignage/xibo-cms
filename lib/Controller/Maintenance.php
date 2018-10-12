@@ -101,7 +101,7 @@ class Maintenance extends Base
         print '<body>';
 
         // Should the Scheduled Task script be running at all?
-        if ($this->getConfig()->getSetting("MAINTENANCE_ENABLED")=="Off") {
+        if ($this->getConfig()->getSetting("MAINTENANCE_ENABLED") == "Off") {
             print "<h1>" . __("Maintenance Disabled") . "</h1>";
             print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
 

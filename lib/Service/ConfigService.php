@@ -319,10 +319,9 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * Get settings
      * @return array|mixed|null
      */
-    private function getSettings()
+    private function loadSettings()
     {
         $item = null;
 
@@ -334,31 +333,31 @@ class ConfigService implements ConfigServiceInterface
 
                 $data = $item->get();
 
-                if ($item->isHit())
+                if ($item->isHit()) {
                     $this->settings = $data;
+                }
             }
 
             // Are we still null?
             if ($this->settings === null) {
                 // Load from the database
-                $results = $this->getStore()->select('SELECT `setting`, `value` FROM `setting`', []);
-
-                foreach ($results as $setting) {
-                    $this->settings[$setting['setting']] = $setting['value'];
-                }
+                $this->settings = $this->getStore()->select('SELECT `setting`, `value`, `userSee`, `userChange` FROM `setting`', []);
             }
         }
 
         // We should have our settings by now, so cache them if we can/need to
         if ($item !== null && $item->isMiss()) {
+            // See about caching these settings - dependent on whether we're logging or not
+            $cacheExpiry = 60 * 5;
+            foreach ($this->settings as $setting) {
+                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($this->settings['ELEVATE_LOG_UNTIL']) > time()) {
+                    $cacheExpiry = intval($this->settings['ELEVATE_LOG_UNTIL']);
+                    break;
+                }
+            }
+
             $item->set($this->settings);
-
-            // Do we have an elevated log level request? If so, then expire the cache sooner
-            if (isset($this->settings['ELEVATE_LOG_UNTIL']) && intval($this->settings['ELEVATE_LOG_UNTIL']) > time())
-                $item->expiresAfter(intval($this->settings['ELEVATE_LOG_UNTIL']));
-            else
-                $item->expiresAfter(60 * 5);
-
+            $item->expiresAfter($cacheExpiry);
             $this->getPool()->saveDeferred($item);
         }
 
@@ -366,22 +365,55 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /** @inheritdoc */
-    public function getSetting($setting, $default = NULL)
+    public function getSettings()
     {
-        $this->getSettings();
+        $settings = $this->loadSettings();
+        $parsed = [];
 
-        return (isset($this->settings[$setting])) ? $this->settings[$setting] : $default;
+        // Go through each setting and create a key/value pair
+        foreach ($settings as $setting) {
+            $parsed[$setting['setting']] = $setting['value'];
+        }
+
+        return $parsed;
+    }
+
+    /** @inheritdoc */
+    public function getSetting($setting, $default = NULL, $full = false)
+    {
+        if ($full) {
+            foreach ($this->settings as $item) {
+                if ($item['setting'] == $setting) {
+                    return $item;
+                }
+            }
+
+            return [
+                'setting' => $setting,
+                'value' => $default,
+                'userSee' => 1,
+                'userChange' => 1
+            ];
+        } else {
+            $settings = $this->getSettings();
+            return (isset($settings[$setting])) ? $settings[$setting] : $default;
+        }
     }
 
     /** @inheritdoc */
     public function changeSetting($setting, $value)
     {
-        $this->getSettings();
+        $settings = $this->getSettings();
 
         // Update in memory cache
-        $this->settings[$setting] = $value;
+        foreach ($this->settings as $item) {
+            if ($item['setting'] == $setting) {
+                $item['value'] = $value;
+                break;
+            }
+        }
 
-        if (isset($this->settings[$setting])) {
+        if (isset($settings[$setting])) {
             // We've already got this setting recorded, update it for
             // Update in database
             $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
@@ -402,6 +434,27 @@ class ConfigService implements ConfigServiceInterface
             $this->getPool()->deleteItem($this->settingCacheKey);
             $this->settingsCacheDropped = true;
         }
+    }
+
+    /**
+     * Is the provided setting visible
+     * @param string $setting
+     * @return bool
+     */
+    public function isSettingVisible($setting)
+    {
+        return $this->getSetting($setting, null, true)['userSee'] == 1;
+    }
+
+    /**
+     * Is the provided setting editable
+     * @param string $setting
+     * @return bool
+     */
+    public function isSettingEditable($setting)
+    {
+        $item = $this->getSetting($setting, null, true);
+        return $item['userSee'] == 1 && $item['userChange'] == 1;
     }
 
     /**
