@@ -2,7 +2,14 @@
     class="playlist-widget selectable {{#if selected}}selected{{/if}}">
     
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }}">{{ duration }}</div>
-    <div class="widgetTitle" title="{{id}}">{{ subType }}</div>
+    <div class="widgetTitle" title="{{id}}">
+        <span class="widgetName">
+            {{widgetName}}
+        </span>
+        <span class="widgetSubType">
+            [{{ subType }}]
+        </span>
+    </div>
 
     {{#if audio}}
         <i class="fa fa-volume-up editProperty" data-property="Audio"></i>

@@ -71,6 +71,14 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         return trans;
     };
 
+        /**
+     * Return the widget name
+     * @returns {string} - Widget name
+     */
+    this.widgetName = function() {
+        return this.getOptions().name;
+    };
+
     /**
      * Return the percentage for the widget on the timeline
      * @returns {number} - Widget duration percentage related to the layout duration
@@ -157,6 +165,7 @@ Widget.prototype.createClone = function() {
 
     const widgetClone = {
         id: 'ghost_' + this.id,
+        widgetName: this.widgetName(),
         subType: this.subType,
         duration: this.getDuration(),
         regionId: this.regionId,

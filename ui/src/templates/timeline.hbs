@@ -1,20 +1,20 @@
 <div id="timeline-container">
     <div id="controls-container" class="text-center">
-        <button id="minTime" type="button" class="btn btn-default" disabled="disabled" style="float: left; width: 60px;">
+        <div id="minTime" class="label label-info label-time pull-left">
             {{properties.minTime}}s
-        </button>
-        <button id="zoomOut" type="button"  {{properties.zoomOutDisable}} class="btn btn-warning">
+        </div>
+        <button id="zoomOut"  {{properties.zoomOutDisable}} class="btn label label-warning label-control">
             <i class="fa fa-search-minus"></i>
         </button>
-        <button id="zoom" type="button" class="btn btn-default">
+        <button id="zoom" class="btn label label-primary label-control">
             {{properties.deltaTime}}s
         </button>
-        <button id="zoomIn" type="button" {{properties.zoomInDisable}} class="btn btn-success">
+        <button id="zoomIn" {{properties.zoomInDisable}} class="btn label label-success label-control">
             <i class="fa fa-search-plus"></i>
         </button>
-        <button id="maxTime" type="button" class="btn btn-default" disabled="disabled" style="float: right; width: 60px;">
+        <div id="maxTime" class="label label-info label-time pull-right">
             {{properties.maxTime}}s
-        </button>
+        </div>
     </div>
 
     <div id="regions-container">
