@@ -3,19 +3,22 @@
 @import "toolbar.less";
 
 // Variables
-@designer-bg-color: #a7a7a7;
+@designer-module-bg-color: #f3f3f3;
+@designer-module-border-color: #333;
+
 @designer-primary-color: #30426a;
+@designer-secondary-color: #337ab7;
 @designer-z-index-select: 10;
 
-@layout-main-bg-color: #8c1bb9;
+@layout-main-bg-color: #1b45b9;
 @layout-main-fg-color: #ffffff;
 @layout-hover-color: lighten(@layout-main-bg-color, 20%);
 @layout-selected-color: lighten(@layout-main-bg-color, 10%);
 
-@region-main-bg-color: #1b45b9;
+@region-main-bg-color: #f27400;
 @region-main-fg-color: #ffffff;
-@region-hover-color: lighten(@region-main-bg-color, 40%);
-@region-selected-color: lighten(@region-main-bg-color, 30%);
+@region-hover-color: lighten(@region-main-bg-color, 30%);
+@region-selected-color: lighten(@region-main-bg-color, 20%);
 
 @widget-main-bg-color: #6fb91b;
 @widget-main-fg-color: #2e2e2e;
@@ -23,7 +26,8 @@
 @widget-selected-color: lighten(@widget-main-bg-color, 10%);
 
 @timeline-widget-bg-color: #f1f1f1;
-@timeline-widget-fg-color: #222;
+@timeline-widget-fg-color: #333;
+@timeline-widget-fg-color2: #555;
 @timeline-widget-border-color: #868686;
 
 @timeline-ghost-bg-color: #c5c5c5;
@@ -32,21 +36,28 @@
 @designer-overlay-z-index: 1050;
 @loading-overlay-z-index: 2000;
 
+@padding-navigator: 5px;
+
 // CSS
 #layout-editor  {
-    background: @designer-bg-color;
     min-height: 90vh;
     padding-bottom: 15vh;
     overflow: hidden;
 }
 
 #layout-editor .top-right-btn {
-    right: 10px;
+    right: 15px;
     top: 10px;
     position: absolute;
     font-size: 25px;
     color: #e0e0e0;
     z-index: 1;
+}
+
+#layout-editor .layout-module {
+    padding-right: 5px;
+    padding-left: 5px;
+    margin-bottom: 5px;
 }
 
 #layout-editor .center-msg {
@@ -63,13 +74,28 @@
 #layout-editor #layout-timeline {
     background: @designer-primary-color;
     padding: 5px;
-    max-height: 220px;
     min-height: 25vh;
     overflow-y: auto;
+    .border-radius(4px);
+    border: 2px solid @designer-module-border-color;
 }
 
 #layout-editor #layout-timeline #regions-container {
     overflow: auto;
+    min-height: 18vh;
+    max-height: 24vh;
+}
+
+#layout-editor #layout-timeline #controls-container .label {
+    width: 45px;
+    font-size: 13px;
+    margin-bottom: 4px;
+    background-color: @designer-secondary-color;
+}
+
+#layout-editor #layout-timeline #controls-container .label-time{
+    background: #f7f7f7;
+    color: #333;
 }
 
 #layout-editor #layout-timeline .designer-region {
@@ -77,6 +103,7 @@
     height: 40px;
     padding: 3px;
     margin: 4px 0;
+    .border-radius(4px);
 }
 
 #layout-editor #layout-timeline .designer-region .message {
@@ -88,8 +115,6 @@
 #layout-editor #layout-timeline #timeline-container {
     float: left;
     width: 100%;
-    padding: 10px;
-    background: #536693;
 }
 
 #layout-editor #layout-timeline .label-region {
@@ -109,6 +134,9 @@
     height: 100%;
     border: 1px solid @timeline-widget-border-color;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 4px;
     .border-radius(4px);
 }
 
@@ -118,12 +146,21 @@
     height: 100%;
     text-align: center;
     opacity: 0.85;
-    margin-left: 5px;
 }
 
 #layout-editor #layout-timeline .designer-widget .widgetTitle {
     display: inline-block;
 }
+
+#layout-editor #layout-timeline .designer-widget .widgetTitle .widgetName {
+    font-style: italic;
+    color: @timeline-widget-fg-color;
+}
+
+#layout-editor #layout-timeline .designer-widget .widgetTitle .widgetSubType {
+    color: @timeline-widget-fg-color2;
+}
+
 
 #layout-editor #layout-timeline .designer-widget i.editProperty {
     float: right;
@@ -142,7 +179,6 @@
     font-weight: bold;
     float: left;
     height: 100%;
-    padding: 6px;
 }
 
 #layout-editor #layout-timeline .designer-widget-sortable-highlight {
@@ -181,12 +217,12 @@
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    padding: 5px;
-    background: @designer-primary-color;
+    .border-radius(4px);
+    border: 2px solid @designer-module-border-color;
 }
 
 #layout-editor #layout-viewer {
-    min-height: 45vh;
+    min-height: 50vh;
 }
 
 #layout-editor .layout-viewer-border {
@@ -247,11 +283,12 @@
     background: #444;
     padding: 4px;
     overflow: auto;
-    margin-top: 5px;
+    .border-radius(0 0 4px 4px);
 }
 
 #layout-editor #layout-viewer-navbar .designer-region {
     background: @region-main-bg-color;
+    
 }
 
 #layout-editor #layout-viewer-navbar .designer-widget {
@@ -270,7 +307,22 @@
 }
 
 #layout-editor #properties-panel-container {
-    background: white;
+    background: @designer-module-bg-color;
+}
+
+#layout-editor #properties-panel-container.properties-layout {
+    .border-radius(4px);
+    border: 3px solid @layout-main-bg-color;
+}
+
+#layout-editor #properties-panel-container.properties-region {
+    .border-radius(4px);
+    border: 3px solid @region-main-bg-color;
+}
+
+#layout-editor #properties-panel-container.properties-widget {
+    .border-radius(4px);
+    border: 3px solid @widget-main-bg-color;
 }
 
 #layout-editor #properties-panel-container .form-title {
@@ -307,17 +359,18 @@
 #layout-editor #layout-navigator {
     background: black;
     min-height: 25vh;
-    padding: 5px;
-    border: @designer-primary-color 5px solid;
+    padding: @padding-navigator;
     margin-bottom: 5px;
+    .border-radius(4px);
+    border: 2px solid @designer-module-border-color;
 }
 
 #layout-editor #layout-navigator .designer-region{
-    .box-shadow(inset 0 0 5px #ddd);
+    .box-shadow(inset 0 0 2px #ddd);
 }
 
 #layout-editor #layout-navigator-edit .designer-region {
-    .box-shadow(inset 0 0 10px #ddd);
+    .box-shadow(inset 0 0 4px #ddd);
 }
 
 #layout-editor #layout-navigator-edit {
@@ -339,6 +392,7 @@
     top: 3%;
     left: 5%;
     position: relative;
+    .border-radius(4px 4px 0 0);
 }
 
 #layout-editor #layout-navigator-edit #layout-navigator-edit-navbar {
@@ -347,10 +401,11 @@
 }
 
 #layout-editor #layout-navigator-edit #layout-navigator-edit-navbar .navbar {
-    padding: 5px;
-    background: gray;
+    padding: 7px;
+    background: @designer-secondary-color;
     width: 90%;
     left: 5%;
+    .border-radius(0 0 4px 4px);
 }
 
 /* Layout object selection */
@@ -418,21 +473,21 @@
 }
 
 #layout-editor .ui-droppable-active {
-    .box-shadow(inset 0 0 5px #fff);
+    .box-shadow(inset 0 0 2px #fff);
 }
 
 #layout-editor .ui-droppable-hover {
-    .box-shadow(inset 0 0 10px #313131);
+    .box-shadow(inset 0 0 4px #313131);
 }
 
 /* Layout Manager */
 #layout-manager {
-    left: 0;
+    left: 10px;
+    top: 10px;
     z-index: 1;
     position: fixed;
-    top: 0;
-    width: 180px;
-    opacity: 0.95;
+    width: 220px;
+    opacity: 0.8;
 }
 
 #layout-manager #layout-manager-header {

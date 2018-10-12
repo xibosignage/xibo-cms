@@ -262,6 +262,8 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
         height: layout.height * dimensions.scale
     };
 
+    const complementaryBackground = $c.complement(layout.backgroundColor);
+
     // Add background ( or color ) to the viewer
     if(layout.backgroundImage === null) {
         this.DOMObject.css('background-color', layout.backgroundColor);
@@ -272,7 +274,7 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
         linkToAPI = linkToAPI.replace(':id', layout.layoutId);
 
         this.DOMObject.css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * dimensions.scale) + "&height=" + (layout.height * dimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
-        this.DOMObject.css('background-color', layout.backgroundColor);
+        this.DOMObject.css('background-color', complementaryBackground);
 
         // Adjust background position
         this.DOMObject.css('background-position-x', -elementScaledDimensions.left + 'px');
