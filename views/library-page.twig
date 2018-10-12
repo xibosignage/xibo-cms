@@ -284,16 +284,25 @@
                 // Configure the upload form
                 var url = "{{ urlFor("library.add") }}";
                 var form = $(this).find("form");
-                var refreshSessionInterval;
-
-                // Initialize the jQuery File Upload widget:
-                form.fileupload({
+                var options = {
                     url: url,
                     disableImageResize: true,
                     previewMaxWidth: 100,
                     previewMaxHeight: 100,
                     previewCrop: true
-                });
+                };
+                var refreshSessionInterval;
+
+                // Initialize the jQuery File Upload widget:
+                if(templateOptions.oldMediaId === undefined || templateOptions.oldMediaId === null) {
+                    form.fileupload(options);
+                } else {
+                    options = $.extend({}, options, {
+                        maxNumberOfFiles: 1,
+                        limitMultiFileUploads: 1
+                    });
+                    form.fileupload(options);
+                }
 
                 // Upload server status check for browsers with CORS support:
                 if ($.support.cors) {
