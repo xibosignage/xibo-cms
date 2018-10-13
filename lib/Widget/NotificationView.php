@@ -295,9 +295,6 @@ class NotificationView extends ModuleWidget
             'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
         );
 

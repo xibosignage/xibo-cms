@@ -239,10 +239,6 @@ class WebPage extends ModuleWidget
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
-        // Get some parameters
-        $width = $this->getSanitizer()->getDouble('width', 0);
-        $height = $this->getSanitizer()->getDouble('height', 0);
-
         // Work out the url
         $url = urldecode($this->getOption('uri'));
         $url = (preg_match('/^' . preg_quote('http') . "/", $url)) ? $url : 'http://' . $url;
@@ -257,12 +253,9 @@ class WebPage extends ModuleWidget
             'originalHeight' => intval($this->region->height),
             'iframeWidth' => intval(($iFrameWidth == '' || $iFrameWidth == 0) ? $this->region->width : $iFrameWidth),
             'iframeHeight' => intval(($iFrameHeight == '' || $iFrameHeight == 0) ? $this->region->height : $iFrameHeight),
-            'previewWidth' => intval($width),
-            'previewHeight' => intval($height),
             'offsetTop' => intval($this->getOption('offsetTop', 0)),
             'offsetLeft' => intval($this->getOption('offsetLeft', 0)),
-            'scale' => ($this->getOption('scaling', 100) / 100),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'scale' => ($this->getOption('scaling', 100) / 100)
         );
 
         // Head Content

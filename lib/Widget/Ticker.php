@@ -685,10 +685,7 @@ class Ticker extends ModuleWidget
             'randomiseItems' => $this->getOption('randomiseItems', 0),
             'speed' => $this->getOption('speed', 1000),
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'originalHeight' => $this->region->height
         );
 
         // Generate a JSON string of substituted items.

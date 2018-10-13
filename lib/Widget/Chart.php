@@ -574,10 +574,7 @@ class Chart extends ModuleWidget
             'useDuration' => $this->getUseDuration(),
             'duration' => $this->getDuration(),
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
+            'originalHeight' => $this->region->height
         );
 
         // Background for the Graph and the legend

@@ -759,9 +759,6 @@ class TwitterMetro extends TwitterBase
             'numItems' => count($items),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'widgetDesignWidth' => $templateData['originalWidth'],
             'widgetDesignHeight'=> $templateData['originalHeight'],
             'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent'))            

@@ -812,11 +812,8 @@ class ForecastIo extends ModuleWidget
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight
         );

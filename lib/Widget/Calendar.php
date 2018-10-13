@@ -249,9 +249,6 @@ class Calendar extends ModuleWidget
             ->appendOptions([
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
-                'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-                'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-                'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
                 'fx' => $effect,
                 'duration' => $duration,
                 'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),

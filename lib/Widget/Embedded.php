@@ -193,10 +193,7 @@ class Embedded extends ModuleWidget
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
             ->appendOptions([
                 'originalWidth' => $this->region->width,
-                'originalHeight' => $this->region->height,
-                'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-                'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-                'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+                'originalHeight' => $this->region->height
             ])
             ->appendJavaScript('
                 $(document).ready(function() { EmbedInit(); });

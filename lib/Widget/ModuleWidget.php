@@ -1401,13 +1401,12 @@ abstract class ModuleWidget implements ModuleInterface
 
         $cacheKey = $this->getCacheKey($displayId);
 
-        // If we are a non-preview, then we'd expect to be provided with a region.
-        // we use this to save a width/height aware version of this
-        if ($displayId !== 0) {
-            $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
-        } else {
-            $cacheFile = $cacheKey;
-        }
+        // Prefix whatever cacheKey the Module generates with the Region dimensions.
+        // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
+        // being contained in a Playlist.
+        // Equally a Region might be resized, which would also effect the way the Widget looks. Just moving a Region
+        // location wouldn't though, which is why we base this on the width/height.
+        $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
 
         $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format('Y-m-d H:i:s')
             . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
