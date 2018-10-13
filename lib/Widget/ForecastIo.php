@@ -24,9 +24,9 @@ namespace Xibo\Widget;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
-use Xibo\Exception\InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
@@ -486,8 +486,8 @@ class ForecastIo extends ModuleWidget
      */
     private function getForecastData($displayId)
     {
-        $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
-        $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
+        $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
 
         if ($this->getOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.
@@ -812,11 +812,8 @@ class ForecastIo extends ModuleWidget
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight
         );

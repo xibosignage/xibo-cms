@@ -19,15 +19,10 @@
 */
 jQuery.fn.extend({
     xiboLayoutScaler: function(options) {
-        var width; var height; var newWidth; var newHeight;
-        
         // Default options
         var defaults = {
           "originalWidth": 0,
           "originalHeight": 0,
-          "previewWidth": 0,
-          "previewHeight": 0,
-          "scaleOverride": 0,
           "widgetDesignWidth": 0,
           "widgetDesignHeight": 0,
           "widgetDesignPadding": 0,
@@ -40,30 +35,16 @@ jQuery.fn.extend({
         var originalWidth = options.originalWidth;
         var originalHeight = options.originalHeight;
 
-        if (options.previewWidth === 0 || options.previewHeight === 0) {
-            width = $(window).width();
-            height = $(window).height();
-        }
-        else {
-            width = options.previewWidth;
-            height = options.previewHeight;
-        }
+        // Width and Height of the window we're in
+        var width = $(window).width();
+        var height = $(window).height();
 
         // Calculate the ratio to apply as a scale transform
         var ratio = Math.min(width / options.originalWidth, height / options.originalHeight);
 
-        // The layout designer might provide a scale override, which we need to use because we cannot tell whether
-        // the region has been resized or not. If it has been resized in the designer, but not saved, the original
-        // width and height will be incorrect (the old saved values). Scale override provides the correct
-        // scale in that case.
-        if (options.scaleOverride !== 0) {
-            ratio = options.scaleOverride;
-        }
-
-        newWidth = width / ratio;
-        newHeight = height / ratio;
-
-        // The widget is scaled according to the layout dimensions
+        // Calculate a new width/height based on the ratio
+        var newWidth = width / ratio;
+        var newHeight = height / ratio;
 
         // Does the widget have an original design width/height
         // if so, we need to further scale the widget        

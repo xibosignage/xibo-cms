@@ -603,7 +603,7 @@ class LayoutFactory extends BaseFactory
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
-        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp/';
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/';
 
         // Do some pre-checks on the arguments we have been provided
         if (!file_exists($zipFile))

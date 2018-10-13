@@ -148,8 +148,8 @@ class Login extends Base
         }
 
         // Check to see if the password reminder functionality is enabled.
-        $passwordReminderEnabled = $this->getConfig()->GetSetting('PASSWORD_REMINDER_ENABLED');
-        $mailFrom = $this->getConfig()->GetSetting('mail_from');
+        $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
+        $mailFrom = $this->getConfig()->getSetting('mail_from');
 
         // Template
         $this->getState()->template = 'login';
@@ -233,8 +233,8 @@ class Login extends Base
     public function forgottenPassword()
     {
         // Is this functionality enabled?
-        $passwordReminderEnabled = $this->getConfig()->GetSetting('PASSWORD_REMINDER_ENABLED');
-        $mailFrom = $this->getConfig()->GetSetting('mail_from');
+        $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
+        $mailFrom = $this->getConfig()->getSetting('mail_from');
 
         if (!(($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != '')) {
             throw new ConfigurationException(__('This feature has been disabled by your administrator'));
@@ -284,7 +284,7 @@ class Login extends Base
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = 'base64';
             $mail->From = $mailFrom;
-            $msgFromName = $this->getConfig()->GetSetting('mail_from_name');
+            $msgFromName = $this->getConfig()->getSetting('mail_from_name');
 
             if ($msgFromName != null)
                 $mail->FromName = $msgFromName;

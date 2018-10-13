@@ -51,7 +51,7 @@ class Soap5 extends Soap4
         }
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -81,7 +81,7 @@ class Soap5 extends Soap4
 
             // Append the time
             $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
-            $displayElement->setAttribute('timezone', $this->getConfig()->GetSetting('defaultTimezone'));
+            $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
@@ -109,7 +109,7 @@ class Soap5 extends Soap4
                   
                     // Override the XMR address if empty
                     if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
-                        $arrayItem['value'] = $this->getConfig()->GetSetting('XMR_PUB_ADDRESS');
+                        $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
@@ -191,7 +191,7 @@ class Soap5 extends Soap4
                 $this->display = $display;
                 $display->display = $displayName;
                 $display->auditingUntil = 0;
-                $display->defaultLayoutId = $this->getConfig()->GetSetting('DEFAULT_LAYOUT', 4);
+                $display->defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT', 4);
                 $display->license = $hardwareKey;
                 $display->licensed = 0;
                 $display->incSchedule = 0;

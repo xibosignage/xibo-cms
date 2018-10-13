@@ -264,7 +264,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ';
 
         $currentDate = $this->dateService->parse();
-        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
             'fromDt' => $currentDate->subHour()->format('U'),
@@ -400,7 +400,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ';
 
         $currentDate = $this->dateService->parse();
-        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
             'fromDt' => $currentDate->subHour()->format('U'),
@@ -516,7 +516,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ';
 
         $currentDate = $this->dateService->parse();
-        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
             'fromDt' => $currentDate->subHour()->format('U'),

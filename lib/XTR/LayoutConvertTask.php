@@ -73,7 +73,7 @@ class LayoutConvertTask implements TaskInterface
         }
 
         // Get the library location to store backups of existing XLF
-        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
         foreach ($this->store->select('SELECT layoutId, xml FROM `layout`', []) as $oldLayout) {

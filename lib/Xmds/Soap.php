@@ -241,17 +241,17 @@ class Soap
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey))
@@ -302,7 +302,7 @@ class Soap
         // Start at the current hour
         $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
 
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1)
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         else
             $toFilter = $fromFilter->copy()->addHour();
@@ -739,10 +739,10 @@ class Soap
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -788,7 +788,7 @@ class Soap
         }
 
         // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On') {
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1) {
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         } else {
             $toFilter = $fromFilter->copy()->addHour();
@@ -1074,7 +1074,7 @@ class Soap
         $reason = $this->getSanitizer()->string($reason);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1159,7 +1159,7 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1184,7 +1184,7 @@ class Soap
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
-        $defaultTimeZone = $this->getConfig()->GetSetting('defaultTimezone');
+        $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
 
         // Store processed logs in an array
         $logs = [];
@@ -1345,7 +1345,7 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1483,7 +1483,7 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1591,7 +1591,7 @@ class Soap
         $mediaId = $this->getSanitizer()->string($mediaId);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1635,10 +1635,10 @@ class Soap
      */
     protected function phoneHome()
     {
-        if ($this->getConfig()->GetSetting('PHONE_HOME') == 'On') {
+        if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if ($this->getConfig()->GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
                 try {
                     $dbh = $this->getStore()->getConnection();
@@ -1652,7 +1652,7 @@ class Soap
                     // Retrieve version number
                     $PHONE_HOME_VERSION = Environment::$WEBSITE_VERSION_NAME;
 
-                    $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                    $PHONE_HOME_URL = $this->getConfig()->getSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->getSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                     if ($this->display->isAuditing())
                         $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
@@ -1709,7 +1709,7 @@ class Soap
      */
     protected function alertDisplayUp()
     {
-        $maintenanceEnabled = $this->getConfig()->GetSetting('MAINTENANCE_ENABLED');
+        $maintenanceEnabled = $this->getConfig()->getSetting('MAINTENANCE_ENABLED');
 
         if ($this->display->loggedIn == 0) {
 
@@ -1720,7 +1720,7 @@ class Soap
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+                && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
@@ -1740,7 +1740,7 @@ class Soap
                     $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
                 }
             } else {
-                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS'));
+                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS'));
             }
         }
     }
@@ -1773,7 +1773,7 @@ class Soap
         // Uncomment to enable auditing.
         //$this->logProcessor->setDisplay(0, true);
 
-        $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
             return true;
@@ -1843,7 +1843,7 @@ class Soap
     {
         $saveAsPath = Wsdl::getRoot() . '?file=' . $nonce . '&displayId=' . $this->display->displayId . '&type=' . $type . '&itemId=' . $itemId;
         // CDN?
-        $cdnUrl = $this->configService->GetSetting('CDN_URL');
+        $cdnUrl = $this->configService->getSetting('CDN_URL');
         if ($cdnUrl != '') {
             // Serve a link to the CDN
             return 'http' . (

@@ -650,7 +650,7 @@ class Library extends Base
             'allowMediaTypeChange' => 0
         ], $options);
 
-        $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
         self::ensureLibraryExists($libraryFolder);
@@ -664,7 +664,7 @@ class Library extends Base
             $validExt = $this->moduleFactory->getValidExtensions();
 
         // Make sure there is room in the library
-        $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = array(
             'userId' => $this->getUser()->userId,
@@ -817,7 +817,7 @@ class Library extends Base
      */
     public function tidyForm()
     {
-        if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         // Work out how many files there are
@@ -873,7 +873,7 @@ class Library extends Base
      */
     public function tidy()
     {
-        if ($this->getConfig()->GetSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new ConfigurationException(__('Sorry this function is disabled.'));
 
         $tidyGenericFiles = $this->getSanitizer()->getCheckbox('tidyGenericFiles');
@@ -931,7 +931,7 @@ class Library extends Base
      */
     public function getLibraryCacheUri()
     {
-        return $this->getConfig()->GetSetting('LIBRARY_LOCATION') . '/cache';
+        return $this->getConfig()->getSetting('LIBRARY_LOCATION') . '/cache';
     }
 
     /**
@@ -1137,7 +1137,7 @@ class Library extends Base
             $fontList = [];
 
             // Check the library exists
-            $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
             $this->ensureLibraryExists($libraryLocation);
 
             if (count($fonts) > 0) {
@@ -1183,7 +1183,7 @@ class Library extends Base
                     }
 
                     // Put the player CSS into the temporary library location
-                    $tempUrl = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
+                    $tempUrl = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fonts.css';
                     file_put_contents($tempUrl, $css);
 
                     // Install it (doesn't expire, isn't a system file, force update)
@@ -1252,7 +1252,7 @@ class Library extends Base
      */
     public function removeTempFiles()
     {
-        $libraryTemp = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp';
+        $libraryTemp = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp';
 
         if (!is_dir($libraryTemp))
             return;

@@ -78,7 +78,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
         // If we're in the error state, then always run, otherwise check the dates we modified various triggers
         if ($this->getTask()->lastRunStatus !== Task::$STATUS_ERROR) {
             // Run a little query to get the last modified date from the media table
-            $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `media`;', [])[0]['modifiedDt'];
+            $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `media` WHERE `type` <> \'module\';', [])[0]['modifiedDt'];
             $lastPlaylistUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `playlist`;', [])[0]['modifiedDt'];
 
             if (empty($lastMediaUpdate) && empty($lastPlaylistUpdate)) {
@@ -115,17 +115,19 @@ class DynamicPlaylistSyncTask implements TaskInterface
             // This is only the first loose check
             $different = (count($playlist->widgets) !== count($media));
 
-            $this->log->debug('There are ' . count($media) . ' that should be assigned. Difference is ' . var_export($different, true));
+            $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets) . ' currently assigned. Difference is ' . var_export($different, true));
 
+            // Get a simple array of mediaId's out of our complex array of media
             $mediaIds = array_map(function($element){
                 /** @var $element Media */
                 return $element->mediaId;
             }, $media);
 
-            $compareMediaIds = $mediaIds;
 
             if (!$different) {
                 // Try a more complete check, using mediaIds
+                $compareMediaIds = $mediaIds;
+
                 // ordering should be the same, so the first time we get one out of order, we can stop
                 foreach ($playlist->widgets as $widget) {
                     if ($widget->getPrimaryMediaId() !== $compareMediaIds[0]) {
@@ -138,22 +140,28 @@ class DynamicPlaylistSyncTask implements TaskInterface
             }
 
             if ($different) {
-                // The best thing to do here (probably) is to remove all the widgets and add them again?
-                // we want to add them in order - remove the ones no-longer present, add the ones we're missing and
-                // the reorder the whole lot
+                // We will update this Playlist
+                $count++;
+
+                // Remove the ones no-longer present, add the ones we're missing
+                // we don't delete and re-add the lot to avoid regenerating the widgetIds (makes stats harder to
+                // interpret)
                 foreach ($playlist->widgets as $widget) {
-                    if (!in_array($widget->getPrimaryMediaId(), $mediaIds)) {
+                    $widgetMediaId = $widget->getPrimaryMediaId();
+
+                    if (!in_array($widgetMediaId, $mediaIds)) {
                         $widget->delete();
                     } else {
                         // It's present in the array, so pop it off
-                        unset($mediaIds[$widget->getPrimaryMediaId()]);
+                        $mediaIds = array_diff($mediaIds, [$widgetMediaId]);
                     }
                 }
+
+                // Do we have any mediaId's left which should be assigned and aren't?
 
                 // Add the ones we have left
                 $assignmentMade = false;
                 foreach ($media as $item) {
-                    $count++;
                     if (in_array($item->mediaId, $mediaIds)) {
                         $assignmentMade = true;
                         $this->createAndAssign($playlist, $item, $count);

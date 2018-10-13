@@ -206,7 +206,7 @@ class Image extends ModuleWidget
         $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());
 
         $media = $this->mediaFactory->getById($this->getMediaId());
-        $libraryLocation = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
         $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;
         $preview = $this->getSanitizer()->getInt('preview', 0) == 1;

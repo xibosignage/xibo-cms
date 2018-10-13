@@ -296,8 +296,8 @@ class GoogleTraffic extends ModuleWidget
             throw new ConfigurationException(__('Module not configured. Missing API Key.'));
 
         // Get the lat/long
-        $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
-        $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
+        $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
 
         if ($this->getOption('useDisplayLocation') == 1) {
             // Use the display ID or the default.

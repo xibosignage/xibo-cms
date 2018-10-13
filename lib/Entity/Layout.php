@@ -654,7 +654,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->debug('Deleting ' . $this);
 
         // We cannot delete the default default
-        if ($this->layoutId == $this->config->GetSetting('DEFAULT_LAYOUT'))
+        if ($this->layoutId == $this->config->getSetting('DEFAULT_LAYOUT'))
             throw new InvalidArgumentException(__('This layout is used as the global default and cannot be deleted'), 'layoutId');
 
         // Delete our draft if we have one
@@ -704,7 +704,7 @@ class Layout implements \JsonSerializable
             // Remove the Layout from any display defaults
             $this->getStore()->update('UPDATE `display` SET defaultlayoutid = :defaultLayoutId WHERE defaultlayoutid = :layoutId', [
                 'layoutId' => $this->layoutId,
-                'defaultLayoutId' => $this->config->GetSetting('DEFAULT_LAYOUT')
+                'defaultLayoutId' => $this->config->getSetting('DEFAULT_LAYOUT')
             ]);
 
             // Remove any display group links
@@ -1109,7 +1109,7 @@ class Layout implements \JsonSerializable
         $zip->addFile($this->xlfToDisk(), 'layout.xml');
 
         // Add all media
-        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
 
         foreach ($this->mediaFactory->getByLayoutId($this->layoutId) as $media) {
@@ -1281,7 +1281,7 @@ class Layout implements \JsonSerializable
      */
     private function getCachePath()
     {
-        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         return $libraryLocation . $this->layoutId . '.xlf';
     }
 
@@ -1341,9 +1341,9 @@ class Layout implements \JsonSerializable
 
         // If this is the global default layout, then add some special handling to make sure we swap the default over
         // to the incoming draft
-        if ($this->parentId == $this->config->GetSetting('DEFAULT_LAYOUT')) {
+        if ($this->parentId == $this->config->getSetting('DEFAULT_LAYOUT')) {
             // Change it over to me.
-            $this->config->ChangeSetting('DEFAULT_LAYOUT', $this->layoutId);
+            $this->config->changeSetting('DEFAULT_LAYOUT', $this->layoutId);
         }
 
         // Delete the parent (make sure we set the parent to be a child of us, otherwise we will delete the linked

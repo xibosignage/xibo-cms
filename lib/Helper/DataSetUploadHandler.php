@@ -70,7 +70,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             $firstRow = true;
             $i = 0;
 
-            $handle = fopen($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
+            $handle = fopen($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
                 $i++;
 
@@ -121,7 +121,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             $dataSet->save(['validate' => false, 'saveColumns' => false]);
 
             // Tidy up the temporary file
-            @unlink($controller->getConfig()->GetSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
+            @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
         } catch (Exception $e) {
             $file->error = $e->getMessage();

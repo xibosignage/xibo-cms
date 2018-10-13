@@ -49,8 +49,8 @@ class EmailNotificationsTask implements TaskInterface
         // Handle queue of notifications to email.
         $this->runMessage .= '## ' . __('Email Notifications') . PHP_EOL;
 
-        $msgFrom = $this->config->GetSetting('mail_from');
-        $msgFromName = $this->config->GetSetting('mail_from_name');
+        $msgFrom = $this->config->getSetting('mail_from');
+        $msgFromName = $this->config->getSetting('mail_from_name');
 
         $this->log->debug('Notification Queue sending from ' . $msgFrom);
 

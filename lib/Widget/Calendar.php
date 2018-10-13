@@ -249,9 +249,6 @@ class Calendar extends ModuleWidget
             ->appendOptions([
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
-                'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-                'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-                'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
                 'fx' => $effect,
                 'duration' => $duration,
                 'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
@@ -388,7 +385,7 @@ class Calendar extends ModuleWidget
         }
 
         // Get a date format
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
         $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         
         // Decide on the Range we're interested in

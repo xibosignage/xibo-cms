@@ -528,11 +528,7 @@ class DataSetView extends ModuleWidget
             'type' => $this->getModuleType(),
             'duration' => $this->getCalculatedDurationForGetResource(),
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'rowsPerPage' => $this->getOption('rowsPerPage'),
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'originalHeight' => $this->region->height
         );
 
         // Add our fonts.css file
@@ -708,7 +704,7 @@ class DataSetView extends ModuleWidget
             if ($displayId != 0) {
                 $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
-                $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
+                $timeZone = ($timeZone == '') ? $this->getConfig()->getSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
                 $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }

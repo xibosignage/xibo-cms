@@ -144,7 +144,7 @@ class StatsArchiveTask implements TaskInterface
         fclose($out);
 
         // Create a ZIP file and add our temporary file
-        $zipName = $this->config->GetSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
+        $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
         $zip = new \ZipArchive();
         $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
         if ($result !== true)

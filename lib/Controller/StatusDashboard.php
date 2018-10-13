@@ -143,7 +143,7 @@ class StatusDashboard extends Base
             $results = $this->store->select($sql, $params);
 
             // Monthly bandwidth - optionally tested against limits
-            $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+            $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
             $maxSize = 0;
             foreach ($results as $row) {
@@ -209,7 +209,7 @@ class StatusDashboard extends Base
                 $libraryLimit = $this->getUser()->libraryQuota * 1024;
             }
             else {
-                $libraryLimit = $this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+                $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
             // Library Size in Bytes
@@ -307,12 +307,12 @@ class StatusDashboard extends Base
             $data['nowShowing'] = $sth->fetchColumn(0);
 
             // Latest news
-            if ($this->getConfig()->GetSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->GetSetting('LATEST_NEWS_URL'))) {
+            if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))) {
                 // Make sure we have the cache location configured
-                Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
+                Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
                 try {
-                    $feedUrl = $this->getConfig()->GetSetting('LATEST_NEWS_URL');
+                    $feedUrl = $this->getConfig()->getSetting('LATEST_NEWS_URL');
                     $cache = $this->pool->getItem('rss/' . md5($feedUrl));
 
                     $latestNews = $cache->get();
@@ -389,7 +389,7 @@ class StatusDashboard extends Base
         }
 
         // Do we have an embedded widget?
-        $data['embeddedWidget'] = html_entity_decode($this->getConfig()->GetSetting('EMBEDDED_STATUS_WIDGET'));
+        $data['embeddedWidget'] = html_entity_decode($this->getConfig()->getSetting('EMBEDDED_STATUS_WIDGET'));
 
         // Render the Theme and output
         $this->getState()->template = 'dashboard-status-page';

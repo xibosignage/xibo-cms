@@ -502,7 +502,7 @@ class Display extends Base
             // Thumbnail
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
-            if (file_exists($this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
+            if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
                 $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
@@ -585,7 +585,7 @@ class Display extends Base
             }
 
             // Schedule Now
-            if ($this->getUser()->checkEditable($display) || $this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes') {
+            if ($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
                     'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
@@ -703,7 +703,7 @@ class Display extends Base
             throw new AccessDeniedException();
 
         // Time format for display
-        $timeFormat = $this->getDate()->extractTimeFormat($this->getConfig()->GetSetting('DATE_FORMAT'));
+        $timeFormat = $this->getDate()->extractTimeFormat($this->getConfig()->getSetting('DATE_FORMAT'));
 
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
@@ -761,7 +761,7 @@ class Display extends Base
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
-            'displayLockName' => ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
+            'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit')
         ]);
     }
@@ -964,7 +964,7 @@ class Display extends Base
             throw new AccessDeniedException();
 
         // Update properties
-        if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
+        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
             $display->display = $this->getSanitizer()->getString('display');
 
         $display->description = $this->getSanitizer()->getString('description');
@@ -1175,7 +1175,7 @@ class Display extends Base
         $file = 'screenshots/' . $displayId . '_screenshot.jpg';
 
         // File upload directory.. get this from the settings object
-        $library = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+        $library = $this->getConfig()->getSetting("LIBRARY_LOCATION");
         $fileName = $library . $file;
 
         if (!file_exists($fileName)) {
@@ -1356,9 +1356,9 @@ class Display extends Base
     public function validateDisplays($displays)
     {
         // Get the global time out (overrides the alert time out on the display if 0)
-        $globalTimeout = $this->getConfig()->GetSetting('MAINTENANCE_ALERT_TOUT') * 60;
-        $emailAlerts = ($this->getConfig()->GetSetting("MAINTENANCE_EMAIL_ALERTS") == 'On');
-        $alwaysAlert = ($this->getConfig()->GetSetting("MAINTENANCE_ALWAYS_ALERT") == 'On');
+        $globalTimeout = $this->getConfig()->getSetting('MAINTENANCE_ALERT_TOUT') * 60;
+        $emailAlerts = ($this->getConfig()->getSetting("MAINTENANCE_EMAIL_ALERTS") == 1);
+        $alwaysAlert = ($this->getConfig()->getSetting("MAINTENANCE_ALWAYS_ALERT") == 1);
 
         foreach ($displays as $display) {
             /* @var \Xibo\Entity\Display $display */
