@@ -125,13 +125,18 @@ Viewer.prototype.render = function(element, layout, page = 1) {
         const darkerValue = 50;
         const complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
 
-        // Darken color
-        complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue; 
-        complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue; 
-        complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue; 
+        if(complementaryColorRGB.R === undefined || complementaryColorRGB.G === undefined || complementaryColorRGB.B === undefined) {
+            this.DOMObject.css('background', layout.backgroundColor);
+        } else {
 
-        // Use a complentary colour for the navigator background
-        this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
+            // Darken color
+            complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue; 
+            complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue; 
+            complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue; 
+
+            // Use a complentary colour for the navigator background
+            this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
+        } 
 
         // Handle play button
         this.DOMObject.find('#play-btn').click(function() {

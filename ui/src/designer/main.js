@@ -216,6 +216,16 @@ $(document).ready(function() {
         }
     });
 
+    // Handle keyboard keys
+    $('body').off('keydown').keydown(function(handler) {
+        if($(handler.target).is($('body'))) {
+
+            if(handler.key == 'Delete') {
+                lD.deleteSelectedObject();
+            }
+        }
+    });
+
     // Refresh some modules on window resize
     $(window).resize($.debounce(500, function(e) {
         if(e.target === window) {
@@ -644,6 +654,8 @@ lD.deleteDraggedObject = function(draggable) {
  * @param {object} objectToDelete - menu to load content for
  */
 lD.deleteObject = function(objectType, objectId) {
+
+    bootbox.hideAll();
 
     if(objectType === 'region' || objectType === 'widget') {
 

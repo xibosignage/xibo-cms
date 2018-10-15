@@ -156,9 +156,19 @@ pE.loadEditor = function() {
 
     // Editor container select ( faking drag and drop ) to add a element to the playlist
     pE.editorDiv.find('#playlist-editor-container').click(function(e) {
-        e.stopPropagation();
         if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+            e.stopPropagation();
             pE.selectObject($(this));
+        }
+    });
+
+    // Handle keyboard keys
+    $('body').off('keydown').keydown(function(handler) {
+        if(!$(handler.target).is($('input'))) {
+
+            if(handler.key == 'Delete') {
+                pE.deleteSelectedObject();
+            }
         }
     });
 

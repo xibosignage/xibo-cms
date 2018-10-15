@@ -179,6 +179,13 @@ PropertiesPanel.prototype.render = function(element) {
             self[$(this).data('action')](element, $(this).data('subAction'));
         });
 
+        // Handle keyboard keys
+        self.DOMObject.off('keydown').keydown(function(handler) {
+            if(handler.key == 'Enter') {
+                self.save(element, $(this).data('subAction'));
+            }
+        });
+
         // Call Xibo Init for this form
         XiboInitialise("#" + self.DOMObject.attr("id"));
 

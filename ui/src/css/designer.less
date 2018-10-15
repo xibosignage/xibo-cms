@@ -6,6 +6,11 @@
 @designer-module-bg-color: #f3f3f3;
 @designer-module-border-color: #333;
 
+@properties-panel-nav-bg-color: #ddd;
+@properties-panel-nav-fg-color: #888;
+@properties-panel-nav-active-bg-color: #f3f3f3;
+@properties-panel-nav-active-fg-color: #337ab7;
+
 @designer-primary-color: #30426a;
 @designer-secondary-color: #337ab7;
 @designer-z-index-select: 10;
@@ -353,6 +358,23 @@
 
 #layout-editor #properties-panel-container .button-container {
     padding: 10px;
+}
+
+.form-container .nav-tabs>li>a {
+    color: @properties-panel-nav-fg-color;
+    background-color: @properties-panel-nav-bg-color;
+}
+
+.form-container .nav-tabs>li>a:hover {
+    color: @properties-panel-nav-active-bg-color;
+    background-color: @properties-panel-nav-active-fg-color !important;
+}
+
+.form-container .nav-tabs>li.active>a,
+.form-container .nav-tabs>li.active>a:hover {
+    background-color: @properties-panel-nav-active-bg-color !important;
+    font-weight: bold;
+    color: @properties-panel-nav-active-fg-color;
 }
 
 /* Layout Navigator */
