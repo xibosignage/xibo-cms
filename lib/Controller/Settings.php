@@ -485,7 +485,7 @@ class Settings extends Base
             $this->getConfig()->changeSetting('audit', $newLogLevel);
         }
 
-        if ($this->getConfig()->isSettingEditable('ELEVATE_LOG_UNTIL')) {
+        if ($this->getConfig()->isSettingEditable('ELEVATE_LOG_UNTIL') && $this->getSanitizer()->getDate('ELEVATE_LOG_UNTIL') != null) {
             $newElevateUntil = $this->getSanitizer()->getDate('ELEVATE_LOG_UNTIL')->format('U');
             $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $newElevateUntil);
         }
