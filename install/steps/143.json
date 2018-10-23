@@ -18,6 +18,10 @@
     {
       "step": "Add a setting allowing users to auto authorise new displays",
       "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('DISPLAY_AUTO_AUTH', '0', 'checkbox', 'If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.', null, 'displays', 1, 'Automatically authorise new Displays?', '', 25, '', 1, 'checkbox'); "
+    },
+    {
+      "step": "Rename Dashboard to Icon Dashboard",
+      "action": "UPDATE `pages` set title = 'Icon Dashboard', name = 'icondashboard' WHERE pageID = 1;"
     }
   ]
 }

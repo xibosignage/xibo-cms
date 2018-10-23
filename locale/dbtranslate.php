@@ -22,7 +22,8 @@
 
 /* Translations from the Database that need to be registered with Gettext */
 
-echo __('Dashboard');
+echo __('Icon Dashboard');
+echo __('Status Dashboard');
 echo __('Media Dashboard');
 echo __('Schedule');
 echo __('Layout');
