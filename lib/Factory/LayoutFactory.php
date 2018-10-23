@@ -416,7 +416,8 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
-                $widget->useDuration = ($widget->useDuration == '') ? 1 : 0;
+                // Additional check for importing layouts from 1.7 series, where the useDuration did not exist
+                $widget->useDuration = ($widget->useDuration === '') ? 1 : $widget->useDuration;
                 $widget->tempId = $mediaNode->getAttribute('fileId');
                 $widgetId = $mediaNode->getAttribute('id');
 
