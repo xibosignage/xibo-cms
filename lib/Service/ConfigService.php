@@ -350,8 +350,8 @@ class ConfigService implements ConfigServiceInterface
             // See about caching these settings - dependent on whether we're logging or not
             $cacheExpiry = 60 * 5;
             foreach ($this->settings as $setting) {
-                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($this->settings['ELEVATE_LOG_UNTIL']) > time()) {
-                    $cacheExpiry = intval($this->settings['ELEVATE_LOG_UNTIL']);
+                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > time()) {
+                    $cacheExpiry = intval($setting['value']);
                     break;
                 }
             }
@@ -433,6 +433,7 @@ class ConfigService implements ConfigServiceInterface
         if (!$this->settingsCacheDropped && $this->getPool() !== null) {
             $this->getPool()->deleteItem($this->settingCacheKey);
             $this->settingsCacheDropped = true;
+            $this->settings = null;
         }
     }
 
