@@ -22,6 +22,10 @@
     {
       "step": "Rename Dashboard to Icon Dashboard",
       "action": "UPDATE `pages` set title = 'Icon Dashboard', name = 'icondashboard' WHERE pageID = 1;"
+    },
+    {
+      "step": "Change the DataSet View module name",
+      "action": "UPDATE `module` set Name = 'DataSet View' WHERE Module = 'datasetview'; "
     }
   ]
 }
