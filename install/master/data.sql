@@ -92,7 +92,7 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
   (1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Image', 10),
-  (2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Video', 0),
+  (2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4,m4v', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Video', 0),
   (3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Flash', 10),
   (4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\PowerPoint', 10),
   (5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\WebPage', 60),

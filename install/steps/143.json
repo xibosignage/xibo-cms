@@ -26,6 +26,10 @@
     {
       "step": "Change the DataSet View module name",
       "action": "UPDATE `module` set Name = 'DataSet View' WHERE Module = 'datasetview'; "
+    },
+    {
+      "step": "Add M4V extension to Video module",
+      "action": "UPDATE `module` SET validextensions = CONCAT(validextensions, ',m4v') WHERE module = 'video' LIMIT 1;"
     }
   ]
 }
