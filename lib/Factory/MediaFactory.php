@@ -420,11 +420,12 @@ class MediaFactory extends BaseFactory
     /**
      * Get Media by LayoutId
      * @param int $layoutId
+     * @param int $edited
      * @return array[Media]
      */
-    public function getByLayoutId($layoutId)
+    public function getByLayoutId($layoutId, $edited)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited]);
     }
 
     /**
@@ -611,6 +612,8 @@ class MediaFactory extends BaseFactory
         } else if ($this->getSanitizer()->getInt('parentMediaId', $filterBy) !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
             $params['mediaId'] = $this->getSanitizer()->getInt('parentMediaId', $filterBy);
+        } else if ($this->getSanitizer()->getInt('isEdited', -1, $filterBy) != -1) {
+            $body .= ' AND media.isEdited <> -1 ';
         } else {
             $body .= ' AND media.isEdited = 0 ';
         }
@@ -751,7 +754,7 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile'
+                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited'
                 ]
             ]);
         }
