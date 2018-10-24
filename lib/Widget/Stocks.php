@@ -167,7 +167,7 @@ class Stocks extends AlphaVantageBase
      *  @SWG\Parameter(
      *      name="items",
      *      in="formData",
-     *      description="Items wanted, can be comma separated",
+     *      description="A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.",
      *      type="string",
      *      required=true
      *   ),
