@@ -511,8 +511,8 @@ class Stats extends Base
             $SQL .= ', bandwidthtype.name AS type ';
 
         $SQL .= ' FROM `bandwidth`
-                INNER JOIN `display`
-                ON display.displayid = bandwidth.displayid';
+                LEFT OUTER JOIN `display`
+                ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0)
             $SQL .= '
@@ -521,8 +521,7 @@ class Stats extends Base
                 ';
 
         $SQL .= '  WHERE month > :month
-                AND month < :month2
-                AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+                AND month < :month2 ';
 
         if ($displayId != 0) {
             $SQL .= ' AND display.displayid = :displayid ';
@@ -555,6 +554,7 @@ class Stats extends Base
 
         $labels = [];
         $data = [];
+        $backgroundColor = [];
 
         foreach ($results as $row) {
 
@@ -562,9 +562,9 @@ class Stats extends Base
             if ($displayId != 0) {
                 $labels[] = $row['type'];
             } else {
-                $labels[] = $row['display'];
+                $labels[] = $row['display'] === null ? __('Deleted Displays') : $row['display'];
             }
-
+            $backgroundColor[] = ($row['display'] === null) ? 'rgb(255,0,0)' : 'rgb(11, 98, 164)';
             $data[] = round((double)$row['size'] / (pow(1024, $base)), 2);
         }
 
@@ -574,6 +574,7 @@ class Stats extends Base
         $this->getState()->extra = [
             'labels' => $labels,
             'data' => $data,
+            'backgroundColor' => $backgroundColor,
             'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
         ];
     }
