@@ -16,5 +16,5 @@
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of seconds you would like to cache long/lat requests for. DarkSky offers 1000 requests a day." %}{% endset %}
-    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod"), helpText) }}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText) }}
 {% endblock %}
