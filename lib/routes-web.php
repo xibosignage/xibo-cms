@@ -57,13 +57,6 @@ $app->get('/logout', '\Xibo\Controller\Login:logout')->name('logout');
 $app->get('/login/ping', '\Xibo\Controller\Login:PingPong')->name('ping');
 
 //
-// upgrade
-//
-$app->get('/update', '\Xibo\Controller\Upgrade:displayPage')->name('upgrade.view');
-$app->post('/update/step/:id', '\Xibo\Controller\Upgrade:doStep')->name('upgrade.doStep');
-$app->delete('/update/step/:id', '\Xibo\Controller\Upgrade:skipStep')->name('upgrade.skipStep');
-
-//
 // schedule
 //
 $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('schedule.view');
