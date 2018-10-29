@@ -72,24 +72,6 @@ class Actions extends Middleware
                 $app->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
             }
 
-            // Handle if we are an upgrade
-            // Get the current route pattern
-            $resource = $app->router->getCurrentRoute()->getPattern();
-
-            // Get an array of excluded routes
-            if (is_array($this->app->excludedCsrfRoutes))
-                $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id'], $this->app->excludedCsrfRoutes);
-            else
-                $excludedRoutes = array_merge($app->publicRoutes, ['/update', '/update/step/:id']);
-
-            // Does the version in the DB match the version of the code?
-            // If not then we need to run an upgrade.
-            if (Environment::migrationPending() && !in_array($resource, $excludedRoutes)) {
-                $app->logService->debug('%s not in excluded routes, redirecting. ', $resource);
-                $app->redirectTo('upgrade.view');
-                return;
-            }
-
             // Do not proceed unless we have completed an upgrade
             if (Environment::migrationPending())
                 return;
@@ -138,6 +120,9 @@ class Actions extends Middleware
 
                     // User notifications
                     $notifications = array_merge($notifications, $factory->getMine());
+
+                    // Get the current route pattern
+                    $resource = $app->router->getCurrentRoute()->getPattern();
 
                     // If we aren't already in a notification interrupt, then check to see if we should be
                     if ($resource != '/drawer/notification/interrupt/:id' && !$app->request()->isAjax()) {
