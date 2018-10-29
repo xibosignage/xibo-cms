@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
@@ -28,12 +29,14 @@ ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
+// Should we show the installer?
 if (!file_exists('settings.php')) {
+    // Check to see if the install app is available
     if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
         header('Location: install/');
         exit();
-    }
-    else {
+    } else {
+        // We can't do anything here - no install app and no settings file.
         die('Not configured');
     }
 }

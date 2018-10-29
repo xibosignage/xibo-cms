@@ -86,7 +86,7 @@ if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Existing Database, checking if we need to upgrade it"
   # Determine if there are any migrations to be run
-  /var/www/cms/vendor/bin/phinx status -c /var/www/cms/phinx.php
+  /var/www/cms/vendor/bin/phinx status -c "/var/www/cms/phinx.php"
 
   if [ ! "$?" == 0 ]
   then
@@ -112,8 +112,11 @@ then
 
   echo "Provisioning Database"
 
+  # Create the database if it doesn't exist
+  mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
+
   # Populate the database
-  php /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
+  php /var/www/cms/vendor/bin/phinx migrate -c "/var/www/cms/phinx.php"
 
   CMS_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
 

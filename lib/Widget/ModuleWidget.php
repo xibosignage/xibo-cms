@@ -1510,22 +1510,6 @@ abstract class ModuleWidget implements ModuleInterface
             $resource = file_get_contents($cachePath . $cacheFile);
         }
 
-        // If we are the preview, then we should look at updating the preview width, height and scale_override with
-        // the ones we've been given
-        // this is a workaround to making the cache key aware of the below parameters, which would create a new cache
-        // file each and every time the region changed size.
-        if ($displayId == 0) {
-            // Support keyword replacement and parsing for known combinations of these in existing widgets
-            // (for backwards compatibility)
-            $previewWidth = $this->getSanitizer()->getDouble('width', 0);
-            $previewHeight = $this->getSanitizer()->getDouble('height', 0);
-            $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
-
-            $resource = preg_replace('/"previewWidth":([-+]?[0-9]*\.?[0-9]+)/', '"previewWidth":' . $previewWidth, $resource);
-            $resource = preg_replace('/"previewHeight":([-+]?[0-9]*\.?[0-9]+)/', '"previewHeight":' . $previewHeight, $resource);
-            $resource = preg_replace('/"scaleOverride":([-+]?[0-9]*\.?[0-9]+)/', '"scaleOverride":' . $scaleOverride, $resource);
-        }
-
         // Return the resource
         return $resource;
     }

@@ -73,6 +73,7 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 
 # Set some environment variables
 ENV CMS_DEV_MODE=true \
+    XMR_HOST=xmr \
     MYSQL_HOST=db \
     MYSQL_PORT=3306 \
     MYSQL_USER=root \
