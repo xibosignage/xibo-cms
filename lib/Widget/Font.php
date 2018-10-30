@@ -28,6 +28,12 @@ use Xibo\Exception\NotFoundException;
  */
 class Font extends ModuleWidget
 {
+    /** @inheritdoc */
+    public function edit()
+    {
+        // Non-editable
+    }
+
     /**
      * Install some fonts
      */

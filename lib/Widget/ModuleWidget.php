@@ -64,6 +64,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 abstract class ModuleWidget implements ModuleInterface
 {
+    protected static $STATUS_INVALID = 0;
+    protected static $STATUS_VALID = 1;
+    protected static $STATUS_PLAYER = 2;
+
     /**
      * @var Slim
      */
@@ -689,19 +693,11 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public function add()
+    final public function add()
     {
-        // Nothing to do
-    }
-
-    /** @inheritdoc */
-    public function edit()
-    {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-
-        $this->widget->save();
+        // Set the default widget options for this widget and save.
+        $this->setDefaultWidgetOptions();
+        $this->saveWidget();
     }
 
     /** @inheritdoc */
@@ -1016,14 +1012,6 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * Default view for add form
-     */
-    public function addForm()
-    {
-        return $this->getModuleType() . '-form-add';
-    }
-
-    /**
      * Default view for edit form
      */
     public function editForm()
@@ -1292,7 +1280,8 @@ abstract class ModuleWidget implements ModuleInterface
      * @param Media $media
      * @param string $filePath
      */
-    public function preProcess($media, $filePath) {
+    public function preProcess($media, $filePath)
+    {
 
     }
 

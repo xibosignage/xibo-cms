@@ -156,7 +156,7 @@ class Text extends ModuleWidget
      * )
      *
      * @throws InvalidArgumentException
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -164,7 +164,7 @@ class Text extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

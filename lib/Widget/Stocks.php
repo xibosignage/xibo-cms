@@ -290,7 +290,7 @@ class Stocks extends AlphaVantageBase
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -298,7 +298,7 @@ class Stocks extends AlphaVantageBase
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

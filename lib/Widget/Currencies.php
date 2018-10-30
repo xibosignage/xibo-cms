@@ -320,7 +320,7 @@ class Currencies extends AlphaVantageBase
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -328,7 +328,7 @@ class Currencies extends AlphaVantageBase
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

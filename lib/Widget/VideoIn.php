@@ -134,7 +134,7 @@ class VideoIn extends ModuleWidget
      * )
      *
      * @throws XiboException
-     */
+
     public function add()
     {
         // Set some options
@@ -145,7 +145,7 @@ class VideoIn extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
     /** @inheritdoc */
     public function edit()

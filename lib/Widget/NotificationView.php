@@ -125,13 +125,13 @@ class NotificationView extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media in the Database

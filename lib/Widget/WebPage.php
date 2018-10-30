@@ -163,7 +163,7 @@ class WebPage extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setOption('xmds', true);
@@ -182,7 +182,7 @@ class WebPage extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    } */
     
     /**
      * Edit a Webpage Widget

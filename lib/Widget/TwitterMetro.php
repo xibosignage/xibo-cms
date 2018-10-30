@@ -348,7 +348,7 @@ class TwitterMetro extends TwitterBase
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -356,7 +356,7 @@ class TwitterMetro extends TwitterBase
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    } */
 
     /**
      * Edit Media

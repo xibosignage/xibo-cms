@@ -93,14 +93,14 @@ class SubPlaylist extends ModuleWidget
      * )
      *
      * @throws InvalidArgumentException
-     */
+
     public function add()
     {
         $this->setCommonOptions();
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

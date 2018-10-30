@@ -309,7 +309,7 @@ class ForecastIo extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -338,7 +338,7 @@ class ForecastIo extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media in the Database

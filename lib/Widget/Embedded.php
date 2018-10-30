@@ -127,7 +127,7 @@ class Embedded extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         // Required Attributes
@@ -142,7 +142,7 @@ class Embedded extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media in the Database

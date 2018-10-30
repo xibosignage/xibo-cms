@@ -441,7 +441,7 @@ class Ticker extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -463,7 +463,7 @@ class Ticker extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

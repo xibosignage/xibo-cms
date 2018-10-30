@@ -144,7 +144,7 @@ class Clock extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         // You must also provide a duration (all media items must provide this field)
@@ -162,7 +162,7 @@ class Clock extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
      /**
      * Edit Clock

@@ -400,7 +400,7 @@ class Twitter extends TwitterBase
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -408,7 +408,7 @@ class Twitter extends TwitterBase
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

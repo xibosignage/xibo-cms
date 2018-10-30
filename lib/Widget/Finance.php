@@ -240,7 +240,7 @@ class Finance extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -248,7 +248,7 @@ class Finance extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

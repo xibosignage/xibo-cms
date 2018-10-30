@@ -25,6 +25,10 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\NotFoundException;
 
+/**
+ * Class Image
+ * @package Xibo\Widget
+ */
 class Image extends ModuleWidget
 {
     /** @inheritdoc */

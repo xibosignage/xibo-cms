@@ -208,7 +208,7 @@ class GoogleTraffic extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -216,7 +216,7 @@ class GoogleTraffic extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

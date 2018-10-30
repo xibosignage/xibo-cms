@@ -844,6 +844,16 @@ class Layout extends Base
             // Populate the status message
             $layout->getStatusMessage();
 
+            // Annotate each Widget with its validity
+            if (in_array('widget_validity', $embed)) {
+                foreach ($layout->getWidgets() as $widget) {
+                    /* @var Widget $widget */
+                    $module = $this->moduleFactory->createWithWidget($widget);
+
+                    $widget->isValid = (int)$module->isValid();
+                }
+            }
+
             if ($this->isApi())
                 continue;
 
