@@ -1,4 +1,4 @@
-<p class="top-right-btn">
+<p class="top-right-btn inline-editor-hide">
     <i id="fs-btn" class="fa fa-arrows-alt"></i>
 </p>
 
@@ -19,13 +19,18 @@
         </p>
     {{else}}
 
+        {{!-- Render Layout --}}
+        <div id="inline-editor" class="inline-editor-opened"></div>
+
         {{!-- Render Widget or Region --}}
         {{#if res.extra.empty}}
             <p class="center-msg">
                 {{res.extra.text}}
             </p>
         {{else}}
-            {{{res.html}}}
+            <div id="viewer-preview">
+                {{{res.html}}}
+            </div>
         {{/if}}
     {{/if}}
 </div>

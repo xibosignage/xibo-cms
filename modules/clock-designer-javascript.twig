@@ -16,23 +16,52 @@
         // Set clock type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#clockTypeId', ['.analogue-control-group', '.digital-control-group', '.flip-control-group'], [1, 2, 3]);
 
-        formHelpers.textCallback(this);
+        formHelpers.setupCKEditor(this, null, 'ta_text');
     }
 
     // Runs before form submit
     function clock_form_add_submit() {        
 
         // Update text callback fields
-        formHelpers.textCallbackUpdate();
+        formHelpers.updateCKEditor();
     }
 
 
     // Runs after form opens
     function clock_form_edit_open() {
 
-        // Use same method as form add open
-        clock_form_add_open.bind(this)();
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Using form Editor
+        if($(this).data('formEditorOnly')) {
+
+            // Set clock type input field, using the helper ()
+            formHelpers.setupObjectValueInputFields($(this).find('form'), '#clockTypeId', ['.analogue-control-group', '.digital-control-group', '.flip-control-group'], [1, 2, 3]);
+
+            formHelpers.setupCKEditor(this, null, 'ta_text');
+        } else { // Using viewer Editor
+
+            // Set clock type input field, using the helper (), without the digital control group
+            formHelpers.setupObjectValueInputFields($(this).find('form'), '#clockTypeId', ['.analogue-control-group', '.flip-control-group'], [1, 3]);
+
+            // Hide default form input
+            $(this).find('.digital-control-group').hide();
+
+            // Check clock type
+            checkClockType($(this));
+
+            // On select input change, check clock type
+            $(this).find('form #clockTypeId').on('change input', () => {
+                checkClockType($(this));
+            });
+        }
     }
+
+    // Check if the clock type needs a inline editor
+    function checkClockType (form) {
+        $(form).data().viewerObject.setupInlineEditor('ta_text', $(form).find('form #clockTypeId').val() == '2');
+    };
 
     // Runs before form submit
     function clock_form_edit_submit() {

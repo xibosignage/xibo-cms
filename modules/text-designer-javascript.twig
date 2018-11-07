@@ -17,22 +17,39 @@
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
         // Set text callback structure
-        formHelpers.textCallback(this);
+        formHelpers.setupCKEditor(this, null, 'ta_text');
     }
 
     // Runs before form submit
     function text_form_add_submit() {        
 
         // Update text callback fields
-        formHelpers.textCallbackUpdate();
+        formHelpers.updateCKEditor();
     }
 
 
     // Runs after form open
     function text_form_edit_open() {
 
-        // Use same method as form add open
-        text_form_add_open.bind(this)();
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set effect type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
+
+        // Using form Editor
+        if($(this).data('formEditorOnly')) {
+
+            formHelpers.setupCKEditor(this, null, 'ta_text');
+        } else {
+            // Using viewer Editor
+
+            // Hide default form input
+            $(this).find('.html-editor-group').hide();
+
+            // Show edit button on the viewer
+            $(this).data().viewerObject.setupInlineEditor('ta_text');
+        }
     }
 
     // Runs before form submit

@@ -444,6 +444,7 @@ class Twitter extends TwitterBase
         $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
         $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
@@ -780,6 +781,7 @@ class Twitter extends TwitterBase
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
                 $widgetOriginalPadding = $template['widgetOriginalPadding'];
+                $advancedEditor = $template['advancedEditor'];
                 $resultContent = $template['resultContent'];
             }
             
@@ -788,6 +790,7 @@ class Twitter extends TwitterBase
             $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
             $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
             $widgetOriginalPadding = $this->getSanitizer()->int($this->getOption('widgetOriginalPadding'));
+            $advancedEditor = $this->getOption('advancedEditor');
             $resultContent = $this->getOption('resultContent');
         }
 

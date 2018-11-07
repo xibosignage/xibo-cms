@@ -1106,9 +1106,9 @@ lD.openUploadFormModelShown = function(form) {
  * Clear Temporary Data ( Cleaning cached variables )
  */
 lD.clearTemporaryData = function() {
-    
+
     // Remove text callback editor structure variables
-    formHelpers.textCallbackDestroy();
+    formHelpers.destroyCKEditor();
 };
 
 /**

@@ -1,29 +1,43 @@
-<nav class="designer-{{type}}">
+<div class="viewer-navbar designer-{{type}}">
 
-    {{!-- Paging controls --}}
-    {{#if pagingEnable}}
-        <span class="paging">
-            <button type="button" id="left-btn" class="btn btn-primary">
-                <i class="fa fa-arrow-left"></i>
-            </button>
-            <button class="btn btn-default" disabled>
-                {{extra.current_item}} / {{extra.number_items}}
-            </button>
-            <button type="button" id="right-btn" class="btn btn-primary">
-                <i class="fa fa-arrow-right"></i>
-            </button>
-        </span>
-    {{/if}}
+    <div class="row">
+        {{! Inline Editor controls}}
+        <div class="inline-editor-buttons col-sm-2">
+            <button id="inline-edit-btn" class="fa fa-edit btn btn-sm btn-warning inline-editor-closed" title="Open inline editor"></button>
+            <button id="inline-save-btn" class="fa fa-save btn btn-sm btn-success inline-editor-opened" title="Save inline editor"></button>
+            <button id="inline-close-btn" class="fa fa-close btn btn-sm btn-danger inline-editor-opened" title="Close inline editor"></button>
+        </div>
 
-    {{! Info}}
-    <span class="info">
-        <span class="label">
-             "{{extra.moduleName}}" ({{extra.type}}) 
-        </span>
+        {{! Inline Editor templates}}
+        <div class="col-xs-10 inline-editor-templates inline-editor-opened"></div>
 
-        <span class="label label-default">
-            {{extra.duration}} / {{extra.regionDuration}}
-        </span>
-    </span>
+        {{!-- Paging controls --}}
+        {{#if pagingEnable}}
+            <div class="paging col-md-5 inline-editor-hide">
+                <button type="button" id="left-btn" class="btn btn-sm btn-primary">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <button class="btn btn-sm btn-default" disabled>
+                    {{extra.current_item}} / {{extra.number_items}}
+                </button>
+                <button type="button" id="right-btn" class="btn btn-sm btn-primary">
+                    <i class="fa fa-arrow-right"></i>
+                </button>
+            </div>
+        {{/if}}
+        
+        {{! Element Info}}
+        <div class="info col-md-5 inline-editor-hide">
+            <div class="info">
+                <span class="label">
+                    "{{extra.moduleName}}" ({{extra.type}})
+                </span>
 
-</nav>
+                <span class="label label-default">
+                    {{extra.duration}} / {{extra.regionDuration}}
+                </span>
+            </div>
+        </div>
+    </div>
+
+</div>

@@ -43,6 +43,14 @@
 
 @padding-navigator: 5px;
 
+.page-content>.row.header {
+        margin-bottom: 10px;
+}
+
+.page-content>.row.header>div {
+    margin-bottom: 0;
+}
+
 // CSS
 #layout-editor  {
     min-height: 90vh;
@@ -51,18 +59,29 @@
 }
 
 #layout-editor .top-right-btn {
-    right: 15px;
+    right: 20px;
     top: 10px;
     position: absolute;
     font-size: 25px;
     color: #e0e0e0;
     z-index: 1;
+    cursor: pointer;
+}
+
+#layout-editor .top-left-btn {
+    left: 20px;
+    top: 10px;
+    position: absolute;
+    font-size: 25px;
+    color: yellow;
+    z-index: 1;
+    cursor: pointer;
 }
 
 #layout-editor .layout-module {
     padding-right: 5px;
     padding-left: 5px;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 #layout-editor .center-msg {
@@ -227,7 +246,7 @@
 }
 
 #layout-editor #layout-viewer {
-    min-height: 50vh;
+    min-height: 47vh;
 }
 
 #layout-editor .layout-viewer-border {
@@ -253,6 +272,14 @@
 
 #layout-editor #layout-viewer .viewer-element {
     position:relative;
+}
+
+#layout-editor #layout-viewer .cke_textarea_inline {
+    display: none;
+}
+
+#layout-editor #layout-viewer #viewer-preview iframe {
+    .user-select-none();
 }
 
 #layout-editor #layout-viewer .layout-player {
@@ -284,25 +311,60 @@
     text-shadow: 0px 0px 25px #fff;
 }
 
-#layout-editor #layout-viewer-navbar nav {
+/* Viewer navbar */
+#layout-editor #layout-viewer-navbar .viewer-navbar {
     background: #444;
     padding: 4px;
     overflow: auto;
     .border-radius(0 0 4px 4px);
 }
 
-#layout-editor #layout-viewer-navbar .designer-region {
-    background: @region-main-bg-color;
-    
+#layout-editor #layout-viewer-navbar .viewer-navbar .row > div {
+    margin: 0;
+    padding: 0;
 }
 
-#layout-editor #layout-viewer-navbar .designer-widget {
-    background: @widget-main-bg-color;
+#layout-editor #layout-viewer-navbar .viewer-navbar .ckeditor_controls > div {
+    padding: 0 5px;
 }
 
-#layout-editor #layout-viewer-navbar nav .info {
+#layout-editor #layout-viewer-navbar .viewer-navbar .ckeditor_controls .select2-container--bootstrap .select2-selection--single {
+    height: 26px;
+    padding: 2px 24px 2px 4px;
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar.designer-region {
+    background: darken(@region-main-bg-color, 10%);
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar.designer-widget {
+    background: darken(@widget-main-bg-color, 10%);
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar .info {
     float: right;
-    font-size: 20px;
+    font-size: 19px;
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar .inline-editor-templates .control-label {
+    padding: 0 3px 0 0;
+    text-align: right;
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar .inline-editor-templates .ckeditor_select_container {
+    padding: 0;
+}
+
+/* Viewer inline editor */
+#layout-editor #inline-editor {
+    height: inherit;
+    .box-shadow(inset yellow 0px 0px 10px 0px);
+}
+
+#layout-editor .inline-editor-opened,
+#layout-editor .inline-editor-closed,
+#layout-editor .inline-editor-buttons {
+    display: none;
 }
 
 /* Properties Panel */
@@ -333,7 +395,7 @@
 #layout-editor #properties-panel-container .form-title {
     text-align: center;
     font-weight: bold;
-    font-size: 1.5em;
+    font-size: 1.2em;
     color: white;
 }
 
@@ -360,21 +422,41 @@
     padding: 10px;
 }
 
-.form-container .nav-tabs>li>a {
+.form-editor-controls {
+    display: none;
+    padding: 5px 10px;
+    background: @designer-module-border-color;
+    color: @designer-module-bg-color;
+}
+
+.form-editor-controls .form-group {
+    margin-right: 10px;
+}
+
+.form-editor-controls .form-group input {
+    height: 25px;
+}
+
+.form-editor-controls .form-group input[type=checkbox] {
+    margin: 0 6px;
+}
+
+.form-container .nav>li>a {
     color: @properties-panel-nav-fg-color;
     background-color: @properties-panel-nav-bg-color;
 }
 
-.form-container .nav-tabs>li>a:hover {
+.form-container .nav>li>a:hover {
     color: @properties-panel-nav-active-bg-color;
     background-color: @properties-panel-nav-active-fg-color !important;
 }
 
-.form-container .nav-tabs>li.active>a,
-.form-container .nav-tabs>li.active>a:hover {
+.form-container .nav>li.active>a,
+.form-container .nav>li.active>a:hover {
     background-color: @properties-panel-nav-active-bg-color !important;
     font-weight: bold;
     color: @properties-panel-nav-active-fg-color;
+    border: none;
 }
 
 /* Layout Navigator */
@@ -382,7 +464,6 @@
     background: black;
     min-height: 25vh;
     padding: @padding-navigator;
-    margin-bottom: 5px;
     .border-radius(4px);
     border: 2px solid @designer-module-border-color;
 }

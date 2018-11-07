@@ -362,6 +362,9 @@ pE.deleteObject = function(objectType, objectId) {
  */
 pE.refreshDesigner = function() {
 
+    // Remove temporary data
+    this.clearTemporaryData();
+    
     // Render containers
     this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
@@ -514,6 +517,15 @@ pE.showLocalLoadingScreen = function() {
     } else {
         pE.editorDiv.find('#playlist-timeline').html(loadingTemplate());
     }
+};
+
+/**
+ * Clear Temporary Data ( Cleaning cached variables )
+ */
+pE.clearTemporaryData = function() {
+
+    // Remove text callback editor structure variables
+    formHelpers.destroyCKEditor();
 };
 
 /**
