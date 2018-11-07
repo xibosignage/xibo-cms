@@ -226,7 +226,7 @@ class ConfigService implements ConfigServiceInterface
     public function loadTheme($themeName = null)
     {
         // What is the currently selected theme?
-        $globalTheme = ($themeName == NULL) ? $this->GetSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
+        $globalTheme = ($themeName == NULL) ? $this->getSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
 
         // Is this theme valid?
         $systemTheme = (is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme) && file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'));
@@ -318,8 +318,10 @@ class ConfigService implements ConfigServiceInterface
         }
     }
 
-    /** @inheritdoc */
-    public function getSettings()
+    /**
+     * @return array|mixed|null
+     */
+    private function loadSettings()
     {
         $item = null;
 
@@ -331,31 +333,31 @@ class ConfigService implements ConfigServiceInterface
 
                 $data = $item->get();
 
-                if ($item->isHit())
+                if ($item->isHit()) {
                     $this->settings = $data;
+                }
             }
 
             // Are we still null?
             if ($this->settings === null) {
                 // Load from the database
-                $results = $this->getStore()->select('SELECT `setting`, `value` FROM `setting`', []);
-
-                foreach ($results as $setting) {
-                    $this->settings[$setting['setting']] = $setting['value'];
-                }
+                $this->settings = $this->getStore()->select('SELECT `setting`, `value`, `userSee`, `userChange` FROM `setting`', []);
             }
         }
 
         // We should have our settings by now, so cache them if we can/need to
         if ($item !== null && $item->isMiss()) {
+            // See about caching these settings - dependent on whether we're logging or not
+            $cacheExpiry = 60 * 5;
+            foreach ($this->settings as $setting) {
+                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > time()) {
+                    $cacheExpiry = intval($setting['value']);
+                    break;
+                }
+            }
+
             $item->set($this->settings);
-
-            // Do we have an elevated log level request? If so, then expire the cache sooner
-            if (isset($this->settings['ELEVATE_LOG_UNTIL']) && intval($this->settings['ELEVATE_LOG_UNTIL']) > time())
-                $item->expiresAfter(intval($this->settings['ELEVATE_LOG_UNTIL']));
-            else
-                $item->expiresAfter(60 * 5);
-
+            $item->expiresAfter($cacheExpiry);
             $this->getPool()->saveDeferred($item);
         }
 
@@ -363,33 +365,99 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /** @inheritdoc */
-    public function GetSetting($setting, $default = NULL)
+    public function getSettings()
     {
-        $this->getSettings();
+        $settings = $this->loadSettings();
+        $parsed = [];
 
-        return (isset($this->settings[$setting])) ? $this->settings[$setting] : $default;
+        // Go through each setting and create a key/value pair
+        foreach ($settings as $setting) {
+            $parsed[$setting['setting']] = $setting['value'];
+        }
+
+        return $parsed;
     }
 
     /** @inheritdoc */
-    public function ChangeSetting($setting, $value)
+    public function getSetting($setting, $default = NULL, $full = false)
     {
-        $this->getSettings();
+        $settings = $this->loadSettings();
 
-        if (isset($this->settings[$setting])) {
-            // Update in memory cache
-            $this->settings[$setting] = $value;
+        if ($full) {
+            foreach ($settings as $item) {
+                if ($item['setting'] == $setting) {
+                    return $item;
+                }
+            }
 
-            // Update in database
-            $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
-                'setting' => $setting, 'value' => $value
-            ]);
+            return [
+                'setting' => $setting,
+                'value' => $default,
+                'userSee' => 1,
+                'userChange' => 1
+            ];
+        } else {
+            $settings = $this->getSettings();
+            return (isset($settings[$setting])) ? $settings[$setting] : $default;
+        }
+    }
 
-            // Drop the cache if we've not already done so this time around
-            if (!$this->settingsCacheDropped && $this->getPool() !== null) {
-                $this->getPool()->deleteItem($this->settingCacheKey);
-                $this->settingsCacheDropped = true;
+    /** @inheritdoc */
+    public function changeSetting($setting, $value)
+    {
+        $settings = $this->getSettings();
+
+        // Update in memory cache
+        foreach ($this->settings as $item) {
+            if ($item['setting'] == $setting) {
+                $item['value'] = $value;
+                break;
             }
         }
+
+        if (isset($settings[$setting])) {
+            // We've already got this setting recorded, update it for
+            // Update in database
+            $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
+                'setting' => $setting,
+                'value' => $value
+            ]);
+        } else {
+            // A new setting we've not seen before.
+            // record it in the settings table.
+            $this->getStore()->insert('INSERT INTO `setting` (`value`, setting) VALUES (:value, :setting);', [
+                'setting' => $setting,
+                'value' => $value
+            ]);
+        }
+
+        // Drop the cache if we've not already done so this time around
+        if (!$this->settingsCacheDropped && $this->getPool() !== null) {
+            $this->getPool()->deleteItem($this->settingCacheKey);
+            $this->settingsCacheDropped = true;
+            $this->settings = null;
+        }
+    }
+
+    /**
+     * Is the provided setting visible
+     * @param string $setting
+     * @return bool
+     */
+    public function isSettingVisible($setting)
+    {
+        return $this->getSetting($setting, null, true)['userSee'] == 1;
+    }
+
+    /**
+     * Is the provided setting editable
+     * @param string $setting
+     * @return bool
+     */
+    public function isSettingEditable($setting)
+    {
+        $item = $this->getSetting($setting, null, true);
+        return $item['userSee'] == 1 && $item['userChange'] == 1;
     }
 
     /**
@@ -399,7 +467,7 @@ class ConfigService implements ConfigServiceInterface
     */
     public function isProxyException($host)
     {
-        $proxyExceptions = $this->GetSetting('PROXY_EXCEPTIONS');
+        $proxyExceptions = $this->getSetting('PROXY_EXCEPTIONS');
 
         // If empty, cannot be an exception
         if (empty($proxyExceptions))
@@ -434,14 +502,14 @@ class ConfigService implements ConfigServiceInterface
     public function getGuzzleProxy($httpOptions = [])
     {
         // Proxy support
-        if ($this->GetSetting('PROXY_HOST') != '') {
+        if ($this->getSetting('PROXY_HOST') != '') {
 
-            $proxy = $this->GetSetting('PROXY_HOST') . ':' . $this->GetSetting('PROXY_PORT');
+            $proxy = $this->getSetting('PROXY_HOST') . ':' . $this->getSetting('PROXY_PORT');
 
-            if ($this->GetSetting('PROXY_AUTH') != '') {
+            if ($this->getSetting('PROXY_AUTH') != '') {
                 $scheme = explode('://', $proxy);
 
-                $proxy = $scheme[0] . $this->GetSetting('PROXY_AUTH') . '@' . $scheme[1];
+                $proxy = $scheme[0] . $this->getSetting('PROXY_AUTH') . '@' . $scheme[1];
             }
 
             $httpOptions['proxy'] = [
@@ -449,8 +517,8 @@ class ConfigService implements ConfigServiceInterface
                 'https' => $proxy
             ];
 
-            if ($this->GetSetting('PROXY_EXCEPTIONS') != '') {
-                $httpOptions['proxy']['no'] = explode(',', $this->GetSetting('PROXY_EXCEPTIONS'));
+            if ($this->getSetting('PROXY_EXCEPTIONS') != '') {
+                $httpOptions['proxy']['no'] = explode(',', $this->getSetting('PROXY_EXCEPTIONS'));
             }
         }
 
@@ -481,7 +549,7 @@ class ConfigService implements ConfigServiceInterface
      * Checks the Environment and Determines if it is suitable
      * @return array
      */
-    public function CheckEnvironment()
+    public function checkEnvironment()
     {
         $rows = array();
 

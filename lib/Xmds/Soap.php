@@ -241,17 +241,17 @@ class Soap
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth())
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
-        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey))
@@ -271,7 +271,7 @@ class Soap
         //  - Each time a nonce is used through HTTP, the required files cache is invalidated so that new nonces
         //    are generated for the next request.
         if ($cache->isHit()) {
-            $this->getLog()->info('Returning required files from Cache for display %s', $this->display->display);
+            $this->getLog()->info('Returning required files from Cache for display ' . $this->display->display);
 
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -302,7 +302,7 @@ class Soap
         // Start at the current hour
         $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
 
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1)
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         else
             $toFilter = $fromFilter->copy()->addHour();
@@ -314,11 +314,11 @@ class Soap
         $fileElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
         $fileElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
 
+        // Get a list of all layout ids in the schedule right now
+        // including any layouts that have been associated to our Display Group
         try {
             $dbh = $this->getStore()->getConnection();
 
-            // Get a list of all layout ids in the schedule right now
-            // including any layouts that have been associated to our Display Group
             $SQL = '
                 SELECT layout.layoutID, 
                     schedule.DisplayOrder, 
@@ -431,7 +431,7 @@ class Soap
             // DownloadOrder:
             //  1 - Module System Files and fonts
             //  2 - Media Linked to Displays
-            //  3 - Media Linked to Widgets in the Scheduled Layouts
+            //  3 - Media Linked to Widgets in the Scheduled Layouts (linked through Playlists)
             //  4 - Background Images for all Scheduled Layouts
             $SQL = "
                 SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
@@ -450,18 +450,18 @@ class Soap
                  WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
                 SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
-                  FROM media
-                   INNER JOIN `lkwidgetmedia`
-                   ON `lkwidgetmedia`.mediaID = media.MediaID
-                   INNER JOIN `widget`
-                   ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                   INNER JOIN `playlist`
-                   ON `playlist`.playlistId = `widget`.playlistId
-                   INNER JOIN `region`
-                   ON `region`.regionId = `playlist`.regionId
-                   INNER JOIN layout
-                   ON layout.LayoutID = region.layoutId
-                 WHERE layout.layoutId IN (%s)
+                  FROM region
+                    INNER JOIN playlist
+                    ON playlist.regionId = region.regionId
+                    INNER JOIN lkplaylistplaylist
+                    ON lkplaylistplaylist.parentId = playlist.playlistId
+                    INNER JOIN widget
+                    ON widget.playlistId = lkplaylistplaylist.childId
+                    INNER JOIN lkwidgetmedia
+                    ON widget.widgetId = lkwidgetmedia.widgetId
+                    INNER JOIN media
+                    ON media.mediaId = lkwidgetmedia.mediaId
+                 WHERE region.layoutId IN (%s)
                 UNION ALL
                 SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
                   FROM `media`
@@ -548,113 +548,131 @@ class Soap
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
 
-            // Check we haven't added this before
-            if (in_array($layoutId, $pathsAdded))
-                continue;
-
-            // Load this layout
             try {
+                // Check we haven't added this before
+                if (in_array($layoutId, $pathsAdded))
+                    continue;
+
+                // Load this layout
                 $layout = $this->layoutFactory->loadById($layoutId);
                 $layout->loadPlaylists();
+
+                // Make sure its XLF is up to date
+                $path = $layout->xlfToDisk(['notify' => false]);
+
+                // If the status is *still* 4, then we skip this layout as it cannot build
+                if ($layout->status === 4) {
+                    $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
+                    continue;
+                }
+
+                // For layouts the MD5 column is the layout xml
+                $fileSize = filesize($path);
+                $md5 = md5_file($path);
+                $fileName = basename($path);
+
+                // Log
+                if ($this->display->isAuditing())
+                    $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
+
+                // Add nonce
+                $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName)->save();
+                $newRfIds[] = $layoutNonce->rfId;
+
+                // Add the Layout file element
+                $file = $requiredFilesXml->createElement("file");
+                $file->setAttribute("type", 'layout');
+                $file->setAttribute("id", $layoutId);
+                $file->setAttribute("size", $fileSize);
+                $file->setAttribute("md5", $md5);
+
+                // Permissive check for http layouts - always allow unless windows and <= 120
+                $supportsHttpLayouts = !($this->display->clientType == 'windows' && $this->display->clientCode <= 120);
+
+                if ($httpDownloads && $supportsHttpLayouts) {
+                    // Serve a link instead (standard HTTP link)
+                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
+                    $file->setAttribute("saveAs", $fileName);
+                    $file->setAttribute("download", 'http');
+                }
+                else {
+                    $file->setAttribute("download", 'xmds');
+                    $file->setAttribute("path", $layoutId);
+                }
+
+                $fileElements->appendChild($file);
+
+                // Get the Layout Modified Date
+                $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
+
+                // Load the layout XML and work out if we have any ticker / text / dataset media items
+                foreach ($layout->regions as $region) {
+                    $playlist = $region->getPlaylist();
+                    $playlist->setModuleFactory($this->moduleFactory);
+
+                    // Playlists might mean we include a widget more than once per region
+                    // if so, we only want to download a single copy of its resource node
+                    // if it is included in 2 regions - we most likely want a copy for each
+                    $resourcesAdded = [];
+
+                    foreach ($playlist->expandWidgets() as $widget) {
+                        /* @var Widget $widget */
+                        if ($widget->type == 'ticker' ||
+                            $widget->type == 'text' ||
+                            $widget->type == 'datasetview' ||
+                            $widget->type == 'webpage' ||
+                            $widget->type == 'embedded' ||
+                            $modules[$widget->type]->renderAs == 'html'
+                        ) {
+                            // If we've already parsed this widget in this region, then don't bother doing it again
+                            // we will only generate the same details.
+                            if (in_array($widget->widgetId, $resourcesAdded)) {
+                                continue;
+                            }
+
+                            // We've added this widget already
+                            $resourcesAdded[] = $widget->widgetId;
+
+                            // Add nonce
+                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                            $newRfIds[] = $getResourceRf->rfId;
+
+                            // Make me a module from the widget, so I can ask it whether it has an updated last accessed
+                            // date or not.
+                            $module = $this->moduleFactory->createWithWidget($widget);
+
+                            // Get the widget modified date
+                            // we will use the later of this vs the layout modified date as the updated attribute on
+                            // required files
+                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
+                            $cachedDt = $module->getCacheDate($this->display->displayId);
+
+                            // Updated date is the greater of layout/widget modified date
+                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
+
+                            // Finally compare against the cached date, and see if that has updated us at all
+                            $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
+
+                            // Append this item to required files
+                            $file = $requiredFilesXml->createElement("file");
+                            $file->setAttribute('type', 'resource');
+                            $file->setAttribute('id', $widget->widgetId);
+                            $file->setAttribute('layoutid', $layoutId);
+                            $file->setAttribute('regionid', $region->regionId);
+                            $file->setAttribute('mediaid', $widget->widgetId);
+                            $file->setAttribute('updated', $updatedDt->format('U'));
+                            $fileElements->appendChild($file);
+                        }
+                    }
+                }
+
+                // Add to paths added
+                $pathsAdded[] = $layoutId;
+
             } catch (XiboException $e) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
                 continue;
             }
-
-            // Make sure its XLF is up to date
-            $path = $layout->xlfToDisk(['notify' => false]);
-
-            // If the status is *still* 4, then we skip this layout as it cannot build
-            if ($layout->status === 4) {
-                $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
-                continue;
-            }
-
-            // For layouts the MD5 column is the layout xml
-            $fileSize = filesize($path);
-            $md5 = md5_file($path);
-            $fileName = basename($path);
-
-            // Log
-            if ($this->display->isAuditing())
-                $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
-
-            // Add nonce
-            $layoutNonce = $this->requiredFileFactory->createForLayout($this->display->displayId, $layoutId, $fileSize, $fileName)->save();
-            $newRfIds[] = $layoutNonce->rfId;
-
-            // Add the Layout file element
-            $file = $requiredFilesXml->createElement("file");
-            $file->setAttribute("type", 'layout');
-            $file->setAttribute("id", $layoutId);
-            $file->setAttribute("size", $fileSize);
-            $file->setAttribute("md5", $md5);
-
-            // Permissive check for http layouts - always allow unless windows and <= 120
-            $supportsHttpLayouts = !($this->display->clientType == 'windows' && $this->display->clientCode <= 120);
-
-            if ($httpDownloads && $supportsHttpLayouts) {
-                // Serve a link instead (standard HTTP link)
-                $file->setAttribute("path", $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
-                $file->setAttribute("saveAs", $fileName);
-                $file->setAttribute("download", 'http');
-            }
-            else {
-                $file->setAttribute("download", 'xmds');
-                $file->setAttribute("path", $layoutId);
-            }
-
-            $fileElements->appendChild($file);
-
-            // Get the Layout Modified Date
-            $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
-
-            // Load the layout XML and work out if we have any ticker / text / dataset media items
-            foreach ($layout->regions as $region) {
-                foreach ($region->getPlaylist()->expandWidgets() as $widget) {
-                    /* @var Widget $widget */
-                    if ($widget->type == 'ticker' ||
-                        $widget->type == 'text' ||
-                        $widget->type == 'datasetview' ||
-                        $widget->type == 'webpage' ||
-                        $widget->type == 'embedded' ||
-                        $modules[$widget->type]->renderAs == 'html'
-                    ) {
-                        // Add nonce
-                        $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
-                        $newRfIds[] = $getResourceRf->rfId;
-
-                        // Make me a module from the widget, so I can ask it whether it has an updated last accessed
-                        // date or not.
-                        $module = $this->moduleFactory->createWithWidget($widget);
-
-                        // Get the widget modified date
-                        // we will use the later of this vs the layout modified date as the updated attribute on
-                        // required files
-                        $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
-                        $cachedDt = $module->getCacheDate($this->display->displayId);
-
-                        // Updated date is the greater of layout/widget modified date
-                        $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
-
-                        // Finally compare against the cached date, and see if that has updated us at all
-                        $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
-
-                        // Append this item to required files
-                        $file = $requiredFilesXml->createElement("file");
-                        $file->setAttribute('type', 'resource');
-                        $file->setAttribute('id', $widget->widgetId);
-                        $file->setAttribute('layoutid', $layoutId);
-                        $file->setAttribute('regionid', $region->regionId);
-                        $file->setAttribute('mediaid', $widget->widgetId);
-                        $file->setAttribute('updated', $updatedDt->format('U'));
-                        $fileElements->appendChild($file);
-                    }
-                }
-            }
-
-            // Add to paths added
-            $pathsAdded[] = $layoutId;
         }
 
         // Add a blacklist node
@@ -739,10 +757,10 @@ class Soap
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -788,7 +806,7 @@ class Soap
         }
 
         // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On') {
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1) {
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         } else {
             $toFilter = $fromFilter->copy()->addHour();
@@ -831,17 +849,19 @@ class Soap
 
             $SQL = '
                 SELECT DISTINCT `region`.layoutId, `media`.storedAs
-                  FROM `media`
-                    INNER JOIN `lkwidgetmedia`
-                    ON `lkwidgetmedia`.MediaID = `media`.MediaID
-                    INNER JOIN `widget`
-                    ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                    INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
-                    INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
-                 WHERE `region`.layoutId IN (' . implode(',', $layoutIds) . ')
-                  AND media.type <> \'module\'
+                  FROM region
+                    INNER JOIN playlist
+                    ON playlist.regionId = region.regionId
+                    INNER JOIN lkplaylistplaylist
+                    ON lkplaylistplaylist.parentId = playlist.playlistId
+                    INNER JOIN widget
+                    ON widget.playlistId = lkplaylistplaylist.childId
+                    INNER JOIN lkwidgetmedia
+                    ON widget.widgetId = lkwidgetmedia.widgetId
+                    INNER JOIN media
+                    ON media.mediaId = lkwidgetmedia.mediaId
+                 WHERE region.layoutId IN (' . implode(',', $layoutIds) . ')
+                    AND media.type <> \'module\'
             ';
 
             foreach ($this->getStore()->select($SQL, []) as $row) {
@@ -1074,7 +1094,7 @@ class Soap
         $reason = $this->getSanitizer()->string($reason);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1159,7 +1179,7 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1184,7 +1204,7 @@ class Soap
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
-        $defaultTimeZone = $this->getConfig()->GetSetting('defaultTimezone');
+        $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
 
         // Store processed logs in an array
         $logs = [];
@@ -1345,7 +1365,7 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1483,7 +1503,7 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1591,7 +1611,7 @@ class Soap
         $mediaId = $this->getSanitizer()->string($mediaId);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -1635,10 +1655,10 @@ class Soap
      */
     protected function phoneHome()
     {
-        if ($this->getConfig()->GetSetting('PHONE_HOME') == 'On') {
+        if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if ($this->getConfig()->GetSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
 
                 try {
                     $dbh = $this->getStore()->getConnection();
@@ -1652,7 +1672,7 @@ class Soap
                     // Retrieve version number
                     $PHONE_HOME_VERSION = Environment::$WEBSITE_VERSION_NAME;
 
-                    $PHONE_HOME_URL = $this->getConfig()->GetSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->GetSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
+                    $PHONE_HOME_URL = $this->getConfig()->getSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->getSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                     if ($this->display->isAuditing())
                         $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
@@ -1709,7 +1729,7 @@ class Soap
      */
     protected function alertDisplayUp()
     {
-        $maintenanceEnabled = $this->getConfig()->GetSetting('MAINTENANCE_ENABLED');
+        $maintenanceEnabled = $this->getConfig()->getSetting('MAINTENANCE_ENABLED');
 
         if ($this->display->loggedIn == 0) {
 
@@ -1720,7 +1740,7 @@ class Soap
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
-                && $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS') == 'On') {
+                && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                 $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
@@ -1740,7 +1760,7 @@ class Soap
                     $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
                 }
             } else {
-                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->GetSetting('MAINTENANCE_EMAIL_ALERTS'));
+                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS'));
             }
         }
     }
@@ -1773,7 +1793,7 @@ class Soap
         // Uncomment to enable auditing.
         //$this->logProcessor->setDisplay(0, true);
 
-        $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
         if ($xmdsLimit <= 0)
             return true;
@@ -1843,7 +1863,7 @@ class Soap
     {
         $saveAsPath = Wsdl::getRoot() . '?file=' . $nonce . '&displayId=' . $this->display->displayId . '&type=' . $type . '&itemId=' . $itemId;
         // CDN?
-        $cdnUrl = $this->configService->GetSetting('CDN_URL');
+        $cdnUrl = $this->configService->getSetting('CDN_URL');
         if ($cdnUrl != '') {
             // Serve a link to the CDN
             return 'http' . (

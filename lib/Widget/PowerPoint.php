@@ -23,6 +23,11 @@ namespace Xibo\Widget;
 
 class PowerPoint extends ModuleWidget
 {
+    /** @inheritdoc */
+    public function edit()
+    {
+        // Non-editable
+    }
 
     /**
      * Javascript functions for the layout designer

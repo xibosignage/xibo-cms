@@ -326,7 +326,7 @@ class Schedule implements \JsonSerializable
         // From Date and To Date are in UNIX format
         $currentDate = $this->getDate()->parse();
         $rfLookAhead = clone $currentDate;
-        $rfLookAhead->addSeconds(intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')));
+        $rfLookAhead->addSeconds(intval($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD')));
 
         // Dial current date back to the start of the day
         $currentDate->startOfDay();

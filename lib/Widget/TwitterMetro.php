@@ -348,7 +348,7 @@ class TwitterMetro extends TwitterBase
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -356,7 +356,7 @@ class TwitterMetro extends TwitterBase
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    } */
 
     /**
      * Edit Media
@@ -431,8 +431,8 @@ class TwitterMetro extends TwitterBase
                 $defaultLat = $display->latitude;
                 $defaultLong = $display->longitude;
             } else {
-                $defaultLat = $this->getConfig()->GetSetting('DEFAULT_LAT');
-                $defaultLong = $this->getConfig()->GetSetting('DEFAULT_LONG');
+                $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
+                $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
             }
 
             // Built the geoCode string.
@@ -539,7 +539,7 @@ class TwitterMetro extends TwitterBase
         $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
 
         // This should return the formatted items.
         foreach ($data->statuses as $tweet) {
@@ -759,9 +759,6 @@ class TwitterMetro extends TwitterBase
             'numItems' => count($items),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'widgetDesignWidth' => $templateData['originalWidth'],
             'widgetDesignHeight'=> $templateData['originalHeight'],
             'resultContent'=> $this->getSanitizer()->string($this->getOption('resultContent'))            

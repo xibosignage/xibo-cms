@@ -473,7 +473,7 @@ class Display implements \JsonSerializable
             throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
         // Check the number of licensed displays
-        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+        $maxDisplays = $this->config->getSetting('MAX_LICENSED_DISPLAYS');
 
         if ($maxDisplays > 0) {
             $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);

@@ -240,7 +240,7 @@ class Finance extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -248,7 +248,7 @@ class Finance extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media
@@ -478,10 +478,7 @@ class Finance extends ModuleWidget
             'numItems' => count($renderedItems),
             'itemsPerPage' => 1,
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'originalHeight' => $this->region->height
         );
 
         // Replace the control meta with our data from twitter

@@ -146,7 +146,7 @@ class Hls extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -154,7 +154,7 @@ class Hls extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

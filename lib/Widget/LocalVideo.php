@@ -108,7 +108,7 @@ class LocalVideo extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         // Set some options
@@ -122,7 +122,7 @@ class LocalVideo extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
-    }
+    } */
 
     /**
      * Edit Media in the Database

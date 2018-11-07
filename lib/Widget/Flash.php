@@ -20,31 +20,36 @@
  */
 namespace Xibo\Widget;
 
-
+/**
+ * Class Flash
+ * @package Xibo\Widget
+ */
 class Flash extends ModuleWidget
 {
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'flash-designer-javascript';
     }
 
+    /** @inheritdoc */
     public function editForm()
     {
         return 'generic-form-edit';
     }
 
-    /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
-     */
+    /** @inheritdoc */
+    public function edit()
+    {
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->saveWidget();
+    }
+
+    /** @inheritdoc */
     public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)

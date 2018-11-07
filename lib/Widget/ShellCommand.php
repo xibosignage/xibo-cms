@@ -128,7 +128,7 @@ class ShellCommand extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
@@ -152,7 +152,7 @@ class ShellCommand extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media

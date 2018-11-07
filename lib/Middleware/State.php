@@ -58,7 +58,7 @@ class State extends Middleware
             // Do we need SSL/STS?
             // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
             // if a whitelist of IP address is provided, we should check it, otherwise trust
-            $whiteListLoadBalancers = $app->configService->GetSetting('WHITELIST_LOAD_BALANCERS');
+            $whiteListLoadBalancers = $app->configService->getSetting('WHITELIST_LOAD_BALANCERS');
             $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
             $forwardedProtoHttps = (
                 strtolower($app->request()->headers('HTTP_X_FORWARDED_PROTO', 'http')) === 'https'
@@ -69,15 +69,15 @@ class State extends Middleware
             );
 
             if ($app->request()->getScheme() == 'https' || $forwardedProtoHttps) {
-                if ($app->configService->GetSetting('ISSUE_STS', 0) == 1)
-                    $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->GetSetting('STS_TTL', 600));
+                if ($app->configService->getSetting('ISSUE_STS', 0) == 1)
+                    $app->response()->header('strict-transport-security', 'max-age=' . $app->configService->getSetting('STS_TTL', 600));
 
             } else {
                 // Get the current route pattern
                 $resource = $app->router->getCurrentRoute()->getPattern();
 
                 // Allow non-https access to the clock page, otherwise force https
-                if ($resource !== '/clock' && $app->configService->GetSetting('FORCE_HTTPS', 0) == 1) {
+                if ($resource !== '/clock' && $app->configService->getSetting('FORCE_HTTPS', 0) == 1) {
                     $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                     header("Location: $redirect");
                     $app->halt(302);
@@ -85,7 +85,7 @@ class State extends Middleware
             }
 
             // Check to see if the instance has been suspended, if so call the special route
-            if ($app->configService->GetSetting('INSTANCE_SUSPENDED') == 1)
+            if ($app->configService->getSetting('INSTANCE_SUSPENDED') == 1)
                 throw new InstanceSuspendedException();
 
             // Get to see if upgrade is pending
@@ -134,7 +134,7 @@ class State extends Middleware
 
         // Register the date service
         $app->container->singleton('dateService', function() use ($app) {
-            if ($app->configService->GetSetting('CALENDAR_TYPE') == 'Jalali')
+            if ($app->configService->getSetting('CALENDAR_TYPE') == 'Jalali')
                 $date = new \Xibo\Service\DateServiceJalali();
             else
                 $date = new \Xibo\Service\DateServiceGregorian();
@@ -185,7 +185,7 @@ class State extends Middleware
         Translate::InitLocale($app->configService);
 
         // Default timezone
-        date_default_timezone_set($app->configService->GetSetting("defaultTimezone"));
+        date_default_timezone_set($app->configService->getSetting("defaultTimezone"));
 
         // Configure the cache
         self::configureCache($app->container, $app->configService, $app->logWriter->getWriter());
@@ -212,7 +212,7 @@ class State extends Middleware
         $app->container->session->set('init', '1');
 
         // App Mode
-        $mode = $app->configService->GetSetting('SERVER_MODE');
+        $mode = $app->configService->getSetting('SERVER_MODE');
         $app->logService->setMode($mode);
 
         // Configure logging
@@ -224,16 +224,16 @@ class State extends Middleware
         else {
 
             // Log level
-            $level = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('audit'));
-            $restingLevel = \Xibo\Service\LogService::resolveLogLevel($app->configService->GetSetting('RESTING_LOG_LEVEL'));
+            $level = \Xibo\Service\LogService::resolveLogLevel($app->configService->getSetting('audit'));
+            $restingLevel = \Xibo\Service\LogService::resolveLogLevel($app->configService->getSetting('RESTING_LOG_LEVEL'));
 
             if ($level > $restingLevel) {
                 // Do we allow the log level to be this high
-                $elevateUntil = $app->configService->GetSetting('ELEVATE_LOG_UNTIL');
+                $elevateUntil = $app->configService->getSetting('ELEVATE_LOG_UNTIL');
 
                 if (intval($elevateUntil) < time()) {
-                    // Elevation has expired, revery log level
-                    $app->configService->ChangeSetting('audit', $app->configService->GetSetting('RESTING_LOG_LEVEL'));
+                    // Elevation has expired, revert log level
+                    $app->configService->changeSetting('audit', $app->configService->getSetting('RESTING_LOG_LEVEL'));
 
                     $level = $restingLevel;
                 }
@@ -320,8 +320,8 @@ class State extends Middleware
             $drivers = $configService->getCacheDrivers();
         } else {
             // File System Driver
-            $realPath = realpath($configService->GetSetting('LIBRARY_LOCATION'));
-            $cachePath = ($realPath) ? $realPath . '/cache/' : $configService->GetSetting('LIBRARY_LOCATION') . 'cache/';
+            $realPath = realpath($configService->getSetting('LIBRARY_LOCATION'));
+            $cachePath = ($realPath) ? $realPath . '/cache/' : $configService->getSetting('LIBRARY_LOCATION') . 'cache/';
 
             $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
         }
@@ -894,7 +894,6 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
-                $container->settingsFactory,
                 $container->layoutFactory,
                 $container->userGroupFactory
             );
@@ -1382,14 +1381,6 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->dateService
-            );
-        });
-
-        $container->singleton('settingsFactory', function($container) {
-            return new \Xibo\Factory\SettingsFactory(
-                $container->store,
-                $container->logService,
-                $container->sanitizerService
             );
         });
 

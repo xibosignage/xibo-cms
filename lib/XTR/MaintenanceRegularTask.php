@@ -106,7 +106,7 @@ class MaintenanceRegularTask implements TaskInterface
      */
     private function licenceSlotValidation()
     {
-        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+        $maxDisplays = $this->config->getSetting('MAX_LICENSED_DISPLAYS');
 
         if ($maxDisplays > 0) {
             $this->runMessage .= '## ' . __('Licence Slot Validation') . PHP_EOL;
@@ -243,7 +243,7 @@ class MaintenanceRegularTask implements TaskInterface
      */
     private function checkLibraryUsage()
     {
-        $libraryLimit = $this->config->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $libraryLimit = $this->config->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         if ($libraryLimit <= 0)
             return;

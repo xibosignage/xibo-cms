@@ -441,7 +441,7 @@ class Ticker extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -463,7 +463,7 @@ class Ticker extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media
@@ -685,10 +685,7 @@ class Ticker extends ModuleWidget
             'randomiseItems' => $this->getOption('randomiseItems', 0),
             'speed' => $this->getOption('speed', 1000),
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0)
+            'originalHeight' => $this->region->height
         );
 
         // Generate a JSON string of substituted items.
@@ -793,7 +790,7 @@ class Ticker extends ModuleWidget
     private function getRssItems($isPreview, $text)
     {
         // Make sure we have the cache location configured
-        Library::ensureLibraryExists($this->getConfig()->GetSetting('LIBRARY_LOCATION'));
+        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
@@ -929,7 +926,7 @@ class Ticker extends ModuleWidget
         }
 
         // Date format for the feed items
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
         $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
@@ -1087,7 +1084,7 @@ class Ticker extends ModuleWidget
 
                 if ($this->getOption('stripTags') != '') {
                     // Handle cache path for HTML serializer
-                    $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'cache/HTMLPurifier';
+                    $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'cache/HTMLPurifier';
                     if (!is_dir($cachePath))
                         mkdir($cachePath);
 
@@ -1272,7 +1269,7 @@ class Ticker extends ModuleWidget
             if ($displayId != 0) {
                 $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
-                $timeZone = ($timeZone == '') ? $this->getConfig()->GetSetting('defaultTimezone') : $timeZone;
+                $timeZone = ($timeZone == '') ? $this->getConfig()->getSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
                 $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
             }

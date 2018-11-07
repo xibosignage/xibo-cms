@@ -93,14 +93,14 @@ class SubPlaylist extends ModuleWidget
      * )
      *
      * @throws InvalidArgumentException
-     */
+
     public function add()
     {
         $this->setCommonOptions();
 
         // Save the widget
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media
@@ -218,12 +218,8 @@ class SubPlaylist extends ModuleWidget
         //TODO: make this hook itself into the preview properly so that you can see the actual widgets rather than a list
         $output = '<h1>Sub Playlist</h1><ul>';
 
-        foreach ($this->getAssignedPlaylistIds() as $playlistId) {
-            $this->getLog()->debug('Sub-Playlist assigned list is ' . $playlistId);
-
-            foreach ($this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory)->expandWidgets() as $widget) {
-                $output .= '<li>' . $widget->type . $widget->getOptionValue('name', '') . '</li>';
-            }
+        foreach ($this->getSubPlaylistResolvedWidgets() as $widget) {
+            $output .= '<li>' . $widget->type . $widget->getOptionValue('name', '') . '</li>';
         }
 
         $this->getLog()->debug('Finished Preview Sub-Playlist');

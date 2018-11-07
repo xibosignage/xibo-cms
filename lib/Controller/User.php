@@ -854,7 +854,7 @@ class User extends Base
             throw new AccessDeniedException(__('Only super and group admins can create users'));
 
         $defaultUserTypeId = 3;
-        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->GetSetting('defaultUsertype')] ) as $defaultUserType) {
+        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->getSetting('defaultUsertype')] ) as $defaultUserType) {
             $defaultUserTypeId = $defaultUserType->userTypeId;
         }
 
@@ -864,7 +864,7 @@ class User extends Base
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
                 'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
-                'defaultGroupId' => $this->getConfig()->GetSetting('DEFAULT_USERGROUP'),
+                'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
             ],
             'help' => [

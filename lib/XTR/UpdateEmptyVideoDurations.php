@@ -37,7 +37,7 @@ class UpdateEmptyVideoDurations implements TaskInterface
     /** @inheritdoc */
     public function run()
     {
-        $libraryLocation = $this->config->GetSetting('LIBRARY_LOCATION');
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $videos = $this->mediaFactory->getByMediaType('video');
 
         foreach ($videos as $video) {

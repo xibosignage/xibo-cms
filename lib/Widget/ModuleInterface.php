@@ -52,14 +52,33 @@ interface ModuleInterface
      */
     public function delete();
 
-    // Return the name of the media as input by the user
+    /**
+     * Return the name of the media as input by the user
+     * @return string
+     */
     public function getName();
+
+    /**
+     * @param $setting
+     * @param null $default
+     * @return string
+     */
     public function getSetting($setting, $default = NULL);
 
     /**
-     * HTML Content to completely render this module.
+     * Get dynamic content for a specified tab
+     * @param string $tab
+     * @return mixed
      */
     public function getTab($tab);
+
+    /**
+     * Preview this module
+     * @param $width
+     * @param $height
+     * @param int $scaleOverride
+     * @return mixed
+     */
     public function preview($width, $height, $scaleOverride = 0);
 
     /**
@@ -75,8 +94,16 @@ interface ModuleInterface
      */
     public function installOrUpdate($moduleFactory);
 
+    /**
+     * Install module
+     * @return mixed
+     */
     public function installModule();
 
+    /**
+     * Module Settings
+     * @return mixed
+     */
     public function settings();
 
     /**

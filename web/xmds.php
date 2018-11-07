@@ -111,7 +111,7 @@ $app->view($twig);
 if (isset($_GET['file'])) {
 
     // Check send file mode is enabled
-    $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
+    $sendFileMode = $app->configService->getSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
         $app->logService->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
@@ -163,20 +163,20 @@ if (isset($_GET['file'])) {
             $app->logService->info('Delete request for ' . $file->path);
 
             // Log bandwith here if we are a CDN
-            $logBandwidth = ($app->configService->GetSetting('CDN_URL') != '');
+            $logBandwidth = ($app->configService->getSetting('CDN_URL') != '');
 
         } else {
 
             // Log bandwidth here if we are NOT a CDN
-            $logBandwidth = ($app->configService->GetSetting('CDN_URL') == '');
+            $logBandwidth = ($app->configService->getSetting('CDN_URL') == '');
 
             // Most likely a Get Request
             // Issue magic packet
-            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->path);
+            $app->logService->info('HTTP GetFile request redirecting to ' . $app->configService->getSetting('LIBRARY_LOCATION') . $file->path);
 
             // Send via Apache X-Sendfile header?
             if ($sendFileMode == 'Apache') {
-                header('X-Sendfile: ' . $app->configService->GetSetting('LIBRARY_LOCATION') . $file->path);
+                header('X-Sendfile: ' . $app->configService->getSetting('LIBRARY_LOCATION') . $file->path);
             } // Send via Nginx X-Accel-Redirect?
             else if ($sendFileMode == 'Nginx') {
                 header('X-Accel-Redirect: /download/' . $file->path);

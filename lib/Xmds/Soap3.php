@@ -47,7 +47,7 @@ class Soap3 extends Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches the one we have
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -123,10 +123,10 @@ class Soap3 extends Soap
         $chunkOffset = $this->getSanitizer()->int($chunkOffset);
         $chunkSize = $this->getSanitizer()->int($chunkSize);
 
-        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit

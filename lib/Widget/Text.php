@@ -156,7 +156,7 @@ class Text extends ModuleWidget
      * )
      *
      * @throws InvalidArgumentException
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -164,7 +164,7 @@ class Text extends ModuleWidget
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media
@@ -236,9 +236,6 @@ class Text extends ModuleWidget
             'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
         ]);
 

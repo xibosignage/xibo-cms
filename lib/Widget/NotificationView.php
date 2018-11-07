@@ -125,13 +125,13 @@ class NotificationView extends ModuleWidget
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media in the Database
@@ -190,7 +190,7 @@ class NotificationView extends ModuleWidget
     private function getNotifications($isPreview, $displayId = null)
     {
         // Date format
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
         $age = $this->getOption('age', 0);
 
         // Parse the text template
@@ -295,9 +295,6 @@ class NotificationView extends ModuleWidget
             'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
             'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
         );
 

@@ -760,7 +760,7 @@ class Media implements \JsonSerializable
      */
     public function saveFile()
     {
-        $libraryFolder = $this->config->GetSetting('LIBRARY_LOCATION');
+        $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
 
         // Work out the extension
         $lastPeriod = strrchr($this->fileName, '.');
@@ -848,7 +848,7 @@ class Media implements \JsonSerializable
         }
 
         // Library location
-        $libraryLocation = $this->config->GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->config->getSetting("LIBRARY_LOCATION");
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
@@ -890,6 +890,6 @@ class Media implements \JsonSerializable
      */
     public function downloadSink()
     {
-        return $this->config->GetSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        return $this->config->getSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
     }
 }

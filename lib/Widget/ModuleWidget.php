@@ -64,6 +64,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 abstract class ModuleWidget implements ModuleInterface
 {
+    protected static $STATUS_INVALID = 0;
+    protected static $STATUS_VALID = 1;
+    protected static $STATUS_PLAYER = 2;
+
     /**
      * @var Slim
      */
@@ -689,25 +693,17 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public function add()
+    final public function add()
     {
-        // Nothing to do
-    }
-
-    /** @inheritdoc */
-    public function edit()
-    {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-
-        $this->widget->save();
+        // Set the default widget options for this widget and save.
+        $this->setDefaultWidgetOptions();
+        $this->saveWidget();
     }
 
     /** @inheritdoc */
     public function delete()
     {
-        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
+        $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION')
             . 'widget'
             . DIRECTORY_SEPARATOR
             . $this->getWidgetId()
@@ -1016,14 +1012,6 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * Default view for add form
-     */
-    public function addForm()
-    {
-        return $this->getModuleType() . '-form-add';
-    }
-
-    /**
      * Default view for edit form
      */
     public function editForm()
@@ -1099,7 +1087,7 @@ abstract class ModuleWidget implements ModuleInterface
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // The file path
-        $libraryPath = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . $media->storedAs;
+        $libraryPath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . $media->storedAs;
 
         // Set the content length
         $headers = $this->getApp()->response()->headers();
@@ -1126,11 +1114,11 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         // Output the file
-        if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Apache') {
+        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             // Send via Apache X-Sendfile header?
             $headers->set('X-Sendfile', $libraryPath);
         }
-        else if ($this->getConfig()->GetSetting('SENDFILE_MODE') == 'Nginx') {
+        else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
             $headers->set('X-Accel-Redirect', '/download/' . $media->storedAs);
         }
@@ -1292,7 +1280,8 @@ abstract class ModuleWidget implements ModuleInterface
      * @param Media $media
      * @param string $filePath
      */
-    public function preProcess($media, $filePath) {
+    public function preProcess($media, $filePath)
+    {
 
     }
 
@@ -1393,7 +1382,7 @@ abstract class ModuleWidget implements ModuleInterface
         $modifiedDt = $this->getModifiedDate($displayId);
         $cachedDt = $this->getCacheDate($displayId);
         $cacheDuration = $this->getCacheDuration();
-        $cachePath = $this->getConfig()->GetSetting('LIBRARY_LOCATION')
+        $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION')
             . 'widget'
             . DIRECTORY_SEPARATOR
             . $this->getWidgetId()
@@ -1401,13 +1390,12 @@ abstract class ModuleWidget implements ModuleInterface
 
         $cacheKey = $this->getCacheKey($displayId);
 
-        // If we are a non-preview, then we'd expect to be provided with a region.
-        // we use this to save a width/height aware version of this
-        if ($displayId !== 0) {
-            $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
-        } else {
-            $cacheFile = $cacheKey;
-        }
+        // Prefix whatever cacheKey the Module generates with the Region dimensions.
+        // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
+        // being contained in a Playlist.
+        // Equally a Region might be resized, which would also effect the way the Widget looks. Just moving a Region
+        // location wouldn't though, which is why we base this on the width/height.
+        $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
 
         $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format('Y-m-d H:i:s')
             . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
@@ -1509,22 +1497,6 @@ abstract class ModuleWidget implements ModuleInterface
             $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
 
             $resource = file_get_contents($cachePath . $cacheFile);
-        }
-
-        // If we are the preview, then we should look at updating the preview width, height and scale_override with
-        // the ones we've been given
-        // this is a workaround to making the cache key aware of the below parameters, which would create a new cache
-        // file each and every time the region changed size.
-        if ($displayId == 0) {
-            // Support keyword replacement and parsing for known combinations of these in existing widgets
-            // (for backwards compatibility)
-            $previewWidth = $this->getSanitizer()->getDouble('width', 0);
-            $previewHeight = $this->getSanitizer()->getDouble('height', 0);
-            $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
-
-            $resource = preg_replace('/"previewWidth":([-+]?[0-9]*\.?[0-9]+)/', '"previewWidth":' . $previewWidth, $resource);
-            $resource = preg_replace('/"previewHeight":([-+]?[0-9]*\.?[0-9]+)/', '"previewHeight":' . $previewHeight, $resource);
-            $resource = preg_replace('/"scaleOverride":([-+]?[0-9]*\.?[0-9]+)/', '"scaleOverride":' . $scaleOverride, $resource);
         }
 
         // Return the resource

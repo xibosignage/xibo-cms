@@ -320,7 +320,7 @@ class Currencies extends AlphaVantageBase
      *      )
      *  )
      * )
-     */
+
     public function add()
     {
         $this->setCommonOptions();
@@ -328,7 +328,7 @@ class Currencies extends AlphaVantageBase
         // Save the widget
         $this->validate();
         $this->saveWidget();
-    }
+    }*/
 
     /**
      * Edit Media
@@ -770,11 +770,8 @@ class Currencies extends AlphaVantageBase
             'numItems' => count($renderedItems),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-            'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0), 
             'maxItemsPerPage' => $maxItemsPerPage
         );
 

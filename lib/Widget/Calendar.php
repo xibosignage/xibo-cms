@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -86,17 +86,6 @@ class Calendar extends ModuleWidget
     public function layoutDesignerJavaScript()
     {
         return 'calendar-designer-javascript';
-    }
-
-    /** @inheritdoc */
-    public function add()
-    {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-
-        $this->validate();
-        $this->saveWidget();
     }
 
     /** @inheritdoc */
@@ -249,9 +238,6 @@ class Calendar extends ModuleWidget
             ->appendOptions([
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
-                'previewWidth' => $this->getSanitizer()->getDouble('width', 0),
-                'previewHeight' => $this->getSanitizer()->getDouble('height', 0),
-                'scaleOverride' => $this->getSanitizer()->getDouble('scale_override', 0),
                 'fx' => $effect,
                 'duration' => $duration,
                 'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
@@ -388,7 +374,7 @@ class Calendar extends ModuleWidget
         }
 
         // Get a date format
-        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
+        $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
         $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         
         // Decide on the Range we're interested in
@@ -481,7 +467,12 @@ class Calendar extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        return 1;
+        // We must at least have a URI
+        if (!v::notEmpty()->validate($this->getOption('uri'))) {
+            return self::$STATUS_INVALID;
+        }
+
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */

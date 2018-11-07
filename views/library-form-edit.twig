@@ -46,7 +46,7 @@
 
                     {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
                     {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
-                    {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}
+                    {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}
                         {% set checked = 1 %}
                     {% endif %}
                     {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}

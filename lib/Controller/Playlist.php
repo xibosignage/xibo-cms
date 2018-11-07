@@ -319,7 +319,7 @@ class Playlist extends Base
         $playlist->save();
 
         // Default permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -364,7 +364,7 @@ class Playlist extends Base
                 // Handle permissions
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
-                    if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+                    if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                         // Apply permissions from the Parent
                         foreach ($playlist->permissions as $permission) {
                             /* @var Permission $permission */
@@ -372,7 +372,7 @@ class Playlist extends Base
                             $permission->save();
                         }
                     } else {
-                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                             /* @var Permission $permission */
                             $permission->save();
                         }
@@ -635,14 +635,14 @@ class Playlist extends Base
         $playlist->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($playlist->widgets as $widget) {
             /* @var Widget $widget */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -951,7 +951,7 @@ class Playlist extends Base
         // Handle permissions
         foreach ($newWidgets as $widget) {
             /* @var Widget $widget */
-            if ($this->getConfig()->GetSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+            if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
                 // Apply permissions from the Parent
                 foreach ($playlist->permissions as $permission) {
                     /* @var Permission $permission */
@@ -959,7 +959,7 @@ class Playlist extends Base
                     $permission->save();
                 }
             } else {
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->GetSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }

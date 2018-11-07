@@ -60,7 +60,7 @@ class Soap4 extends Soap
         $clientAddress = $this->getIp();
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Check the Length of the hardwareKey
@@ -87,7 +87,7 @@ class Soap4 extends Soap
 
             // Append the time
             $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
-            $displayElement->setAttribute('timezone', $this->getConfig()->GetSetting('defaultTimezone'));
+            $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
@@ -151,7 +151,7 @@ class Soap4 extends Soap
                 $this->display = $display;
                 $display->display = $displayName;
                 $display->auditingUntil = 0;
-                $display->defaultLayoutId = $this->getConfig()->GetSetting('DEFAULT_LAYOUT', 4);
+                $display->defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT', 4);
                 $display->license = $hardwareKey;
                 $display->licensed = 0;
                 $display->incSchedule = 0;
@@ -196,7 +196,7 @@ class Soap4 extends Soap
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
-        $httpDownloads = ($this->getConfig()->GetSetting('SENDFILE_MODE') != 'Off');
+        $httpDownloads = ($this->getConfig()->getSetting('SENDFILE_MODE') != 'Off');
         return $this->doRequiredFiles($serverKey, $hardwareKey, $httpDownloads);
     }
 
@@ -223,10 +223,10 @@ class Soap4 extends Soap
         $chunkOffset = $this->getSanitizer()->int($chunkOffset);
         $chunkSize = $this->getSanitizer()->int($chunkSize);
 
-        $libraryLocation = $this->getConfig()->GetSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -397,7 +397,7 @@ class Soap4 extends Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -421,7 +421,7 @@ class Soap4 extends Soap
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
         $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
 
-        if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1 && $this->display->hasPropertyChanged('deviceName')) {
+        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1 && $this->display->hasPropertyChanged('deviceName')) {
             $this->display->display = $this->display->deviceName;
         }
 
@@ -480,7 +480,7 @@ class Soap4 extends Soap
         $needConversion = false;
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
@@ -495,7 +495,7 @@ class Soap4 extends Soap
             $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
-        $location = $this->getConfig()->GetSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
+        $location = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
 
         foreach(array('imagick', 'gd') as $imgDriver) {
             Img::configure(array('driver' => $imgDriver));

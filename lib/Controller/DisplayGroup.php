@@ -220,7 +220,7 @@ class DisplayGroup extends Base
             'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific')
         ];
 
-        $scheduleWithView = ($this->getConfig()->GetSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 'Yes');
+        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
