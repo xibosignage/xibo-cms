@@ -7,8 +7,6 @@
 
 namespace Xibo\Widget;
 
-use Xibo\Exception\XiboException;
-
 /**
  * Class Pdf
  * @package Xibo\Widget
@@ -36,13 +34,21 @@ class Pdf extends ModuleWidget
     }
 
     /**
-     * Edit a pdf Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/pdf/{playlistId}",
+     * Edit PDF Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
      *  operationId="WidgetPdfEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing pdf on a layout",
      *  description="Parameters for editing existing pdf on a layout, for adding new files, please refer to POST /library documentation",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The WidgetId to Edit",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
@@ -65,16 +71,12 @@ class Pdf extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
@@ -83,26 +85,16 @@ class Pdf extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
 
-
         $this->saveWidget();
     }
 
-    /**
-     * Is this module valid
-     * @return int
-     */
+    /** @inheritdoc */
     public function isValid()
     {
-        // Yes
-        return 1;
+        return self::$STATUS_VALID;
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     * @throws XiboException
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         $data = [];

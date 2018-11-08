@@ -163,7 +163,7 @@ class DataSetView extends ModuleWidget
     /**
      * * @SWG\Post(
      *  path="/playlist/widget/{widgetId}",
-     *  operationId="WidgetdataSetViewEdit",
+     *  operationId="widgetDataSetViewEdit",
      *  tags={"widget"},
      *  summary="Edit a dataSetView Widget",
      *  description="Edit a new dataSetView Widget to the specified playlist",
@@ -174,6 +174,13 @@ class DataSetView extends ModuleWidget
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="step",
+     *      in="formData",
+     *      description="The Step Number being edited",
+     *      type="integer",
+     *      required=false
+     *  ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",

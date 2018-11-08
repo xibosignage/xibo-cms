@@ -141,17 +141,18 @@ class Currencies extends AlphaVantageBase
     }
 
     /**
-     * Adds a Currencies Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/currencies/{playlistId}",
-     *  operationId="WidgetCurrenciesAdd",
+     * Edit Media
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="widgetCurrenciesEdit",
      *  tags={"widget"},
-     *  summary="Add a Currencies Widget",
-     *  description="Add a new Currencies Widget to the specified playlist",
+     *  summary="Edit a Currencies Widget",
+     *  description="Edit a new Currencies Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Currencies widget",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -310,39 +311,14 @@ class Currencies extends AlphaVantageBase
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
-     *  )
+     *      response=204,
+     *      description="successful operation"
+     *   )
      * )
-
-    public function add()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    public function setCommonOptions()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -360,7 +336,7 @@ class Currencies extends AlphaVantageBase
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        
+
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
             $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
@@ -369,6 +345,10 @@ class Currencies extends AlphaVantageBase
             $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
             $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
         }
+
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
     }
 
     /**

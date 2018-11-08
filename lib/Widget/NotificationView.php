@@ -19,7 +19,7 @@ class NotificationView extends ModuleWidget
     /**
      * Install Files
      */
-    public function InstallFiles()
+    public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
@@ -37,17 +37,18 @@ class NotificationView extends ModuleWidget
     }
 
     /**
-     * Adds an Notification Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/notificationview/{playlistId}",
-     *  operationId="WidgetNotificationAdd",
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetNotificationEdit",
      *  tags={"widget"},
-     *  summary="Add a Notification Widget",
-     *  description="Add a new Notification Widget to the specified playlist",
+     *  summary="Edit a Notification Widget",
+     *  description="Edit a Notification Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add an Notification Widget",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -115,40 +116,15 @@ class NotificationView extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
-
-    public function add()
-    {
-        $this->setCommonOptions();
-        $this->validate();
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media in the Database
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
-        $this->setCommonOptions();
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /**
-     * Set common options from Request Params
-     */
-    private function setCommonOptions()
-    {
-
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
@@ -160,18 +136,15 @@ class NotificationView extends ModuleWidget
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null));
         $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
-    }
 
-    private function validate()
-    {
-
+        $this->saveWidget();
     }
 
     /** @inheritdoc */
     public function isValid()
     {
         // Can't be sure because the client does the rendering
-        return 2;
+        return self::$STATUS_PLAYER;
     }
 
     /**

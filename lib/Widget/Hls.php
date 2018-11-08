@@ -79,17 +79,18 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Adds a HLS Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/hls/{playlistId}",
-     *  operationId="WidgetHlsAdd",
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetHlsEdit",
      *  tags={"widget"},
-     *  summary="Add a HLS Widget",
-     *  description="Add a new HLS Widget to the specified playlist",
+     *  summary="Edit a HLS Widget",
+     *  description="Edit HLS Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -136,32 +137,24 @@ class Hls extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
-
-    public function add()
-    {
-        $this->setCommonOptions();
-        $this->validate();
-
-        // Save the widget
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
-        $this->setCommonOptions();
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
+        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+
+        // This causes some android devices to switch to a hardware accellerated web view
+        $this->setOption('transparency', 0);
+
         $this->validate();
 
         // Save the widget
@@ -182,38 +175,14 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Set common options
-     */
-    private function setCommonOptions()
-    {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
-
-        // This causes some android devices to switch to a hardware accellerated web view
-        $this->setOption('transparency', 0);
-    }
-
-    /**
      * @inheritdoc
      */
     public function isValid()
     {
-        // Using the information you have in your module calculate whether it is valid or not.
-        // 0 = Invalid
-        // 1 = Valid
-        // 2 = Unknown
-        return 1;
+        return self::$STATUS_VALID;
     }
 
-    /**
-     * GetResource
-     * Return the rendered resource to be used by the client (or a preview) for displaying this content.
-     * @param integer $displayId If this comes from a real client, this will be the display id.
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         // Ensure we have the necessary files linked up
