@@ -900,7 +900,8 @@ class State extends Middleware
                 $container->layoutFactory,
                 $container->mediaFactory,
                 $container->userFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->displayGroupFactory
             );
         });
 
