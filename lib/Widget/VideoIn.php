@@ -1,7 +1,7 @@
 <?php
-/*
+/**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2017 Spring Signage Ltd.
+ * Copyright (C) 2017-2018 Xibo Signage Ltd.
  *
  * This file is part of Xibo.
  *
@@ -22,8 +22,6 @@ namespace Xibo\Widget;
 
 use InvalidArgumentException;
 use Respect\Validation\Validator as v;
-use Xibo\Exception\XiboException;
-use Xibo\Factory\ModuleFactory;
 
 /**
  * Class VideoIn
@@ -40,10 +38,7 @@ class VideoIn extends ModuleWidget
         return 'videoin-designer-javascript';
     }
 
-    /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
-     */
+    /** @inheritdoc */
     public function installOrUpdate($moduleFactory)
     {
         if ($this->module == null) {
@@ -85,21 +80,23 @@ class VideoIn extends ModuleWidget
         if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
             throw new InvalidArgumentException(__('You must enter a duration.'));
     }
+
     /**
-     * Adds a Video In Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/videoin/{playlistId}",
-     *  operationId="WidgetVideoInAdd",
+     * Edit
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetVideoInEdit",
      *  tags={"widget"},
-     *  summary="Add a Video In Widget",
-     *  description="Add a new Video In Widget to the specified playlist",
+     *  summary="Edit a Video In Widget",
+     *  description="Edit a Video In Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
-     *  ),
+     *   ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
@@ -123,31 +120,12 @@ class VideoIn extends ModuleWidget
      *   ),
      *  @SWG\Response(
      *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      description="successful operation"
      *  )
      * )
      *
-     * @throws XiboException
-
-    public function add()
-    {
-        // Set some options
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('sourceId', $this->getSanitizer()->getString('sourceId' , 'hdmi'));
-        $this->validate();
-
-        // Save the widget
-        $this->saveWidget();
-    }*/
-
-    /** @inheritdoc */
+     * @throws \Xibo\Exception\XiboException
+     */
     public function edit()
     {
         // Set some options
@@ -165,13 +143,10 @@ class VideoIn extends ModuleWidget
     public function isValid()
     {
         // Client dependant
-        return 2;
+        return ($this->getOption('sourceId') == '') ? self::$STATUS_INVALID : self::$STATUS_PLAYER;
     }
 
-    /**
-     * Default code for the hover preview
-     * @return string
-     */
+    /** @inheritdoc */
     public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
@@ -196,7 +171,6 @@ class VideoIn extends ModuleWidget
     public function getResource($displayId)
     {
         // Get resource isn't required for this module
-
         return null;
     }
 }

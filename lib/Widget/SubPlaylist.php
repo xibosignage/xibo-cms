@@ -19,7 +19,7 @@ class SubPlaylist extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        return 1;
+        return (count($this->getAssignedPlaylistIds()) > 0) ? self::$STATUS_VALID : self::$STATUS_INVALID;
     }
 
     /** @inheritdoc */
@@ -59,17 +59,18 @@ class SubPlaylist extends ModuleWidget
     }
 
     /**
-     * Adds a Sub-Playlist Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/text/{playlistId}",
-     *  operationId="WidgetSubPlaylistAdd",
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetSubPlaylistEdit",
      *  tags={"widget"},
-     *  summary="Add a Sub-Playlist Widget",
-     *  description="Add a new Sub-Playlist Widget to the specified playlist",
+     *  summary="Edit a Sub-Playlist Widget",
+     *  description="Edit a new Sub-Playlist Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -81,44 +82,14 @@ class SubPlaylist extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
      *
      * @throws InvalidArgumentException
-
-    public function add()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media
-     * @throws InvalidArgumentException
      */
     public function edit()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->saveWidget();
-    }
-
-    /**
-     * Set common options
-     * @throws InvalidArgumentException
-     */
-    private function setCommonOptions()
     {
         // Set some dud durations
         $this->setDuration(10);
@@ -187,6 +158,9 @@ class SubPlaylist extends ModuleWidget
         ', ['parentId' => $this->getPlaylistId()])) {
             throw new \InvalidArgumentException(__('This assignment creates a circular reference'));
         }
+
+        // Save the widget
+        $this->saveWidget();
     }
 
     /** @inheritdoc */

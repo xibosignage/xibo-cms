@@ -66,17 +66,18 @@ class Text extends ModuleWidget
     }
 
     /**
-     * Adds a Text Widget
+     * Edit Media
+     *
      * @SWG\Post(
-     *  path="/playlist/widget/text/{playlistId}",
-     *  operationId="WidgetTextAdd",
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetTextEdit",
      *  tags={"widget"},
-     *  summary="Add a Text Widget",
-     *  description="Add a new Text Widget to the specified playlist",
+     *  summary="Edit a Text Widget",
+     *  description="Edit a new Text Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -144,45 +145,14 @@ class Text extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
      *
      * @throws InvalidArgumentException
-
-    public function add()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media
-     * @throws InvalidArgumentException
      */
     public function edit()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /**
-     * Set common options
-     */
-    private function setCommonOptions()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -194,14 +164,14 @@ class Text extends ModuleWidget
         $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
         $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
-    public function GetResource($displayId = 0)
+    /** @inheritdoc */
+    public function getResource($displayId = 0)
     {
         // Start building the template
         $this
@@ -333,7 +303,7 @@ class Text extends ModuleWidget
     public function isValid()
     {
         // Text rendering will be valid
-        return 1;
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */
