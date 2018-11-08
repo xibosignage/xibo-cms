@@ -1128,7 +1128,9 @@ abstract class ModuleWidget implements ModuleInterface
         }
         else {
             // Return the file with PHP
+            ob_end_flush();
             readfile($libraryPath);
+            exit;
         }
     }
 
