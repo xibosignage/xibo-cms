@@ -30,6 +30,22 @@
     {
       "step": "Add M4V extension to Video module",
       "action": "UPDATE `module` SET validextensions = CONCAT(validextensions, ',m4v') WHERE module = 'video' LIMIT 1;"
+    },
+    {
+      "step": "Update PHONE_HOME helpText",
+      "action": "UPDATE `setting` SET helptext = 'Should the CMS send anonymous statistics to help improve the software?' WHERE `setting` = 'PHONE_HOME'; "
+    },
+    {
+      "step": "Update PHONE_HOME_KEY helpText",
+      "action": "UPDATE `setting` SET helptext = 'Key used to distinguish each CMS instance. This is generated randomly based on the time you first installed the CMS, and is completely untraceable.' WHERE `setting` = 'PHONE_HOME_KEY'; "
+    },
+    {
+      "step": "Update MAINTENANCE_ALWAYS_ALERT helpText",
+      "action": "UPDATE `setting` SET helptext = 'Should the CMS send an email if a display is in an error state every time maintenance runs?' WHERE `setting` = 'MAINTENANCE_ALWAYS_ALERT'; "
+    },
+    {
+      "step": "Update SCHEDULE_LOOKAHEAD helpText",
+      "action": "UPDATE `setting` SET helptext = 'Should the CMS send future schedule information to clients?' WHERE `setting` = 'SCHEDULE_LOOKAHEAD'; "
     }
   ]
 }
