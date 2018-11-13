@@ -955,7 +955,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function installModule()
     {
-        $this->getLog()->notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
+        $this->getLog()->notice('Request to install module with name: ' . $this->module->name);
 
         // Validate some things.
         if ($this->module->type == '')
