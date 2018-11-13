@@ -185,12 +185,13 @@ Playlist.prototype.addElement = function(droppable, draggable) {
                 }
             });
 
-        } else { // Load add widget form for region specific
+        } else { // Add widget to a region
 
-            // Load form the API
-            const linkToAPI = urlsForApi.playlist.addWidgetForm;
+            const linkToAPI = urlsForApi.playlist.addWidget;
 
             let requestPath = linkToAPI.url;
+
+            pE.common.showLoadingScreen('addModuleToPlaylist');
 
             // Replace type
             requestPath = requestPath.replace(':type', draggableSubType);
@@ -198,150 +199,50 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             // Replace playlist id
             requestPath = requestPath.replace(':id', playlistId);
 
-            // Create dialog
-            var calculatedId = new Date().getTime();
-
-            let dialog = bootbox.dialog({
-                className: 'second-dialog',
-                title: 'Add ' + draggableSubType + ' widget',
-                message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
-                buttons: {
-                    cancel: {
-                        label: translations.cancel,
-                        className: "btn-default"
-                    },
-                    done: {
-                        label: translations.done,
-                        className: "btn-primary test",
-                        callback: function(res) {
-
-                            // Run form open module optional function
-                            if(typeof window[draggableSubType + '_form_add_submit'] === 'function') {
-                                window[draggableSubType + '_form_add_submit'].bind(dialog)();
-                            }
-
-                            // If form is valid, submit it ( add change )
-                            if($(dialog).find('form').valid()) {
-
-                                const form = dialog.find('form');
-
-                                // Show loading screen in the dropzone
-                                pE.showLocalLoadingScreen();
-
-                                pE.common.showLoadingScreen();
-
-                                pE.manager.addChange(
-                                    'addWidget',
-                                    'playlist', // targetType 
-                                    playlistId,  // targetId
-                                    null,  // oldValues
-                                    form.serialize(), // newValues
-                                    {
-                                        updateTargetId: true,
-                                        updateTargetType: 'widget',
-                                        customRequestPath: {
-                                            url: form.attr('action'),
-                                            type: form.attr('method')
-                                        }
-                                    }
-                                ).then((res) => { // Success
-
-                                    pE.common.hideLoadingScreen();
-
-                                    // Behavior if successful 
-                                    toastr.success(res.message);
-
-                                    dialog.modal('hide');
-
-                                    pE.reloadData();
-
-                                }).catch((error) => { // Fail/error
-
-                                    pE.common.hideLoadingScreen();
-
-                                    // Show error returned or custom message to the user
-                                    let errorMessage = '';
-
-                                    if(typeof error == 'string') {
-                                        errorMessage += error;
-                                    } else {
-                                        errorMessage += error.errorThrown;
-                                    }
-
-                                    // Remove added change from the history manager
-                                    pE.manager.removeLastChange();
-
-                                    // Display message in form
-                                    formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
-
-                                    // Show toast message
-                                    toastr.error(errorMessage);
-                                });
-                            }
-
-                            // Prevent the modal to close ( close only when addChange returns true )
-                            return false;
-                        }
+            pE.manager.addChange(
+                'addWidget',
+                'playlist', // targetType 
+                playlistId,  // targetId
+                null,  // oldValues
+                null, // newValues
+                {
+                    updateTargetId: true,
+                    updateTargetType: 'widget',
+                    customRequestPath: {
+                        url: requestPath,
+                        type: linkToAPI.type
                     }
                 }
-            }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
+            ).then((res) => { // Success
 
-            pE.common.showLoadingScreen();
+                pE.common.hideLoadingScreen('addModuleToPlaylist');
 
-            // Request and load element form
-            $.ajax({
-                url: requestPath,
-                type: linkToAPI.type
-            }).done(function(res) {
+                // Behavior if successful 
+                toastr.success(res.message);
 
-                pE.common.hideLoadingScreen();
+                pE.reloadData();
 
-                if(res.success) {
-                    // Add title
-                    dialog.find('.modal-title').html(res.dialogTitle);
+            }).catch((error) => { // Fail/error
 
-                    // Add body main content
-                    dialog.find('.bootbox-body').html(res.html);
+                pE.common.hideLoadingScreen('addModuleToPlaylist');
 
-                    dialog.data('extra', res.extra);
+                // Show error returned or custom message to the user
+                let errorMessage = '';
 
-                    // Call Xibo Init for this form
-                    XiboInitialise("#" + dialog.attr("id"));
-
-                    // Run form open module optional function
-                    if(typeof window[draggableSubType + '_form_add_open'] === 'function') {
-                        window[draggableSubType + '_form_add_open'].bind(dialog)();
-                    }
-
+                if(typeof error == 'string') {
+                    errorMessage += error;
                 } else {
-
-                    // Login Form needed?
-                    if(res.login) {
-
-                        window.location.href = window.location.href;
-                        location.reload(false);
-                    } else {
-
-                        toastr.error('Element form load failed!');
-
-                        // Just an error we dont know about
-                        if(res.message == undefined) {
-                            console.error(res);
-                        } else {
-                            console.error(res.message);
-                        }
-
-                        dialog.modal('hide');
-                    }
+                    errorMessage += error.errorThrown;
                 }
-            }).catch(function(jqXHR, textStatus, errorThrown) {
 
-                pE.common.hideLoadingScreen();
+                // Remove added change from the history manager
+                pE.manager.removeLastChange();
 
-                console.error(jqXHR, textStatus, errorThrown);
-                toastr.error('Element form load failed!');
+                // Display message in form
+                formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
 
-                dialog.modal('hide');
+                // Show toast message
+                toastr.error(errorMessage);
             });
         }
     } else if(draggableType == 'tool') { // Add tool

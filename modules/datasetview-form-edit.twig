@@ -40,7 +40,7 @@
                 <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="dataSetViewEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="dataSetViewEditForm" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -55,15 +55,11 @@
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
-                        {% set title %}{% trans "Template" %}{% endset %}
-                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
-
                         {% set message %}{% trans "Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists." %}{% endset %}
                         {{ forms.message(message) }}
 
                         <div class="row">
-                            <div class="col-md-10 col-md-offset-2">
+                            <div class="col-md-12">
                                 <div class="connectedlist col-sm-6">
                                     <p class="text-info">{% trans "Columns Selected" %}</p>
                                     <ul id="columnsIn" class="connectedSortable">
@@ -86,6 +82,10 @@
                     </div>
 
                     <div class="tab-pane" id="appearance">
+
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
@@ -183,6 +183,8 @@
                         {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
                     </div>
                 </div>
+
+                <input type="hidden" name="step" value="2" />
             </form>
         </div>
     </div>

@@ -119,6 +119,10 @@
                         url: "{{ urlFor("module.widget.add.form") }}",
                         type: 'GET'
                     },
+                    add: {
+                        url: "{{ urlFor("module.widget.add") }}",
+                        type: 'POST'
+                    },
                     delete: {
                         url: "{{ urlFor("module.widget.delete") }}",
                         type: 'DELETE'
@@ -162,6 +166,10 @@
                     addWidgetForm: {
                         url: "{{ urlFor("module.widget.add.form") }}",
                         type: 'GET'
+                    },
+                    addWidget: {
+                        url: "{{ urlFor("module.widget.add") }}",
+                        type: 'POST'
                     },
                     order: {
                         url: "{{ urlFor("playlist.order") }}",

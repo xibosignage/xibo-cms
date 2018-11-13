@@ -29,7 +29,7 @@
                 <label for="columnType[]">
                 <select class="form-control" name="columnType[]">
                     {{#each columnTypeOptions}}
-                    <option value="{{ id }}" {{#if_eq id ../columnType}}selected{{/if_eq}}>{{ value }}</option>
+                    <option value="{{ id }}" {{#eq id ../columnType}}selected{{/eq}}>{{ value }}</option>
                     {{/each}}
                 </select>
                 </label>
@@ -38,7 +38,7 @@
                 <select class="form-control" name="dataSetColumnId[]">
                     <option value=""></option>
                     {{#each columns}}
-                    <option value="{{ dataSetColumnId }}" {{#if_eq dataSetColumnId ../dataSetColumnId}}selected{{/if_eq}}>{{ heading }}</option>
+                    <option value="{{ dataSetColumnId }}" {{#eq dataSetColumnId ../dataSetColumnId}}selected{{/eq}}>{{ heading }}</option>
                     {{/each}}
                 </select>
             </div>
@@ -65,7 +65,7 @@
                 <select class="form-control" name="orderClause[]">
                     <option value=""></option>
                     {{#each columns}}
-                    <option value="{{ heading }}" {{#if_eq heading ../orderClause}}selected{{/if_eq}}>{{ heading }}</option>
+                    <option value="{{ heading }}" {{#eq heading ../orderClause}}selected{{/eq}}>{{ heading }}</option>
                     {{/each}}
                 </select>
             </div>
@@ -87,10 +87,10 @@
         <div class="form-group">
             <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
             <div class="col-sm-2">
-                <label for="filterClauseOperator[]" {{#if_eq title "1"}}class="hidden"{{/if_eq}}>
+                <label for="filterClauseOperator[]" {{#eq title "1"}}class="hidden"{{/eq}}>
                 <select class="form-control" name="filterClauseOperator[]">
                     {{#each filterOperatorOptions}}
-                    <option value="{{ id }}" {{#if_eq id ../filterClauseOperator}}selected{{/if_eq}}>{{ value }}</option>
+                    <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
                     {{/each}}
                 </select>
                 </label>
@@ -99,7 +99,7 @@
                 <select class="form-control" name="filterClause[]">
                     <option value=""></option>
                     {{#each columns}}
-                    <option value="{{ heading }}" {{#if_eq heading ../filterClause}}selected{{/if_eq}}>{{ heading }}</option>
+                    <option value="{{ heading }}" {{#eq heading ../filterClause}}selected{{/eq}}>{{ heading }}</option>
                     {{/each}}
                 </select>
             </div>
@@ -107,7 +107,7 @@
                 <label for="filterClauseCriteria[]">
                     <select class="form-control" name="filterClauseCriteria[]">
                         {{#each filterOptions}}
-                        <option value="{{ id }}" {{#if_eq id ../filterClauseCriteria}}selected{{/if_eq}}>{{ value }}</option>
+                        <option value="{{ id }}" {{#eq id ../filterClauseCriteria}}selected{{/eq}}>{{ value }}</option>
                         {{/each}}
                     </select>
                 </label>
@@ -125,7 +125,7 @@
 {% endraw %}
 
 <script type="text/javascript">
-    Handlebars.registerHelper('if_eq', function(a, b, opts) {
+    Handlebars.registerHelper('eq', function(a, b, opts) {
         if(a == b) // Or === depending on your needs
             return opts.fn(this);
         else

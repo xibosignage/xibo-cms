@@ -307,8 +307,16 @@ class DataSetView extends ModuleWidget
         // Do we have a step provided?
         $step = $this->getSanitizer()->getInt('step', 2);
 
-        if ($step == 1 || !$this->hasDataSet()) {
+        if ($step == 1) {
+
+                        // Read in the dataSetId, validate and store it
             $dataSetId = $this->getSanitizer()->getInt('dataSetId');
+
+            // Do we already have a DataSet?
+            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+                // Reset the fields that are dependent on the dataSetId
+                $this->setOption('columns', '');
+            }
 
             $this->setOption('dataSetId', $dataSetId);
 
@@ -350,8 +358,7 @@ class DataSetView extends ModuleWidget
             $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
             $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
             $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-
-
+            
             $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
             $this->setOption('borderColor', $this->getSanitizer()->getString('borderColor'));
             $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));

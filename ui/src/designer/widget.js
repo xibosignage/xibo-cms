@@ -18,7 +18,9 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     }
 
     this.layoutObject = layoutObject;
-    
+
+    this.isValid = data.isValid;
+
     // widget type
     this.type = 'widget';
     this.subType = data.type;
@@ -149,6 +151,11 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
                 calculatedDuration = this.widgetDefaultDuration;
             }
             
+            // Fix for negative durations
+            if(calculatedDuration <= 0) {
+                calculatedDuration = 1;
+            }
+
             // set the duration to the widget
             this.duration = calculatedDuration;
         }

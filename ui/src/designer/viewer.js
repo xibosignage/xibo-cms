@@ -366,8 +366,6 @@ Viewer.prototype.saveInlineEditor = function(elementToSave) {
  * Load Inline Editor content
  */
 Viewer.prototype.loadInlineEditorContent = function() {
-
-    console.debug(' >>> loadInlineEditorContent');
     
     // Move text area from form to viewer
     const taText = lD.propertiesPanel.DOMObject.find('textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').clone();

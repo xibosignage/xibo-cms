@@ -324,13 +324,24 @@
     padding: 0;
 }
 
+/* CKEditor controls */
 #layout-editor #layout-viewer-navbar .viewer-navbar .ckeditor_controls > div {
     padding: 0 5px;
+    float: right;
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar .ckeditor_controls .select2-container--bootstrap .select2-selection--single {
     height: 26px;
     padding: 2px 24px 2px 4px;
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar .inline-editor-templates .control-label {
+    padding: 0 3px 0 0;
+    text-align: right;
+}
+
+#layout-editor #layout-viewer-navbar .viewer-navbar .inline-editor-templates .ckeditor_select_container {
+    padding: 0;
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar.designer-region {
@@ -344,15 +355,6 @@
 #layout-editor #layout-viewer-navbar .viewer-navbar .info {
     float: right;
     font-size: 19px;
-}
-
-#layout-editor #layout-viewer-navbar .viewer-navbar .inline-editor-templates .control-label {
-    padding: 0 3px 0 0;
-    text-align: right;
-}
-
-#layout-editor #layout-viewer-navbar .viewer-navbar .inline-editor-templates .ckeditor_select_container {
-    padding: 0;
 }
 
 /* Viewer inline editor */
@@ -545,6 +547,10 @@
 
 #layout-editor  #layout-timeline .designer-widget.ui-droppable-active * {
     visibility: hidden;
+}
+
+#layout-editor  #layout-timeline .designer-widget.invalid-widget {
+    .box-shadow(inset 0px 0px 10px 3px red);
 }
 
 #layout-editor .designer-region.ui-droppable-active {

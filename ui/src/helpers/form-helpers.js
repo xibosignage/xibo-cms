@@ -1,3 +1,6 @@
+const dataSetViewOrderClauseTemplate = require("../templates/data-set-view-order-clause.hbs");
+const dataSetViewFilterClauseTemplate = require('../templates/data-set-view-filter-clause.hbs');
+
 let formHelpers = function() {
 
     // Default params ( might change )
@@ -452,7 +455,9 @@ let formHelpers = function() {
                         
             // Default config for fonts
             if(data == "") {
-                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>";
+                const messageToDisplay = (textAreaId === 'noDataMessage') ? translations.noDataMessage : translations.enterText;
+                
+                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + messageToDisplay + "</span></span>";
             }
 
             // Handle initial template set up
@@ -460,30 +465,6 @@ let formHelpers = function() {
 
             CKEDITOR.instances[textAreaId].setData(data);
         });
-
-        // Create a no data message editor if one is present
-        if($("#noDataMessage").length > 0) {
-            CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
-            CKEDITOR.instances["noDataMessage"].on('instanceReady', function() {
-
-                // Apply scaling to this editor instance
-                applyContentsToIframe("noDataMessage");
-
-                // Reapply the background style after switching to source view and back to the normal editing view
-                CKEDITOR.instances["noDataMessage"].on('contentDom', function() {applyContentsToIframe("noDataMessage")});
-
-                // Get the template data
-                var data = CKEDITOR.instances["noDataMessage"].getData();
-                if(data === "") {
-                    data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.noDataMessage + "</span></span>";
-                }
-
-                // Handle initial template set up
-                data = convertLibraryReferences(data);
-
-                CKEDITOR.instances["noDataMessage"].setData(data);
-            });
-        }
 
         // Do we have any snippets selector?
         var $selectPickerSnippets = $('.ckeditor_snippets_select', dialog);
@@ -493,8 +474,6 @@ let formHelpers = function() {
             $selectPickerSnippets.select2().off().on('select2:select', function(e) {
                 var linkedTo = $(this).data().linkedTo;
                 var text;
-
-                console.debug(linkedTo);
                 
                 if(CKEDITOR.instances[linkedTo] != undefined) {
                     if($(this).attr("datasetcolumnid") != undefined)
@@ -649,7 +628,6 @@ let formHelpers = function() {
         }
     };
 
-
     /**
      * Create and attach a Replace button, and open a upload form on click to replace media
      * @param {object} dialog - Dialog object
@@ -699,6 +677,125 @@ let formHelpers = function() {
         });
 
         footer.find('#Save').before(replaceButton);
+    };
+
+/**
+ * Configure the query builder ( order and filter )
+ * @param {object} dialog - Dialog object
+ * @param {object} translations - Object with all the translations
+ */
+    this.configureQueryBuilder = function(dialog, translations) {
+
+        // Order Clause
+        var orderClauseFields = $("#orderClause");
+
+        if(orderClauseFields.length == 0)
+            return;
+        
+        var orderClauseTemplate = dataSetViewOrderClauseTemplate;
+
+        var ascTitle = translations.ascTitle;
+        var descTitle = translations.descTitle;
+
+        if(dialog.data().extra.orderClause.length == 0) {
+            // Add a template row
+            var context = {columns: dialog.data().extra.columns, title: "1", orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-plus", ascTitle: ascTitle, descTitle: descTitle};
+            orderClauseFields.append(orderClauseTemplate(context));
+        } else {
+            // For each of the existing codes, create form components
+            var i = 0;
+            $.each(dialog.data().extra.orderClause, function(index, field) {
+                i++;
+
+                var direction = (field.orderClauseDirection == "ASC");
+
+                var context = {columns: dialog.data().extra.columns, title: i, orderClause: field.orderClause, orderClauseAsc: direction, orderClauseDesc: !direction, buttonGlyph: ((i == 1) ? "fa-plus" : "fa-minus"), ascTitle: ascTitle, descTitle: descTitle};
+
+                orderClauseFields.append(orderClauseTemplate(context));
+            });
+        }
+
+        // Nabble the resulting buttons
+        orderClauseFields.on("click", "button", function(e) {
+            e.preventDefault();
+
+            // find the gylph
+            if($(this).find("i").hasClass("fa-plus")) {
+                var context = {columns: dialog.data().extra.columns, title: orderClauseFields.find('.form-group').length + 1, orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-minus", ascTitle: ascTitle, descTitle: descTitle};
+                orderClauseFields.append(orderClauseTemplate(context));
+            } else {
+                // Remove this row
+                $(this).closest(".form-group").remove();
+            }
+        });
+
+        //
+        // Filter Clause
+        //
+        var filterClauseFields = $("#filterClause");
+        var filterClauseTemplate = dataSetViewFilterClauseTemplate;
+        var filterOptions = translations.filterOptions;
+        var filterOperatorOptions = translations.filterOperatorOptions;
+
+        if(dialog.data().extra.filterClause.length == 0) {
+            // Add a template row
+            var context2 = {
+                columns: dialog.data().extra.columns,
+                filterOptions: filterOptions,
+                filterOperatorOptions: filterOperatorOptions,
+                title: "1",
+                filterClause: "",
+                filterClauseOperator: "AND",
+                filterClauseCriteria: "",
+                filterClauseValue: "",
+                buttonGlyph: "fa-plus"
+            };
+            filterClauseFields.append(filterClauseTemplate(context2));
+        } else {
+            // For each of the existing codes, create form components
+            var j = 0;
+            $.each(dialog.data().extra.filterClause, function(index, field) {
+                j++;
+
+                var context2 = {
+                    columns: dialog.data().extra.columns,
+                    filterOptions: filterOptions,
+                    filterOperatorOptions: filterOperatorOptions,
+                    title: j,
+                    filterClause: field.filterClause,
+                    filterClauseOperator: field.filterClauseOperator,
+                    filterClauseCriteria: field.filterClauseCriteria,
+                    filterClauseValue: field.filterClauseValue,
+                    buttonGlyph: ((j == 1) ? "fa-plus" : "fa-minus")
+                };
+
+                filterClauseFields.append(filterClauseTemplate(context2));
+            });
+        }
+
+        // Nabble the resulting buttons
+        filterClauseFields.on("click", "button", function(e) {
+            e.preventDefault();
+
+            // find the gylph
+            if($(this).find("i").hasClass("fa-plus")) {
+                var context = {
+                    columns: dialog.data().extra.columns,
+                    filterOptions: filterOptions,
+                    filterOperatorOptions: filterOperatorOptions,
+                    title: filterClauseFields.find('.form-group').length + 1,
+                    filterClause: "",
+                    filterClauseOperator: "AND",
+                    filterClauseCriteria: "",
+                    filterClauseValue: "",
+                    buttonGlyph: "fa-minus"
+                };
+                filterClauseFields.append(filterClauseTemplate(context));
+            } else {
+                // Remove this row
+                $(this).closest(".form-group").remove();
+            }
+        });
     };
 };
 

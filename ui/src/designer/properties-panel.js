@@ -102,10 +102,23 @@ PropertiesPanel.prototype.save = function(element) {
 };
 
 /**
+ * Go to the previous form step
+ * @param {object} element - the element that the form relates to
+ */
+PropertiesPanel.prototype.back = function(element) {
+    
+    // Get current step
+    const currentStep = this.DOMObject.find('form').data('formStep');
+
+    // Render previous form
+    this.render(element, currentStep - 1);
+}
+
+/**
  * Render panel
  * @param {Object} element - the element object to be rendered
  */
-PropertiesPanel.prototype.render = function(element) {
+PropertiesPanel.prototype.render = function(element, step) {
 
     // Prevent the panel to render if the layout is not editable
     if(typeof element == 'undefined' || $.isEmptyObject(element) || (element.type == 'layout' && !element.editable) ) {
@@ -122,6 +135,10 @@ PropertiesPanel.prototype.render = function(element) {
     let requestPath = urlsForApi[element.type].getForm.url;
 
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
+
+    if(step !== undefined) {
+        requestPath += '?step=' + step;
+    } 
 
     // Get form for the given element
     const self = this;
@@ -151,7 +168,7 @@ PropertiesPanel.prototype.render = function(element) {
         
         // Process buttons from result
         for(let button in res.buttons) {
-
+            
             // If button is not a cancel or save button, add it to the button object
             if(!['Save', 'Cancel'].includes(button)) {
                 buttons[button] = {
@@ -162,13 +179,20 @@ PropertiesPanel.prototype.render = function(element) {
             }
         }
 
+        // Add back button
+        buttons.back = {
+            name: 'Back',
+            type: 'btn-default',
+            action: 'back'
+        };
+
         // Add save button
         buttons.save = {
             name: 'Save',
-                type: 'btn-info',
-                    action: 'save'
+            type: 'btn-info',
+            action: 'save'
         };
-
+        
         const html = propertiesPanel({
             header: res.dialogTitle,
             style: element.type,
@@ -190,9 +214,12 @@ PropertiesPanel.prototype.render = function(element) {
         if(viewerExists) {
             self.DOMObject.data('viewerObject', app.viewer);
         }
-
+        
         // Run form open module optional function
         if(element.type === 'widget' && typeof window[element.subType + '_form_edit_open'] === 'function') {
+            // Pass widget options to the form as data
+            self.DOMObject.data('elementOptions', element.getOptions());
+
             window[element.subType + '_form_edit_open'].bind(self.DOMObject)();
         }
 
@@ -201,8 +228,17 @@ PropertiesPanel.prototype.render = function(element) {
 
         // Handle buttons click
         self.DOMObject.find('.properties-panel-btn').click(function(el) {
-            self[$(this).data('action')](element, $(this).data('subAction'));
+            if($(this).data('action')) {
+                self[$(this).data('action')](element, $(this).data('subAction'));
+            }  
         });
+
+        // Handle back button based on form page
+        if(self.DOMObject.find('form').data('formStep') != undefined && self.DOMObject.find('form').data('formStep') > 1) {
+            self.DOMObject.find('button#back').show();
+        } else {
+            self.DOMObject.find('button#back').hide();
+        }
 
         // Handle keyboard keys
         self.DOMObject.off('keydown').keydown(function(handler) {

@@ -96,7 +96,7 @@ $(document).ready(function() {
     toastr.options.positionClass = 'toast-top-right';
 
     // Load layout through an ajax request
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets')
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity')
         .done(function(res) {
 
             if(res.data.length > 0) {
@@ -346,7 +346,7 @@ lD.reloadData = function(layout) {
 
     lD.common.showLoadingScreen();
 
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets")
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity")
         .done(function(res) {
             
             lD.common.hideLoadingScreen();
@@ -593,11 +593,11 @@ lD.showPublishScreen = function() {
  * Revert last action
  */
 lD.undoLastAction = function() {
-    lD.common.showLoadingScreen();
+    lD.common.showLoadingScreen('undoLastAction');
 
     lD.manager.revertChange().then((res) => { // Success
 
-        lD.common.hideLoadingScreen();
+        lD.common.hideLoadingScreen('undoLastAction');
 
         toastr.success(res.message);
 
@@ -609,7 +609,7 @@ lD.undoLastAction = function() {
         }
     }).catch((error) => { // Fail/error
 
-        lD.common.hideLoadingScreen();
+        lD.common.hideLoadingScreen('undoLastAction');
 
         // Show error returned or custom message to the user
         let errorMessage = 'Revert failed: ';
@@ -675,19 +675,19 @@ lD.deleteObject = function(objectType, objectId) {
             callback: function(result) {
                 if(result) {
 
-                    lD.common.showLoadingScreen();
+                    lD.common.showLoadingScreen('deleteObject');
 
                     // Delete element from the layout
                     lD.layout.deleteElement(objectType, objectId).then((res) => { // Success
 
-                        lD.common.hideLoadingScreen();
+                        lD.common.hideLoadingScreen('deleteObject');
 
                         // Behavior if successful 
                         toastr.success(res.message);
                         lD.reloadData(lD.layout);
                     }).catch((error) => { // Fail/error
 
-                        lD.common.hideLoadingScreen();
+                        lD.common.hideLoadingScreen('deleteObject');
 
                         // Show error returned or custom message to the user
                         let errorMessage = 'Delete element failed: ' + error;
@@ -747,7 +747,7 @@ lD.dropItemAdd = function(droppable, draggable) {
 
             if(draggableSubType == 'region') { // Add region to layout
 
-                lD.common.showLoadingScreen(); 
+                lD.common.showLoadingScreen('addRegionToLayout'); 
 
                 lD.manager.saveAllChanges().then((res) => {
 
@@ -755,14 +755,14 @@ lD.dropItemAdd = function(droppable, draggable) {
 
                     lD.layout.addElement('region').then((res) => { // Success
 
-                        lD.common.hideLoadingScreen(); 
+                        lD.common.hideLoadingScreen('addRegionToLayout'); 
 
                         // Behavior if successful 
                         toastr.success(res.message);
                         lD.reloadData(lD.layout);
                     }).catch((error) => { // Fail/error
 
-                        lD.common.hideLoadingScreen(); 
+                        lD.common.hideLoadingScreen('addRegionToLayout'); 
 
                         // Show error returned or custom message to the user
                         let errorMessage = 'Create region failed: ' + error;
@@ -777,7 +777,7 @@ lD.dropItemAdd = function(droppable, draggable) {
                     });
                 }).catch((err) => {
 
-                    lD.common.hideLoadingScreen(); 
+                    lD.common.hideLoadingScreen('addRegionToLayout'); 
 
                     toastr.error('Save all changes failed!');
                 });
@@ -827,23 +827,25 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
                 validExt: validExt
             },
             playlistId: playlistId
-        }, {
-                main: {
-                    label: translations.done,
-                    className: "btn-primary",
-                    callback: function() {
-                        lD.timeline.resetZoom();
-                        lD.reloadData(lD.layout);
-                    }
+        }, 
+        {
+            main: {
+                label: translations.done,
+                className: "btn-primary",
+                callback: function() {
+                    lD.timeline.resetZoom();
+                    lD.reloadData(lD.layout);
                 }
-            });
+            }
+        });
 
-    } else { // Load add widget form for region specific
+    } else { // Add widget to a region
 
-        // Load form the API
-        const linkToAPI = urlsForApi.playlist.addWidgetForm;
+        const linkToAPI = urlsForApi.playlist.addWidget;
 
         let requestPath = linkToAPI.url;
+
+        lD.common.showLoadingScreen('addModuleToPlaylist');
 
         // Replace type
         requestPath = requestPath.replace(':type', moduleType);
@@ -851,135 +853,48 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         // Replace playlist id
         requestPath = requestPath.replace(':id', playlistId);
 
-        // Create dialog
-        var calculatedId = new Date().getTime();
-
-        let dialog = bootbox.dialog({
-            title: 'Add ' + moduleType + ' widget',
-            message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
-            buttons: {
-                cancel: {
-                    label: translations.cancel,
-                    className: "btn-default"
-                },
-                done: {
-                    label: translations.done,
-                    className: "btn-primary test",
-                    callback: function(res) {
-
-                        // Run form open module optional function
-                        if(typeof window[moduleType + '_form_add_submit'] === 'function') {
-                            window[moduleType + '_form_add_submit'].bind(dialog)();
-                        }
-
-                        // If form is valid, submit it ( add change )
-                        if($(dialog).find('form').valid()) {
-
-                            const form = dialog.find('form');
-
-                            lD.manager.addChange(
-                                'addWidget',
-                                'playlist', // targetType 
-                                playlistId,  // targetId
-                                null,  // oldValues
-                                form.serialize(), // newValues
-                                {
-                                    updateTargetId: true,
-                                    updateTargetType: 'widget',
-                                    customRequestPath: {
-                                        url: form.attr('action'),
-                                        type: form.attr('method')
-                                    }
-                                }
-                            ).then((res) => { // Success
-
-                                // Behavior if successful 
-                                toastr.success(res.message);
-
-                                dialog.modal('hide');
-
-                                lD.timeline.resetZoom();
-                                lD.reloadData(lD.layout);
-
-                            }).catch((error) => { // Fail/error
-
-                                // Show error returned or custom message to the user
-                                let errorMessage = '';
-
-                                if(typeof error == 'string') {
-                                    errorMessage += error;
-                                } else {
-                                    errorMessage += error.errorThrown;
-                                }
-
-                                // Remove added change from the history manager
-                                lD.manager.removeLastChange();
-
-                                // Display message in form
-                                formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
-
-                                // Show toast message
-                                toastr.error(errorMessage);
-                            });
-                        }
-
-                        // Prevent the modal to close ( close only when addChange returns true )
-                        return false;
-                    }
+        lD.manager.addChange(
+            'addWidget',
+            'playlist', // targetType 
+            playlistId,  // targetId
+            null,  // oldValues
+            null, // newValues
+            {
+                updateTargetId: true,
+                updateTargetType: 'widget',
+                customRequestPath: {
+                    url: requestPath,
+                    type: linkToAPI.type
                 }
             }
-        }).attr('id', calculatedId).attr('data-test', 'addWidgetModal');
+        ).then((res) => { // Success
 
-        // Request and load element form
-        $.ajax({
-            url: requestPath,
-            type: linkToAPI.type
-        }).done(function(res) {
+            lD.common.hideLoadingScreen('addModuleToPlaylist');
 
-            if(res.success) {
-                // Add title
-                dialog.find('.modal-title').html(res.dialogTitle);
+            // Behavior if successful 
+            toastr.success(res.message);
 
-                // Add body main content
-                dialog.find('.bootbox-body').html(res.html);
+            lD.timeline.resetZoom();
+            lD.reloadData(lD.layout);
 
-                dialog.data('extra', res.extra);
+        }).catch((error) => { // Fail/error
 
-                // Call Xibo Init for this form
-                XiboInitialise("#" + dialog.attr("id"));
+            lD.common.hideLoadingScreen('addModuleToPlaylist');
 
-                // Run form open module optional function
-                if(typeof window[moduleType + '_form_add_open'] === 'function') {
-                    window[moduleType + '_form_add_open'].bind(dialog)();
-                }
+            // Show error returned or custom message to the user
+            let errorMessage = '';
 
+            if(typeof error == 'string') {
+                errorMessage += error;
             } else {
-
-                // Login Form needed?
-                if(res.login) {
-
-                    window.location.href = window.location.href;
-                    location.reload(false);
-                } else {
-
-                    toastr.error('Element form load failed!');
-
-                    // Just an error we dont know about
-                    if(res.message == undefined) {
-                        console.error(res);
-                    } else {
-                        console.error(res.message);
-                    }
-
-                    dialog.modal('hide');
-                }
+                errorMessage += error.errorThrown;
             }
-        }).catch(function(jqXHR, textStatus, errorThrown) {
 
-            console.error(jqXHR, textStatus, errorThrown);
-            toastr.error('Element form load failed!');
+            // Remove added change from the history manager
+            lD.manager.removeLastChange();
 
-            dialog.modal('hide');
+            // Show toast message
+            toastr.error(errorMessage);
         });
     }  
 };
@@ -997,6 +912,8 @@ lD.addMediaToPlaylist = function(playlistId, mediaId) {
         ]
     };
 
+    lD.common.showLoadingScreen('addMediaToPlaylist');
+
     // Create change to be uploaded
     lD.manager.addChange(
         'addMedia',
@@ -1010,11 +927,15 @@ lD.addMediaToPlaylist = function(playlistId, mediaId) {
         }
     ).then((res) => { // Success
 
+        lD.common.hideLoadingScreen('addMediaToPlaylist');
+
         // Behavior if successful 
         toastr.success(res.message);
         lD.timeline.resetZoom();
         lD.reloadData(lD.layout);
     }).catch((error) => { // Fail/error
+
+        lD.common.hideLoadingScreen('addMediaToPlaylist');
 
         // Show error returned or custom message to the user
         let errorMessage = 'Add media failed: ';

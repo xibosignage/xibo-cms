@@ -120,6 +120,10 @@
                     url: "{{ urlFor("module.widget.add.form") }}",
                     type: 'GET'
                 },
+                addWidget: {
+                    url: "{{ urlFor("module.widget.add") }}",
+                    type: 'POST'
+                },
                 preview: {
                     url: "{{ urlFor("region.preview") }}",
                     type: 'GET'
@@ -145,6 +149,10 @@
                 addForm: {
                     url: "{{ urlFor("module.widget.add.form") }}",
                     type: 'GET'
+                },
+                add: {
+                    url: "{{ urlFor("module.widget.add") }}",
+                    type: 'POST'
                 },
                 delete: {
                     url: "{{ urlFor("module.widget.delete") }}",

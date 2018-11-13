@@ -13,7 +13,7 @@
             <select class="form-control" name="subPlaylistId[]">
                 <option value=""></option>
                 {{#each playlists}}
-                    <option value="{{ playlistId }}" {{#if_eq playlistId ../subPlaylistId}}selected{{/if_eq}}>{{ name }}</option>
+                    <option value="{{ playlistId }}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
                 {{/each}}
             </select>
         </div>
@@ -26,12 +26,6 @@
 {% endraw %}
 
 <script type="text/javascript">
-    Handlebars.registerHelper('if_eq', function(a, b, opts) {
-        if(a == b) // Or === depending on your needs
-            return opts.fn(this);
-        else
-            return opts.inverse(this);
-    });
 
     // Runs after form opens
     function subplaylist_form_add_open() {

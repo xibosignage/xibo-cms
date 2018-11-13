@@ -29,12 +29,14 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetFormEditStep2" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"
+            <form id="dataSetFormEditStep2" class="XiboForm form-horizontal" data-form-step="1" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}"
                   data-next-form-url="{{ urlFor("module.widget.edit.form", {type: module.widget.type}) }}?step=2">
 
                 {% set title %}{% trans "DataSet" %}{% endset %}
                 {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this view." %}{% endset %}
                 {{ forms.dropdown("dataSetId", "single", title, "", module.dataSets(), "dataSetId", "dataSet", helpText, "dataset-fields") }}
+            
+                <input type="hidden" name="step" value="1" />
             </form>
         </div>
     </div>
