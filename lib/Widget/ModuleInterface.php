@@ -82,8 +82,9 @@ interface ModuleInterface
     public function preview($width, $height, $scaleOverride = 0);
 
     /**
-     * Is the Module Valid
-     * @return int (0 = No, 1 = Yes, 2 = Player Dependent
+     * Is the Module Valid?
+     * @return int (1 = Yes, 2 = Player Dependent)
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function isValid();
 

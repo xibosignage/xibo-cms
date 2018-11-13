@@ -20,8 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 
 /**
  * Class VideoIn
@@ -65,20 +65,6 @@ class VideoIn extends ModuleWidget
 
         // Check we are all installed
         $this->installFiles();
-    }
-
-
-    /**
-     * Validate
-     */
-    public function validate()
-    {
-        // Validate
-        if (!v::stringType()->notEmpty()->validate($this->getOption('sourceId')))
-            throw new InvalidArgumentException(__('Please Select the sourceId'));
-
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
-            throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
     /**
@@ -133,7 +119,7 @@ class VideoIn extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('sourceId', $this->getSanitizer()->getString('sourceId' ,'hdmi'));
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
@@ -142,8 +128,14 @@ class VideoIn extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if (!v::stringType()->notEmpty()->validate($this->getOption('sourceId')))
+            throw new InvalidArgumentException(__('Please Select the sourceId'), 'sourceId');
+
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
         // Client dependant
-        return ($this->getOption('sourceId') == '') ? self::$STATUS_INVALID : self::$STATUS_PLAYER;
+        return self::$STATUS_PLAYER;
     }
 
     /** @inheritdoc */

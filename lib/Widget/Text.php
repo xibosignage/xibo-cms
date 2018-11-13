@@ -51,20 +51,6 @@ class Text extends ModuleWidget
         return 'text-designer-javascript';
     }
 
-
-    /**
-     * @throws InvalidArgumentException
-     */
-    public function validate()
-    {
-        // Validation
-        if ($this->getOption('text') == '')
-            throw new InvalidArgumentException(__('Please enter some text'), 'text');
-
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
-    }
-
     /**
      * Edit Media
      *
@@ -166,7 +152,7 @@ class Text extends ModuleWidget
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
@@ -302,7 +288,13 @@ class Text extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        // Text rendering will be valid
+        // Validation
+        if ($this->getOption('text') == '')
+            throw new InvalidArgumentException(__('Please enter some text'), 'text');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
         return self::$STATUS_VALID;
     }
 

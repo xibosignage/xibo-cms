@@ -20,8 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 
 class LocalVideo extends ModuleWidget
 {
@@ -32,19 +32,6 @@ class LocalVideo extends ModuleWidget
     public function layoutDesignerJavaScript()
     {
         return 'localvideo-designer-javascript';
-    }
-
-    /**
-     * Validate
-     */
-    public function validate()
-    {
-        // Validate
-        if (!v::stringType()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
-
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
-            throw new InvalidArgumentException(__('You must enter a duration.'));
     }
 
     /**
@@ -115,7 +102,7 @@ class LocalVideo extends ModuleWidget
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
@@ -124,7 +111,13 @@ class LocalVideo extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        // Client dependant
+        // Validate
+        if (!v::stringType()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'), 'uri');
+
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
         return self::$STATUS_PLAYER;
     }
 

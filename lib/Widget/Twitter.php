@@ -165,19 +165,6 @@ class Twitter extends TwitterBase
         return $this->module->settings;
     }
 
-    public function validate()
-    {
-        // If overrideTemplate is false we have to define a template Id 
-        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new \InvalidArgumentException(__('Please choose a template'));
-            
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
-
-        if (!v::stringType()->notEmpty()->validate($this->getOption('searchTerm')))
-            throw new \InvalidArgumentException(__('Please enter a search term'));
-    }
-
     /**
      * Edit Widget
      *
@@ -434,7 +421,7 @@ class Twitter extends TwitterBase
         }
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
@@ -860,6 +847,16 @@ class Twitter extends TwitterBase
     /** @inheritdoc */
     public function isValid()
     {
+        // If overrideTemplate is false we have to define a template Id
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        if (!v::stringType()->notEmpty()->validate($this->getOption('searchTerm')))
+            throw new InvalidArgumentException(__('Please enter a search term'), 'searchTerm');
+
         return self::$STATUS_VALID;
     }
 

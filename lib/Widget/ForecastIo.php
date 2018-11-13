@@ -138,25 +138,6 @@ class ForecastIo extends ModuleWidget
         $this->module->settings['cachePeriod'] = $cachePeriod;
     }
 
-    public function validate()
-    {
-        
-        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new \InvalidArgumentException(__('Please choose a template'));
-            
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
-
-        if ($this->getOption('useDisplayLocation') == 0) {
-            // Validate lat/long
-            if (!v::latitude()->validate($this->getOption('latitude')))
-                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
-
-            if (!v::longitude()->validate($this->getOption('longitude')))
-                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
-        }
-    }
-
     /**
      * Edit Widget
      *
@@ -334,7 +315,7 @@ class ForecastIo extends ModuleWidget
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
@@ -807,9 +788,32 @@ class ForecastIo extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+            throw new \InvalidArgumentException(__('Please choose a template'));
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new \InvalidArgumentException(__('Please enter a duration'));
+
+        if ($this->getOption('useDisplayLocation') == 0) {
+            // Validate lat/long
+            if (!v::latitude()->validate($this->getOption('latitude')))
+                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+
+            if (!v::longitude()->validate($this->getOption('longitude')))
+                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+        }
+
         return self::$STATUS_VALID;
     }
 
+    /**
+     * Get a forecast from DarkSky
+     * @param $latitude
+     * @param $longitude
+     * @param null $time
+     * @param array $options
+     * @return bool|mixed
+     */
     public function get($latitude, $longitude, $time = null, $options = array())
     {
         $request_url = self::API_ENDPOINT

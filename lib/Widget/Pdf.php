@@ -7,6 +7,9 @@
 
 namespace Xibo\Widget;
 
+use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class Pdf
  * @package Xibo\Widget
@@ -85,12 +88,16 @@ class Pdf extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
 
+        $this->isValid();
         $this->saveWidget();
     }
 
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
         return self::$STATUS_VALID;
     }
 

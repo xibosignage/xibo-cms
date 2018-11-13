@@ -414,29 +414,8 @@ class DataSetView extends ModuleWidget
 
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
-            //
             // Validate
-            //
-            // Must have a duration
-            if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-                throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
-
-            if (!is_numeric($this->getOption('upperLimit')) || !is_numeric($this->getOption('lowerLimit')))
-                throw new InvalidArgumentException(__('Limits must be numbers'), 'limit');
-
-            if ($this->getOption('upperLimit') < 0 || $this->getOption('lowerLimit') < 0)
-                throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limit');
-
-            // Check the bounds of the limits
-            if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
-                throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
-
-            if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
-                throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
-
-            // Make sure we haven't entered a silly value in the filter
-            if (strstr($this->getOption('filter'), 'DESC'))
-                throw new InvalidArgumentException(__('Cannot user ordering criteria in the Filter Clause'), 'filter');
+            $this->isValid();
         }
 
         // Save the widget
@@ -853,7 +832,26 @@ class DataSetView extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        // depends on whether we have a dataSet yet or not.
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        if (!is_numeric($this->getOption('upperLimit')) || !is_numeric($this->getOption('lowerLimit')))
+            throw new InvalidArgumentException(__('Limits must be numbers'), 'limit');
+
+        if ($this->getOption('upperLimit') < 0 || $this->getOption('lowerLimit') < 0)
+            throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limit');
+
+        // Check the bounds of the limits
+        if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+            throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
+
+        if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
+            throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
+
+        // Make sure we haven't entered a silly value in the filter
+        if (strstr($this->getOption('filter'), 'DESC'))
+            throw new InvalidArgumentException(__('Cannot user ordering criteria in the Filter Clause'), 'filter');
+
         return ($this->hasDataSet()) ? self::$STATUS_VALID : self::$STATUS_INVALID;
     }
 

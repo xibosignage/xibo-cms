@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2006-2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -20,8 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 
 /**
  * Class WebPage
@@ -30,34 +30,18 @@ use Respect\Validation\Validator as v;
 class WebPage extends ModuleWidget
 {
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
         return 'webpage-designer-javascript';
     }
 
-    /**
-     * Install Files
-     */
+    /** @inheritdoc */
     public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-webpage-render.js')->save();
-    }
-
-    public function validate()
-    {
-        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new InvalidArgumentException(__('Please enter a link'));
-
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'));
-
-        if ($this->getOption('modeid') == null)
-            throw new InvalidArgumentException(__('You must select a mode.'));
     }
     
     /**
@@ -178,7 +162,7 @@ class WebPage extends ModuleWidget
         $this->setOption('modeid', $this->getSanitizer()->getInt('modeId'));
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
@@ -252,6 +236,15 @@ class WebPage extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+            throw new InvalidArgumentException(__('Please enter a link'), 'uri');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
+        if ($this->getOption('modeid') == null)
+            throw new InvalidArgumentException(__('You must select a mode.'), 'modeid');
+
         return self::$STATUS_PLAYER;
     }
 

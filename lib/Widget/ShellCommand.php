@@ -20,7 +20,7 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
+use Xibo\Exception\InvalidArgumentException;
 
 class ShellCommand extends ModuleWidget
 {
@@ -31,12 +31,6 @@ class ShellCommand extends ModuleWidget
     public function layoutDesignerJavaScript()
     {
         return 'shellcommand-designer-javascript';
-    }
-
-    public function validate()
-    {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == ''))
-            throw new InvalidArgumentException(__('You must enter a command'));
     }
 
     /**
@@ -147,7 +141,7 @@ class ShellCommand extends ModuleWidget
         $this->setOption('webosCommand', urlencode($webos));
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
@@ -182,7 +176,9 @@ class ShellCommand extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        // Client dependant
+        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == ''))
+            throw new InvalidArgumentException(__('You must enter a command'), 'command');
+
         return self::$STATUS_PLAYER;
     }
 

@@ -121,26 +121,6 @@ class Currencies extends AlphaVantageBase
     }
 
     /**
-     * Validate
-     * @throws InvalidArgumentException
-     */
-    public function validate()
-    {
-        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
-            
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
-
-        // Validate for the items field
-        if ($this->getOption('items') == '')
-            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
-
-        if ($this->getOption('base') == '')
-            throw new InvalidArgumentException(__('Please provide a symbols in the base field.'), 'base');
-    }
-
-    /**
      * Edit Media
      *
      * @SWG\Put(
@@ -347,7 +327,7 @@ class Currencies extends AlphaVantageBase
         }
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
@@ -819,11 +799,20 @@ class Currencies extends AlphaVantageBase
     /** @inheritdoc */
     public function isValid()
     {
-        // Using the information you have in your module calculate whether it is valid or not.
-        // 0 = Invalid
-        // 1 = Valid
-        // 2 = Unknown
-        return 1;
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        // Validate for the items field
+        if ($this->getOption('items') == '')
+            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
+
+        if ($this->getOption('base') == '')
+            throw new InvalidArgumentException(__('Please provide a symbols in the base field.'), 'base');
+
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */

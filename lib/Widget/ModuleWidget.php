@@ -1304,15 +1304,6 @@ abstract class ModuleWidget implements ModuleInterface
         $this->setUseDuration(0);
     }
 
-    /**
-     * Get Status Message
-     * @return string
-     */
-    public function getStatusMessage()
-    {
-        return $this->statusMessage;
-    }
-
     //<editor-fold desc="Get Resource and cache">
 
     /** @inheritdoc */

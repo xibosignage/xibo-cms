@@ -22,6 +22,7 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
 
 class Clock extends ModuleWidget
@@ -43,16 +44,6 @@ class Clock extends ModuleWidget
     public function layoutDesignerJavaScript()
     {
         return 'clock-designer-javascript';
-    }
-
-    /**
-     * Validate
-     */
-    public function validate()
-    {
-        // Validate
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
-            throw new \InvalidArgumentException(__('Please enter a duration.'));
     }
 
     /**
@@ -148,7 +139,7 @@ class Clock extends ModuleWidget
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
@@ -292,6 +283,10 @@ class Clock extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration())) {
+            throw new InvalidArgumentException(__('Please enter a duration.'), 'duration');
+        }
+
         return self::$STATUS_VALID;
     }
 

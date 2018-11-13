@@ -38,12 +38,14 @@ class PowerPoint extends ModuleWidget
         return 'powerpoint-designer-javascript';
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Client dependant
-        return 2;
+        return self::$STATUS_PLAYER;
     }
 
+    /** @inheritdoc */
     public function editForm()
     {
         return 'generic-form-edit';

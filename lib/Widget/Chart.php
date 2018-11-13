@@ -223,42 +223,6 @@ class Chart extends ModuleWidget
         ];
     }
 
-    /**
-     * Validates the settings
-     * @override
-     * @throws InvalidArgumentException
-     */
-    public function validate()
-    {
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
-
-        if ($this->getWidgetId() != 0) {
-            // We must always have an X
-            if ($this->getColumnType('x-axis') === null)
-                throw new InvalidArgumentException(__('Please make sure you select an X-Axis'), 'config');
-
-            // We must always have a Y
-            if ($this->getColumnType('y-axis') === null)
-                throw new InvalidArgumentException(__('Please make sure you select an Y-Axis'), 'config');
-
-            // TODO: validate the contents of the config object to ensure we have all we need (an X and Y for example)
-            switch ($this->getOption('graphType')) {
-
-                case 'pie':
-                case 'doughnut':
-                    // Make sure we have an X and a Y and nothing else
-                    if ($this->getColumnType('series-identifier') !== null)
-                        throw new InvalidArgumentException(__('This type of chart does not support a Series Identifier'), 'config');
-
-                    break;
-
-                case '':
-                    throw new InvalidArgumentException(__('Please select a graph type'), 'graphType');
-            }
-        }
-    }
-
     /** @inheritdoc @override */
     public function editForm()
     {
@@ -567,7 +531,7 @@ class Chart extends ModuleWidget
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
 
-            $this->validate();
+            $this->isValid();
         }
 
         $this->saveWidget();
@@ -955,6 +919,34 @@ class Chart extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
+        if ($this->getWidgetId() != 0) {
+            // We must always have an X
+            if ($this->getColumnType('x-axis') === null)
+                throw new InvalidArgumentException(__('Please make sure you select an X-Axis'), 'config');
+
+            // We must always have a Y
+            if ($this->getColumnType('y-axis') === null)
+                throw new InvalidArgumentException(__('Please make sure you select an Y-Axis'), 'config');
+
+            // TODO: validate the contents of the config object to ensure we have all we need (an X and Y for example)
+            switch ($this->getOption('graphType')) {
+
+                case 'pie':
+                case 'doughnut':
+                    // Make sure we have an X and a Y and nothing else
+                    if ($this->getColumnType('series-identifier') !== null)
+                        throw new InvalidArgumentException(__('This type of chart does not support a Series Identifier'), 'config');
+
+                    break;
+
+                case '':
+                    throw new InvalidArgumentException(__('Please select a graph type'), 'graphType');
+            }
+        }
+
         // depends on whether we have a dataSet yet or not.
         return ($this->hasDataSet()) ? self::$STATUS_VALID : self::$STATUS_INVALID;
     }

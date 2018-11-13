@@ -20,6 +20,8 @@
  */
 namespace Xibo\Widget;
 
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class Embedded
  * @package Xibo\Widget
@@ -137,12 +139,17 @@ class Embedded extends ModuleWidget
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
 
         // Save the widget
+        $this->isValid();
         $this->saveWidget();
     }
 
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
+
         return self::$STATUS_PLAYER;
     }
 

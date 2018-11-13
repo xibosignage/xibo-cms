@@ -215,41 +215,35 @@ class GoogleTraffic extends ModuleWidget
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
         $this->setOption('zoom', $this->getSanitizer()->getInt('zoom'));
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
     }
 
-    /**
-     * Validate
-     */
-    private function validate()
+    /** @inheritdoc */
+    public function isValid()
     {
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
 
         if ($this->getOption('zoom') == '')
-            throw new \InvalidArgumentException(__('Please enter a zoom level'));
+            throw new InvalidArgumentException(__('Please enter a zoom level'), 'zoom');
 
         if ($this->getOption('useDisplayLocation') == 0) {
             // Validate lat/long
             if (!v::latitude()->validate($this->getOption('latitude')))
-                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+                throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
 
             if (!v::longitude()->validate($this->getOption('longitude')))
-                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+                throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
         }
 
         // Check the duration against the minDuration setting
         $minDuration = $this->getSetting('minDuration', 600);
         if ($this->getUseDuration() == 1 && $this->getDuration() < $minDuration)
             throw new InvalidArgumentException(__('The minimum duration for this Widget is %d.', $minDuration), 'duration');
-    }
 
-    /** @inheritdoc */
-    public function isValid()
-    {
         return self::$STATUS_PLAYER;
     }
 

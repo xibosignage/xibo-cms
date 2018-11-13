@@ -11,7 +11,6 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -155,30 +154,21 @@ class Hls extends ModuleWidget
         // This causes some android devices to switch to a hardware accellerated web view
         $this->setOption('transparency', 0);
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
     }
 
-    /**
-     * Validate
-     * @throws XiboException
-     */
-    private function validate()
+    /** @inheritdoc */
+    public function isValid()
     {
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
 
         if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
             throw new InvalidArgumentException(__('Please enter a link'), 'uri');
-    }
 
-    /**
-     * @inheritdoc
-     */
-    public function isValid()
-    {
         return self::$STATUS_VALID;
     }
 

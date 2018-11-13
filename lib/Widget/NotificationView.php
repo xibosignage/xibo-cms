@@ -8,6 +8,8 @@
 
 namespace Xibo\Widget;
 
+use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\NotificationFactory;
 
 /**
@@ -143,6 +145,9 @@ class NotificationView extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
         // Can't be sure because the client does the rendering
         return self::$STATUS_PLAYER;
     }
