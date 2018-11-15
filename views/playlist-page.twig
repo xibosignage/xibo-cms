@@ -350,9 +350,9 @@
         function playlistFormOpen(dialog) {
             mediaTable = null;
 
-            $(dialog).find("input[name=filterMediaName]").on("keyup", $.debounce(500, function() {
+            $(dialog).find("input[name=filterMediaName]").on("keyup", _.debounce(function() {
                 playlistFormPopulateMediaTable(dialog);
-            }));
+            }, 500));
 
             $(dialog).find("input[name=filterMediaTag]").on("change", function() {
                 playlistFormPopulateMediaTable(dialog);

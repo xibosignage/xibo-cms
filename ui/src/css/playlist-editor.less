@@ -4,6 +4,7 @@
 
 // Variables
 @playlist-editor-main-background-color: #fff;
+@playlist-editor-main-fb-color: #333;
 @playlist-editor-min-content-height: 40vh;
 @playlist-editor-max-content-height: 65vh;
 
@@ -49,6 +50,13 @@
 
 .editor-modal-title {
     line-height: 1;
+    font-weight: bold;
+    color: @playlist-editor-main-fb-color;
+}
+
+.editor-modal-header .close:not(.help) i {
+    padding-left: 8px;
+    color: red;
 }
 
 #playlist-editor #playlist-timeline {

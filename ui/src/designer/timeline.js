@@ -366,7 +366,7 @@ Timeline.prototype.render = function(layout) {
     });
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
-    regionsContainer.scroll($.debounce(500, function() {
+    regionsContainer.scroll(_.debounce(function() {
 
         // If regions are still not rendered, leave method
         if(self.properties.scrollWidth != $(this).find("#regions").width()) {
@@ -384,7 +384,7 @@ Timeline.prototype.render = function(layout) {
             // Render layout
             self.render(layout);
         }
-    }));
+    }, 500));
 };
 
 module.exports = Timeline;

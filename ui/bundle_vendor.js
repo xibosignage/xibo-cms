@@ -99,9 +99,6 @@ var dt_extras = [
      ];
 dt_extras.forEach(function(e) {e(window, window.$);});
 
-// throttle-debounce
-window.$.debounce = require('throttle-debounce/debounce.js');
-
 // bootstrap-tour
 require('bootstrap-tour/build/js/bootstrap-tour.min.js');
 

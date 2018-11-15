@@ -77,7 +77,7 @@ window.pE = {
 
 // Load Layout and build app structure
 pE.loadEditor = function() {
-
+    
     pE.common.showLoadingScreen();
 
     // Save and change toastr positioning
@@ -171,11 +171,6 @@ pE.loadEditor = function() {
             }
         }
     });
-
-    // Append buttons to form
-    $('.editor-modal-content #playlist-buttons').append(formButtonsTemplate({
-        buttons: formButtons
-    }));
 
     pE.common.hideLoadingScreen();
 };
@@ -383,6 +378,11 @@ pE.refreshDesigner = function() {
         this.editorDiv.find('#editing-container').hide();
         this.editorDiv.find('#dropzone-container').show();
     }
+
+    // Select the object that was previously selected is not selected and exists on the timeline and
+    if(!this.playlist.widgets['widget_' + this.selectedObject.widgetId].selected) {
+        this.selectObject(this.timeline.DOMObject.find('#widget_' + this.selectedObject.widgetId));
+    }
 };
 
 /**
@@ -425,8 +425,6 @@ pE.reloadData = function() {
         if(res.success) {
             pE.playlist = new Playlist(pE.playlist.playlistId, res.data.playlist);
 
-            pE.selectObject();
-
             pE.refreshDesigner();
         } else {
             pE.showErrorMessage();
@@ -458,30 +456,25 @@ pE.showErrorMessage = function() {
 
 /**
  * Save playlist order
- * @param {boolean} [saveAndClose=false] - Container for the layout to be rendered
  */
-pE.saveOrder = function(saveAndClose = false) {
+pE.saveOrder = function() {
 
     const self = this;
 
-    pE.common.showLoadingScreen();
+    pE.common.showLoadingScreen('saveOrder');
     
     this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
         
-        pE.common.hideLoadingScreen();
+        pE.common.hideLoadingScreen('saveOrder');
 
         // Behavior if successful            
         toastr.success(res.message);
 
-        if(saveAndClose) {
-            self.close();
-        } else {
-            self.reloadData();
-        }
-        
+        self.reloadData();
+
     }).catch((error) => { // Fail/error
 
-        pE.common.hideLoadingScreen();
+        pE.common.hideLoadingScreen('saveOrder');
 
         // Show error returned or custom message to the user
         let errorMessage = 'Save order failed: ' + error;
@@ -500,7 +493,7 @@ pE.saveOrder = function(saveAndClose = false) {
  * Close playlist editor
  */
 pE.close = function() {
-
+    
     // Restore toastr positioning
     toastr.options.positionClass = this.toastrPosition;
 

@@ -227,7 +227,7 @@ $(document).ready(function() {
     });
 
     // Refresh some modules on window resize
-    $(window).resize($.debounce(500, function(e) {
+    $(window).resize(_.debounce(function(e) {
         if(e.target === window) {
 
             // Refresh navigators and viewer
@@ -235,7 +235,7 @@ $(document).ready(function() {
             lD.renderContainer(lD.navigatorEdit);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }
-    }));
+    }, 500));
 });
 
 /**
