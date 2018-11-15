@@ -20,6 +20,8 @@
  */
 namespace Xibo\Widget;
 
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class Embedded
  * @package Xibo\Widget
@@ -46,17 +48,18 @@ class Embedded extends ModuleWidget
     }
 
     /**
-     * Adds an Embedded Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/embedded/{playlistId}",
-     *  operationId="WidgetEmbeddedAdd",
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="widgetEmbeddedEdit",
      *  tags={"widget"},
-     *  summary="Add a Embedded Widget",
-     *  description="Add a new Embedded Widget to the specified playlist",
+     *  summary="Edit a Embedded Widget",
+     *  description="Edit Embedded Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add an Embedded Widget",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -117,35 +120,12 @@ class Embedded extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=200,
+     *      description="successful operation"
      *  )
      * )
-
-    public function add()
-    {
-        // Required Attributes
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
-        $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
-        $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
-        $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
-        $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
-
-        // Save the widget
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media in the Database
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
@@ -159,24 +139,21 @@ class Embedded extends ModuleWidget
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
 
         // Save the widget
+        $this->isValid();
         $this->saveWidget();
     }
 
-    /**
-     * @inheritdoc
-     */
+    /** @inheritdoc */
     public function isValid()
     {
-        // Can't be sure because the client does the rendering
-        return 2;
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
+
+        return self::$STATUS_PLAYER;
     }
 
-    /**
-     * GetResource
-     * Return the rendered resource to be used by the client (or a preview) for displaying this content.
-     * @param integer $displayId If this comes from a real client, this will be the display id.
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         // Construct the response HTML

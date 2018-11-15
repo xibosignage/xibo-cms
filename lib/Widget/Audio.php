@@ -141,13 +141,9 @@ class Audio extends ModuleWidget
         $this->download();
     }
 
-    /**
-     * Is this module valid
-     * @return int
-     */
+    /** @inheritdoc */
     public function isValid()
     {
-        // Yes
-        return 1;
+        return self::$STATUS_PLAYER;
     }
 }

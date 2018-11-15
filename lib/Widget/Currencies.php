@@ -121,37 +121,18 @@ class Currencies extends AlphaVantageBase
     }
 
     /**
-     * Validate
-     * @throws InvalidArgumentException
-     */
-    public function validate()
-    {
-        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
-            
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
-
-        // Validate for the items field
-        if ($this->getOption('items') == '')
-            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
-
-        if ($this->getOption('base') == '')
-            throw new InvalidArgumentException(__('Please provide a symbols in the base field.'), 'base');
-    }
-
-    /**
-     * Adds a Currencies Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/currencies/{playlistId}",
-     *  operationId="WidgetCurrenciesAdd",
+     * Edit Media
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="widgetCurrenciesEdit",
      *  tags={"widget"},
-     *  summary="Add a Currencies Widget",
-     *  description="Add a new Currencies Widget to the specified playlist",
+     *  summary="Edit a Currencies Widget",
+     *  description="Edit a new Currencies Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Currencies widget",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -310,39 +291,14 @@ class Currencies extends AlphaVantageBase
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
-     *  )
+     *      response=204,
+     *      description="successful operation"
+     *   )
      * )
-
-    public function add()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }*/
-
-    /**
-     * Edit Media
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    public function setCommonOptions()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -360,7 +316,7 @@ class Currencies extends AlphaVantageBase
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        
+
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
             $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
@@ -369,6 +325,10 @@ class Currencies extends AlphaVantageBase
             $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
             $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
         }
+
+        // Save the widget
+        $this->isValid();
+        $this->saveWidget();
     }
 
     /**
@@ -839,11 +799,20 @@ class Currencies extends AlphaVantageBase
     /** @inheritdoc */
     public function isValid()
     {
-        // Using the information you have in your module calculate whether it is valid or not.
-        // 0 = Invalid
-        // 1 = Valid
-        // 2 = Unknown
-        return 1;
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        // Validate for the items field
+        if ($this->getOption('items') == '')
+            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
+
+        if ($this->getOption('base') == '')
+            throw new InvalidArgumentException(__('Please provide a symbols in the base field.'), 'base');
+
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */

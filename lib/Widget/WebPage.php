@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+ * Copyright (C) 2006-2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -20,8 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 
 /**
  * Class WebPage
@@ -30,48 +30,33 @@ use Respect\Validation\Validator as v;
 class WebPage extends ModuleWidget
 {
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
         return 'webpage-designer-javascript';
     }
 
-    /**
-     * Install Files
-     */
+    /** @inheritdoc */
     public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-webpage-render.js')->save();
     }
-
-    public function validate()
-    {
-        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new InvalidArgumentException(__('Please enter a link'));
-
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'));
-
-        if ($this->getOption('modeid') == null)
-            throw new InvalidArgumentException(__('You must select a mode.'));
-    }
-
+    
     /**
-     * Adds a Webpage Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/webpage/{playlistId}",
-     *  operationId="WidgetWebpageAdd",
+     * Edit a Webpage Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetWebpageEdit",
      *  tags={"widget"},
-     *  summary="Add a Web page Widget",
-     *  description="Add a new Web page Widget to the specified playlist",
+     *  summary="Edit a Web page Widget",
+     *  description="Edit a Web page Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Web page to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -153,39 +138,13 @@ class WebPage extends ModuleWidget
      *      required=true
      *   ),
      *  @SWG\Response(
-     *      response=201,
+     *      response=204,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      @SWG\Schema(ref="#/definitions/Widget")
      *  )
      * )
-
-    public function add()
-    {
-        $this->setOption('xmds', true);
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('scaling', $this->getSanitizer()->getInt('scaling'));
-        $this->setOption('offsetLeft', $this->getSanitizer()->getInt('offsetLeft'));
-        $this->setOption('offsetTop', $this->getSanitizer()->getInt('offsetTop'));
-        $this->setOption('pageWidth', $this->getSanitizer()->getInt('pageWidth'));
-        $this->setOption('pageHeight', $this->getSanitizer()->getInt('pageHeight'));
-        $this->setOption('modeid', $this->getSanitizer()->getInt('modeId'));
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    } */
-    
-    /**
-     * Edit a Webpage Widget
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
@@ -203,17 +162,11 @@ class WebPage extends ModuleWidget
         $this->setOption('modeid', $this->getSanitizer()->getInt('modeId'));
 
         // Save the widget
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
-    /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
-     */
+    /** @inheritdoc */
     public function preview($width, $height, $scaleOverride = 0)
     {
         // If we are opening the web page natively on the device, then we cannot offer a preview
@@ -223,11 +176,7 @@ class WebPage extends ModuleWidget
         return parent::preview($width, $height, $scaleOverride);
     }
 
-    /**
-     * GetResource for Web page Media
-     * @param int $displayId
-     * @return mixed|string
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         // Load in the template
@@ -285,10 +234,18 @@ class WebPage extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function IsValid()
+    public function isValid()
     {
-        // Can't be sure because the client does the rendering
-        return 2;
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+            throw new InvalidArgumentException(__('Please enter a link'), 'uri');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
+        if ($this->getOption('modeid') == null)
+            throw new InvalidArgumentException(__('You must select a mode.'), 'modeid');
+
+        return self::$STATUS_PLAYER;
     }
 
     /** @inheritdoc */

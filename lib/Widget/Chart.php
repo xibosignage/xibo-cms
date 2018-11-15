@@ -223,39 +223,16 @@ class Chart extends ModuleWidget
         ];
     }
 
-    /**
-     * Validates the settings
-     * @override
-     * @throws InvalidArgumentException
-     */
-    public function validate()
+    /** @inheritdoc @override */
+    public function editForm()
     {
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        // Do we have a step provided?
+        $step = $this->getSanitizer()->getInt('step', 2);
 
-        if ($this->getWidgetId() != 0) {
-            // We must always have an X
-            if ($this->getColumnType('x-axis') === null)
-                throw new InvalidArgumentException(__('Please make sure you select an X-Axis'), 'config');
-
-            // We must always have a Y
-            if ($this->getColumnType('y-axis') === null)
-                throw new InvalidArgumentException(__('Please make sure you select an Y-Axis'), 'config');
-
-            // TODO: validate the contents of the config object to ensure we have all we need (an X and Y for example)
-            switch ($this->getOption('graphType')) {
-
-                case 'pie':
-                case 'doughnut':
-                    // Make sure we have an X and a Y and nothing else
-                    if ($this->getColumnType('series-identifier') !== null)
-                        throw new InvalidArgumentException(__('This type of chart does not support a Series Identifier'), 'config');
-
-                    break;
-
-                case '':
-                    throw new InvalidArgumentException(__('Please select a graph type'), 'graphType');
-            }
+        if ($step == 1 || !$this->hasDataSet()) {
+            return 'chart-form-edit-step1';
+        } else {
+            return 'chart-form-edit';
         }
     }
 
@@ -264,7 +241,7 @@ class Chart extends ModuleWidget
      *
      * @SWG\Put(
      *  path="/playlist/widget/{widgetId}",
-     *  operationId="WidgetChartEdit",
+     *  operationId="widgetChartEdit",
      *  tags={"widget"},
      *  summary="Edit a Chart Widget",
      *  description="Edit a new Chart Widget to the specified playlist",
@@ -275,6 +252,13 @@ class Chart extends ModuleWidget
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="step",
+     *      in="formData",
+     *      description="The Step Number being edited",
+     *      type="integer",
+     *      required=false
+     *  ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
@@ -434,102 +418,122 @@ class Chart extends ModuleWidget
      */
     public function edit()
     {
-        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId', 0));
+        // Do we have a step provided?
+        $step = $this->getSanitizer()->getInt('step', 2);
 
-        // Check we have permission to use this DataSetId
-        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
-            throw new InvalidArgumentException(__('You do not have permission to use that DataSet'), 'dataSetId');
+        if ($step == 1 || !$this->hasDataSet()) {
+            $dataSetId = $this->getSanitizer()->getInt('dataSetId');
 
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+            $this->setOption('dataSetId', $dataSetId);
 
-        $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
-        $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
-        $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
-        $this->setOption('legendPosition', $this->getSanitizer()->getString('legendPosition'));
-        $this->setOption('startYAtZero', $this->getSanitizer()->getCheckbox('startYAtZero', 0));
-        $this->setOption('title', $this->getSanitizer()->getString('title'));
-        $this->setOption('x-axis-label', $this->getSanitizer()->getString('x-axis-label'));
-        $this->setOption('y-axis-label', $this->getSanitizer()->getString('y-axis-label'));
+            // Validate Data Set Selected
+            if ($dataSetId == 0) {
+                throw new InvalidArgumentException(__('Please select a DataSet'), 'dataSetId');
+            }
 
-        // Handle the config
-        $columnTypes = $this->getSanitizer()->getStringArray('columnType');
-        $dataSetColumnIds = $this->getSanitizer()->getStringArray('dataSetColumnId');
-        $config = [];
+            // Check we have permission to use this DataSetId
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+                throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+            }
 
-        $i = -1;
-        foreach ($columnTypes as $columnType) {
-            $i++;
+        } else {
 
-            if ($columnType == '')
-                continue;
+            // Check we have permission to use this DataSetId
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
+                throw new InvalidArgumentException(__('You do not have permission to use that DataSet'), 'dataSetId');
 
-            // Store this column configuration
-            $config[] = [
-                'columnType' => $columnType,
-                'dataSetColumnId' => isset($dataSetColumnIds[$i]) ? $dataSetColumnIds[$i] : ''
-            ];
+            $this->setOption('name', $this->getSanitizer()->getString('name'));
+            $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+            $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+
+            $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
+            $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+            $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+            $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
+            $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
+            $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
+            $this->setOption('legendPosition', $this->getSanitizer()->getString('legendPosition'));
+            $this->setOption('startYAtZero', $this->getSanitizer()->getCheckbox('startYAtZero', 0));
+            $this->setOption('title', $this->getSanitizer()->getString('title'));
+            $this->setOption('x-axis-label', $this->getSanitizer()->getString('x-axis-label'));
+            $this->setOption('y-axis-label', $this->getSanitizer()->getString('y-axis-label'));
+
+            // Handle the config
+            $columnTypes = $this->getSanitizer()->getStringArray('columnType');
+            $dataSetColumnIds = $this->getSanitizer()->getStringArray('dataSetColumnId');
+            $config = [];
+
+            $i = -1;
+            foreach ($columnTypes as $columnType) {
+                $i++;
+
+                if ($columnType == '')
+                    continue;
+
+                // Store this column configuration
+                $config[] = [
+                    'columnType' => $columnType,
+                    'dataSetColumnId' => isset($dataSetColumnIds[$i]) ? $dataSetColumnIds[$i] : ''
+                ];
+            }
+
+            $this->setOption('config', json_encode($config));
+
+            // Handle colours
+            $seriesColors = $this->getSanitizer()->getStringArray('seriesColor');
+            $this->setOption('seriesColors', json_encode(array_filter($seriesColors)));
+
+            // Order and Filter criteria
+            $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
+            $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
+            $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
+            $orderClauseMapping = [];
+
+            $i = -1;
+            foreach ($orderClauses as $orderClause) {
+                $i++;
+
+                if ($orderClause == '')
+                    continue;
+
+                // Map the stop code received to the stop ref (if there is one)
+                $orderClauseMapping[] = [
+                    'orderClause' => $orderClause,
+                    'orderClauseDirection' => isset($orderClauseDirections[$i]) ? $orderClauseDirections[$i] : '',
+                ];
+            }
+
+            $this->setOption('orderClauses', json_encode($orderClauseMapping));
+
+            $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
+            $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
+            $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
+            $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
+            $filterClauseMapping = [];
+
+            $i = -1;
+            foreach ($filterClauses as $filterClause) {
+                $i++;
+
+                if ($filterClause == '')
+                    continue;
+
+                // Map the stop code received to the stop ref (if there is one)
+                $filterClauseMapping[] = [
+                    'filterClause' => $filterClause,
+                    'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
+                    'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
+                    'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
+                ];
+            }
+
+            $this->setOption('filterClauses', json_encode($filterClauseMapping));
+
+
+            $this->isValid();
         }
 
-        $this->setOption('config', json_encode($config));
-
-        // Handle colours
-        $seriesColors = $this->getSanitizer()->getStringArray('seriesColor');
-        $this->setOption('seriesColors', json_encode(array_filter($seriesColors)));
-
-        // Order and Filter criteria
-        $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
-        $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
-        $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
-        $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
-        $orderClauseMapping = [];
-
-        $i = -1;
-        foreach ($orderClauses as $orderClause) {
-            $i++;
-
-            if ($orderClause == '')
-                continue;
-
-            // Map the stop code received to the stop ref (if there is one)
-            $orderClauseMapping[] = [
-                'orderClause' => $orderClause,
-                'orderClauseDirection' => isset($orderClauseDirections[$i]) ? $orderClauseDirections[$i] : '',
-            ];
-        }
-
-        $this->setOption('orderClauses', json_encode($orderClauseMapping));
-
-        $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
-        $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
-        $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
-        $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
-        $filterClauseMapping = [];
-
-        $i = -1;
-        foreach ($filterClauses as $filterClause) {
-            $i++;
-
-            if ($filterClause == '')
-                continue;
-
-            // Map the stop code received to the stop ref (if there is one)
-            $filterClauseMapping[] = [
-                'filterClause' => $filterClause,
-                'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
-                'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
-                'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
-            ];
-        }
-
-        $this->setOption('filterClauses', json_encode($filterClauseMapping));
-
-
-        $this->validate();
         $this->saveWidget();
     }
 
@@ -902,17 +906,49 @@ class Chart extends ModuleWidget
 
         return $this->colorPallet;
     }
-    
+
+    /**
+     * Does this module have a DataSet yet?
+     * @return bool
+     */
+    private function hasDataSet()
+    {
+        return (v::notEmpty()->validate($this->getOption('dataSetId')));
+    }
+
     /** @inheritdoc */
     public function isValid()
     {
-        // We must at least have a URI
-        if (!v::notEmpty()->validate($this->getOption('dataSetId'))) {
-            return self::$STATUS_INVALID;
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
+        if ($this->getWidgetId() != 0) {
+            // We must always have an X
+            if ($this->getColumnType('x-axis') === null)
+                throw new InvalidArgumentException(__('Please make sure you select an X-Axis'), 'config');
+
+            // We must always have a Y
+            if ($this->getColumnType('y-axis') === null)
+                throw new InvalidArgumentException(__('Please make sure you select an Y-Axis'), 'config');
+
+            // TODO: validate the contents of the config object to ensure we have all we need (an X and Y for example)
+            switch ($this->getOption('graphType')) {
+
+                case 'pie':
+                case 'doughnut':
+                    // Make sure we have an X and a Y and nothing else
+                    if ($this->getColumnType('series-identifier') !== null)
+                        throw new InvalidArgumentException(__('This type of chart does not support a Series Identifier'), 'config');
+
+                    break;
+
+                case '':
+                    throw new InvalidArgumentException(__('Please select a graph type'), 'graphType');
+            }
         }
 
-        // We can be sure because every WebPlayer should render this graph corectly
-        return self::$STATUS_VALID;
+        // depends on whether we have a dataSet yet or not.
+        return ($this->hasDataSet()) ? self::$STATUS_VALID : self::$STATUS_INVALID;
     }
 
     /** @inheritdoc */

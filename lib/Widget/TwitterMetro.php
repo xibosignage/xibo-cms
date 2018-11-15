@@ -169,17 +169,18 @@ class TwitterMetro extends TwitterBase
     }
 
     /**
-     * Adds a Twitter Metro Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/twittermetro/{playlistId}",
-     *  operationId="WidgetTwitterMetroAdd",
+     * Edit Media
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetTwitterMetroEdit",
      *  tags={"widget"},
-     *  summary="Add a Twitter Metro Widget",
-     *  description="Add a new Twitter Metro Widget to the specified playlist",
+     *  summary="Edit a Twitter Metro Widget",
+     *  description="Edit a Twitter Metro Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Twitter Metro widget",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -339,41 +340,13 @@ class TwitterMetro extends TwitterBase
      *   ),
      *  @SWG\Response(
      *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      description="successful operation"
      *  )
      * )
-
-    public function add()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    } */
-
-    /**
-     * Edit Media
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /**
-     * Set common options from Request Params
-     */
-    private function setCommonOptions()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -396,9 +369,8 @@ class TwitterMetro extends TwitterBase
         $this->setOption('colorTemplateId', $this->getSanitizer()->getString('colorTemplateId'));
         $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
         $this->setOption('removeRetweets', $this->getSanitizer()->getCheckbox('removeRetweets'));
-        
-        if( $this->getOption('overrideColorTemplate') == 1 ){
-            
+
+        if ($this->getOption('overrideColorTemplate') == 1) {
             // Convert the colors array to string to be able to save it
             $stringColor = $this->getSanitizer()->getStringArray('color')[0];
             for ($i=1; $i < count($this->getSanitizer()->getStringArray('color')); $i++) {
@@ -407,6 +379,10 @@ class TwitterMetro extends TwitterBase
             }
             $this->setOption('templateColours', $stringColor);
         }
+
+        // Save the widget
+        $this->validate();
+        $this->saveWidget();
     }
 
     /**
@@ -717,12 +693,7 @@ class TwitterMetro extends TwitterBase
         return $return;
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     * @throws XiboException
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         // Make sure we are set up correctly
@@ -781,7 +752,7 @@ class TwitterMetro extends TwitterBase
         if ($backgroundColor != '') {
             $headContent .= '<style type="text/css">body { background-color: ' . $backgroundColor . ' }</style>';
         } else {
-          $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
+            $headContent .= '<style type="text/css"> body { background-color: transparent }</style>';
         }
         
         // Add the CSS if it isn't empty
@@ -836,11 +807,7 @@ class TwitterMetro extends TwitterBase
     /** @inheritdoc */
     public function isValid()
     {
-        // Using the information you have in your module calculate whether it is valid or not.
-        // 0 = Invalid
-        // 1 = Valid
-        // 2 = Unknown
-        return 1;
+        return self::$STATUS_VALID;
     }
 
     /**

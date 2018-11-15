@@ -850,7 +850,11 @@ class Layout extends Base
                     /* @var Widget $widget */
                     $module = $this->moduleFactory->createWithWidget($widget);
 
-                    $widget->isValid = (int)$module->isValid();
+                    try {
+                        $widget->isValid = (int)$module->isValid();
+                    } catch (InvalidArgumentException $invalidArgumentException) {
+                        $widget->isValid = 0;
+                    }
                 }
             }
 

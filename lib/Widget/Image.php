@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 
 /**
@@ -61,16 +62,6 @@ class Image extends ModuleWidget
     {
         // We use the same javascript as the data set view designer
         return 'image-designer-javascript';
-    }
-
-    /**
-     * Validate
-     */
-    public function validate()
-    {
-        // Validate
-        if (!v::intType()->min(1, true)->validate($this->getDuration()))
-            throw new \InvalidArgumentException(__('You must enter a duration.'));
     }
 
     /**
@@ -134,6 +125,8 @@ class Image extends ModuleWidget
      *      )
      *  )
      * )
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
@@ -145,17 +138,11 @@ class Image extends ModuleWidget
         $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
         $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));
 
-        $this->validate();
+        $this->isValid();
         $this->saveWidget();
     }
 
-    /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
-     */
+    /** @inheritdoc */
     public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
@@ -177,10 +164,7 @@ class Image extends ModuleWidget
         return $html;
     }
 
-    /**
-     * Hover preview
-     * @return string
-     */
+    /** @inheritdoc */
     public function hoverPreview()
     {
         // Default Hover window contains a thumbnail, media type and duration
@@ -286,13 +270,12 @@ class Image extends ModuleWidget
         }
     }
 
-    /**
-     * Is this module valid
-     * @return int
-     */
+    /** @inheritdoc */
     public function isValid()
     {
-        // Yes
-        return 1;
+        if (!v::intType()->min(1, true)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
+        return self::$STATUS_VALID;
     }
 }
