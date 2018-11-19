@@ -238,7 +238,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
     let newOrder = {};
 
     for(let index = 0;index < widgets.length;index++) {
-        const widget = lD.getElementByTypeAndId('widget', $(widgets[index]).data('widgetId'), 'region_' + playlist.regionId);
+        const widget = lD.getElementByTypeAndId('widget', $(widgets[index]).attr('id'), 'region_' + playlist.regionId);
 
         newOrder[widget.widgetId] = index + 1;
     }

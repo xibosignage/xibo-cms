@@ -380,8 +380,8 @@ pE.refreshDesigner = function() {
     }
 
     // Select the object that was previously selected is not selected and exists on the timeline and
-    if(!this.playlist.widgets['widget_' + this.selectedObject.widgetId].selected) {
-        this.selectObject(this.timeline.DOMObject.find('#widget_' + this.selectedObject.widgetId));
+    if(!this.playlist.widgets[this.selectedObject.id].selected) {
+        this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
     }
 };
 

@@ -136,7 +136,7 @@ PropertiesPanel.prototype.render = function(element, step) {
 
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
-    if(step !== undefined) {
+    if(step !== undefined && typeof step == 'number') {
         requestPath += '?step=' + step;
     } 
 

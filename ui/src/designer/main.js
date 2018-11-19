@@ -340,7 +340,7 @@ lD.refreshDesigner = function() {
  * Reload API data and replace the layout structure with the new value
  * @param {object} layout - previous layout
  */
-lD.reloadData = function(layout) {
+lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
     const layoutId = (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
@@ -354,14 +354,22 @@ lD.reloadData = function(layout) {
             if(res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
 
+
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
 
+                // To select an object that still doesn't exist
+                if(refreshBeforeSelect) {
+                    lD.refreshDesigner();
+                }
+                
                 // Select the same object ( that will refresh the layout too )
                 const selectObjectId = lD.selectedObject.id;
                 lD.selectedObject = {};
 
                 lD.selectObject($('#' + selectObjectId));
+            
+                
             } else {
                 lD.showErrorMessage();
             }
@@ -759,7 +767,9 @@ lD.dropItemAdd = function(droppable, draggable) {
 
                         // Behavior if successful 
                         toastr.success(res.message);
-                        lD.reloadData(lD.layout);
+
+                        lD.selectedObject.id = 'region_' + res.data.regionId;
+                        lD.reloadData(lD.layout, true);
                     }).catch((error) => { // Fail/error
 
                         lD.common.hideLoadingScreen('addRegionToLayout'); 
@@ -875,8 +885,11 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
             toastr.success(res.message);
 
             lD.timeline.resetZoom();
-            lD.reloadData(lD.layout);
 
+            // The new selected object as the id based on the previous selected region
+            lD.selectedObject.id = 'widget_' + lD.selectedObject.regionId + '_' + res.data.widgetId;
+            lD.reloadData(lD.layout, true);
+            
         }).catch((error) => { // Fail/error
 
             lD.common.hideLoadingScreen('addModuleToPlaylist');
@@ -931,8 +944,12 @@ lD.addMediaToPlaylist = function(playlistId, mediaId) {
 
         // Behavior if successful 
         toastr.success(res.message);
+
+        // The new selected object as the id based on the previous selected region
+        lD.selectedObject.id = 'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
+
         lD.timeline.resetZoom();
-        lD.reloadData(lD.layout);
+        lD.reloadData(lD.layout, true);
     }).catch((error) => { // Fail/error
 
         lD.common.hideLoadingScreen('addMediaToPlaylist');

@@ -138,7 +138,10 @@ Playlist.prototype.addElement = function(droppable, draggable) {
 
             pE.common.hideLoadingScreen();
 
-            // Behavior if successful            
+            // The new selected object
+            pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
+
+            // Behavior if successful
             toastr.success(res.message);
             pE.reloadData();
         }).catch((error) => { // Fail/error
@@ -174,16 +177,16 @@ Playlist.prototype.addElement = function(droppable, draggable) {
                     validExt: validExt
                 },
                 playlistId: playlistId
-            }, 
-            {
-                main: {
-                    label: translations.done,
-                    className: "btn-primary",
-                    callback: function() {
-                        pE.reloadData();
+            },
+                {
+                    main: {
+                        label: translations.done,
+                        className: "btn-primary",
+                        callback: function() {
+                            pE.reloadData();
+                        }
                     }
-                }
-            });
+                });
 
         } else { // Add widget to a region
 
@@ -216,6 +219,9 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             ).then((res) => { // Success
 
                 pE.common.hideLoadingScreen('addModuleToPlaylist');
+
+                // The new selected object
+                pE.selectedObject.id = 'widget_' + res.data.widgetId;
 
                 // Behavior if successful 
                 toastr.success(res.message);
@@ -272,12 +278,12 @@ Playlist.prototype.addElement = function(droppable, draggable) {
  */
 Playlist.prototype.deleteElement = function(elementType, elementId) {
 
-    pE.common.showLoadingScreen(); 
+    pE.common.showLoadingScreen();
 
     // Remove changes from the history array
-    return pE.manager.removeAllChanges(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']).then((res) =>  {
+    return pE.manager.removeAllChanges(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']).then((res) => {
 
-        pE.common.hideLoadingScreen(); 
+        pE.common.hideLoadingScreen();
 
         // Unselect selected object before deleting
         pE.selectObject(null, true);
@@ -295,11 +301,11 @@ Playlist.prototype.deleteElement = function(elementType, elementId) {
         );
 
     }).catch(function() {
-        pE.common.hideLoadingScreen(); 
-        
+        pE.common.hideLoadingScreen();
+
         toastr.error('Remove all changes failed!');
     });
-    
+
 };
 
 /**
@@ -326,12 +332,12 @@ Playlist.prototype.saveOrder = function(widgets) {
     let newOrder = {};
 
     for(let index = 0;index < widgets.length;index++) {
-        const widget = pE.getElementByTypeAndId('widget', $(widgets[index]).data('widgetId'));
+        const widget = pE.getElementByTypeAndId('widget', $(widgets[index]).attr('id'));
 
         newOrder[widget.widgetId] = index + 1;
     }
 
-    if(JSON.stringify(newOrder) === JSON.stringify(oldOrder) ) {
+    if(JSON.stringify(newOrder) === JSON.stringify(oldOrder)) {
         return Promise.resolve({
             message: 'List order not Changed!'
         });
@@ -347,7 +353,7 @@ Playlist.prototype.saveOrder = function(widgets) {
         {
             widgets: newOrder
         }
-    ).catch((error) => { 
+    ).catch((error) => {
         toastr.error('Playlist save order failed! ' + error);
     });
 

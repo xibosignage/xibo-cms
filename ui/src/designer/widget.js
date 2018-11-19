@@ -14,7 +14,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         this.id = 'widget_' + regionId + '_' + id; // widget_regionID_widgetID
         this.regionId = 'region_' + regionId;
     } else {
-        this.id = 'widget_' + id; // widget_regionID_widgetID
+        this.id = 'widget_' + id; // widget_widgetID
     }
 
     this.layoutObject = layoutObject;

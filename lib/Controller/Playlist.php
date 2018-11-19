@@ -677,8 +677,6 @@ class Playlist extends Base
 
             /* @var Widget $widget */
             $widget->module = $this->moduleFactory->createWithWidget($widget);
-
-            $widget->isValid = (int)$widget->module->isValid();
         }
 
         // Pass to view
