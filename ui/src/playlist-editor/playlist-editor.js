@@ -186,7 +186,7 @@ window.getXiboApp = function() {
  * @param {bool=} forceUnselect - Clean selected object
  */
 pE.selectObject = function(obj = null, forceUnselect = false) {
-
+    
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -205,6 +205,15 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
     } else {
         let newSelectedId = {};
         let newSelectedType = {};
+
+        // Unselect the previous selectedObject object if still selected
+        if(this.selectedObject.selected) {
+            if(this.selectedObject.type == 'widget') {
+                if(this.playlist.widgets[this.selectedObject.id]) {
+                    this.playlist.widgets[this.selectedObject.id].selected = false;
+                }
+            }
+        }
 
         // If there's no selected object, select a default one ( or nothing if widgets are empty)
         if(obj == null || typeof obj.data('type') == 'undefined') {
@@ -225,18 +234,6 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             // Get object properties from the DOM ( or set to layout if not defined )
             newSelectedId = obj.attr('id');
             newSelectedType = obj.data('type');
-
-            // Unselect the previous selectedObject object if still selected
-            if(this.selectedObject.selected) {
-
-                if(this.selectedObject.type == 'widget') {
-
-                    if(this.playlist.widgets[this.selectedObject.id]) {
-                        this.playlist.widgets[this.selectedObject.id].selected = false;
-                    }
-
-                }
-            }
 
             // Select new object
             if(newSelectedType === 'widget') {
@@ -356,7 +353,7 @@ pE.deleteObject = function(objectType, objectId) {
  * Refresh designer
  */
 pE.refreshDesigner = function() {
-
+    
     // Remove temporary data
     this.clearTemporaryData();
     
@@ -366,9 +363,20 @@ pE.refreshDesigner = function() {
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
     if(!$.isEmptyObject(pE.playlist.widgets)) {
-        // Render timeline and properties panel
-        this.renderContainer(this.propertiesPanel, this.selectedObject);
+
+        // Render timeline
         this.renderContainer(this.timeline);
+
+        // Select the object that was previously selected if it's not selected and exists on the timeline
+        if(this.playlist.widgets[this.selectedObject.id] !== undefined && !this.playlist.widgets[this.selectedObject.id].selected) {
+            this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
+        } else if(this.playlist.widgets[this.selectedObject.id] === undefined) {
+            //Prevent nothing selected
+            this.selectObject();
+        } else {
+            // Render properties panel
+            this.renderContainer(this.propertiesPanel, this.selectedObject);
+        }
 
         this.editorDiv.find('#editing-container').show();
         this.editorDiv.find('#dropzone-container').hide();
@@ -377,11 +385,6 @@ pE.refreshDesigner = function() {
 
         this.editorDiv.find('#editing-container').hide();
         this.editorDiv.find('#dropzone-container').show();
-    }
-
-    // Select the object that was previously selected is not selected and exists on the timeline and
-    if(!this.playlist.widgets[this.selectedObject.id].selected) {
-        this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
     }
 };
 
