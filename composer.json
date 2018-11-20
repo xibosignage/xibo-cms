@@ -57,7 +57,7 @@
     "league/oauth2-client": "~1.0",
     "james-heinrich/getid3": "^1.9",
     "onelogin/php-saml": "3.0.0.x-dev",
-    "fguillot/picofeed": "@stable",
+    "infostars/picofeed": "dev-master",
     "xibosignage/xibo-xmr": "0.*",
     "tedivm/stash": "^0.14.1",
     "akrabat/rka-slim-controller": "^2.0",
