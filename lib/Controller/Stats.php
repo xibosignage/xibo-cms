@@ -788,6 +788,7 @@ class Stats extends Base
 
         $displayId = $this->getSanitizer()->getInt('displayId');
         $displayGroupId = $this->getSanitizer()->getInt('displayGroupId');
+        $tags = $this->getSanitizer()->getString('tags');
         $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
 
         // What if the fromdt and todt are exactly the same?
@@ -824,14 +825,33 @@ class Stats extends Base
         $SQL = '
             SELECT display.display, display.displayId,
             SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration,
-            :end - :start as filter
-              FROM `displayevent`
+            :end - :start as filter ';
+
+        if ($tags != '') {
+            $SQL .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
+              FROM tag
+                INNER JOIN lktagdisplaygroup
+                  ON lktagdisplaygroup.tagId = tag.tagId
+                WHERE lktagdisplaygroup.displayGroupId = displaygroup.DisplayGroupID
+                GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
+        }
+
+
+        $SQL .= 'FROM `displayevent`
                 INNER JOIN `display`
                 ON display.displayId = `displayevent`.displayId ';
 
         if ($displayGroupId != 0) {
             $SQL .= 'INNER JOIN `lkdisplaydg`
-                ON lkdisplaydg.DisplayID = display.displayid ';
+                        ON lkdisplaydg.DisplayID = display.displayid ';
+        }
+
+        if ($tags != '') {
+            $SQL .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup`
+                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
+                         AND `displaygroup`.isDisplaySpecific = 1 ';
         }
 
         $SQL .= 'WHERE `start` <= :end
@@ -843,6 +863,44 @@ class Stats extends Base
             $SQL .= '
                      AND lkdisplaydg.displaygroupid = :displayGroupId ';
             $params['displayGroupId'] = $displayGroupId;
+        }
+
+        if ($tags != '') {
+            if (trim($tags) === '--no-tag') {
+                $SQL .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
+                $SQL .= " AND `displaygroup`.displaygroupId IN (
+                SELECT `lktagdisplaygroup`.displaygroupId
+                  FROM tag
+                    INNER JOIN `lktagdisplaygroup`
+                    ON `lktagdisplaygroup`.tagId = tag.tagId
+                ";
+                $i = 0;
+
+                foreach (explode(',', $tags) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $SQL .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    else
+                        $SQL .= ' OR `tag` ' . $operator . ' :tags' . $i;
+
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $SQL .= " ) ";
+            }
         }
 
         if ($displayId != 0) {
