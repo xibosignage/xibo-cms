@@ -451,6 +451,10 @@ class Task extends Base
         // Process timeouts
         $this->pollProcessTimeouts();
 
+        // Keep track of tasks we've run during this poll period
+        // we will use this as a catch all so that we do not run a task more than once.
+        $tasksRun = [];
+
         // The getting/updating of tasks runs in a separate DB connection
         $sqlForActiveTasks = 'SELECT taskId, `schedule`, runNow, lastRunDt FROM `task` WHERE isActive = 1 AND `status` <> :status ORDER BY lastRunDuration';
 
@@ -469,6 +473,12 @@ class Task extends Base
             foreach ($tasks as $task) {
                 /** @var \Xibo\Entity\Task $task */
                 $taskId = $task['taskId'];
+
+                // Skip tasks that have already been run
+                if (in_array($taskId, $tasksRun)) {
+                    continue;
+                }
+
                 $cron = \Cron\CronExpression::factory($task['schedule']);
 
                 // Is the next run date of this event earlier than now, or is the task set to runNow
@@ -521,6 +531,10 @@ class Task extends Base
 
                     // We have run a task
                     $taskRun = true;
+
+                    // We've run this task during this polling period
+                    $tasksRun[] = $taskId;
+
                     break;
                 }
             }

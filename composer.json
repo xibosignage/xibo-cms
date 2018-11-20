@@ -39,6 +39,9 @@
   },
   "require": {
     "php": ">=5.5.9",
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-zip": "*",
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",

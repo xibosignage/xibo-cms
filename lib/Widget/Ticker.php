@@ -1339,8 +1339,9 @@ class Ticker extends ModuleWidget
 
             // Process queued downloads
             $this->mediaFactory->processDownloads(function($media) {
+                /** @var \Xibo\Entity\Media $media */
                 // Success
-                $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+                $this->getLog()->debug('Successfully processed ' . $media->mediaId . '. ' . (($media->isSaveRequired) ? ' Downloaded.' : 'Download not required'));
 
                 // Tag this layout with this file
                 $this->assignMedia($media->mediaId);
