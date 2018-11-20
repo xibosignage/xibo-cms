@@ -351,7 +351,7 @@ class DisplayFactory extends BaseFactory
 
         if ($this->getSanitizer()->getInt('lastAccessed', $filterBy) !== null) {
             $body .= ' AND display.lastAccessed > :lastAccessed ';
-            $params['lastAccessed'] = date("U", $this->getSanitizer()->getInt('lastAccessed', $filterBy));
+            $params['lastAccessed'] = $this->getSanitizer()->getInt('lastAccessed', $filterBy);
         }
 
         // Exclude a group?

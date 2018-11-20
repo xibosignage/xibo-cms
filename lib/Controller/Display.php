@@ -481,7 +481,7 @@ class Display extends Base
             'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
             'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
-            'lastAccessed' => $this->getSanitizer()->getDate('lastAccessed', '1899-01-01 00:00:00')->format('U')
+            'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null
         ];
 
         // Get a list of displays

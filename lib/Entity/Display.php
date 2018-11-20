@@ -476,8 +476,6 @@ class Display implements \JsonSerializable
         // Check if there are display slots available
         $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
-        $this->isDisplaySlotAvailable();
-
         if (!$this->isDisplaySlotAvailable())
             throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
 
