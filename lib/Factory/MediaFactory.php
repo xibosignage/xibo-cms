@@ -194,9 +194,10 @@ class MediaFactory extends BaseFactory
      * @param $name
      * @param $uri
      * @param $expiry
+     * @param array $requestOptions
      * @return Media
      */
-    public function queueDownload($name, $uri, $expiry)
+    public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
         $this->getLog()->debug('Queue download of: ' . $uri);
 
@@ -207,7 +208,7 @@ class MediaFactory extends BaseFactory
         $media->expires = $expiry;
 
         // Save the file, but do not download yet.
-        $media->saveAsync();
+        $media->saveAsync(['requestOptions' => $requestOptions]);
 
         // Add to our collection of queued downloads
         // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
@@ -269,9 +270,10 @@ class MediaFactory extends BaseFactory
                 foreach ($queue as $media) {
                     $url = $media->downloadUrl();
                     $sink = $media->downloadSink();
+                    $requestOptions = array_merge($media->downloadRequestOptions(),  ['save_to' => $sink]);
 
-                    yield function () use ($client, $url, $sink) {
-                        return $client->getAsync($url, ['save_to' => $sink]);
+                    yield function () use ($client, $url, $requestOptions) {
+                        return $client->getAsync($url, $requestOptions);
                     };
                 }
             };
