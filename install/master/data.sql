@@ -110,7 +110,7 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
-  (1, 'dashboard', 'Dashboard', 1),
+  (1, 'icondashboard', 'Icon Dashboard', 1),
   (2, 'schedule', 'Schedule', 1),
   (3, 'mediamanager', 'Media Dashboard', 1),
   (4, 'layout', 'Layout', 1),
