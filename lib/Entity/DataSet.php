@@ -776,6 +776,9 @@ class DataSet implements \JsonSerializable
             $column->delete();
         }
 
+        // Delete any dataSet rss
+        $this->getStore()->update('DELETE FROM `datasetrss` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
+
         // Delete the data set
         $this->getStore()->update('DELETE FROM `dataset` WHERE dataSetId = :dataSetId', ['dataSetId' => $this->dataSetId]);
 

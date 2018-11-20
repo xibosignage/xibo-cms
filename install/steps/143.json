@@ -3,6 +3,14 @@
   "appVersion": "1.8.12",
   "steps": [
     {
+      "step": "DataSet RSS Definition",
+      "action": "CREATE TABLE `datasetrss` (id int PRIMARY KEY AUTO_INCREMENT, dataSetId int NOT NULL, psk varchar(254) NOT NULL, title varchar(254), author varchar(254), titleColumnId int, summaryColumnId int, contentColumnId int, publishedDateColumnId int, sort text, filter text) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "DataSet RSS Keys",
+      "action": "ALTER TABLE `datasetrss` ADD CONSTRAINT datasetrss_dataset_DataSetID_fk FOREIGN KEY (dataSetId) REFERENCES dataset (DataSetID);"
+    },
+    {
       "step": "Add a setting for allowing users to request a password reminder.",
       "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reset enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reset', '', 50, 'Off', 1, 'string'); "
     },

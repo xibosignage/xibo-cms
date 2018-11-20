@@ -1166,3 +1166,18 @@ CREATE TABLE IF NOT EXISTS `requiredfile` (
   `size` BIGINT(20) DEFAULT 0 NOT NULL,
   PRIMARY KEY (`rfId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE datasetrss (
+  id int PRIMARY KEY AUTO_INCREMENT,
+  dataSetId int NOT NULL,
+  psk varchar(254) NOT NULL,
+  title varchar(254),
+  author varchar(254),
+  titleColumnId int,
+  summaryColumnId int,
+  contentColumnId int,
+  publishedDateColumnId int,
+  sort text,
+  filter text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
