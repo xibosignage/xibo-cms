@@ -119,6 +119,10 @@ class WidgetSyncTask implements TaskInterface
 
                                 $this->log->debug('Took ' . $duration . ' seconds to check and/or cache widgetId ' . $widget->widgetId . ' for displayId ' . $displayId);
 
+                                // Commit so that any images we've downloaded have their cache times updated for the next request
+                                // this makes sense because we've got a file cache that is already written out.
+                                $this->store->commitIfNecessary();
+
                                 // Add a little break in here
                                 usleep(10000);
                             }

@@ -54,6 +54,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @var int[] */
     private $displayIdsRequiringActions = [];
 
+    /** @var string[] */
+    private $keysProcessed = [];
+
     /** @inheritdoc */
     public function __construct($config, $log, $store, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory)
     {
@@ -439,6 +442,11 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     {
         $this->log->debug('Notify by PlaylistId ' . $playlistId);
 
+        if (in_array('playlist_' . $playlistId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $playlistId . ' skipping this time.');
+            return;
+        }
+
         $sql = '
             SELECT DISTINCT display.displayId, 
                 schedule.eventId, 
@@ -526,6 +534,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         foreach ($this->store->select($sql, $params) as $row) {
 
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                continue;
+            }
+
             // Is this schedule active?
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
@@ -546,5 +560,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($this->collectRequired)
                 $this->displayIdsRequiringActions[] = $row['displayId'];
         }
+
+        $this->keysProcessed[] = 'playlist_' . $playlistId;
     }
 }
