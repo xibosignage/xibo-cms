@@ -174,6 +174,9 @@ class Ticker extends ModuleWidget
 
             if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new \InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
+
+            if (!v::intType()->min(0)->validate($this->getOption('updateIntervalImages')))
+                throw new \InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'));
         }
     }
 
@@ -238,6 +241,13 @@ class Ticker extends ModuleWidget
      *      name="updateInterval",
      *      in="formData",
      *      description="EDIT Only - Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateIntervalImages",
+     *      in="formData",
+     *      description="EDIT Only - Update interval for downloaded Images, in minutes",
      *      type="integer",
      *      required=false
      *   ),
@@ -451,6 +461,7 @@ class Ticker extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
+        $this->setOption('updateIntervalImages', 240);
         $this->setOption('speed', 2);
 
         if ($this->getOption('sourceId') == 2)
@@ -477,6 +488,7 @@ class Ticker extends ModuleWidget
         $this->setOption('xmds', true);
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+        $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages', 240));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
@@ -932,7 +944,7 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', 240))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {
@@ -1005,7 +1017,7 @@ class Ticker extends ModuleWidget
                         // image url
                         if ($link != NULL) {
                             // Grab the profile image
-                            $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+                            $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expiresImage);
 
                             $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" ' . $attribute . ' />';
                         }
@@ -1072,7 +1084,7 @@ class Ticker extends ModuleWidget
 
                                 if (!(empty($link))) {
                                     // Grab the image
-                                    $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+                                    $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expiresImage);
 
                                     $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
                                 } else {
@@ -1217,7 +1229,7 @@ class Ticker extends ModuleWidget
         $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', 240))->format('U');
 
         // Combine the column id's with the dataset data
         $matches = '';
@@ -1305,7 +1317,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
+                            $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expiresImage);
 
                             $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
 
