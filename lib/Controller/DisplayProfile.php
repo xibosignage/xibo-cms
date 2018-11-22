@@ -244,7 +244,7 @@ class DisplayProfile extends Base
         $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
         $displayProfile->userId = $this->getUser()->userId;
 
-        $combined = array();
+        $combined = [];
 
         $displayProfile->save();
 
@@ -276,11 +276,11 @@ class DisplayProfile extends Base
             }
 
             // Add to the combined array
-            $combined[] = array(
+            $combined[] = [
                 'name' => $setting['name'],
                 'value' => $value,
                 'type' => $setting['type']
-            );
+            ];
         }
 
         // Recursively merge the arrays and update

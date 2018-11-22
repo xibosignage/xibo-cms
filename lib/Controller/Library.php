@@ -1641,10 +1641,7 @@ class Library extends Base
 
     /**
      * Copies a Media
-     * @param int $mediaId
      *
-     * @throws NotFoundException
-     * @throws XiboException
      * @SWG\Post(
      *  path="/library/copy/{mediaId}",
      *  operationId="mediaCopy",
@@ -1683,6 +1680,11 @@ class Library extends Base
      *      )
      *  )
      * )
+     *
+     * @param int $mediaId
+     *
+     * @throws NotFoundException
+     * @throws XiboException
      */
     public function copy($mediaId)
     {

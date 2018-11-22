@@ -47,6 +47,7 @@
                         {% elseif col.dataTypeId == 3 %}
                             {{ forms.dateTime(fieldId, col.heading) }}
                         {% elseif col.dataTypeId == 5 %}
+                            {% set selectImage %}{% trans "Select an Image" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-search-url", value: urlFor("library.search") },
                                 { name: "data-search-term", value: "media" },
@@ -54,7 +55,7 @@
                                 { name: "data-text-property", value: "name" },
                                 { name: "data-filter-options", value: '{"type":"image"}' },
                                 { name: "data-allow-clear", value: "true"},
-                                { name: "data-placeholder", value: "Select an Image"}
+                                { name: "data-placeholder", value: selectImage}
                             ] %}
                             {{ forms.dropdown(fieldId, "single", col.heading, "", null, "mediaId", "name", "", "pagedSelect", "", "", "", attributes) }}
                         {% elseif col.listContent != "" %}
