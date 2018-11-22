@@ -29,7 +29,7 @@
     },
     {
       "step": "Rename Dashboard to Icon Dashboard",
-      "action": "UPDATE `pages` set title = 'Icon Dashboard', name = 'icondashboard' WHERE pageID = 1;"
+      "action": "UPDATE `pages` set title = 'Icon Dashboard', name = 'icondashboard' WHERE name = 'dashboard';"
     },
     {
       "step": "Change the DataSet View module name",
