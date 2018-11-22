@@ -31,6 +31,7 @@ use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Helper\Environment;
@@ -98,6 +99,32 @@ class Ticker extends ModuleWidget
     public function getFilterClause()
     {
         return json_decode($this->getOption('filterClauses', "[]"), true);
+    }
+
+    /**
+     * Form for updating the module settings
+     */
+    public function settingsForm()
+    {
+        return 'ticker-form-settings';
+    }
+
+    /**
+     * Process any module settings
+     * @throws InvalidArgumentException
+     */
+    public function settings()
+    {
+        $updateIntervalImages = $this->getSanitizer()->getString('updateIntervalImages', 240);
+
+        if ($this->module->enabled != 0) {
+            if ($updateIntervalImages < 0)
+                throw new InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'), 'updateIntervalImages');
+        }
+
+        $this->module->settings['updateIntervalImages'] = $updateIntervalImages;
+
+        return $this->module->settings;
     }
 
     /**
@@ -461,7 +488,7 @@ class Ticker extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
-        $this->setOption('updateIntervalImages', 240);
+        $this->setOption('updateIntervalImages', $this->module->settings['updateIntervalImages']);
         $this->setOption('speed', 2);
 
         if ($this->getOption('sourceId') == 2)
@@ -488,7 +515,7 @@ class Ticker extends ModuleWidget
         $this->setOption('xmds', true);
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-        $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages', 240));
+        $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages', $this->module->settings['updateIntervalImages']));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
@@ -944,7 +971,7 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', 240))->format('U');
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->module->settings['updateIntervalImages']))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {
@@ -1229,7 +1256,7 @@ class Ticker extends ModuleWidget
         $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', 240))->format('U');
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->module->settings['updateIntervalImages']))->format('U');
 
         // Combine the column id's with the dataset data
         $matches = '';
