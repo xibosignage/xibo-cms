@@ -305,7 +305,7 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (10, 'Xibo\\Entity\\Notification'),
 (11, 'Xibo\\Entity\\DayPart');
 
-INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');
+INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access');
 
 INSERT INTO `permission` (entityId, groupId, objectId, view, edit, `delete`) VALUES
   (1, 1, 1, 1, 0, 0),

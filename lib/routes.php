@@ -299,6 +299,12 @@ $app->get('/dataset/data/:id', '\Xibo\Controller\DataSetData:grid')->name('dataS
 $app->post('/dataset/data/:id', '\Xibo\Controller\DataSetData:add')->name('dataSet.data.add');
 $app->put('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:edit')->name('dataSet.data.edit');
 $app->delete('/dataset/data/:id/:rowId', '\Xibo\Controller\DataSetData:delete')->name('dataSet.data.delete');
+// RSS
+$app->get('/dataset/:id/rss', '\Xibo\Controller\DataSetRss:grid')->name('dataSet.rss.search');
+$app->post('/dataset/:id/rss', '\Xibo\Controller\DataSetRss:add')->name('dataSet.rss.add');
+$app->put('/dataset/:id/rss/:rssId', '\Xibo\Controller\DataSetRss:edit')->name('dataSet.rss.edit');
+$app->delete('/dataset/:id/rss/:rssId', '\Xibo\Controller\DataSetRss:delete')->name('dataSet.rss.delete');
+$app->get('/rss/:psk', '\Xibo\Controller\DataSetRss:feed')->name('dataSet.rss.feed');
 
 /**
  * Statistics

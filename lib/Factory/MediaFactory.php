@@ -199,12 +199,12 @@ class MediaFactory extends BaseFactory
      */
     public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
-        $this->getLog()->debug('Queue download of: ' . $uri);
-
         $media = $this->createModuleFile($name, $uri);
         $media->isRemote = true;
 
-        // We update the desired expiry here - isSavedRequired is tested agains the original value
+        $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
+
+        // We update the desired expiry here - isSavedRequired is tested against the original value
         $media->expires = $expiry;
 
         // Save the file, but do not download yet.
@@ -213,6 +213,9 @@ class MediaFactory extends BaseFactory
         // Add to our collection of queued downloads
         // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
         if ($media->isSaveRequired) {
+
+            $this->getLog()->debug('We are required to download as this file is either expired or not existing');
+
             $queueItem = true;
             if ($media->getId() != null) {
                 // Existing media, check to see if we're already queued
@@ -230,6 +233,8 @@ class MediaFactory extends BaseFactory
 
         } else {
             // Queue in the not required download queue
+            $this->getLog()->debug('Download not required as this file exists and is up to date. Expires = ' . $media->getOriginalValue('expires'));
+
             $queueItem = true;
             if ($media->getId() != null) {
                 // Existing media, check to see if we're already queued
@@ -315,6 +320,8 @@ class MediaFactory extends BaseFactory
 
         // Handle the downloads that did not require downloading
         if (count($this->remoteDownloadNotRequiredQueue) > 0) {
+            $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadNotRequiredQueue) . ' items which do not need downloading.');
+
             foreach ($this->remoteDownloadNotRequiredQueue as $item) {
                 // If a success callback has been provided, call it
                 if ($success !== null && is_callable($success))
