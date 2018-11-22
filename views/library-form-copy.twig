@@ -46,7 +46,7 @@
 
                 {% set title %}{% trans "Tags" %}{% endset %}
                 {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                {{ forms.inputWithTags("tags", title, '', helpText) }}
+                {{ forms.inputWithTags("tags", title, media.tags, helpText) }}
             </form>
         </div>
     </div>
