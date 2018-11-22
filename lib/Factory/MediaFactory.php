@@ -432,7 +432,7 @@ class MediaFactory extends BaseFactory
      * @param int $edited
      * @return array[Media]
      */
-    public function getByLayoutId($layoutId, $edited)
+    public function getByLayoutId($layoutId, $edited = -1)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited]);
     }
