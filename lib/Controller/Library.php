@@ -456,6 +456,13 @@ class Library extends Base
                     'url' => $this->urlFor('library.edit.form', ['id' => $media->mediaId]),
                     'text' => __('Edit')
                 );
+
+                // Copy Button
+                $media->buttons[] = array(
+                    'id' => 'media_button_copy',
+                    'url' => $this->urlFor('library.copy.form', ['id' => $media->mediaId]),
+                    'text' => __('Copy')
+                );
             }
 
             if ($user->checkDeleteable($media)) {
@@ -1609,5 +1616,102 @@ class Library extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($layouts);
+    }
+
+    /**
+     * Copy Media form
+     * @param $mediaId
+     * @throws NotFoundException
+     */
+    public function copyForm($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'library-form-copy';
+        $this->getState()->setData([
+            'media' => $media,
+            'help' => $this->getHelp()->link('Media', 'Copy')
+        ]);
+    }
+
+    /**
+     * Copies a Media
+     * @param int $mediaId
+     *
+     * @throws NotFoundException
+     * @throws XiboException
+     * @SWG\Post(
+     *  path="/library/copy/{mediaId}",
+     *  operationId="mediaCopy",
+     *  tags={"library"},
+     *  summary="Copy Media",
+     *  description="Copy a Media, providing a new name and tags if applicable",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The media ID to Copy",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name for the new Media",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="The Optional tags for new Media",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    public function copy($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Load the media for Copy
+        $media->load();
+        $media = clone $media;
+
+        // Set new Name and tags
+        $media->name = $this->getSanitizer()->getString('name');
+        $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        // Set the Owner to user making the Copy
+        $media->setOwner($this->getUser()->userId);
+
+        // Save the new Media
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Copied as %s'), $media->name),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
     }
 }
