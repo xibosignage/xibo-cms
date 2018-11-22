@@ -26,7 +26,7 @@
                     <div class="tab-pane" id="general">
                         {% set generatedId %}{{ random() }}{% endset %}
 
-                        <div class="ckeditor_controls">
+                        <div class="ckeditor_controls" data-linked-to="ta_text{{ generatedId }}">
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>

@@ -14,8 +14,17 @@
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-        // Set up both text editors
-        formHelpers.setupCKEditor(this, null, 'template', false, '[Subject] - [Body]');
+        // Using form Editor
+        if($(this).data('formEditorOnly')) {
+            formHelpers.setupCKEditor(this, null, 'template', false, '[Subject] - [Body]');
+        } else { // Using viewer Editor
+            
+            // Hide default form input
+            $(this).find('.html-editor-group').hide();
+
+            // Show edit button on the viewer
+            $(this).data().viewerObject.setupInlineEditor('template', true, '[Subject] - [Body]');
+        }
 
         formHelpers.setupCKEditor(this, null, 'noDataMessage');
     }

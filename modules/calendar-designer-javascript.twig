@@ -31,12 +31,49 @@
         // Set template field, using the helper
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useCurrentTemplate', '.current-event-template');
 
-        // Set up text editors
-        formHelpers.setupCKEditor(this, null, 'ta_text');
+        const self = this;
+        const formEditorSetup  = function() {
 
-        formHelpers.setupCKEditor(this, null, 'currentEventTemplate');
+            // Main editor depends on the inline editor or the advanced option
+            if(!$(self).data('formEditorOnly')) { // Using inline Editor
+                // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
+                $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #advancedEditor').is(':checked'));
 
-        formHelpers.setupCKEditor(this, null, 'noDataMessage');
+                // Show template group if override template is on, and if the advance editor is off
+                $(self).find('.template-group-editor').toggle(!$(self).find('form #advancedEditor').is(':checked')); 
+            } else {
+                // Using form editor
+                if($(self).find('form #advancedEditor').is(':checked')) {
+                    formHelpers.setupCKEditor(self, null, 'ta_text');
+                } else {
+                    var textAreaId = $(self).find('textarea[name="ta_text"]').attr('id');
+                    formHelpers.destroyCKEditor(textAreaId);
+                }
+                
+            }
+
+            // Alternative template just depends on the advanced Editor option
+            if($(self).find('form #advancedEditor').is(':checked')) {
+                formHelpers.setupCKEditor(self, null, 'currentEventTemplate');
+            } else { 
+                var textAreaId2 = $(self).find('textarea[name="currentEventTemplate"]').attr('id');
+                formHelpers.destroyCKEditor(textAreaId2);
+            }
+        };
+
+        // Initialize editor
+        formEditorSetup();
+
+        // Setup form and have a callback to restart the CKEditor instance
+        formHelpers.setupForm(this, function() {
+            formEditorSetup();
+        }, 'ta_text');
+
+        // Setup form and have a callback to restart the CKEditor instance
+        formHelpers.setupForm(this, null, 'ta_text');
+            
+        // Setup alternative template for the code snippets
+        formHelpers.setupForm(this, null, 'currentEventTemplate');
     }
 
     // Runs before form submit
@@ -46,69 +83,4 @@
         formHelpers.updateCKEditor();
     }
 
-    function calendarFormOpen(dialog, extra) {
-        text_callback(dialog, extra);
-
-        var $layout = $("#layout");
-
-        // Choose a complementary color
-        var color = $c.complement($layout.data().backgroundColor);
-
-        // Apply some CSS to set a scale for these editors
-        var scale = $layout.attr('designer_scale');
-        var regionWidth = $("#region_" + $layout.data().currentRegionId).attr("width");
-        var regionHeight = $("#region_" + $layout.data().currentRegionId).attr("height");
-
-        var applyContentsToIframe = function(field) {
-            //console.log('Applying iframe adjustments to ' + field);
-            $("#cke_" + field + " iframe").contents().find("head").append("" +
-                "<style>" +
-                "body {" +
-                "width: " + regionWidth + "px; " +
-                "height: " + regionHeight + "px; border:2px solid red; " +
-                "background: " + $('#layout').css('background-color') + "; " +
-                "transform: scale(" + scale + "); " +
-                "transform-origin: 0 0; }" +
-                "h1, h2, h3, h4, p { margin-top: 0;}" +
-                "</style>");
-        };
-
-        var convertLibraryReferences = function(data) {
-            // We need to convert any library references [123] to their full URL counterparts
-            // we leave well alone non-library references.
-            var regex = /\[[0-9]+]/gi;
-
-            data = data.replace(regex, function (match) {
-                var inner = match.replace("]", "").replace("[", "");
-                return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
-            });
-
-            return data;
-        };
-
-        // Conjure up a text editor
-        CKEDITOR.replace("currentEventTemplate", CKEDITOR_DEFAULT_CONFIG);
-
-        // Bind to instance ready so that we can adjust some things about the editor.
-        CKEDITOR.instances["currentEventTemplate"].on('instanceReady', function() {
-            // Apply scaling to this editor instance
-            applyContentsToIframe("currentEventTemplate");
-
-            // Reapply the background style after switching to source view and back to the normal editing view
-            CKEDITOR.instances["currentEventTemplate"].on('contentDom', function () { applyContentsToIframe("currentEventTemplate") });
-
-            // Get the template data
-            var data = CKEDITOR.instances["currentEventTemplate"].getData();
-
-            // Default config for fonts
-            if (data === "") {
-                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>";
-            }
-
-            // Handle initial template set up
-            data = convertLibraryReferences(data);
-
-            CKEDITOR.instances["currentEventTemplate"].setData(data);
-        });
-    }
 </script>

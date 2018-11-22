@@ -39,7 +39,40 @@
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');
 
-            tickerConfigureQueryBuilder(this);
+                    // Configure the query for sorting and filtering
+            formHelpers.configureQueryBuilder(this, datasetQueryBuilderTranslations);
+
+            const self = this;
+            const formEditorSetup  = function() {
+
+                if(!$(self).data('formEditorOnly')) { // Using inline Editor
+                    // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
+                    $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #advancedEditor').is(':checked'));
+
+                    // Show template group if override template is on, and if the advance editor is off
+                    $(self).find('.template-group-editor').toggle(!$(self).find('form #advancedEditor').is(':checked')); 
+                } else {
+                    // Using form editor
+                    if($(self).find('form #advancedEditor').is(':checked')) {
+                        formHelpers.setupCKEditor(self, null, 'ta_text');
+                    } else {
+                        var textAreaId = $(self).find('textarea[name="ta_text"]').attr('id');
+                        formHelpers.destroyCKEditor(textAreaId);
+                    }
+                    
+                }
+            };
+
+            // Initialize editor
+            formEditorSetup();
+
+            // Setup form and have a callback to restart the CKEditor instance
+            formHelpers.setupForm(this, function() {
+                formEditorSetup();
+            }, 'ta_text');
+            
+            // Initialise CKEditor for the noDataMessage
+            formHelpers.setupCKEditor($(this), null, 'noDataMessage');
         }
     }
 
@@ -62,66 +95,6 @@
             
             formHelpers.updateCKEditor();
         }
-    }
-
-    function tickerConfigureQueryBuilder(dialog) {
-
-        // Translations for the query builder
-        var translations = {
-            ascTitle: "{% trans "Ascending" %}",
-            descTitle: "{% trans "Descending" %}",
-            filterOptions: [
-                {
-                    id: "starts-with",
-                    value: "{% trans "starts with" %}"
-                }, {
-                    id: "ends-with",
-                    value: "{% trans "ends with" %}"
-                }, {
-                    id: "contains",
-                    value: "{% trans "contains" %}"
-                }, {
-                    id: "equals",
-                    value: "{% trans "equals" %}"
-                }, {
-                    id: "not-starts-with",
-                    value: "{% trans "does not start with" %}"
-                }, {
-                    id: "not-ends-with",
-                    value: "{% trans "does not end with" %}"
-                }, {
-                    id: "not-contains",
-                    value: "{% trans "does not contain" %}"
-                }, {
-                    id: "not-equals",
-                    value: "{% trans "does not equal" %}"
-                }, {
-                    id: "greater-than",
-                    value: "{% trans "greater than" %}"
-                }, {
-                    id: "less-than",
-                    value: "{% trans "less than" %}"
-                }
-            ],
-            filterOperatorOptions: [
-                {
-                    id: "OR",
-                    value: "{% trans "Or" %}"
-                }, {
-                    id: "AND",
-                    value: "{% trans "And" %}"
-                }
-            ]
-        };
-
-        // Configure the query for sorting and filtering
-        formHelpers.configureQueryBuilder(dialog, translations);
-
-        // Initialise CKEditor for the ta_text
-        formHelpers.setupCKEditor($(dialog), null, 'ta_text');
-        
-        // Initialise CKEditor for the noDataMessage
-        formHelpers.setupCKEditor($(dialog), null, 'noDataMessage');
     }
 
 </script>

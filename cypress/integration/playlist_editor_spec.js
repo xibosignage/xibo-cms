@@ -105,12 +105,6 @@ describe('Playlist Editor', function() {
                     '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"] .drag-area',
                     '#dropzone-container'
                 ).then(() => {
-                    cy.get('[data-test="addWidgetModal"]').contains('Add embedded');
-
-                    cy.get('[data-test="addWidgetModal"] input[name="name"]').clear().type('Embedded Widget');
-
-                    cy.get('[data-test="addWidgetModal"] [data-bb-handler="done"]').click();
-
                     // Wait for the widget to be added
                     cy.wait('@createWidget');
 
@@ -325,9 +319,6 @@ describe('Playlist Editor', function() {
                     })
                     .trigger('mouseup');
 
-                // Click save button
-                cy.get('.modal-footer button').contains('Save Order').click();
-
                 cy.wait('@saveOrder');
 
                 // Should show a notification for the order change
@@ -361,9 +352,6 @@ describe('Playlist Editor', function() {
                         pageY: $oldWidget.position().top + offsetY
                     })
                     .trigger('mouseup');
-
-                // Click save button
-                cy.get('.modal-footer button').contains('Save Order').click();
 
                 cy.wait('@saveOrder');
 

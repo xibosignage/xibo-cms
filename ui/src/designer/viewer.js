@@ -286,11 +286,12 @@ Viewer.prototype.toggleFullscreen = function() {
 /**
  * Setup Inline Editor button
  */
-Viewer.prototype.setupInlineEditor = function(textAreaName, show = true) {
+Viewer.prototype.setupInlineEditor = function(textAreaName, show = true, customNoDataMessage = null) {
 
     // Change inline editor to enable it on viewer render/refresh
     lD.propertiesPanel.inlineEditor = show;
     lD.propertiesPanel.inlineEditorName = textAreaName;
+    lD.propertiesPanel.customNoDataMessage = customNoDataMessage;
 
     // Show or hide inline editor
     if(show) {
@@ -369,15 +370,18 @@ Viewer.prototype.loadInlineEditorContent = function() {
     
     // Move text area from form to viewer
     const taText = lD.propertiesPanel.DOMObject.find('textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').clone();
+    const oldTaTextId = taText.attr('id');
+
     taText.attr('id', 'viewer_' + taText.attr('id'));
     
     this.DOMObject.find('#inline-editor').empty().append(taText);
 
     // Move editor controls from the form to the viewer navbar
-    const controls = lD.propertiesPanel.DOMObject.find('.ckeditor_controls');
+    const controls = lD.propertiesPanel.DOMObject.find('.ckeditor_controls[data-linked-to="' + oldTaTextId + '"]');
 
+    
     // Destroy select2 controls before cloning
-    controls.find('select').each(function(index) {
+    controls.find('select').each(function() {
         if($(this).hasClass('select2-hidden-accessible')) {
             $(this).select2('destroy');
         }
@@ -396,7 +400,7 @@ Viewer.prototype.loadInlineEditorContent = function() {
     this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
 
     // Setup iniline CKEditor
-    formHelpers.setupCKEditor(this.DOMObject.parent(), null, lD.propertiesPanel.inlineEditorName, true);
+    formHelpers.setupCKEditor(this.DOMObject.parent(), null, lD.propertiesPanel.inlineEditorName, true, lD.propertiesPanel.customNoDataMessage);
 };
 
 /**

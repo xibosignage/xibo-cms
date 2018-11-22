@@ -317,11 +317,6 @@ describe('Layout Designer (Empty)', function() {
                         '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"] .drag-area',
                         '#' + target + ' [data-type="region"]:first-child'
                     ).then(() => {
-                        cy.get('[data-test="addWidgetModal"]').contains('Add embedded');
-
-                        cy.get('[data-test="addWidgetModal"] input[name="name"]').clear().type('Embedded Widget');
-
-                        cy.get('[data-test="addWidgetModal"] [data-bb-handler="done"]').click();
 
                         // Wait for the widget to be added
                         cy.wait('@createWidget');

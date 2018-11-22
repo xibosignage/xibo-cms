@@ -108,7 +108,12 @@
 
                     <div class="tab-pane" id="template">
                         {% set generatedId %}{{ random() }}{% endset %}
-                        <div class="ckeditor_controls">
+
+                        {% set title %}{% trans "Advanced editor?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to use the advanced HTML editor." %}{% endset %}
+                        {{ forms.checkbox("advancedEditor", title, module.getOption("advancedEditor", 0), helpText, "template-override-controls") }}
+
+                        <div class="ckeditor_controls template-group-editor" data-linked-to="ta_text{{ generatedId }}">
 
                             <div class="col-sm-6">
                                 <div class="form-group">
@@ -148,7 +153,7 @@
                             {% trans "The red rectangle reflects the size of the region you are editing." %}
                             {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                         {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10, generatedId) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-group-editor", "", 10, generatedId) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
                         {{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "", "", 10) }}

@@ -114,7 +114,8 @@ class Calendar extends ModuleWidget
         $this->setRawNode('currentEventTemplate', $this->getSanitizer()->getParam('currentEventTemplate', null));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null)));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
-
+        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
+            
         $this->isValid();
         $this->saveWidget();
     }
@@ -129,6 +130,7 @@ class Calendar extends ModuleWidget
         $template = $this->getRawNode('template', '');
         $currentEventTemplate = ($this->getOption('useCurrentTemplate') == 1) ? $this->getRawNode('currentEventTemplate', '') : null;
         $styleSheet = $this->getRawNode('styleSheet', '');
+        $advancedEditor = $this->getOption('advancedEditor');
 
         // Parse library references first as its more efficient
         $template = $this->parseLibraryReferences($this->isPreview(), $template);

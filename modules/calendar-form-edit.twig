@@ -64,7 +64,12 @@
                     </div>
                     <div class="tab-pane" id="templateTab">
                         {% set generatedId %}{{ random() }}{% endset %}
-                        <div class="ckeditor_controls">
+
+                        {% set title %}{% trans "Advanced editor?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to use the advanced HTML editor." %}{% endset %}
+                        {{ forms.checkbox("advancedEditor", title, module.getOption("advancedEditor", 0), helpText, "template-override-controls") }}
+
+                        <div class="ckeditor_controls template-group-editor" data-linked-to="ta_text{{ generatedId }}">
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
@@ -104,13 +109,13 @@
                             {% trans "The red rectangle reflects the size of the region you are editing." %}
                             {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                         {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10, generatedId) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-group-editor", "", 10, generatedId) }}
 
                         {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
                         {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
                         {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
 
-                        <div class="ckeditor_controls current-event-template">
+                        <div class="ckeditor_controls current-event-template" data-linked-to="currentEventTemplate">
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
@@ -232,18 +237,6 @@
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
 
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        <div class="col-md-6">
-                            <label class="col-sm-4 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
-                            <div class="col-sm-8">
-                                <select id="ckeditor_library_select"
-                                        class="ckeditor_library_select form-control"
-                                        data-linked-to="noDataMessage"
-                                        data-width="100%"
-                                        data-search-url="{{ urlFor("library.search") }}"
-                                        data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                </select>
-                            </div>
-                        </div>
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}

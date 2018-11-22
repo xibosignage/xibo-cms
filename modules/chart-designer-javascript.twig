@@ -191,57 +191,8 @@
                 $(this).closest(".form-group").remove();
             }
         });
-
-        // Translations for the query builder
-        var translations = {
-            ascTitle: "{% trans "Ascending" %}",
-            descTitle: "{% trans "Descending" %}",
-            filterOptions: [
-                {
-                    id: "starts-with",
-                    value: "{% trans "starts with" %}"
-                }, {
-                    id: "ends-with",
-                    value: "{% trans "ends with" %}"
-                }, {
-                    id: "contains",
-                    value: "{% trans "contains" %}"
-                }, {
-                    id: "equals",
-                    value: "{% trans "equals" %}"
-                }, {
-                    id: "not-starts-with",
-                    value: "{% trans "does not start with" %}"
-                }, {
-                    id: "not-ends-with",
-                    value: "{% trans "does not end with" %}"
-                }, {
-                    id: "not-contains",
-                    value: "{% trans "does not contain" %}"
-                }, {
-                    id: "not-equals",
-                    value: "{% trans "does not equal" %}"
-                }, {
-                    id: "greater-than",
-                    value: "{% trans "greater than" %}"
-                }, {
-                    id: "less-than",
-                    value: "{% trans "less than" %}"
-                }
-            ],
-            filterOperatorOptions: [
-                {
-                    id: "OR",
-                    value: "{% trans "Or" %}"
-                }, {
-                    id: "AND",
-                    value: "{% trans "And" %}"
-                }
-            ]
-        };
-
                 // Configure the query for sorting and filtering
-        formHelpers.configureQueryBuilder(dialog, translations);
+        formHelpers.configureQueryBuilder(dialog, datasetQueryBuilderTranslations);
 
         // Fill the font colour in with a complimentary colour (if it isn't already filled in)
         var $fontInput = $("#fontColor", dialog);

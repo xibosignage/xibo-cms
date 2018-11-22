@@ -163,7 +163,7 @@ let formHelpers = function() {
     * @param {callback=} callbackFunction - Function called when override template or advance editor is changed
     * @param {string=} textAreaName - Textarea editor, if exists
     */
-    this.setupForm = function(dialog, callbackFunction, textAreaName) {
+    this.setupForm = function(dialog, callbackFunction = null, textAreaName = null) {
         
         const self = this;
 
@@ -181,7 +181,7 @@ let formHelpers = function() {
 
                 // To update text area value, we need to destroy the editor if there's one attached to it
                 let textAreaId = '';
-                if(textAreaName != undefined) {
+                if(textAreaName != null) {
                     textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
                     self.destroyCKEditor(textAreaId);
                 }
@@ -199,7 +199,7 @@ let formHelpers = function() {
                     if(value.id == templateId) {
 
                         // Update html and css on the form
-                        if(textAreaName != undefined) {
+                        if(textAreaName != null) {
                             $('#' + textAreaId, dialog).val(value.template);
                         }
                         
@@ -225,10 +225,10 @@ let formHelpers = function() {
 
         var initialiseTextareaSnippets  = function(snippets) {
 
-            if(textAreaName != undefined) {
+            if(textAreaName != null) {
 
                 const textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
-                const target = $('#' + textAreaId, dialog);
+                
 
                 // Apply content only if advanced editor is off
                 if(!$("#advancedEditor", dialog).is(":checked")) {
@@ -236,16 +236,17 @@ let formHelpers = function() {
                     if(snippets.length > 0) {
 
                         snippets.select2().off().on('select2:select', function(e) {
-                            var linkedTo = $(this).data().linkedTo;
-                            var text;
+                            let linkedTo = $(this).data().linkedTo;
+                            let text;
+                            let target = $('#' + linkedTo, dialog);
 
                             if(target.length > 0) {
                                 text = "[" + e.params.data.element.value + "]";
 
                                 let cursorPosition = target[0].selectionStart;
                                 let previousText = target.val();
-
-                                target.val(previousText.substring(0, cursorPosition) + text + previousText.substring(cursorPosition));
+                                
+                                $('#' + linkedTo, dialog).val(previousText.substring(0, cursorPosition) + text + previousText.substring(cursorPosition));
                             }
 
                             // Reset selector
@@ -261,7 +262,7 @@ let formHelpers = function() {
 
             applyTemplateContentIfNecessary(data);
 
-            if(callbackFunction != undefined) {
+            if(callbackFunction !== null) {
                 callbackFunction();
             }
         });
@@ -271,7 +272,7 @@ let formHelpers = function() {
 
             initialiseTextareaSnippets($('.ckeditor_snippets_select', dialog));
 
-            if(callbackFunction != undefined) {
+            if(callbackFunction !== null) {
                 callbackFunction();
             }
         });
@@ -670,7 +671,10 @@ let formHelpers = function() {
                         label: translations.done,
                         className: 'btn-primary',
                         callback: function() {
-                            self.namespace.timeline.resetZoom();
+                            if(typeof self.namespace.timeline.resetZoom === 'function') {
+                                self.namespace.timeline.resetZoom();
+                            }
+                            
                             self.namespace.reloadData(self.mainObject);
                         }
                     }

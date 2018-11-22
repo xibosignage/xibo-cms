@@ -350,6 +350,7 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
             $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
             $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
+            $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
             $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
             $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
             $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
@@ -465,6 +466,7 @@ class DataSetTicker extends ModuleWidget
         // DataSet tickers or feed tickers without overrides.
         $text = $this->getRawNode('template', '');
         $css = $this->getRawNode('css', '');
+        $advancedEditor = $this->getOption('advancedEditor');
         
         // Parse library references on the template
         $text = $this->parseLibraryReferences($isPreview, $text);

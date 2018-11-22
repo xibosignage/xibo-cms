@@ -215,7 +215,7 @@
             cancelUpload: "{% trans "Cancel upload" %}",
             viewLibrary: "{% trans "View Library" %}",
             undo: "{% trans "Undo" %}"
-        }
+        };
         var playlistAddFilesTrans = {
             uploadMessage: "{% trans "Replace" %}",
             addFiles: "{% trans "Add Replacement" %}",
@@ -229,7 +229,54 @@
                 title: "{% trans "Delete the old version?" %}",
                 helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
             }
-        }
+        };
+        
+        var datasetQueryBuilderTranslations = {
+            ascTitle: "{% trans "Ascending" %}",
+            descTitle: "{% trans "Descending" %}",
+            filterOptions: [
+                {
+                    id: "starts-with",
+                    value: "{% trans "starts with" %}"
+                }, {
+                    id: "ends-with",
+                    value: "{% trans "ends with" %}"
+                }, {
+                    id: "contains",
+                    value: "{% trans "contains" %}"
+                }, {
+                    id: "equals",
+                    value: "{% trans "equals" %}"
+                }, {
+                    id: "not-starts-with",
+                    value: "{% trans "does not start with" %}"
+                }, {
+                    id: "not-ends-with",
+                    value: "{% trans "does not end with" %}"
+                }, {
+                    id: "not-contains",
+                    value: "{% trans "does not contain" %}"
+                }, {
+                    id: "not-equals",
+                    value: "{% trans "does not equal" %}"
+                }, {
+                    id: "greater-than",
+                    value: "{% trans "greater than" %}"
+                }, {
+                    id: "less-than",
+                    value: "{% trans "less than" %}"
+                }
+            ],
+            filterOperatorOptions: [
+                {
+                    id: "OR",
+                    value: "{% trans "Or" %}"
+                }, {
+                    id: "AND",
+                    value: "{% trans "And" %}"
+                }
+            ]
+        };
         {% endautoescape %}
 
         var table;

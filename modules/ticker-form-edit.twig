@@ -120,7 +120,7 @@
 
                         {% set generatedId %}{{ random() }}{% endset %}
                         
-                        <div class="ckeditor_controls template-override-controls template-group-editor">
+                        <div class="ckeditor_controls template-override-controls template-group-editor" data-linked-to="ta_text{{ generatedId }}">
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>

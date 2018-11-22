@@ -90,7 +90,7 @@
                         {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
                         {{ forms.message(message, "digital-control-group") }}
 
-                        <div class="ckeditor_controls">
+                        <div class="ckeditor_controls" data-linked-to="ta_text{{ generatedId }}">
                             <div class="col-sm-offset-4 col-sm-8">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
