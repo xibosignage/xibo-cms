@@ -789,18 +789,18 @@ class ForecastIo extends ModuleWidget
     public function isValid()
     {
         if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
-            throw new \InvalidArgumentException(__('Please choose a template'));
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
 
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
 
         if ($this->getOption('useDisplayLocation') == 0) {
             // Validate lat/long
             if (!v::latitude()->validate($this->getOption('latitude')))
-                throw new \InvalidArgumentException(__('The latitude entered is not valid.'));
+                throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
 
             if (!v::longitude()->validate($this->getOption('longitude')))
-                throw new \InvalidArgumentException(__('The longitude entered is not valid.'));
+                throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
         }
 
         return self::$STATUS_VALID;

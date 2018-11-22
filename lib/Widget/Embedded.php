@@ -173,7 +173,7 @@ class Embedded extends ModuleWidget
                 'originalHeight' => $this->region->height
             ])
             ->appendJavaScript('
-                $(document).ready(function() { EmbedInit(); });
+                $(document).ready(function() { if(typeof EmbedInit === "function"){ EmbedInit(); } });
                 $("body").find("img").xiboImageRender(options);
             ')
             ->appendBody($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedHtml', null)));

@@ -7,43 +7,11 @@
 #}
 <script type="text/javascript">
 
-    // Runs after add form opens
-    function twitter_form_add_open() {
-        // Set duration field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
-
-        // Set override template field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
-
-        // Set effect type input field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['noAnim'], true);
-
-        const form = this;
-
-        // Setup editor
-        const formEditorSetup  = function() {
-            if($(form).find('form #advancedEditor').is(':checked')) {
-                formHelpers.setupCKEditor(form, null, 'ta_text');
-            } else {
-                const textAreaId = form.find('textarea[name="ta_text"]').attr('id');
-                formHelpers.destroyCKEditor(textAreaId);
-            }
-        };
-
-         // Initialize editor
-        formEditorSetup();
-
-        // Setup templates in form and have a callback to restart the CKEditor instance
-        formHelpers.setupForm(this, function() {
-            formEditorSetup();
-        }, 'ta_text');
-    }
-
     /** 
     * Runs before form submit
     * @return {bool} - Form validation
     */
-    function twitter_form_add_submit() {        
+    function twitter_form_edit_submit() {        
 
         // Update text callback fields
         formHelpers.updateCKEditor();
@@ -64,18 +32,28 @@
         const self = this;
         const formEditorSetup  = function() {
 
-            // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
-            $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked'));
-
             if(!$(self).data('formEditorOnly')) { // Using inline Editor
+                // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
+                $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked'));
 
                 // Show template group if override template is on, and if the advance editor is off
-                $(self).find('.template-group-editor').toggle($(self).find('form #overrideTemplate').is(':checked') && !$(self).find('form #advancedEditor').is(':checked'));
+                $(self).find('.template-group-editor').toggle($(self).find('form #overrideTemplate').is(':checked') && !$(self).find('form #advancedEditor').is(':checked')); 
+            } else {
+                // Using form editor
+                if($(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked')) {
+                    formHelpers.setupCKEditor(self, null, 'ta_text');
+                } else {
+                    var textAreaId = $(self).find('textarea[name="ta_text"]').attr('id');
+                    formHelpers.destroyCKEditor(textAreaId);
+                }
+                
             }
         };
 
         // Initialize editor
         formEditorSetup();
+
+         console.log($(self).data());
 
         // Setup form and have a callback to restart the CKEditor instance
         formHelpers.setupForm(this, function() {
@@ -83,10 +61,4 @@
         }, 'ta_text');
     }
 
-    // Runs before form submit
-    function twitter_form_edit_submit() {
-
-        // Use same method as form add submit
-        twitter_form_add_submit.bind(this)();
-    }
 </script>

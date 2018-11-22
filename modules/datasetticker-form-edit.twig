@@ -39,7 +39,7 @@
                 <li><a href="#format" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="dataSetTickerForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -105,39 +105,53 @@
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed", module.getOption("scrollSpeed")), helpText, "effect-controls") }}
                     </div>
+
                     <div class="tab-pane" id="template">
-                        <div class="col-sm-6">
-                            <div class="well">
-                                <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
-                                <ul id="TickerDataSetColumns">
-                                    {% for column in module.dataSetColumns() %}
-                                    <li class="ckeditor_snippits" linkedto="ta_text" datasetcolumnid="{{ column.dataSetColumnId }}">{{ column.heading }}</li>
-                                    {% endfor %}
-                                </ul>
+                        {% set generatedId %}{{ random() }}{% endset %}
+                        <div class="ckeditor_controls">
+
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Available Substitutions" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                            class="ckeditor_snippets_select form-control"
+                                            data-linked-to="ta_text{{ generatedId }}">
+                                            <option value=""></option>
+
+                                            {% for column in module.dataSetColumns() %}
+                                                <option value="{{ column.heading }}|{{ column.dataSetColumnId }}">{{ column.heading }}</option>
+                                            {% endfor %}
+                                        
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group well">
-                                <label class="col-sm-2 control-label" for="ckeditor_library_select3">{% trans "Library" %}</label>
-                                <div class="col-sm-10">
-                                    <select id="ckeditor_library_select3"
-                                            class="ckeditor_library_select form-control"
-                                            data-linked-to="ta_text"
-                                            data-search-url="{{ urlFor("library.search") }}"
-                                            data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                    </select>
+
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select3">{% trans "Library" %}</label>
+                                    <div class="col-sm-8">
+                                        <select id="ckeditor_library_select3"
+                                                class="ckeditor_library_select form-control"
+                                                data-linked-to="ta_text{{ generatedId }}"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                         {% set helpText %}
                             {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
                             {% trans "The red rectangle reflects the size of the region you are editing." %}
                             {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                         {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10, generatedId) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "", "", 10) }}
                     </div>
                     <div class="tab-pane" id="orderCriteria">
 
@@ -220,8 +234,9 @@
                         </div>
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
                     </div>
-                {% endif %}
                 </div>
+                
+                <input type="hidden" name="step" value="2" />
             </form>
         </div>
     </div>

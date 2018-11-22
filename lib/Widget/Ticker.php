@@ -298,6 +298,7 @@ class Ticker extends ModuleWidget
         $this->setOption('disableDateSort', $this->getSanitizer()->getCheckbox('disableDateSort'));
         $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
@@ -365,6 +366,7 @@ class Ticker extends ModuleWidget
             if (isset($template)) {
                 $text = $template['template'];
                 $css = $template['css'];
+                $advancedEditor = $template['advancedEditor'];
             } else {
                 $text = $this->getRawNode('template', '');
                 $css = $this->getRawNode('css', '');
@@ -373,6 +375,7 @@ class Ticker extends ModuleWidget
             // DataSet tickers or feed tickers without overrides.
             $text = $this->getRawNode('template', '');
             $css = $this->getRawNode('css', '');
+            $advancedEditor = $this->getOption('advancedEditor');
         }
         
         // Parse library references on the template

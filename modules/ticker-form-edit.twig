@@ -114,30 +114,41 @@
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
-                        <div class="template-override-controls">
+                        {% set title %}{% trans "Advanced editor?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to use the advanced HTML editor." %}{% endset %}
+                        {{ forms.checkbox("advancedEditor", title, module.getOption("advancedEditor", 0), helpText, "template-override-controls") }}
+
+                        {% set generatedId %}{{ random() }}{% endset %}
+                        
+                        <div class="ckeditor_controls template-override-controls template-group-editor">
                             <div class="col-sm-6">
-                                <div class="well">
-                                    <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
-                                    <ul id="TickerDataSetColumns">
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Name</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Title</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Description</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Date</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Content</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Copyright</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Link</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">PermaLink</li>
-                                        <li class="ckeditor_snippits" linkedto="ta_text">Tag|Namespace</li>
-                                    </ul>
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                            class="ckeditor_snippets_select form-control"
+                                            data-linked-to="ta_text{{ generatedId }}">
+                                            <option value=""></option>
+                                            <option value="Name">Name</option>
+                                            <option value="Title">Title</option>
+                                            <option value="Description">Description</option>
+                                            <option value="Date">Date</option>
+                                            <option value="Content">Content</option>
+                                            <option value="Copyright">Copyright</option>
+                                            <option value="Link">Link</option>
+                                            <option value="PermaLink">PermaLink</option>
+                                            <option value="Tag|Namespace">Tag|Namespace</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="form-group well">
-                                    <label class="col-sm-2 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                    <div class="col-sm-10">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                    <div class="col-sm-8">
                                         <select id="ckeditor_library_select2"
                                                 class="ckeditor_library_select form-control"
-                                                data-linked-to="ta_text"
+                                                data-linked-to="ta_text{{ generatedId }}"
                                                 data-search-url="{{ urlFor("library.search") }}"
                                                 data-image-url="{{ urlFor("library.download") }}?preview=1">
                                         </select>
@@ -151,7 +162,7 @@
                             {% trans "The red rectangle reflects the size of the region you are editing." %}
                             {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                         {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls template-group-editor", "", 10, generatedId) }}
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
                         {{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}

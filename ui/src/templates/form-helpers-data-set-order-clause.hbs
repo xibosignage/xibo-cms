@@ -4,20 +4,18 @@
         <select class="form-control" name="orderClause[]">
             <option value=""></option>
             {{#each columns}}
-                <option value="{{ heading }}" {{#eq heading ../orderClause}} selected{{/eq}}> {{ heading }} </option>
+                <option value="{{ heading }}" {{#eq heading ../orderClause}} selected{{/eq}}>{{ heading }}</option>
             {{/each}}
         </select>
     </div>
-    
     <div class="col-sm-5">
         <label for="orderClauseDirection[]">
             <select class="form-control" name="orderClauseDirection[]">
-                <option value="ASC" {{#if orderClauseAsc}} selected{{/if}}> {{ ascTitle }} </option>
-                <option value="DESC" {{#if orderClauseDesc}} selected{{/if}}> {{ descTitle }} </option>
+                <option value="ASC" {{#if orderClauseAsc}}selected{{/if}}>{{ ascTitle }}</option>
+                <option value="DESC" {{#if orderClauseDesc}}selected{{/if}}>{{ descTitle }}</option>
             </select>
         </label>
     </div>
-    
     <div class="col-sm-1">
         <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
     </div>

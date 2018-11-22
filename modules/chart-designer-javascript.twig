@@ -20,123 +20,60 @@
  */
 #}
 
-{# Define some templates #}
-{% raw %}
-    <script type="text/x-handlebars-template" id="graphConfigTemplate">
-        <div class="form-group">
-            <label class="col-sm-1 control-label" for="columnType[]">{{ title }}</label>
-            <div class="col-sm-4">
-                <label for="columnType[]">
-                <select class="form-control" name="columnType[]">
-                    {{#each columnTypeOptions}}
-                    <option value="{{ id }}" {{#eq id ../columnType}}selected{{/eq}}>{{ value }}</option>
-                    {{/each}}
-                </select>
-                </label>
-            </div>
-            <div class="col-sm-4">
-                <select class="form-control" name="dataSetColumnId[]">
-                    <option value=""></option>
-                    {{#each columns}}
-                    <option value="{{ dataSetColumnId }}" {{#eq dataSetColumnId ../dataSetColumnId}}selected{{/eq}}>{{ heading }}</option>
-                    {{/each}}
-                </select>
-            </div>
-            <div class="col-sm-1">
-                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
-            </div>
-        </div>
-    </script>
-    <script type="text/x-handlebars-template" id="chartSeriesColorsTemplate">
-        <div class="form-group">
-            <label class="col-sm-1 control-label" for="seriesColor[]">{{ title }}</label>
-            <div class="col-sm-4">
-                <input class="form-control color-picker" name="seriesColor[]" value="{{ color }}" />
-            </div>
-            <div class="col-sm-1">
-                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
-            </div>
-        </div>
-    </script>
-    <script type="text/x-handlebars-template" id="chartOrderClauseTemplate">
-        <div class="form-group">
-            <label class="col-sm-1 control-label" for="orderClause[]">{{ title }}</label>
-            <div class="col-sm-7">
-                <select class="form-control" name="orderClause[]">
-                    <option value=""></option>
-                    {{#each columns}}
-                    <option value="{{ heading }}" {{#eq heading ../orderClause}}selected{{/eq}}>{{ heading }}</option>
-                    {{/each}}
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <label for="orderClauseDirection[]">
-                    <select class="form-control" name="orderClauseDirection[]">
-                        <option value="ASC" {{#if orderClauseAsc}}selected{{/if}}>{{ ascTitle }}</option>
-                        <option value="DESC" {{#if orderClauseDesc}}selected{{/if}}>{{ descTitle }}</option>
-                    </select>
-                </label>
-            </div>
-            <div class="col-sm-1">
-                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
-            </div>
-        </div>
-    </script>
-
-    <script type="text/x-handlebars-template" id="chartFilterClauseTemplate">
-        <div class="form-group">
-            <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
-            <div class="col-sm-2">
-                <label for="filterClauseOperator[]" {{#eq title "1"}}class="hidden"{{/eq}}>
-                <select class="form-control" name="filterClauseOperator[]">
-                    {{#each filterOperatorOptions}}
-                    <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
-                    {{/each}}
-                </select>
-                </label>
-            </div>
-            <div class="col-sm-3">
-                <select class="form-control" name="filterClause[]">
-                    <option value=""></option>
-                    {{#each columns}}
-                    <option value="{{ heading }}" {{#eq heading ../filterClause}}selected{{/eq}}>{{ heading }}</option>
-                    {{/each}}
-                </select>
-            </div>
-            <div class="col-sm-3">
-                <label for="filterClauseCriteria[]">
-                    <select class="form-control" name="filterClauseCriteria[]">
-                        {{#each filterOptions}}
-                        <option value="{{ id }}" {{#eq id ../filterClauseCriteria}}selected{{/eq}}>{{ value }}</option>
-                        {{/each}}
-                    </select>
-                </label>
-            </div>
-            <div class="col-sm-2">
-                <label for="filterClauseValue[]">
-                    <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
-                </label>
-            </div>
-            <div class="col-sm-1">
-                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
-            </div>
-        </div>
-    </script>
-{% endraw %}
-
 <script type="text/javascript">
-    Handlebars.registerHelper('eq', function(a, b, opts) {
-        if(a == b) // Or === depending on your needs
-            return opts.fn(this);
-        else
-            return opts.inverse(this);
-    });
+
+    // Runs after form opens
+    function chart_form_edit_open() {
+
+        if($(this).find('form').data('formStep') === 1) {
+            // If data set exists, set the drop-down to that value
+            if(this.data().elementOptions.dataSetId !== undefined) {
+                $(this).find('#dataSetId').val(this.data().elementOptions.dataSetId);
+            }
+        } else if($(this).find('form').data('formStep') === 2) {
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+            // Set display location field, using the helper ()
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
+
+            // Set override template field, using the helper ()
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
+
+            // Set order and filtering clauses fields, using the helper ()
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');
+
+            graphFormSetup(this);
+        }
+    }
+
+    // Runs before form submit
+    function chart_form_edit_submit() {
+        
+        if($(this).find('form').data('formStep') === 2) {
+            var form = $("#dataSetViewEditForm2");
+
+            // Clean the previous generated hidden dataSetColumns from the form
+            form.find('input[name="dataSetColumnId[]"]').remove();
+
+            // Add all the selected columns to the form as hidden input fields
+            $($("#columnsIn").sortable('toArray')).each(function() {
+                form.append('<input type="hidden" name="dataSetColumnId[]" value="' + this + '" />');
+            });
+
+            form.data("apply", true);
+            
+            formHelpers.updateCKEditor();
+        }
+    }
 
     function graphFormSetup(dialog) {
-        var extra = $('.bootbox').data().extra;
 
-        var $graphConfig = $("#graphConfig");
-        var graphConfigTemplate = Handlebars.compile($("#graphConfigTemplate").html());
+        var $graphConfig = $("#graphConfig", dialog);
+
+        // Get template
+        var graphConfigTemplate = formHelpers.getTemplate('chartGraphConfigTemplate');
+
         var columnTypeOptions = [
             {
                 id: "x-axis",
@@ -172,7 +109,7 @@
                     columnTypeOptions: columnTypeOptions,
                     title: j,
                     columnType: field.columnType,
-                    dataSetColumnId: field.dataSetColumnId,
+                    dataSetColumnId: parseInt(field.dataSetColumnId),
                     buttonGlyph: ((j === 1) ? "fa-plus" : "fa-minus")
                 };
 
@@ -202,8 +139,10 @@
         });
 
         // Series Colors
-        var $seriesColors = $("#seriesColors");
-        var seriesColorsTemplate = Handlebars.compile($("#chartSeriesColorsTemplate").html());
+        var $seriesColors = $("#seriesColors", dialog);
+
+        // Get template
+        var seriesColorsTemplate = formHelpers.getTemplate('chartColorsTemplate');
 
         if (dialog.data().extra.seriesColors.length === 0) {
             // No existing config, so we add a row to our config div
@@ -253,168 +192,69 @@
             }
         });
 
-        // Order Clause
-        var orderClauseFields = $("#orderClause");
+        // Translations for the query builder
+        var translations = {
+            ascTitle: "{% trans "Ascending" %}",
+            descTitle: "{% trans "Descending" %}",
+            filterOptions: [
+                {
+                    id: "starts-with",
+                    value: "{% trans "starts with" %}"
+                }, {
+                    id: "ends-with",
+                    value: "{% trans "ends with" %}"
+                }, {
+                    id: "contains",
+                    value: "{% trans "contains" %}"
+                }, {
+                    id: "equals",
+                    value: "{% trans "equals" %}"
+                }, {
+                    id: "not-starts-with",
+                    value: "{% trans "does not start with" %}"
+                }, {
+                    id: "not-ends-with",
+                    value: "{% trans "does not end with" %}"
+                }, {
+                    id: "not-contains",
+                    value: "{% trans "does not contain" %}"
+                }, {
+                    id: "not-equals",
+                    value: "{% trans "does not equal" %}"
+                }, {
+                    id: "greater-than",
+                    value: "{% trans "greater than" %}"
+                }, {
+                    id: "less-than",
+                    value: "{% trans "less than" %}"
+                }
+            ],
+            filterOperatorOptions: [
+                {
+                    id: "OR",
+                    value: "{% trans "Or" %}"
+                }, {
+                    id: "AND",
+                    value: "{% trans "And" %}"
+                }
+            ]
+        };
 
-        if (orderClauseFields.length === 0)
-            return;
-
-        var orderClauseTemplate = Handlebars.compile($("#chartOrderClauseTemplate").html());
-        var ascTitle = "{% trans "Ascending" %}";
-        var descTitle = "{% trans "Descending" %}";
-
-        if (dialog.data().extra.orderClause.length === 0) {
-            // Add a template row
-            var context = {columns: dialog.data().extra.columns, title: "1", orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-plus", ascTitle: ascTitle, descTitle: descTitle};
-            orderClauseFields.append(orderClauseTemplate(context));
-        } else {
-            // For each of the existing codes, create form components
-            var i = 0;
-            $.each(dialog.data().extra.orderClause, function (index, field) {
-                i++;
-
-                var direction = (field.orderClauseDirection === "ASC");
-
-                var context = {columns: dialog.data().extra.columns, title: i, orderClause: field.orderClause, orderClauseAsc: direction, orderClauseDesc: !direction, buttonGlyph: ((i == 1) ? "fa-plus" : "fa-minus"), ascTitle: ascTitle, descTitle: descTitle};
-
-                orderClauseFields.append(orderClauseTemplate(context));
-            });
-        }
-
-        // Nabble the resulting buttons
-        orderClauseFields.on("click", "button", function (e) {
-            e.preventDefault();
-
-            // find the gylph
-            if ($(this).find("i").hasClass("fa-plus")) {
-                var context = {columns: dialog.data().extra.columns, title: orderClauseFields.find('.form-group').length + 1, orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-minus", ascTitle: ascTitle, descTitle: descTitle};
-                orderClauseFields.append(orderClauseTemplate(context));
-            } else {
-                // Remove this row
-                $(this).closest(".form-group").remove();
-            }
-        });
-
-        //
-        // Filter Clause
-        //
-        var filterClauseFields = $("#filterClause");
-        var filterClauseTemplate = Handlebars.compile($("#chartFilterClauseTemplate").html());
-        var filterOptions = [
-            {
-                id: "starts-with",
-                value: "{% trans "starts with" %}"
-            },{
-                id: "ends-with",
-                value: "{% trans "ends with" %}"
-            },{
-                id: "contains",
-                value: "{% trans "contains" %}"
-            },{
-                id: "equals",
-                value: "{% trans "equals" %}"
-            },{
-                id: "not-starts-with",
-                value: "{% trans "does not start with" %}"
-            },{
-                id: "not-ends-with",
-                value: "{% trans "does not end with" %}"
-            },{
-                id: "not-contains",
-                value: "{% trans "does not contain" %}"
-            },{
-                id: "not-equals",
-                value: "{% trans "does not equal" %}"
-            },{
-                id: "greater-than",
-                value: "{% trans "greater than" %}"
-            },{
-                id: "less-than",
-                value: "{% trans "less than" %}"
-            }
-        ];
-        var filterOperatorOptions = [
-            {
-                id: "OR",
-                value: "{% trans "Or" %}"
-            },{
-                id: "AND",
-                value: "{% trans "And" %}"
-            }
-        ];
-
-        if (dialog.data().extra.filterClause.length === 0) {
-            // Add a template row
-            context = {
-                columns: dialog.data().extra.columns,
-                filterOptions: filterOptions,
-                filterOperatorOptions: filterOperatorOptions,
-                title: "1",
-                filterClause: "",
-                filterClauseOperator: "AND",
-                filterClauseCriteria: "",
-                filterClauseValue: "",
-                buttonGlyph: "fa-plus"
-            };
-            filterClauseFields.append(filterClauseTemplate(context));
-        } else {
-            // For each of the existing codes, create form components
-            var j = 0;
-            $.each(dialog.data().extra.filterClause, function (index, field) {
-                j++;
-
-                var context = {
-                    columns: dialog.data().extra.columns,
-                    filterOptions: filterOptions,
-                    filterOperatorOptions: filterOperatorOptions,
-                    title: j,
-                    filterClause: field.filterClause,
-                    filterClauseOperator: field.filterClauseOperator,
-                    filterClauseCriteria: field.filterClauseCriteria,
-                    filterClauseValue: field.filterClauseValue,
-                    buttonGlyph: ((j === 1) ? "fa-plus" : "fa-minus")
-                };
-
-                filterClauseFields.append(filterClauseTemplate(context));
-            });
-        }
-
-        // Nabble the resulting buttons
-        filterClauseFields.on("click", "button", function (e) {
-            e.preventDefault();
-
-            // find the gylph
-            if ($(this).find("i").hasClass("fa-plus")) {
-                var context = {
-                    columns: dialog.data().extra.columns,
-                    filterOptions: filterOptions,
-                    filterOperatorOptions: filterOperatorOptions,
-                    title: filterClauseFields.find('.form-group').length + 1,
-                    filterClause: "",
-                    filterClauseOperator: "AND",
-                    filterClauseCriteria: "",
-                    filterClauseValue: "",
-                    buttonGlyph: "fa-minus"
-                };
-                filterClauseFields.append(filterClauseTemplate(context));
-            } else {
-                // Remove this row
-                $(this).closest(".form-group").remove();
-            }
-        });
+                // Configure the query for sorting and filtering
+        formHelpers.configureQueryBuilder(dialog, translations);
 
         // Fill the font colour in with a complimentary colour (if it isn't already filled in)
-        var $fontInput = $("#fontColor");
+        var $fontInput = $("#fontColor", dialog);
 
         if ($fontInput.val() == "") {
             // Choose a complementary color
-            var color = $c.complement($("#layout").data().backgroundColor);
+            var color = $c.complement(formHelpers.mainObject.backgroundColor);
 
             $fontInput.val(color);
         }
 
         // Set up the colour selectors
-        $("#backgroundColor").colorpicker({format: "hex"});
+        $("#backgroundColor", dialog).colorpicker({format: "hex"});
         $fontInput.colorpicker({format: "hex"});
     }
 </script>

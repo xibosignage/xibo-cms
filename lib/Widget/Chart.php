@@ -424,6 +424,15 @@ class Chart extends ModuleWidget
         if ($step == 1 || !$this->hasDataSet()) {
             $dataSetId = $this->getSanitizer()->getInt('dataSetId');
 
+            // Do we already have a DataSet?
+            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+                // Reset the fields that are dependent on the dataSetId
+
+                $this->setOption('config', '[]');
+                $this->setOption('filterClauses', '[]');
+                $this->setOption('orderClauses', '[]');
+            }
+
             $this->setOption('dataSetId', $dataSetId);
 
             // Validate Data Set Selected

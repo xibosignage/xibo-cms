@@ -8,7 +8,7 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function forecastio_form_add_open() {
+    function forecastio_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
@@ -20,13 +20,6 @@
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
 
         forecastIoFormSetup(this);
-    }
-
-    // Runs after form opens
-    function forecastio_form_edit_open() {
-
-        // Use same method as form add open
-        forecastio_form_add_open.bind(this)();
     }
 
     /**

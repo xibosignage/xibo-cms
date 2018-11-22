@@ -22,6 +22,30 @@
 
 <script type="text/javascript">
 
+    // Runs after form opens
+    function calendar_form_edit_open() {
+
+        // Set duration field, using the helper
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set template field, using the helper
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useCurrentTemplate', '.current-event-template');
+
+        // Set up text editors
+        formHelpers.setupCKEditor(this, null, 'ta_text');
+
+        formHelpers.setupCKEditor(this, null, 'currentEventTemplate');
+
+        formHelpers.setupCKEditor(this, null, 'noDataMessage');
+    }
+
+    // Runs before form submit
+    function calendar_form_edit_submit() {
+
+        // Update text callback fields
+        formHelpers.updateCKEditor();
+    }
+
     function calendarFormOpen(dialog, extra) {
         text_callback(dialog, extra);
 

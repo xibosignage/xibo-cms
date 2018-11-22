@@ -8,26 +8,6 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function clock_form_add_open() {
-        
-        // Set duration field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
-
-        // Set clock type input field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(this).find('form'), '#clockTypeId', ['.analogue-control-group', '.digital-control-group', '.flip-control-group'], [1, 2, 3]);
-
-        formHelpers.setupCKEditor(this, null, 'ta_text');
-    }
-
-    // Runs before form submit
-    function clock_form_add_submit() {        
-
-        // Update text callback fields
-        formHelpers.updateCKEditor();
-    }
-
-
-    // Runs after form opens
     function clock_form_edit_open() {
 
         // Set duration field, using the helper ()
@@ -64,10 +44,10 @@
     };
 
     // Runs before form submit
-    function clock_form_edit_submit() {
+    function clock_form_edit_submit() {  
 
-        // Use same method as form add submit
-        clock_form_add_submit.bind(this)();
+        // Update text callback fields
+        formHelpers.updateCKEditor();
     }
 
 </script>

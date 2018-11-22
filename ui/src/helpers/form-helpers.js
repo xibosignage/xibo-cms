@@ -1,5 +1,12 @@
-const dataSetViewOrderClauseTemplate = require("../templates/data-set-view-order-clause.hbs");
-const dataSetViewFilterClauseTemplate = require('../templates/data-set-view-filter-clause.hbs');
+// Include templates
+const templates = {
+    dataSetOrderClauseTemplate: require("../templates/form-helpers-data-set-order-clause.hbs"),
+    dataSetFilterClauseTemplate: require('../templates/form-helpers-data-set-filter-clause.hbs'),
+    subPlaylistFormTemplate: require('../templates/form-helpers-sub-playlist-form.hbs'),
+    twittermetroColorsTemplate: require('../templates/form-helpers-twitter-metro-colors.hbs'),
+    chartColorsTemplate: require('../templates/form-helpers-chart-colors.hbs'),
+    chartGraphConfigTemplate: require('../templates/form-helpers-chart-graph-config.hbs')
+};
 
 let formHelpers = function() {
 
@@ -151,14 +158,13 @@ let formHelpers = function() {
     };
 
     /**
-    * Create a CKEDITOR instance to conjure a text editor
+    * Setup form with a CKEditor and AdvancedEditor
     * @param {object} dialog - Dialog object ( the object that contains the replaceable fields )
     * @param {callback=} callbackFunction - Function called when override template or advance editor is changed
     * @param {string=} textAreaName - Textarea editor, if exists
     */
     this.setupForm = function(dialog, callbackFunction, textAreaName) {
-
-        console.debug(' >> setupForm');
+        
         const self = this;
 
         // Get extra data
@@ -166,7 +172,7 @@ let formHelpers = function() {
 
         // Function to apply template contents to form
         var applyTemplateContentIfNecessary = function(data) {
-            
+
             // Apply content only if override template is on
             if($("#overrideTemplate", dialog).is(":checked")) {
 
@@ -180,12 +186,23 @@ let formHelpers = function() {
                     self.destroyCKEditor(textAreaId);
                 }
 
+                let templates = data;
+
+                // Fix for modules with templates as a param of data
+                if(data.templates !== undefined) {
+                    templates = data.templates;
+                }
+
                 // Parse each field
-                $.each(data, function(index, value) {
+                $.each(templates, function(index, value) {
+ 
                     if(value.id == templateId) {
 
                         // Update html and css on the form
-                        $('#' + textAreaId, dialog).val(value.template);
+                        if(textAreaName != undefined) {
+                            $('#' + textAreaId, dialog).val(value.template);
+                        }
+                        
                         $('#ta_css', dialog).val(value.css);
 
                         // Check/uncheck advanced editor input if available
@@ -223,14 +240,7 @@ let formHelpers = function() {
                             var text;
 
                             if(target.length > 0) {
-                                if($(this).attr("datasetcolumnid") != undefined)
-                                    text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]";
-                                else
-                                    text = "[" + e.params.data.element.value + "]";
-
-                                // TODO: Test dataset col
-                                console.debug($(this).attr("datasetcolumnid"));
-                                console.debug(text);
+                                text = "[" + e.params.data.element.value + "]";
 
                                 let cursorPosition = target[0].selectionStart;
                                 let previousText = target.val();
@@ -276,15 +286,12 @@ let formHelpers = function() {
      * @param {object} extraData - Extra data
      * @param {string} textAreaName - Name of the text area to use for the editor
      * @param {bool=} inline - Inline editor option
+     * @param {string=} customNoDataMessage - Custom message to appear when the field is empty
      */
-    this.setupCKEditor = function(dialog, extraData, textAreaName, inline = false) {
+    this.setupCKEditor = function(dialog, extraData, textAreaName, inline = false, customNoDataMessage = null) {
 
         // Get form text area Id by name
         let textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
-        
-        console.debug(' >>>> setupCKEditor');
-        console.debug(textAreaName);
-        console.debug(textAreaId);
 
         // Stop here if there's no text area element
         if(textAreaId === undefined) {
@@ -453,11 +460,20 @@ let formHelpers = function() {
                 data = data.replace(/#Color#/g, color);
             }
                         
-            // Default config for fonts
+            // Handle no message data
             if(data == "") {
-                const messageToDisplay = (textAreaId === 'noDataMessage') ? translations.noDataMessage : translations.enterText;
-                
-                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + messageToDisplay + "</span></span>";
+
+                let dataMessage = '';
+
+                if(textAreaId === 'noDataMessage') {
+                    dataMessage = translations.noDataMessage;
+                } else if(customNoDataMessage !== null) {
+                    dataMessage = customNoDataMessage;
+                } else {
+                    dataMessage = translations.enterText;
+                }
+
+                data = "<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + dataMessage + "</span></span>";
             }
 
             // Handle initial template set up
@@ -476,14 +492,7 @@ let formHelpers = function() {
                 var text;
                 
                 if(CKEDITOR.instances[linkedTo] != undefined) {
-                    if($(this).attr("datasetcolumnid") != undefined)
-                        text = "[" + $(this).html() + "|" + $(this).attr("datasetcolumnid") + "]";
-                    else
-                        text = "[" + e.params.data.element.value + "]";
-
-                    // TODO: Test dataset col
-                    console.debug($(this).attr("datasetcolumnid"));
-                    console.debug(text);
+                    text = "[" + e.params.data.element.value + "]";
 
                     CKEDITOR.instances[linkedTo].insertText(text);
                 }
@@ -554,6 +563,8 @@ let formHelpers = function() {
                         CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
                     }
                 }
+                                // Reset selector
+                $(this).val('').trigger('change');
             });
         }
 
@@ -567,8 +578,6 @@ let formHelpers = function() {
      * Restart CKEDITOR instance
      */
     this.restartCKEditor = function(dialog, textAreaName) {
-        console.debug('restartCKEditor'); 
-        console.debug(dialog);
 
         // Get form text area Id by name
         let textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
@@ -581,7 +590,6 @@ let formHelpers = function() {
      * Update text callback CKEDITOR instance
      */
     this.updateCKEditor = function(instance) {
-        console.debug('updateCKEditor ' + instance);
 
         try {
             // Update specific instance
@@ -601,22 +609,16 @@ let formHelpers = function() {
      * Destroy text callback CKEDITOR instance
      */
     this.destroyCKEditor = function(instance) {
-
-        console.debug('destroyCKEditor ' + instance);
-
+        
         // Make sure when we close the dialog we also destroy the editor
         try {
             if(instance === undefined) {
-                console.debug('Destroy all instances!');
                 // Destroy all instances
                 $.each(CKEDITOR.instances, function(index, value) {
-                    console.debug('Destroy ' + index);
                     CKEDITOR.instances[index].destroy();
                 });
             } else {
                 // Destroy specific instance
-                console.debug('Destroy specific instance!');
-                console.debug(instance);
                 if(CKEDITOR.instances[instance] != undefined) {
                     CKEDITOR.instances[instance].destroy();
                 }
@@ -676,14 +678,14 @@ let formHelpers = function() {
             );
         });
 
-        footer.find('#Save').before(replaceButton);
+        footer.find('#save').before(replaceButton);
     };
 
-/**
- * Configure the query builder ( order and filter )
- * @param {object} dialog - Dialog object
- * @param {object} translations - Object with all the translations
- */
+    /**
+     * Configure the query builder ( order and filter )
+     * @param {object} dialog - Dialog object
+     * @param {object} translations - Object with all the translations
+     */
     this.configureQueryBuilder = function(dialog, translations) {
 
         // Order Clause
@@ -692,7 +694,7 @@ let formHelpers = function() {
         if(orderClauseFields.length == 0)
             return;
         
-        var orderClauseTemplate = dataSetViewOrderClauseTemplate;
+        var orderClauseTemplate = templates.dataSetOrderClauseTemplate;
 
         var ascTitle = translations.ascTitle;
         var descTitle = translations.descTitle;
@@ -733,7 +735,7 @@ let formHelpers = function() {
         // Filter Clause
         //
         var filterClauseFields = $("#filterClause");
-        var filterClauseTemplate = dataSetViewFilterClauseTemplate;
+        var filterClauseTemplate = templates.dataSetFilterClauseTemplate;
         var filterOptions = translations.filterOptions;
         var filterOperatorOptions = translations.filterOperatorOptions;
 
@@ -796,6 +798,19 @@ let formHelpers = function() {
                 $(this).closest(".form-group").remove();
             }
         });
+    };
+
+    /**
+     * Get pre-built template
+     * @param {object} templateName - Template name
+     * @returns {object} Template object
+     */
+    this.getTemplate = function(templateName) {
+        if(templates[templateName] === undefined) {
+            console.error('Template ' + templateName + ' does not exist on formHelpers file!')
+        }
+
+        return templates[templateName];
     };
 };
 

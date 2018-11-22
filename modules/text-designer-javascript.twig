@@ -7,27 +7,6 @@
 #}
 <script type="text/javascript">
 
-    // Runs after form opens
-    function text_form_add_open() {
-        
-        // Set duration field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
-
-        // Set effect type input field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
-
-        // Set text callback structure
-        formHelpers.setupCKEditor(this, null, 'ta_text');
-    }
-
-    // Runs before form submit
-    function text_form_add_submit() {        
-
-        // Update text callback fields
-        formHelpers.updateCKEditor();
-    }
-
-
     // Runs after form open
     function text_form_edit_open() {
 
@@ -53,10 +32,10 @@
     }
 
     // Runs before form submit
-    function text_form_edit_submit() {
+    function text_form_edit_submit() {     
 
-        // Use same method as form add submit
-        text_form_add_submit.bind(this)();
+        // Update text callback fields
+        formHelpers.updateCKEditor();
     }
 
 </script>

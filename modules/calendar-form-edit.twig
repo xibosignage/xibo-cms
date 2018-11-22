@@ -28,81 +28,6 @@
     {% trans "Edit Calendar" %}
 {% endblock %}
 
-{% block formButtons %}
-    {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#calendarFormEdit").submit()
-{% endblock %}
-
-{% block callBack %}calendarFormOpen{% endblock %}
-
-{% block formFieldActions %}
-    [{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "none" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    },{
-    "field": "useDuration",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".duration-fields": { "display": "block" }
-    }
-    },{
-    "field": "useCurrentTemplate",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".current-event-template": { "display": "none" }
-    }
-    },{
-    "field": "useCurrentTemplate",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".current-event-template": { "display": "none" }
-    }
-    },{
-    "field": "useCurrentTemplate",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".current-event-template": { "display": "block" }
-    }
-    },{
-    "field": "useCurrentTemplate",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".current-event-template": { "display": "block" }
-    }
-    }]
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -138,30 +63,38 @@
 
                     </div>
                     <div class="tab-pane" id="templateTab">
-                        <div class="col-sm-6">
-                            <div class="well">
-                                <div class="text-center text-info">{% trans "Available Substitutions" %}</div>
-                                <ul id="TickerDataSetColumns">
-                                    <li class="ckeditor_snippits" linkedto="ta_text">Name</li>
-                                    <li class="ckeditor_snippits" linkedto="ta_text">Summary</li>
-                                    <li class="ckeditor_snippits" linkedto="ta_text">Description</li>
-                                    <li class="ckeditor_snippits" linkedto="ta_text">Location</li>
-                                    <li class="ckeditor_snippits" linkedto="ta_text">StartDate</li>
-                                    <li class="ckeditor_snippits" linkedto="ta_text">EndDate</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group well">
-                                <label class="col-sm-2 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                <div class="col-sm-10">
-                                    <select id="ckeditor_library_select2"
-                                            class="ckeditor_library_select form-control"
-                                            data-width="100%"
-                                            data-linked-to="ta_text"
-                                            data-search-url="{{ urlFor("library.search") }}"
-                                            data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                    </select>
+                        {% set generatedId %}{{ random() }}{% endset %}
+                        <div class="ckeditor_controls">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                        class="ckeditor_snippets_select form-control"
+                                        data-linked-to="ta_text{{ generatedId }}">
+                                            <option value=""></option>
+                                            <option value="Name">Name</option>
+                                            <option value="Summary">Summary</option>
+                                            <option value="Description">Description</option>
+                                            <option value="Location">Location</option>
+                                            <option value="StartDate">StartDate</option>
+                                            <option value="EndDate">EndDate</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>  
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                    <div class="col-sm-8">
+                                        <select id="ckeditor_library_select2"
+                                                class="ckeditor_library_select form-control"
+                                                data-width="100%"
+                                                data-linked-to="ta_text{{ generatedId }}"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -171,11 +104,46 @@
                             {% trans "The red rectangle reflects the size of the region you are editing." %}
                             {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                         {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "", "", 10, generatedId) }}
 
                         {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
                         {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
                         {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
+
+                        <div class="ckeditor_controls current-event-template">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                        class="ckeditor_snippets_select form-control"
+                                        data-linked-to="currentEventTemplate">
+                                            <option value=""></option>
+                                            <option value="Name">Name</option>
+                                            <option value="Summary">Summary</option>
+                                            <option value="Description">Description</option>
+                                            <option value="Location">Location</option>
+                                            <option value="StartDate">StartDate</option>
+                                            <option value="EndDate">EndDate</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>  
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                    <div class="col-sm-8">
+                                        <select id="ckeditor_library_select2"
+                                                class="ckeditor_library_select form-control"
+                                                data-width="100%"
+                                                data-linked-to="currentEventTemplate"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {% set helpText %}
                             {% trans "Enter the alternative template for events that are current." %}
@@ -264,9 +232,9 @@
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
 
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        <div class="col-md-6 col-md-offset-6">
-                            <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
-                            <div class="col-sm-10">
+                        <div class="col-md-6">
+                            <label class="col-sm-4 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
+                            <div class="col-sm-8">
                                 <select id="ckeditor_library_select"
                                         class="ckeditor_library_select form-control"
                                         data-linked-to="noDataMessage"

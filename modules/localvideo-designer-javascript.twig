@@ -8,17 +8,10 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function localvideo_form_add_open() {
+    function localvideo_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
-    }
-
-    // Runs after form opens
-    function localvideo_form_edit_open() {
-
-        // Use same method as form add open
-        localvideo_form_add_open.bind(this)();
     }
 
 </script>

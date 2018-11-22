@@ -4,7 +4,7 @@
         <label for="filterClauseOperator[]" {{#eq title "1"}}class="hidden"{{/eq}}>
             <select class="form-control" name="filterClauseOperator[]">
                 {{#each filterOperatorOptions}}
-                <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
+                    <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
                 {{/each}}
             </select>
         </label>

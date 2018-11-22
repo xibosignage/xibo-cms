@@ -108,6 +108,19 @@ class DataSetTicker extends ModuleWidget
         ];
     }
 
+    /** @inheritdoc @override */
+    public function editForm()
+    {
+        // Do we have a step provided?
+        $step = $this->getSanitizer()->getInt('step', 2);
+
+        if ($step == 1 || !$this->hasDataSet()) {
+            return 'datasetticker-form-edit-step1';
+        } else {
+            return 'datasetticker-form-edit';
+        }
+    }
+
     /**
      * Does this module have a DataSet yet?
      * @return bool
@@ -300,8 +313,15 @@ class DataSetTicker extends ModuleWidget
         // Do we have a step provided?
         $step = $this->getSanitizer()->getInt('step', 2);
 
-        if ($step == 1 || !$this->hasDataSet()) {
+        if ($step == 1) {
+
             $dataSetId = $this->getSanitizer()->getInt('dataSetId');
+
+            // Do we already have a DataSet?
+            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+                // Reset the fields that are dependent on the dataSetId
+                //$this->setOption('columns', '');
+            }
 
             $this->setOption('dataSetId', $dataSetId);
 
@@ -812,8 +832,9 @@ class DataSetTicker extends ModuleWidget
             throw new InvalidArgumentException(__('Please select a DataSet'), 'dataSetId');
 
         // Check we have permission to use this DataSetId
-        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
-            throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+        // FIXME: Call to a member function checkViewable() on null
+        //if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
+            //throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
 
         if ($this->widget->widgetId != 0) {
             // Some extra edit validation
