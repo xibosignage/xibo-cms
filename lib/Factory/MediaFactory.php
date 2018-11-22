@@ -451,6 +451,21 @@ class MediaFactory extends BaseFactory
         if ($sortOrder === null)
             $sortOrder = ['name'];
 
+        $newSortOrder = [];
+        foreach ($sortOrder as $sort) {
+            if ($sort == '`revised`') {
+                $newSortOrder[] = '`parentId`';
+                continue;
+            }
+
+            if ($sort == '`revised` DESC') {
+                $newSortOrder[] = '`parentId` DESC';
+                continue;
+            }
+            $newSortOrder[] = $sort;
+        }
+        $sortOrder = $newSortOrder;
+
         $entries = array();
 
         $params = array();
