@@ -399,7 +399,7 @@ class Soap
             foreach ($sth->fetchAll() as $row) {
                 $layoutId = $this->getSanitizer()->int($row['layoutID']);
 
-                if ($row['scheduleId'] != 0) {
+                if ($row['eventId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
                     try {
