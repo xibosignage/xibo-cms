@@ -798,7 +798,7 @@ class Stats extends Base
         }
 
         // Get an array of display id this user has access to.
-        $displayIds = array();
+        $displayIds = [];
 
         foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
