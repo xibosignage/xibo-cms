@@ -889,6 +889,12 @@ class DataSetView extends ModuleWidget
     }
 
     /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
+    }
+
+    /** @inheritdoc */
     public function getLockKey()
     {
         // Lock to the dataSetId, because our dataSet might have external images which are downloaded.

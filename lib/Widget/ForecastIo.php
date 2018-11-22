@@ -24,9 +24,9 @@ namespace Xibo\Widget;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
-use Xibo\Exception\InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
@@ -903,6 +903,12 @@ class ForecastIo extends ModuleWidget
     public function getCacheKey($displayId)
     {
         return $this->getWidgetId() . (($displayId === 0 || $this->getOption('useDisplayLocation') == 1) ? '_' . $displayId : '');
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return ($this->getOption('useDisplayLocation') == 1);
     }
 
     public function getWeatherLanguage()

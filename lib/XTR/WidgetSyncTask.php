@@ -46,6 +46,7 @@ class WidgetSyncTask implements TaskInterface
         $layout = null;
         $countWidgets = 0;
         $countLayouts = 0;
+        $widgetsDone = [];
 
         $sql = '
           SELECT requiredfile.itemId, requiredfile.displayId 
@@ -86,6 +87,9 @@ class WidgetSyncTask implements TaskInterface
 
                     // Update pointer
                     $currentLayoutId = $layoutId;
+
+                    // Clear out the list of widgets we've done
+                    $widgetsDone = [];
                 }
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
@@ -107,11 +111,19 @@ class WidgetSyncTask implements TaskInterface
                                 // Make me a module from the widget
                                 $module = $moduleFactory->createWithWidget($widget, $region);
 
+                                // Have we done this widget before?
+                                if (in_array($widget->widgetId, $widgetsDone) && !$module->isCacheDisplaySpecific()) {
+                                    $this->log->debug('This widgetId ' . $widget->widgetId . ' has been done before and is not display specific, so we skip');
+                                }
+
                                 // Record start time
                                 $startTime = microtime(true);
 
                                 // Cache the widget
                                 $module->getResourceOrCache($displayId);
+
+                                // Record we have done this widget
+                                $widgetsDone[] = $widget->widgetId;
 
                                 // Record end time and aggregate for final total
                                 $duration = (microtime(true) - $startTime);

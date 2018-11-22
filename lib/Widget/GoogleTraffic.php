@@ -338,4 +338,10 @@ class GoogleTraffic extends ModuleWidget
     {
         return $this->getWidgetId() . (($this->getOption('useDisplayLocation') == 1 || $displayId === 0) ? '_' . $displayId : '');
     }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return ($this->getOption('useDisplayLocation') == 1);
+    }
 }
