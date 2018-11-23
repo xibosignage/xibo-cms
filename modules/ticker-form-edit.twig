@@ -271,7 +271,7 @@
                 {% set fieldUpdateInterval %}{{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}{% endset %}
 
                 {% set title %}{% trans "Update Interval Images (mins)" %}{% endset %}
-                {% set helpText %}{% trans "Please enter the update interval for images in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                {% set helpText %}{% trans "Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings." %}{% endset %}
                 {% set fieldUpdateIntervalImages %}{{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages")), helpText, "", "required") }}{% endset %}
 
                 {% set title %}{% trans "Duration is per item" %}{% endset %}

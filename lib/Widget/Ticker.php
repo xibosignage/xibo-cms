@@ -489,7 +489,6 @@ class Ticker extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('durationIsPerItem', 1);
         $this->setOption('updateInterval', 120);
-        $this->setOption('updateIntervalImages', $this->module->settings['updateIntervalImages']);
         $this->setOption('speed', 2);
 
         if ($this->getOption('sourceId') == 2)
@@ -516,7 +515,11 @@ class Ticker extends ModuleWidget
         $this->setOption('xmds', true);
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-        $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages', $this->module->settings['updateIntervalImages']));
+
+        if ($this->getSanitizer()->getInt('updateIntervalImages') !== null) {
+            $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages'));
+        }
+
         $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
@@ -972,7 +975,7 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->module->settings['updateIntervalImages']))->format('U');
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {
@@ -1257,7 +1260,7 @@ class Ticker extends ModuleWidget
         $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->module->settings['updateIntervalImages']))->format('U');
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Combine the column id's with the dataset data
         $matches = '';
