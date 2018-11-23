@@ -613,6 +613,7 @@ class DataSetFactory extends BaseFactory
      * @param array $entry The Data from the remote system
      * @param DataSetColumn[] $dataSetColumns The configured Columns form the current DataSet
      * @return array The processed $entry as a List of Fields from $columns
+     * @throws InvalidArgumentException
      */
     private function processEntry(array $entry, array $dataSetColumns) {
         $result = [];
@@ -645,7 +646,13 @@ class DataSetFactory extends BaseFactory
                             break;
                         case 3:
                             // This expects an ISO date
-                            $result[$column->heading] = $this->getSanitizer()->getDate($value[1]);
+                            $date = $this->getSanitizer()->string($value[1]);
+                            try {
+                                $result[$column->heading] = $this->date->parse($date);
+                            } catch (\Exception $e) {
+                                $this->getLog()->error('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ');
+                                throw new InvalidArgumentException('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ', 'date');
+                            }
                             break;
                         case 5:
                             $result[$column->heading] = $this->getSanitizer()->int($value[1]);

@@ -26,6 +26,7 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\Media;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -505,7 +506,7 @@ class ForecastIo extends ModuleWidget
 
         $apiKey = $this->getSetting('apiKey');
         if ($apiKey == '')
-            die(__('Incorrectly configured module'));
+            throw new ConfigurationException('Incorrectly configured module');
 
         // Query the API and Dump the Results.
         $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'minutely,hourly');

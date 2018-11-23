@@ -29,14 +29,19 @@
                 <form onsubmit="false">
                     {{ inline.hidden("retired", 0) }}
                     {{ inline.hidden("assignable", 1) }}
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("media", title) }}
-                        </div>
-                        <div class="col-md-6">
-                            {% set title %}{% trans "Type" %}{% endset %}
-                            {{ inline.dropdown("type", "single", title, "", [{type: null, name: ""}]|merge(modules), "type", "name") }}
+                    <div class="XiboFilter well">
+                        <div class="FilterDiv" id="Filter">
+                            <form class="form-inline">
+                                {% set title %}{% trans "Name" %}{% endset %}
+                                {{ inline.input("media", title) }}
+
+                                {% set title %}{% trans "Type" %}{% endset %}
+                                {{ inline.dropdown("type", "single", title, "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
+
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText) }}
+                            </form>
                         </div>
                     </div>
                 </form>
@@ -49,6 +54,7 @@
                             <th>{% trans "ID" %}</th>
                             <th>{% trans "Name" %}</th>
                             <th>{% trans "Type" %}</th>
+                            <th>{% trans "Tags" %}</th>
                             <th>{% trans "Thumbnail" %}</th>
                             <th></th>
                         </tr>

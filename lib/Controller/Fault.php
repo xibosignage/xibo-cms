@@ -192,7 +192,9 @@ class Fault extends Base
 
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
+        ob_end_flush();
         readfile($tempFileName);
+        exit;
     }
 
     public function debugOn()

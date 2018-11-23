@@ -31,6 +31,7 @@ use Respect\Validation\Validator as v;
 use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Helper\Environment;
@@ -98,6 +99,32 @@ class Ticker extends ModuleWidget
     public function getFilterClause()
     {
         return json_decode($this->getOption('filterClauses', "[]"), true);
+    }
+
+    /**
+     * Form for updating the module settings
+     */
+    public function settingsForm()
+    {
+        return 'ticker-form-settings';
+    }
+
+    /**
+     * Process any module settings
+     * @throws InvalidArgumentException
+     */
+    public function settings()
+    {
+        $updateIntervalImages = $this->getSanitizer()->getInt('updateIntervalImages', 240);
+
+        if ($this->module->enabled != 0) {
+            if ($updateIntervalImages < 0)
+                throw new InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'), 'updateIntervalImages');
+        }
+
+        $this->module->settings['updateIntervalImages'] = $updateIntervalImages;
+
+        return $this->module->settings;
     }
 
     /**
@@ -174,6 +201,10 @@ class Ticker extends ModuleWidget
 
             if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new \InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
+
+            $updateIntervalImages = $this->getOption('updateIntervalImages');
+            if ($updateIntervalImages !== null && !v::intType()->min(0)->validate($this->getOption('updateIntervalImages', 0)))
+                throw new \InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'));
         }
     }
 
@@ -238,6 +269,13 @@ class Ticker extends ModuleWidget
      *      name="updateInterval",
      *      in="formData",
      *      description="EDIT Only - Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateIntervalImages",
+     *      in="formData",
+     *      description="EDIT Only - Update interval for downloaded Images, in minutes",
      *      type="integer",
      *      required=false
      *   ),
@@ -477,6 +515,11 @@ class Ticker extends ModuleWidget
         $this->setOption('xmds', true);
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+
+        if ($this->getSanitizer()->getInt('updateIntervalImages') !== null) {
+            $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages'));
+        }
+
         $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
@@ -932,7 +975,7 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expires = $this->getDate()->parse()->addMinutes($this->getOption('updateInterval', 3600))->format('U');
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {
@@ -1005,7 +1048,7 @@ class Ticker extends ModuleWidget
                         // image url
                         if ($link != NULL) {
                             // Grab the profile image
-                            $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+                            $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expiresImage);
 
                             $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" ' . $attribute . ' />';
                         }
@@ -1072,7 +1115,7 @@ class Ticker extends ModuleWidget
 
                                 if (!(empty($link))) {
                                     // Grab the image
-                                    $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expires);
+                                    $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expiresImage);
 
                                     $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
                                 } else {
@@ -1217,7 +1260,7 @@ class Ticker extends ModuleWidget
         $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Combine the column id's with the dataset data
         $matches = '';
@@ -1305,7 +1348,7 @@ class Ticker extends ModuleWidget
                         if ($mappings[$header]['dataTypeId'] == 4) {
                             // External Image
                             // Download the image, alter the replace to wrap in an image tag
-                            $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
+                            $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expiresImage);
 
                             $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
 

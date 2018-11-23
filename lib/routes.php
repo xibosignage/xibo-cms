@@ -209,6 +209,7 @@ $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
+$app->post('/library/copy/:id', '\Xibo\Controller\Library:copy')->name('library.copy');
 // Tagging
 $app->post('/library/:id/tag', '\Xibo\Controller\Library:tag')->name('library.tag');
 $app->post('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');
@@ -314,7 +315,7 @@ $app->get('/rss/:psk', '\Xibo\Controller\DataSetRss:feed')->name('dataSet.rss.fe
  */
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
 $app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
-$app->get('/stats/data/availability', '\Xibo\Controller\Stats:availabilityData')->name('stats.availability.data');
+$app->get('/stats/data/timeDisconnected', '\Xibo\Controller\Stats:timeDisconnectedGrid')->name('stats.timeDisconnected.search');
 $app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export');
 
 /**

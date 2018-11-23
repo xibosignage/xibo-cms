@@ -132,8 +132,10 @@ class StatusDashboard extends Base
                   IFNULL(SUM(Size), 0) AS size
                 FROM `bandwidth`
                   INNER JOIN `lkdisplaydg`
-                  ON lkdisplaydg.displayid = bandwidth.displayId
-               WHERE month > :month ';
+                  ON lkdisplaydg.displayID = bandwidth.displayId
+                  INNER JOIN `displaygroup`
+                  ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
+               WHERE month > :month AND displaygroup.isDisplaySpecific = 1';
 
             $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 

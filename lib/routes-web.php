@@ -37,11 +37,11 @@ $app->get('/', function () use ($app) {
 })->setName('home');
 
 // Dashboards
-$app->get('/dashboard/status', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
-$app->get('/dashboard/status/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
-$app->get('/dashboard/icon', '\Xibo\Controller\IconDashboard:displayPage')->name('dashboard.view');
-$app->get('/dashboard/media', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
-$app->get('/dashboard/media/data', '\Xibo\Controller\MediaManager:grid')->name('mediaManager.search');
+$app->get('/statusdashboard', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
+$app->get('/statusdashboard/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
+$app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
+$app->get('/mediadashboard', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
+$app->get('/mediadashboard/data', '\Xibo\Controller\MediaManager:grid')->name('mediaManager.search');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
@@ -137,7 +137,7 @@ $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('libr
 $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 $app->get('/library/fontlist', '\Xibo\Controller\Library:fontList')->name('library.font.list');
-
+$app->get('/library/form/copy/:id', '\Xibo\Controller\Library:copyForm')->name('library.copy.form');
 
 //
 // display
