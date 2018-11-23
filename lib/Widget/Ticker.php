@@ -115,7 +115,7 @@ class Ticker extends ModuleWidget
      */
     public function settings()
     {
-        $updateIntervalImages = $this->getSanitizer()->getString('updateIntervalImages', 240);
+        $updateIntervalImages = $this->getSanitizer()->getInt('updateIntervalImages', 240);
 
         if ($this->module->enabled != 0) {
             if ($updateIntervalImages < 0)
@@ -202,7 +202,8 @@ class Ticker extends ModuleWidget
             if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
                 throw new \InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
 
-            if (!v::intType()->min(0)->validate($this->getOption('updateIntervalImages')))
+            $updateIntervalImages = $this->getOption('updateIntervalImages');
+            if ($updateIntervalImages !== null && !v::intType()->min(0)->validate($this->getOption('updateIntervalImages', 0)))
                 throw new \InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'));
         }
     }
