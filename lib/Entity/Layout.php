@@ -924,11 +924,11 @@ class Layout implements \JsonSerializable
                 // Set the Layout Status
                 try {
                     $moduleStatus = $module->isValid();
-                } catch (InvalidArgumentException $invalidArgumentException) {
+                } catch (XiboException $xiboException) {
                     $moduleStatus = 0;
 
                     // Include the exception on
-                    $this->pushStatusMessage($invalidArgumentException->getMessage());
+                    $this->pushStatusMessage($xiboException->getMessage());
                 }
 
                 $status = ($moduleStatus > $status) ? $moduleStatus : $status;

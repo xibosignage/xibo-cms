@@ -852,7 +852,7 @@ class Layout extends Base
 
                     try {
                         $widget->isValid = (int)$module->isValid();
-                    } catch (InvalidArgumentException $invalidArgumentException) {
+                    } catch (XiboException $xiboException) {
                         $widget->isValid = 0;
                     }
                 }
