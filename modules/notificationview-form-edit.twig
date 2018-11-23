@@ -40,8 +40,10 @@
                         {% set helpText %}{% trans "What is the maximum notification age in minutes, 0 for no restrictions." %}{% endset %}
                         {{ forms.number("age", title, module.getOption("age"), helpText, "", "required") }}
 
+                        {% set generatedId %}{{ random() }}{% endset %}
+
                         {% set helpText %}{% trans "The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting." %}{% endset %}
-                        {{ forms.textarea("template", "", module.getRawNode("template"), helpText, "", "", 5) }}
+                        {{ forms.textarea("template", "", module.getRawNode("template"), helpText, "html-editor-group", "", 5, generatedId) }}
                     </div>
                     <div class="tab-pane" id="effectTab">
                         {% set title %}{% trans "Effect" %}{% endset %}

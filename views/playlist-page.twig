@@ -120,6 +120,10 @@
                     url: "{{ urlFor("module.widget.add.form") }}",
                     type: 'GET'
                 },
+                addWidget: {
+                    url: "{{ urlFor("module.widget.add") }}",
+                    type: 'POST'
+                },
                 preview: {
                     url: "{{ urlFor("region.preview") }}",
                     type: 'GET'
@@ -145,6 +149,10 @@
                 addForm: {
                     url: "{{ urlFor("module.widget.add.form") }}",
                     type: 'GET'
+                },
+                add: {
+                    url: "{{ urlFor("module.widget.add") }}",
+                    type: 'POST'
                 },
                 delete: {
                     url: "{{ urlFor("module.widget.delete") }}",
@@ -207,7 +215,7 @@
             cancelUpload: "{% trans "Cancel upload" %}",
             viewLibrary: "{% trans "View Library" %}",
             undo: "{% trans "Undo" %}"
-        }
+        };
         var playlistAddFilesTrans = {
             uploadMessage: "{% trans "Replace" %}",
             addFiles: "{% trans "Add Replacement" %}",
@@ -221,7 +229,54 @@
                 title: "{% trans "Delete the old version?" %}",
                 helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
             }
-        }
+        };
+        
+        var datasetQueryBuilderTranslations = {
+            ascTitle: "{% trans "Ascending" %}",
+            descTitle: "{% trans "Descending" %}",
+            filterOptions: [
+                {
+                    id: "starts-with",
+                    value: "{% trans "starts with" %}"
+                }, {
+                    id: "ends-with",
+                    value: "{% trans "ends with" %}"
+                }, {
+                    id: "contains",
+                    value: "{% trans "contains" %}"
+                }, {
+                    id: "equals",
+                    value: "{% trans "equals" %}"
+                }, {
+                    id: "not-starts-with",
+                    value: "{% trans "does not start with" %}"
+                }, {
+                    id: "not-ends-with",
+                    value: "{% trans "does not end with" %}"
+                }, {
+                    id: "not-contains",
+                    value: "{% trans "does not contain" %}"
+                }, {
+                    id: "not-equals",
+                    value: "{% trans "does not equal" %}"
+                }, {
+                    id: "greater-than",
+                    value: "{% trans "greater than" %}"
+                }, {
+                    id: "less-than",
+                    value: "{% trans "less than" %}"
+                }
+            ],
+            filterOperatorOptions: [
+                {
+                    id: "OR",
+                    value: "{% trans "Or" %}"
+                }, {
+                    id: "AND",
+                    value: "{% trans "And" %}"
+                }
+            ]
+        };
         {% endautoescape %}
 
         var table;
@@ -342,9 +397,9 @@
         function playlistFormOpen(dialog) {
             mediaTable = null;
 
-            $(dialog).find("input[name=filterMediaName]").on("keyup", $.debounce(500, function() {
+            $(dialog).find("input[name=filterMediaName]").on("keyup", _.debounce(function() {
                 playlistFormPopulateMediaTable(dialog);
-            }));
+            }, 500));
 
             $(dialog).find("input[name=filterMediaTag]").on("change", function() {
                 playlistFormPopulateMediaTable(dialog);

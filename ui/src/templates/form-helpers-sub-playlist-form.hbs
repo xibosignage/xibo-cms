@@ -1,0 +1,14 @@
+<div class="form-group">
+    <label class="col-sm-1 control-label" for="subPlaylistId[]">{{ title }}</label>
+    <div class="col-sm-7">
+        <select class="form-control" name="subPlaylistId[]">
+            <option value=""></option>
+            {{#each playlists}}
+                <option value="{{ playlistId }}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
+            {{/each}}
+        </select>
+    </div>
+    <div class="col-sm-1">
+        <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+    </div>
+</div>

@@ -149,9 +149,9 @@
         function displayGroupFormOpen(dialog) {
             displayTable = null;
 
-            $(dialog).find("input[name=dynamicCriteria]").on("keyup", $.debounce(500, function() {
+            $(dialog).find("input[name=dynamicCriteria]").on("keyup", _.debounce(function() {
                 displayGroupQueryDynamicMembers(dialog);
-            }));
+            }, 500));
 
             // First time in there
             displayGroupQueryDynamicMembers(dialog);

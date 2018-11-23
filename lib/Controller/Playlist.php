@@ -674,6 +674,7 @@ class Playlist extends Base
         $playlist->load();
 
         foreach ($playlist->widgets as $widget) {
+
             /* @var Widget $widget */
             $widget->module = $this->moduleFactory->createWithWidget($widget);
         }

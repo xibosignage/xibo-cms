@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008 Daniel Garner and James Packer
+ * Copyright (C) 2006-2018 Xibo Signage Ltd, Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -24,26 +24,20 @@ namespace Xibo\Widget;
 class Video extends ModuleWidget
 {
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'video-designer-javascript';
     }
 
-    /**
-     * Form for updating the module settings
-     */
+    /** @inheritdoc */
     public function settingsForm()
     {
         return 'video-form-settings';
     }
 
-    /**
-     * Process any module settings
-     */
+    /** @inheritdoc */
     public function settings()
     {
         // Process any module settings you asked for.
@@ -117,6 +111,8 @@ class Video extends ModuleWidget
      *      )
      *  )
      * )
+     *
+     * @inheritdoc
      */
     public function edit()
     {
@@ -136,23 +132,13 @@ class Video extends ModuleWidget
         $this->saveWidget();
     }
 
-    /**
-     * Override previewAsClient
-     * @param float $width
-     * @param float $height
-     * @param int $scaleOverride
-     * @return string
-     */
+    /** @inheritdoc */
     public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
     }
 
-    /**
-     * Determine duration
-     * @param $fileName
-     * @return int
-     */
+    /** @inheritdoc */
     public function determineDuration($fileName = null)
     {
         // If we don't have a file name, then we use the default duration of 0 (end-detect)
@@ -165,32 +151,22 @@ class Video extends ModuleWidget
         return intval($this->getSanitizer()->getDouble('playtime_seconds', 0, $file));
     }
 
-    /**
-     * Set default widget options
-     */
+    /** @inheritdoc */
     public function setDefaultWidgetOptions()
     {
         parent::setDefaultWidgetOptions();
         $this->setOption('mute', $this->getSetting('defaultMute', 0));
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         $this->download();
     }
 
-    /**
-     * Is this module valid
-     * @return int
-     */
+    /** @inheritdoc */
     public function isValid()
     {
-        // Yes
-        return 1;
+        return self::$STATUS_VALID;
     }
 }

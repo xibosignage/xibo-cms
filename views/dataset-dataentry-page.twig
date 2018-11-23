@@ -141,13 +141,13 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
 
-        var dataSetEditFormOpen = $.debounce(500, true, function() {
+        var dataSetEditFormOpen = _.debounce(function() {
             var data = table.row($(this)).data();
 
             // Load the edit form.
             var editUrl = "{{ urlFor("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
             XiboFormRender(editUrl);
-        });
+        }, 500, true);
         
         $("#datasets tbody").on('click', 'tr', dataSetEditFormOpen);
     </script>

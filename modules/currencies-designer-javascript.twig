@@ -8,7 +8,7 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function currencies_form_add_open() {
+    function currencies_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
@@ -20,14 +20,6 @@
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
         financeFormSetup(this);
-    }
-
-
-    // Runs after form opens
-    function currencies_form_edit_open() {
-
-        // Use same method as form add open
-        currencies_form_add_open.bind(this)();
     }
 
     function financeFormSetup(form) {

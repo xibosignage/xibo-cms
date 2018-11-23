@@ -165,31 +165,19 @@ class Twitter extends TwitterBase
         return $this->module->settings;
     }
 
-    public function validate()
-    {
-        // If overrideTemplate is false we have to define a template Id 
-        if($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null) )
-            throw new \InvalidArgumentException(__('Please choose a template'));
-            
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
-
-        if (!v::stringType()->notEmpty()->validate($this->getOption('searchTerm')))
-            throw new \InvalidArgumentException(__('Please enter a search term'));
-    }
-
     /**
-     * Adds a Twitter Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/twitter/{playlistId}",
-     *  operationId="WidgetTwitterAdd",
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetTwitterEdit",
      *  tags={"widget"},
-     *  summary="Add a Twitter Widget",
-     *  description="Add a new Twitter Widget to the specified playlist",
+     *  summary="Edit a Twitter Widget",
+     *  description="Edit a Twitter Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Twitter widget",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -276,7 +264,7 @@ class Twitter extends TwitterBase
      *      description="Distance in miles that the tweets should be returned from. Set 0 for no restrictions",
      *      type="integer",
      *      required=false
-     *   ),   
+     *   ),
      *  @SWG\Parameter(
      *      name="tweetCount",
      *      in="formData",
@@ -290,21 +278,21 @@ class Twitter extends TwitterBase
      *      description="Flag (0, 1) Should the URLs be removed from the tweet text?",
      *      type="integer",
      *      required=false
-     *   ),      
+     *   ),
      *  @SWG\Parameter(
      *      name="removeMentions",
      *      in="formData",
      *      description="Flag (0, 1) Should mentions (@someone) be removed from the tweet text?",
      *      type="integer",
      *      required=false
-     *   ),      
+     *   ),
      *  @SWG\Parameter(
      *      name="removeHashtags",
      *      in="formData",
      *      description="Flag (0, 1) Should the hashtags (#something) be removed from the tweet text",
      *      type="integer",
      *      required=false
-     *   ),             
+     *   ),
      *  @SWG\Parameter(
      *      name="updateInterval",
      *      in="formData",
@@ -390,42 +378,14 @@ class Twitter extends TwitterBase
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
-     */
-    public function add()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /**
-     * Edit Media
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
-    {
-        $this->setCommonOptions();
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /**
-     * Set common options from Request Params
-     */
-    private function setCommonOptions()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -444,29 +404,33 @@ class Twitter extends TwitterBase
         $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
         $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'), 5);
+        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage', 5));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
-        if( $this->getOption('overrideTemplate') == 1 ){
+        if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
             $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
-                
+
             $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
             $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
             $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
         }
-        
+
+        // Save the widget
+        $this->isValid();
+        $this->saveWidget();
     }
 
     /**
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws XiboException
+     * @throws \Xibo\Exception\XiboException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
@@ -780,6 +744,7 @@ class Twitter extends TwitterBase
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
                 $widgetOriginalPadding = $template['widgetOriginalPadding'];
+                $advancedEditor = $template['advancedEditor'];
                 $resultContent = $template['resultContent'];
             }
             
@@ -788,6 +753,7 @@ class Twitter extends TwitterBase
             $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
             $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
             $widgetOriginalPadding = $this->getSanitizer()->int($this->getOption('widgetOriginalPadding'));
+            $advancedEditor = $this->getOption('advancedEditor');
             $resultContent = $this->getOption('resultContent');
         }
 
@@ -884,11 +850,17 @@ class Twitter extends TwitterBase
     /** @inheritdoc */
     public function isValid()
     {
-        // Using the information you have in your module calculate whether it is valid or not.
-        // 0 = Invalid
-        // 1 = Valid
-        // 2 = Unknown
-        return 1;
+        // If overrideTemplate is false we have to define a template Id
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+            throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        if (!v::stringType()->notEmpty()->validate($this->getOption('searchTerm')))
+            throw new InvalidArgumentException(__('Please enter a search term'), 'searchTerm');
+
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */

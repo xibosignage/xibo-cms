@@ -1,0 +1,23 @@
+<div class="form-group">
+    <label class="col-sm-1 control-label" for="columnType[]">{{ title }}</label>
+    <div class="col-sm-4">
+        <label for="columnType[]">
+        <select class="form-control" name="columnType[]">
+            {{#each columnTypeOptions}}
+                <option value="{{ id }}" {{#eq id ../columnType}}selected{{/eq}}>{{ value }}</option>
+            {{/each}}
+        </select>
+        </label>
+    </div>
+    <div class="col-sm-4">
+        <select class="form-control" name="dataSetColumnId[]">
+            <option value=""></option>
+            {{#each columns}}
+                <option value="{{ dataSetColumnId }}" {{#eq dataSetColumnId ../dataSetColumnId}}selected{{/eq}}>{{ heading }}</option>
+            {{/each}}
+        </select>
+    </div>
+    <div class="col-sm-1">
+        <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+    </div>
+</div>

@@ -8,7 +8,7 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function googletraffic_form_add_open() {
+    function googletraffic_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
@@ -17,11 +17,5 @@
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
     }
 
-    // Runs after form opens
-    function googletraffic_form_edit_open() {
-
-        // Use same method as form add open
-        googletraffic_form_add_open.bind(this)();
-    }
 
 </script>

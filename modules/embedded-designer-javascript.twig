@@ -8,17 +8,11 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function embedded_form_add_open() {
+    function embedded_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
-    }
-
-    // Runs after form opens
-    function embedded_form_edit_open() {
-
-        // Use same method as form add open
-        embedded_form_add_open.bind(this)();
+        
     }
 
 </script>

@@ -23,6 +23,11 @@ namespace Xibo\Widget;
 
 class PowerPoint extends ModuleWidget
 {
+    /** @inheritdoc */
+    public function edit()
+    {
+        // Non-editable
+    }
 
     /**
      * Javascript functions for the layout designer
@@ -33,12 +38,14 @@ class PowerPoint extends ModuleWidget
         return 'powerpoint-designer-javascript';
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
         // Client dependant
-        return 2;
+        return self::$STATUS_PLAYER;
     }
 
+    /** @inheritdoc */
     public function editForm()
     {
         return 'generic-form-edit';

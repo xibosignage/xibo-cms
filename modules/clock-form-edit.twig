@@ -31,58 +31,86 @@
     <div class="row">
         <div class="col-md-12">
             <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <ul class="nav nav-tabs digital-control-group" role="tablist">
+                    <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                    <li><a href="#editorTab" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="generalTab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
 
-                {% set title %}{% trans "Set a duration?" %}{% endset %}
-                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
-                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
-                {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                        {% set title %}{% trans "Clock Type" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
+                        {% set analog %}{% trans "Analog" %}{% endset %}
+                        {% set digital %}{% trans "Digital" %}{% endset %}
+                        {% set flip %}{% trans "Flip Clock" %}{% endset %}
+                        {% set options = [
+                            { id: 1, value: analog },
+                            { id: 2, value: digital },
+                            { id: 3, value: flip },
+                        ] %}
+                        {{ forms.dropdown("clockTypeId", "single", title, module.getOption("clockTypeId"), options, "id", "value", helpText) }}
 
-                {% set title %}{% trans "Clock Type" %}{% endset %}
-                {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
-                {% set analog %}{% trans "Analog" %}{% endset %}
-                {% set digital %}{% trans "Digital" %}{% endset %}
-                {% set flip %}{% trans "Flip Clock" %}{% endset %}
-                {% set options = [
-                    { id: 1, value: analog },
-                    { id: 2, value: digital },
-                    { id: 3, value: flip },
-                ] %}
-                {{ forms.dropdown("clockTypeId", "single", title, module.getOption("clockTypeId"), options, "id", "value", helpText) }}
+                        {% set title %}{% trans "Clock Face" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a clock face." %}{% endset %}
+                        {{ forms.dropdown("clockFace", "single", title, module.getOption("clockFace", "TwentyFourHourClock"), module.clockFaces(), "id", "value", helpText, "flip-control-group") }}
 
-                {% set title %}{% trans "Clock Face" %}{% endset %}
-                {% set helpText %}{% trans "Please select a clock face." %}{% endset %}
-                {{ forms.dropdown("clockFace", "single", title, module.getOption("clockFace", "TwentyFourHourClock"), module.clockFaces(), "id", "value", helpText, "flip-control-group") }}
+                        {% set title %}{% trans "Offset" %}{% endset %}
+                        {% set helpText %}{% trans "The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s." %}{% endset %}
+                        {{ forms.input("offset", title, module.getOption("offset"), helpText) }}
 
-                {% set title %}{% trans "Offset" %}{% endset %}
-                {% set helpText %}{% trans "The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s." %}{% endset %}
-                {{ forms.input("offset", title, module.getOption("offset"), helpText) }}
+                        {% set title %}{% trans "Show Seconds?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the clock show seconds or not?" %}{% endset %}
+                        {{ forms.checkbox("showSeconds", title, module.getOption("showSeconds", 1), helpText, "flip-control-group") }}
 
-                {% set title %}{% trans "Show Seconds?" %}{% endset %}
-                {% set helpText %}{% trans "Should the clock show seconds or not?" %}{% endset %}
-                {{ forms.checkbox("showSeconds", title, module.getOption("showSeconds", 1), helpText, "flip-control-group") }}
+                        {% set title %}{% trans "Theme" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a theme for the clock." %}{% endset %}
+                        {% set light %}{% trans "Light" %}{% endset %}
+                        {% set dark %}{% trans "Dark" %}{% endset %}
+                        {% set options = [
+                        { id: 1, value: light },
+                        { id: 2, value: dark }
+                        ] %}
+                        {{ forms.dropdown("themeId", "single", title, module.getOption("themeId"), options, "id", "value", helpText, "analogue-control-group") }}
+                    </div>
 
-                {% set title %}{% trans "Theme" %}{% endset %}
-                {% set helpText %}{% trans "Please select a theme for the clock." %}{% endset %}
-                {% set light %}{% trans "Light" %}{% endset %}
-                {% set dark %}{% trans "Dark" %}{% endset %}
-                {% set options = [
-                { id: 1, value: light },
-                { id: 2, value: dark }
-                ] %}
-                {{ forms.dropdown("themeId", "single", title, module.getOption("themeId"), options, "id", "value", helpText, "analogue-control-group") }}
+                    <div class="tab-pane" id="editorTab">
+                        {% set generatedId %}{{ random() }}{% endset %}
 
-                {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
-                {{ forms.message(message, "digital-control-group") }}
+                        {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
+                        {{ forms.message(message, "digital-control-group") }}
 
-                {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
-                {{ forms.textarea("ta_text", "", module.getRawNode("format"), helpText, "digital-control-group") }}
+                        <div class="ckeditor_controls" data-linked-to="ta_text{{ generatedId }}">
+                            <div class="col-sm-offset-4 col-sm-8">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                            class="ckeditor_snippets_select form-control"
+                                            data-linked-to="ta_text{{ generatedId }}">
+                                            <option value=""></option>
+                                            <option value="HH:mm">HH:mm</option>
+                                            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("format"), helpText, "digital-control-group", "", 10, generatedId) }}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

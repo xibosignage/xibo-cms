@@ -20,8 +20,18 @@
  */
 namespace Xibo\Widget;
 
+/**
+ * Class GenericFile
+ * @package Xibo\Widget
+ */
 class GenericFile extends ModuleWidget
 {
+    /** @inheritdoc */
+    public function edit()
+    {
+        // Non-editable
+    }
+
     /**
      * Preview code for a module
      * @param int $width

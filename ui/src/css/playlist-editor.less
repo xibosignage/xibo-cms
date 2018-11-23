@@ -4,6 +4,7 @@
 
 // Variables
 @playlist-editor-main-background-color: #fff;
+@playlist-editor-main-fb-color: #333;
 @playlist-editor-min-content-height: 40vh;
 @playlist-editor-max-content-height: 65vh;
 
@@ -49,6 +50,13 @@
 
 .editor-modal-title {
     line-height: 1;
+    font-weight: bold;
+    color: @playlist-editor-main-fb-color;
+}
+
+.editor-modal-header .close:not(.help) i {
+    padding-left: 8px;
+    color: red;
 }
 
 #playlist-editor #playlist-timeline {
@@ -58,7 +66,7 @@
 }
 
 #playlist-editor #playlist-timeline #timeline-container{
-    padding: 0 5px;
+    padding: 5px;
     height: @playlist-editor-max-content-height;
     overflow: auto;
 }
@@ -68,6 +76,10 @@
     padding: 0;
     .border-radius(4px);
     border: 2px solid @playlist-editor-widget-selected-color;
+}
+
+#playlist-editor #playlist-properties-panel .form-container {
+    padding-top: 5px;
 }
 
 #playlist-editor-container.ui-droppable-active {
@@ -114,7 +126,6 @@
     text-align: center;
     font-weight: bold;
     font-size: 1.5em;
-    margin-bottom: 5px;
     color: white;
     background-color: @playlist-editor-timeline-fg-color;
     height: 30px;
@@ -205,6 +216,10 @@
 
 .playlist-widget i.editProperty:hover {
     color: lighten(@playlist-editor-widget-fg-color, 20%);
+}
+
+.playlist-widget.invalid-widget {
+    .box-shadow(inset 0px 0px 10px 3px red);
 }
 
 .ui-droppable-active {

@@ -65,12 +65,6 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        Handlebars.registerHelper('if_eq', function(a, b, opts) {
-            if(a == b) // Or === depending on your needs
-                return opts.fn(this);
-            else
-                return opts.inverse(this);
-        });
 
         var table = $("#dayparts").DataTable({ "language": dataTablesLanguage,
             serverSide: true, stateSave: true, stateDuration: 0,
@@ -215,7 +209,7 @@
                 <select class="form-control" name="exceptionDays[]">
                     <option value=""></option>
                     {{#each daysOfWeek}}
-                    <option value="{{ day }}" {{#if_eq day ../exceptionDay}}selected{{/if_eq}}>{{ title }}</option>
+                    <option value="{{ day }}" {{#eq day ../exceptionDay}}selected{{/eq}}>{{ title }}</option>
                     {{/each}}
                 </select>
             </div>

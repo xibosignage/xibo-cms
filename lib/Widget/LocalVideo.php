@@ -20,8 +20,8 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 
 class LocalVideo extends ModuleWidget
 {
@@ -35,30 +35,18 @@ class LocalVideo extends ModuleWidget
     }
 
     /**
-     * Validate
-     */
-    public function validate()
-    {
-        // Validate
-        if (!v::stringType()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'));
-
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
-            throw new InvalidArgumentException(__('You must enter a duration.'));
-    }
-
-    /**
-     * Adds a Local Video Widget
+     * Edit Widget
+     *
      * @SWG\Post(
-     *  path="/playlist/widget/localVideo/{playlistId}",
-     *  operationId="WidgetLocalVideoAdd",
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="WidgetLocalVideoEdit",
      *  tags={"widget"},
-     *  summary="Add a Local Video Widget",
-     *  description="Add a new Local Video Widget to the specified playlist",
+     *  summary="Edit a Local Video Widget",
+     *  description="Edit a Local Video Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
@@ -98,34 +86,12 @@ class LocalVideo extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
-     */
-    public function add()
-    {
-        // Set some options
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
-
-        $this->validate();
-
-        // Save the widget
-        $this->saveWidget();
-    }
-
-    /**
-     * Edit Media in the Database
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
@@ -136,25 +102,26 @@ class LocalVideo extends ModuleWidget
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
     }
 
+    /** @inheritdoc */
     public function isValid()
     {
-        // Client dependant
-        return 2;
+        // Validate
+        if (!v::stringType()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'), 'uri');
+
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+            throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+
+        return self::$STATUS_PLAYER;
     }
 
-    /**
-     * Override previewAsClient
-     * @param float $width
-     * @param float $height
-     * @param int $scaleOverride
-     * @return string
-     */
+    /** @inheritdoc */
     public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
