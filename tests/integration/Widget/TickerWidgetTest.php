@@ -161,8 +161,7 @@ class TickerWidgetTest extends LocalWebTestCase
                 'sourceId' => 2
             ]);
         }
-        $this->getLogger()->debug($this->client->response->getBody());
-        $this->getLogger()->debug('THE STATUS IS :' . $this->client->response->status());
+
         // Check response
         $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
 
@@ -320,8 +319,6 @@ class TickerWidgetTest extends LocalWebTestCase
         $this->client->put('/playlist/widget/' . $ticker->widgetId, $newWidgetOptions, ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // Check response
-        $this->getLogger()->debug($this->client->response->getBody());
-        $this->getLogger()->debug('THE STATUS IS :' . $this->client->response->status());
         $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
@@ -440,8 +437,7 @@ class TickerWidgetTest extends LocalWebTestCase
                 'itemsPerPage' => 5,
                 'noDataMessage' => $noDataMessage
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $this->getLogger()->debug($this->client->response->getBody());
-        $this->getLogger()->debug('THE STATUS IS :' . $this->client->response->status());
+
         $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
