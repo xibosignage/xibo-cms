@@ -1335,6 +1335,13 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        // the default cacheKey is the widgetId only, so the default answer here is false
+        return false;
+    }
+
+    /** @inheritdoc */
     public function getLockKey()
     {
         // Default is the widgetId

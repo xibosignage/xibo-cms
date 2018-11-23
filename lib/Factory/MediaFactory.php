@@ -328,6 +328,10 @@ class MediaFactory extends BaseFactory
                     $success($item);
             }
         }
+
+        // Clear the queue for next time.
+        $this->remoteDownloadQueue = [];
+        $this->remoteDownloadNotRequiredQueue = [];
     }
 
     /**

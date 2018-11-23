@@ -18,8 +18,8 @@
       "homepage": "https://github.com/alexharrington"
     },
     {
-      "name": "Spring Signage Ltd",
-      "homepage": "http://springsignage.com"
+      "name": "Xibo Signage Ltd",
+      "homepage": "https://xibo.org.uk"
     },
     {
       "name": "Xibo Contributors",
@@ -34,7 +34,8 @@
   ],
   "config": {
       "platform": {
-          "php": "5.5.9"
+          "php": "5.6",
+          "ext-zmq": "1"
       }
   },
   "require": {
@@ -76,13 +77,12 @@
     "phpseclib/mcrypt_compat": "^1.0"
   },
   "require-dev": {
-    "php": ">=7",
-    "phpunit/phpunit": "~5.0",
-    "zircote/swagger-php": "~2.0",
+    "phpunit/phpunit": "^5",
+    "zircote/swagger-php": "^2",
     "umpirsky/twig-gettext-extractor": "dev-dev-xibo-extractors",
     "there4/slim-test-helpers": "0.9.*",
     "doctrine/instantiator": "1.0.*",
-    "doctrine/annotations": "1.3.*"
+    "doctrine/annotations": "^1"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }

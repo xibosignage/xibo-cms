@@ -946,6 +946,12 @@ class Chart extends ModuleWidget
         return $this->getWidgetId() . '_' . $displayId;
     }
 
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
+    }
+
     /**
      * @inheritdoc
      * @override

@@ -1445,6 +1445,12 @@ class Ticker extends ModuleWidget
     }
 
     /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return ($this->getOption('sourceId', 1) == 2);
+    }
+
+    /** @inheritdoc */
     public function getLockKey()
     {
         if ($this->getOption('sourceId', 1) == 2) {
