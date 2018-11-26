@@ -922,11 +922,16 @@ class Layout implements \JsonSerializable
                 $module = $this->moduleFactory->createWithWidget($widget, $region);
 
                 // Set the Layout Status
-                $moduleStatus = $module->isValid();
-                $status = ($moduleStatus > $status) ? $moduleStatus : $status;
+                try {
+                    $moduleStatus = $module->isValid();
+                } catch (XiboException $xiboException) {
+                    $moduleStatus = 0;
 
-                if ($moduleStatus > 1 && $module->getStatusMessage() != '')
-                    $this->pushStatusMessage($module->getStatusMessage());
+                    // Include the exception on
+                    $this->pushStatusMessage($xiboException->getMessage());
+                }
+
+                $status = ($moduleStatus > $status) ? $moduleStatus : $status;
 
                 // Determine the duration of this widget
                 // the calculated duration contains the best guess at this duration from the playlist's perspective

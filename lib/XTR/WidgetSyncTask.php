@@ -107,7 +107,10 @@ class WidgetSyncTask implements TaskInterface
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
-                    foreach ($region->getPlaylist()->expandWidgets() as $widget) {
+                    $playlist = $region->getPlaylist();
+                    $playlist->setModuleFactory($this->moduleFactory);
+
+                    foreach ($playlist->expandWidgets() as $widget) {
                         // See if we have a cache
                         if ($widget->type == 'ticker' ||
                             $widget->type == 'text' ||

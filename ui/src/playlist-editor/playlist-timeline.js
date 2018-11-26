@@ -45,8 +45,24 @@ PlaylistTimeline.prototype.render = function(layout) {
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
 
+    // Save order function with debounce
+    var saveOrderFunc = _.debounce(function() {
+        pE.saveOrder();
+        pE.timeline.DOMObject.find('#unsaved').hide();
+        pE.timeline.DOMObject.find('#saved').show();
+    }, 1000);
+
     // Sortable widgets
-    this.DOMObject.find('#timeline-container').sortable();
+    this.DOMObject.find('#timeline-container').sortable({
+        start: function(event, ui) {
+            pE.timeline.DOMObject.find('#unsaved').hide();
+            saveOrderFunc.cancel();
+        },
+        stop: function(event, ui) {
+            pE.timeline.DOMObject.find('#unsaved').show();
+            saveOrderFunc();
+        }
+    });
 };
 
 module.exports = PlaylistTimeline;

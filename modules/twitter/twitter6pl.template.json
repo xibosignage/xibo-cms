@@ -7,5 +7,6 @@
     "widgetOriginalHeight": "450",
     "widgetOriginalPadding": "10",
     "resultContent": "2",
-    "image":"modules/twitter/template-thumbs/twitter6pl.png"
+    "image":"modules/twitter/template-thumbs/twitter6pl.png",
+    "advancedEditor": false
 }

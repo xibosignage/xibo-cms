@@ -64,6 +64,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 abstract class ModuleWidget implements ModuleInterface
 {
+    protected static $STATUS_INVALID = 0;
+    protected static $STATUS_VALID = 1;
+    protected static $STATUS_PLAYER = 2;
+
     /**
      * @var Slim
      */
@@ -689,19 +693,11 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public function add()
+    final public function add()
     {
-        // Nothing to do
-    }
-
-    /** @inheritdoc */
-    public function edit()
-    {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-
-        $this->widget->save();
+        // Set the default widget options for this widget and save.
+        $this->setDefaultWidgetOptions();
+        $this->saveWidget();
     }
 
     /** @inheritdoc */
@@ -959,7 +955,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function installModule()
     {
-        $this->getLog()->notice('Request to install module with name: ' . $this->module->name, 'module', 'InstallModule');
+        $this->getLog()->notice('Request to install module with name: ' . $this->module->name);
 
         // Validate some things.
         if ($this->module->type == '')
@@ -1013,14 +1009,6 @@ abstract class ModuleWidget implements ModuleInterface
     public function configureRoutes()
     {
 
-    }
-
-    /**
-     * Default view for add form
-     */
-    public function addForm()
-    {
-        return $this->getModuleType() . '-form-add';
     }
 
     /**
@@ -1294,7 +1282,8 @@ abstract class ModuleWidget implements ModuleInterface
      * @param Media $media
      * @param string $filePath
      */
-    public function preProcess($media, $filePath) {
+    public function preProcess($media, $filePath)
+    {
 
     }
 
@@ -1315,15 +1304,8 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
-    }
 
-    /**
-     * Get Status Message
-     * @return string
-     */
-    public function getStatusMessage()
-    {
-        return $this->statusMessage;
+        $this->setDuration($this->module->defaultDuration);
     }
 
     //<editor-fold desc="Get Resource and cache">
@@ -1517,22 +1499,6 @@ abstract class ModuleWidget implements ModuleInterface
             $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
 
             $resource = file_get_contents($cachePath . $cacheFile);
-        }
-
-        // If we are the preview, then we should look at updating the preview width, height and scale_override with
-        // the ones we've been given
-        // this is a workaround to making the cache key aware of the below parameters, which would create a new cache
-        // file each and every time the region changed size.
-        if ($displayId == 0) {
-            // Support keyword replacement and parsing for known combinations of these in existing widgets
-            // (for backwards compatibility)
-            $previewWidth = $this->getSanitizer()->getDouble('width', 0);
-            $previewHeight = $this->getSanitizer()->getDouble('height', 0);
-            $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
-
-            $resource = preg_replace('/"previewWidth":([-+]?[0-9]*\.?[0-9]+)/', '"previewWidth":' . $previewWidth, $resource);
-            $resource = preg_replace('/"previewHeight":([-+]?[0-9]*\.?[0-9]+)/', '"previewHeight":' . $previewHeight, $resource);
-            $resource = preg_replace('/"scaleOverride":([-+]?[0-9]*\.?[0-9]+)/', '"scaleOverride":' . $scaleOverride, $resource);
         }
 
         // Return the resource

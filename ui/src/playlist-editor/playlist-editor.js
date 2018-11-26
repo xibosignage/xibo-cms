@@ -77,7 +77,7 @@ window.pE = {
 
 // Load Layout and build app structure
 pE.loadEditor = function() {
-
+    
     pE.common.showLoadingScreen();
 
     // Save and change toastr positioning
@@ -156,16 +156,21 @@ pE.loadEditor = function() {
 
     // Editor container select ( faking drag and drop ) to add a element to the playlist
     pE.editorDiv.find('#playlist-editor-container').click(function(e) {
-        e.stopPropagation();
         if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+            e.stopPropagation();
             pE.selectObject($(this));
         }
     });
 
-    // Append buttons to form
-    $('.editor-modal-content #playlist-buttons').append(formButtonsTemplate({
-        buttons: formButtons
-    }));
+    // Handle keyboard keys
+    $('body').off('keydown').keydown(function(handler) {
+        if(!$(handler.target).is($('input'))) {
+
+            if(handler.key == 'Delete') {
+                pE.deleteSelectedObject();
+            }
+        }
+    });
 
     pE.common.hideLoadingScreen();
 };
@@ -181,7 +186,7 @@ window.getXiboApp = function() {
  * @param {bool=} forceUnselect - Clean selected object
  */
 pE.selectObject = function(obj = null, forceUnselect = false) {
-
+    
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -200,6 +205,15 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
     } else {
         let newSelectedId = {};
         let newSelectedType = {};
+
+        // Unselect the previous selectedObject object if still selected
+        if(this.selectedObject.selected) {
+            if(this.selectedObject.type == 'widget') {
+                if(this.playlist.widgets[this.selectedObject.id]) {
+                    this.playlist.widgets[this.selectedObject.id].selected = false;
+                }
+            }
+        }
 
         // If there's no selected object, select a default one ( or nothing if widgets are empty)
         if(obj == null || typeof obj.data('type') == 'undefined') {
@@ -220,18 +234,6 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             // Get object properties from the DOM ( or set to layout if not defined )
             newSelectedId = obj.attr('id');
             newSelectedType = obj.data('type');
-
-            // Unselect the previous selectedObject object if still selected
-            if(this.selectedObject.selected) {
-
-                if(this.selectedObject.type == 'widget') {
-
-                    if(this.playlist.widgets[this.selectedObject.id]) {
-                        this.playlist.widgets[this.selectedObject.id].selected = false;
-                    }
-
-                }
-            }
 
             // Select new object
             if(newSelectedType === 'widget') {
@@ -351,16 +353,30 @@ pE.deleteObject = function(objectType, objectId) {
  * Refresh designer
  */
 pE.refreshDesigner = function() {
-
+    
+    // Remove temporary data
+    this.clearTemporaryData();
+    
     // Render containers
     this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
     if(!$.isEmptyObject(pE.playlist.widgets)) {
-        // Render timeline and properties panel
-        this.renderContainer(this.propertiesPanel, this.selectedObject);
+
+        // Render timeline
         this.renderContainer(this.timeline);
+
+        // Select the object that was previously selected if it's not selected and exists on the timeline
+        if(this.playlist.widgets[this.selectedObject.id] !== undefined && !this.playlist.widgets[this.selectedObject.id].selected) {
+            this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
+        } else if(this.playlist.widgets[this.selectedObject.id] === undefined) {
+            //Prevent nothing selected
+            this.selectObject();
+        } else {
+            // Render properties panel
+            this.renderContainer(this.propertiesPanel, this.selectedObject);
+        }
 
         this.editorDiv.find('#editing-container').show();
         this.editorDiv.find('#dropzone-container').hide();
@@ -412,8 +428,6 @@ pE.reloadData = function() {
         if(res.success) {
             pE.playlist = new Playlist(pE.playlist.playlistId, res.data.playlist);
 
-            pE.selectObject();
-
             pE.refreshDesigner();
         } else {
             pE.showErrorMessage();
@@ -445,30 +459,25 @@ pE.showErrorMessage = function() {
 
 /**
  * Save playlist order
- * @param {boolean} [saveAndClose=false] - Container for the layout to be rendered
  */
-pE.saveOrder = function(saveAndClose = false) {
+pE.saveOrder = function() {
 
     const self = this;
 
-    pE.common.showLoadingScreen();
+    pE.common.showLoadingScreen('saveOrder');
     
     this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
         
-        pE.common.hideLoadingScreen();
+        pE.common.hideLoadingScreen('saveOrder');
 
         // Behavior if successful            
         toastr.success(res.message);
 
-        if(saveAndClose) {
-            self.close();
-        } else {
-            self.reloadData();
-        }
-        
+        self.reloadData();
+
     }).catch((error) => { // Fail/error
 
-        pE.common.hideLoadingScreen();
+        pE.common.hideLoadingScreen('saveOrder');
 
         // Show error returned or custom message to the user
         let errorMessage = 'Save order failed: ' + error;
@@ -487,7 +496,7 @@ pE.saveOrder = function(saveAndClose = false) {
  * Close playlist editor
  */
 pE.close = function() {
-
+    
     // Restore toastr positioning
     toastr.options.positionClass = this.toastrPosition;
 
@@ -504,6 +513,15 @@ pE.showLocalLoadingScreen = function() {
     } else {
         pE.editorDiv.find('#playlist-timeline').html(loadingTemplate());
     }
+};
+
+/**
+ * Clear Temporary Data ( Cleaning cached variables )
+ */
+pE.clearTemporaryData = function() {
+
+    // Remove text callback editor structure variables
+    formHelpers.destroyCKEditor();
 };
 
 /**

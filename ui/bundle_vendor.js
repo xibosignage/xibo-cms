@@ -37,7 +37,7 @@ try {
         window.moment = require('moment-jalaali');
     }
 } catch (e) { //Handle variable not set error
-    console.log('[Warning] loading moment-jalaali: Calendar Type not defined!');
+    console.warn('[Warning] loading moment-jalaali: Calendar Type not defined!');
 }
 
 // select2
@@ -49,7 +49,7 @@ try {
         require('select2/dist/js/i18n/' + jsLocale + '.js');
     }
 } catch (e) { //Handle variable not set error
-    console.log('[Warning] loading select2: Locale not defined!');
+    console.warn('[Warning] loading select2: Locale not defined!');
 }
 
 // Default theme for select2
@@ -98,9 +98,6 @@ var dt_extras = [
          require("datatables.net-buttons/js/buttons.print.min.js")
      ];
 dt_extras.forEach(function(e) {e(window, window.$);});
-
-// throttle-debounce
-window.$.debounce = require('throttle-debounce/debounce.js');
 
 // bootstrap-tour
 require('bootstrap-tour/build/js/bootstrap-tour.min.js');

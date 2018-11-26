@@ -41,6 +41,8 @@ echo __('Formula');
 echo __('Data Set');
 echo __('DataSet View');
 echo __('A view on a DataSet');
+echo __('DataSet Ticker');
+echo __('Ticker with a DataSet providing the items');
 echo __('Ticker');
 echo __('RSS Ticker.');
 echo __('Text');

@@ -7,8 +7,19 @@
 #}
 <script type="text/javascript">
 
-    // Runs after add form opens
-    function twitter_form_add_open() {
+    /** 
+    * Runs before form submit
+    * @return {bool} - Form validation
+    */
+    function twitter_form_edit_submit() {        
+
+        // Update text callback fields
+        formHelpers.updateCKEditor();
+    }
+
+    // Runs after edit form opens
+    function twitter_form_edit_open() {
+
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
@@ -18,30 +29,36 @@
         // Set effect type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['noAnim'], true);
 
-        formHelpers.textCallback(this);
+        const self = this;
+        const formEditorSetup  = function() {
+
+            if(!$(self).data('formEditorOnly')) { // Using inline Editor
+                // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
+                $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked'));
+
+                // Show template group if override template is on, and if the advance editor is off
+                $(self).find('.template-group-editor').toggle($(self).find('form #overrideTemplate').is(':checked') && !$(self).find('form #advancedEditor').is(':checked')); 
+            } else {
+                // Using form editor
+                if($(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked')) {
+                    formHelpers.setupCKEditor(self, null, 'ta_text');
+                } else {
+                    var textAreaId = $(self).find('textarea[name="ta_text"]').attr('id');
+                    formHelpers.destroyCKEditor(textAreaId);
+                }
+                
+            }
+        };
+
+        // Initialize editor
+        formEditorSetup();
+
+         console.log($(self).data());
+
+        // Setup form and have a callback to restart the CKEditor instance
+        formHelpers.setupForm(this, function() {
+            formEditorSetup();
+        }, 'ta_text');
     }
 
-    /** 
-    * Runs before form submit
-    * @return {bool} - Form validation
-    */
-    function twitter_form_add_submit() {        
-
-        // Update text callback fields
-        formHelpers.textCallbackUpdate();
-    }
-
-    // Runs after edit form opens
-    function twitter_form_edit_open() {
-
-        // Use same method as form add open
-        twitter_form_add_open.bind(this)();
-    }
-
-    // Runs before form submit
-    function twitter_form_edit_submit() {
-
-        // Use same method as form add submit
-        twitter_form_add_submit.bind(this)();
-    }
 </script>

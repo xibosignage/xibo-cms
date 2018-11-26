@@ -381,8 +381,10 @@ class ConfigService implements ConfigServiceInterface
     /** @inheritdoc */
     public function getSetting($setting, $default = NULL, $full = false)
     {
+        $settings = $this->loadSettings();
+
         if ($full) {
-            foreach ($this->settings as $item) {
+            foreach ($settings as $item) {
                 if ($item['setting'] == $setting) {
                     return $item;
                 }

@@ -17,42 +17,6 @@
     {% trans "Save" %}, $("#regionEditForm").submit()
 {% endblock %}
 
-{% block formFieldActions %}
-    [{
-    "field": "transitionType",
-    "trigger": "init",
-    "value": "",
-    "operation": "equals",
-    "actions": {
-    ".transition-group": { "display": "none" }
-    }
-    },{
-    "field": "transitionType",
-    "trigger": "change",
-    "value": "",
-    "operation": "equals",
-    "actions": {
-    ".transition-group": { "display": "none" }
-    }
-    },{
-    "field": "transitionType",
-    "trigger": "init",
-    "value": "",
-    "operation": "not",
-    "actions": {
-    ".transition-group": { "display": "block" }
-    }
-    },{
-    "field": "transitionType",
-    "trigger": "change",
-    "value": "",
-    "operation": "not",
-    "actions": {
-    ".transition-group": { "display": "block" }
-    }
-    }]
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">

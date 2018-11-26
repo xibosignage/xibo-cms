@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -89,17 +89,6 @@ class Calendar extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function add()
-    {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /** @inheritdoc */
     public function edit()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -125,41 +114,10 @@ class Calendar extends ModuleWidget
         $this->setRawNode('currentEventTemplate', $this->getSanitizer()->getParam('currentEventTemplate', null));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null)));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
-
-        $this->validate();
+        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
+            
+        $this->isValid();
         $this->saveWidget();
-    }
-
-    /**
-     * Validate this modules config against a minimum set of requirements
-     * @throws InvalidArgumentException
-     */
-    private function validate()
-    {
-        // Must have a duration
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
-
-        // Validate the URL
-        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new InvalidArgumentException(__('Please enter a feed URI containing the events you want to display'), 'uri');
-
-        if ($this->getWidgetId() != '') {
-            $customInterval = $this->getOption('customInterval');
-
-            if ($customInterval != '') {
-                // Try to create a date interval from it
-                $dateInterval = \DateInterval::createFromDateString($customInterval);
-
-                // Use now and add the date interval to it
-                $now = Date::now();
-                $check = $now->copy()->add($dateInterval);
-
-                if ($now->equalTo($check))
-                    throw new InvalidArgumentException(__('That is not a valid date interval, please use natural language such as 1 week'), 'customInterval');
-
-            }
-        }
     }
 
     /** @inheritdoc */
@@ -172,6 +130,7 @@ class Calendar extends ModuleWidget
         $template = $this->getRawNode('template', '');
         $currentEventTemplate = ($this->getOption('useCurrentTemplate') == 1) ? $this->getRawNode('currentEventTemplate', '') : null;
         $styleSheet = $this->getRawNode('styleSheet', '');
+        $advancedEditor = $this->getOption('advancedEditor');
 
         // Parse library references first as its more efficient
         $template = $this->parseLibraryReferences($this->isPreview(), $template);
@@ -478,7 +437,32 @@ class Calendar extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        return 1;
+        // Must have a duration
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        // Validate the URL
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+            throw new InvalidArgumentException(__('Please enter a feed URI containing the events you want to display'), 'uri');
+
+        if ($this->getWidgetId() != '') {
+            $customInterval = $this->getOption('customInterval');
+
+            if ($customInterval != '') {
+                // Try to create a date interval from it
+                $dateInterval = \DateInterval::createFromDateString($customInterval);
+
+                // Use now and add the date interval to it
+                $now = Date::now();
+                $check = $now->copy()->add($dateInterval);
+
+                if ($now->equalTo($check))
+                    throw new InvalidArgumentException(__('That is not a valid date interval, please use natural language such as 1 week'), 'customInterval');
+
+            }
+        }
+
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */

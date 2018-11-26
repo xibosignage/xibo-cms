@@ -8,41 +8,13 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function shellcommand_form_add_open() {
+    function shellcommand_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
         // Set command code field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#commandCode', ['.non-command-fields'], ['']);
-    }
-
-    // Runs before form submit
-    function shellcommand_form_add_submit() {        
-
-        // Validate Video Path
-        if($(this).find('#commandCode').val() == '' ) {
-            // Add field as required
-            $(this).find('#windowsCommand').attr('required', '');
-        } else {
-            // Remove required field
-            $(this).find('#windowsCommand').removeAttr('required');
-        }
-
-    }
-
-    // Runs after form opens
-    function shellcommand_form_edit_open() {
-
-        // Use same method as form add open
-        shellcommand_form_add_open.bind(this)();
-    }
-
-    // Runs before form submit
-    function shellcommand_form_edit_submit() {
-
-        // Use same method as form add submit
-        shellcommand_form_add_submit.bind(this)();
     }
 
 </script>

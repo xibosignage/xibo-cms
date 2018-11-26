@@ -117,12 +117,12 @@ function XiboInitialise(scope) {
             });
         }
 
-        var filterRefresh = $.debounce(500, function () {
+        var filterRefresh = _.debounce(function () {
             if (gridName != undefined)
                 localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
 
             $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
-        });
+        }, 500);
         
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
@@ -844,9 +844,9 @@ function XiboFormRender(sourceObj, data) {
                 $('input[type=text]', dialog).each(function(index, el) {
                     formRenderDetectSpacingIssues(el);
 
-                    $(el).on("keyup", $.debounce(500, function() {
+                    $(el).on("keyup", _.debounce(function() {
                         formRenderDetectSpacingIssues(el);
-                    }))
+                    }, 500));
                 });
 
                 // Set up dependencies between controls

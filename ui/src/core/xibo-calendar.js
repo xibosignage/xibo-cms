@@ -734,9 +734,9 @@ var setupScheduleNowForm = function(form) {
         }
     });
 
-    var evaluateDates = $.debounce(500, function() {
+    var evaluateDates = _.debounce(function() {
       scheduleNowFormEvaluateDates(form);
-    });
+    }, 500);
     
     // Bind to the H:i:s fields
     $(form).find("#hours").on("keyup", evaluateDates);

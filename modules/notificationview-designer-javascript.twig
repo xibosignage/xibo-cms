@@ -7,111 +7,33 @@
 #}
 <script type="text/javascript">
 
+
     // Runs after form opens
-    function notificationview_form_add_open() {
+    function notificationview_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-        notificationWidgetFormOpen(this);
-    }
-
-    // Runs before form submit
-    function notificationview_form_add_submit() {        
-
-        // Update text callback fields
-        formHelpers.textCallbackUpdate();
-    }
-
-    // Runs after form opens
-    function notificationview_form_edit_open() {
-
-        // Use same method as form add open
-        notificationview_form_add_open.bind(this)();
-    }
-
-    // Runs before form submit
-    function notificationview_form_edit_submit() {
-
-        // Use same method as form add submit
-        notificationview_form_add_submit.bind(this)();
-    }
-
-    function notificationWidgetFormOpen(dialog) {
-
-        // Get background color, or use default
-        const backgroundColor = (typeof lD != 'undefined' && typeof lD.layout != 'undefined') ? lD.layout.backgroundColor : '#eee';
+        // Using form Editor
+        if($(this).data('formEditorOnly')) {
+            formHelpers.setupCKEditor(this, null, 'template', false, '[Subject] - [Body]');
+        } else { // Using viewer Editor
             
-        // Choose a complementary color
-        var color = $c.complement(backgroundColor);
+            // Hide default form input
+            $(this).find('.html-editor-group').hide();
 
-        // DIMENSIONS
-        var region = {};
-
-        var regionDimensions = null;
-
-        // Get region dimensions
-        if(typeof lD != 'undefined') {
-            if(lD.selectedObject.type == 'widget') {
-                region = lD.getElementByTypeAndId('region', lD.selectedObject.regionId);
-            } else {
-                region = lD.getElementByTypeAndId('region', lD.selectedObject.id);
-            }
+            // Show edit button on the viewer
+            $(this).data().viewerObject.setupInlineEditor('template', true, '[Subject] - [Body]');
         }
 
-        var regionDimensions = (typeof region.dimensions != 'undefined') ? region.dimensions : formHelpers.defaultDimensions;
-
-        // Calculate scale based on the region previewed in the viewer
-        var scale = (typeof lD != 'undefined' && typeof lD.viewer != 'undefined') ? lD.viewer.containerElementDimensions.width / regionDimensions.width : 1;
-
-        var applyContentsToIframe = function(field) {
-            $("#cke_" + field + " iframe").contents().find("head").append("" +
-                "<style>" +
-                "body {" +
-                "width: " + regionDimensions.width + "px; " +
-                "height: " + regionDimensions.height + "px; border:2px solid red; " +
-                "margin-right: 10px; " +
-                "background: " + backgroundColor + "; " +
-                "transform: scale(" + scale + "); " +
-                "transform-origin: 0 0; }" +
-                "h1, h2, h3, h4, p { margin-top: 0;}" +
-                "</style>");
-        };
-
-        // Configure the editor
-        CKEDITOR.replace("template", CKEDITOR_DEFAULT_CONFIG);
-        CKEDITOR.instances["template"].on('instanceReady', function () {
-
-            applyContentsToIframe("template");
-
-            // Reapply the background style after switching to source view and back to the normal editing view
-            CKEDITOR.instances["template"].on('contentDom', function () { applyContentsToIframe("template") });
-
-            // Get the template data
-            var data = CKEDITOR.instances["template"].getData();
-
-            // Default config for fonts
-            if (data === "") {
-                CKEDITOR.instances["template"].setData("<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">[Subject] - [Body]</span></span>");
-            }
-        });
-
-        // Configure the editor
-        CKEDITOR.replace("noDataMessage", CKEDITOR_DEFAULT_CONFIG);
-        CKEDITOR.instances["noDataMessage"].on('instanceReady', function () {
-
-            applyContentsToIframe("noDataMessage");
-
-            // Reapply the background style after switching to source view and back to the normal editing view
-            CKEDITOR.instances["noDataMessage"].on('contentDom', function() { applyContentsToIframe("noDataMessage"); });
-
-            // Get the template data
-            var data = CKEDITOR.instances["noDataMessage"].getData();
-
-            // Default config for fonts
-            if (data === "") {
-                CKEDITOR.instances["noDataMessage"].setData("<span style=\"font-size: 48px;\"><span style=\"color: " + color + ";\">" + translations.enterText + "</span></span>");
-            }
-        });
+        formHelpers.setupCKEditor(this, null, 'noDataMessage');
     }
+
+    // Runs before form submit
+    function notificationview_form_edit_submit() {        
+
+        // Update text callback fields
+        formHelpers.updateCKEditor();
+    }
+    
 </script>

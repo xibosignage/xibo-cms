@@ -1,0 +1,16 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2017 Spring Signage Ltd
+ * (notification-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function region_form_edit_open() {
+        // Transition type affects the transition-group visibility
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#transitionType', ['.transition-group'], null, true);
+    }
+
+</script>

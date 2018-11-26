@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2015-2018 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,11 +18,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
 
 class Clock extends ModuleWidget
@@ -46,37 +47,21 @@ class Clock extends ModuleWidget
     }
 
     /**
-     * Validate
-     */
-    public function validate()
-    {
-        // Validate
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
-            throw new \InvalidArgumentException(__('Please enter a duration.'));
-    }
-
-    /**
-     * Adds a Clock Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/clock/{playlistId}",
-     *  operationId="WidgetClockAdd",
+     * Edit Clock
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="widgetClockEdit",
      *  tags={"widget"},
-     *  summary="Add a Clock Widget",
-     *  description="Add a new Clock Widget to the specified playlist",
+     *  summary="Clock Widget",
+     *  description="Edit Clock Widget",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Clock widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
-     *  @SWG\Parameter(
-     *      name="name",
-     *      in="formData",
-     *      description="Optional Widget Name",
-     *      type="string",
-     *      required=false
-     *  ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
@@ -127,45 +112,19 @@ class Clock extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="ClockFace",
+     *      name="clockFace",
      *      in="formData",
      *      description="For Flip Clock, supported options: TwelveHourClock TwentyFourHourClock HourlyCounter MinuteCounter DailyCounter",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
-     */
-    public function add()
-    {
-        // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
-        $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
-        $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
-        $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
-        $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds', 1));
-        $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace', 'TwentyFourHourClock'));
-
-        $this->validate();
-
-        // Save the widget
-        $this->saveWidget();
-    }
-
-     /**
-     * Edit Clock
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function edit()
     {
@@ -180,7 +139,7 @@ class Clock extends ModuleWidget
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
 
-        $this->validate();
+        $this->isValid();
 
         // Save the widget
         $this->saveWidget();
@@ -201,12 +160,7 @@ class Clock extends ModuleWidget
         ];
     }
 
-    /**
-     * GetResource
-     * Return the rendered resource to be used by the client (or a preview) for displaying this content.
-     * @param integer $displayId If this comes from a real client, this will be the display id.
-     * @return mixed
-     */
+    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         $template = null;
@@ -326,17 +280,14 @@ class Clock extends ModuleWidget
         return $this->renderTemplate($data, $template);
     }
 
-    /**
-     * Is Valid
-     * @return int
-     */
+    /** @inheritdoc */
     public function isValid()
     {
-        // Using the information you have in your module calculate whether it is valid or not.
-        // 0 = Invalid
-        // 1 = Valid
-        // 2 = Unknown
-        return 1;
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration())) {
+            throw new InvalidArgumentException(__('Please enter a duration.'), 'duration');
+        }
+
+        return self::$STATUS_VALID;
     }
 
     /** @inheritdoc */

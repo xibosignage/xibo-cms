@@ -5,36 +5,11 @@
  * (subplaylist-designer-javascript.twig)
  */
 #}
-{% raw %}
-<script type="text/x-handlebars-template" id="subPlaylistFormTemplate">
-    <div class="form-group">
-        <label class="col-sm-1 control-label" for="subPlaylistId[]">{{ title }}</label>
-        <div class="col-sm-7">
-            <select class="form-control" name="subPlaylistId[]">
-                <option value=""></option>
-                {{#each playlists}}
-                    <option value="{{ playlistId }}" {{#if_eq playlistId ../subPlaylistId}}selected{{/if_eq}}>{{ name }}</option>
-                {{/each}}
-            </select>
-        </div>
-        <div class="col-sm-1">
-            <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
-        </div>
-    </div>
-</script>
-
-{% endraw %}
 
 <script type="text/javascript">
-    Handlebars.registerHelper('if_eq', function(a, b, opts) {
-        if(a == b) // Or === depending on your needs
-            return opts.fn(this);
-        else
-            return opts.inverse(this);
-    });
 
     // Runs after form opens
-    function subplaylist_form_add_open() {
+    function subplaylist_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
@@ -42,28 +17,20 @@
         playlistFormSetup(this);
     }
 
-    // Runs after form opens
-    function subplaylist_form_edit_open() {
-
-        // Use same method as form add open
-        subplaylist_form_add_open.bind(this)();
-    }
-
     function playlistFormSetup(dialog) {
 
-        console.log(dialog.data().extra);
-
         // Order Clause
-        var subPlaylistFields = $(".sub-playlists");
+        var subPlaylistFields = $(".sub-playlists", dialog);
 
-        if (subPlaylistFields.length === 0)
+        // Get template
+        var subPlaylistFormTemplate = formHelpers.getTemplate('subPlaylistFormTemplate');
+
+        if(subPlaylistFields.length === 0)
             return;
 
-        var subPlaylistIdTemplate = Handlebars.compile($("#subPlaylistFormTemplate").html());
-
-        if (dialog.data().extra.subPlaylistId.length === 0) {
+        if(dialog.data().extra.subPlaylistId.length === 0) {
             // Add a template row
-            subPlaylistFields.append(subPlaylistIdTemplate({
+            subPlaylistFields.append(subPlaylistFormTemplate({
                 playlists: dialog.data().extra.playlists,
                 title: "1",
                 subPlaylistId: "",
@@ -72,9 +39,9 @@
         } else {
             // For each of the existing codes, create form components
             var i = 0;
-            $.each(dialog.data().extra.subPlaylistId, function (index, field) {
+            $.each(dialog.data().extra.subPlaylistId, function(index, field) {
                 i++;
-                subPlaylistFields.append(subPlaylistIdTemplate({
+                subPlaylistFields.append(subPlaylistFormTemplate({
                     playlists: dialog.data().extra.playlists,
                     title: i,
                     subPlaylistId: field,
@@ -84,12 +51,12 @@
         }
 
         // Nabble the resulting buttons
-        subPlaylistFields.on("click", "button", function (e) {
+        subPlaylistFields.on("click", "button", function(e) {
             e.preventDefault();
 
             // find the gylph
-            if ($(this).find("i").hasClass("fa-plus")) {
-                subPlaylistFields.append(subPlaylistIdTemplate({
+            if($(this).find("i").hasClass("fa-plus")) {
+                subPlaylistFields.append(subPlaylistFormTemplate({
                     playlists: dialog.data().extra.playlists,
                     title: subPlaylistFields.find('.form-group').length + 1,
                     subPlaylistId: "",
@@ -101,4 +68,5 @@
             }
         });
     }
+
 </script>

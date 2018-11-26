@@ -125,13 +125,18 @@ Viewer.prototype.render = function(element, layout, page = 1) {
         const darkerValue = 50;
         const complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
 
-        // Darken color
-        complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue; 
-        complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue; 
-        complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue; 
+        if(complementaryColorRGB.R === undefined || complementaryColorRGB.G === undefined || complementaryColorRGB.B === undefined) {
+            this.DOMObject.css('background', layout.backgroundColor);
+        } else {
 
-        // Use a complentary colour for the navigator background
-        this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
+            // Darken color
+            complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue; 
+            complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue; 
+            complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue; 
+
+            // Use a complentary colour for the navigator background
+            this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
+        } 
 
         // Handle play button
         this.DOMObject.find('#play-btn').click(function() {
@@ -154,8 +159,16 @@ Viewer.prototype.render = function(element, layout, page = 1) {
 
         requestPath += '&width=' + this.containerElementDimensions.width + '&height=' + this.containerElementDimensions.height;
 
+        // If there was still a render request, abort it
+        if(this.renderRequest != undefined) {
+            this.renderRequest.abort('requestAborted');
+        }
+
         // Get HTML for the given element from the API
-        $.get(requestPath).done(function(res) { 
+        this.renderRequest = $.get(requestPath).done(function(res) {
+            
+            // Clear request var after response
+            self.renderRequest = undefined;
             
             // Prevent rendering null html
             if(!res.success) {
@@ -173,28 +186,41 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             // Append layout html to the container div
             this.DOMObject.html(html);
 
+            // Render navbar
+            this.renderNavbar(res, element);
+
             // Calculate and render background image or color to the preview
             this.calculateBackground(lD.viewer.containerElementDimensions, targetElement, layout);
+
+            // If inline editor is on, show the controls for it
+            if(lD.propertiesPanel.inlineEditor) {
+                // Show inline editor controls
+                this.showInlineEditor(true);
+            }
 
             // Handle fullscreen button
             this.DOMObject.find('#fs-btn').click(function() {
                 this.toggleFullscreen();
             }.bind(this));
 
-            // Render navbar
-            this.renderNavbar(res, element.type);
-
         }.bind(this)).fail(function(res) {
-            toastr.error('Preview failed!');
-            this.DOMObject.html('Preview failed');
+            // Clear request var after response
+            self.renderRequest = undefined;
+
+            if(res.statusText != 'requestAborted') {
+                toastr.error('Preview failed!');
+                this.DOMObject.html('Preview failed');
+            }
+
         }.bind(this));
     }
+
 };
 
 /**
  * Render Navbar
  */
-Viewer.prototype.renderNavbar = function(data, elementType) {
+Viewer.prototype.renderNavbar = function(data, element) {
 
     // Stop if navbar container does not exist
     if(this.navbarContainer === null || this.navbarContainer === undefined || data.extra.empty) {
@@ -204,7 +230,7 @@ Viewer.prototype.renderNavbar = function(data, elementType) {
     this.navbarContainer.html(viewerNavbarTemplate(
         {
             extra: data.extra,
-            type: elementType,
+            type: element.type,
             pagingEnable: (data.extra.number_items > 1)
         }
     ));
@@ -219,6 +245,19 @@ Viewer.prototype.renderNavbar = function(data, elementType) {
             this.render(lD.selectedObject, lD.layout, data.extra.current_item + 1);
         }.bind(this));
     }
+
+    // Inline editor controls
+    this.navbarContainer.find('#inline-edit-btn').click(function() {
+        this.editInlineEditorToggle(true);
+    }.bind(this));
+
+    this.navbarContainer.find('#inline-save-btn').click(function() {
+        this.saveInlineEditor(element);
+    }.bind(this));
+
+    this.navbarContainer.find('#inline-close-btn').click(function() {
+        this.closeInlineEditor();
+    }.bind(this));
 };
 
 /**
@@ -242,6 +281,144 @@ Viewer.prototype.playPreview = function(url, dimensions) {
 Viewer.prototype.toggleFullscreen = function() {
     this.DOMObject.toggleClass('fullscreen');
     this.render(lD.selectedObject, lD.layout);
+};
+
+/**
+ * Setup Inline Editor button
+ */
+Viewer.prototype.setupInlineEditor = function(textAreaName, show = true, customNoDataMessage = null) {
+
+    // Change inline editor to enable it on viewer render/refresh
+    lD.propertiesPanel.inlineEditor = show;
+    lD.propertiesPanel.inlineEditorName = textAreaName;
+    lD.propertiesPanel.customNoDataMessage = customNoDataMessage;
+
+    // Show or hide inline editor
+    if(show) {
+        this.showInlineEditor();
+    } else {
+        this.hideInlineEditor();
+    }
+};
+
+/**
+ * Show Inline Editor
+ */
+Viewer.prototype.showInlineEditor = function() {
+
+    // Show closed editor controls
+    this.DOMObject.parent().find('.inline-editor-closed').show();
+    this.DOMObject.parent().find('.inline-editor-buttons').show();
+};
+
+/**
+ * Hide Inline Editor
+ */
+Viewer.prototype.hideInlineEditor = function() {
+
+    // Hide inline editor controls
+    this.DOMObject.parent().find(
+        '.inline-editor-opened, ' +
+        '.inline-editor-closed, ' +
+        '.inline-editor-buttons').hide();
+    
+    // Show widget info
+    this.DOMObject.parent().find('.inline-editor-hide').show();
+
+    this.destroyInlineEditor();
+};
+
+/**
+ * Edit Inline Editor editor ( open or close edit )
+ */
+Viewer.prototype.editInlineEditorToggle = function(show = true) {
+
+    // Toggle open/close inline editor classes
+    this.DOMObject.parent().find('.inline-editor-opened').toggle(show);
+    this.DOMObject.parent().find('.inline-editor-hide').toggle(!show);
+    this.navbarContainer.parent().find('.inline-editor-closed').toggle(!show);
+
+    // Load content if editor is toggled on
+    if(show) {
+        this.loadInlineEditorContent(lD.propertiesPanel.inlineEditorName);
+    }
+    
+    // Toggle rendered preview
+    this.DOMObject.find('#viewer-preview').toggle(!show);
+};
+
+/**
+ * Save Inline Editor
+ */
+Viewer.prototype.saveInlineEditor = function(elementToSave) {
+
+    // Update inline editor text area
+    formHelpers.updateCKEditor();
+
+    // Re-attach text_editor to form
+    const taText = this.DOMObject.find('#inline-editor textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').clone();
+    lD.propertiesPanel.DOMObject.find('textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').replaceWith(taText);
+
+    // Save the properties panel form
+    lD.propertiesPanel.save(elementToSave);
+};
+
+/**
+ * Load Inline Editor content
+ */
+Viewer.prototype.loadInlineEditorContent = function() {
+    
+    // Move text area from form to viewer
+    const taText = lD.propertiesPanel.DOMObject.find('textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').clone();
+    const oldTaTextId = taText.attr('id');
+
+    taText.attr('id', 'viewer_' + taText.attr('id'));
+    
+    this.DOMObject.find('#inline-editor').empty().append(taText);
+
+    // Move editor controls from the form to the viewer navbar
+    const controls = lD.propertiesPanel.DOMObject.find('.ckeditor_controls[data-linked-to="' + oldTaTextId + '"]');
+
+    
+    // Destroy select2 controls before cloning
+    controls.find('select').each(function() {
+        if($(this).hasClass('select2-hidden-accessible')) {
+            $(this).select2('destroy');
+        }
+    });
+
+    // Clone controls to move the copy to the viewer's navbar
+    const controlClones = controls.clone();
+    
+        // Change the new controls data link to the new text area
+    controlClones.find('select').attr('data-linked-to', 'viewer_' + controls.find('select').attr('data-linked-to'));
+
+    // Show controls
+    controlClones.show();
+    
+    // Append controls to navbar
+    this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
+
+    // Setup iniline CKEditor
+    formHelpers.setupCKEditor(this.DOMObject.parent(), null, lD.propertiesPanel.inlineEditorName, true, lD.propertiesPanel.customNoDataMessage);
+};
+
+/**
+ * Close Inline Editor Edit
+ */
+Viewer.prototype.closeInlineEditor = function() {
+
+    this.destroyInlineEditor();
+    this.editInlineEditorToggle(false);
+};
+
+/* Destroy inline editor */
+Viewer.prototype.destroyInlineEditor = function() {
+
+    // If viewer inline editor exists, remove it
+    if(this.DOMObject.find('#inline-editor textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').length > 0) {
+        formHelpers.destroyCKEditor(this.DOMObject.find('#inline-editor textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').attr('id'));
+    }
 };
 
 /**

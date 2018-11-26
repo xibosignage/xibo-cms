@@ -8,7 +8,7 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function stocks_form_add_open() {
+    function stocks_form_edit_open() {
         
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
@@ -19,18 +19,10 @@
         // Set effect type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
-        stocksFormSetup(this);
+        stocksFormTemplatesSetup(this);
     }
 
-
-    // Runs after form opens
-    function stocks_form_edit_open() {
-
-        // Use same method as form add open
-        stocks_form_add_open.bind(this)();
-    }
-   
-    function stocksFormSetup(form) {
+    function stocksFormTemplatesSetup(form) {
         $(form).find('#backgroundColor').colorpicker({format: 'rgba'});
 
         // If all 3 of the template fields are empty, then the template should be reapplied.
@@ -69,6 +61,5 @@
             }
         });
     };
-
 
 </script>

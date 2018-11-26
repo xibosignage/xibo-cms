@@ -20,9 +20,9 @@
  */
 namespace Xibo\Widget;
 
-use InvalidArgumentException;
 use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 
 /**
@@ -43,9 +43,7 @@ class DataSetView extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
         return 'datasetview-designer-javascript';
@@ -137,10 +135,7 @@ class DataSetView extends ModuleWidget
         return json_decode($this->getOption('filterClauses', "[]"), true);
     }
 
-    /**
-     * Get Extra content for the form
-     * @return array
-     */
+    /** @inheritdoc */
     public function getExtra()
     {
         return [
@@ -152,59 +147,40 @@ class DataSetView extends ModuleWidget
         ];
     }
 
-    /**
-     * validate
-     */
-    public function validate()
+    /** @inheritdoc @override */
+    public function editForm()
     {
-        // Must have a duration
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
-            throw new \InvalidArgumentException(__('Please enter a duration'));
+        // Do we have a step provided?
+        $step = $this->getSanitizer()->getInt('step', 2);
 
-        // Validate Data Set Selected
-        if ($this->getOption('dataSetId') == 0)
-            throw new \InvalidArgumentException(__('Please select a DataSet'));
-
-        // Check we have permission to use this DataSetId
-        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
-            throw new \InvalidArgumentException(__('You do not have permission to use that dataset'));
-
-        if ($this->getWidgetId() != 0) {
-
-            if (!is_numeric($this->getOption('upperLimit')) || !is_numeric($this->getOption('lowerLimit')))
-                throw new \InvalidArgumentException(__('Limits must be numbers'));
-
-            if ($this->getOption('upperLimit') < 0 || $this->getOption('lowerLimit') < 0)
-                throw new \InvalidArgumentException(__('Limits cannot be lower than 0'));
-
-            // Check the bounds of the limits
-            if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
-                throw new \InvalidArgumentException(__('Upper limit must be higher than lower limit'));
-
-            if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
-                throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'));
-
-            // Make sure we haven't entered a silly value in the filter
-            if (strstr($this->getOption('filter'), 'DESC'))
-                throw new InvalidArgumentException(__('Cannot user ordering criteria in the Filter Clause'));
+        if ($step == 1 || !$this->hasDataSet()) {
+            return 'datasetview-form-edit-step1';
+        } else {
+            return 'datasetview-form-edit';
         }
     }
 
     /**
-     * Adds a dataSetView Widget
-     * @SWG\Post(
-     *  path="/playlist/widget/dataSetView/{playlistId}",
-     *  operationId="WidgetdataSetViewAdd",
+     * * @SWG\Post(
+     *  path="/playlist/widget/{widgetId}",
+     *  operationId="widgetDataSetViewEdit",
      *  tags={"widget"},
-     *  summary="Add a dataSetView Widget",
-     *  description="Add a new dataSetView Widget to the specified playlist",
+     *  summary="Edit a dataSetView Widget",
+     *  description="Edit a new dataSetView Widget to the specified playlist",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The playlist ID to add a Widget to",
+     *      description="The WidgetId to Edit",
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="step",
+     *      in="formData",
+     *      description="The Step Number being edited",
+     *      type="integer",
+     *      required=false
+     *  ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
@@ -230,7 +206,7 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
-     *      description="EDIT Only - The dataSetView Duration",
+     *      description="The dataSetView Duration",
      *      type="integer",
      *      required=false
      *  ),
@@ -244,199 +220,212 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="updateInterval",
      *      in="formData",
-     *      description="EDIT Only - Update interval in minutes",
+     *      description="Update interval in minutes",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="rowsPerPage",
      *      in="formData",
-     *      description="EDIT Only - Number of rows per page, 0 for no pages",
+     *      description="Number of rows per page, 0 for no pages",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="showHeadings",
      *      in="formData",
-     *      description="EDIT Only - Should the table show Heading? (0,1)",
+     *      description="Should the table show Heading? (0,1)",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="upperLimit",
      *      in="formData",
-     *      description="EDIT Only - Upper row limit for this dataSet, 0 for no limit",
+     *      description="Upper low limit for this dataSet, 0 for no limit",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="lowerLimit",
      *      in="formData",
-     *      description="EDIT Only - Lower row limit for this dataSet, 0 for no limit",
+     *      description="Lower low limit for this dataSet, 0 for no limit",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="filter",
      *      in="formData",
-     *      description="EDIT Only - SQL clause for filter this dataSet",
+     *      description="SQL clause for filter this dataSet",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ordering",
      *      in="formData",
-     *      description="EDIT Only - SQL clause for how this dataSet should be ordered",
+     *      description="SQL clause for how this dataSet should be ordered",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="templateId",
      *      in="formData",
-     *      description="EDIT Only - Template you'd like to apply, options available: empty, light-green",
+     *      description="Template you'd like to apply, options available: empty, light-green",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="overrideTemplate",
      *      in="formData",
-     *      description="EDIT Only - flag (0, 1) override template checkbox",
+     *      description="flag (0, 1) override template checkbox",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="useOrderingClause",
      *      in="formData",
-     *      description="EDIT Only - flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
+     *      description="flag (0,1) Use advanced order clause - set to 1 if ordering is provided",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="useFilteringClause",
      *      in="formData",
-     *      description="EDIT Only - flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
+     *      description="flag (0,1) Use advanced filter clause - set to 1 if filter is provided",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="noDataMessage",
      *      in="formData",
-     *      description="EDIT Only - A message to display when no data is returned from the source",
+     *      description="A message to display when no data is returned from the source",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new widget",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
-     */
-    public function add()
-    {
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration(0);
-        $this->setDuration($this->getModule()->defaultDuration);
-        $this->setOption('dataSetId', $this->getSanitizer()->getInt('dataSetId'));
-
-        // Save the widget
-        $this->validate();
-        $this->saveWidget();
-    }
-
-    /**
-     * Edit Media in the Database
+     *
+     * @inheritdoc
      */
     public function edit()
     {
-        // Columns
-        $columns = $this->getSanitizer()->getIntArray('dataSetColumnId');
-        if (count($columns) == 0)
-            $this->setOption('columns', '');
-        else
-            $this->setOption('columns', implode(',', $columns));
+        // Do we have a step provided?
+        $step = $this->getSanitizer()->getInt('step', 2);
 
-        // Other properties
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-        $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
-        $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
-        $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
-        $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
-        $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
-        $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
-        $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        if ($step == 1) {
 
+                        // Read in the dataSetId, validate and store it
+            $dataSetId = $this->getSanitizer()->getInt('dataSetId');
 
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('borderColor', $this->getSanitizer()->getString('borderColor'));
-        $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
-        $this->setOption('fontFamily', $this->getSanitizer()->getString('fontFamily'));
-        $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
+            // Do we already have a DataSet?
+            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+                // Reset the fields that are dependent on the dataSetId
+                $this->setOption('columns', '');
+            }
 
-        if( $this->getOption('overrideTemplate') == 1 ){
-            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+            $this->setOption('dataSetId', $dataSetId);
+
+            // Validate Data Set Selected
+            if ($dataSetId == 0) {
+                throw new InvalidArgumentException(__('Please select a DataSet'), 'dataSetId');
+            }
+
+            // Check we have permission to use this DataSetId
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+                throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+            }
+
+        } else {
+
+            // Columns
+            $columns = $this->getSanitizer()->getIntArray('dataSetColumnId');
+
+            if (count($columns) == 0) {
+                $this->setOption('columns', '');
+            } else {
+                $this->setOption('columns', implode(',', $columns));
+            }
+
+            // Other properties
+            $this->setOption('name', $this->getSanitizer()->getString('name'));
+            $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+            $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+            $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+            $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
+            $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
+            $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
+            $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
+            $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
+            $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
+            $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
+            $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+            $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
+            $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
+            $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+
+            $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
+            $this->setOption('borderColor', $this->getSanitizer()->getString('borderColor'));
+            $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
+            $this->setOption('fontFamily', $this->getSanitizer()->getString('fontFamily'));
+            $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
+
+            if ($this->getOption('overrideTemplate') == 1) {
+                $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+            }
+
+            // Order and Filter criteria
+            $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
+            $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
+            $orderClauseMapping = [];
+
+            $i = -1;
+            foreach ($orderClauses as $orderClause) {
+                $i++;
+
+                if ($orderClause == '')
+                    continue;
+
+                // Map the stop code received to the stop ref (if there is one)
+                $orderClauseMapping[] = [
+                    'orderClause' => $orderClause,
+                    'orderClauseDirection' => isset($orderClauseDirections[$i]) ? $orderClauseDirections[$i] : '',
+                ];
+            }
+
+            $this->setOption('orderClauses', json_encode($orderClauseMapping));
+
+            $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
+            $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
+            $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
+            $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
+            $filterClauseMapping = [];
+
+            $i = -1;
+            foreach ($filterClauses as $filterClause) {
+                $i++;
+
+                if ($filterClause == '')
+                    continue;
+
+                // Map the stop code received to the stop ref (if there is one)
+                $filterClauseMapping[] = [
+                    'filterClause' => $filterClause,
+                    'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
+                    'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
+                    'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
+                ];
+            }
+
+            $this->setOption('filterClauses', json_encode($filterClauseMapping));
+
+            // Validate
+            $this->isValid();
         }
-
-        // Order and Filter criteria
-        $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
-        $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
-        $orderClauseMapping = [];
-
-        $i = -1;
-        foreach ($orderClauses as $orderClause) {
-            $i++;
-
-            if ($orderClause == '')
-                continue;
-
-            // Map the stop code received to the stop ref (if there is one)
-            $orderClauseMapping[] = [
-                'orderClause' => $orderClause,
-                'orderClauseDirection' => isset($orderClauseDirections[$i]) ? $orderClauseDirections[$i] : '',
-            ];
-        }
-
-        $this->setOption('orderClauses', json_encode($orderClauseMapping));
-
-        $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
-        $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
-        $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
-        $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
-        $filterClauseMapping = [];
-
-        $i = -1;
-        foreach ($filterClauses as $filterClause) {
-            $i++;
-
-            if ($filterClause == '')
-                continue;
-
-            // Map the stop code received to the stop ref (if there is one)
-            $filterClauseMapping[] = [
-                'filterClause' => $filterClause,
-                'filterClauseOperator' => isset($filterClauseOperator[$i]) ? $filterClauseOperator[$i] : '',
-                'filterClauseCriteria' => isset($filterClauseCriteria[$i]) ? $filterClauseCriteria[$i] : '',
-                'filterClauseValue' => isset($filterClauseValue[$i]) ? $filterClauseValue[$i] : '',
-            ];
-        }
-
-        $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
         // Save the widget
-        $this->validate();
         $this->saveWidget();
     }
 
@@ -839,13 +828,38 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * Is Valid
-     * @return int
+     * Does this module have a DataSet yet?
+     * @return bool
      */
-    public function IsValid()
+    private function hasDataSet()
     {
-        // DataSet rendering will be valid
-        return 1;
+        return (v::notEmpty()->validate($this->getOption('dataSetId')));
+    }
+
+    /** @inheritdoc */
+    public function isValid()
+    {
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+            throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+
+        if (!is_numeric($this->getOption('upperLimit')) || !is_numeric($this->getOption('lowerLimit')))
+            throw new InvalidArgumentException(__('Limits must be numbers'), 'limit');
+
+        if ($this->getOption('upperLimit') < 0 || $this->getOption('lowerLimit') < 0)
+            throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limit');
+
+        // Check the bounds of the limits
+        if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+            throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
+
+        if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
+            throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
+
+        // Make sure we haven't entered a silly value in the filter
+        if (strstr($this->getOption('filter'), 'DESC'))
+            throw new InvalidArgumentException(__('Cannot user ordering criteria in the Filter Clause'), 'filter');
+
+        return ($this->hasDataSet()) ? self::$STATUS_VALID : self::$STATUS_INVALID;
     }
 
     /** @inheritdoc */

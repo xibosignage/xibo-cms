@@ -179,7 +179,7 @@ Layout.prototype.addElement = function(elementType) {
  */
 Layout.prototype.deleteElement = function(elementType, elementId) {
     
-    lD.common.showLoadingScreen(); 
+    lD.common.showLoadingScreen('deleteElement'); 
 
     // Save all changes first
     return lD.manager.saveAllChanges().then((res) =>  {
@@ -190,7 +190,7 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
             // Unselect selected object before deleting
             lD.selectObject();
 
-            lD.common.hideLoadingScreen(); 
+            lD.common.hideLoadingScreen('deleteElement'); 
 
             // Create a delete type change, upload it but don't add it to the history array
             return lD.manager.addChange(
@@ -206,13 +206,13 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
 
         }).catch(function() {
 
-            lD.common.hideLoadingScreen(); 
+            lD.common.hideLoadingScreen('deleteElement'); 
 
             toastr.error('Remove all changes failed!');
         });
     }).catch(function() {
 
-        lD.common.hideLoadingScreen(); 
+        lD.common.hideLoadingScreen('deleteElement'); 
         
         toastr.error('Save all changes failed!');
     });
@@ -238,7 +238,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
     let newOrder = {};
 
     for(let index = 0;index < widgets.length;index++) {
-        const widget = lD.getElementByTypeAndId('widget', $(widgets[index]).data('widgetId'), 'region_' + playlist.regionId);
+        const widget = lD.getElementByTypeAndId('widget', $(widgets[index]).attr('id'), 'region_' + playlist.regionId);
 
         newOrder[widget.widgetId] = index + 1;
     }
