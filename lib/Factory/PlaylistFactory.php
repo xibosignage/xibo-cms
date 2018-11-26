@@ -151,9 +151,9 @@ class PlaylistFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
 
-        $params = array();
+        $params = [];
         $select = '
             SELECT `playlist`.playlistId,
                 `playlist`.ownerId,

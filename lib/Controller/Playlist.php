@@ -229,6 +229,7 @@ class Playlist extends Base
             }
         }
 
+        $this->getState()->recordsTotal = $this->playlistFactory->countLast();
         $this->getState()->setData($playlists);
     }
 
