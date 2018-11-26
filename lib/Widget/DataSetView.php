@@ -316,11 +316,11 @@ class DataSetView extends ModuleWidget
 
         if ($step == 1) {
 
-                        // Read in the dataSetId, validate and store it
+            // Read in the dataSetId, validate and store it
             $dataSetId = $this->getSanitizer()->getInt('dataSetId');
 
             // Do we already have a DataSet?
-            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+            if ($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
                 // Reset the fields that are dependent on the dataSetId
                 $this->setOption('columns', '');
             }

@@ -455,6 +455,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             // Don't process if the displayId is already in the collection (there is little point in running the
             // extra query)
             if (in_array($row['displayId'], $this->displayIds)) {
+                $this->log->debug('displayId ' . $row['displayId'] . ' already in collection, skipping.');
                 continue;
             }
 
@@ -480,6 +481,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         }
 
         $this->keysProcessed[] = 'dataSet_' . $dataSetId;
+
+        $this->log->debug('Finished notify for dataSetId ' . $dataSetId);
     }
 
     /** @inheritdoc */
