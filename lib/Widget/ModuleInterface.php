@@ -121,6 +121,14 @@ interface ModuleInterface
     public function getCacheDuration();
 
     /**
+     * Is the Cache for this Module display specific, or can we assume that if we've calculated the
+     * cache for 1 display, we've calculated for all.
+     * this should reflect the cacheKey
+     * @return bool
+     */
+    public function isCacheDisplaySpecific();
+
+    /**
      * Get Resource or Cache
      * @param int $displayId The displayId we're requesting for, or 0 for preview
      * @return string

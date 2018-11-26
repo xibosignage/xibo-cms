@@ -57,6 +57,11 @@
                         {% set title %}{% trans "Longitude" %}{% endset %}
                         {% set helpText %}{% trans "The Longitude for this widget" %}{% endset %}
                         {{ forms.number("longitude", title, module.getOption("longitude"), helpText, "locationControls") }}
+
+                        {% if module.getSetting("apiKey") == "" %}
+                            {% set message %}{% trans "The Weather Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
+                            {{ forms.message(message, "alert alert-danger") }}
+                        {% endif %}
                     </div>
 
                     <div class="tab-pane" id="appearance">

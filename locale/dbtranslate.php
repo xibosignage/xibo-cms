@@ -111,3 +111,8 @@ echo __('September');
 echo __('October');
 echo __('November');
 echo __('December');
+
+// Dashboards
+echo __('Icon Dashboard');
+echo __('Status Dashboard');
+echo __('Media Dashboard');

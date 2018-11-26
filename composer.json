@@ -18,8 +18,8 @@
       "homepage": "https://github.com/alexharrington"
     },
     {
-      "name": "Spring Signage Ltd",
-      "homepage": "http://springsignage.com"
+      "name": "Xibo Signage Ltd",
+      "homepage": "https://xibo.org.uk"
     },
     {
       "name": "Xibo Contributors",
@@ -35,11 +35,14 @@
   "config": {
       "platform": {
           "php": "5.6",
-          "ext-zmq": "0"
+          "ext-zmq": "1"
       }
   },
   "require": {
     "php": ">=5.5.9",
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-zip": "*",
     "slim/slim": "~2.6",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "~4.1",
@@ -58,7 +61,7 @@
     "league/oauth2-client": "~1.0",
     "james-heinrich/getid3": "^1.9",
     "onelogin/php-saml": "3.0.0.x-dev",
-    "fguillot/picofeed": "@stable",
+    "infostars/picofeed": "dev-master",
     "xibosignage/xibo-xmr": "0.*",
     "tedivm/stash": "^0.14.1",
     "akrabat/rka-slim-controller": "^2.0",
@@ -75,12 +78,12 @@
     "phpseclib/mcrypt_compat": "^1.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "~5.0",
-    "zircote/swagger-php": "~2.0",
+    "phpunit/phpunit": "^5",
+    "zircote/swagger-php": "^2",
     "umpirsky/twig-gettext-extractor": "dev-dev-xibo-extractors",
     "there4/slim-test-helpers": "0.9.*",
     "doctrine/instantiator": "1.0.*",
-    "doctrine/annotations": "1.3.*"
+    "doctrine/annotations": "^1"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }

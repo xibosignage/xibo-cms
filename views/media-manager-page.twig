@@ -168,7 +168,9 @@
                 // Initialize the jQuery File Upload widget:
                 form.fileupload({
                     url: url,
-                    disableImageResize: true
+                    disableImageResize: true,
+                    maxNumberOfFiles: 1,
+                    limitMultiFileUploads: 1
                 });
 
                 // Upload server status check for browsers with CORS support:
@@ -201,6 +203,11 @@
                     data.formData = inputs.serializeArray().concat(form.serializeArray());
 
                     inputs.filter("input").prop("disabled", true);
+                });
+
+                form.bind('fileuploaddone', function (e, data) {
+                    table.ajax.reload();
+                    XiboDialogClose();
                 });
             });
         }

@@ -51,8 +51,8 @@
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
-                        {% set title %}{% trans "Items" %}{% endset %}
-                        {% set helpText %}{% trans "The items wanted, can be comma separated. For the best results enter no more than 5 items." %}{% endset %}
+                        {% set title %}{% trans "Stock Symbols" %}{% endset %}
+                        {% set helpText %}{% trans "A comma separated list of Stock Ticker symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items." %}{% endset %}
                         {{ forms.input("items", title, "", helpText, "", "required") }}
 
                         {% set title %}{% trans "Items per Page" %}{% endset %}

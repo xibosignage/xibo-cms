@@ -186,7 +186,7 @@ class Currencies extends AlphaVantageBase
      *  @SWG\Parameter(
      *      name="items",
      *      in="formData",
-     *      description="Items wanted",
+     *      description="A comma separated list of Currency Acronyms/Abbreviations, e.g. GBP,USD,EUR. For the best results enter no more than 5 items.",
      *      type="string",
      *      required=true
      *   ),

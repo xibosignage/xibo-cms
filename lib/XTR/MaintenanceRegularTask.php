@@ -167,8 +167,11 @@ class MaintenanceRegularTask implements TaskInterface
                     // Client should be awake, so has this displays WOL time been passed
                     if ($display->lastWakeOnLanCommandSent < $timeToWake) {
                         // Call the Wake On Lan method of the display object
-                        if ($display->macAddress == '' || $display->broadCastAddress == '')
-                            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+                        if ($display->macAddress == '' || $display->broadCastAddress == '') {
+                            $this->log->error('This display has no mac address recorded against it yet. Make sure the display is running.');
+                            $this->runMessage .= ' - ' . $display->display . ' Did not send MAC address yet' . PHP_EOL;
+                            continue;
+                        }
 
                         $this->log->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 

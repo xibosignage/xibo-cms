@@ -50,8 +50,8 @@
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
                         {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
 
-                        {% set title %}{% trans "Items" %}{% endset %}
-                        {% set helpText %}{% trans "The items wanted, can be comma separated. For the best results enter no more than 5 items." %}{% endset %}
+                        {% set title %}{% trans "Currencies" %}{% endset %}
+                        {% set helpText %}{% trans "A comma separated list of Currency Acronyms/Abbreviations, e.g. GBP,USD,EUR. For the best results enter no more than 5 items." %}{% endset %}
                         {{ forms.input("items", title, module.getOption("items"), helpText, "", "required") }}
                         
                         {% set title %}{% trans "Base" %}{% endset %}

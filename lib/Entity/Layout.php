@@ -1112,7 +1112,7 @@ class Layout implements \JsonSerializable
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach ($this->mediaFactory->getByLayoutId($this->layoutId) as $media) {
+        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 

@@ -202,10 +202,10 @@ class Notification implements \JsonSerializable
 
         // Load the Display Groups and User Group Notifications
         if ($options['loadUserGroups'])
-        $this->userGroups = $this->userGroupFactory->getByNotificationId($this->notificationId);
+            $this->userGroups = $this->userGroupFactory->getByNotificationId($this->notificationId);
 
         if ($options['loadDisplayGroups'])
-        $this->displayGroups = $this->displayGroupFactory->getByNotificationId($this->notificationId);
+            $this->displayGroups = $this->displayGroupFactory->getByNotificationId($this->notificationId);
 
         $this->loaded = true;
     }

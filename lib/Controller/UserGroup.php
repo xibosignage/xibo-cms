@@ -683,6 +683,7 @@ class UserGroup extends Base
         $this->getLog()->debug('Assign User for groupId %d', $groupId);
 
         $group = $this->userGroupFactory->getById($groupId);
+        $group->load();
 
         if (!$this->isEditable($group))
             throw new AccessDeniedException();
@@ -699,6 +700,7 @@ class UserGroup extends Base
                 throw new AccessDeniedException(__('Access Denied to User'));
 
             $group->assignUser($user);
+            $group->save(['validate' => false]);
         }
 
         // Check to see if unassign has been provided.
@@ -714,9 +716,9 @@ class UserGroup extends Base
                 throw new AccessDeniedException(__('Access Denied to User'));
 
             $group->unassignUser($user);
+            $group->save(['validate' => false]);
         }
 
-        $group->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([

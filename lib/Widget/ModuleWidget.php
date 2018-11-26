@@ -1136,7 +1136,9 @@ abstract class ModuleWidget implements ModuleInterface
         }
         else {
             // Return the file with PHP
+            ob_end_flush();
             readfile($libraryPath);
+            exit;
         }
     }
 
@@ -1338,6 +1340,13 @@ abstract class ModuleWidget implements ModuleInterface
     {
         // Default is the widgetId
         return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        // the default cacheKey is the widgetId only, so the default answer here is false
+        return false;
     }
 
     /** @inheritdoc */
