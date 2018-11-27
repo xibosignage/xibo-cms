@@ -50,20 +50,20 @@ class PlaylistReorderTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
-            'useDuration' => 1,
-            'sourceId' => 1,
+            'useDuration' => 1
         ]);
 
         $this->widget1 = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget B',
             'duration' => 100,
-            'useDuration' => 1,
-            'sourceId' => 1,
+            'useDuration' => 1
         ]);
 
         $this->widget2 = (new XiboText($this->getEntityProvider()))->hydrate($response);
