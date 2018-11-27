@@ -318,8 +318,9 @@
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "timeZone", "visible": false},
-                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false},
+                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
                     {
+                        "name": "thumbnail",
                         "orderable": false,
                         "data": function (data, type) {
                             if (type != "display")
@@ -400,6 +401,16 @@
                 localStorage.setItem("displayView", JSON.stringify($lastAccessed.closest("form").serializeArray()));
             });
         });
+
+        function displayRequestScreenshotFormSubmit() {
+            $("#displayRequestScreenshotForm").submit();
+            XiboDialogClose();
+            var table = $('#displays').DataTable();
+
+            if (!table.column(["thumbnail:name"]).visible()) {
+                table.columns(["screenShotRequested:name", "thumbnail:name"]).visible(true);
+            }
+        }
 
         function setDefaultMultiSelectFormOpen(dialog) {
             console.log('Multi-select form opened for default layout');
