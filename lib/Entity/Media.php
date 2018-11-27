@@ -191,7 +191,7 @@ class Media implements \JsonSerializable
 
     // Private
     private $unassignTags = [];
-
+    private $requestOptions = [];
     // New file revision
     public $isSaveRequired;
     public $isRemote;
@@ -571,9 +571,10 @@ class Media implements \JsonSerializable
     public function saveAsync($options = [])
     {
         $options = array_merge([
-            'deferred' => true
+            'deferred' => true,
+            'requestOptions' => []
         ], $options);
-
+        $this->requestOptions = $options['requestOptions'];
         $this->save($options);
 
         return $this;
@@ -891,5 +892,14 @@ class Media implements \JsonSerializable
     public function downloadSink()
     {
         return $this->config->getSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+    }
+
+    /**
+     * Get optional options for downloading media files
+     * @return array
+     */
+    public function downloadRequestOptions()
+    {
+        return $this->requestOptions;
     }
 }

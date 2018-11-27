@@ -843,6 +843,12 @@ class TwitterMetro extends TwitterBase
     }
 
     /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return ($this->getOption('tweetDistance', 0) > 0);
+    }
+
+    /** @inheritdoc */
     public function getLockKey()
     {
         // What is the minimum likely lock we can get to prevent concurrent access - probably search term

@@ -186,14 +186,14 @@ class GoogleTraffic extends ModuleWidget
      *  @SWG\Parameter(
      *      name="longitude",
      *      in="formData",
-     *      description="The longitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      description="The longitude for this Google Traffic widget, only pass if useDisplayLocation set to 0",
      *      type="number",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="latitude",
      *      in="formData",
-     *      description="The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+     *      description="The latitude for this Google Traffic widget, only pass if useDisplayLocation set to 0",
      *      type="number",
      *      required=false
      *   ),
@@ -307,5 +307,11 @@ class GoogleTraffic extends ModuleWidget
     public function getCacheKey($displayId)
     {
         return $this->getWidgetId() . (($this->getOption('useDisplayLocation') == 1 || $displayId === 0) ? '_' . $displayId : '');
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return ($this->getOption('useDisplayLocation') == 1);
     }
 }

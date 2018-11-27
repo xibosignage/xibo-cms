@@ -1579,7 +1579,9 @@ class Layout extends Base
 
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
+        ob_end_flush();
         readfile($fileName);
+        exit;
     }
 
     /**

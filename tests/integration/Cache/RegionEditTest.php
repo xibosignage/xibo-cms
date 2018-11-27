@@ -50,7 +50,8 @@ class RegionEditTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Add a widget to the existing region
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1

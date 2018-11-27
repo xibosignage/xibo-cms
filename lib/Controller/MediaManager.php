@@ -80,7 +80,7 @@ class MediaManager extends Base
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => $this->moduleFactory->query(null, ['assignable' => 1])
+            'modules' => $this->moduleFactory->query(null, ['assignable' => 1, 'enabled' => 1])
         ]);
     }
 

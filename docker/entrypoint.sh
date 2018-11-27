@@ -153,7 +153,7 @@ then
     # Import any ca-certificate files that might be needed to use a proxy etc
     echo "Importing ca-certs"
     cp -v /var/www/cms/ca-certs/*.pem /usr/local/share/ca-certificates
-    cp -v /var/www/cms/ca-certs/*.crt /var/local/share/ca-certificates
+    cp -v /var/www/cms/ca-certs/*.crt /usr/local/share/ca-certificates
     /usr/sbin/update-ca-certificates
 
     # Update /etc/periodic/15min/cms-db-backup with current environment (for cron)

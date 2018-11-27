@@ -443,8 +443,10 @@ class Maintenance extends Base
         }
 
         // Return the file with PHP
+        ob_end_flush();
         readfile($zipFile);
 
         $this->setNoOutput(true);
+        exit;
     }
 }

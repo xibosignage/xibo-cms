@@ -194,24 +194,28 @@ class MediaFactory extends BaseFactory
      * @param $name
      * @param $uri
      * @param $expiry
+     * @param array $requestOptions
      * @return Media
      */
-    public function queueDownload($name, $uri, $expiry)
+    public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
-        $this->getLog()->debug('Queue download of: ' . $uri);
-
         $media = $this->createModuleFile($name, $uri);
         $media->isRemote = true;
 
-        // We update the desired expiry here - isSavedRequired is tested agains the original value
+        $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
+
+        // We update the desired expiry here - isSavedRequired is tested against the original value
         $media->expires = $expiry;
 
         // Save the file, but do not download yet.
-        $media->saveAsync();
+        $media->saveAsync(['requestOptions' => $requestOptions]);
 
         // Add to our collection of queued downloads
         // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
         if ($media->isSaveRequired) {
+
+            $this->getLog()->debug('We are required to download as this file is either expired or not existing');
+
             $queueItem = true;
             if ($media->getId() != null) {
                 // Existing media, check to see if we're already queued
@@ -229,6 +233,8 @@ class MediaFactory extends BaseFactory
 
         } else {
             // Queue in the not required download queue
+            $this->getLog()->debug('Download not required as this file exists and is up to date. Expires = ' . $media->getOriginalValue('expires'));
+
             $queueItem = true;
             if ($media->getId() != null) {
                 // Existing media, check to see if we're already queued
@@ -269,9 +275,10 @@ class MediaFactory extends BaseFactory
                 foreach ($queue as $media) {
                     $url = $media->downloadUrl();
                     $sink = $media->downloadSink();
+                    $requestOptions = array_merge($media->downloadRequestOptions(),  ['save_to' => $sink]);
 
-                    yield function () use ($client, $url, $sink) {
-                        return $client->getAsync($url, ['save_to' => $sink]);
+                    yield function () use ($client, $url, $requestOptions) {
+                        return $client->getAsync($url, $requestOptions);
                     };
                 }
             };
@@ -313,12 +320,18 @@ class MediaFactory extends BaseFactory
 
         // Handle the downloads that did not require downloading
         if (count($this->remoteDownloadNotRequiredQueue) > 0) {
+            $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadNotRequiredQueue) . ' items which do not need downloading.');
+
             foreach ($this->remoteDownloadNotRequiredQueue as $item) {
                 // If a success callback has been provided, call it
                 if ($success !== null && is_callable($success))
                     $success($item);
             }
         }
+
+        // Clear the queue for next time.
+        $this->remoteDownloadQueue = [];
+        $this->remoteDownloadNotRequiredQueue = [];
     }
 
     /**
@@ -420,11 +433,12 @@ class MediaFactory extends BaseFactory
     /**
      * Get Media by LayoutId
      * @param int $layoutId
+     * @param int $edited
      * @return array[Media]
      */
-    public function getByLayoutId($layoutId)
+    public function getByLayoutId($layoutId, $edited = -1)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited]);
     }
 
     /**
@@ -447,6 +461,21 @@ class MediaFactory extends BaseFactory
     {
         if ($sortOrder === null)
             $sortOrder = ['name'];
+
+        $newSortOrder = [];
+        foreach ($sortOrder as $sort) {
+            if ($sort == '`revised`') {
+                $newSortOrder[] = '`parentId`';
+                continue;
+            }
+
+            if ($sort == '`revised` DESC') {
+                $newSortOrder[] = '`parentId` DESC';
+                continue;
+            }
+            $newSortOrder[] = $sort;
+        }
+        $sortOrder = $newSortOrder;
 
         $entries = array();
 
@@ -601,6 +630,8 @@ class MediaFactory extends BaseFactory
         } else if ($this->getSanitizer()->getInt('parentMediaId', $filterBy) !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
             $params['mediaId'] = $this->getSanitizer()->getInt('parentMediaId', $filterBy);
+        } else if ($this->getSanitizer()->getInt('isEdited', -1, $filterBy) != -1) {
+            $body .= ' AND media.isEdited <> -1 ';
         } else {
             $body .= ' AND media.isEdited = 0 ';
         }
@@ -742,7 +773,7 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile'
+                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited'
                 ]
             ]);
         }
