@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2018 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -18,16 +19,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Tests\Integration\Widget;
+
+namespace Xibo\Tests\integration\Widget;
 
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
-use Xibo\OAuth2\Client\Entity\XiboDataSetColumn;
-use Xibo\OAuth2\Client\Entity\XiboDataSetView;
+use Xibo\OAuth2\Client\Entity\XiboTicker;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
-class DataSetViewWidgetTest extends LocalWebTestCase
+/**
+ * Class DataSetTickerWidgetTest
+ * @package Xibo\Tests\integration\Widget
+ */
+class DataSetTickerWidgetTest extends LocalWebTestCase
 {
     use LayoutHelperTrait;
 
@@ -39,9 +44,6 @@ class DataSetViewWidgetTest extends LocalWebTestCase
 
     /** @var XiboDataSet */
     protected $dataSet;
-
-    /** @var XiboDataSetColumn */
-    protected $dataSetColumn;
 
     /**
      * setUp - called before every test automatically
@@ -55,9 +57,6 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         // Add a DataSet
         $this->dataSet = (new XiboDataSet($this->getEntityProvider()))->create(Random::generateString(), 'Test');
 
-        // Create a Column for our DataSet
-        $this->dataSetColumn = (new XiboDataSetColumn($this->getEntityProvider()))->create($this->dataSet->dataSetId, Random::generateString(8, 'phpunit'),'', 2, 1, 1, '');
-
         // Create a Layout
         $this->publishedLayout = $this->createLayout();
 
@@ -65,7 +64,7 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         $layout = $this->checkout($this->publishedLayout);
 
         // Create a Widget for us to edit.
-        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/datasetticker/' . $layout->regions[0]->regionPlaylist['playlistId']);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'step' => 1,
             'dataSetId' => $this->dataSet->dataSetId
@@ -90,49 +89,81 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         $this->getLogger()->debug('Tear down for ' . get_class() .' Test');
     }
 
-    public function testEdit()
+    /**
+     * Edit dataSet ticker
+     */
+    public function testEditDataset()
     {
-        $nameNew = 'Edited Name';
-        $durationNew = 80;
+        $this->getLogger()->debug('testEdit ' . get_class() .' Test');
+
+        // Edit ticker
+        $noDataMessage = 'no records found';
 
         $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
-            'dataSetColumnId' => [$this->dataSetColumn->dataSetColumnId],
-            'name' => $nameNew,
-            'duration' => $durationNew,
+            'sourceId' => 2,
+            'name' => 'Edited widget',
+            'duration' => 90,
+            'useDuration' => 1,
             'updateInterval' => 100,
-            'rowsPerPage' => 2,
-            'showHeadings' => 0,
+            'effect' => 'fadeout',
+            'speed' => 500,
+            'template' => '[Col1]',
+            'durationIsPerItem' => 1,
+            'itemsSideBySide' => 1,
             'upperLimit' => 0,
             'lowerLimit' => 0,
-            'filter' => null,
-            'ordering' => null,
-            'templateId' => 'light-green',
-            'overrideTemplate' => 0,
-            'useOrderingClause' => 0,
-            'useFilteringClause' => 0,
-            'noDataMessage' => 'No Data returned',
-            ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+            'itemsPerPage' => 5,
+            'noDataMessage' => $noDataMessage
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status());
+        $this->assertSame(200, $this->client->response->status(), 'Incorrect status: ' . $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
 
-        /** @var XiboDataSetView $checkWidget */
-        $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
-        $checkWidget = (new XiboDataSetView($this->getEntityProvider()))->hydrate($response[0]);
+        $this->getLogger()->debug('Request successful, double check contents.');
 
-        $this->assertSame($nameNew, $checkWidget->name);
-        $this->assertSame($durationNew, $checkWidget->duration);
+        /** @var XiboTicker $checkWidget */
+        $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
+        $checkWidget = (new XiboTicker($this->getEntityProvider()))->hydrate($response[0]);
+
+        // check if changes were correctly saved
+        $this->assertSame('Edited widget', $checkWidget->name);
+        $this->assertSame(90, $checkWidget->duration);
 
         foreach ($checkWidget->widgetOptions as $option) {
-            if ($option['option'] == 'templateId') {
-                $this->assertSame('light-green', $option['value']);
-            } else if ($option['option'] == 'updateInterval') {
+            if ($option['option'] == 'updateInterval') {
                 $this->assertSame(100, intval($option['value']));
-            } else if ($option['option'] == 'name') {
-                $this->assertSame($nameNew, $option['value']);
+            }
+            if ($option['option'] == 'effect') {
+                $this->assertSame('fadeout', $option['value']);
+            }
+            if ($option['option'] == 'speed') {
+                $this->assertSame(500, intval($option['value']));
+            }
+            if ($option['option'] == 'template') {
+                $this->assertSame('[Col1]', $option['value']);
+            }
+            if ($option['option'] == 'durationIsPerItem') {
+                $this->assertSame(1, intval($option['value']));
+            }
+            if ($option['option'] == 'itemsSideBySide') {
+                $this->assertSame(1, intval($option['value']));
+            }
+            if ($option['option'] == 'upperLimit') {
+                $this->assertSame(0, intval($option['value']));
+            }
+            if ($option['option'] == 'lowerLimit') {
+                $this->assertSame(0, intval($option['value']));
+            }
+            if ($option['option'] == 'itemsPerPage') {
+                $this->assertSame(5, intval($option['value']));
+            }
+            if ($option['option'] == 'noDataMessage') {
+                $this->assertSame($noDataMessage, $option['value']);
             }
         }
+
+        $this->getLogger()->debug('testEdit finished');
     }
 }
