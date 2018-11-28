@@ -127,6 +127,7 @@ class WidgetSyncTask implements TaskInterface
                             // Have we done this widget before?
                             if (in_array($widget->widgetId, $widgetsDone) && !$module->isCacheDisplaySpecific()) {
                                 $this->log->debug('This widgetId ' . $widget->widgetId . ' has been done before and is not display specific, so we skip');
+                                continue;
                             }
 
                             // Record start time
