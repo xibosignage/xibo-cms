@@ -852,6 +852,7 @@ class Layout implements \JsonSerializable
 
         // Keep track of whether this layout has an empty region
         $layoutHasEmptyRegion = false;
+        $layoutCountRegionsWithMinDuration = 0;
 
         $document = new \DOMDocument();
         $layoutNode = $document->createElement('layout');
@@ -938,11 +939,12 @@ class Layout implements \JsonSerializable
                 // the only time we want to override this, is if we want it set to the Minimum Duration for the XLF
                 $widgetDuration = $widget->calculatedDuration;
 
-                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0) {
+                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && count($this->regions) > $layoutCountRegionsWithMinDuration + 1) {
                     // We have a widget without a specified duration in a region on its own and the region isn't set to
                     // loop.
                     // Reset to the minimum duration
                     $widgetDuration = Widget::$widgetMinDuration;
+                    $layoutCountRegionsWithMinDuration++;
                 }
 
                 // Region duration
