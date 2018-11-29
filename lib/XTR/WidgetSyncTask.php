@@ -82,7 +82,7 @@ class WidgetSyncTask implements TaskInterface
 
                     // Add a little break in here
                     if ($currentLayoutId !== 0) {
-                        usleep(5000);
+                        usleep(10000);
                     }
 
                     // We've changed layout
