@@ -299,7 +299,8 @@ describe('Playlist Editor', function() {
             });
         });
 
-        it('saves the widgets order when sorting by dragging', () => {
+        // Test skipped due to Cypress not being able to handle vertical drag and drop without scrolling, which leads to unexpected behaviours ( https://github.com/cypress-io/cypress/issues/2418 )
+        it.skip('saves the widgets order when sorting by dragging', () => {
             cy.server();
             cy.route('POST', '**/playlist/order/*').as('saveOrder');
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
@@ -333,7 +334,8 @@ describe('Playlist Editor', function() {
             });
         });
 
-        it('should revert the widgets order when using the undo feature', () => {
+        // Test skipped due to Cypress not being able to handle vertical drag and drop without scrolling, which leads to unexpected behaviours ( https://github.com/cypress-io/cypress/issues/2418 )
+        it.skip('should revert the widgets order when using the undo feature', () => {
             cy.server();
             cy.route('POST', '**/playlist/order/*').as('saveOrder');
             cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
