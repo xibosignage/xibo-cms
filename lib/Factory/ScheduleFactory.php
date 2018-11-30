@@ -215,6 +215,7 @@ class ScheduleFactory extends BaseFactory
                 LEFT OUTER JOIN `layout`
                 ON lkcampaignlayout.LayoutID = layout.LayoutID
                   AND layout.retired = 0
+                  AND layout.parentId IS NULL
                 LEFT OUTER JOIN `command`
                 ON `command`.commandId = `schedule`.commandId
         ';

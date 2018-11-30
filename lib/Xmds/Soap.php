@@ -341,6 +341,7 @@ class Soap
                     ON lkcampaignlayout.CampaignID = campaign.CampaignID
                     INNER JOIN `layout`
                     ON lkcampaignlayout.LayoutID = layout.LayoutID
+                    AND layout.parentId IS NULL
                     INNER JOIN `lkdgdg`
                     ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
