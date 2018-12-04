@@ -16,19 +16,8 @@
         // Set effect type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
-        // Using form Editor
-        if($(this).data('formEditorOnly')) {
-
-            formHelpers.setupCKEditor(this, null, 'ta_text');
-        } else {
-            // Using viewer Editor
-
-            // Hide default form input
-            $(this).find('.html-editor-group').hide();
-
-            // Show edit button on the viewer
-            $(this).data().viewerObject.setupInlineEditor('ta_text');
-        }
+        // Setup form Editor
+        formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
     }
 
     // Runs before form submit

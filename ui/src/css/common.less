@@ -1,0 +1,157 @@
+// Import
+@import "mixins.less";
+
+// Variables
+@form-editor-controls-bg-color: #333;
+@form-editor-controls-fg-color: #f3f3f3;
+
+@properties-panel-nav-bg-color: #ddd;
+@properties-panel-nav-fg-color: #888;
+@properties-panel-nav-active-bg-color: #f3f3f3;
+@properties-panel-nav-active-fg-color: #337ab7;
+
+@loading-overlay-z-index: 2000;
+
+// CSS
+.page-content>.row.header {
+        margin-bottom: 10px;
+}
+
+.page-content>.row.header>div {
+    margin-bottom: 0;
+}
+
+/* Properties Panel */
+.form-content-title {
+    margin: -5px 0 10px 0;
+    padding: 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Form Editor Controls */
+.form-editor-controls {
+    display: none;
+    padding: 5px 10px;
+    background: @form-editor-controls-bg-color;
+    color: @form-editor-controls-fg-color;
+}
+
+.form-editor-controls .form-group {
+    margin-right: 10px;
+}
+
+.form-editor-controls .form-group input {
+    height: 25px;
+}
+
+.form-editor-controls .form-group input[type=checkbox] {
+    margin: 0 6px;
+}
+
+/* Tab System */
+.form-container .nav>li>a {
+    color: @properties-panel-nav-fg-color;
+    background-color: @properties-panel-nav-bg-color;
+    border-radius: 0;
+    padding: 5px 7px;
+}
+
+.form-container .nav>li>a:hover {
+    color: @properties-panel-nav-active-bg-color;
+    background-color: @properties-panel-nav-active-fg-color !important;
+}
+
+.form-container .nav>li.active>a,
+.form-container .nav>li.active>a:hover {
+    background-color: @properties-panel-nav-active-bg-color !important;
+    color: @properties-panel-nav-active-fg-color;
+}
+
+.form-container .tab-pane {
+    padding-top: 5px;
+}
+
+/* Layout Manager */
+#layout-manager {
+    left: 10px;
+    top: 10px;
+    z-index: 1;
+    position: fixed;
+    width: 220px;
+    opacity: 0.8;
+}
+
+#layout-manager #layout-manager-header {
+    background: #2d2d2d;
+    color: white;
+    font-weight: bold;
+    padding: 5px;
+    border: #212121 3px solid;
+}
+
+#layout-manager #layout-manager-container {
+    display: grid;
+    grid-template-columns: auto;
+    grid-gap: 2px;
+    color: #444;
+    padding: 2px;
+    background: #303030;
+    border: #3e3e3e 4px solid;
+}
+
+#layout-manager .title {
+    color: white;
+    font-weight: bold;
+    background-color: #4d4d4d;
+    cursor: move;
+    text-align: center;
+}
+
+#layout-manager .label {
+    display: inline-block;
+    width: 48%;
+}
+
+#layout-manager .change {
+    color: black;
+    background-color: #c3c3c3;
+    padding: 2px;
+    .border-radius(2px);
+}
+
+#layout-manager .change.uploaded {
+    background-color: #8dffa6;
+}
+
+// Overlay and loading
+.custom-overlay,
+.loading-overlay {
+    display: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: black;
+    .transparent-object(50);
+    z-index: 2;
+}
+
+.loading-overlay.loading {
+    display: block;
+    z-index: @loading-overlay-z-index;
+}
+
+.loading-overlay.loading .loading-icon {
+    display: block;
+    font-size: 60px;
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    color: #ffffff;
+}
+
+/* Select2 width fix */
+.select2-container {
+    width: auto !important;
+}

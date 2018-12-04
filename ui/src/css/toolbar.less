@@ -8,6 +8,7 @@
 @toolbar-dark-blue: #3a71df;
 @toolbar-card-color: #5f75a5;
 @toolbar-content-bg-color: #f3f3f3;
+@toolbar-disabled-color: #888;
 @toolbar-tab-bg-color: #4084be;
 @toolbar-tab-fg-color: #ffffff;
 @toolbar-tab-hover-color: #87b1d5;
@@ -86,8 +87,16 @@
 /* Toolbar - pagination */
 .editor-toolbar .toolbar-content button.pagination-btn {
     width: 5%;
-    height: 94px;
+    height: 90px;
     .border-radius(0);
+}
+
+.editor-toolbar .toolbar-content button.pagination-btn[disabled] {
+    background: @toolbar-disabled-color;
+}
+
+.editor-toolbar .toolbar-content button.pagination-btn[disabled]:hover {
+    opacity: 1;
 }
 
 .editor-toolbar .toolbar-content button#pag-btn-left {

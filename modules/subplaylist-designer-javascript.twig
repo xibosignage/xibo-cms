@@ -10,17 +10,12 @@
 
     // Runs after form opens
     function subplaylist_form_edit_open() {
+
+        // Get form object
+        const $form = $(this);
         
-        // Set duration field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
-
-        playlistFormSetup(this);
-    }
-
-    function playlistFormSetup(dialog) {
-
         // Order Clause
-        var subPlaylistFields = $(".sub-playlists", dialog);
+        var subPlaylistFields = $(".sub-playlists", $form);
 
         // Get template
         var subPlaylistFormTemplate = formHelpers.getTemplate('subPlaylistFormTemplate');
@@ -28,10 +23,10 @@
         if(subPlaylistFields.length === 0)
             return;
 
-        if(dialog.data().extra.subPlaylistId.length === 0) {
+        if($form.data().extra.subPlaylistId.length === 0) {
             // Add a template row
             subPlaylistFields.append(subPlaylistFormTemplate({
-                playlists: dialog.data().extra.playlists,
+                playlists: $form.data().extra.playlists,
                 title: "1",
                 subPlaylistId: "",
                 buttonGlyph: "fa-plus"
@@ -39,10 +34,10 @@
         } else {
             // For each of the existing codes, create form components
             var i = 0;
-            $.each(dialog.data().extra.subPlaylistId, function(index, field) {
+            $.each($form.data().extra.subPlaylistId, function(index, field) {
                 i++;
                 subPlaylistFields.append(subPlaylistFormTemplate({
-                    playlists: dialog.data().extra.playlists,
+                    playlists: $form.data().extra.playlists,
                     title: i,
                     subPlaylistId: field,
                     buttonGlyph: ((i === 1) ? "fa-plus" : "fa-minus")
@@ -57,7 +52,7 @@
             // find the gylph
             if($(this).find("i").hasClass("fa-plus")) {
                 subPlaylistFields.append(subPlaylistFormTemplate({
-                    playlists: dialog.data().extra.playlists,
+                    playlists: $form.data().extra.playlists,
                     title: subPlaylistFields.find('.form-group').length + 1,
                     subPlaylistId: "",
                     buttonGlyph: "fa-minus"

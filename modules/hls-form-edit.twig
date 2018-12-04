@@ -15,24 +15,38 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
             <form id="HlsVideoEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
-                {% set title %}{% trans "Video Path" %}{% endset %}
-                {% set helpText %}{% trans "A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget." %}{% endset %}
-                {% set uri = module.getOption("uri")|url_decode %}
-                {{ forms.input("uri", title, uri, helpText, "", "required") }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+                        
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
 
-                {% set title %}{% trans "Set a duration?" %}{% endset %}
-                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
-                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
 
-                {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
-
-                {% set title %}{% trans "Mute?" %}{% endset %}
-                {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
-                {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Video Path" %}{% endset %}
+                        {% set helpText %}{% trans "A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget." %}{% endset %}
+                        {% set uri = module.getOption("uri")|url_decode %}
+                        {{ forms.input("uri", title, uri, helpText, "", "required") }}
+                        
+                        {% set title %}{% trans "Mute?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
+                        {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
+                    </div>
+                </div> 
             </form>
         </div>
     </div>

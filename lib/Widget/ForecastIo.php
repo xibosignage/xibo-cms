@@ -260,10 +260,24 @@ class ForecastIo extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="currentTemplate_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="dailyTemplate",
      *      in="formData",
      *      description="Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dailyTemplate_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -307,7 +321,9 @@ class ForecastIo extends ModuleWidget
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
             $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
+            $this->setOption('currentTemplate_advanced', $this->getSanitizer()->getCheckbox('currentTemplate_advanced'));
             $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
+            $this->setOption('dailyTemplate_advanced', $this->getSanitizer()->getCheckbox('dailyTemplate_advanced'));
             $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
             $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
         }

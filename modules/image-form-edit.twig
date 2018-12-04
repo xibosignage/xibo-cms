@@ -15,53 +15,63 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
             <form id="imageEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}">
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
-                {% set title %}{% trans "Set a duration?" %}{% endset %}
-                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
-                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
 
-                {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
 
-                {% set title %}{% trans "Scale type" %}{% endset %}
-                {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
-                {% set center %}{% trans "Centre" %}{% endset %}
-                {% set stretch %}{% trans "Stretch" %}{% endset %}
-                {% set options = [
-                { scaleTypeId: "center", scaleType: center },
-                { scaleTypeId: "stretch", scaleType: stretch }
-                ] %}
-                {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
+                    <div class="tab-pane" id="appearanceTab">
+                        {% set title %}{% trans "Scale type" %}{% endset %}
+                        {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
+                        {% set center %}{% trans "Centre" %}{% endset %}
+                        {% set stretch %}{% trans "Stretch" %}{% endset %}
+                        {% set options = [
+                        { scaleTypeId: "center", scaleType: center },
+                        { scaleTypeId: "stretch", scaleType: stretch }
+                        ] %}
+                        {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
 
-                {% set title %}{% trans "Horizontal Align" %}{% endset %}
-                {% set helpText %}{% trans "How should this image be aligned?" %}{% endset %}
-                {% set left %}{% trans "Left" %}{% endset %}
-                {% set center %}{% trans "Centre" %}{% endset %}
-                {% set right %}{% trans "Right" %}{% endset %}
-                {% set options = [
-                { alignId: "left", align: left },
-                { alignId: "center", align: center },
-                { alignId: "right", align: right }
-                ] %}
-                {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "align-fields") }}
+                        {% set title %}{% trans "Horizontal Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this image be aligned?" %}{% endset %}
+                        {% set left %}{% trans "Left" %}{% endset %}
+                        {% set center %}{% trans "Centre" %}{% endset %}
+                        {% set right %}{% trans "Right" %}{% endset %}
+                        {% set options = [
+                        { alignId: "left", align: left },
+                        { alignId: "center", align: center },
+                        { alignId: "right", align: right }
+                        ] %}
+                        {{ forms.dropdown("alignId", "single", title, module.getOption("align","center"), options, "alignId", "align", helpText, "align-fields") }}
 
-                {% set title %}{% trans "Vertical Align" %}{% endset %}
-                {% set helpText %}{% trans "How should this image be vertically aligned?" %}{% endset %}
-                {% set top %}{% trans "Top" %}{% endset %}
-                {% set middle %}{% trans "Middle" %}{% endset %}
-                {% set bottom %}{% trans "Bottom" %}{% endset %}
-                {% set options = [
-                { valignId: "top", valign: top },
-                { valignId: "middle", valign: middle },
-                { valignId: "bottom", valign: bottom }
-                ] %}
-                {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "align-fields") }}
+                        {% set title %}{% trans "Vertical Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this image be vertically aligned?" %}{% endset %}
+                        {% set top %}{% trans "Top" %}{% endset %}
+                        {% set middle %}{% trans "Middle" %}{% endset %}
+                        {% set bottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                        { valignId: "top", valign: top },
+                        { valignId: "middle", valign: middle },
+                        { valignId: "bottom", valign: bottom }
+                        ] %}
+                        {{ forms.dropdown("valignId", "single", title, module.getoption("valign", "middle"), options, "valignId", "valign", helpText, "align-fields") }}
+                    </div>
+                </div> 
             </form>
         </div>
     </div>

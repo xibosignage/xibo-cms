@@ -29,21 +29,28 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a></li>
+                    <li><a href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
+                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
+                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
+                </ul>
+            </li>
+            <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Apperance" %}</span></a></li>
-                <li><a href="#format" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-            </ul>
             <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
-
                     <div class="tab-pane active" id="general">
-                        {% set title %}{% trans "Feed URL" %}{% endset %}
-                        {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
-
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.input("name", title, module.getOption("name"), helpText) }}
@@ -55,6 +62,66 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Feed URL" %}{% endset %}
+                        {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
+                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
+
+                        {% set title %}{% trans "Number of Items" %}{% endset %}
+                        {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
+                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+
+                        {% set title %}{% trans "Take items from the" %}{% endset %}
+                        {% set helpText %}{% trans "Take the items from the beginning or the end of the list" %}{% endset %}
+                        {% set startOfTheFeed %}{% trans "Start of the Feed" %}{% endset %}
+                        {% set endOfTheFeed %}{% trans "End of the Feed" %}{% endset %}
+                        {% set options = [
+                        { takeitemsfromid: "start", takeitemsfrom: startOfTheFeed },
+                        { takeitemsfromid: "end", takeitemsfrom: endOfTheFeed }
+                        ] %}
+                        {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
+
+                        {% set title %}{% trans "Randomise?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order." %}{% endset %}
+                        {{ forms.checkbox("randomiseItems", title, module.getOption("randomiseItems"), helpText) }}
+                        
+                        {% set title %}{% trans "Copyright" %}{% endset %}
+                        {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
+                        {{ forms.input("copyright", title, module.getOption("copyright"), helpText) }}
+
+                        {% set title %}{% trans "Show items side by side?" %}{% endset %}
+                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
+                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
+
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
+                        {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+
+                        {% set title %}{% trans "Allowable Attributes" %}{% endset %}
+                        {% set helpText %}{% trans "A comma separated list of attributes that should not be stripped from the incoming feed." %}{% endset %}
+                        {{ forms.input("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
+
+                        {% set title %}{% trans "Strip Tags" %}{% endset %}
+                        {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
+                        {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
+
+                        {% set title %}{% trans "Disable Date Sort" %}{% endset %}
+                        {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
+                        {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="appearanceTab">
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
@@ -103,8 +170,30 @@
                         ] %}
                         {{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l", "", "", "", "", optionGroups) }}
 
+                        {% set title %}{% trans "Speed" %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
+                        {{ forms.number("speed", title, module.getOption("speed", module.getOption("scrollSpeed")), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Text direction" %}{% endset %}
+                        {% set helpText %}{% trans "Which direction does the text in the feed use?" %}{% endset %}
+                        {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
+                        {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
+                        {% set options = [
+                        { textdirectionid: "ltr", textdirection: leftToRight },
+                        { textdirectionid: "rtl", textdirection: rightToLeft }
+                        ] %}
+                        {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection", "ltr"), options, "textdirectionid", "textdirection", helpText) }}
+
+                        {% set title %}{% trans "Items per page" %}{% endset %}
+                        {% set helpText %}{% trans "If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
+                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
+
                     </div>
-                    <div class="tab-pane" id="template">
+
+                    <div class="tab-pane" id="templatePreset">
+                        <div class="form-content-title">
+                            <h4>{% trans "Preset" %}</h4>
+                        </div>
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
@@ -114,20 +203,38 @@
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
-                        {% set title %}{% trans "Advanced editor?" %}{% endset %}
-                        {% set helpText %}{% trans "Tick if you would like to use the advanced HTML editor." %}{% endset %}
-                        {{ forms.checkbox("advancedEditor", title, module.getOption("advancedEditor", 0), helpText, "template-override-controls") }}
+                        {% set useTemplatesMessage %}
+                           {% trans "Use the Templates select field to access and set the custom template values." %}                     
+                        {% endset %}
+                        {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
+                    </div>
 
-                        {% set generatedId %}{{ random() }}{% endset %}
-                        
-                        <div class="ckeditor_controls template-override-controls template-group-editor" data-linked-to="ta_text{{ generatedId }}">
+                    <div class="tab-pane" id="templateTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        {% set inlineEditorMessage %}
+                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+
+                        <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_snippets_select" 
                                             class="ckeditor_snippets_select form-control"
-                                            data-linked-to="ta_text{{ generatedId }}">
+                                            data-linked-to="ta_text">
                                             <option value=""></option>
                                             <option value="Name">Name</option>
                                             <option value="Title">Title</option>
@@ -148,7 +255,7 @@
                                     <div class="col-sm-8">
                                         <select id="ckeditor_library_select2"
                                                 class="ckeditor_library_select form-control"
-                                                data-linked-to="ta_text{{ generatedId }}"
+                                                data-linked-to="ta_text"
                                                 data-search-url="{{ urlFor("library.search") }}"
                                                 data-image-url="{{ urlFor("library.download") }}?preview=1">
                                         </select>
@@ -157,99 +264,32 @@
                             </div>
                         </div>
 
-                        {% set helpText %}
-                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-override-controls template-group-editor", "", 10, generatedId) }}
-
-                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "template-override-controls", "", 10) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
+                        
                     </div>
-                    <div class="tab-pane" id="format">
-                        {% set title %}{% trans "Speed" %}{% endset %}
-                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
-                        {{ forms.number("speed", title, module.getOption("speed", module.getOption("scrollSpeed")), helpText, "effect-controls") }}
 
-                        {% set title %}{% trans "Text direction" %}{% endset %}
-                        {% set helpText %}{% trans "Which direction does the text in the feed use?" %}{% endset %}
-                        {% set leftToRight %}{% trans "Left to Right (LTR)" %}{% endset %}
-                        {% set rightToLeft %}{% trans "Right to Left (RTL)" %}{% endset %}
-                        {% set options = [
-                        { textdirectionid: "ltr", textdirection: leftToRight },
-                        { textdirectionid: "rtl", textdirection: rightToLeft }
-                        ] %}
-                        {{ forms.dropdown("textDirection", "single", title, module.getOption("textDirection", "ltr"), options, "textdirectionid", "textdirection", helpText) }}
-
-                        {% set title %}{% trans "Number of Items" %}{% endset %}
-                        {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
-                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
-
-                        {% set title %}{% trans "Items per page" %}{% endset %}
-                        {% set helpText %}{% trans "If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
-                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
-
-                        {% set title %}{% trans "Take items from the" %}{% endset %}
-                        {% set helpText %}{% trans "Take the items from the beginning or the end of the list" %}{% endset %}
-                        {% set startOfTheFeed %}{% trans "Start of the Feed" %}{% endset %}
-                        {% set endOfTheFeed %}{% trans "End of the Feed" %}{% endset %}
-                        {% set options = [
-                        { takeitemsfromid: "start", takeitemsfrom: startOfTheFeed },
-                        { takeitemsfromid: "end", takeitemsfrom: endOfTheFeed }
-                        ] %}
-                        {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
-
-                        {% set title %}{% trans "Duration is per item" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
-
-                        {% set title %}{% trans "Randomise?" %}{% endset %}
-                        {% set helpText %}{% trans "Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order." %}{% endset %}
-                        {{ forms.checkbox("randomiseItems", title, module.getOption("randomiseItems"), helpText) }}
-
+                    <div class="tab-pane" id="optionalStylesheetTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
+                        </div>
+                        
+                        {{ forms.textarea("ta_css", "", module.getRawNode("css"), "", "template-override-controls", "", 10) }}
                     </div>
-                    <div class="tab-pane" id="advanced">
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
 
-                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
-                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+                    <div class="tab-pane" id="noDataTemplateTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
-                        {% set title %}{% trans "Copyright" %}{% endset %}
-                        {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
-                        {{ forms.input("copyright", title, module.getOption("copyright"), helpText) }}
-
-                        {% set title %}{% trans "Show items side by side?" %}{% endset %}
-                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
-                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
-
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
-                        {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
-                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
-
-                        {% set title %}{% trans "Allowable Attributes" %}{% endset %}
-                        {% set helpText %}{% trans "A comma separated list of attributes that should not be stripped from the incoming feed." %}{% endset %}
-                        {{ forms.input("allowedAttributes", title, module.getOption("allowedAttributes"), helpText) }}
-
-                        {% set title %}{% trans "Strip Tags" %}{% endset %}
-                        {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
-                        {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
-
-                        {% set title %}{% trans "Disable Date Sort" %}{% endset %}
-                        {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
-                        {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
-
-                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
-                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
-
-                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        <div class="pull-right">
+                        <div>
                             <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
-                            <div class="col-sm-10">
+                            <div class="col-sm-4">
                                 <select id="ckeditor_library_select"
                                         class="ckeditor_library_select form-control"
                                         data-linked-to="noDataMessage"
@@ -258,7 +298,26 @@
                                 </select>
                             </div>
                         </div>
+
+                        {% set helpText %}
+                        {% trans "A message to display when no data is returned from the source" %}
+                        {% endset %}
+
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalJavascriptTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional JavaScript" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), "", "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="cacheTab">
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
                     </div>
                 </div>
             </form>

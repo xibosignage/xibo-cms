@@ -33,15 +33,12 @@
         } else if($(this).find('form').data('formStep') === 2) {
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-            // Set display location field, using the helper ()
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
-
-            // Set override template field, using the helper ()
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
-
             // Set order and filtering clauses fields, using the helper ()
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');
+
+            // Setup show legend fields
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showLegend', '.legend-fields');
 
             graphFormSetup(this);
         }
@@ -51,7 +48,7 @@
     function chart_form_edit_submit() {
         
         if($(this).find('form').data('formStep') === 2) {
-            var form = $("#dataSetViewEditForm2");
+            var form = $("#graphEditFormStep2");
 
             // Clean the previous generated hidden dataSetColumns from the form
             form.find('input[name="dataSetColumnId[]"]').remove();
@@ -67,6 +64,7 @@
         }
     }
 
+    // Graph specific params setup
     function graphFormSetup(dialog) {
 
         var $graphConfig = $("#graphConfig", dialog);

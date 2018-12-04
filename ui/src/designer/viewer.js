@@ -286,11 +286,11 @@ Viewer.prototype.toggleFullscreen = function() {
 /**
  * Setup Inline Editor button
  */
-Viewer.prototype.setupInlineEditor = function(textAreaName, show = true, customNoDataMessage = null) {
+Viewer.prototype.setupInlineEditor = function(textAreaId, show = true, customNoDataMessage = null) {
 
     // Change inline editor to enable it on viewer render/refresh
     lD.propertiesPanel.inlineEditor = show;
-    lD.propertiesPanel.inlineEditorName = textAreaName;
+    lD.propertiesPanel.inlineEditorId = textAreaId;
     lD.propertiesPanel.customNoDataMessage = customNoDataMessage;
 
     // Show or hide inline editor
@@ -309,6 +309,12 @@ Viewer.prototype.showInlineEditor = function() {
     // Show closed editor controls
     this.DOMObject.parent().find('.inline-editor-closed').show();
     this.DOMObject.parent().find('.inline-editor-buttons').show();
+
+    // Show form message
+    lD.propertiesPanel.DOMObject.find('.inline-editor-on-message').show();
+
+    // Hide form editor
+    lD.propertiesPanel.DOMObject.find('.inline-editor-hide').hide();
 };
 
 /**
@@ -325,6 +331,12 @@ Viewer.prototype.hideInlineEditor = function() {
     // Show widget info
     this.DOMObject.parent().find('.inline-editor-hide').show();
 
+    // Hide form message
+    lD.propertiesPanel.DOMObject.find('.inline-editor-on-message').hide();
+
+    // Show form editor
+    lD.propertiesPanel.DOMObject.find('.inline-editor-hide').show();
+
     this.destroyInlineEditor();
 };
 
@@ -340,11 +352,12 @@ Viewer.prototype.editInlineEditorToggle = function(show = true) {
 
     // Load content if editor is toggled on
     if(show) {
-        this.loadInlineEditorContent(lD.propertiesPanel.inlineEditorName);
+        this.loadInlineEditorContent();
     }
     
     // Toggle rendered preview
     this.DOMObject.find('#viewer-preview').toggle(!show);
+
 };
 
 /**
@@ -353,11 +366,11 @@ Viewer.prototype.editInlineEditorToggle = function(show = true) {
 Viewer.prototype.saveInlineEditor = function(elementToSave) {
 
     // Update inline editor text area
-    formHelpers.updateCKEditor();
+    formHelpers.updateCKEditor('viewer_' + lD.propertiesPanel.inlineEditorId);
 
     // Re-attach text_editor to form
-    const taText = this.DOMObject.find('#inline-editor textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').clone();
-    lD.propertiesPanel.DOMObject.find('textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').replaceWith(taText);
+    const taText = this.DOMObject.find('#viewer_' + lD.propertiesPanel.inlineEditorId).clone();
+    lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).replaceWith(taText);
 
     // Save the properties panel form
     lD.propertiesPanel.save(elementToSave);
@@ -369,17 +382,15 @@ Viewer.prototype.saveInlineEditor = function(elementToSave) {
 Viewer.prototype.loadInlineEditorContent = function() {
     
     // Move text area from form to viewer
-    const taText = lD.propertiesPanel.DOMObject.find('textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').clone();
-    const oldTaTextId = taText.attr('id');
+    const taText = lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).clone();
 
     taText.attr('id', 'viewer_' + taText.attr('id'));
     
     this.DOMObject.find('#inline-editor').empty().append(taText);
 
     // Move editor controls from the form to the viewer navbar
-    const controls = lD.propertiesPanel.DOMObject.find('.ckeditor_controls[data-linked-to="' + oldTaTextId + '"]');
+    const controls = lD.propertiesPanel.DOMObject.find('.ckeditor_controls[data-linked-to="' + lD.propertiesPanel.inlineEditorId + '"]');
 
-    
     // Destroy select2 controls before cloning
     controls.find('select').each(function() {
         if($(this).hasClass('select2-hidden-accessible')) {
@@ -400,7 +411,7 @@ Viewer.prototype.loadInlineEditorContent = function() {
     this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
 
     // Setup iniline CKEditor
-    formHelpers.setupCKEditor(this.DOMObject.parent(), null, lD.propertiesPanel.inlineEditorName, true, lD.propertiesPanel.customNoDataMessage);
+    formHelpers.setupCKEditor(this.DOMObject.parent(), null, 'viewer_' + lD.propertiesPanel.inlineEditorId, true, lD.propertiesPanel.customNoDataMessage);
 };
 
 /**
@@ -416,8 +427,8 @@ Viewer.prototype.closeInlineEditor = function() {
 Viewer.prototype.destroyInlineEditor = function() {
 
     // If viewer inline editor exists, remove it
-    if(this.DOMObject.find('#inline-editor textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').length > 0) {
-        formHelpers.destroyCKEditor(this.DOMObject.find('#inline-editor textarea[name="' + lD.propertiesPanel.inlineEditorName + '"]').attr('id'));
+    if(this.DOMObject.find('#inline-editor #viewer_' + lD.propertiesPanel.inlineEditorId).length > 0) {
+        formHelpers.destroyCKEditor('viewer_' + lD.propertiesPanel.inlineEditorId);
     }
 };
 

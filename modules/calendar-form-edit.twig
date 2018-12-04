@@ -30,24 +30,33 @@
 
 {% block formHtml %}
     <div class="row">
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
+                    <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
+                </ul>
+            </li>
+            <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
+
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
-                <li><a href="#formatTab" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
-                <li><a href="#advancedTab" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-            </ul>
             <form id="calendarFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
+
                     <div class="tab-pane active" id="generalTab">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.input("name", title, module.getOption("name"), helpText) }}
-
-                        {% set title %}{% trans "Feed URL" %}{% endset %}
-                        {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
-                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
-
+                        
                         {% set title %}{% trans "Set a duration?" %}{% endset %}
                         {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
                         {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
@@ -56,123 +65,36 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Feed URL" %}{% endset %}
+                        {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
+                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
+                        
                         {# What range are we looking to return #}
                         {% set title %}{% trans "Interval" %}{% endset %}
                         {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
                         {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
 
-                    </div>
-                    <div class="tab-pane" id="templateTab">
-                        {% set generatedId %}{{ random() }}{% endset %}
-
-                        {% set title %}{% trans "Advanced editor?" %}{% endset %}
-                        {% set helpText %}{% trans "Tick if you would like to use the advanced HTML editor." %}{% endset %}
-                        {{ forms.checkbox("advancedEditor", title, module.getOption("advancedEditor", 0), helpText, "template-override-controls") }}
-
-                        <div class="ckeditor_controls template-group-editor" data-linked-to="ta_text{{ generatedId }}">
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                    <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_snippets_select" 
-                                        class="ckeditor_snippets_select form-control"
-                                        data-linked-to="ta_text{{ generatedId }}">
-                                            <option value=""></option>
-                                            <option value="Name">Name</option>
-                                            <option value="Summary">Summary</option>
-                                            <option value="Description">Description</option>
-                                            <option value="Location">Location</option>
-                                            <option value="StartDate">StartDate</option>
-                                            <option value="EndDate">EndDate</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>  
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                    <div class="col-sm-8">
-                                        <select id="ckeditor_library_select2"
-                                                class="ckeditor_library_select form-control"
-                                                data-width="100%"
-                                                data-linked-to="ta_text{{ generatedId }}"
-                                                data-search-url="{{ urlFor("library.search") }}"
-                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% set helpText %}
-                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-group-editor", "", 10, generatedId) }}
-
-                        {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
-                        {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
-                        {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
-
-                        <div class="ckeditor_controls current-event-template" data-linked-to="currentEventTemplate">
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                    <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_snippets_select" 
-                                        class="ckeditor_snippets_select form-control"
-                                        data-linked-to="currentEventTemplate">
-                                            <option value=""></option>
-                                            <option value="Name">Name</option>
-                                            <option value="Summary">Summary</option>
-                                            <option value="Description">Description</option>
-                                            <option value="Location">Location</option>
-                                            <option value="StartDate">StartDate</option>
-                                            <option value="EndDate">EndDate</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>  
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                    <div class="col-sm-8">
-                                        <select id="ckeditor_library_select2"
-                                                class="ckeditor_library_select form-control"
-                                                data-width="100%"
-                                                data-linked-to="currentEventTemplate"
-                                                data-search-url="{{ urlFor("library.search") }}"
-                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% set helpText %}
-                            {% trans "Enter the alternative template for events that are current." %}
-                        {% endset %}
-                        {{ forms.textarea("currentEventTemplate", "", module.getRawNode("currentEventTemplate"), helpText, "current-event-template", "", 10) }}
-                    </div>
-                    <div class="tab-pane" id="formatTab">
-
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
-                        {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
-                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
                         {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+                        
+                        {% set title %}{% trans "Exclude all day events?" %}{% endset %}
+                        {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+                    </div>
 
-                        {% set title %}{% trans "Items per page" %}{% endset %}
-                        {% set helpText %}{% trans "If an effect has been selected how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
-                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
-
-                        {% set title %}{% trans "Duration is per item" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                    <div class="tab-pane" id="appearanceTab">
+                        {% set title %}{% trans "Date Format" %}{% endset %}
+                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
+                        {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Show items side by side?" %}{% endset %}
                         {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
@@ -224,24 +146,155 @@
                             { effectid: "tileBlind", effect: tileBlind}
                         ] %}
                         {{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l", "", "", "", "", optionGroups) }}
+
+                        {% set title %}{% trans "Items per page" %}{% endset %}
+                        {% set helpText %}{% trans "If an effect has been selected how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
+                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
                     </div>
 
-                    <div class="tab-pane" id="advancedTab">
+                    
+                    <div class="tab-pane" id="templateTab">
 
-                        {% set title %}{% trans "Exclude all day events?" %}{% endset %}
-                        {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
-                        {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
-                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
-                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+                        {% set inlineEditorMessage %}
+                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+
+                        <div class="form-group ckeditor_controls inline-editor-hide" data-linked-to="template">
+                            <div class="col-sm-6">
+                                <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                <div class="col-sm-8 ckeditor_select_container">
+                                    <select id="ckeditor_snippets_select" 
+                                    class="ckeditor_snippets_select form-control"
+                                    data-linked-to="template">
+                                        <option value=""></option>
+                                        <option value="Name">Name</option>
+                                        <option value="Summary">Summary</option>
+                                        <option value="Description">Description</option>
+                                        <option value="Location">Location</option>
+                                        <option value="StartDate">StartDate</option>
+                                        <option value="EndDate">EndDate</option>
+                                    </select>
+                                </div>
+                            </div>  
+                            <div class="col-sm-6">
+                                <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                <div class="col-sm-8">
+                                    <select id="ckeditor_library_select2"
+                                            class="ckeditor_library_select form-control"
+                                            data-width="100%"
+                                            data-linked-to="template"
+                                            data-search-url="{{ urlFor("library.search") }}"
+                                            data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{ forms.textarea("template", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="currentDayTemplateTab">
+
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Current Day Template" %}</h4>
+                            
+                            <div class="current-event-template">
+                                <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
+                        </div>
+                        
+                        {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
+                        {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
+                        {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
+
+                        <div class="ckeditor_controls current-event-template" data-linked-to="currentEventTemplate">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                        class="ckeditor_snippets_select form-control"
+                                        data-linked-to="currentEventTemplate">
+                                            <option value=""></option>
+                                            <option value="Name">Name</option>
+                                            <option value="Summary">Summary</option>
+                                            <option value="Description">Description</option>
+                                            <option value="Location">Location</option>
+                                            <option value="StartDate">StartDate</option>
+                                            <option value="EndDate">EndDate</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>  
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                    <div class="col-sm-8">
+                                        <select id="ckeditor_library_select2"
+                                                class="ckeditor_library_select form-control"
+                                                data-width="100%"
+                                                data-linked-to="currentEventTemplate"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% set helpText %}
+                            {% trans "Enter the alternative template for events that are current." %}
+                        {% endset %}
+                        {{ forms.textarea("currentEventTemplate", "", module.getRawNode("currentEventTemplate"), helpText, "current-event-template", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="noDataTemplateTab">
+
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+                    </div>
 
-                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), title, "", "", 10) }}
+                    <div class="tab-pane" id="optionalStylesheetTab">
 
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), "", "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="cachingTab">
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
                     </div>
                 </div>
             </form>

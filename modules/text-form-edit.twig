@@ -15,62 +15,37 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
+                </ul>
+            </li>
+        </ul>
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="html-editor-group"><a href="#general" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "General" %}</span></a></li>
-                <li class="active"><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-            </ul>
             <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
-                    <div class="tab-pane" id="general">
-                        {% set generatedId %}{{ random() }}{% endset %}
-
-                        <div class="ckeditor_controls" data-linked-to="ta_text{{ generatedId }}">
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                    <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_snippets_select" 
-                                        class="ckeditor_snippets_select form-control"
-                                        data-linked-to="ta_text{{ generatedId }}">
-                                            <option value=""></option>
-                                            <option value="Clock">Clock</option>
-                                            <option value="Clock|HH:mm">Clock|HH:mm</option>
-                                            <option value="Clock|DD/MM/YYYY">Clock|DD/MM/YYYY</option>
-                                            <option value="Date">Date</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
-                                    <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_library_select"
-                                                class="ckeditor_library_select form-control"
-                                                data-linked-to="ta_text{{ generatedId }}"
-                                                data-search-url="{{ urlFor("library.search") }}"
-                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {% set helpText %}
-                            {% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getOption("text"), helpText, "html-editor-group", "", 10, generatedId) }}
-                    </div>
-
-                    <div class="tab-pane active" id="options">
+                    <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="effectTab">
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
                         {% set noneOption %}{% trans "None" %}{% endset %}
@@ -108,17 +83,7 @@
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
-
-                        {% set title %}{% trans "Set a duration?" %}{% endset %}
-                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
-                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
-
-                        {% set title %}{% trans "Duration" %}{% endset %}
-                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
-                    </div>
-
-                    <div class="tab-pane" id="advanced">
+                        
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
                         {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "effect-controls") }}
@@ -126,9 +91,69 @@
                         {% set title %}{% trans "Marquee Selector" %}{% endset %}
                         {% set helpText %}{% trans "The selector to use for stacking marquee items in a line when scrolling Left/Right." %}{% endset %}
                         {{ forms.input("marqueeInlineSelector", title, module.getOption("marqueeInlineSelector"), helpText, "effect-controls") }}
+                    </div>
 
-                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
-                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
+                    <div class="tab-pane" id="templateTab">
+
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        {% set inlineEditorMessage %}
+                            {% trans "Enter the text to display. Please note that the background colour has automatically coloured to your layout background colour." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, '') }}
+
+                        <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                        class="ckeditor_snippets_select form-control"
+                                        data-linked-to="ta_text">
+                                            <option value=""></option>
+                                            <option value="Clock">Clock</option>
+                                            <option value="Clock|HH:mm">Clock|HH:mm</option>
+                                            <option value="Clock|DD/MM/YYYY">Clock|DD/MM/YYYY</option>
+                                            <option value="Date">Date</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_library_select"
+                                                class="ckeditor_library_select form-control"
+                                                data-linked-to="ta_text"
+                                                data-search-url="{{ urlFor("library.search") }}"
+                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {{ forms.textarea("ta_text", "", module.getOption("text"), "", "inline-editor-hide", "", 10) }}
+                    
+                    </div>
+
+                    <div class="tab-pane" id="optionalJavascriptTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional JavaScript" %}</h4>
+                        </div>
+                        
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), "", "", "", 10) }}
                     </div>
                 </div>
             </form>

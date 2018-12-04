@@ -98,7 +98,7 @@ let Toolbar = function(container, customButtons = [], customActions = {}, jumpLi
     this.cardDimensions = {
         width: 100, // In pixels
         height: 80, // In pixels
-        margin: 2 // In pixels
+        margin: 4 // In pixels
     };
 
     this.selectedCard = {};
@@ -329,11 +329,14 @@ Toolbar.prototype.render = function() {
     // Delete object
     this.DOMObject.find('#trashContainer').click(
         this.customActions.deleteSelectedObjectAction
-    ).droppable({
+    );
+    /* Delete by dragging disabled for now
+    .droppable({
         drop: function(event, ui) {
             self.customActions.deleteDraggedObjectAction(ui.draggable);
         }
     });
+    */
 
     // Handle custom buttons
     for(let index = 0;index < this.customButtons.length;index++) {
@@ -358,11 +361,11 @@ Toolbar.prototype.render = function() {
 
     // Set cards width/margin and draggable properties
     this.DOMObject.find('.toolbar-card').width(
-        this.cardDimensions.width
+        this.cardCalculatedWidth
     ).height(
         this.cardDimensions.height
     ).css(
-        'margin', this.cardDimensions.margin
+        'margin-left', this.cardDimensions.margin
     ).draggable({
         cursor: 'crosshair',
         handle: '.drag-area',
@@ -523,9 +526,9 @@ Toolbar.prototype.openTab = function(menu = -1) {
 
         if(this.openedMenu != -1) { // Close opened tab
             this.previousOpenedMenu = this.openedMenu;
-        this.menuItems[this.openedMenu].state = '';
-        this.openedMenu = -1;
-        } else if(this.previousOpenedMenu != -1) { // Reopen previously opened tab
+            this.menuItems[this.openedMenu].state = '';
+            this.openedMenu = -1;
+        } else if(this.previousOpenedMenu != -1 && this.menuItems[this.previousOpenedMenu] != undefined) { // Reopen previously opened tab
             this.menuItems[this.previousOpenedMenu].state = 'active';
             this.openedMenu = this.previousOpenedMenu;
             this.previousOpenedMenu = -1;
@@ -656,8 +659,21 @@ Toolbar.prototype.calculatePagination = function(menu) {
     const containerWidth = this.DOMObject.find('.toolbar-content').width() * (this.contentDimentions.width / 100);
 
     // Calculate number of elements to display
-    const elementsToDisplay = Math.floor(containerWidth / (this.cardDimensions.width + this.cardDimensions.margin * 2));
+    const elementsToDisplay = Math.floor(containerWidth / (this.cardDimensions.width + this.cardDimensions.margin));
 
+    // Space used
+    const usedSpace = elementsToDisplay * (this.cardDimensions.width + this.cardDimensions.margin);
+    
+    // Remaining space to be filled ( without the right margin )
+    const remainingSpace = containerWidth - usedSpace - this.cardDimensions.margin;
+
+    // New calculated width
+    if(remainingSpace < this.cardDimensions.width) {
+        this.cardCalculatedWidth = this.cardDimensions.width + (remainingSpace / elementsToDisplay);
+    } else {
+        this.cardCalculatedWidth = this.cardDimensions.width;
+    }
+    
     this.menuItems[menu].contentWidth = this.contentDimentions.width;
 
     return {

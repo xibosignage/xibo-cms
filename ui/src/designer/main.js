@@ -369,6 +369,8 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 lD.selectObject($('#' + selectObjectId));
             
+                // Reload the form helper connection
+                formHelpers.setup(lD, lD.layout);
                 
             } else {
                 lD.showErrorMessage();

@@ -17,41 +17,23 @@
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
         
         // Set override template field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
+        formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
 
-        forecastIoFormSetup(this);
-    }
+        // Setup editors
+        formHelpers.setupDualTypeTextArea(this, 'currentTemplate');
+        formHelpers.setupDualTypeTextArea(this, 'dailyTemplate');
 
-    /**
-     * Setup Forecast IO form
-     * @param {object} dialog - Dialog object
-     */
-    function forecastIoFormSetup(dialog) {
-
-        $(dialog).find('#color').colorpicker();
-
-        var reapplyWeatherTemplate = function() {
-            // Reapply
-            var templateId = $(dialog).find('#templateId').val();
-
-            $.each($(dialog).data().extra, function(index, value) {
-                if(value.id == templateId) {
-                    $(dialog).find('#widgetOriginalWidth').val(value.widgetOriginalWidth);
-                    $(dialog).find('#widgetOriginalHeight').val(value.widgetOriginalHeight);
-                    $(dialog).find('#currentTemplate').val(value.main);
-                    $(dialog).find('#dailyTemplate').val(value.daily);
-                    $(dialog).find('#styleSheet').val(value.css);
-                }
+        // Setup template override
+        formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
+            {
+                '#currentTemplate': 'main',
+                '#dailyTemplate': 'daily',
+                '#styleSheet': 'css',
+                '#widgetOriginalWidth': 'widgetOriginalWidth',
+                '#widgetOriginalHeight': 'widgetOriginalHeight'
             });
-        };
 
-        // Reapply the selected template if override template isn't checked
-        // https://github.com/xibosignage/xibo/issues/1241
-        if(!$(dialog).find('#overrideTemplate').is(':checked')) {
-            reapplyWeatherTemplate();
-        }
-
-        $(dialog).find('#templateId').on('change', reapplyWeatherTemplate);
-    };
-
+        // Setupd color picker
+        $(this).find('#color').colorpicker();
+    }
 </script>

@@ -90,6 +90,13 @@ class NotificationView extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="noDataMessage_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
      *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind ",
@@ -135,8 +142,10 @@ class NotificationView extends ModuleWidget
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null));
+        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null));        
+        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
         $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
+        $this->setRawNode('template_advanced', $this->getSanitizer()->getParam('template_advanced', null));
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
 
         $this->saveWidget();

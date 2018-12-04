@@ -245,10 +245,24 @@ class DataSetTicker extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="noDataMessage_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="template",
      *      in="formData",
      *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ta_text_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -350,7 +364,7 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
             $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
             $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
-            $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
+            $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
             $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
             $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
             $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
@@ -404,6 +418,7 @@ class DataSetTicker extends ModuleWidget
 
             // DataSet Tickers always have Templates provided.
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
             $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
 
             $this->isValid();
@@ -466,7 +481,6 @@ class DataSetTicker extends ModuleWidget
         // DataSet tickers or feed tickers without overrides.
         $text = $this->getRawNode('template', '');
         $css = $this->getRawNode('css', '');
-        $advancedEditor = $this->getOption('advancedEditor');
         
         // Parse library references on the template
         $text = $this->parseLibraryReferences($isPreview, $text);

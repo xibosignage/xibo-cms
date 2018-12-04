@@ -432,6 +432,9 @@ pE.reloadData = function() {
         } else {
             pE.showErrorMessage();
         }
+
+        // Reload the form helper connection
+        formHelpers.setup(pE, pE.playlist);
     }).fail(function(jqXHR, textStatus, errorThrown) {
 
         pE.common.hideLoadingScreen();

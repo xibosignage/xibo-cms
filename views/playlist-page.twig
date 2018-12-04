@@ -204,7 +204,6 @@
         var libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ urlFor("library.search") }}";
         var libraryAddUrl = "{{ urlFor("library.add") }}";
-        var libraryPlaylistAssignUrl = "{{ urlFor("playlist.library.assign.form") }}";
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         {% autoescape "js" %}

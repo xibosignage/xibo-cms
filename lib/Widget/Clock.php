@@ -105,6 +105,13 @@ class Clock extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="ta_text_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="showSeconds",
      *      in="formData",
      *      description="For Flip Clock, should the clock show seconds or not",
@@ -136,6 +143,7 @@ class Clock extends ModuleWidget
         $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
         $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
         $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
+        $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
 

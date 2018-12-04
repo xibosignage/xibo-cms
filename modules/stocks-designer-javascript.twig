@@ -14,52 +14,28 @@
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
         // Set override template field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
+        formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
 
         // Set effect type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
-        stocksFormTemplatesSetup(this);
-    }
-
-    function stocksFormTemplatesSetup(form) {
-        $(form).find('#backgroundColor').colorpicker({format: 'rgba'});
-
-        // If all 3 of the template fields are empty, then the template should be reapplied.
-        if (!$(form).find('#overrideTemplate').is(':checked')) {
-            // Reapply
-            var templateId = $('#templateId').val();
-
-            $.each($(form).data().extra, function(index, value) {
-                if (value.id == templateId) {
-                    $('#widgetOriginalWidth').val(value.widgetOriginalWidth);
-                    $('#widgetOriginalHeight').val(value.widgetOriginalHeight);
-                    $('#mainTemplate').val(value.main);
-                    $('#itemTemplate').val(value.item);
-                    $('#styleSheet').val(value.css);
-                    $('#maxItemsPerPage').val(value.maxItemsPerPage);
-                }
+        // Setup editors
+        formHelpers.setupDualTypeTextArea(this, 'mainTemplate');
+        formHelpers.setupDualTypeTextArea(this, 'itemTemplate');
+        
+        // Setup template override
+        formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
+            {
+                '#mainTemplate': 'main',
+                '#itemTemplate': 'item',
+                '#styleSheet': 'css',
+                '#widgetOriginalWidth': 'widgetOriginalWidth',
+                '#widgetOriginalHeight': 'widgetOriginalHeight',
+                '#maxItemsPerPage': 'maxItemsPerPage'
             });
-        }
 
-        $(form).find('#templateId').on('change', function() {
-            // Check to see if the override template check box is unchecked
-            if (!$('#overrideTemplate').is(':checked')) {
-
-                var templateId = $('#templateId').val();
-
-                $.each($(form).data().extra, function(index, value) {
-                    if (value.id == templateId) {
-                        $('#widgetOriginalWidth').val(value.widgetOriginalWidth);
-                        $('#widgetOriginalHeight').val(value.widgetOriginalHeight);
-                        $('#mainTemplate').val(value.main);
-                        $('#itemTemplate').val(value.item);
-                        $('#styleSheet').val(value.css);
-                        $('#maxItemsPerPage').val(value.maxItemsPerPage);
-                    }
-                });
-            }
-        });
-    };
+        // Setup background color picker
+        $(this).find('#backgroundColor').colorpicker({format: 'rgba'});
+    }
 
 </script>

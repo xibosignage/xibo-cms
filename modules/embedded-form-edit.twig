@@ -15,36 +15,82 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#htmlTab" role="tab" data-toggle="tab"><span>{% trans "HTML to Embed" %}</span></a></li>
+                    <li><a href="#customStyleSheetTab" role="tab" data-toggle="tab"><span>{% trans "Custom Style Sheet" %}</span></a></li>
+                    <li><a href="#headContentTab" role="tab" data-toggle="tab"><span>{% trans "HEAD content to Embed" %}</span></a></li>
+                </ul>
+            </li>
+        </ul>
         <div class="col-md-12">
             <form id="embeddedFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
-                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
 
-                {% set title %}{% trans "Set a duration?" %}{% endset %}
-                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
-                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
 
-                {% set title %}{% trans "Duration" %}{% endset %}
-                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
-                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
 
-                {% set title %}{% trans "Background transparent?" %}{% endset %}
-                {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not current available on the Windows Display Client." %}{% endset %}
-                {{ forms.checkbox("transparency", title, module.getOption("transparency"), helpText) }}
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Background transparent?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not current available on the Windows Display Client." %}{% endset %}
+                        {{ forms.checkbox("transparency", title, module.getOption("transparency"), helpText) }}
 
-                {% set title %}{% trans "Scale Content?" %}{% endset %}
-                {% set helpText %}{% trans "Should the embedded content be scaled along with the layout?" %}{% endset %}
-                {{ forms.checkbox("scaleContent", title, module.getOption("scaleContent"), helpText) }}
+                        {% set title %}{% trans "Scale Content?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the embedded content be scaled along with the layout?" %}{% endset %}
+                        {{ forms.checkbox("scaleContent", title, module.getOption("scaleContent"), helpText) }}
+                    </div>
 
-                {% set helpText %}{% trans "HTML to Embed" %}{% endset %}
-                {{ forms.textarea("embedHtml", "", module.getRawNode('embedHtml'), helpText, "", "", 10) }}
+                    <div class="tab-pane" id="htmlTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "HTML to Embed" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="embedHtml_advanced" name="embedHtml_advanced" {% if module.getOption("embedHtml_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
-                {% set helpText %}{% trans "Custom Style Sheets" %}{% endset %}
-                {{ forms.textarea("embedStyle", "", module.getRawNode('embedStyle'), helpText, "", "", 10) }}
+                        {% set inlineEditorMessage %}
+                        {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
 
-                {% set helpText %}{% trans "HEAD content to Embed (including script tags)" %}{% endset %}
-                {{ forms.textarea("embedScript", "", module.getRawNode('embedScript'), helpText, "", "", 10) }}
+                        {{ forms.textarea("embedHtml", "", module.getRawNode('embedHtml'), "", "inline-editor-hide", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="customStyleSheetTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Custom Style Sheets" %}</h4>
+                        </div>
+                        
+                        {{ forms.textarea("embedStyle", "", module.getRawNode('embedStyle'), "", "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="headContentTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "HEAD content to Embed" %}</h4>
+                        </div>
+
+                        {% set helpText %}{% trans "HEAD content to Embed (including script tags)" %}{% endset %}
+                        {{ forms.textarea("embedScript", "", module.getRawNode('embedScript'), helpText, "", "", 10) }}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

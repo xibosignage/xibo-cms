@@ -106,11 +106,11 @@
     </div>
 {% endmacro %}
 
-{% macro textarea(name, title, value, helpText, groupClass, validation, rows, generatedId) %}
+{% macro textarea(name, title, value, helpText, groupClass, validation, rows) %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-12">
             <span class="help-block">{{ helpText }}</span>
-            <textarea class="form-control" name="{{ name }}" id="{{ [name, generatedId]|join }}" rows="{{ rows }}" {{ validation }}>{{ value }}</textarea>
+            <textarea class="form-control" name="{{ name }}" id="{{ name }}" rows="{{ rows }}" {{ validation }}>{{ value }}</textarea>
         </div>
     </div>
 {% endmacro %}
