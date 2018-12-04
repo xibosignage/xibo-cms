@@ -73,16 +73,20 @@ Change into your new folder
 cd xibo-cms
 ```
 
-Install the external dependencies with Composer. Your local machine is unlikely to have the necessary dependencies to install the packages, hence the `--ignore-platform-reqs` switch.
+We recommend installing the dependencies via Docker, so that you are guarenteed consistent dependencies across different development machines.
 
-```sh
-php composer.phar install --ignore-platform-reqs
+### PHP dependencies
+
+```bash
+docker run --interactive --tty --volume $PWD:/app --volume ~/.composer:/tmp composer install
 ```
-Note, on some distributions, such as Ubuntu, composer may be availabe in the distribution's software repositories. In this case, the command listed above may be different. For example, on Ubuntu 18.04, you would use the following two commands to install composer and then run the equivalent of `php composer.phar install --ignore-platform-reqs`:
 
-```sh
-sudo apt install composer
-composer install --ignore-platform-reqs
+This command also mounts the Composer `/tmp` folder into your home directory so that you can take advantage of Composer caching.
+
+### Website dependencies (webpack)
+
+```bash
+docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:latest sh -c "npm install webpack -g; npm install; npm run build;"
 ```
 
 
@@ -106,27 +110,6 @@ asked for a database you should select to create a new database and enter these 
 When asked for a library location you should enter
 
  - /var/www/cms/library
- 
-## Package manager ( npm ) and module bundler ( webpack )
-
-Configure NPM Package Manager (https://www.npmjs.com/) and build dist folder with Webpack (https://webpack.js.org/):
-
- - Install Node.js ( comes with NPM ) from https://nodejs.org/en/
-
- - Update NPM to latest version:
-```
-npm install npm@latest -g
-```
-
- - Install the dependencies in the local node_modules folder:
-```
-npm install
-```
-
- - Build the dist folder with:
- ```
- npm run build
- ```
 
 ## Under the hood
 

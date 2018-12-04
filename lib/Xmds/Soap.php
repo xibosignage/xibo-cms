@@ -1835,9 +1835,9 @@ class Soap
 
     /**
      * Log Bandwidth Usage
-     * @param <type> $displayId
-     * @param <type> $type
-     * @param <type> $sizeInBytes
+     * @param int $displayId
+     * @param string $type
+     * @param int $sizeInBytes
      */
     protected function logBandwidth($displayId, $type, $sizeInBytes)
     {
