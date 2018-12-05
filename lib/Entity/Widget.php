@@ -593,7 +593,11 @@ class Widget implements \JsonSerializable
         $numItems = $this->getOptionValue('numItems', 0);
 
         // Determine the duration of this widget
-        if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+        if ($this->type === 'subplaylist') {
+            // We use the module to calculate the duration
+            $this->calculatedDuration = $module->getSubPlaylistResolvedDuration();
+
+        } else if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
             // If we have paging involved then work out the page count.
             $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
             if ($itemsPerPage > 0)
