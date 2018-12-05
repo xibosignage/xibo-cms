@@ -262,7 +262,7 @@ class SubPlaylist extends ModuleWidget
             $arrangement = 'roundrobin';
 
             // We need to decide how frequently we take from the respective lists.
-            $takeEvery = floor(($firstListCount < $largestListCount) ? 1 : ($largestListCount / $smallestListCount));
+            $takeEvery = intval(floor(($firstListCount < $largestListCount) ? 1 : ($largestListCount / $smallestListCount)));
 
             $this->getLog()->debug('Even arrangement, take items every ' . $takeEvery);
         } else {
@@ -278,21 +278,22 @@ class SubPlaylist extends ModuleWidget
         if ($arrangement === 'roundrobin') {
             // Round Robin
             // Take 1 from each until we have run out, use the smallest list as the "key"
-            $keys = array_keys($widgets);
             for ($i = 0; $i < $largestListCount; $i++) {
                 $first = true;
-                foreach ($keys as $key) {
+                foreach (array_keys($widgets) as $playlistId) {
                     // Start the index as the current loop in the largest list
                     $index = $i;
-                    $countInList = count($widgets[$key]);
+                    $countInList = count($widgets[$playlistId]);
 
-                    $this->getLog()->debug('Assessing index ' . $i . ' for list ' . $key . ' which has ' . $countInList . ' widgets.' . (($first) ? ' first list' : ''));
+                    $this->getLog()->debug('Assessing index ' . $i . ' for playlistId ' . $playlistId . ' which has ' . $countInList . ' widgets.' . (($first) ? ' first list' : ''));
 
-                    // We always take from the first list
+                    // We might skip the second or later list if we're only taking from that list every N $takeEvery items.
                     if (!$first) {
                         // We are on the second or later list - should we take?
-                        if ($index - $lastTakeIndex !== $takeEvery)
+                        if ($index - $lastTakeIndex !== $takeEvery) {
+                            $this->getLog()->debug('Skipping over ' . $index . ' because we last took index ' . $lastTakeIndex . ' and we should only take every ' . $takeEvery);
                             continue;
+                        }
 
                         $this->getLog()->debug('Not on the first list, we have assessed that we should take an item');
 
@@ -327,7 +328,7 @@ class SubPlaylist extends ModuleWidget
                     $this->getLog()->debug('Selecting widget at position '. $index);
 
                     // Append the key at the position
-                    $resolvedWidgets[] = $widgets[$key][$index];
+                    $resolvedWidgets[] = $widgets[$playlistId][$index];
 
                     // Not the first list
                     $first = false;
@@ -337,7 +338,7 @@ class SubPlaylist extends ModuleWidget
             // None
             // If the arrangement is none we just add all of the widgets together
             // Merge the arrays together for returning
-            foreach ($widgets as $key => $items) {
+            foreach ($widgets as $playlist => $items) {
                 if ($remainder === 'drop') {
                     $this->getLog()->debug('Dropping list of ' . count($items) . ' widgets down to ' . $smallestListCount);
 
