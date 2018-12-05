@@ -262,7 +262,7 @@ class SubPlaylist extends ModuleWidget
             $arrangement = 'roundrobin';
 
             // We need to decide how frequently we take from the respective lists.
-            $takeEvery = ($firstListCount < $largestListCount) ? 1 : ($largestListCount / $smallestListCount);
+            $takeEvery = floor(($firstListCount < $largestListCount) ? 1 : ($largestListCount / $smallestListCount));
 
             $this->getLog()->debug('Even arrangement, take items every ' . $takeEvery);
         } else {
