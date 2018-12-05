@@ -454,6 +454,11 @@ class Module extends Base
         // Inject the Current User
         $module->setUser($this->getUser());
 
+        // Check that we can call `add()` directly on this module
+        if ($module->getModule()->regionSpecific != 1) {
+            throw new InvalidArgumentException(__('Sorry but a file based Widget must be assigned not created'), 'type');
+        }
+
         // Set an event to be called when we save this module
         $module->setSaveEvent(new WidgetAddEvent($module));
 

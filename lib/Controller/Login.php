@@ -277,7 +277,8 @@ class Login extends Base
             // Make a link
             $link = ((new HttpsDetect())->getUrl()) . $this->getApp()->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
 
-            $this->getLog()->debug('Link is:' . $link);
+            // Uncomment this to get a debug message showing the link.
+            //$this->getLog()->debug('Link is:' . $link);
 
             // Send the mail
             $mail = new \PHPMailer\PHPMailer\PHPMailer();

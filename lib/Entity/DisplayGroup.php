@@ -683,6 +683,12 @@ class DisplayGroup implements \JsonSerializable
             ]);
         }
 
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tag->unassignDisplayGroup($this->displayGroupId);
+            $tag->save();
+        }
+
         // Delete assignments
         $this->removeAssignments();
 

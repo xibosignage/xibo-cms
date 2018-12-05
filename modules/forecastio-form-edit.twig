@@ -166,6 +166,11 @@
                         {{ forms.message(message) }}  
                     </div>
                 </div>
+                
+                {% if module.getSetting("apiKey") == "" %}
+                    {% set message %}{% trans "The Weather Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
+                    {{ forms.message(message, "alert alert-danger") }}
+                {% endif %}
             </form>
         </div>
     </div>

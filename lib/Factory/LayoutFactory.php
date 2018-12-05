@@ -457,7 +457,8 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode->getAttribute('duration');
                 $widget->useDuration = $mediaNode->getAttribute('useDuration');
-                $widget->useDuration = ($widget->useDuration == '') ? 1 : 0;
+                // Additional check for importing layouts from 1.7 series, where the useDuration did not exist
+                $widget->useDuration = ($widget->useDuration === '') ? 1 : $widget->useDuration;
                 $widget->tempId = $mediaNode->getAttribute('fileId');
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('toDt');
@@ -619,6 +620,11 @@ class LayoutFactory extends BaseFactory
 
         // Construct the Layout
         $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
+
+        $this->getLog()->debug('Layout Loaded: ' . $layout);
+        // Ensure width and height are integer type for resolution validation purpose xibosignage/xibo#1648
+        $layout->width = (int)$layout->width;
+        $layout->height = (int)$layout->height;
 
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);

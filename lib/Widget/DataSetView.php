@@ -241,14 +241,14 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="upperLimit",
      *      in="formData",
-     *      description="Upper low limit for this dataSet, 0 for nor limit",
+     *      description="Upper low limit for this dataSet, 0 for no limit",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="lowerLimit",
      *      in="formData",
-     *      description="Lower low limit for this dataSet, 0 for nor limit",
+     *      description="Lower low limit for this dataSet, 0 for no limit",
      *      type="integer",
      *      required=false
      *   ),
@@ -323,11 +323,11 @@ class DataSetView extends ModuleWidget
 
         if ($step == 1) {
 
-                        // Read in the dataSetId, validate and store it
+            // Read in the dataSetId, validate and store it
             $dataSetId = $this->getSanitizer()->getInt('dataSetId');
 
             // Do we already have a DataSet?
-            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+            if ($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
                 // Reset the fields that are dependent on the dataSetId
                 $this->setOption('columns', '');
             }
@@ -373,7 +373,7 @@ class DataSetView extends ModuleWidget
             $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
             $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
             $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-            
+
             $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
             $this->setOption('borderColor', $this->getSanitizer()->getString('borderColor'));
             $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
@@ -904,6 +904,12 @@ class DataSetView extends ModuleWidget
     {
         // DataSetViews are display specific
         return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
     }
 
     /** @inheritdoc */

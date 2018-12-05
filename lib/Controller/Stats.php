@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
@@ -50,6 +51,10 @@ class Stats extends Base
      */
     private $displayFactory;
 
+    /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
     /**
      * @var MediaFactory
      */
@@ -79,8 +84,9 @@ class Stats extends Base
      * @param MediaFactory $mediaFactory
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -90,6 +96,7 @@ class Stats extends Base
         $this->mediaFactory = $mediaFactory;
         $this->userFactory = $userFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -271,7 +278,8 @@ class Stats extends Base
               MAX(end) AS MaxEnd,
               layout.layoutId,
               stat.mediaId,
-              stat.widgetId
+              stat.widgetId,
+              stat.displayId
         ';
 
         $body = '
@@ -341,7 +349,7 @@ class Stats extends Base
             $params['displayId'] = $displayId;
         }
 
-        $body .= 'GROUP BY stat.type, display.Display, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
+        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         // Sorting?
         $filterBy = $this->gridRenderFilter();
@@ -369,6 +377,7 @@ class Stats extends Base
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
             $entry['type'] = $this->getSanitizer()->string($row['type']);
+            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
             $entry['display'] = $this->getSanitizer()->string($row['Display']);
             $entry['layout'] = $this->getSanitizer()->string($row['Layout']);
             $entry['media'] = $widgetName;
@@ -395,87 +404,6 @@ class Stats extends Base
         $this->getState()->setData($rows);
     }
 
-    public function availabilityData()
-    {
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('availabilityFromDt'));
-        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('availabilityToDt'));
-        $displayId = $this->getSanitizer()->getInt('displayId');
-        $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
-
-        // Get an array of display id this user has access to.
-        $displayIds = array();
-
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
-        }
-
-        if (count($displayIds) <= 0)
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-
-        // Get some data for a bandwidth chart
-        $params = array(
-            'start' => $fromDt->format('U'),
-            'end' => $toDt->format('U')
-        );
-
-        $SQL = '
-            SELECT display.display,
-                SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration
-              FROM `displayevent`
-                INNER JOIN `display`
-                ON display.displayId = `displayevent`.displayId
-             WHERE `start` <= :end
-                AND IFNULL(`end`, :end) >= :start
-                AND display.displayId IN (' . implode(',', $displayIds) . ') ';
-
-        if ($displayId != 0) {
-            $SQL .= ' AND display.displayId = :displayId ';
-            $params['displayId'] = $displayId;
-        }
-
-        if ($onlyLoggedIn) {
-            $SQL .= ' AND `display`.loggedIn = 1 ';
-        }
-
-        $SQL .= '
-            GROUP BY display.display
-        ';
-
-        $rows = $this->store->select($SQL, $params);
-
-        $labels = [];
-        $data = [];
-        $maxDuration = 0;
-
-        foreach ($rows as $row) {
-            $maxDuration = $maxDuration + $this->getSanitizer()->double($row['duration']);
-        }
-
-        if ($maxDuration > 86400) {
-            $postUnits = __('Days');
-            $divisor = 86400;
-        }
-        else if ($maxDuration > 3600) {
-            $postUnits = __('Hours');
-            $divisor = 3600;
-        }
-        else {
-            $postUnits = __('Minutes');
-            $divisor = 60;
-        }
-
-        foreach ($rows as $row) {
-            $labels[] = $this->getSanitizer()->string($row['display']);
-            $data[] = round($this->getSanitizer()->double($row['duration']) / $divisor, 2);
-        }
-
-        $this->getState()->extra = [
-            'labels' => $labels,
-            'data' => $data,
-            'postUnits' => $postUnits
-        ];
-    }
-
     /**
      * Bandwidth Data
      */
@@ -485,7 +413,7 @@ class Stats extends Base
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('bandwidthToDt'));
 
         // Get an array of display id this user has access to.
-        $displayIds = array();
+        $displayIds = [];
 
         foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
@@ -509,8 +437,8 @@ class Stats extends Base
             $SQL .= ', bandwidthtype.name AS type ';
 
         $SQL .= ' FROM `bandwidth`
-                INNER JOIN `display`
-                ON display.displayid = bandwidth.displayid';
+                LEFT OUTER JOIN `display`
+                ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0)
             $SQL .= '
@@ -519,8 +447,7 @@ class Stats extends Base
                 ';
 
         $SQL .= '  WHERE month > :month
-                AND month < :month2
-                AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+                AND month < :month2 ';
 
         if ($displayId != 0) {
             $SQL .= ' AND display.displayid = :displayid ';
@@ -553,6 +480,7 @@ class Stats extends Base
 
         $labels = [];
         $data = [];
+        $backgroundColor = [];
 
         foreach ($results as $row) {
 
@@ -560,9 +488,9 @@ class Stats extends Base
             if ($displayId != 0) {
                 $labels[] = $row['type'];
             } else {
-                $labels[] = $row['display'];
+                $labels[] = $row['display'] === null ? __('Deleted Displays') : $row['display'];
             }
-
+            $backgroundColor[] = ($row['display'] === null) ? 'rgb(255,0,0)' : 'rgb(11, 98, 164)';
             $data[] = round((double)$row['size'] / (pow(1024, $base)), 2);
         }
 
@@ -572,6 +500,7 @@ class Stats extends Base
         $this->getState()->extra = [
             'labels' => $labels,
             'data' => $data,
+            'backgroundColor' => $backgroundColor,
             'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
         ];
     }
@@ -843,6 +772,195 @@ class Stats extends Base
         if ($limit != '' && count($rows) > 0) {
             $results = $this->store->select('SELECT COUNT(*) AS total FROM `user` ' . $permissions, $params);
             $this->getState()->recordsTotal = intval($results[0]['total']);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function timeDisconnectedGrid()
+    {
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('availabilityFromDt'));
+        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('availabilityToDt'));
+
+        $displayId = $this->getSanitizer()->getInt('displayId');
+        $displayGroupId = $this->getSanitizer()->getInt('displayGroupId');
+        $tags = $this->getSanitizer()->getString('tags');
+        $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
+
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
+            $toDt->addDay(1);
+        }
+
+        // Get an array of display id this user has access to.
+        $displayIds = [];
+
+        foreach ($this->displayFactory->query() as $display) {
+            $displayIds[] = $display->displayId;
+        }
+
+        if (count($displayIds) <= 0)
+            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+        // Get an array of display groups this user has access to
+        $displayGroupIds = [];
+
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+            $displayGroupIds[] = $displayGroup->displayGroupId;
+        }
+
+        if (count($displayGroupIds) <= 0)
+            throw new InvalidArgumentException(__('No display groups with View permissions'), 'displayGroup');
+
+        $params = array(
+            'start' => $fromDt->format('U'),
+            'end' => $toDt->format('U')
+        );
+
+        $SQL = '
+            SELECT display.display, display.displayId,
+            SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration,
+            :end - :start as filter ';
+
+        if ($tags != '') {
+            $SQL .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
+              FROM tag
+                INNER JOIN lktagdisplaygroup
+                  ON lktagdisplaygroup.tagId = tag.tagId
+                WHERE lktagdisplaygroup.displayGroupId = displaygroup.DisplayGroupID
+                GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
+        }
+
+
+        $SQL .= 'FROM `displayevent`
+                INNER JOIN `display`
+                ON display.displayId = `displayevent`.displayId ';
+
+        if ($displayGroupId != 0) {
+            $SQL .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = display.displayid ';
+        }
+
+        if ($tags != '') {
+            $SQL .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup`
+                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
+                         AND `displaygroup`.isDisplaySpecific = 1 ';
+        }
+
+        $SQL .= 'WHERE `start` <= :end
+                  AND IFNULL(`end`, :end) >= :start
+                  AND :end <= UNIX_TIMESTAMP(NOW())
+                  AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+
+        if ($displayGroupId != 0) {
+            $SQL .= '
+                     AND lkdisplaydg.displaygroupid = :displayGroupId ';
+            $params['displayGroupId'] = $displayGroupId;
+        }
+
+        if ($tags != '') {
+            if (trim($tags) === '--no-tag') {
+                $SQL .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                    )
+                ';
+            } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
+                $SQL .= " AND `displaygroup`.displaygroupId IN (
+                SELECT `lktagdisplaygroup`.displaygroupId
+                  FROM tag
+                    INNER JOIN `lktagdisplaygroup`
+                    ON `lktagdisplaygroup`.tagId = tag.tagId
+                ";
+                $i = 0;
+
+                foreach (explode(',', $tags) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $SQL .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    else
+                        $SQL .= ' OR `tag` ' . $operator . ' :tags' . $i;
+
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $SQL .= " ) ";
+            }
+        }
+
+        if ($displayId != 0) {
+            $SQL .= ' AND display.displayId = :displayId ';
+            $params['displayId'] = $displayId;
+        }
+
+        if ($onlyLoggedIn) {
+            $SQL .= ' AND `display`.loggedIn = 1 ';
+        }
+
+        $SQL .= '
+            GROUP BY display.display
+        ';
+
+        // Sorting?
+        $filterBy = $this->gridRenderFilter();
+        $sortOrder = $this->gridRenderSort();
+
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $SQL . $order . $limit;
+        $maxDuration = 0;
+        $rows = [];
+
+        foreach ($this->store->select($sql, $params) as $row) {
+            $maxDuration = $maxDuration + $this->getSanitizer()->double($row['duration']);
+        }
+
+        if ($maxDuration > 86400) {
+            $postUnits = __('Days');
+            $divisor = 86400;
+        }
+        else if ($maxDuration > 3600) {
+            $postUnits = __('Hours');
+            $divisor = 3600;
+        }
+        else {
+            $postUnits = __('Minutes');
+            $divisor = 60;
+        }
+
+        foreach ($this->store->select($sql, $params) as $row) {
+            $entry = [];
+            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
+            $entry['display'] = $this->getSanitizer()->string(($row['display']));
+            $entry['timeDisconnected'] =  round($this->getSanitizer()->double($row['duration']) / $divisor, 2);
+            $entry['timeConnected'] =  round($this->getSanitizer()->double($row['filter'] / $divisor) - $entry['timeDisconnected'], 2);
+            $entry['postUnits'] = $postUnits;
+
+            $rows[] = $entry;
         }
 
         $this->getState()->template = 'grid';

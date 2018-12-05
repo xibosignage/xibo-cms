@@ -341,6 +341,7 @@ class Soap
                     ON lkcampaignlayout.CampaignID = campaign.CampaignID
                     INNER JOIN `layout`
                     ON lkcampaignlayout.LayoutID = layout.LayoutID
+                    AND layout.parentId IS NULL
                     INNER JOIN `lkdgdg`
                     ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
@@ -398,7 +399,7 @@ class Soap
             foreach ($sth->fetchAll() as $row) {
                 $layoutId = $this->getSanitizer()->int($row['layoutID']);
 
-                if ($row['scheduleId'] != 0) {
+                if ($row['eventId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
                     try {
@@ -1787,6 +1788,8 @@ class Soap
     /**
      * Check we haven't exceeded the bandwidth limits
      *  - Note, display logging doesn't work in here, this is CMS level logging
+     *
+     * @return bool true if the check passes, false if it fails
      */
     protected function checkBandwidth()
     {
@@ -1795,31 +1798,18 @@ class Soap
 
         $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
-        if ($xmdsLimit <= 0)
-            return true;
-
         try {
-            $dbh = $this->getStore()->getConnection();
+            $bandwidthUsage = 0;
 
-            // Test bandwidth for the current month
-            $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');
-            $sth->execute(array(
-                'month' => strtotime(date('m') . '/02/' . date('Y') . ' 00:00:00')
-            ));
-
-            $bandwidthUsageBytes = $sth->fetchColumn(0);
-            $bandwidthUsage = ($bandwidthUsageBytes >= ($xmdsLimit * 1024)) ? false : true;
-
-            $this->getLog()->debug('Checking bandwidth usage against allowance: ' . ByteFormatter::format($xmdsLimit * 1024) . '. ' . ByteFormatter::format($bandwidthUsageBytes));
-
-            if (!$bandwidthUsage) {
+            if ($this->bandwidthFactory->isBandwidthExceeded($xmdsLimit, $bandwidthUsage)) {
+                // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __('Bandwidth allowance exceeded');
                 $date = $this->dateService->parse();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
 
-                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsageBytes)));
+                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsage)));
 
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
@@ -1831,10 +1821,12 @@ class Soap
 
                     $this->getLog()->critical($subject);
                 }
+
+                return false;
+            } else {
+                // Bandwidth not exceeded.
+                return true;
             }
-
-            return $bandwidthUsage;
-
         } catch (\Exception $e) {
             $this->getLog()->error($e->getMessage());
             return false;
@@ -1843,9 +1835,9 @@ class Soap
 
     /**
      * Log Bandwidth Usage
-     * @param <type> $displayId
-     * @param <type> $type
-     * @param <type> $sizeInBytes
+     * @param int $displayId
+     * @param string $type
+     * @param int $sizeInBytes
      */
     protected function logBandwidth($displayId, $type, $sizeInBytes)
     {

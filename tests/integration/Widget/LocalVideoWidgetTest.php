@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2018 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,87 +22,56 @@
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLocalVideo;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
+/**
+ * Class LocalVideoWidgetTest
+ * @package Xibo\Tests\Integration\Widget
+ */
 class LocalVideoWidgetTest extends LocalWebTestCase
 {
     use LayoutHelperTrait;
 
-	protected $startLayouts;
+    /** @var \Xibo\OAuth2\Client\Entity\XiboLayout */
+    protected $publishedLayout;
+
+    /** @var int */
+    protected $widgetId;
+
     /**
      * setUp - called before every test automatically
      */
     public function setup()
-    {  
+    {
         parent::setup();
-        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+
+        $this->getLogger()->debug('Setup for ' . get_class() .' Test');
+
+        // Create a Layout
+        $this->publishedLayout = $this->createLayout();
+
+        // Checkout
+        $layout = $this->checkout($this->publishedLayout);
+
+        // Create a Widget for us to edit.
+        $response = $this->getEntityProvider()->post('/playlist/widget/localvideo/' . $layout->regions[0]->regionPlaylist['playlistId']);
+
+        $this->widgetId = $response['widgetId'];
     }
+
     /**
      * tearDown - called after every test automatically
      */
     public function tearDown()
     {
-        // tearDown all layouts that weren't there initially
-        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining layouts and nuke them
-        foreach ($finalLayouts as $layout) {
-            /** @var XiboLayout $layout */
-            $flag = true;
-            foreach ($this->startLayouts as $startLayout) {
-               if ($startLayout->layoutId == $layout->layoutId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $layout->delete();
-                } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
-                }
-            }
-        }
+        // Delete the Layout we've been working with
+        $this->deleteLayout($this->publishedLayout);
+
         parent::tearDown();
-    }
 
-    /**
-     * @group add
-     * @dataProvider provideSuccessCases
-     */
-    public function testAdd($uri, $duration, $useDuration, $scaleTypeId, $mute)
-    {
-        // Create layout
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId, [
-            'uri' => $uri,
-            'duration' => $duration,
-            'useDuration' => $useDuration,
-            'scaleTypeId' => $scaleTypeId,
-            'mute' => $mute,
-            ]);
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboLocalVideo($this->getEntityProvider()))->getById($playlistId);
-        $this->assertSame($duration, $widgetOptions->duration);
-        
-        foreach ($widgetOptions->widgetOptions as $option) {
-            if ($option['option'] == 'uri') {
-                $this->assertSame($uri, urldecode($option['value']));
-            }
-            if ($option['option'] == 'scaleTypeId') {
-                $this->assertSame($scaleTypeId, $option['value']);
-            }
-            if ($option['option'] == 'mute') {
-                $this->assertSame($mute, intval($option['value']));
-            }
-        }
+        $this->getLogger()->debug('Tear down for ' . get_class() .' Test');
     }
 
     /**
@@ -109,7 +79,7 @@ class LocalVideoWidgetTest extends LocalWebTestCase
      * Format ($name, $duration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
      * @return array
      */
-    public function provideSuccessCases()
+    public function provideEditCases()
     {
         # Sets of data used in testAdd
         return [
@@ -118,33 +88,32 @@ class LocalVideoWidgetTest extends LocalWebTestCase
         ];
     }
 
-    public function testEdit()
+    /**
+     * @throws \Xibo\OAuth2\Client\Exception\XiboApiException
+     * @dataProvider provideEditCases
+     */
+    public function testEdit($uri, $duration, $useDuration, $scaleTypeId, $mute)
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Add local video widget
-        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $playlistId);
-        $duration = 80;
-        $scaleTypeId = 'stretch';
-        $mute = 1;
-        $uri = 'rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov';
-        $response = $this->client->put('/playlist/widget/' . $localVideo->widgetId, [
+        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
             'uri' => $uri,
             'duration' => $duration,
-            'useDuration' => 1,
+            'useDuration' => $useDuration,
             'scaleTypeId' => $scaleTypeId,
             'mute' => $mute,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboLocalVideo($this->getEntityProvider()))->getById($playlistId);
-        $this->assertSame($duration, $widgetOptions->duration);
-        foreach ($widgetOptions->widgetOptions as $option) {
+
+        /** @var XiboLocalVideo $checkWidget */
+        $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
+        $checkWidget = (new XiboLocalVideo($this->getEntityProvider()))->hydrate($response[0]);
+
+        $this->assertSame($duration, $checkWidget->duration);
+
+        foreach ($checkWidget->widgetOptions as $option) {
             if ($option['option'] == 'uri') {
                 $this->assertSame($uri, urldecode($option['value']));
             }
@@ -155,20 +124,5 @@ class LocalVideoWidgetTest extends LocalWebTestCase
                 $this->assertSame($mute, intval($option['value']));
             }
         }
-    }
-
-    public function testDelete()
-    {
-        // Create layout
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Add local video widget
-        $localVideo = (new XiboLocalVideo($this->getEntityProvider()))->create('rtsp://184.72.239.149/vod/mp4:BigBuckBunny_115k.mov', 30, 1, 'aspect', 0, $playlistId);
-        # Delete it
-        $this->client->delete('/playlist/widget/' . $localVideo->widgetId);
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(200, $response->status, $this->client->response->body());
     }
 }

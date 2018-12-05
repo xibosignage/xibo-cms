@@ -179,7 +179,7 @@ class Image extends ModuleWidget
             }
 
             $output .= '<div class="hoverPreview">';
-            $output .= '    <img src="' . $url . '?preview=1&width=100&height=56&proportional=1&cache=1" alt="Hover Preview">';
+            $output .= '    <img src="' . $url . '?preview=1&width=100&height=56&proportional=1&cache=1&mediaId=' . $this->getMediaId() . '" alt="Hover Preview">';
             $output .= '</div>';
         } catch (NotFoundException $e) {
             $this->getLog()->error('Cannot find image to show in HoverPreview. WidgetId: %d', $this->getWidgetId());

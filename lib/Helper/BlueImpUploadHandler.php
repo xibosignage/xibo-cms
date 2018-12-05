@@ -747,7 +747,9 @@ class BlueImpUploadHandler
                 }
                 $this->header('Content-Length: ' . $this->get_file_size($file_path));
                 $this->header('Last-Modified: ' . gmdate('D, d M Y H:i:s T', filemtime($file_path)));
+                ob_end_flush();
                 $this->readfile($file_path);
+                exit;
             }
         }
     }

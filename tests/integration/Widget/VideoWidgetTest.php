@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2018 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,108 +22,104 @@
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboVideo;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
+/**
+ * Class VideoWidgetTest
+ * @package Xibo\Tests\Integration\Widget
+ */
 class VideoWidgetTest extends LocalWebTestCase
 {
     use LayoutHelperTrait;
 
-	protected $startLayouts;
+    /** @var \Xibo\OAuth2\Client\Entity\XiboLayout */
+    protected $publishedLayout;
+
+    /** @var XiboLibrary */
+    protected $media;
+
+    /** @var int */
+    protected $widgetId;
+
     /**
      * setUp - called before every test automatically
      */
     public function setup()
-    {  
+    {
         parent::setup();
-        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+
+        $this->getLogger()->debug('Setup for ' . get_class() .' Test');
+
+        // Create a Layout
+        $this->publishedLayout = $this->createLayout();
+
+        // Checkout
+        $layout = $this->checkout($this->publishedLayout);
+
+        // Create some media to upload
+        $this->media = (new XiboLibrary($this->getEntityProvider()))->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/HLH264.mp4');
+
+        // Assign the media we've created to our regions playlist.
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist['playlistId']);
+
+        // Store the widgetId
+        $this->widgetId = $playlist->widgets[0]->widgetId;
     }
+
     /**
      * tearDown - called after every test automatically
      */
     public function tearDown()
     {
-        // tearDown all layouts that weren't there initially
-        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining layouts and nuke them
-        foreach ($finalLayouts as $layout) {
-            /** @var XiboLayout $layout */
-            $flag = true;
-            foreach ($this->startLayouts as $startLayout) {
-               if ($startLayout->layoutId == $layout->layoutId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $layout->delete();
-                } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
-                }
-            }
-        }
-        // tearDown all media files that weren't there initially
-        $finalMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining media files and nuke them
-        foreach ($finalMedias as $media) {
-            /** @var XiboLibrary $media */
-            $flag = true;
-            foreach ($this->startMedias as $startMedia) {
-               if ($startMedia->mediaId == $media->mediaId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $media->deleteAssigned();
-                } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $media->mediaId . '. E:' . $e->getMessage());
-                }
-            }
-        }
+        // Delete the Layout we've been working with
+        $this->deleteLayout($this->publishedLayout);
+
+        // Tidy up the media
+        $this->media->delete();
+
         parent::tearDown();
+
+        $this->getLogger()->debug('Tear down for ' . get_class() .' Test');
     }
 
     public function testEdit()
     {
-        // Create layout
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Upload new media
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
-        # Assign media to a playlist
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $playlistId);
-        $name = 'Edited Name';
+        $name = 'Edited Name: ' . Random::generateString(5);
         $useDuration = 1;
         $duration = 80;
         $scaleTypeId = 'stretch';
         $mute = 1;
         $loop = 0;
-        $widget = $playlist->widgets[0];
-        $response = $this->client->put('/playlist/widget/' . $widget->widgetId, [
+
+        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
             'name' => $name,
             'duration' => $duration,
             'useDuration' => $useDuration,
             'scaleTypeId' => $scaleTypeId,
             'mute' => $mute,
             'loop' => $loop,
-            ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $widgetOptions = (new XiboVideo($this->getEntityProvider()))->getById($playlistId);
-        $this->assertSame($name, $widgetOptions->name);
-        $this->assertSame($duration, $widgetOptions->duration);
-        $this->assertSame($media->mediaId, intval($widgetOptions->mediaIds[0]));
-        foreach ($widgetOptions->widgetOptions as $option) {
+
+        /** @var XiboVideo $checkWidget */
+        $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
+        $checkWidget = (new XiboVideo($this->getEntityProvider()))->hydrate($response[0]);
+
+        $this->assertSame($name, $checkWidget->name);
+        $this->assertSame($duration, $checkWidget->duration);
+        $this->assertSame($this->media->mediaId, intval($checkWidget->mediaIds[0]));
+
+
+        foreach ($checkWidget->widgetOptions as $option) {
             if ($option['option'] == 'scaleTypeId') {
                 $this->assertSame($scaleTypeId, $option['value']);
             }
@@ -136,23 +133,5 @@ class VideoWidgetTest extends LocalWebTestCase
                 $this->assertSame($useDuration, $option['value']);
             }
         }
-    }
-
-    public function testDelete()
-    {
-        // Create layout
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
-
-        # Upload new media
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API video', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
-        # Assign media to a region
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId], 10, $playlistId);
-        $widget = $playlist->widgets[0];
-        # Delete it
-        $this->client->delete('/playlist/widget/' . $widget->widgetId);
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(200, $response->status, $this->client->response->body());
     }
 }

@@ -329,6 +329,31 @@ class DisplayFactory extends BaseFactory
             $params['clientVersion'] = '%' . $this->getSanitizer()->getString('clientVersion', $filterBy) . '%';
         }
 
+        if ($this->getSanitizer()->getString('clientType', $filterBy) != '') {
+            $body .= ' AND display.client_type = :clientType ';
+            $params['clientType'] = $this->getSanitizer()->getString('clientType', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('clientCode', $filterBy) != '') {
+            $body .= ' AND display.client_code LIKE :clientCode ';
+            $params['clientCode'] = '%' . $this->getSanitizer()->getString('clientCode', $filterBy) . '%';
+        }
+
+        if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) != '') {
+            $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
+            $params['mediaInventoryStatus'] = $this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('loggedIn', -1, $filterBy) != -1) {
+            $body .= ' AND display.loggedIn = :loggedIn ';
+            $params['loggedIn'] = $this->getSanitizer()->getInt('loggedIn', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('lastAccessed', $filterBy) !== null) {
+            $body .= ' AND display.lastAccessed > :lastAccessed ';
+            $params['lastAccessed'] = $this->getSanitizer()->getInt('lastAccessed', $filterBy);
+        }
+
         // Exclude a group?
         if ($this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy) !== null) {
             $body .= " AND display.DisplayID NOT IN ";

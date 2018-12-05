@@ -298,7 +298,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
-
+                // Calculate the widget duration for new uploaded media widgets
+                $widget->calculateDuration($module);
                 // Assign media
                 $widget->assignMedia($media->mediaId);
 

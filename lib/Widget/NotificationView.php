@@ -333,6 +333,12 @@ class NotificationView extends ModuleWidget
     }
 
     /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
+    }
+
+    /** @inheritdoc */
     public function getCacheDuration()
     {
         // We have a long cache interval because we don't depend on any external data.
