@@ -156,7 +156,7 @@ class SubPlaylist extends ModuleWidget
                AND childId = parentId 
                AND depth > 0
         ', ['parentId' => $this->getPlaylistId()])) {
-            throw new \InvalidArgumentException(__('This assignment creates a circular reference'));
+            throw new InvalidArgumentException(__('This assignment creates a loop because the Playlist being assigned contains the Playlist being worked on.'), 'subPlaylistId');
         }
 
         // Save the widget
