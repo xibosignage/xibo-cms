@@ -549,8 +549,8 @@ class Playlist implements \JsonSerializable
         $time = date('Y-m-d H:i:s');
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -561,6 +561,7 @@ class Playlist implements \JsonSerializable
             'filterMediaTags' => $this->filterMediaTags,
             'createdDt' => $time,
             'modifiedDt' => $time,
+            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : 1
         ));
 
         // Insert my self link

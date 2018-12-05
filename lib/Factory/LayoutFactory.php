@@ -965,6 +965,12 @@ class LayoutFactory extends BaseFactory
         // Finished
         $zip->close();
 
+        // We need one final pass through all widgets on the layout so that we can set the durations properly.
+        foreach ($layout->getWidgets() as $widget) {
+            $module = $this->moduleFactory->createWithWidget($widget);
+            $widget->calculateDuration($module);
+        }
+
         if ($fontsAdded) {
             $this->getLog()->debug('Fonts have been added');
             $libraryController->installFonts();

@@ -140,6 +140,7 @@ class PlaylistFactory extends BaseFactory
         $playlist->ownerId = $ownerId;
         $playlist->regionId = $regionId;
         $playlist->isDynamic = 0;
+        $playlist->requiresDurationUpdate = 1;
 
         return $playlist;
     }
