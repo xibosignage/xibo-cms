@@ -213,13 +213,6 @@ describe('Layout Designer (Populated)', function() {
             // Type the new name in the input
             cy.get('#properties-panel input[name="name"]').clear().type('newName');
 
-            // Set some properties
-            cy.get('#properties-panel #loop').check();
-            cy.get('#properties-panel input[name="top"]').clear().type(100);
-            cy.get('#properties-panel input[name="left"]').clear().type(100);
-            cy.get('#properties-panel input[name="width"]').clear().type(400);
-            cy.get('#properties-panel input[name="height"]').clear().type(300);
-
             // Save form
             cy.get('#properties-panel button[data-action="save"]').click();
 
@@ -229,10 +222,6 @@ describe('Layout Designer (Populated)', function() {
             // Check if the values are the same entered after reload
             cy.wait('@reloadRegion').then(() => {
                 cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
-                cy.get('#properties-panel input[name="top"]').should('have.attr', 'value').and('include', 100);
-                cy.get('#properties-panel input[name="left"]').should('have.attr', 'value').and('include', 100);
-                cy.get('#properties-panel input[name="width"]').should('have.attr', 'value').and('include', 400);
-                cy.get('#properties-panel input[name="height"]').should('have.attr', 'value').and('include', 300);
             });
         });
 
