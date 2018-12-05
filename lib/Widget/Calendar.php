@@ -110,11 +110,16 @@ class Calendar extends ModuleWidget
         $this->setOption('excludeAllDay', $this->getSanitizer()->getCheckbox('excludeAllDay'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
 
-        $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', null));
+        $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
+        $this->setOption('template_advanced', $this->getSanitizer()->getCheckbox('template_advanced'));
+        
         $this->setRawNode('currentEventTemplate', $this->getSanitizer()->getParam('currentEventTemplate', null));
+        $this->setOption('currentEventTemplate_advanced', $this->getSanitizer()->getCheckbox('currentEventTemplate_advanced'));
+        
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null)));
+        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
+        
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
-        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
             
         $this->isValid();
         $this->saveWidget();
@@ -130,7 +135,6 @@ class Calendar extends ModuleWidget
         $template = $this->getRawNode('template', '');
         $currentEventTemplate = ($this->getOption('useCurrentTemplate') == 1) ? $this->getRawNode('currentEventTemplate', '') : null;
         $styleSheet = $this->getRawNode('styleSheet', '');
-        $advancedEditor = $this->getOption('advancedEditor');
 
         // Parse library references first as its more efficient
         $template = $this->parseLibraryReferences($this->isPreview(), $template);

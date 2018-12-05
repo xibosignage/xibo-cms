@@ -30,15 +30,26 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
+                    <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
+                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
+                </ul>
+            </li>
+            <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+            <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#template" role="tab" data-toggle="tab"><span>{% trans "Apperance" %}</span></a></li>
-                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
-                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
-                <li><a href="#format" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-            </ul>
             <form id="dataSetTickerForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
@@ -53,6 +64,30 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Show items side by side?" %}{% endset %}
+                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
+                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
+                        
+                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
+
+                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="appearanceTab">
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
@@ -104,30 +139,46 @@
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed", module.getOption("scrollSpeed")), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Items per page" %}{% endset %}
+                        {% set helpText %}{% trans "If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
+                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
+
                     </div>
 
-                    <div class="tab-pane" id="template">
-                        {% set generatedId %}{{ random() }}{% endset %}
 
-                        {% set title %}{% trans "Advanced editor?" %}{% endset %}
-                        {% set helpText %}{% trans "Tick if you would like to use the advanced HTML editor." %}{% endset %}
-                        {{ forms.checkbox("advancedEditor", title, module.getOption("advancedEditor", 0), helpText, "template-override-controls") }}
+                    <div class="tab-pane" id="templateTab">
 
-                        <div class="ckeditor_controls template-group-editor" data-linked-to="ta_text{{ generatedId }}">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
+                        {% set inlineEditorMessage %}
+                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+
+                        <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
                             <div class="col-sm-6">
                                 <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Available Substitutions" %}</label>
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Data Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_snippets_select" 
                                             class="ckeditor_snippets_select form-control"
-                                            data-linked-to="ta_text{{ generatedId }}">
+                                            data-linked-to="ta_text">
                                             <option value=""></option>
 
                                             {% for column in module.dataSetColumns() %}
                                                 <option value="{{ column.heading }}|{{ column.dataSetColumnId }}">{{ column.heading }}</option>
                                             {% endfor %}
-                                        
                                         </select>
                                     </div>
                                 </div>
@@ -139,7 +190,7 @@
                                     <div class="col-sm-8">
                                         <select id="ckeditor_library_select3"
                                                 class="ckeditor_library_select form-control"
-                                                data-linked-to="ta_text{{ generatedId }}"
+                                                data-linked-to="ta_text"
                                                 data-search-url="{{ urlFor("library.search") }}"
                                                 data-image-url="{{ urlFor("library.download") }}?preview=1">
                                         </select>
@@ -148,16 +199,51 @@
                             </div>
                         </div>
 
-                        {% set helpText %}
-                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), helpText, "template-group-editor", "", 10, generatedId) }}
-
-                        {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
-                        {{ forms.textarea("ta_css", "", module.getRawNode("css"), title, "", "", 10) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
                     </div>
+
+                    <div class="tab-pane" id="noDataTemplateTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                        <div>
+                            <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
+                            <div class="col-sm-4">
+                                <select id="ckeditor_library_select"
+                                        class="ckeditor_library_select form-control"
+                                        data-linked-to="noDataMessage"
+                                        data-search-url="{{ urlFor("library.search") }}"
+                                        data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                </select>
+                            </div>
+                        </div>
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalStylesheetTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("ta_css", "", module.getRawNode("css"), "", "", "", 10) }}     
+                    </div>
+
+                    <div class="tab-pane" id="optionalJavascriptTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional JavaScript" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), "", "", "", 10) }}
+                    </div>
+
                     <div class="tab-pane" id="orderCriteria">
 
                         {% set message %}{% trans "The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
@@ -192,52 +278,13 @@
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
                         {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
                     </div>
-                    <div class="tab-pane" id="format">
-                        {% set title %}{% trans "Items per page" %}{% endset %}
-                        {% set helpText %}{% trans "If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
-                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
 
-                        {% set title %}{% trans "Show items side by side?" %}{% endset %}
-                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
-                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
-                    </div>
-                    <div class="tab-pane" id="advanced">
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
-
-                        {% set title %}{% trans "Duration is per item" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
-
+                    <div class="tab-pane" id="cachingTab">
+                        
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
 
-                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
-                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
-
-                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
-                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
-
-                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
-                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
-
-                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        <div class="pull-right">
-                            <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
-                            <div class="col-sm-10">
-                                <select id="ckeditor_library_select"
-                                        class="ckeditor_library_select form-control"
-                                        data-linked-to="noDataMessage"
-                                        data-search-url="{{ urlFor("library.search") }}"
-                                        data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                </select>
-                            </div>
-                        </div>
-                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
                     </div>
                 </div>
                 

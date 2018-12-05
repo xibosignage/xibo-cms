@@ -28,146 +28,36 @@
     {% trans "Edit Chart" %}
 {% endblock %}
 
-{% block formFieldActions %}
-  [
-    {
-      "field": "useDuration", "trigger": "init",
-      "operation": "is:checked", "value": false,
-      "actions": { ".duration-fields": { "display": "none" } }
-    },{
-      "field": "useDuration", "trigger": "init",
-      "operation": "is:checked", "value": true,
-      "actions": { ".duration-fields": { "display": "block" } }
-    },{
-      "field": "useDuration", "trigger": "change",
-      "operation": "is:checked", "value": false,
-      "actions": { ".duration-fields": { "display": "none" } }
-    },{
-      "field": "useDuration", "trigger": "change",
-      "operation": "is:checked", "value": true,
-      "actions": { ".duration-fields": { "display": "block" } }
-    },{
-    "field": "useOrderingClause",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".order-clause-field": { "display": "none" },
-    "#orderClause": { "display": "block" }
-    }
-    },{
-    "field": "useOrderingClause",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".order-clause-field": { "display": "none" },
-    "#orderClause": { "display": "block" }
-    }
-    },{
-    "field": "useOrderingClause",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".order-clause-field": { "display": "block" },
-    "#orderClause": { "display": "none" }
-    }
-    },{
-    "field": "useOrderingClause",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".order-clause-field": { "display": "block" },
-    "#orderClause": { "display": "none" }
-    }
-    },{
-    "field": "useFilteringClause",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".filter-clause-field": { "display": "none" },
-    "#filterClause": { "display": "block" }
-    }
-    },{
-    "field": "useFilteringClause",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".filter-clause-field": { "display": "none" },
-    "#filterClause": { "display": "block" }
-    }
-    },{
-    "field": "useFilteringClause",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".filter-clause-field": { "display": "block" },
-    "#filterClause": { "display": "none" }
-    }
-    },{
-    "field": "useFilteringClause",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".filter-clause-field": { "display": "block" },
-    "#filterClause": { "display": "none" }
-    }
-    },{
-    "field": "showLegend",
-    "trigger": "init",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".legend-fields": { "display": "none" }
-    }
-    },{
-    "field": "showLegend",
-    "trigger": "change",
-    "value": false,
-    "operation": "is:checked",
-    "actions": {
-    ".legend-fields": { "display": "none" }
-    }
-    },{
-    "field": "showLegend",
-    "trigger": "init",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".legend-fields": { "display": "block" }
-    }
-    },{
-    "field": "showLegend",
-    "trigger": "change",
-    "value": true,
-    "operation": "is:checked",
-    "actions": {
-    ".legend-fields": { "display": "block" }
-    }
-    }
-  ]
-{% endblock %}
-
-{% block callBack %}graphFormSetup{% endblock %}
-
 {% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Configuration" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#dataTab" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                    <li><a href="#labelsTab" role="tab" data-toggle="tab"><span>{% trans "Labels" %}</span></a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Appearance" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#styleTab" role="tab" data-toggle="tab"><span>{% trans "Style" %}</span></a></li>
+                    <li><a href="#colourPalletTab" role="tab" data-toggle="tab"><span>{% trans "Colour Pallet" %}</span></a></li>
+                </ul>
+            </li>
+            <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+            <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
+
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#formatting" role="tab" data-toggle="tab"><span>{% trans "Format" %}</span></a></li>
-                <li><a href="#colorsTab" role="tab" data-toggle="tab"><span>{% trans "Colours" %}</span></a></li>
-                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
-                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
-            </ul>
             <form id="graphEditFormStep2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
@@ -182,10 +72,12 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
 
-                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
-                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+                    <div class="tab-pane" id="dataTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Data" %}</h4>
+                        </div>
 
                         {% set bar_chart %}{% trans "Bar" %}{% endset %}
                         {% set line_chart %}{% trans "Line" %}{% endset %}
@@ -205,45 +97,20 @@
                         {% set title %}{% trans "Chart Type" %}{% endset %}
                         {% set helpText %}{% trans "Select which type of chart to Display." %}{% endset %}
                         {{ forms.dropdown("graphType", "single", title, module.getOption("graphType"), options, "typeid", "type", helpText) }}
-
+                        
                         {% set message %}Configure your charts data using the selectors below. You should have at least an X and a Y axis defined.{% endset %}
                         {{ forms.message(message) }}
 
-                        <div id="graphConfig">
+                        <div id="graphConfig"></div>
 
-                        </div>
+                        {% set title %}{% trans "Always start the Y-Axis at 0?" %}{% endset %}
+                        {{ forms.checkbox("startYAtZero", title, module.getOption("startYAtZero")) }}
                     </div>
 
-                    <div class="tab-pane" id="formatting">
-                        {% set title %}{% trans "Background Color" %}{% endset %}
-                        {% set helpText %}{% trans "Select an optional background colour to put behind the chart, leaving this blank will make the graph transparent." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
-
-                        {% set title %}{% trans "Font Color" %}{% endset %}
-                        {% set helpText %}{% trans "Choose a font colour that will work well with your Layout's background - or the Region below this one." %}{% endset %}
-                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
-
-                        {% set title %}{% trans "Font Size" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size for all text that will show on the chart." %}{% endset %}
-                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
-
-                        {% set title %}{% trans "Show legend?" %}{% endset %}
-                        {{ forms.checkbox("showLegend", title, module.getOption("showLegend")) }}
-
-                        {% set positionTop %}{% trans "Top" %}{% endset %}
-                        {% set positionLeft %}{% trans "Left" %}{% endset %}
-                        {% set positionRight %}{% trans "Right" %}{% endset %}
-                        {% set positionBottom %}{% trans "Bottom" %}{% endset %}
-                        {% set options = [
-                            { typeid: "top", type: positionTop },
-                            { typeid: "left", type: positionLeft },
-                            { typeid: "right", type: positionRight },
-                            { typeid: "bottom", type: positionBottom },
-                        ] %}
-
-                        {% set title %}{% trans "Legend Position" %}{% endset %}
-                        {% set helpText %}{% trans "Where should the legend be positioned." %}{% endset %}
-                        {{ forms.dropdown("legendPosition", "single", title, module.getOption("legendPosition"), options, "typeid", "type", helpText, "legend-fields") }}
+                    <div class="tab-pane" id="labelsTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Labels" %}</h4>
+                        </div>
 
                         {% set title %}{% trans "Title" %}{% endset %}
                         {% set helpText %}{% trans "Enter a title to show on the Chart." %}{% endset %}
@@ -256,29 +123,61 @@
                         {% set title %}{% trans "Y-Axis Label" %}{% endset %}
                         {% set helpText %}{% trans "Enter a label to show on the Charts y-axis." %}{% endset %}
                         {{ forms.input("y-axis-label", title, module.getOption("y-axis-label"), helpText) }}
+                        
+                        {% set positionTop %}{% trans "Top" %}{% endset %}
+                        {% set positionLeft %}{% trans "Left" %}{% endset %}
+                        {% set positionRight %}{% trans "Right" %}{% endset %}
+                        {% set positionBottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                            { typeid: "top", type: positionTop },
+                            { typeid: "left", type: positionLeft },
+                            { typeid: "right", type: positionRight },
+                            { typeid: "bottom", type: positionBottom },
+                        ] %}
+                        
+                        {% set title %}{% trans "Show legend?" %}{% endset %}
+                        {{ forms.checkbox("showLegend", title, module.getOption("showLegend")) }}
 
-                        {% set title %}{% trans "Always start the Y-Axis at 0?" %}{% endset %}
-                        {{ forms.checkbox("startYAtZero", title, module.getOption("startYAtZero")) }}
-
+                        {% set title %}{% trans "Legend Position" %}{% endset %}
+                        {% set helpText %}{% trans "Where should the legend be positioned." %}{% endset %}
+                        {{ forms.dropdown("legendPosition", "single", title, module.getOption("legendPosition"), options, "typeid", "type", helpText, "legend-fields") }}
                     </div>
 
-                    <div class="tab-pane" id="colorsTab">
+                    <div class="tab-pane" id="styleTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Style" %}</h4>
+                        </div>
+
+                        {% set title %}{% trans "Background Color" %}{% endset %}
+                        {% set helpText %}{% trans "Select an optional background colour to put behind the chart, leaving this blank will make the graph transparent." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+
+                        {% set title %}{% trans "Font Color" %}{% endset %}
+                        {% set helpText %}{% trans "Choose a font colour that will work well with your Layout's background - or the Region below this one." %}{% endset %}
+                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
+
+                        {% set title %}{% trans "Font Size" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size for all text that will show on the chart." %}{% endset %}
+                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="colourPalletTab">
+
+                        <div class="form-content-title">
+                            <h4>{% trans "Colour Pallet" %}</h4>
+                        </div>
+
                         {% set message %}{% trans "Add a Colour Pallet to use when drawing a charts data series. If no or too few colours are specified the default colours will be used." %}{% endset %}
                         {{ forms.message(message) }}
 
-                        <div id="seriesColors">
-
-                        </div>
+                        <div id="seriesColors"></div>
                     </div>
 
                     <div class="tab-pane" id="orderCriteria">
-
                         {% set message %}{% trans "The DataSet results can be ordered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated order be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                         {{ forms.message(message) }}
 
-                        <div id="orderClause">
-
-                        </div>
+                        <div id="orderClause"></div>
 
                         {% set title %}{% trans "Use advanced order clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
@@ -287,16 +186,13 @@
                         {% set title %}{% trans "Order" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause for how this dataset should be ordered" %}{% endset %}
                         {{ forms.input("ordering", title, module.getOption("ordering"), helpText, "order-clause-field") }}
-
                     </div>
 
                     <div class="tab-pane" id="filterCriteria">
                         {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                         {{ forms.message(message) }}
 
-                        <div id="filterClause">
-
-                        </div>
+                        <div id="filterClause"></div>
 
                         {% set title %}{% trans "Use advanced filter clause?" %}{% endset %}
                         {% set helpText %}{% trans "Provide a custom clause instead of using the clause builder above." %}{% endset %}
@@ -305,6 +201,12 @@
                         {% set title %}{% trans "Filter" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a SQL clause to filter this DataSet." %}{% endset %}
                         {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
+                    </div>
+
+                    <div class="tab-pane" id="cacheTab">
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
                     </div>
                 </div>
 

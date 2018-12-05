@@ -15,12 +15,21 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
+                    <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
+                </ul>
+            </li>
+        </ul>
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-            </ul>
             <form id="notificationForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
@@ -36,16 +45,17 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
+                        {% set title %}{% trans "Duration is per item" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+
                         {% set title %}{% trans "Age" %}{% endset %}
                         {% set helpText %}{% trans "What is the maximum notification age in minutes, 0 for no restrictions." %}{% endset %}
                         {{ forms.number("age", title, module.getOption("age"), helpText, "", "required") }}
 
-                        {% set generatedId %}{{ random() }}{% endset %}
-
-                        {% set helpText %}{% trans "The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting." %}{% endset %}
-                        {{ forms.textarea("template", "", module.getRawNode("template"), helpText, "html-editor-group", "", 5, generatedId) }}
-                    </div>
-                    <div class="tab-pane" id="effectTab">
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items." %}{% endset %}
                         {% set noneOption %}{% trans "None" %}{% endset %}
@@ -76,15 +86,58 @@
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
                     </div>
-                    <div class="tab-pane" id="advanced">
 
-                        {% set title %}{% trans "Duration is per item" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                    <div class="tab-pane" id="templateTab">
+                    
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        {% set inlineEditorMessage %}
+                            {% trans "The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting." %}
+                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+
+                        <div class="form-group ckeditor_controls inline-editor-hide" data-linked-to="template">
+                            <div class="col-sm-6">
+                                <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                <div class="col-sm-8 ckeditor_select_container">
+                                    <select id="ckeditor_snippets_select" 
+                                    class="ckeditor_snippets_select form-control"
+                                    data-linked-to="template">
+                                        <option value=""></option>
+                                        <option value="Subject">Subject</option>
+                                        <option value="Body">Body</option>
+                                    </select>
+                                </div>
+                            </div>  
+                        </div>  
+
+                        {{ forms.textarea("template", "", module.getRawNode("template"), "", "inline-editor-hide", "", 5) }}
+                    </div>
+
+                    <div class="tab-pane" id="noDataTemplateTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
                         {% set helpText %}{% trans "A message to display when there are no notifications to show" %}{% endset %}
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+                    </div>
 
+                    <div class="tab-pane" id="optionalStylesheetTab">
                         {% set helpText %}{% trans "Custom Style Sheets" %}{% endset %}
                         {{ forms.textarea("embedStyle", "", module.getRawNode('embedStyle'), helpText, "", "", 10) }}
                     </div>

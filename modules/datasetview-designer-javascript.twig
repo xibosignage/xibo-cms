@@ -20,15 +20,21 @@
         } else if($(this).find('form').data('formStep') === 2) {
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-            // Set display location field, using the helper ()
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
-
             // Set override template field, using the helper ()
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
+            formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
 
             // Set order and filtering clauses fields, using the helper ()
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');
+
+            // Initialise CKEditor for the noDataMessage
+            formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
+
+            // Setup template override
+            formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
+            {
+                '#styleSheet': 'css'
+            });
 
             dataSetFormSetup(this);
         }
@@ -63,37 +69,8 @@
         }).disableSelection();
         $(".li-sortable", dialog).dblclick(switchLists);
 
-        // If all 3 of the template fields are empty, then the template should be reapplied.
-        if (!$("#overrideTemplate").is(":checked") && $("#styleSheet").val() == "") {
-            // Reapply
-            var templateId = $("#templateId").val();
-
-            $.each($(dialog).data().extra.templates, function(index, value) {
-                if (value.id == templateId) {
-                    $("#styleSheet").val(value.css);
-                }
-            });
-        }
-
-        $("#templateId").on('change', function() {
-            // Check to see if the override template check box is unchecked
-            if (!$("#overrideTemplate").is(":checked")) {
-
-                var templateId = $("#templateId").val();
-
-                $.each($(dialog).data().extra.templates, function(index, value) {
-                    if (value.id == templateId) {
-                        $("#styleSheet").val(value.css);
-                    }
-                });
-            }
-        });
-
         // Configure the query for sorting and filtering
         formHelpers.configureQueryBuilder(dialog, datasetQueryBuilderTranslations);
-
-        // Initialise CKEditor for the noDataMessage
-        formHelpers.setupCKEditor($(dialog), null, 'noDataMessage');
 
         // Configure some color pickers
         $(dialog).find("#backgroundColor").colorpicker();

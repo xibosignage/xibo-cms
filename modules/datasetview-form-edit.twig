@@ -32,14 +32,25 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li class="template-override-controls"><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
+                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
+                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
+                </ul>
+            </li>
+            <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+            <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#appearance" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
-                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-            </ul>
             <form id="dataSetViewEditForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
@@ -54,7 +65,9 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
 
+                    <div class="tab-pane" id="configurationTab">
                         {% set message %}{% trans "Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists." %}{% endset %}
                         {{ forms.message(message) }}
 
@@ -79,13 +92,37 @@
                             </div>
                         </div>
 
+                        {% set title %}{% trans "Show the table headings?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}
+                        {{ forms.checkbox("showHeadings", title, module.getOption("showHeadings"), helpText) }}
+                        
+                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)')" %}{% endset %}
+                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
+
+                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
+                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText ) }}
+
+                        {% set title %}{% trans "Rows per page" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the number of rows per page. 0 for no pages." %}{% endset %}
+                        {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
                     </div>
 
-                    <div class="tab-pane" id="appearance">
+                    <div class="tab-pane" id="appearanceTab">
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
                         {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "1"), helpText) }}
+
+                        {% set useTemplatesMessage %}
+                           {% trans "Use the Templates select field to access and set the custom template values." %}                     
+                        {% endset %}
+                        {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
@@ -110,17 +147,38 @@
                         {% set title %}{% trans "Font Size" %}{% endset %}
                         {% set helpText %}{% trans "Set the font size" %}{% endset %}
                         {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
+                    </div>
 
-                        {% set title %}{% trans "Show the table headings?" %}{% endset %}
-                        {% set helpText %}{% trans "Should the Table headings be shown?" %}{% endset %}
-                        {{ forms.checkbox("showHeadings", title, module.getOption("showHeadings"), helpText) }}
+                    <div class="tab-pane" id="noDataTemplateTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
-                        {% set title %}{% trans "Override the template?" %}{% endset %}
-                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "1"), helpText) }}
+                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalStylesheetTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
+                        </div>
 
                         {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
                         {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "template-override-controls", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalJavascriptTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional JavaScript" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), "", "", "", 10) }}
                     </div>
 
                     <div class="tab-pane" id="orderCriteria">
@@ -159,28 +217,10 @@
                         {{ forms.input("filter", title, module.getOption("filter"), helpText, "filter-clause-field") }}
                     </div>
 
-                    <div class="tab-pane" id="advanced">
-                        {% set title %}{% trans "Lower Row Limit" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)')" %}{% endset %}
-                        {{ forms.number("lowerLimit", title, module.getOption("lowerLimit"), helpText) }}
-
-                        {% set title %}{% trans "Upper Row Limit" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
-                        {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText ) }}
-
+                    <div class="tab-pane" id="cachingTab">
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
-
-                        {% set title %}{% trans "Rows per page" %}{% endset %}
-                        {% set helpText %}{% trans "Please enter the number of rows per page. 0 for no pages." %}{% endset %}
-                        {{ forms.number("rowsPerPage", title, module.getOption("rowsPerPage"), helpText) }}
-
-                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
-
-                        {% set title %}{% trans "Optional JavaScript" %}{% endset %}
-                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), title, "", "", 10) }}
                     </div>
                 </div>
 

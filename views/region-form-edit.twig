@@ -13,53 +13,62 @@
     {% trans "Region Options" %}
 {% endblock %}
 
-{% block formButtons %}
-    {% trans "Save" %}, $("#regionEditForm").submit()
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#positioningTab" role="tab" data-toggle="tab"><span>{% trans "Positioning" %}</span></a></li>
+            <li><a href="#transitionTab" role="tab" data-toggle="tab"><span>{% trans "Transition" %}</span></a></li>
+        </ul>
+
         <div class="col-md-12">
             <form id="regionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("region.edit", {id: region.regionId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="generalTab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "Name of the Region" %}{% endset %}
+                        {{ forms.input("name", title, region.name, helpText) }}
 
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "Name of the Region" %}{% endset %}
-                {{ forms.input("name", title, region.name, helpText) }}
+                        {% set title %}{% trans "Loop?" %}{% endset %}
+                        {% set helpText %}{% trans "If there is only one item in this region should it loop?" %}{% endset %}
+                        {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
+                    </div>
 
-                {% set title %}{% trans "Top" %}{% endset %}
-                {% set helpText %}{% trans "Offset from the Top Corner" %}{% endset %}
-                {{ forms.number("top", title, region.top, helpText) }}
+                    <div class="tab-pane" id="positioningTab">
+                        {% set title %}{% trans "Top" %}{% endset %}
+                        {% set helpText %}{% trans "Offset from the Top Corner" %}{% endset %}
+                        {{ forms.number("top", title, region.top, helpText) }}
 
-                {% set title %}{% trans "Left" %}{% endset %}
-                {% set helpText %}{% trans "Offset from the Left Corner" %}{% endset %}
-                {{ forms.number("left", title, region.left, helpText) }}
+                        {% set title %}{% trans "Left" %}{% endset %}
+                        {% set helpText %}{% trans "Offset from the Left Corner" %}{% endset %}
+                        {{ forms.number("left", title, region.left, helpText) }}
 
-                {% set title %}{% trans "Width" %}{% endset %}
-                {% set helpText %}{% trans "Width of the Region" %}{% endset %}
-                {{ forms.number("width", title, region.width, helpText) }}
+                        {% set title %}{% trans "Width" %}{% endset %}
+                        {% set helpText %}{% trans "Width of the Region" %}{% endset %}
+                        {{ forms.number("width", title, region.width, helpText) }}
 
-                {% set title %}{% trans "Height" %}{% endset %}
-                {% set helpText %}{% trans "Height of the Region" %}{% endset %}
-                {{ forms.number("height", title, region.height, helpText) }}
+                        {% set title %}{% trans "Height" %}{% endset %}
+                        {% set helpText %}{% trans "Height of the Region" %}{% endset %}
+                        {{ forms.number("height", title, region.height, helpText) }}
 
-                {# Transitions #}
-                {% set title %}{% trans "Exit Transition" %}{% endset %}
-                {% set helpText %}{% trans "What transition should be applied when this region is finished?" %}{% endset %}
-                {{ forms.dropdown("transitionType", "single", title, region.getOptionValue("transitionType"), [{code: null, transition: ""}]|merge(transitions.out), "code", "transition", helpText) }}
+                        {% set title %}{% trans "Layer" %}{% endset %}
+                        {% set helpText %}{% trans "The layering order of this region (z-index). Advanced use only." %}{% endset %}
+                        {{ forms.number("zIndex", title, region.zIndex, helpText) }}
+                    </div>
 
-                {{ forms.number("transitionDuration", "Duration", region.getOptionValue("transitionDuration"), "The duration for this transition, in milliseconds.", "transition-group") }}
+                    <div class="tab-pane" id="transitionTab">
+                        {% set title %}{% trans "Exit Transition" %}{% endset %}
+                        {% set helpText %}{% trans "What transition should be applied when this region is finished?" %}{% endset %}
+                        {{ forms.dropdown("transitionType", "single", title, region.getOptionValue("transitionType"), [{code: null, transition: ""}]|merge(transitions.out), "code", "transition", helpText) }}
 
-                {% set title %}{% trans "Direction" %}{% endset %}
-                {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
-                {{ forms.dropdown("transitionDirection", "single", title, region.getOptionValue("transitionDirection"), transitions.compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
+                        {{ forms.number("transitionDuration", "Duration", region.getOptionValue("transitionDuration"), "The duration for this transition, in milliseconds.", "transition-group") }}
 
-                {% set title %}{% trans "Loop?" %}{% endset %}
-                {% set helpText %}{% trans "If there is only one item in this region should it loop?" %}{% endset %}
-                {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
-                
-                {% set title %}{% trans "Layer" %}{% endset %}
-                {% set helpText %}{% trans "The layering order of this region (z-index). Advanced use only." %}{% endset %}
-                {{ forms.number("zIndex", title, region.zIndex, helpText) }}
+                        {% set title %}{% trans "Direction" %}{% endset %}
+                        {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
+                        {{ forms.dropdown("transitionDirection", "single", title, region.getOptionValue("transitionDirection"), transitions.compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
+                    </div>
+                </div>
             </form>
         </div>
     </div>

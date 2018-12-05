@@ -13,6 +13,8 @@
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
         
+        // Setup editors
+        formHelpers.setupDualTypeTextArea(this, 'embedHtml', !$(this).data('formEditorOnly'));
     }
 
 </script>

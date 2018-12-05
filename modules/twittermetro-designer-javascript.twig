@@ -30,13 +30,12 @@
         $(this).find('#colorTemplateId').on('change', function() {
             configureColoursForm(dialog, dialog.data().extra);
         });
+
+        // Turn the background colour into a picker
+        $(this).find('#backgroundColor').colorpicker();
     }
 
     function configureColoursForm(dialog, extra) {
-        
-        if(extra == null) {
-            extra = $(dialog).data().extra;
-        }
 
         // Get template
         var twittermetroColorsTemplate = formHelpers.getTemplate('twittermetroColorsTemplate');
@@ -129,9 +128,6 @@
             e.preventDefault();
             $(this).css('background-color', $(this).val());
         });
-
-        // Turn the background colour into a picker
-        $(dialog).find('#backgroundColor').colorpicker();
     };
 
 </script>

@@ -194,7 +194,6 @@
 
             var librarySearchUrl = "{{ urlFor("library.search") }}";
             var libraryAddUrl = "{{ urlFor("library.add") }}";
-            var libraryPlaylistAssignUrl = "{{ urlFor("playlist.library.assign.form") }}";
             var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
             var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
             {% autoescape "js" %}
@@ -273,99 +272,7 @@
                 ]
             };
             {% endautoescape %}
-
-
-            function timelineGridCallback(dialog) {
-
-                dialog.addClass("modal-big");
-
-                var timelineWidgetTabel = $("#timelineWidgets").DataTable({
-                    "language": dataTablesLanguage,
-                    serverSide: true, stateSave: true, stateDuration: 0,
-                    filter: false,
-                    searchDelay: 3000,
-                    "order": [[0, "asc"]],
-                    ajax: {
-                        url: "{{ urlFor("playlist.widget.search") }}",
-                        "data": function (d) {
-                            $.extend(d, $("#timelineWidgets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                        }
-                    },
-                    "columns": [
-                        {"data": "displayOrder"},
-                        {"data": "name", "orderable": false},
-                        {"data": "type"},
-                        {
-                            "data": "calculatedDuration",
-                            "render": function(data) {
-                                return (data == 0) ? 'N/A' : data;
-                            }
-                        },
-                        {"data": "transition"},
-                        {
-                            "orderable": false,
-                            "data": dataTableButtonsColumn
-                        }
-                    ]
-                });
-
-                timelineWidgetTabel.on('draw', dataTableDraw);
-                timelineWidgetTabel.on('processing.dt', dataTableProcessing);
-
-                // Hook up the library Upload Buttons
-                $(".libraryUploadForm").click(libraryUploadClick);
-            }
-
-            function DeleteRegion(form, regionId) {
-                $.ajax({
-                    type: form.attr("method"),
-                    url: form.attr("action"),
-                    cache: false,
-                    dataType: "json",
-                    data: form.serialize(),
-                    success: function (xhr, textStatus, error) {
-
-                        XiboSubmitResponse(xhr, form);
-
-                        if (xhr.success)
-                            $("#region_" + regionId).remove();
-                    },
-                    error: function (xhr, textStatus, errorThrown) {
-                        SystemMessage(xhr.responseText, false);
-                    }
-                });
-            }
-
-            // Bind to the add button when we load
-            $(document).ready(function () {
-
-                // Add region button
-                $("#regionAddButton").click(function (e) {
-                    e.preventDefault();
-                    $.ajax({
-                        type: "post",
-                        url: $(this).attr("href"),
-                        cache: false,
-                        dataType: "json",
-                        success: function (xhr, textStatus, error) {
-
-                            XiboSubmitResponse(xhr);
-
-                            if (xhr.success) {
-                                // Reload the designer
-                                window.location.reload();
-                            }
-                        }
-                    });
-                });
-            });
-
-            $("[name='my-checkbox']").bootstrapSwitch();
-
-
-
         </script>
-
 
         {% for module in modules %}
             {% if module.layoutDesignerJavaScript() != "" %}

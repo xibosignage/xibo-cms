@@ -14,19 +14,12 @@
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-        // Using form Editor
-        if($(this).data('formEditorOnly')) {
-            formHelpers.setupCKEditor(this, null, 'template', false, '[Subject] - [Body]');
-        } else { // Using viewer Editor
-            
-            // Hide default form input
-            $(this).find('.html-editor-group').hide();
+        // Set effect type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
-            // Show edit button on the viewer
-            $(this).data().viewerObject.setupInlineEditor('template', true, '[Subject] - [Body]');
-        }
-
-        formHelpers.setupCKEditor(this, null, 'noDataMessage');
+        // Setup editors
+        formHelpers.setupDualTypeTextArea(this, 'template', !$(this).data('formEditorOnly'), '[Subject] - [Body]');
+        formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
     }
 
     // Runs before form submit

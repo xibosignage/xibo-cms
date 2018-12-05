@@ -8,5 +8,5 @@
     "widgetOriginalPadding": "0",
     "resultContent": "1",
     "image":"modules/twitter/template-thumbs/twitter4.png",
-    "advancedEditor": false
+    "defaultVisualEditor": false
 }

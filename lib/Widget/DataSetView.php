@@ -301,6 +301,13 @@ class DataSetView extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="noDataMessage_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -364,6 +371,7 @@ class DataSetView extends ModuleWidget
             $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
             $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
             $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
+            $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
             $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
             $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));

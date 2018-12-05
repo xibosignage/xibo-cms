@@ -29,12 +29,13 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li><a href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
             <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
-                <ul class="nav nav-tabs digital-control-group" role="tablist">
-                    <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                    <li><a href="#editorTab" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
-                </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="generalTab">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -48,7 +49,9 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+                    </div>
 
+                    <div class="tab-pane" id="appearanceTab">
                         {% set title %}{% trans "Clock Type" %}{% endset %}
                         {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
                         {% set analog %}{% trans "Analog" %}{% endset %}
@@ -85,19 +88,31 @@
                     </div>
 
                     <div class="tab-pane" id="editorTab">
-                        {% set generatedId %}{{ random() }}{% endset %}
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Clock Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
 
                         {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
-                        {{ forms.message(message, "digital-control-group") }}
+                        {{ forms.message(message, "inline-editor-hide") }}
 
-                        <div class="ckeditor_controls" data-linked-to="ta_text{{ generatedId }}">
+                        {% set inlineEditorMessage %}
+                           {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}                        {% endset %}
+                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+
+                        <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
                             <div class="col-sm-offset-4 col-sm-8">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_snippets_select" 
                                             class="ckeditor_snippets_select form-control"
-                                            data-linked-to="ta_text{{ generatedId }}">
+                                            data-linked-to="ta_text">
                                             <option value=""></option>
                                             <option value="HH:mm">HH:mm</option>
                                             <option value="DD/MM/YYYY">DD/MM/YYYY</option>
@@ -107,8 +122,7 @@
                             </div>
                         </div>
 
-                        {% set helpText %}{% trans "Enter a format for the clock" %}{% endset %}
-                        {{ forms.textarea("ta_text", "", module.getRawNode("format"), helpText, "digital-control-group", "", 10, generatedId) }}
+                        {{ forms.textarea("ta_text", "", module.getRawNode("format"), "", "inline-editor-hide", "", 10) }}
                     </div>
                 </div>
             </form>

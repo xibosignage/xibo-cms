@@ -27,40 +27,27 @@
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
         // Set override template field, using the helper ()
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
+        formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
 
-        const self = this;
-        const formEditorSetup  = function() {
+        // Set effect type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
-            if(!$(self).data('formEditorOnly')) { // Using inline Editor
-                // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
-                $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked'));
+        // Setup editors
+        formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
 
-                // Show template group if override template is on, and if the advance editor is off
-                $(self).find('.template-group-editor').toggle($(self).find('form #overrideTemplate').is(':checked') && !$(self).find('form #advancedEditor').is(':checked')); 
-            } else {
-                // Using form editor
-                if($(self).find('form #overrideTemplate').is(':checked') && $(self).find('form #advancedEditor').is(':checked')) {
-                    formHelpers.setupCKEditor(self, null, 'ta_text');
-                } else {
-                    var textAreaId = $(self).find('textarea[name="ta_text"]').attr('id');
-                    formHelpers.destroyCKEditor(textAreaId);
-                }
-                
-            }
-        };
+        // Initialise CKEditor for the noDataMessage
+        formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
 
-        // Initialize editor
-        formEditorSetup();
-
-        console.log($(self).data());
-
-        // Setup form and have a callback to restart the CKEditor instance
-        formHelpers.setupForm(this, function() {
-            formEditorSetup();
-        }, 'ta_text');
-
-        formHelpers.setupCKEditor(this, null, 'noDataMessage');
+        // Setup template override
+        formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
+            {
+                '#ta_text_advanced': 'defaultVisualEditor',
+                '#ta_text': 'template',
+                '#ta_css': 'css'
+            });
+        
+        // Set colorpicker for the bg colour
+        $(this).find('#backgroundColor').colorpicker({format: 'rgba'});
     }
 
     // Runs before form submit

@@ -124,6 +124,13 @@ class Text extends ModuleWidget
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="ta_text_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="javaScript",
      *      in="formData",
      *      description="Optional JavaScript",
@@ -149,6 +156,7 @@ class Text extends ModuleWidget
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
         $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
+        $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         // Save the widget

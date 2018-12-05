@@ -32,47 +32,21 @@
         } else if($(this).find('form').data('formStep') === 2) {
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-            // Set display location field, using the helper ()
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
+            // Set clock type input field, using the helper ()
+            formHelpers.setupObjectValueInputFields($(this), '#effect', ['.effect-controls'], ['none'], true);
 
             // Set order and filtering clauses fields, using the helper ()
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');
 
-                    // Configure the query for sorting and filtering
+            // Configure the query for sorting and filtering
             formHelpers.configureQueryBuilder(this, datasetQueryBuilderTranslations);
 
-            const self = this;
-            const formEditorSetup  = function() {
-
-                if(!$(self).data('formEditorOnly')) { // Using inline Editor
-                    // Show/Hide inline editor depending on the overrideTemplate and advancedEditor checkboxes
-                    $(self).data().viewerObject.setupInlineEditor('ta_text', $(self).find('form #advancedEditor').is(':checked'));
-
-                    // Show template group if override template is on, and if the advance editor is off
-                    $(self).find('.template-group-editor').toggle(!$(self).find('form #advancedEditor').is(':checked')); 
-                } else {
-                    // Using form editor
-                    if($(self).find('form #advancedEditor').is(':checked')) {
-                        formHelpers.setupCKEditor(self, null, 'ta_text');
-                    } else {
-                        var textAreaId = $(self).find('textarea[name="ta_text"]').attr('id');
-                        formHelpers.destroyCKEditor(textAreaId);
-                    }
-                    
-                }
-            };
-
-            // Initialize editor
-            formEditorSetup();
-
-            // Setup form and have a callback to restart the CKEditor instance
-            formHelpers.setupForm(this, function() {
-                formEditorSetup();
-            }, 'ta_text');
+            // Setup editors
+            formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
             
             // Initialise CKEditor for the noDataMessage
-            formHelpers.setupCKEditor($(this), null, 'noDataMessage');
+            formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
         }
     }
 

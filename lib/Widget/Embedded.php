@@ -106,6 +106,13 @@ class Embedded extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="embedHtml_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embedScript",
      *      in="formData",
      *      description="HEAD content to Embed (including script tags)",
@@ -135,6 +142,7 @@ class Embedded extends ModuleWidget
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
         $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
+        $this->setOption('embedHtml_advanced', $this->getSanitizer()->getCheckbox('embedHtml_advanced'));
         $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
         $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
 

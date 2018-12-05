@@ -11,11 +11,11 @@ const templates = {
 let formHelpers = function() {
 
     // Default params ( might change )
-    this.defaultBackgroundColor = '#111';
+    this.defaultBackgroundColor = '#eee';
 
     this.defaultRegionDimensions = {
-        width: 1920,
-        height: 1080,
+        width: 1366,
+        height: 768,
         scale: 1
     };
 
@@ -158,147 +158,271 @@ let formHelpers = function() {
     };
 
     /**
-    * Setup form with a CKEditor and AdvancedEditor
+    * Setup dual type text area (advanced and simple modes)
     * @param {object} dialog - Dialog object ( the object that contains the replaceable fields )
-    * @param {callback=} callbackFunction - Function called when override template or advance editor is changed
-    * @param {string=} textAreaName - Textarea editor, if exists
+    * @param {string} textAreaID - text area ID - Snippets selector
+    * @param {boolean=} inlineEditor - Use the text area as inline editor
+    * @param {string=} customNoDataMessage - Custom message to appear when the field is empty
     */
-    this.setupForm = function(dialog, callbackFunction = null, textAreaName = null) {
-        
+    this.setupDualTypeTextArea = function(dialog, textAreaID, inlineEditor = false, customNoDataMessage = null) {
+
+        // Get disable checkbox
         const self = this;
+        const $advancedEditorOption = $('#' + textAreaID + '_advanced', dialog);
+        
+        const setupDualEditor = function(dialog, textAreaID) {
+            
+            // Inline editor
+            if(inlineEditor) {
+                
+                $(dialog).data().viewerObject.setupInlineEditor(textAreaID, $advancedEditorOption.is(":checked"));
+
+                if(!$advancedEditorOption.is(":checked")) {
+                    // Setup text area snippets
+                    self.setupTextArea(dialog, textAreaID);
+                }
+            } else { // Form editor
+                if($advancedEditorOption !== undefined && !$advancedEditorOption.is(":checked")) {
+                    
+                    // Destroy CKEditor if exists
+                    self.destroyCKEditor(textAreaID);
+
+                    // Setup text area snippets
+                    self.setupTextArea(dialog, textAreaID);
+                } else {
+                    self.setupCKEditor(dialog, null, textAreaID, customNoDataMessage);
+                }
+            }
+        };
+        // Register an onchange listener to callback function on advanced editor checkbox change if exists
+        $advancedEditorOption.bootstrapSwitch().on('switchChange.bootstrapSwitch', function(event, state) {
+            setupDualEditor(dialog, textAreaID);
+        });
+
+        setupDualEditor(dialog, textAreaID);
+    };
+
+    /**
+    * Setup form textarea with text/library snippets and no data message
+    * @param {object} dialog - Dialog object ( the object that contains the replaceable fields )
+    * @param {string} textAreaId - text area ID - Snippets selector
+    */
+    this.setupTextArea = function(dialog, textAreaId) {
+        
+        // Get select elements
+        const $snippets = $('.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]', dialog);
+        const $mediaSelector = $('.ckeditor_library_select[data-linked-to="' + textAreaId + '"]', dialog);
+
+        // Setup Snippets
+        if($snippets.length > 0) {
+            
+            this.setupSnippetsSelector($snippets, function(e) {
+                let linkedTo = $snippets.data().linkedTo;
+                let target = $('#' + linkedTo, dialog);
+                let value = e.params.data.element.value;
+
+                if(target.length > 0 && value !== undefined) {
+                    let text = "[" + value + "]";
+                    let cursorPosition = target[0].selectionStart;
+                    let previousText = target.val();
+
+                    $('#' + linkedTo, dialog).val(previousText.substring(0, cursorPosition) + text + previousText.substring(cursorPosition));
+                }
+            });
+        }
+
+        // Setup Media
+        if($mediaSelector.length > 0) {
+            this.setupMediaSelector($mediaSelector, function(e) {
+                var linkedTo = $mediaSelector.data().linkedTo;
+                var value = e.params.data.id;
+                let target = $('#' + linkedTo, dialog);
+
+                if(target.length > 0 && value !== undefined) {
+                    let text = '<img src="[' + value + ']"/>';
+                    let cursorPosition = target[0].selectionStart;
+                    let previousText = target.val();
+
+                    $('#' + linkedTo, dialog).val(previousText.substring(0, cursorPosition) + text + previousText.substring(cursorPosition));
+                }
+            });
+        }
+        
+        // Handle no message data
+        if($('#' + textAreaId, dialog).val() == "") {
+
+            // Background color from the mainObject
+            var backgroundColor = (typeof this.mainObject.backgroundColor != 'undefined') ? this.mainObject.backgroundColor : this.defaultBackgroundColor;
+            // Choose a complementary color
+            var color = $c.complement(backgroundColor);
+            
+            let dataMessage = '';
+
+            if(textAreaId === 'noDataMessage') {
+                dataMessage = translations.noDataMessage;
+            } else {
+                dataMessage = translations.enterText;
+            }
+
+            $('#' + textAreaId, dialog).val('<span style="font-size: 48px; color:' + color + ';">' + dataMessage + '</span>');
+        }
+    };
+
+    /**
+     * Setup the snippets' selector
+     * @param {object} selector - DOM select object
+     * @param {function} callback - A function to run after setting the select2 instance 
+     */
+    this.setupSnippetsSelector = function(selector, callback) {
+        selector.select2().off().on('select2:select', function(e) {
+
+            // Call callback
+            callback(e);
+
+            // Reset selector
+            $(this).val('').trigger('change');
+        });
+    };
+
+    /**
+     * Setup the library/media selector
+     * @param {object} selector - DOM select object
+     * @param {function} callback - A function to run after setting the select2 instance 
+     */
+    this.setupMediaSelector = function(selector, callback) {
+        selector.select2({
+            ajax: {
+                url: selector.data().searchUrl,
+                dataType: "json",
+                data: function(params) {
+                    var query = {
+                        media: params.term,
+                        type: "image",
+                        start: 0,
+                        length: 10
+                    };
+
+                    // Set the start parameter based on the page number
+                    if(params.page != null) {
+                        query.start = (params.page - 1) * 10;
+                    }
+
+                    // Find out what is inside the search box for this list, and save it (so we can replay it when the list
+                    // is opened again)
+                    if(params.term !== undefined) {
+                        localStorage.liveSearchPlaceholder = params.term;
+                    }
+
+                    return query;
+                },
+                processResults: function(data, params) {
+                    var results = [];
+
+                    $.each(data.data, function(index, element) {
+                        results.push({
+                            "id": element.mediaId,
+                            "text": element.name,
+                            'imageUrl': selector.data().imageUrl.replace(':id', element.mediaId),
+                            'disabled': false
+                        });
+                    });
+
+                    var page = params.page || 1;
+                    page = (page > 1) ? page - 1 : page;
+
+                    return {
+                        results: results,
+                        pagination: {
+                            more: (page * 10 < data.recordsTotal)
+                        }
+                    }
+                },
+                delay: 250
+            }
+        }).off().on('select2:select', function(e) {
+
+            callback(e);
+
+            // Reset selector
+            $(this).val('').trigger('change');
+        });
+    };
+
+       /**
+     * Setup the library/media selector
+     * @param {object} dialog - Dialog object ( the object that contains the overwrittable fields )
+     * @param {string} triggerSelector - Overwrite Trigger object jquery selector
+     * @param {string} templateFieldSelector - Selected template object jquery selector
+     * @param {object} targetsObject - Object containining pairs of selctors for form fields and respective template replacements
+     */
+    this.setupTemplateOverriding = function(dialog, triggerSelector, templateFieldSelector, targetsObject) {
 
         // Get extra data
         var data = $(dialog).data().extra;
 
+        const $trigger = $(triggerSelector, dialog);
+
         // Function to apply template contents to form
-        var applyTemplateContentIfNecessary = function(data) {
+        const applyTemplateContentIfNecessary = function(data) {
 
             // Apply content only if override template is on
-            if($("#overrideTemplate", dialog).is(":checked")) {
+            if($trigger.is(":checked")) {
 
                 // Get the currently selected templateId
-                var templateId = $("#templateId").val();
+                const templateId = $(templateFieldSelector, dialog).val();
 
-                // To update text area value, we need to destroy the editor if there's one attached to it
-                let textAreaId = '';
-                if(textAreaName != null) {
-                    textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
-                    self.destroyCKEditor(textAreaId);
-                }
-
+                // Get available templates
                 let templates = data;
 
-                // Fix for modules with templates as a param of data
-                if(data.templates !== undefined) {
+                if(data.templates !== undefined) { // Fix for modules with templates as a param of data
                     templates = data.templates;
                 }
 
-                // Parse each field
-                $.each(templates, function(index, value) {
- 
-                    if(value.id == templateId) {
+                // Find selected template
+                $.each(templates, function(templateIndex, template) {
 
-                        // Update html and css on the form
-                        if(textAreaName != null) {
-                            $('#' + textAreaId, dialog).val(value.template);
-                        }
-                        
-                        $('#ta_css', dialog).val(value.css);
+                    if(template.id == templateId) {
 
-                        // Check/uncheck advanced editor input if available
-                        if(value.advancedEditor != undefined) {
-                            $('#advancedEditor', dialog).prop("checked", value.advancedEditor);
-                        }
+                        $.each(targetsObject, function(targetSelector, targetTemplateField) {
 
-                        // Go through each other property
-                        $.each(value, function(key, value) {
+                            let $target = $(targetSelector, dialog);
+                            let targetType = $target.attr('type');
 
-                            if(key != "template" && key != "css" && key != "advancedEditor") {
-                                // Try to match a advancedEditorfield
-                                $("#" + key, dialog).val(value);
+                            // Process types and assign values
+                            if(targetType === 'checkbox') { // Checkbox
+                                // If the checkbox is a bootstrap switch
+                                if($target.hasClass('bootstrap-switch-target')) {
+                                    $target.bootstrapSwitch('state', template[targetTemplateField]);
+                                } else {
+                                    $target.prop('checked', template[targetTemplateField]);
+                                }
+                            } else { // All the other input types
+                                
+                                $target.val(template[targetTemplateField]);
                             }
                         });
                     }
+
                 });
             }
         };
 
-        var initialiseTextareaSnippets  = function(snippets) {
-
-            if(textAreaName != null) {
-
-                const textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
-                
-
-                // Apply content only if advanced editor is off
-                if(!$("#advancedEditor", dialog).is(":checked")) {
-
-                    if(snippets.length > 0) {
-
-                        snippets.select2().off().on('select2:select', function(e) {
-                            let linkedTo = $(this).data().linkedTo;
-                            let text;
-                            let target = $('#' + linkedTo, dialog);
-
-                            if(target.length > 0) {
-                                text = "[" + e.params.data.element.value + "]";
-
-                                let cursorPosition = target[0].selectionStart;
-                                let previousText = target.val();
-                                
-                                $('#' + linkedTo, dialog).val(previousText.substring(0, cursorPosition) + text + previousText.substring(cursorPosition));
-                            }
-
-                            // Reset selector
-                            $(this).val('').trigger('change');
-                        });
-                    }
-                }
-            }
-        };
-
         // Register an onchange listener to manipulate the template content if the selector is changed.
-        $('#overrideTemplate', dialog).on('change', function() {
-
+        $trigger.on('change', function() {
             applyTemplateContentIfNecessary(data);
-
-            if(callbackFunction !== null) {
-                callbackFunction();
-            }
         });
-
-        // Register an onchange listener to callback function on advancedEditor checkbox change
-        $('#advancedEditor', dialog).on('change', function() {
-
-            initialiseTextareaSnippets($('.ckeditor_snippets_select', dialog));
-
-            if(callbackFunction !== null) {
-                callbackFunction();
-            }
-        });
-
-        // Run initialiseTextareaSnippets if checkbox advanced starts as false
-        initialiseTextareaSnippets($('.ckeditor_snippets_select', dialog));
     };
 
     /**
      * Create a CKEDITOR instance to conjure a text editor
      * @param {object} dialog - Dialog object ( the object that contains the replaceable fields )
      * @param {object} extraData - Extra data
-     * @param {string} textAreaName - Name of the text area to use for the editor
+     * @param {string} textAreaId - Id of the text area to use for the editor
      * @param {bool=} inline - Inline editor option
      * @param {string=} customNoDataMessage - Custom message to appear when the field is empty
      */
-    this.setupCKEditor = function(dialog, extraData, textAreaName, inline = false, customNoDataMessage = null) {
-
-        // Get form text area Id by name
-        let textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
-
-        // Stop here if there's no text area element
-        if(textAreaId === undefined) {
-            return;
-        }
-
+    this.setupCKEditor = function(dialog, extraData, textAreaId, inline = false, customNoDataMessage = null) {
+        
         // Get extra data
         var extra = extraData;
 
@@ -351,7 +475,7 @@ let formHelpers = function() {
                     if($(dialog).find('.text_editor_' + dimension).val() != regionDimensions[dimension]) {
                         // Destroy and rebuild the CKEDITOR
                         this.destroyCKEditor();
-                        this.setupCKEditor(dialog, extra, textAreaName);
+                        this.setupCKEditor(dialog, extra, textAreaId);
                     }
                     
                 });
@@ -361,7 +485,7 @@ let formHelpers = function() {
             $(dialog).find('.text_editor_scale').off().change(() => {
                 // Destroy and rebuild the CKEDITOR
                 this.destroyCKEditor();
-                this.setupCKEditor(dialog, extra, textAreaName);
+                this.setupCKEditor(dialog, extra, textAreaId);
             });
 
             // Calculate scale based on the form text area ( if scale checkbox check is true)
@@ -484,79 +608,28 @@ let formHelpers = function() {
         });
 
         // Do we have any snippets selector?
-        var $selectPickerSnippets = $('.ckeditor_snippets_select', dialog);
+        var $selectPickerSnippets = $('.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]', dialog);
             // Select2 has been initialized
         if($selectPickerSnippets.length > 0) {
 
-            $selectPickerSnippets.select2().off().on('select2:select', function(e) {
-                var linkedTo = $(this).data().linkedTo;
-                var text;
+            this.setupSnippetsSelector($selectPickerSnippets, function(e) {
+                var linkedTo = $selectPickerSnippets.data().linkedTo;
+                let value = e.params.data.element.value;
                 
-                if(CKEDITOR.instances[linkedTo] != undefined) {
-                    text = "[" + e.params.data.element.value + "]";
+                if(CKEDITOR.instances[linkedTo] != undefined && value !== undefined) {
+                    let text = "[" + value + "]";
 
                     CKEDITOR.instances[linkedTo].insertText(text);
                 }
-
-                // Reset selector
-                $(this).val('').trigger('change');
             });
         }
 
         // Do we have a media selector?
-        var $selectPicker = $(".ckeditor_library_select", dialog);
+        var $selectPicker = $('.ckeditor_library_select[data-linked-to="' + textAreaId + '"]', dialog);
         if($selectPicker.length > 0) {
-            $selectPicker.select2({
-                ajax: {
-                    url: $selectPicker.data().searchUrl,
-                    dataType: "json",
-                    data: function(params) {
-                        var query = {
-                            media: params.term,
-                            type: "image",
-                            start: 0,
-                            length: 10
-                        };
 
-                        // Set the start parameter based on the page number
-                        if(params.page != null) {
-                            query.start = (params.page - 1) * 10;
-                        }
-
-                        // Find out what is inside the search box for this list, and save it (so we can replay it when the list
-                        // is opened again)
-                        if(params.term !== undefined) {
-                            localStorage.liveSearchPlaceholder = params.term;
-                        }
-
-                        return query;
-                    },
-                    processResults: function(data, params) {
-                        var results = [];
-
-                        $.each(data.data, function(index, element) {
-                            results.push({
-                                "id": element.mediaId,
-                                "text": element.name,
-                                'imageUrl': $selectPicker.data().imageUrl.replace(':id', element.mediaId),
-                                'disabled': false
-                            });
-                        });
-
-                        var page = params.page || 1;
-                        page = (page > 1) ? page - 1 : page;
-
-                        return {
-                            results: results,
-                            pagination: {
-                                more: (page * 10 < data.recordsTotal)
-                            }
-                        }
-                    },
-                    delay: 250
-                }
-            }).off().on('select2:select', function(e) {
-                var linkedTo = $(this).data().linkedTo;
+            this.setupMediaSelector($selectPicker, function(e){
+                var linkedTo = $selectPicker.data().linkedTo;
                 var value = e.params.data.imageUrl;
 
                 if(value !== undefined && value !== "" && linkedTo != null) {
@@ -564,8 +637,7 @@ let formHelpers = function() {
                         CKEDITOR.instances[linkedTo].insertHtml("<img src=\"" + value + "\" />");
                     }
                 }
-                                // Reset selector
-                $(this).val('').trigger('change');
+
             });
         }
 
@@ -578,27 +650,27 @@ let formHelpers = function() {
     /**
      * Restart CKEDITOR instance
      */
-    this.restartCKEditor = function(dialog, textAreaName) {
-
-        // Get form text area Id by name
-        let textAreaId = dialog.find('textarea[name="' + textAreaName + '"]').attr('id');
-
+    this.restartCKEditor = function(dialog, textAreaId) {
         this.destroyCKEditor(textAreaId);
-        this.setupCKEditor(dialog, null, textAreaName);
+        this.setupCKEditor(dialog, null, textAreaId);
     };
 
     /**
      * Update text callback CKEDITOR instance
      */
     this.updateCKEditor = function(instance) {
+        
+        const self = this;
 
         try {
             // Update specific instance
             if(instance != undefined && CKEDITOR.instances[instance] != undefined) {
-                CKEDITOR.instances[instance].updateElement();
+                // Parse editor data and update it
+                self.parseCKEditorData(index);
             } else {
                 $.each(CKEDITOR.instances, function(index, value) {
-                    CKEDITOR.instances[index].updateElement();
+                    // Parse editor data and update it
+                    self.parseCKEditorData(index);
                 });
             }
         } catch(e) {
@@ -610,7 +682,9 @@ let formHelpers = function() {
      * Destroy text callback CKEDITOR instance
      */
     this.destroyCKEditor = function(instance) {
-        
+
+        const self = this;
+
         // Make sure when we close the dialog we also destroy the editor
         try {
             if(instance === undefined) {
@@ -620,8 +694,11 @@ let formHelpers = function() {
                 });
             } else {
                 // Destroy specific instance
-                if(CKEDITOR.instances[instance] != undefined) {
-                    CKEDITOR.instances[instance].destroy();
+                if(CKEDITOR.instances[instance] != undefined) { 
+                    // Parse instance data before destroying 
+                    self.parseCKEditorData(instance, CKEDITOR.instances[instance].destroy);
+                } else {
+                    console.warn("CKEditor instance does not exist.");
                 }
             }
 
@@ -629,6 +706,38 @@ let formHelpers = function() {
             console.warn("Unable to remove CKEditor instance. " + e);
             CKEDITOR.instances = {};
         }
+    };
+
+    /**
+     * Parse Editor data to turn media path into library tags
+     * @param {string} instance - CKEditor instance name to update
+     * @param {function=} callback - A function to run after data update
+     */
+    this.parseCKEditorData = function(instance, callback) {
+        
+        // If instance is not set, stop right here
+        if(CKEDITOR.instances[instance] === undefined) {
+            return;
+        }
+
+        const regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
+        
+        let data = CKEDITOR.instances[instance].getData();
+
+        data = data.replace(regex, function(match, group1) {
+            return "[" + group1 + "]";
+        });
+
+        // Update text field with the new data ( to avoid the setData delay on save )
+        $('textarea#' + instance).val(data);
+
+        // Set the appropriate text editor field with this data
+        if(callback !== undefined) {
+            CKEDITOR.instances[instance].setData(data, callback);
+        } else {
+            CKEDITOR.instances[instance].setData(data);
+        }
+        
     };
 
     /**

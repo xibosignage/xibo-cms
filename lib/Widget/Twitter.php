@@ -364,6 +364,13 @@ class Twitter extends TwitterBase
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="ta_text_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="styleSheet",
      *      in="formData",
      *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 ",
@@ -404,7 +411,6 @@ class Twitter extends TwitterBase
         $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
         $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
@@ -413,6 +419,7 @@ class Twitter extends TwitterBase
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
             $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
             $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
 
@@ -744,7 +751,6 @@ class Twitter extends TwitterBase
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
                 $widgetOriginalPadding = $template['widgetOriginalPadding'];
-                $advancedEditor = $template['advancedEditor'];
                 $resultContent = $template['resultContent'];
             }
             
@@ -753,7 +759,6 @@ class Twitter extends TwitterBase
             $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
             $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
             $widgetOriginalPadding = $this->getSanitizer()->int($this->getOption('widgetOriginalPadding'));
-            $advancedEditor = $this->getOption('advancedEditor');
             $resultContent = $this->getOption('resultContent');
         }
 
