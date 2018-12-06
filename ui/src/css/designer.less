@@ -398,6 +398,11 @@
     background: @designer-module-bg-color;
 }
 
+/* Hide playlist editor only messages */
+#layout-editor #properties-panel-container .playlist-editor-message {
+    display: none;
+}
+
 #layout-editor #properties-panel-container.properties-layout {
     .border-radius(4px);
     border: 3px solid @layout-main-bg-color;
@@ -593,4 +598,9 @@
     #layout-editor #bottom-toolbar {
         padding: 5px 0 0 5px;
     }
+}
+
+/* Select2 width fix */
+#layout-editor .select2-container {
+    width: auto !important;
 }

@@ -91,6 +91,9 @@ let Toolbar = function(container, customButtons = [], customActions = {}, jumpLi
     // Custom actions
     this.customActions = customActions;
 
+    // Lock search buttons
+    this.searchButtonsLock = false;
+
     this.contentDimentions = {
         width: 90 // In percentage
     };
@@ -290,13 +293,17 @@ Toolbar.prototype.render = function() {
         });
 
         this.DOMObject.find('#content-' + index + ' #pag-btn-left').click(function() {
-            toolbar.menuItems[index].page -= 1;
-            toolbar.loadContent(index);
+            if(!toolbar.searchButtonsLock) {
+                toolbar.menuItems[index].page -= 1;
+                toolbar.loadContent(index); 
+            }
         });
 
         this.DOMObject.find('#content-' + index + ' #pag-btn-right').click(function() {
-            toolbar.menuItems[index].page += 1;
-            toolbar.loadContent(index);
+            if(!toolbar.searchButtonsLock) {
+                toolbar.menuItems[index].page += 1;
+                toolbar.loadContent(index);
+            }
         });
 
     }
@@ -318,25 +325,19 @@ Toolbar.prototype.render = function() {
 
     // Search button
     this.DOMObject.find('.search-btn').click(function() {
-        
-        // Reset page
-        self.menuItems[$(this).attr("data-search-id")].page = 0;
+        if(!self.searchButtonsLock) {
+            // Reset page
+            self.menuItems[$(this).attr("data-search-id")].page = 0;
 
-        // Load content for the search tab
-        self.loadContent($(this).attr("data-search-id"));
+            // Load content for the search tab
+            self.loadContent($(this).attr("data-search-id"));
+        }
     });
 
     // Delete object
     this.DOMObject.find('#trashContainer').click(
         this.customActions.deleteSelectedObjectAction
     );
-    /* Delete by dragging disabled for now
-    .droppable({
-        drop: function(event, ui) {
-            self.customActions.deleteDraggedObjectAction(ui.draggable);
-        }
-    });
-    */
 
     // Handle custom buttons
     for(let index = 0;index < this.customButtons.length;index++) {
@@ -451,6 +452,9 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         // Load using the API
         const linkToAPI = urlsForApi.library.get;
 
+        // Lock buttons
+        this.searchButtonsLock = true;
+
         // Save filters
         this.menuItems[menu].filters.name.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-name').val();
         this.menuItems[menu].filters.tag.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-tag').val();
@@ -498,6 +502,9 @@ Toolbar.prototype.loadContent = function(menu = -1) {
                 self.menuItems[menu].content = res.data;
             }
 
+            // Unlock buttons
+            self.searchButtonsLock = false;
+
             // Enable/Disable page up pagination button according to the page to display and total elements
             self.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= res.recordsTotal) ? 'disabled' : '';
 
@@ -509,6 +516,9 @@ Toolbar.prototype.loadContent = function(menu = -1) {
 
             console.error(jqXHR, textStatus, errorThrown);
             toastr.error('Library load failed!');
+
+            // Unlock buttons
+            self.searchButtonsLock = false;
 
             self.menuItems[menu].content = null;
         });

@@ -144,8 +144,15 @@ Viewer.prototype.render = function(element, layout, page = 1) {
         }.bind(this));
 
         // Handle fullscreen button
-        this.DOMObject.find('#fs-btn').click(function() {
+        this.DOMObject.find('#fs-btn').click(function() {            
             this.toggleFullscreen();
+        }.bind(this));
+
+        // Handle click on viewer to select layout ( if not selected )
+        this.DOMObject.off().click(function(e) {
+            if(lD.selectedObject.type != 'layout' && !this.DOMObject.hasClass('fullscreen') && !['play-btn', 'fs-btn'].includes(e.target.id)) {
+                lD.selectObject();
+            }
         }.bind(this));
 
     } else { // Render Widget or Region
@@ -310,8 +317,8 @@ Viewer.prototype.showInlineEditor = function() {
     this.DOMObject.parent().find('.inline-editor-closed').show();
     this.DOMObject.parent().find('.inline-editor-buttons').show();
 
-    // Show form message
-    lD.propertiesPanel.DOMObject.find('.inline-editor-on-message').show();
+    // Show form elements
+    lD.propertiesPanel.DOMObject.find('.inline-editor-show').show();
 
     // Hide form editor
     lD.propertiesPanel.DOMObject.find('.inline-editor-hide').hide();
@@ -331,10 +338,10 @@ Viewer.prototype.hideInlineEditor = function() {
     // Show widget info
     this.DOMObject.parent().find('.inline-editor-hide').show();
 
-    // Hide form message
-    lD.propertiesPanel.DOMObject.find('.inline-editor-on-message').hide();
+    // Hide form elements
+    lD.propertiesPanel.DOMObject.find('.inline-editor-show').hide();
 
-    // Show form editor
+    // Show inline editor message
     lD.propertiesPanel.DOMObject.find('.inline-editor-hide').show();
 
     this.destroyInlineEditor();

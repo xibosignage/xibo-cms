@@ -41,6 +41,7 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#currentEventTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Current Event" %}</span></a></li>
                     <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
                     <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
                 </ul>
@@ -165,12 +166,26 @@
                                 data-off-text="{% trans "Off" %}">
                         </div>
 
-                        {% set inlineEditorMessage %}
-                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
+
+                            {# Layout Designer messages #}
+                            {% set layoutDesignerMessage %}
+                                {% trans "Enter the text to display using the inline editor. This can be found in the preview on the left, click the Edit icon to start." %}
+                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+
+                            {# Playlist Editor messages #}
+                            {% set playlistEditorMessage %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
+                        </div>
 
                         <div class="form-group ckeditor_controls inline-editor-hide" data-linked-to="template">
                             <div class="col-sm-6">
@@ -206,10 +221,10 @@
                         {{ forms.textarea("template", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
                     </div>
 
-                    <div class="tab-pane" id="currentDayTemplateTab">
+                    <div class="tab-pane" id="currentEventTemplateTab">
 
                         <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Current Day Template" %}</h4>
+                            <h4 class="col-xs-6 text-left">{% trans "Current Event Template" %}</h4>
                             
                             <div class="current-event-template">
                                 <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %} 
@@ -224,6 +239,19 @@
                         {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
                         {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
                         {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
+
+                        <div class="editor-messages current-event-template">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'currentEventTemplate-advanced-editor-hide') }}
+
+                            {% set simpleTextEditorMessage2 %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage2, 'currentEventTemplate-advanced-editor-show') }}
+                        </div>
 
                         <div class="ckeditor_controls current-event-template" data-linked-to="currentEventTemplate">
                             <div class="col-sm-6">
@@ -277,6 +305,18 @@
                                 data-on-text="{% trans "On" %}" 
                                 data-off-text="{% trans "Off" %}">
                         </div>
+
+                        {% set noDataMessageMessage1 %}
+                            {% trans "Enter text or HTML in the box below." %}<br>
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage1, 'noDataMessage-advanced-editor-hide') }}
+
+                        {% set noDataMessageMessage2 %}
+                            {% trans "Enter the text to display." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage2, 'noDataMessage-advanced-editor-show') }}
 
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}

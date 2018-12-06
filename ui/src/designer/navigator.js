@@ -165,6 +165,13 @@ Navigator.prototype.render = function(layout) {
         lD.toggleNavigatorEditing(true);
     }.bind(this));
 
+    // Handle click on viewer to select layout
+    this.DOMObject.off().click(function(e) {
+        if(lD.selectedObject.type != 'layout' && !this.editMode && !this.DOMObject.hasClass('selectable') && !['edit-btn'].includes(e.target.id)) {
+            lD.selectObject();
+        }
+    }.bind(this));
+
     // Render navbar
     this.renderNavbar();
 };

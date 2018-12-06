@@ -83,6 +83,16 @@
     padding-top: 10px;
 }
 
+/* Select2 width fix */
+#playlist-editor #playlist-properties-panel .select2-container {
+    width: auto !important;
+}
+
+/* Hide layout designer only messages */
+#playlist-editor #playlist-properties-panel .layout-designer-message {
+    display: none;
+}
+
 #playlist-editor-container.ui-droppable-active {
     .z-index-set(@playlist-editor-z-index-select);
     .background-stripes(45deg; darken(@playlist-editor-main-background-color, 10%); darken(@playlist-editor-main-background-color, 20%); 10px; 4px);
