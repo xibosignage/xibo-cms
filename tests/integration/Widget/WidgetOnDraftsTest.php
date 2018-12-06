@@ -62,13 +62,7 @@ class WidgetOnDraftsTest extends LocalWebTestCase
         $playlistId = $this->layout->regions[0]->regionPlaylist['playlistId'];
 
         // Add a widget (and widget will do, it doesn't matter)
-        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId, [
-            'uri' => 'http://example.com',
-            'duration' => 10,
-            'useDuration' => 1,
-            'scaleTypeId' => 1,
-            'mute' => 1,
-        ]);
+        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId);
 
         $this->getLogger()->debug('Response from Widget Add is ' . $response);
 
@@ -87,13 +81,7 @@ class WidgetOnDraftsTest extends LocalWebTestCase
         $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
 
         // Add a widget (and widget will do, it doesn't matter)
-        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId, [
-            'uri' => 'http://example.com',
-            'duration' => 10,
-            'useDuration' => 1,
-            'scaleTypeId' => 1,
-            'mute' => 1,
-        ]);
+        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId);
 
         $this->getLogger()->debug('Response from Widget Add is ' . $response);
 

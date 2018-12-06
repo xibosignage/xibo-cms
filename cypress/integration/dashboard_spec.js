@@ -8,7 +8,7 @@ describe('Dashboard', function () {
 
     it('should be at the dashboard page', function() {
 
-        cy.url().should('include', '/dashboard');
+        cy.url().should('include', 'dashboard');
 
         cy.contains('xibo_admin');
 

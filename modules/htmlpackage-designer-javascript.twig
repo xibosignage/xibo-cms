@@ -1,0 +1,18 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2018 Xibo Signage Ltd
+ * (htmlpackage-designer-javascript.twig)
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function htmlpackage_form_edit_open() {
+
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields, .loop-fields');
+        formHelpers.mediaEditFormOpen(this);
+    }
+
+</script>

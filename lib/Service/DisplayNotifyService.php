@@ -54,6 +54,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @var int[] */
     private $displayIdsRequiringActions = [];
 
+    /** @var string[] */
+    private $keysProcessed = [];
+
     /** @inheritdoc */
     public function __construct($config, $log, $store, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory)
     {
@@ -155,6 +158,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     {
         $this->log->debug('Notify by DisplayId ' . $displayId);
 
+        // Don't process if the displayId is already in the collection (there is little point in running the
+        // extra query)
+        if (in_array($displayId, $this->displayIds)) {
+            return;
+        }
+
         $this->displayIds[] = $displayId;
 
         if ($this->collectRequired)
@@ -166,6 +175,11 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     {
         $this->log->debug('Notify by DisplayGroupId ' . $displayGroupId);
 
+        if (in_array('displayGroup_' . $displayGroupId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $displayGroupId . ' skipping this time.');
+            return;
+        }
+
         $sql = '
           SELECT DISTINCT `lkdisplaydg`.displayId 
             FROM `lkdgdg`
@@ -175,6 +189,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ';
 
         foreach ($this->store->select($sql, ['displayGroupId' => $displayGroupId]) as $row) {
+
+            // Don't process if the displayId is already in the collection
+            if (in_array($row['displayId'], $this->displayIds)) {
+                continue;
+            }
+
             $this->displayIds[] = $row['displayId'];
 
             $this->log->debug('DisplayGroup[' . $displayGroupId .'] change caused notify on displayId[' . $row['displayId'] . ']');
@@ -182,12 +202,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($this->collectRequired)
                 $this->displayIdsRequiringActions[] = $row['displayId'];
         }
+
+        $this->keysProcessed[] = 'displayGroup_' . $displayGroupId;
     }
 
     /** @inheritdoc */
     public function notifyByCampaignId($campaignId)
     {
         $this->log->debug('Notify by CampaignId ' . $campaignId);
+
+        if (in_array('campaign_' . $campaignId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $campaignId . ' skipping this time.');
+            return;
+        }
 
         $sql = '
             SELECT DISTINCT display.displayId, 
@@ -276,6 +303,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         foreach ($this->store->select($sql, $params) as $row) {
 
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                continue;
+            }
+
             // Is this schedule active?
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
@@ -296,12 +329,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($this->collectRequired)
                 $this->displayIdsRequiringActions[] = $row['displayId'];
         }
+
+        $this->keysProcessed[] = 'campaign_' . $campaignId;
     }
 
     /** @inheritdoc */
     public function notifyByDataSetId($dataSetId)
     {
         $this->log->debug('Notify by DataSetId ' . $dataSetId);
+
+        if (in_array('dataSet_' . $dataSetId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $dataSetId . ' skipping this time.');
+            return;
+        }
 
         $sql = '
            SELECT DISTINCT display.displayId, 
@@ -412,6 +452,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         foreach ($this->store->select($sql, $params) as $row) {
 
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                $this->log->debug('displayId ' . $row['displayId'] . ' already in collection, skipping.');
+                continue;
+            }
+
             // Is this schedule active?
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
@@ -432,12 +479,21 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($this->collectRequired)
                 $this->displayIdsRequiringActions[] = $row['displayId'];
         }
+
+        $this->keysProcessed[] = 'dataSet_' . $dataSetId;
+
+        $this->log->debug('Finished notify for dataSetId ' . $dataSetId);
     }
 
     /** @inheritdoc */
     public function notifyByPlaylistId($playlistId)
     {
         $this->log->debug('Notify by PlaylistId ' . $playlistId);
+
+        if (in_array('playlist_' . $playlistId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $playlistId . ' skipping this time.');
+            return;
+        }
 
         $sql = '
             SELECT DISTINCT display.displayId, 
@@ -526,6 +582,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         foreach ($this->store->select($sql, $params) as $row) {
 
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                continue;
+            }
+
             // Is this schedule active?
             if ($row['eventId'] != 0) {
                 $scheduleEvents = $this->scheduleFactory
@@ -546,5 +608,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             if ($this->collectRequired)
                 $this->displayIdsRequiringActions[] = $row['displayId'];
         }
+
+        $this->keysProcessed[] = 'playlist_' . $playlistId;
     }
 }

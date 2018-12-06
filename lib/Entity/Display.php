@@ -460,6 +460,7 @@ class Display implements \JsonSerializable
 
     /**
      * Validate the Object as it stands
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -472,21 +473,11 @@ class Display implements \JsonSerializable
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
             throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
-        // Check the number of licensed displays
-        $maxDisplays = $this->config->getSetting('MAX_LICENSED_DISPLAYS');
+        // Check if there are display slots available
+        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
-        if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
-
-            if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-                $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
-
-                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
-
-                if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays)
-                    throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
-            }
-        }
+        if (!$this->isDisplaySlotAvailable())
+            throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
 
         // Broadcast Address
         if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
@@ -518,6 +509,32 @@ class Display implements \JsonSerializable
 
         if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
             throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
+    }
+
+    /**
+     * Check if there is display slot available, returns true when there are display slots available, return false if there are no display slots available
+     * @return boolean
+     */
+    public function isDisplaySlotAvailable()
+    {
+        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+
+        // Check the number of licensed displays
+        if ($maxDisplays > 0) {
+            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+
+            if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
+                $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+
+                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+
+                if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -625,7 +642,7 @@ class Display implements \JsonSerializable
             'auditingUntil' => 0,
             'defaultlayoutid' => $this->defaultLayoutId,
             'license' => $this->license,
-            'licensed' => 0,
+            'licensed' => $this->licensed,
             'inc_schedule' => 0,
             'email_alert' => 0,
             'alert_timeout' => 0,
