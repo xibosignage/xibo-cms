@@ -157,7 +157,7 @@ class Soap4 extends Soap
                 $display->incSchedule = 0;
                 $display->clientAddress = $this->getIp();
 
-                if (!$display->maxLicensedDisplays()) {
+                if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;
                 }
             }
