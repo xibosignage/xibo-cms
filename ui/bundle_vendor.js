@@ -28,7 +28,7 @@ require('bootstrap-colorpicker');
 window.moment = require('moment');
 
 // moment-timezone
-require('moment-timezone/moment-timezone.js');
+require('moment-timezone');
 
 // moment-jalaali
 try {

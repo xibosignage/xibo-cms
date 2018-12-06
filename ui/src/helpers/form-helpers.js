@@ -184,12 +184,23 @@ let formHelpers = function() {
             } else { // Form editor
                 if($advancedEditorOption !== undefined && !$advancedEditorOption.is(":checked")) {
                     
+                    // Toggle elements visibility
+                    dialog.find('.' + textAreaID + '-advanced-editor-show').hide();
+                    dialog.find('.' + textAreaID + '-advanced-editor-hide').show();
+
                     // Destroy CKEditor if exists
                     self.destroyCKEditor(textAreaID);
+
+                    // Try to hide the dimension controls
+                    self.setupFormDimensionControls(dialog, false, textAreaID);
 
                     // Setup text area snippets
                     self.setupTextArea(dialog, textAreaID);
                 } else {
+                    // Toggle elements visibility
+                    dialog.find('.' + textAreaID + '-advanced-editor-show').show();
+                    dialog.find('.' + textAreaID + '-advanced-editor-hide').hide();
+
                     self.setupCKEditor(dialog, null, textAreaID, customNoDataMessage);
                 }
             }
@@ -456,8 +467,8 @@ let formHelpers = function() {
 
             regionDimensions = this.defaultRegionDimensions;
 
-            // Display controls
-            $(dialog).find('.form-editor-controls').show();
+            // Try to show the dimension controls
+            this.setupFormDimensionControls(dialog, true);
 
             // Dimensions
             ['width', 'height'].forEach((dimension) => {
@@ -473,9 +484,7 @@ let formHelpers = function() {
 
                     // If the value was updated
                     if($(dialog).find('.text_editor_' + dimension).val() != regionDimensions[dimension]) {
-                        // Destroy and rebuild the CKEDITOR
-                        this.destroyCKEditor();
-                        this.setupCKEditor(dialog, extra, textAreaId);
+                        this.restartCKEditors(dialog);
                     }
                     
                 });
@@ -483,9 +492,7 @@ let formHelpers = function() {
 
             // Scale
             $(dialog).find('.text_editor_scale').off().change(() => {
-                // Destroy and rebuild the CKEDITOR
-                this.destroyCKEditor();
-                this.setupCKEditor(dialog, extra, textAreaId);
+                this.restartCKEditors(dialog);
             });
 
             // Calculate scale based on the form text area ( if scale checkbox check is true)
@@ -648,11 +655,18 @@ let formHelpers = function() {
     };
     
     /**
-     * Restart CKEDITOR instance
+     * Restart all CKEDITOR instances
      */
-    this.restartCKEditor = function(dialog, textAreaId) {
-        this.destroyCKEditor(textAreaId);
-        this.setupCKEditor(dialog, null, textAreaId);
+    this.restartCKEditors = function(dialog) {
+
+        const self = this;
+        
+        $.each(CKEDITOR.instances, function(index, value) {
+
+            CKEDITOR.instances[index].destroy();
+
+            self.setupCKEditor(dialog, null, index);
+        });
     };
 
     /**
@@ -682,7 +696,7 @@ let formHelpers = function() {
      * Destroy text callback CKEDITOR instance
      */
     this.destroyCKEditor = function(instance) {
-
+        
         const self = this;
 
         // Make sure when we close the dialog we also destroy the editor
@@ -925,6 +939,27 @@ let formHelpers = function() {
 
         return templates[templateName];
     };
+
+    /**
+     * Hide or show the form dimension controls for the editor
+     * @param {object} dialog - Dialog object
+     * @param {boolean} toggleFlag - Flag to show/hide controls
+     * @param {string} instanceToDestroy - Name of the instance marked to be destroyed
+     */
+    this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
+        
+        if(toggleFlag) {
+            // Display controls
+            $(dialog).find('.form-editor-controls').show();
+        } else {
+            // Hide the controls if there are no CKEditor instances or the one that is left is marked to be destroyed
+            if($.isEmptyObject(CKEDITOR.instances) || (Object.keys(CKEDITOR.instances).length === 1 && CKEDITOR.instances[instanceToDestroy] !== undefined)) {
+                // Hide controls
+                $(dialog).find('.form-editor-controls').hide();
+            }
+        }
+    };
+
 };
 
 module.exports = new formHelpers();

@@ -67,9 +67,26 @@
                                 data-off-text="{% trans "Off" %}">
                         </div>
 
-                        {% set inlineEditorMessage %}
-                        {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}                        {% endset %}
-                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'embedHtml-advanced-editor-hide inline-editor-hide') }}
+
+                            {# Layout Designer messages #}
+                            {% set layoutDesignerMessage %}
+                                {% trans "Enter the text to display using the inline editor. This can be found in the preview on the left, click the Edit icon to start." %}
+                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+
+                            {# Playlist Editor messages #}
+                            {% set playlistEditorMessage %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message embedHtml-advanced-editor-show') }}
+                        </div>
 
                         {{ forms.textarea("embedHtml", "", module.getRawNode('embedHtml'), "", "inline-editor-hide", "", 10) }}
                     </div>

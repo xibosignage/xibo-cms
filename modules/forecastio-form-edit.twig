@@ -119,6 +119,19 @@
                                 data-off-text="{% trans "Off" %}">
                         </div>
 
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'currentTemplate-advanced-editor-hide') }}
+
+                            {% set simpleTextEditorMessage2 %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage2, 'currentTemplate-advanced-editor-show') }}
+                        </div>
+
                         {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Request Forecast below." %}{% endset %}
                         {{ forms.textarea("currentTemplate", "", module.getOption("currentTemplate"), helpText, "template-override-controls", "required", 10) }}
                     </div>
@@ -132,6 +145,19 @@
                                 data-label-width="80px" 
                                 data-on-text="{% trans "On" %}" 
                                 data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'dailyTemplate-advanced-editor-hide') }}
+
+                            {% set simpleTextEditorMessage2 %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage2, 'dailyTemplate-advanced-editor-show') }}
                         </div>
 
                         {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}

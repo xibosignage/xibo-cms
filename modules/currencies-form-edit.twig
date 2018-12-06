@@ -156,9 +156,19 @@
                                 data-on-text="{% trans "On" %}" 
                                 data-off-text="{% trans "Off" %}">
                         </div>
+                        
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'mainTemplate-advanced-editor-hide') }}
 
-                        {% set inlineEditorMessage %}{% trans "Enter the main template. Please note that the background colour has automatically coloured to your layout background colour." %}{% endset %}
-                        {{ forms.message(inlineEditorMessage, "") }}
+                            {% set simpleTextEditorMessage2 %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage2, 'mainTemplate-advanced-editor-show') }}
+                        </div>
 
                         {{ forms.textarea("mainTemplate", "",  module.getRawNode("mainTemplate"), "", "", "", 10) }}
                     </div>
@@ -172,6 +182,19 @@
                                 data-label-width="80px" 
                                 data-on-text="{% trans "On" %}" 
                                 data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'itemTemplate-advanced-editor-hide') }}
+
+                            {% set simpleTextEditorMessage2 %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage2, 'itemTemplate-advanced-editor-show') }}
                         </div>
 
                         {% set helpText %}{% trans "Enter the template for each item. Replaces [itemsTemplate] in main template." %}{% endset %}

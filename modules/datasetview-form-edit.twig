@@ -159,6 +159,18 @@
                                 data-on-text="{% trans "On" %}" 
                                 data-off-text="{% trans "Off" %}">
                         </div>
+                        
+                        {% set noDataMessageMessage1 %}
+                            {% trans "Enter text or HTML in the box below." %}<br>
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage1, 'noDataMessage-advanced-editor-hide') }}
+
+                        {% set noDataMessageMessage2 %}
+                            {% trans "Enter the text to display." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage2, 'noDataMessage-advanced-editor-show') }}
 
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}

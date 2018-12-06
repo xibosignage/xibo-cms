@@ -162,47 +162,6 @@
                            {% trans "Use the Templates select field to access and set the custom template values." %}                     
                         {% endset %}
                         {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
-                    </div>
-
-                    <div class="tab-pane" id="templateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
-                        </div>
-
-                        {% set inlineEditorMessage %}
-                           {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}                        
-                        {% endset %}
-                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
-
-                        <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
-                            <div class="col-sm-6">
-                                <div class="form-group">
-                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                    <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_snippets_select" 
-                                            class="ckeditor_snippets_select form-control"
-                                            data-linked-to="ta_text">
-                                            <option value=""></option>
-                                            <option value="Tweet">Tweet</option>
-                                            <option value="User">User</option>
-                                            <option value="Date">Date</option>
-                                            <option value="ProfileImage">ProfileImage</option>
-                                            <option value="Location">Location</option>
-                                            <option value="ScreenName">ScreenName</option>
-                                            <option value="Photo">Photo</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
 
                         {% set title %}{% trans "Original Width" %}{% endset %}
                         {% set helpText %}{% trans "This is the intended width of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
@@ -227,6 +186,62 @@
                         { contenttypeid: 2, type: withImages }
                         ] %}
                         {{ forms.dropdown("resultContent", "single", title, module.getOption("resultContent", 0), options, "contenttypeid", "type", helpText,"template-override-controls", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="templateTab">
+                        <div class="form-content-title container-fluid text-right">
+                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
+                                data-size="small" 
+                                data-label-text="{% trans "Visual editor" %}" 
+                                data-label-width="80px" 
+                                data-on-text="{% trans "On" %}" 
+                                data-off-text="{% trans "Off" %}">
+                        </div>
+
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
+
+                            {# Layout Designer messages #}
+                            {% set layoutDesignerMessage %}
+                                {% trans "Enter the text to display using the inline editor. This can be found in the preview on the left, click the Edit icon to start." %}
+                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+
+                            {# Playlist Editor messages #}
+                            {% set playlistEditorMessage %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
+                        </div>
+                        <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
+                            <div class="col-sm-6">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                            class="ckeditor_snippets_select form-control"
+                                            data-linked-to="ta_text">
+                                            <option value=""></option>
+                                            <option value="Tweet">Tweet</option>
+                                            <option value="User">User</option>
+                                            <option value="Date">Date</option>
+                                            <option value="ProfileImage">ProfileImage</option>
+                                            <option value="Location">Location</option>
+                                            <option value="ScreenName">ScreenName</option>
+                                            <option value="Photo">Photo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{ forms.textarea("ta_text", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
                     </div>
 
                     <div class="tab-pane" id="noTweetsTab">   

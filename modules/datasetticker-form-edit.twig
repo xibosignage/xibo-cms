@@ -159,12 +159,26 @@
                                 data-off-text="{% trans "Off" %}">
                         </div>
 
-                        {% set inlineEditorMessage %}
-                            {% trans "Enter the template. Please note that the background colour has automatically coloured to your layout background colour." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.message(inlineEditorMessage, 'inline-editor-on-message') }}
+                        <div class="editor-messages">
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
+
+                            {# Layout Designer messages #}
+                            {% set layoutDesignerMessage %}
+                                {% trans "Enter the text to display using the inline editor. This can be found in the preview on the left, click the Edit icon to start." %}
+                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+
+                            {# Playlist Editor messages #}
+                            {% set playlistEditorMessage %}
+                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
+                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                            {% endset %}
+                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
+                        </div>
 
                         <div class="ckeditor_controls inline-editor-hide" data-linked-to="ta_text">
                             <div class="col-sm-6">
@@ -213,18 +227,19 @@
                                 data-off-text="{% trans "Off" %}">
                         </div>
 
+                        {% set noDataMessageMessage1 %}
+                            {% trans "Enter text or HTML in the box below." %}<br>
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage1, 'noDataMessage-advanced-editor-hide') }}
+
+                        {% set noDataMessageMessage2 %}
+                            {% trans "Enter the text to display." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage2, 'noDataMessage-advanced-editor-show') }}
+
                         {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        <div>
-                            <label class="col-sm-2 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
-                            <div class="col-sm-4">
-                                <select id="ckeditor_library_select"
-                                        class="ckeditor_library_select form-control"
-                                        data-linked-to="noDataMessage"
-                                        data-search-url="{{ urlFor("library.search") }}"
-                                        data-image-url="{{ urlFor("library.download") }}?preview=1">
-                                </select>
-                            </div>
-                        </div>
                         {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
                     </div>
 
