@@ -196,15 +196,15 @@ class UserFactory extends BaseFactory
      * @param array[mixed] $filterBy
      * @return array[User]
      */
-    public function query($sortOrder = array(), $filterBy = array())
+    public function query($sortOrder = [], $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
 
         // Default sort order
-        if (count($sortOrder) <= 0)
-            $sortOrder = array('userName');
+        if ($sortOrder === null || count($sortOrder) <= 0)
+            $sortOrder = ['userName'];
 
-        $params = array();
+        $params = [];
         $select = '
             SELECT `user`.userId,
                 userName,
@@ -282,7 +282,7 @@ class UserFactory extends BaseFactory
         // Groups Provided
         $groups = $this->getSanitizer()->getParam('groupIds', $filterBy);
 
-        if (count($groups) > 0) {
+        if ($groups !== null && count($groups) > 0) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
