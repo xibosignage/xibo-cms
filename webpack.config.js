@@ -102,13 +102,6 @@ module.exports = {
                 ]
             },
             {
-                // Load and run script
-                test: /\.exec\.js$/,
-                use: [
-                    'script-loader'
-                ]
-            },
-            {
                 test: /\.hbs$/,
                 use: [{
                     loader: 'handlebars-loader',
