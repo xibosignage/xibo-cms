@@ -12,35 +12,30 @@ const toolsList = [
         name: 'Region',
         type: 'region',
         description: 'Add a region to the layout',
-        imageUri: 'designer/region.png',
         dropTo: 'layout'
     },
     {
         name: 'Audio',
         type: 'audio',
         description: 'Attach audio to a widget',
-        imageUri: 'designer/audio.png',
         dropTo: 'widget'
     },
     {
         name: 'Expiry Dates',
         type: 'expiry',
         description: 'Set expiry dates to a widget',
-        imageUri: 'designer/expiry.png',
         dropTo: 'widget'
     },
     {
         name: 'Transition In',
         type: 'transitionIn',
         description: 'Add a in transition to a widget',
-        imageUri: 'designer/transitionIn.png',
         dropTo: 'widget'
     },
     {
         name: 'Transition Out',
         type: 'transitionOut',
         description: 'Add a out transition to a widget',
-        imageUri: 'designer/transitionOut.png',
         dropTo: 'widget'
     }
 ];
