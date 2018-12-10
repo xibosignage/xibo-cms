@@ -50,7 +50,6 @@ class Hls extends ModuleWidget
             $module->type = 'hls';
             $module->class = 'Xibo\Widget\Hls';
             $module->description = 'HLS Video Stream';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

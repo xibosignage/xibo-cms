@@ -62,12 +62,6 @@ class Module implements \JsonSerializable
     public $validExtensions;
 
     /**
-     * @SWG\Property(description="The file uri of an image to represent this Module")
-     * @var string
-     */
-    public $imageUri;
-
-    /**
      * @SWG\Property(description="The type code for this module")
      * @var string
      */
@@ -159,9 +153,6 @@ class Module implements \JsonSerializable
 
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->imageUri))
-            throw new InvalidArgumentException(__('Image Uri is a required field.'), 'imageUri');
-
         if (!v::intType()->validate($this->defaultDuration))
             throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
     }
@@ -180,17 +171,15 @@ class Module implements \JsonSerializable
     private function add()
     {
         $this->moduleId = $this->getStore()->insert('
-          INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
+          INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
             VALUES (:module, :name, :enabled, :region_specific, :description,
-                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
+                :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
         ', [
             'module' => $this->type,
             'name' => $this->name,
             'enabled' => $this->enabled,
             'region_specific' => $this->regionSpecific,
             'description' => $this->description,
-            'image_uri' => $this->imageUri,
             'schema_version' => $this->schemaVersion,
             'valid_extensions' => $this->validExtensions,
             'preview_enabled' => $this->previewEnabled,
@@ -211,7 +200,6 @@ class Module implements \JsonSerializable
               enabled = :enabled,
               previewEnabled = :previewEnabled,
               validExtensions = :validExtensions,
-              imageUri = :imageUri,
               defaultDuration = :defaultDuration,
               settings = :settings
            WHERE moduleid = :moduleId
@@ -220,7 +208,6 @@ class Module implements \JsonSerializable
             'enabled' => $this->enabled,
             'previewEnabled' => $this->previewEnabled,
             'validExtensions' => $this->validExtensions,
-            'imageUri' => $this->imageUri,
             'defaultDuration' => $this->defaultDuration,
             'settings' => json_encode($this->settings)
         ]);

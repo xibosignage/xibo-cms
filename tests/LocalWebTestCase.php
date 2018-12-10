@@ -337,16 +337,15 @@ class LocalWebTestCase extends WebTestCase
             // Install the module
             self::$container->store->insert('
               INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`,
-                `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
+                 `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
               VALUES (:module, :name, :enabled, :region_specific, :description,
-                :image_uri, :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
+                 :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
             ', [
                 'module' => $name,
                 'name' => $name,
                 'enabled' => 1,
                 'region_specific' => 1,
                 'description' => $name,
-                'image_uri' => null,
                 'schema_version' => 1,
                 'valid_extensions' => null,
                 'preview_enabled' => 1,

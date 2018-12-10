@@ -48,7 +48,6 @@ class HtmlPackage extends ModuleWidget
             $module->type = 'htmlpackage';
             $module->class = 'Xibo\Widget\HtmlPackage';
             $module->description = 'A module for displaying HTML packages in .htz format';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 0;
             $module->assignable = 1;
