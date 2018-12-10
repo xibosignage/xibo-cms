@@ -48,7 +48,6 @@ class Stocks extends AlphaVantageBase
             $module->type = 'stocks';
             $module->class = 'Xibo\Widget\Stocks';
             $module->description = 'A module for showing Stock quotes';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

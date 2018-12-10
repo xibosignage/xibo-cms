@@ -48,7 +48,6 @@ class Currencies extends AlphaVantageBase
             $module->type = 'currencies';
             $module->class = 'Xibo\Widget\Currencies';
             $module->description = 'A module for showing Currency pairs and exchange rates';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

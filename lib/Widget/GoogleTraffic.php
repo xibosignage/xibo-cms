@@ -62,7 +62,6 @@ class GoogleTraffic extends ModuleWidget
             $module->type = 'googletraffic';
             $module->class = 'Xibo\Widget\GoogleTraffic';
             $module->description = 'Google Traffic Map';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

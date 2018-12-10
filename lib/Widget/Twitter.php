@@ -63,7 +63,6 @@ class Twitter extends TwitterBase
             $module->type = 'twitter';
             $module->class = 'Xibo\Widget\Twitter';
             $module->description = 'Twitter Search Module';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

@@ -519,7 +519,6 @@ class ModuleFactory extends BaseFactory
                settings,
                RegionSpecific,
                ValidExtensions,
-               ImageUri,
                PreviewEnabled,
                assignable,
                SchemaVersion,
@@ -603,7 +602,6 @@ class ModuleFactory extends BaseFactory
             $module->name = $this->getSanitizer()->string($row['Name']);
             $module->description = $this->getSanitizer()->string($row['Description']);
             $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
-            $module->imageUri = $this->getSanitizer()->string($row['ImageUri']);
             $module->renderAs = $this->getSanitizer()->string($row['render_as']);
             $module->enabled = $this->getSanitizer()->int($row['Enabled']);
             $module->regionSpecific = $this->getSanitizer()->int($row['RegionSpecific']);

@@ -77,7 +77,6 @@ class ForecastIo extends ModuleWidget
             $module->type = 'forecastio';
             $module->class = 'Xibo\Widget\ForecastIo';
             $module->description = 'Weather Powered by DarkSky';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

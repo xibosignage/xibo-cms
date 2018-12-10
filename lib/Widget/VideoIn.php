@@ -48,7 +48,6 @@ class VideoIn extends ModuleWidget
             $module->type = 'videoin';
             $module->class = 'Xibo\Widget\VideoIn';
             $module->description = 'A module for displaying Video and Audio from an external source';
-            $module->imageUri = 'forms/video.gif';
             $module->enabled = 1;
             $module->previewEnabled = 0;
             $module->assignable = 1;

@@ -55,7 +55,6 @@ class Chart extends ModuleWidget
             $module->type = 'chart';
             $module->class = 'Xibo\Widget\Chart';
             $module->description = 'Graphical data visualization';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

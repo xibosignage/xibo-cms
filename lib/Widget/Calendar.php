@@ -54,7 +54,6 @@ class Calendar extends ModuleWidget
             $module->type = 'calendar';
             $module->class = '\Xibo\Widget\Calendar';
             $module->description = 'Display content from a Calendar';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

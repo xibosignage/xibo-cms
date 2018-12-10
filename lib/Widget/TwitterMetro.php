@@ -61,7 +61,6 @@ class TwitterMetro extends TwitterBase
             $module->type = 'twittermetro';
             $module->class = 'Xibo\Widget\TwitterMetro';
             $module->description = 'Twitter Metro Search Module';
-            $module->imageUri = 'forms/library.gif';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;
