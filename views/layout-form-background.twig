@@ -75,7 +75,12 @@
                 {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
 
                 <div class="col-md-offset-2">
-                    <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=100&height=56" data-not-found-url="{{ theme.uri("img/forms/filenotfound.gif") }}" alt="{% trans "Background thumbnail" %}" />
+                    <div id="bg_not_found_icon">
+                        <i class="fa bg_not_found_icon fa-2x"></i>
+                        <span>{% trans "No Background Image" %}</span>
+                    </div>
+            
+                    <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
                 </div>
             </form>
         </div>
