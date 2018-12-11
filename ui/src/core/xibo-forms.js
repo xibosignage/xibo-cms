@@ -378,6 +378,7 @@ var backGroundFormSetup = function(dialog) {
     $('#backgroundColor').colorpicker({format: "hex"});
 
     var backgroundImageList = $('#backgroundImageId');
+    var notFoundIcon = $('#bg_not_found_icon');
     var backgroundImage = $('#bg_image_image');
     var initialBackgroundImageId = backgroundImageList.val();
     var backgroundChanged = false;
@@ -387,12 +388,22 @@ var backGroundFormSetup = function(dialog) {
         var id = backgroundImageList.val();
 
         var src;
-        if (id == 0)
-            src = backgroundImage.data().notFoundUrl;
-        else
+        // If the image is not defined
+        if ([0, ''].indexOf(id) !== -1) {
+            
+            // Show not found icon and hide image
+            notFoundIcon.show();
+            backgroundImage.hide();
+        } else {
+            
+            // Hide not found icon and show image
+            notFoundIcon.hide();
+            backgroundImage.show();
+            
+            // Replace image source
             src = backgroundImage.data().url.replace(":id", id);
-
-        backgroundImage.attr("src", src);
+            backgroundImage.attr("src", src);
+        }
 
         if (id != initialBackgroundImageId)
             backgroundChanged = true;

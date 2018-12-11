@@ -436,7 +436,7 @@ class DataSetTicker extends ModuleWidget
         $name = $this->getOption('name');
 
         // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><img alt="' . $this->module->name . ' thumbnail" src="' . $this->getConfig()->uri('img/forms/' . $this->getModuleType() . '.gif') . '"></div>';
+        $output = '<div class="thumbnail"><i alt="' . $this->module->name . ' thumbnail" class="fa module-preview-icon module-icon-' . $this->getModuleType() . '"></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';

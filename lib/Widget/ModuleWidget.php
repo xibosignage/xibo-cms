@@ -797,7 +797,7 @@ abstract class ModuleWidget implements ModuleInterface
     {
         // Default Hover window contains a thumbnail, media type and duration
         $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><i alt="' . __($this->module->name) . ' thumbnail" class="fa module-icon-' . __($this->module->name) . '"></i></div>';
+        $output .= '<div class="preview-module-image"><i alt="' . __($this->module->name) . ' thumbnail" class="fa module-preview-icon module-icon-' . __($this->module->name) . '"></i></div>';
         $output .= '<div class="info">';
         $output .= '    <ul>';
         $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
