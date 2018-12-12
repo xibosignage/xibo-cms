@@ -148,13 +148,6 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             this.toggleFullscreen();
         }.bind(this));
 
-        // Handle click on viewer to select layout ( if not selected )
-        this.DOMObject.off().click(function(e) {
-            if(lD.selectedObject.type != 'layout' && !this.DOMObject.hasClass('fullscreen') && !['play-btn', 'fs-btn'].includes(e.target.id)) {
-                lD.selectObject();
-            }
-        }.bind(this));
-
     } else { // Render Widget or Region
 
         // Id the element is a region or widget, increase request information
