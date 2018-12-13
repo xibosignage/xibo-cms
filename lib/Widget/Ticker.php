@@ -336,14 +336,15 @@ class Ticker extends ModuleWidget
         $this->setOption('disableDateSort', $this->getSanitizer()->getCheckbox('disableDateSort'));
         $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('advancedEditor', $this->getSanitizer()->getCheckbox('advancedEditor'));
         $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
+        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
 
         if ($this->getOption('overrideTemplate') == 1) {
             // Feed tickers should only use the template if they have override set.
             $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
+            $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
             $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
         }
         
@@ -404,7 +405,6 @@ class Ticker extends ModuleWidget
             if (isset($template)) {
                 $text = $template['template'];
                 $css = $template['css'];
-                $advancedEditor = $template['advancedEditor'];
             } else {
                 $text = $this->getRawNode('template', '');
                 $css = $this->getRawNode('css', '');
@@ -413,7 +413,6 @@ class Ticker extends ModuleWidget
             // DataSet tickers or feed tickers without overrides.
             $text = $this->getRawNode('template', '');
             $css = $this->getRawNode('css', '');
-            $advancedEditor = $this->getOption('advancedEditor');
         }
         
         // Parse library references on the template
@@ -527,7 +526,7 @@ class Ticker extends ModuleWidget
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); $("#content").find("img").xiboImageRender(options); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); if(items != false) { $("#content").xiboTextRender(options, items); } $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';
