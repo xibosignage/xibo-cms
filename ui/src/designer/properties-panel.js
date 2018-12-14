@@ -112,7 +112,19 @@ PropertiesPanel.prototype.back = function(element) {
 
     // Render previous form
     this.render(element, currentStep - 1);
-}
+};
+
+/**
+ * Disable all the form inputs and make it read only
+ */
+PropertiesPanel.prototype.makeFormReadOnly = function() {
+
+    // Disable inputs, select, textarea and buttons
+    this.DOMObject.find('input, select, textarea, button').attr('disabled', 'disabled');
+
+    // Hide bootstrap switch
+    this.DOMObject.find('.bootstrap-switch').hide();
+};
 
 /**
  * Render panel
@@ -120,8 +132,8 @@ PropertiesPanel.prototype.back = function(element) {
  */
 PropertiesPanel.prototype.render = function(element, step) {
 
-    // Prevent the panel to render if the layout is not editable
-    if(typeof element == 'undefined' || $.isEmptyObject(element) || (element.type == 'layout' && !element.editable) ) {
+    // Prevent the panel to render if there's no selected object
+    if(typeof element == 'undefined' || $.isEmptyObject(element) ) {
         // Clean the property panel html
         this.DOMObject.html('');
 
@@ -157,7 +169,8 @@ PropertiesPanel.prototype.render = function(element, step) {
         self.renderRequest = undefined;
 
         // Prevent rendering null html
-        if(res.html === null) {
+        if(res.html === null || res.success === false) {
+            self.DOMObject.html('');
             return;
         }
 
@@ -166,32 +179,34 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Create buttons object
         let buttons = {};
         
-        // Process buttons from result
-        for(let button in res.buttons) {
-            
-            // If button is not a cancel or save button, add it to the button object
-            if(!['Save', 'Cancel'].includes(button)) {
-                buttons[button] = {
-                    name: button,
-                    type: 'btn-default',
-                    click: res.buttons[button]
-                };
+        if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
+            // Process buttons from result
+            for(let button in res.buttons) {
+                
+                // If button is not a cancel or save button, add it to the button object
+                if(!['Save', 'Cancel'].includes(button)) {
+                    buttons[button] = {
+                        name: button,
+                        type: 'btn-default',
+                        click: res.buttons[button]
+                    };
+                }
             }
+
+            // Add back button
+            buttons.back = {
+                name: 'Back',
+                type: 'btn-default',
+                action: 'back'
+            };
+
+            // Add save button
+            buttons.save = {
+                name: 'Save',
+                type: 'btn-info',
+                action: 'save'
+            };
         }
-
-        // Add back button
-        buttons.back = {
-            name: 'Back',
-            type: 'btn-default',
-            action: 'back'
-        };
-
-        // Add save button
-        buttons.save = {
-            name: 'Save',
-            type: 'btn-info',
-            action: 'save'
-        };
         
         const html = propertiesPanel({
             header: res.dialogTitle,
@@ -210,7 +225,7 @@ PropertiesPanel.prototype.render = function(element, step) {
         const viewerExists = (typeof app.viewer != 'undefined');
         self.DOMObject.data('formEditorOnly', !viewerExists);
 
-        // If fthe viewer exists, save its data  to the DOMObject
+        // If the viewer exists, save its data  to the DOMObject
         if(viewerExists) {
             self.DOMObject.data('viewerObject', app.viewer);
         }
@@ -229,25 +244,27 @@ PropertiesPanel.prototype.render = function(element, step) {
         self.formSerializedLoadData = self.DOMObject.find('form').serialize();
 
         // Handle buttons click
-        self.DOMObject.find('.properties-panel-btn').click(function(el) {
-            if($(this).data('action')) {
-                self[$(this).data('action')](element, $(this).data('subAction'));
-            }  
-        });
+        if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
+            self.DOMObject.find('.properties-panel-btn').click(function(el) {
+                if($(this).data('action')) {
+                    self[$(this).data('action')](element, $(this).data('subAction'));
+                }  
+            });
 
-        // Handle back button based on form page
-        if(self.DOMObject.find('form').data('formStep') != undefined && self.DOMObject.find('form').data('formStep') > 1) {
-            self.DOMObject.find('button#back').show();
-        } else {
-            self.DOMObject.find('button#back').hide();
-        }
-
-        // Handle keyboard keys
-        self.DOMObject.off('keydown').keydown(function(handler) {
-            if(handler.key == 'Enter' && !$(handler.target).is('textarea')) {
-                self.save(element, $(this).data('subAction'));
+            // Handle back button based on form page
+            if(self.DOMObject.find('form').data('formStep') != undefined && self.DOMObject.find('form').data('formStep') > 1) {
+                self.DOMObject.find('button#back').show();
+            } else {
+                self.DOMObject.find('button#back').hide();
             }
-        });
+
+            // Handle keyboard keys
+            self.DOMObject.off('keydown').keydown(function(handler) {
+                if(handler.key == 'Enter' && !$(handler.target).is('textarea')) {
+                    self.save(element, $(this).data('subAction'));
+                }
+            });
+        }
 
         // Call Xibo Init for this form
         XiboInitialise("#" + self.DOMObject.attr("id"));
@@ -255,6 +272,10 @@ PropertiesPanel.prototype.render = function(element, step) {
         // For the layout properties, call background Setup
         if(element.type == 'layout') {
             backGroundFormSetup(self.DOMObject);
+        }
+
+        if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
+            self.makeFormReadOnly();
         }
 
     }).fail(function(data) {

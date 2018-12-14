@@ -1,7 +1,7 @@
 <nav class="navbar navbar-fixed-bottom">
     <div class="container-toolbar container-fluid">
 
-        <div class="navbar-header">
+        <div class="navbar-header hide-on-read-only">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1"
                 aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
@@ -12,7 +12,7 @@
         </div>
 
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <div class="toolbar-content">
+            <div class="toolbar-content hide-on-read-only">
                 {{!-- Menu items/tabs --}}
                 {{#each menuItems}}
                     <div id="content-{{@index}}" class="toolbar-pane {{state}}">
@@ -71,8 +71,8 @@
             
             </div>
 
-            <div class="navbar-header">
-                <a id="btn-menu-toggle" class="navbar-brand btn-menu-tool">
+            <div class="navbar-header hide-on-read-only">
+                <a id="btn-menu-toggle" class="navbar-brand btn-menu-tool hide-on-read-only">
                     
                     {{#if opened}}
                         <i class="fa fa-toggle-on"></i>
@@ -82,7 +82,7 @@
                 </a>
             </div>
 
-            <ul class="nav navbar-nav navbar-buttons">
+            <ul class="nav navbar-nav navbar-buttons hide-on-read-only">
                 {{#each menuItems}}
                     <li>
                         <a id="btn-menu-{{@index}}" class="btn-menu-tab {{state}}" data-test="toolbarTabs">
@@ -109,7 +109,7 @@
 
                 {{#if tabsCount}}
                     <li>
-                        <button id="deleteAllTabs" class="btn btn-danger navbar-btn" href="#">
+                        <button id="deleteAllTabs" class="btn btn-danger navbar-btn hide-on-read-only" href="#">
                             <span>Close Tabs</span>
                             <i class="fa fa-times"></i>
                         </button>
