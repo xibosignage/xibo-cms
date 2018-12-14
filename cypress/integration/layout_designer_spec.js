@@ -95,19 +95,22 @@ describe('Layout Designer (Empty)', function() {
             cy.get('.popover.tour').should('not.be.visible');
         });
 
-        it('shows the checkout modal', function() {
+        it('shows the read only message', function() {
 
             // Check if the checkout modal appears
-            cy.get('[data-test="checkoutModal"]').should('exist');
+            cy.get('#read-only-message').should('exist');
         });
 
         it('goes into draft mode when checked out', function() {
 
-            // Get the done button from the checkout modal
-            cy.get('[data-test="checkoutModal"] button[data-bb-handler="done"]').click();
+            // Click message to open the modal
+            cy.get('#read-only-message').click();
 
-            // If the layout is on draft, the properties panel should have loaded with content 
-            cy.get('#properties-panel .form-container');
+            // Get the done button from the checkout modal
+            cy.get('[data-test="checkoutModal"] button[data-bb-handler="checkout"]').click();
+
+            // Check if the checkout message disappeared
+            cy.get('#read-only-message').should('not.be.visible');
         });
     });
 

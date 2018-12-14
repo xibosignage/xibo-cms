@@ -195,7 +195,7 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             // If inline editor is on, show the controls for it
             if(lD.propertiesPanel.inlineEditor) {
                 // Show inline editor controls
-                this.showInlineEditor(true);
+                this.showInlineEditor();
             }
 
             // Handle fullscreen button
@@ -288,6 +288,12 @@ Viewer.prototype.toggleFullscreen = function() {
  */
 Viewer.prototype.setupInlineEditor = function(textAreaId, show = true, customNoDataMessage = null) {
 
+    // Prevent setup if user is in read only mode
+    const app = getXiboApp();
+    if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
+        return;
+    }
+    
     // Change inline editor to enable it on viewer render/refresh
     lD.propertiesPanel.inlineEditor = show;
     lD.propertiesPanel.inlineEditorId = textAreaId;

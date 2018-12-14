@@ -346,7 +346,7 @@ let formHelpers = function() {
                         pagination: {
                             more: (page * 10 < data.recordsTotal)
                         }
-                    }
+                    };
                 },
                 delay: 250
             }
@@ -582,7 +582,9 @@ let formHelpers = function() {
             applyContentsToIframe(textAreaId);
 
             // Reapply the background style after switching to source view and back to the normal editing view
-            CKEDITOR.instances[textAreaId].on('contentDom', function() {applyContentsToIframe(textAreaId)});
+            CKEDITOR.instances[textAreaId].on('contentDom', function() {
+                applyContentsToIframe(textAreaId);
+            });
 
             // Get the template data from the text area field
             var data = $('#' + textAreaId).val();
@@ -934,7 +936,7 @@ let formHelpers = function() {
      */
     this.getTemplate = function(templateName) {
         if(templates[templateName] === undefined) {
-            console.error('Template ' + templateName + ' does not exist on formHelpers file!')
+            console.error('Template ' + templateName + ' does not exist on formHelpers file!');
         }
 
         return templates[templateName];

@@ -41,6 +41,9 @@ require('../css/designer.less');
 // Create layout designer namespace (lD)
 window.lD = {
 
+    // Read Only mode
+    readOnlyMode: false,
+
     // Attach common functions to layout designer
     common: Common,
 
@@ -126,7 +129,7 @@ $(document).ready(function() {
                 // Initialize manager
                 lD.manager = new Manager(
                     lD.designerDiv.find('#layout-manager'),
-                    (serverMode == 'Test')
+                    false // (serverMode == 'Test') Turn of manager visibility for now
                 );
 
                 // Initialize viewer
@@ -148,6 +151,17 @@ $(document).ready(function() {
                             action: lD.showPublishScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        },
+                        {
+                            id: 'checkoutLayout',
+                            title: layoutDesignerTrans.checkoutTitle,
+                            logo: 'fa-edit',
+                            class: 'btn-info',
+                            action: lD.showCheckoutScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == true);
                             },
                             inactiveCheckClass: 'hidden',
                         },
@@ -185,8 +199,8 @@ $(document).ready(function() {
 
 
                 if(res.data[0].publishedStatusId != 2) {
-                    // Show checkout screen
-                    lD.showCheckoutScreen(lD.layout);
+                    // Enter read Only Mode
+                    lD.enterReadOnlyMode();
                 }
 
                 // Setup helpers
@@ -220,7 +234,7 @@ $(document).ready(function() {
     $('body').off('keydown').keydown(function(handler) {
         if($(handler.target).is($('body'))) {
 
-            if(handler.key == 'Delete') {
+            if(handler.key == 'Delete' && lD.readOnlyMode == false) {
                 lD.deleteSelectedObject();
             }
         }
@@ -404,7 +418,14 @@ lD.checkoutLayout = function() {
     }).done(function(res) {
         if(res.success) {
             toastr.success(res.message);
+
+            // Turn off read only mode
+            lD.readOnlyMode = false;
+
+            // Hide read only message
+            lD.designerDiv.find('#read-only-message-container').hide();
             
+            // Reload layout
             lD.reloadData(res.data);
 
             bootbox.hideAll();
@@ -445,6 +466,7 @@ lD.publishLayout = function() {
         lD.common.hideLoadingScreen();
 
         if(res.success) {
+
             toastr.success(res.message);
 
             window.location.href = urlsForApi.layout.list.url;
@@ -468,6 +490,23 @@ lD.publishLayout = function() {
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
     });
+};
+
+
+/**
+ * Read Only Mode
+ */
+lD.enterReadOnlyMode = function() {
+
+    // Show edit mode message
+    lD.designerDiv.find('#read-only-message').html(layoutDesignerTrans.readOnlyModeMessage);
+    lD.designerDiv.find('#read-only-message-container').show();
+    lD.designerDiv.find('#read-only-message-container').off().on('click', function() {
+        lD.showCheckoutScreen();
+    });
+    
+    // Turn on read only mode
+    lD.readOnlyMode = true;
 };
 
 /**
@@ -550,14 +589,16 @@ lD.showCheckoutScreen = function() {
     bootbox.dialog({
         title: layoutDesignerTrans.checkoutTitle + ' ' + lD.layout.name,
         message: layoutDesignerTrans.checkoutMessage,
-        closeButton: false,
         buttons: {
-            done: {
+            checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
-                className: "btn-primary btn-lg",
+                className: "btn-success btn-lg",
                 callback: function(res) {
 
                     $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
+
+                    // Unselect objects ( select layout )
+                    lD.selectObject();
 
                     lD.checkoutLayout();
 
@@ -578,10 +619,6 @@ lD.showPublishScreen = function() {
         title: layoutDesignerTrans.publishTitle + ' ' + lD.layout.name,
         message: layoutDesignerTrans.publishMessage,
         buttons: {
-            cancel: {
-                label: translations.cancel,
-                className: "btn-default",
-            },
             done: {
                 label: layoutDesignerTrans.publishTitle,
                 className: "btn-primary btn-lg",

@@ -1117,11 +1117,7 @@ class Layout extends Base
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
-
-        // Check that this Layout is a Draft
-        if (!$layout->isChild())
-            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
-
+            
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 

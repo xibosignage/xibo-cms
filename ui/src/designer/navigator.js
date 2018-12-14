@@ -146,24 +146,29 @@ Navigator.prototype.render = function(layout) {
         lD.selectObject($(this));
     });
 
-    this.DOMObject.find('[data-type="layout"]').droppable({
-        accept: '[drop-to="layout"]',
-        drop: function(event, ui) {
-            lD.dropItemAdd(event.target, ui.draggable[0]);
-        }
-    });
+    if(lD.readOnlyMode === false) {
+        this.DOMObject.find('[data-type="layout"]').droppable({
+            accept: '[drop-to="layout"]',
+            drop: function(event, ui) {
+                lD.dropItemAdd(event.target, ui.draggable[0]);
+            }
+        });
 
-    this.DOMObject.find('.designer-region').droppable({
-        accept: '[drop-to="region"]',
-        drop: function(event, ui) {
-            lD.dropItemAdd(event.target, ui.draggable[0]);
-        }
-    });
+        this.DOMObject.find('.designer-region').droppable({
+            accept: '[drop-to="region"]',
+            drop: function(event, ui) {
+                lD.dropItemAdd(event.target, ui.draggable[0]);
+            }
+        });
 
-    // Handle edit button
-    this.DOMObject.find('#edit-btn').click(function() {
-        lD.toggleNavigatorEditing(true);
-    }.bind(this));
+        // Handle edit button
+        this.DOMObject.find('#edit-btn').click(function() {
+            lD.toggleNavigatorEditing(true);
+        }.bind(this));
+    } else {
+        // Hide edit button
+        this.DOMObject.find('#edit-btn').hide();
+    }
 
     // Handle click on viewer to select layout
     this.DOMObject.off().click(function(e) {

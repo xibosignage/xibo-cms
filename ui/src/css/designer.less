@@ -45,6 +45,15 @@
     overflow: hidden;
 }
 
+#layout-editor #read-only-message-container {
+    display: none;
+    padding: 0 5px;
+}
+
+#layout-editor #read-only-message {
+    margin-bottom: 5px;
+}
+
 #layout-editor .top-right-btn {
     right: 20px;
     top: 10px;
@@ -182,11 +191,12 @@
 }
 
 #layout-editor #layout-timeline .designer-widget .widgetLabel {
-    width: 20px;
+    min-width: 20px;
     display: inline-block;
     height: 100%;
     text-align: center;
     opacity: 0.85;
+    padding: 0 4px;
 }
 
 #layout-editor #layout-timeline .designer-widget .widgetTitle {
@@ -608,4 +618,8 @@
 /* Select2 width fix */
 #layout-editor .select2-container {
     width: auto !important;
+}
+
+#layout-editor #layoutJumpListContainer {
+    min-width: 120px; 
 }

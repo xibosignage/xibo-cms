@@ -82,10 +82,11 @@ describe('Layout Designer (Populated)', function() {
             // Choose the first region in the navigator and select it
             cy.get('#layout-navigator .designer-region:first-child').click({force: true});
 
-            // Try to save the region form, it should fail and return a message
-            cy.get('#properties-panel-container [data-action="save"]').click({force: true});
+            // Should contain region options form
+            cy.get('#properties-panel-container').contains('Region Options');
 
-            cy.get('.toast-error').contains('Layout is not a Draft');
+            // The save button should not be visible
+            cy.get('#properties-panel-container [data-action="save"]').should('not.exist');
         });
 
     });

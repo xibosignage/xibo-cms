@@ -329,6 +329,9 @@ Timeline.prototype.render = function(layout) {
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
     
+    
+    if(lD.readOnlyMode === false) {
+
     this.DOMObject.find('#regions .designer-region').sortable({
         items: '.designer-widget:not(.designer-widget-ghost)',
         placeholder: 'designer-widget-sortable-highlight',
@@ -364,6 +367,7 @@ Timeline.prototype.render = function(layout) {
             });
         }
     });
+    }
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll(_.debounce(function() {

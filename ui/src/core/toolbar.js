@@ -261,78 +261,87 @@ Toolbar.prototype.render = function() {
     // Deselect selected card on render
     this.selectedCard = {};
 
+    // Check if trash bin is active
+    let trashBinActive = (app.selectedObject.type === 'region' || app.selectedObject.type === 'widget') && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+
     // Compile layout template with data
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
         tabsCount: (this.menuItems.length > this.fixedTabs),
         customButtons: this.customButtons,
-        trashActive: (app.selectedObject.type === 'region' || app.selectedObject.type === 'widget')
+        trashActive: trashBinActive
     });
 
     // Append layout html to the main div
     this.DOMObject.html(html);
 
-    // Handle tabs
-    for(let i = 0;i < this.menuItems.length;i++) {
+    // If read only mode is enabled
+    if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
+        this.DOMObject.find('.hide-on-read-only').hide();
+    } else {
 
-        const toolbar = self;
-        const index = i;
+        // Handle tabs
+        for(let i = 0;i < this.menuItems.length;i++) {
 
-        this.DOMObject.find('#btn-menu-' + index).click(function() {
-            toolbar.openTab(index);
-        });
+            const toolbar = self;
+            const index = i;
 
-        this.DOMObject.find('#close-btn-menu-' + index).click(function() {
-            toolbar.deleteTab(index);
-        });
+            this.DOMObject.find('#btn-menu-' + index).click(function() {
+                toolbar.openTab(index);
+            });
 
-        this.DOMObject.find('#content-' + index + ' #pag-btn-left').click(function() {
-            if(!toolbar.searchButtonsLock) {
-                toolbar.menuItems[index].page -= 1;
-                toolbar.loadContent(index); 
-            }
-        });
+            this.DOMObject.find('#close-btn-menu-' + index).click(function() {
+                toolbar.deleteTab(index);
+            });
 
-        this.DOMObject.find('#content-' + index + ' #pag-btn-right').click(function() {
-            if(!toolbar.searchButtonsLock) {
-                toolbar.menuItems[index].page += 1;
-                toolbar.loadContent(index);
-            }
-        });
+            this.DOMObject.find('#content-' + index + ' #pag-btn-left').click(function() {
+                if(!toolbar.searchButtonsLock) {
+                    toolbar.menuItems[index].page -= 1;
+                    toolbar.loadContent(index); 
+                }
+            });
 
-    }
+            this.DOMObject.find('#content-' + index + ' #pag-btn-right').click(function() {
+                if(!toolbar.searchButtonsLock) {
+                    toolbar.menuItems[index].page += 1;
+                    toolbar.loadContent(index);
+                }
+            });
 
-    // Toggle button
-    this.DOMObject.find('#btn-menu-toggle').click(function() {
-        self.openTab();
-    });
-
-    // Create new tab
-    this.DOMObject.find('#btn-menu-new-tab').click(function(){
-        self.createNewTab();
-    });
-
-    // Close all tabs
-    this.DOMObject.find('#deleteAllTabs').click(function() {
-        self.deleteAllTabs();
-    });
-
-    // Search button
-    this.DOMObject.find('.search-btn').click(function() {
-        if(!self.searchButtonsLock) {
-            // Reset page
-            self.menuItems[$(this).attr("data-search-id")].page = 0;
-
-            // Load content for the search tab
-            self.loadContent($(this).attr("data-search-id"));
         }
-    });
 
-    // Delete object
-    this.DOMObject.find('#trashContainer').click(
-        this.customActions.deleteSelectedObjectAction
-    );
+        // Toggle button
+        this.DOMObject.find('#btn-menu-toggle').click(function() {
+            self.openTab();
+        });
+
+        // Create new tab
+        this.DOMObject.find('#btn-menu-new-tab').click(function(){
+            self.createNewTab();
+        });
+
+        // Close all tabs
+        this.DOMObject.find('#deleteAllTabs').click(function() {
+            self.deleteAllTabs();
+        });
+
+        // Search button
+        this.DOMObject.find('.search-btn').click(function() {
+            if(!self.searchButtonsLock) {
+                // Reset page
+                self.menuItems[$(this).attr("data-search-id")].page = 0;
+
+                // Load content for the search tab
+                self.loadContent($(this).attr("data-search-id"));
+            }
+        });
+
+        // Delete object
+        this.DOMObject.find('#trashContainer').click(
+            this.customActions.deleteSelectedObjectAction
+        );
+    }
 
     // Handle custom buttons
     for(let index = 0;index < this.customButtons.length;index++) {
@@ -355,38 +364,41 @@ Toolbar.prototype.render = function() {
         this.setupJumpList($("#layoutJumpListContainer"));
     }
 
-    // Set cards width/margin and draggable properties
-    this.DOMObject.find('.toolbar-card').width(
-        this.cardCalculatedWidth
-    ).height(
-        this.cardDimensions.height
-    ).css(
-        'margin-left', this.cardDimensions.margin
-    ).draggable({
-        cursor: 'crosshair',
-        handle: '.drag-area',
-        cursorAt: {
-            top: (this.cardDimensions.height + this.cardDimensions.margin) / 2,
-            left: (this.cardDimensions.width + this.cardDimensions.margin) / 2
-        },
-        opacity: 0.3,
-        helper: 'clone',
-        start: function() {
-            $('.custom-overlay').show();
-        }, 
-        stop: function() {
-            // Hide designer overlay
-            $('.custom-overlay').hide();
-        }
-    });
+    // If in edit mode
+    if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
+        // Set cards width/margin and draggable properties
+        this.DOMObject.find('.toolbar-card').width(
+            this.cardCalculatedWidth
+        ).height(
+            this.cardDimensions.height
+        ).css(
+            'margin-left', this.cardDimensions.margin
+        ).draggable({
+            cursor: 'crosshair',
+            handle: '.drag-area',
+            cursorAt: {
+                top: (this.cardDimensions.height + this.cardDimensions.margin) / 2,
+                left: (this.cardDimensions.width + this.cardDimensions.margin) / 2
+            },
+            opacity: 0.3,
+            helper: 'clone',
+            start: function() {
+                $('.custom-overlay').show();
+            }, 
+            stop: function() {
+                // Hide designer overlay
+                $('.custom-overlay').hide();
+            }
+        });
 
-    // Set cards width/margin and draggable properties
-    this.DOMObject.find('.toolbar-card:not(.card-selected) .add-area').click((e) => {
-        self.selectCard($(e.currentTarget).parent()); 
-    });
+        // Select card clicking in the Add button
+        this.DOMObject.find('.toolbar-card:not(.card-selected) .add-area').click((e) => {
+            self.selectCard($(e.currentTarget).parent()); 
+        });
 
-    // Initialize tooltips
-    this.DOMObject.find('[data-toggle="tooltip"]').tooltip();
+        // Initialize tooltips
+        this.DOMObject.find('[data-toggle="tooltip"]').tooltip();
+    }
 };
 
 /**

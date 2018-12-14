@@ -115,7 +115,7 @@ pE.loadEditor = function() {
     // Initialize manager
     pE.manager = new Manager(
         $('#playlist-editor').find('#layout-manager'),
-        (serverMode == 'Test')
+        false //(serverMode == 'Test') Turn of manager visibility for now
     );
 
     // Append toolbar to the modal container
