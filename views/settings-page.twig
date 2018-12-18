@@ -314,6 +314,13 @@
                                     {{ forms.checkbox("SCHEDULE_LOOKAHEAD", title, theme.getSetting("SCHEDULE_LOOKAHEAD", 1), helpText, "", "", not theme.isSettingEditable("SCHEDULE_LOOKAHEAD")) }}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("EVENT_SYNC") %}
+                                    {% set title %}{% trans "Show Synchronise this Event checkbox on applicable events?" %}{% endset %}
+                                    {% set helpText %}{% trans "If checked you will have an option to enable Synchronise this Event checkbox for applicable events" %}{% endset %}
+
+                                    {{ forms.checkbox("EVENT_SYNC", title, theme.getSetting("EVENT_SYNC", 0), helpText, "", "", not theme.isSettingEditable("EVENT_SYNC")) }}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("REQUIRED_FILES_LOOKAHEAD") %}
                                     {% set title %}{% trans "Send files in advance?" %}{% endset %}
                                     {% set helpText %}{% trans "How many seconds in to the future should the calls to RequiredFiles look?" %}{% endset %}
