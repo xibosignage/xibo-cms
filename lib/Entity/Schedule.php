@@ -199,7 +199,7 @@ class Schedule implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether the event should be synchronised across displays")
      * @var int
      */
-    public $syncEvent;
+    public $syncEvent = 0;
 
     /**
      * @SWG\Property(description="Flag indicating whether the event will sync to the Display timezone")

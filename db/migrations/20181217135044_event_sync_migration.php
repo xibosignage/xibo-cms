@@ -43,7 +43,6 @@ class EventSyncMigration extends AbstractMigration
         $syncColumn = $scheduleTable->hasColumn('syncEvent');
 
         if (!$syncColumn)
-            $this->execute('ALTER TABLE schedule ADD syncEvent tinyint DEFAULT 0 NOT NULL');
-
+            $scheduleTable->addColumn('syncEvent', 'integer', ['default' => 0, 'null' => false])->save();
     }
 }
