@@ -295,6 +295,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('SCHEDULE_LOOKAHEAD', $this->getSanitizer()->getCheckbox('SCHEDULE_LOOKAHEAD'));
         }
 
+        if ($this->getConfig()->isSettingEditable('EVENT_SYNC')) {
+            $this->getConfig()->changeSetting('EVENT_SYNC', $this->getSanitizer()->getCheckbox('EVENT_SYNC'));
+        }
+
         if ($this->getConfig()->isSettingEditable('REQUIRED_FILES_LOOKAHEAD')) {
             $this->getConfig()->changeSetting('REQUIRED_FILES_LOOKAHEAD', $this->getSanitizer()->getInt('REQUIRED_FILES_LOOKAHEAD'));
         }

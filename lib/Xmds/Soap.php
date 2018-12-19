@@ -909,6 +909,7 @@ class Soap
 
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
+                    $syncEvent = $this->getSanitizer()->int($row['syncEvent']);
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
@@ -932,6 +933,7 @@ class Soap
                         $layout->setAttribute("todt", $toDt);
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
+                        $layout->setAttribute("syncEvent", $syncEvent);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
