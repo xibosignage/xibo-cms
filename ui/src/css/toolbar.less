@@ -1,3 +1,5 @@
+@import (less) "~font-awesome/css/font-awesome.min.css";
+
 // Variables
 @toolbar-main-color: #337ab7;
 @toolbar-green: #5ac063;
@@ -112,6 +114,7 @@
     text-align: center;
     height: 70px;
     font-size: 12px;
+    position: relative;
     .border-radius(4px);
 }
 
@@ -188,6 +191,77 @@
     .set-transparent-color(background-color; @toolbar-dark-blue; 70%);
 }
 
+.editor-toolbar .toolbar-content .toolbar-card .media-tags {
+    display: block;
+    position: absolute;
+    bottom: 80px;
+    width: 90%;
+    left: 5%;
+    opacity: 0.9;
+    background-color: darken(@toolbar-card-color, 20%);
+    .border-radius(4px 4px 0 0);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags:hover {
+    opacity: 1;
+    z-index: 2;
+    width: 96%;
+    left: 2%;
+    background-color: darken(@toolbar-card-color, 40%);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags:not(.expanded):hover {
+    width: 100%;
+    left: 0;
+    min-width: fit-content;
+    .border-radius(4px);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags-label {
+    display: block;
+    margin: 2px;
+    font-size: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags .toggle-tags {
+    font-size: 100%;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags.expanded .media-tags-container {
+    opacity: 0;
+    bottom: 17px;
+    position: absolute;
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform 0.1s, opacity 0.4s linear;
+    min-width: 100%;
+
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags.expanded:hover .media-tags-container { 
+    opacity: 1;
+    transform: scaleY(1);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags .toggle-tags {
+    display: none;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags.expanded .toggle-tags {
+    display: block;
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags .toggle-tags span i {
+    &:extend(.fa-angle-up all);
+}
+
+.editor-toolbar .toolbar-content .toolbar-card .media-tags:hover .toggle-tags span i {
+    &:extend(.fa-angle-down all);
+}
+
 /* Toolbar - buttons */
 .editor-toolbar a {
     color: white;
@@ -240,6 +314,14 @@
 
 .editor-toolbar .navbar-buttons a:hover .close-tab-button:hover {
     color: #c92121 !important;
+}
+
+.editor-toolbar .bootstrap-tagsinput {
+    line-height: 24px;
+}
+
+.editor-toolbar .bootstrap-tagsinput .label {
+    font-size: 95%;
 }
 
 @media (max-width: 768px) {
