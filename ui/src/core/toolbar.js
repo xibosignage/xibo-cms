@@ -524,7 +524,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
                         el.tags = el.tags.split(',');
                         el.tagsCount = el.tags.length;
                         el.tagsShow = (el.tagsCount === 1) ? true : false;
-                        el.tagsMessage = layoutDesignerTrans.toolbarTagsMessage.replace('[tagCount]', el.tagsCount);
+                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('[tagCount]', el.tagsCount);
 
                     } else {
                         el.tagsCount = 0;
