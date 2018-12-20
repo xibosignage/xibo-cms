@@ -6,6 +6,21 @@
     data-sub-type="{{mediaType}}"
     drop-to="region">
 
+    <div class="media-tags {{#gt tagsCount 1}}expanded{{/gt}}">
+        <div class="toggle-tags label">
+            <span>
+                {{tagsMessage}}
+                <i class="fa fa-angle-up"></i>
+            </span>
+        </div>
+
+        <div class="media-tags-container">
+            {{#each tags}}
+                <span class="label label-info media-tags-label">{{this}}</span>
+            {{/each}}
+        </div>
+    </div>
+
     <div class="add-area">
         <i class="fa fa-plus fa-2x" title="Add"></i>
     </div>

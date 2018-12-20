@@ -177,10 +177,13 @@ Viewer.prototype.render = function(element, layout, page = 1) {
                 return;
             }
 
+            let elementType = (element.type === 'widget') ? (element.type + '_' + element.subType) : element.type;
+            
             // Replace container html
             const html = viewerTemplate({
                 res: res,
-                dimensions: lD.viewer.containerElementDimensions
+                dimensions: lD.viewer.containerElementDimensions,
+                type: elementType
             });
 
             // Append layout html to the container div

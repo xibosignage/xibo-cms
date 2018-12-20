@@ -178,7 +178,9 @@ class Clock extends ModuleWidget
         // After body content
         $options = [
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height
+            'originalHeight' => $this->region->height,
+            'previewWidth' => intval($this->getSanitizer()->getDouble('width')),
+            'previewHeight' => intval($this->getSanitizer()->getDouble('height'))
         ];
 
         // Clock Type

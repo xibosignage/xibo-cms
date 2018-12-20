@@ -46,12 +46,6 @@ require('timepicker/jquery.timepicker.min.css');
 // bootstrap-tour
 require('bootstrap-tour/build/css/bootstrap-tour.min.css');
 
-//--- Xibo style files ---
-require('./src/css/dashboard.css');
-require('./src/css/timeline.css');
-require('./src/css/xibo.css');
-require('./src/css/calendar.css');
-
 require('./src/vendor/calendar/css/calendar.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload-ui.css');

@@ -398,6 +398,18 @@ Toolbar.prototype.render = function() {
 
         // Initialize tooltips
         this.DOMObject.find('[data-toggle="tooltip"]').tooltip();
+
+        // Initialize tagsinput
+        this.DOMObject.find('input[data-role="tagsinput"]').tagsinput();
+
+        this.DOMObject.find('.media-tags').off('click').on('click', '.media-tags-label', function(e) {
+
+            // See if its the first element, if not add comma
+            var tagText = $(this).text();
+
+            // Add text to form
+            self.DOMObject.find("#input-tag").tagsinput('add', tagText, {allowDuplicates: false});
+        });
     }
 };
 
@@ -506,6 +518,21 @@ Toolbar.prototype.loadContent = function(menu = -1) {
                 toastr.info('No results for the filter!', 'Search');
                 self.menuItems[menu].content = null;
             } else {
+                //Convert tags into an array
+                res.data.forEach((el) => {
+                    if(typeof el.tags != undefined && el.tags != null) {
+                        el.tags = el.tags.split(',');
+                        el.tagsCount = el.tags.length;
+                        el.tagsShow = (el.tagsCount === 1) ? true : false;
+                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('[tagCount]', el.tagsCount);
+
+                    } else {
+                        el.tagsCount = 0;
+                        el.tagsShow = false;
+                        el.tagsMessage = '';
+                    }
+                });
+
                 self.menuItems[menu].content = res.data;
             }
 

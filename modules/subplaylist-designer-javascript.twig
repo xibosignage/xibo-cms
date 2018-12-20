@@ -57,11 +57,17 @@
                     subPlaylistId: "",
                     buttonGlyph: "fa-minus"
                 }));
+
+                // Turn playlist select into  select2 instances
+                $(".subPlaylistSelect", $form).select2();
             } else {
                 // Remove this row
                 $(this).closest(".form-group").remove();
             }
         });
+
+        // Turn playlist select into  select2 instances
+        $(".subPlaylistSelect", $form).select2();
     }
 
 </script>
