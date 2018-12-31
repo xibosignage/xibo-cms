@@ -398,6 +398,10 @@
                         ] %}
                         {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
 
+                        {% set title %}{% trans "Reverse Order?" %}{% endset %}
+                        {% set helpText %}{% trans "Should we reverse the order of the feed items?" %}{% endset %}
+                        {{ forms.checkbox("reverseOrder", title, module.getOption("reverseOrder"), helpText) }}
+
                         {{ fieldDurationIsPerItem }}
 
                         {% set title %}{% trans "Randomise?" %}{% endset %}

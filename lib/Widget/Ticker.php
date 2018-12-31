@@ -315,6 +315,13 @@ class Ticker extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="reverseOrder",
+     *      in="formData",
+     *      description="A flag (0, 1), Should we reverse the order of the feed items as well?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="durationIsPerItem",
      *      in="formData",
      *      description="A flag (0, 1), The duration specified is per item, otherwise it is per feed",
@@ -526,6 +533,7 @@ class Ticker extends ModuleWidget
         $this->setOption('copyright', $this->getSanitizer()->getString('copyright'));
         $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
         $this->setOption('takeItemsFrom', $this->getSanitizer()->getString('takeItemsFrom'));
+        $this->setOption('reverseOrder', $this->getSanitizer()->getCheckbox('reverseOrder'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
         $this->setOption('randomiseItems', $this->getSanitizer()->getCheckbox('randomiseItems'));
         $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
@@ -674,6 +682,7 @@ class Ticker extends ModuleWidget
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $numItems = $this->getOption('numItems', 0);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
+        $reverseOrder = $this->getOption('reverseOrder', 0);
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
         // Text/CSS subsitution variables.
@@ -724,6 +733,7 @@ class Ticker extends ModuleWidget
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
             'numItems' => $numItems,
             'takeItemsFrom' => $takeItemsFrom,
+            'reverseOrder' => $reverseOrder,
             'itemsPerPage' => $itemsPerPage,
             'randomiseItems' => $this->getOption('randomiseItems', 0),
             'speed' => $this->getOption('speed', 1000),
