@@ -100,6 +100,11 @@
                 {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
                 {{ forms.number("isPriority", title, isPriority, helpText) }}
 
+                {% if settings.EVENT_SYNC == 1 %}
+                    {% set title %}{% trans "Synchronise This Event?" %}{% endset %}
+                    {% set helpText %}{% trans "When selected, all selected players will attempt to synchronise the output (Supported on Android player only)" %}{% endset %}
+                    {{ forms.checkbox("syncEvent", title, 0, helpText, "sync-schedule-control") }}
+                {% endif %}
             </form>
         </div>
     </div>

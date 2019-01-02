@@ -792,6 +792,7 @@ class Schedule extends Base
             $schedule->dayPartId = $customDayPart->dayPartId;
 
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
+        $schedule->syncEvent = $this->getSanitizer()->getCheckbox('syncEvent', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -1044,6 +1045,7 @@ class Schedule extends Base
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', $schedule->isPriority);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $schedule->dayPartId);
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
+        $schedule->syncEvent = $this->getSanitizer()->getCheckbox('syncEvent', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');

@@ -54,6 +54,14 @@
     {
       "step": "Update SCHEDULE_LOOKAHEAD helpText",
       "action": "UPDATE `setting` SET helptext = 'Should the CMS send future schedule information to clients?' WHERE `setting` = 'SCHEDULE_LOOKAHEAD'; "
+    },
+    {
+      "step": "Add the setting EVENT_SYNC",
+      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('EVENT_SYNC', '0', 'checkbox', 'If checked you will have an option to enable Synchronise this Event checkbox for applicable events', null, 'general', 0, 'Show Synchronise this Event checkbox on applicable events?', '', 55, '', 0, 'checkbox'); "
+    },
+    {
+      "step": "Add syncEvent column to schedule table",
+      "action": "ALTER TABLE schedule ADD syncEvent tinyint DEFAULT 0 NOT NULL; "
     }
   ]
 }
