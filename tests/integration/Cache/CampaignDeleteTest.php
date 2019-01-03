@@ -58,22 +58,19 @@ class CampaignDeleteTest extends LocalWebTestCase
 
         // Build the layout
         $this->buildLayout($this->layout);
+
         // Create a Campaign
         $this->campaign = (new XiboCampaign($this->getEntityProvider()))->create(Random::generateString());
-        $this->getLogger()->debug('Creating campaign ID ' . $this->campaign->campaignId);
 
         // Assign the Layout to the Campaign
-        $this->getLogger()->debug('Assigning Layout ID ' . $this->layout->layoutId . ' To campaign ID ' . $this->campaign->campaignId);
         $this->campaign->assignLayout($this->layout->layoutId);
 
         // Create a Display
-        $this->getLogger()->debug('Creating Display' );
         $this->display = $this->createDisplay();
 
         // Date
         $date = Date::now();
 
-        $this->getLogger()->debug('Creating scheduled event ' );
         // Schedule the Campaign "always" onto our display
         //  deleting the layout will remove this at the end
         $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
@@ -118,9 +115,7 @@ class CampaignDeleteTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
         // Add the Layout we have prepared to the existing Campaign
-        $this->getLogger()->debug('Removing campaign ' . $this->campaign->campaign . ' with ID ' . $this->campaign->campaignId);
         $this->client->delete('/campaign/' . $this->campaign->campaignId);
-        $this->getLogger()->debug(json_encode($this->client->response->getBody(), JSON_PRETTY_PRINT));
 
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');

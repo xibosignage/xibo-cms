@@ -98,7 +98,6 @@ pbBhRgkIdydXoZZdjQIDAQAB
      */
     protected function deleteDisplay($display)
     {
-        $this->getLogger()->debug('Deleting display  ' . $display->display . ' with ID ' . $display->displayId);
         $display->delete();
     }
 

@@ -34,7 +34,7 @@ trait LayoutHelperTrait
                 9
             );
 
-        $this->getLogger()->debug('Layout created with name ' . $layout->layout . ' and ID ' . $layout->layoutId);
+        $this->getLogger()->debug('Layout created with name ' . $layout->layout);
 
         if ($status !== null) {
             // Set the initial status of this Layout to Built
@@ -70,7 +70,6 @@ trait LayoutHelperTrait
      */
     protected function deleteLayout($layout)
     {
-        $this->getLogger()->debug('Deleting layout  ' . $layout->layout . ' with ID ' . $layout->layoutId);
         $layout->delete();
     }
 
