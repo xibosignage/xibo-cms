@@ -23,6 +23,8 @@ class DisplayGroupTest extends LocalWebTestCase
 {
     protected $startDisplayGroups;
     protected $startDisplays;
+    protected $startLayouts;
+    protected $startCommands;
 
     /**
      * setUp - called before every test automatically
@@ -60,7 +62,7 @@ class DisplayGroupTest extends LocalWebTestCase
                 try {
                     $displayGroup->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $displayGroup->displayGroupId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Display Group ID ' . $displayGroup->displayGroupId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -84,7 +86,7 @@ class DisplayGroupTest extends LocalWebTestCase
                 try {
                     $display->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $display->displayId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Display ID ' . $display->displayId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -104,7 +106,7 @@ class DisplayGroupTest extends LocalWebTestCase
                 try {
                     $layout->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Layout ID ' . $layout->layoutId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -124,7 +126,7 @@ class DisplayGroupTest extends LocalWebTestCase
                 try {
                     $command->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $command->commandId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Command ID  ' . $command->commandId . '. E:' . $e->getMessage());
                 }
             }
         }

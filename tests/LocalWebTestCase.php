@@ -302,8 +302,8 @@ class LocalWebTestCase extends WebTestCase
     {
         // Create if necessary
         if (self::$logger === null) {
-            //self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
-            self::$logger = new NullLogger();
+            self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+            //self::$logger = new NullLogger();
         }
 
         return self::$logger;

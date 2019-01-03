@@ -38,9 +38,9 @@ class CampaignTest extends LocalWebTestCase
     public function tearDown()
     {
         // tearDown all campaigns that weren't there initially
-        $finalCamapigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+        $finalCampaigns = (new XiboCampaign($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         # Loop over any remaining campaigns and nuke them
-        foreach ($finalCamapigns as $campaign) {
+        foreach ($finalCampaigns as $campaign) {
             /** @var XiboCampaign $campaign */
             $flag = true;
             foreach ($this->startCampaigns as $startCampaign) {
@@ -52,7 +52,7 @@ class CampaignTest extends LocalWebTestCase
                 try {
                     $campaign->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $campaign->campaignId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Campaign ID ' . $campaign->campaignId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -71,7 +71,7 @@ class CampaignTest extends LocalWebTestCase
                 try {
                     $layout->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Layout ID ' . $layout->layoutId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -147,7 +147,11 @@ class CampaignTest extends LocalWebTestCase
         # Load in a couple of known campaigns
         $camp1 = (new XiboCampaign($this->getEntityProvider()))->create($name1);
         $camp2 = (new XiboCampaign($this->getEntityProvider()))->create($name2);
+        $this->getLogger()->debug('Created Campaign with name ' . $camp1->campaign . ' and ID ' . $camp1->campaignId);
+        $this->getLogger()->debug('Created Campaign with name ' . $camp2->campaign . ' and ID ' . $camp2->campaignId);
+
         # Delete the one we created last
+        $this->getLogger()->debug('Deleting Campaign with name ' . $camp2->campaign . ' and ID ' . $camp2->campaignId);
         $this->client->delete('/campaign/' . $camp2->campaignId);
         # This should return 204 for success
         $response = json_decode($this->client->response->body());
@@ -163,8 +167,6 @@ class CampaignTest extends LocalWebTestCase
         }
         # Check if everything is in order
         $this->assertTrue($flag, 'Campaign ID ' . $camp1->campaignId . ' was not found after deleting a different campaign');
-        # Cleanup
-        $camp1->delete();
     }
 
     /**
@@ -178,6 +180,7 @@ class CampaignTest extends LocalWebTestCase
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
         // Get a layout for the test
+        /* @var XiboLayout $layout */
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Call assign on the default layout
@@ -195,9 +198,6 @@ class CampaignTest extends LocalWebTestCase
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $this->client->response->body());
         $this->assertSame(1, $campaignCheck->numberLayouts, $this->client->response->body());
-        # Delete layout as we no longer need it
-        $campaign->delete();
-        $layout->delete();
     }
     /**
      * Unassign Layout
@@ -210,6 +210,7 @@ class CampaignTest extends LocalWebTestCase
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
         // Get a layout for the test
+        /* @var XiboLayout $layout */
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Assign layout to campaign
@@ -221,9 +222,6 @@ class CampaignTest extends LocalWebTestCase
         $campaignCheck2 = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame($campaign->campaignId, $campaignCheck2->campaignId, $this->client->response->body());
         $this->assertSame(0, $campaignCheck2->numberLayouts, $this->client->response->body());
-        # Delete layout as we no longer need it
-        $campaign->delete();
-        $layout->delete();
     }
 
     /**
@@ -233,6 +231,7 @@ class CampaignTest extends LocalWebTestCase
     public function testAssignLayoutFailure()
     {
         // Get a layout for the test
+        /* @var XiboLayout $layout */
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit description', '', 9);
         $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Call assign on the layout specific campaignId
@@ -246,6 +245,5 @@ class CampaignTest extends LocalWebTestCase
         ]);
 
         $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
-        $layout->delete();
     }
 }

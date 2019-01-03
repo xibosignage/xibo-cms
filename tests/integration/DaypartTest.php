@@ -52,7 +52,7 @@ class DaypartTest extends LocalWebTestCase
                 try {
                     $daypart->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $daypart->dayPartId . '. E:' . $e->getMessage());
+                    fwrite(STDERR, 'Unable to delete Daypart ID ' . $daypart->dayPartId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -88,8 +88,6 @@ class DaypartTest extends LocalWebTestCase
         $daypart = (new XiboDaypart($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $daypart->name);
         $this->assertSame($description, $daypart->description);
-        # Clean up the daypart as we no longer need it
-        $this->assertTrue($daypart->delete(), 'Unable to delete ' . $daypart->dayPartId);
     }
     
     /**
@@ -172,8 +170,6 @@ class DaypartTest extends LocalWebTestCase
         $daypart = (new XiboDaypart($this->getEntityProvider()))->getById($object->id);
         $this->assertSame($name, $daypart->name);
         $this->assertSame($description, $daypart->description);
-        # Clean up the Daypart as we no longer need it
-        $daypart->delete();
     }
 
      /**
@@ -202,6 +198,5 @@ class DaypartTest extends LocalWebTestCase
             }
         }
         $this->assertTrue($flag, 'Daypart ID ' . $daypart1->dayPartId . ' was not found after deleting a different daypart');
-        $daypart1->delete();
     }
 }
