@@ -116,7 +116,7 @@
                         {{ forms.checkbox("syncTimezone", title, 0, helpText) }}
 
                         {% if settings.EVENT_SYNC == 1 %}
-                            {% set title %}{% trans "Synchronise This Event?" %}{% endset %}
+                            {% set title %}{% trans "Synchronise this event?" %}{% endset %}
                             {% set helpText %}{% trans "When selected, all selected players will attempt to synchronise the output (Supported on Android player only)" %}{% endset %}
                             {{ forms.checkbox("syncEvent", title, 0, helpText, "sync-schedule-control") }}
                         {% endif %}

@@ -226,7 +226,7 @@ class DataSetData extends Base
 
                 $row[$column->heading] = $value;
             } elseif ($column->dataSetColumnTypeId == 3) {
-                throw new InvalidArgumentException('Cannot add new rows to remote dataSet', 'dataSetColumnTypeId');
+                throw new InvalidArgumentException(__('Cannot add new rows to remote dataSet'), 'dataSetColumnTypeId');
             }
         }
 
@@ -385,7 +385,7 @@ class DataSetData extends Base
         if ($row != [])
             $dataSet->editRow($rowId, $row);
         else
-            throw new InvalidArgumentException('Cannot edit data of remote columns', 'dataSetColumnTypeId');
+            throw new InvalidArgumentException(__('Cannot edit data of remote columns'), 'dataSetColumnTypeId');
 
         // Save the dataSet
         $dataSet->save(['validate' => false, 'saveColumns' => false]);
