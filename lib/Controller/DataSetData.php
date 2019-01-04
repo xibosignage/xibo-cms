@@ -11,6 +11,7 @@ namespace Xibo\Controller;
 
 //use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
@@ -224,6 +225,8 @@ class DataSetData extends Base
                 }
 
                 $row[$column->heading] = $value;
+            } elseif ($column->dataSetColumnTypeId == 3) {
+                throw new InvalidArgumentException(__('Cannot add new rows to remote dataSet'), 'dataSetColumnTypeId');
             }
         }
 
@@ -378,8 +381,11 @@ class DataSetData extends Base
             }
         }
 
-        // Use the data set object to add a row
-        $dataSet->editRow($rowId, $row);
+        // Use the data set object to edit a row
+        if ($row != [])
+            $dataSet->editRow($rowId, $row);
+        else
+            throw new InvalidArgumentException(__('Cannot edit data of remote columns'), 'dataSetColumnTypeId');
 
         // Save the dataSet
         $dataSet->save(['validate' => false, 'saveColumns' => false]);

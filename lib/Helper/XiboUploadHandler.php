@@ -169,7 +169,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $controller->getDispatcher()->dispatch(LibraryReplaceWidgetEvent::$NAME, new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia));
 
                             // Save
-                            $widget->save();
+                            $widget->save(['alwaysUpdate' => true]);
                         }
                     }
 

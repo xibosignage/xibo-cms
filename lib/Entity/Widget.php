@@ -593,7 +593,8 @@ class Widget implements \JsonSerializable
             'saveWidgetAudio' => true,
             'notify' => true,
             'notifyDisplays' => false,
-            'audit' => true
+            'audit' => true,
+            'alwaysUpdate' => false
         ], $options);
 
         $this->getLog()->debug('Saving widgetId %d with options. %s', $this->getId(), json_encode($options, JSON_PRETTY_PRINT));
@@ -601,7 +602,7 @@ class Widget implements \JsonSerializable
         // Add/Edit
         if ($this->widgetId == null || $this->widgetId == 0)
             $this->add();
-        else if ($this->hash != $this->hash())
+        else if ($this->hash != $this->hash() || $options['alwaysUpdate'])
             $this->update();
 
         // Save the widget options

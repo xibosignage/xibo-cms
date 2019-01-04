@@ -208,7 +208,8 @@ echo __('Is password reset enabled?');
 echo __('On except Admin');
 echo __('Automatically authorise new Displays?');
 echo __('If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.');
-
+echo __('Show Synchronise this Event checkbox on applicable events?');
+echo __('If checked you will have an option to enable Synchronise this Event checkbox for applicable events');
 
 // Transitions
 echo __('Fade In');
