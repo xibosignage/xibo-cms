@@ -108,7 +108,8 @@ class MaintenanceDailyTask implements TaskInterface
 
             $options = [
                 'maxAttempts' => $maxAttempts,
-                'statsDeleteSleep' => $statsDeleteSleep
+                'statsDeleteSleep' => $statsDeleteSleep,
+                'limit' => 10000
             ];
 
             $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);

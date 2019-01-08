@@ -142,7 +142,8 @@ class StatsArchiveTask implements TaskInterface
 
         $options = [
             'maxAttempts' => 10,
-            'statsDeleteSleep' => 1
+            'statsDeleteSleep' => 1,
+            'limit' => 1000
         ];
         // Delete the stats, incrementally
         $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);

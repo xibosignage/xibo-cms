@@ -305,23 +305,18 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $i = 0;
             $rows = 1;
 
-            if($fromDt) {
-                $params = [
-                    'fromDt' => $fromDt,
-                    'toDt' => $maxage
-                ];
-
+            if($fromDt != null) {
                 $delete = $this->store->getConnection()
-                    ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT 10000');
+                    ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT :limit');
 
+                $delete->bindParam(':fromDt', $fromDt, \PDO::PARAM_STR);
+                $delete->bindParam(':toDt', $maxage, \PDO::PARAM_STR);
+                $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             } else {
-                $params = [
-                    'maxage' => $maxage,
-                ];
-
                 $delete = $this->store->getConnection()
-                    ->prepare('DELETE FROM `stat` WHERE stat.statDate < :maxage LIMIT 10000');
-
+                    ->prepare('DELETE FROM `stat` WHERE stat.statDate < :maxage LIMIT :limit');
+                $delete->bindParam(':maxage', $maxage, \PDO::PARAM_STR);
+                $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             }
 
             while ($rows > 0) {
@@ -329,7 +324,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $i++;
 
                 // Run the delete
-                $delete->execute($params);
+                $delete->execute();
 
                 // Find out how many rows we've deleted
                 $rows = $delete->rowCount();
