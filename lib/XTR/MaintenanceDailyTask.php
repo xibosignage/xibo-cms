@@ -102,34 +102,19 @@ class MaintenanceDailyTask implements TaskInterface
 
             $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE'))));
 
-            try {
-                $i = 0;
-                $rows = 1;
-                $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
-                while ($rows > 0) {
-                    $i++;
+            $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
 
-                    $rows = $this->store->update('DELETE FROM `stat` WHERE statDate < :maxage LIMIT 10000', ['maxage' => $maxage]);
+            $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
 
-                    // Give SQL time to recover
-                    if ($rows > 0) {
-                        $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
-                        sleep($this->getOption('statsDeleteSleep', 3));
-                    }
+            $options = [
+                'maxAttempts' => $maxAttempts,
+                'statsDeleteSleep' => $statsDeleteSleep
+            ];
 
-                    // Break if we've exceeded the maximum attempts.
-                    if ($i >= $maxAttempts)
-                        break;
-                }
+            $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
 
-                $this->log->debug('Deleted Stats back to ' . $maxage . ' in ' . $i . ' attempts');
+            $this->runMessage .= $result['message'] . PHP_EOL . PHP_EOL;
 
-                $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-            }
-            catch (\PDOException $e) {
-                $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
-                $this->log->error($e->getMessage());
-            }
         }
         else {
             $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;

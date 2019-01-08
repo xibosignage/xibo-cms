@@ -36,6 +36,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -49,6 +50,9 @@ class Task extends Base
 
     /** @var  StorageServiceInterface */
     private $store;
+
+    /** @var  TimeSeriesStoreInterface */
+    private $timeSeriesStore;
 
     /** @var  PoolInterface */
     private $pool;
@@ -84,6 +88,7 @@ class Task extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
+     * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param PoolInterface $pool
      * @param TaskFactory $taskFactory
      * @param UserFactory $userFactory
@@ -94,11 +99,12 @@ class Task extends Base
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
+        $this->timeSeriesStore = $timeSeriesStore;
         $this->userGroupFactory = $userGroupFactory;
         $this->pool = $pool;
         $this->userFactory = $userFactory;
@@ -355,6 +361,7 @@ class Task extends Base
                 ->setDate($this->getDate())
                 ->setPool($this->pool)
                 ->setStore($this->store)
+                ->setTimeSeriesStore($this->timeSeriesStore)
                 ->setFactories($this->getApp()->container)
                 ->setTask($task)
                 ->run();
