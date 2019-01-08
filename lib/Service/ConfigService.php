@@ -74,6 +74,7 @@ class ConfigService implements ConfigServiceInterface
     public $authentication = null;
     public $samlSettings = null;
     public $cacheDrivers = null;
+    public $timeSeriesStore = null;
     public $cacheNamespace = 'Xibo';
 
     /**
@@ -159,6 +160,14 @@ class ConfigService implements ConfigServiceInterface
     /**
      * @inheritdoc
      */
+    public function getTimeSeriesStore()
+    {
+        return $this->timeSeriesStore;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getCacheNamespace()
     {
         return $this->cacheNamespace;
@@ -210,6 +219,10 @@ class ConfigService implements ConfigServiceInterface
         // Cache drivers
         if (isset($cacheDrivers))
             $config->cacheDrivers = $cacheDrivers;
+
+        // Time series store settings
+        if (isset($timeSeriesStore))
+            $config->timeSeriesStore = $timeSeriesStore;
 
         if (isset($cacheNamespace))
             $config->cacheNamespace = $cacheNamespace;
