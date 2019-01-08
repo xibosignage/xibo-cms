@@ -46,6 +46,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\TimeSeriesStoreInterface;
 
 /**
  * Class Soap
@@ -68,6 +69,9 @@ class Soap
 
     /** @var  StorageServiceInterface */
     private $store;
+
+    /** @var  TimeSeriesStoreInterface */
+    private $timeSeriesStore;
 
     /** @var  LogServiceInterface */
     private $logService;
@@ -128,6 +132,7 @@ class Soap
      * @param LogProcessor $logProcessor
      * @param PoolInterface $pool
      * @param StorageServiceInterface $store
+     * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
@@ -147,11 +152,12 @@ class Soap
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
         $this->store = $store;
+        $this->timeSeriesStore = $timeSeriesStore;
         $this->logService = $log;
         $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
@@ -188,6 +194,15 @@ class Soap
     protected function getStore()
     {
         return $this->store;
+    }
+
+    /**
+     * Get Time Series Store
+     * @return TimeSeriesStoreInterface
+     */
+    protected function getTimeSeriesStore()
+    {
+        return $this->timeSeriesStore;
     }
 
     /**
@@ -1384,7 +1399,9 @@ class Soap
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
         // Store an array of parsed stat data for insert
-        $stats = [];
+        $mediaStats = [];
+        $layoutStats = [];
+        $tagStats = [];
         $now = $this->getDate()->getLocalDate();
 
         // Load the XML into a DOMDocument
@@ -1447,40 +1464,52 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            // Add this information to an array for batch insert
-            $stats[] = [
-                'type' => $type,
-                'statDate' => $now,
-                'fromDt' => $fromdt,
-                'toDt' => $todt,
-                'scheduleId' => $scheduleId,
-                'displayId' => $this->display->displayId,
-                'layoutId' => $layoutId,
-                'mediaId' => $mediaId,
-                'tag' => $tag,
-                'widgetId' => $widgetId,
-            ];
+            if (($type == 'media') || ($type == 'widget')) {
+                $mediaStats[] = [
+                    'type' => $type,
+                    'statDate' => $now,
+                    'fromDt' => $fromdt,
+                    'toDt' => $todt,
+                    'scheduleId' => $scheduleId,
+                    'displayId' => $this->display->displayId,
+                    'layoutId' => $layoutId,
+                    'mediaId' => $mediaId,
+                    'tag' => $tag,
+                    'widgetId' => $widgetId,
+                ];
+            } elseif ($type == 'layout') {
+                $layoutStats[] = [
+                    'type' => $type,
+                    'statDate' => $now,
+                    'fromDt' => $fromdt,
+                    'toDt' => $todt,
+                    'scheduleId' => $scheduleId,
+                    'displayId' => $this->display->displayId,
+                    'layoutId' => $layoutId,
+                ];
+
+            }
         }
 
-        if (count($stats) > 0) {
-            // Insert
-            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
-            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-
-            $sql = $sql . implode(', ', array_fill(1, count($stats), $placeHolders));
-
-            // Flatten the array
-            $data = [];
-            foreach ($stats as $stat) {
-                foreach ($stat as $field) {
-                    $data[] = $field;
-                }
-            }
-
-            // Insert
-            $this->getStore()->isolated($sql, $data);
+        /*Insert media stats*/
+        if (count($mediaStats) > 0) {
+            $this->getTimeSeriesStore()->addMediaStat($mediaStats);
         } else {
-            $this->getLog()->info('0 stats resolved from data package');
+            $this->getLog()->info('0 media stats resolved from data package');
+        }
+
+        /*Insert layout stats*/
+        if (count($layoutStats) > 0) {
+            $this->getTimeSeriesStore()->addLayoutStat($layoutStats);
+        } else {
+            $this->getLog()->info('0 layout stats resolved from data package');
+        }
+
+        /*Insert tag stats*/
+        if (count($tagStats) > 0) {
+            $this->getTimeSeriesStore()->addTagStat($tagStats);
+        } else {
+            $this->getLog()->info('0 tag stats resolved from data package');
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));
