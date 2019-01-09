@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (PDOConnect.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -95,7 +96,20 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addTagStat($statData)
     {
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, Tag) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?)';
 
+        $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
+
+        // Flatten the array
+        $data = [];
+        foreach ($statData as $stat) {
+            foreach ($stat as $field) {
+                $data[] = $field;
+            }
+        }
+
+        $this->store->isolated($sql, $data);
     }
 
     /** @inheritdoc */
@@ -183,7 +197,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $body .= 'GROUP BY stat.type, display.Display, stat.displayId, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
 
-        $order = 'ORDER BY ' . implode(',', $columns);
+        $order = '';
+        if($columns != null)
+            $order = 'ORDER BY ' . implode(',', $columns);
 
         $limit= '';
         if($length != null)
@@ -223,7 +239,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         return [
             'statData' => $rows,
             'count' => count($rows),
-            'totalStats' => $results[0]['total']
+            'totalStats' => isset($results[0]['total']) ? $results[0]['total'] : 0
         ];
 
     }
@@ -299,11 +315,16 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function deleteStats($maxage, $fromDt = null, $options = [])
+    public function deleteStats($maxage, $fromDt = null, $options = null)
     {
         try {
             $i = 0;
             $rows = 1;
+            $options = array_merge([
+                'maxAttempts' => 10,
+                'statsDeleteSleep' => 3,
+                'limit' => 10000,
+            ], $options);
 
             if($fromDt != null) {
                 $delete = $this->store->getConnection()
@@ -319,6 +340,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             }
 
+            $count = 0;
             while ($rows > 0) {
 
                 $i++;
@@ -328,6 +350,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
                 // Find out how many rows we've deleted
                 $rows = $delete->rowCount();
+                $count += $rows;
 
                 // We shouldn't be in a transaction, but commit anyway just in case
                 $this->store->commitIfNecessary();
@@ -345,16 +368,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
             $this->log->debug('Deleted Stats back to ' . $maxage . ' in ' . $i . ' attempts');
 
-            $message = ' - ' . __('Done.');
-
-            return ['message' => $message];
+            return $count;
         }
         catch (\PDOException $e) {
-            $message = ' - ' . __('Error.');
             $this->log->error($e->getMessage());
-
-            return ['message' => $message];
-
+            throw new \RuntimeException('Stats cannot be deleted.');
         }
     }
 
