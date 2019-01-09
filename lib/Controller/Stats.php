@@ -46,6 +46,7 @@ class Stats extends Base
      * @var StorageServiceInterface
      */
     private $store;
+
     /**
      * @var TimeSeriesStoreInterface
      */
@@ -60,6 +61,7 @@ class Stats extends Base
      * @var DisplayGroupFactory
      */
     private $displayGroupFactory;
+
     /**
      * @var MediaFactory
      */
@@ -261,29 +263,30 @@ class Stats extends Base
             $toDt->addDay(1);
         }
 
-        /*Format param dates*/
+        // Format param dates
         $fromDt = $this->getDate()->getLocalDate($fromDt);
         $toDt = $this->getDate()->getLocalDate($toDt);
 
         $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
-        $display_ids = array();
+        $displayIds = array();
 
         foreach ($this->displayFactory->query() as $display) {
-            $display_ids[] = $display->displayId;
+            $displayIds[] = $display->displayId;
         }
 
-        /*Clear the display_ids array and add the user selected display in the array*/
-        if($displayId != null){
-            $display_ids = array();
-            if(!in_array($displayId, $display_ids)){
-                $display_ids[] = $displayId;
+        if (count($displayIds) <= 0)
+            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+        // Clear the displayIds if the user selected a display for which they don't have permission
+        if($displayId != 0) {
+            if(!in_array($displayId, $displayIds)){
+                $displayIds = [];
+            } else {
+                $displayIds = [$displayId];
             }
         }
-
-        if (count($display_ids) <= 0)
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
         // Sorting?
         $filterBy = $this->gridRenderFilter();
@@ -302,10 +305,10 @@ class Stats extends Base
             $length = $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
-        /*Call the time series interface getStatsReport*/
-        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $display_ids, $layoutIds, $mediaIds, $type, $columns, $start, $length);
+        // Call the time series interface getStatsReport
+        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $start, $length);
 
-        /*Sanitize results*/
+        // Sanitize results
         $rows = array();
         foreach ($result['statData'] as $row) {
             $entry = [];
@@ -460,29 +463,30 @@ class Stats extends Base
         $displayId = $this->getSanitizer()->getInt('displayId');
 
         // Get an array of display id this user has access to.
-        $display_ids = array();
+        $displayIds = array();
 
         foreach ($this->displayFactory->query() as $display) {
-            $display_ids[] = $display->displayId;
+            $displayIds[] = $display->displayId;
         }
 
-        /*Clear the display_ids array and add the user selected display in the array*/
-        if($displayId != null){
-            $display_ids = array();
-            if(!in_array($displayId, $display_ids)){
-                $display_ids[] = $displayId;
+        if (count($displayIds) <= 0)
+            throw new AccessDeniedException();
+
+        // Clear the displayIds if the user selected a display for which they don't have permission
+        if($displayId != 0) {
+            if(!in_array($displayId, $displayIds)){
+                $displayIds = [];
+            } else {
+                $displayIds = [$displayId];
             }
         }
 
-        if (count($display_ids) <= 0)
-            throw new AccessDeniedException();
-
-        /*Format param dates*/
+        // Format param dates
         $fromDt = $this->getDate()->getLocalDate($fromDt);
         $toDt = $this->getDate()->getLocalDate($toDt);
 
-        /*Call the time series interface exportStats*/
-        $result =  $this->timeSeriesStore->getStats($fromDt, $toDt, $display_ids);
+        // Call the time series interface exportStats
+        $result =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);

@@ -1487,7 +1487,16 @@ class Soap
                     'displayId' => $this->display->displayId,
                     'layoutId' => $layoutId,
                 ];
-
+            } elseif ($type == 'tag') {
+                $tagStats[] = [
+                    'type' => $type,
+                    'statDate' => $now,
+                    'fromDt' => $fromdt,
+                    'toDt' => $todt,
+                    'scheduleId' => $scheduleId,
+                    'displayId' => $this->display->displayId,
+                    'tag' => $tag,
+                ];
             }
         }
 

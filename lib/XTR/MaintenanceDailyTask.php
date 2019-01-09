@@ -112,10 +112,14 @@ class MaintenanceDailyTask implements TaskInterface
                 'limit' => 10000
             ];
 
-            $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
-
-            $this->runMessage .= $result['message'] . PHP_EOL . PHP_EOL;
-
+            try {
+                $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
+                if($result > 0) {
+                    $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
+                }
+            } catch (\RuntimeException $exception) {
+                $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
+            }
         }
         else {
             $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
