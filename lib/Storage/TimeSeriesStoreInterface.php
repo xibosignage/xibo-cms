@@ -98,7 +98,7 @@ interface TimeSeriesStoreInterface
      * @return int number of deleted stat records
      * @throws \PDOException
      */
-    public function deleteStats($toDt, $fromDt = null, $options = null);
+    public function deleteStats($toDt, $fromDt = null, $options = []);
 
 
 

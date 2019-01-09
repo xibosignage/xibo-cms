@@ -315,7 +315,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function deleteStats($maxage, $fromDt = null, $options = null)
+    public function deleteStats($maxage, $fromDt = null, $options = [])
     {
         try {
             $i = 0;
