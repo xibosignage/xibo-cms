@@ -26,6 +26,11 @@ let Region = function(id, data, {backgroundColor = '#555555'} = {}) {
 
     this.options = data.regionOptions;
 
+    // Permissions
+    this.isEditable = data.isEditable;
+    this.isDeletable = data.isDeletable;
+    this.isPermissionsModifiable = data.isPermissionsModifiable;
+
     // set real dimentions
     this.dimensions = {
         width: data.width,
@@ -104,6 +109,144 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
     this.dimensions.height = transform.height;
     this.dimensions.top = transform.top;
     this.dimensions.left = transform.left;
+};
+
+/**
+ * Edit permissions
+ */
+Region.prototype.editPermissions = function() {
+
+    const self = this;
+
+    const app = getXiboApp();
+
+    // Load form the API
+    const linkToAPI = urlsForApi.region['getPermissions'];
+
+    let requestPath = linkToAPI.url;
+
+    // Replace widget id
+    requestPath = requestPath.replace(':id', this.regionId);
+
+    // Create dialog
+    var calculatedId = new Date().getTime();
+
+    // Create dialog
+    let dialog = bootbox.dialog({
+        className: 'second-dialog',
+        title: 'Load Permissions for region',
+        message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+        buttons: {
+            cancel: {
+                label: translations.cancel,
+                className: "btn-default"
+            },
+            done: {
+                label: translations.done,
+                className: "btn-primary test",
+                callback: function(res) {
+
+                    const form = dialog.find('form');
+
+                    app.common.showLoadingScreen();
+
+                    app.manager.addChange(
+                        'savePermission',
+                        'widget', // targetType 
+                        self.regionId,  // targetId
+                        null,  // oldValues
+                        formHelpers.permissionsFormBeforeSubmit(dialog), // newValues
+                        {
+                            addToHistory: false, // options.addToHistory
+                            customRequestPath: {
+                                url: dialog.find('.permissionsGrid').data('url'),
+                                type: 'POST'
+                            }
+                        }
+                    ).then((res) => { // Success
+
+                        app.common.hideLoadingScreen();
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+
+                        dialog.modal('hide');
+
+                        app.reloadData(app.layout);
+
+                    }).catch((error) => { // Fail/error
+
+                        app.common.hideLoadingScreen();
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = '';
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
+                        }
+
+                        // Display message in form
+                        formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                        // Show toast message
+                        toastr.error(errorMessage);
+                    });
+                }
+
+            }
+        }
+    }).attr('id', calculatedId).attr('data-test', 'regionPermissionsForm');
+
+    // Request and load element form
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+            // Add title
+            dialog.find('.modal-title').html(res.dialogTitle);
+
+            // Add body main content
+            dialog.find('.bootbox-body').html(res.html);
+
+            dialog.data('extra', res.extra);
+
+            formHelpers.permissionsFormAfterOpen(dialog);
+
+            // Call Xibo Init for this form
+            XiboInitialise('#' + dialog.attr('id'));
+
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error('Permissions form load failed!');
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
+                dialog.modal('hide');
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error('Permissions form load failed!');
+
+        dialog.modal('hide');
+    });
 };
 
 module.exports = Region;

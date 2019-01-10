@@ -37,6 +37,12 @@ const toolsList = [
         type: 'transitionOut',
         description: 'Add a out transition to a widget',
         dropTo: 'widget'
+    },
+    {
+        name: 'Permissions',
+        type: 'permissions',
+        description: 'Edit object permissions',
+        dropTo: 'all'
     }
 ];
 
@@ -126,9 +132,9 @@ Toolbar.prototype.loadPrefs = function() {
 
             // Populate the toolbar with the returned data
             self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
-            self.openedMenu = (loadedData.openedMenu) ? loadedData.openedMenu : -1;
-            self.previousOpenedMenu = (loadedData.previousOpenedMenu) ? loadedData.openedMenu : -1;
-            
+            self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
+            self.previousOpenedMenu = (loadedData.previousOpenedMenu != undefined) ? loadedData.openedMenu : -1;
+
             // Set menu index
             self.menuIndex = self.menuItems.length;
 
@@ -262,7 +268,7 @@ Toolbar.prototype.render = function() {
     this.selectedCard = {};
 
     // Check if trash bin is active
-    let trashBinActive = (app.selectedObject.type === 'region' || app.selectedObject.type === 'widget') && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+    let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
 
     // Compile layout template with data
     const html = ToolbarTemplate({
@@ -383,6 +389,9 @@ Toolbar.prototype.render = function() {
             opacity: 0.3,
             helper: 'clone',
             start: function() {
+                // Deselect previous selections
+                self.deselectCardsAndDropZones();
+
                 $('.custom-overlay').show();
             }, 
             stop: function() {
@@ -828,6 +837,7 @@ Toolbar.prototype.selectCard = function(card) {
 
         // Get card info
         const dropTo = $(card).attr('drop-to');
+        const subType = $(card).attr('data-sub-type');
 
         // Save selected card data
         this.selectedCard = card;
@@ -838,7 +848,11 @@ Toolbar.prototype.selectCard = function(card) {
         });
 
         // Set droppable areas as active
-        $('[data-type="' + dropTo + '"].ui-droppable').addClass('ui-droppable-active');
+        if(dropTo === 'all' && subType === 'permissions') { 
+            $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
+        } else {
+            $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+        }
     }
 };
 

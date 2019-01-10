@@ -309,14 +309,21 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.designer-region').droppable({
-        accept: '[drop-to="region"]',
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
+                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
 
-    this.DOMObject.find('.designer-widget:not(.designer-widget-ghost)').droppable({
-        accept: '[drop-to="widget"]',
+    this.DOMObject.find('.designer-widget').droppable({
+        greedy: true,
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
+                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
@@ -332,41 +339,41 @@ Timeline.prototype.render = function(layout) {
     
     if(lD.readOnlyMode === false) {
 
-    this.DOMObject.find('#regions .designer-region').sortable({
-        items: '.designer-widget:not(.designer-widget-ghost)',
-        placeholder: 'designer-widget-sortable-highlight',
-        opacity: '.5',
-        stop: function() {
+        this.DOMObject.find('#regions .designer-region.editable').sortable({
+            items: '.designer-widget:not(.designer-widget-ghost)',
+            placeholder: 'designer-widget-sortable-highlight',
+            opacity: '.5',
+            stop: function() {
 
-            lD.common.showLoadingScreen();
+                lD.common.showLoadingScreen();
 
-            // Get playlist
-            const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
+                // Get playlist
+                const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
 
-            lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
+                lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
 
-                lD.common.hideLoadingScreen();
+                    lD.common.hideLoadingScreen();
 
-                // Behavior if successful            
-                toastr.success(res.message);
-                lD.reloadData(lD.layout);
-            }).catch((error) => { // Fail/error
-                
-                lD.common.hideLoadingScreen();
+                    // Behavior if successful            
+                    toastr.success(res.message);
+                    lD.reloadData(lD.layout);
+                }).catch((error) => { // Fail/error
+                    
+                    lD.common.hideLoadingScreen();
 
-                // Show error returned or custom message to the user
-                let errorMessage = 'Save order failed: ' + error;
+                    // Show error returned or custom message to the user
+                    let errorMessage = 'Save order failed: ' + error;
 
-                if(typeof error == 'string') {
-                    errorMessage += error;
-                } else {
-                    errorMessage += error.errorThrown;
-                }
+                    if(typeof error == 'string') {
+                        errorMessage += error;
+                    } else {
+                        errorMessage += error.errorThrown;
+                    }
 
-                toastr.error(errorMessage);
-            });
-        }
-    });
+                    toastr.error(errorMessage);
+                });
+            }
+        });
     }
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour

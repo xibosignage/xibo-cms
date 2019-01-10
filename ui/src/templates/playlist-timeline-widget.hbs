@@ -1,7 +1,7 @@
 <div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}"
-    class="playlist-widget selectable {{#eq isValid 0}}invalid-widget{{/eq}} {{#if selected}}selected{{/if}}">
+    class="playlist-widget selectable {{#eq isValid 0}}invalid-widget{{/eq}} {{#if selected}}selected{{/if}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}}">
     
-    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }}">{{ duration }}</div>
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">{{ duration }}</div>
     <div class="widgetTitle" title="{{id}}">
         <span class="widgetName">
             {{widgetName}}

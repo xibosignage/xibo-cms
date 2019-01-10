@@ -32,6 +32,8 @@
 
             let libraryUpload = {{ libraryUpload|json_encode|raw }};
 
+            let playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
+
             const serverMode = "{{ settings.SERVER_MODE }}";
             
             const urlsForApi = {
@@ -100,6 +102,10 @@
                     preview: {
                         url: "{{ urlFor("region.preview") }}",
                         type: 'GET'
+                    },
+                    getPermissions:  {
+                        url: "{{ urlFor("user.permissions.form", {entity: 'Region'}) }}",
+                        type: 'GET'
                     }
                 },
                 widget: {
@@ -150,6 +156,10 @@
                     saveTransition:  {
                         url: "{{ urlFor("module.widget.transition.edit") }}",
                         type: 'PUT'
+                    },
+                    getPermissions:  {
+                        url: "{{ urlFor("user.permissions.form", {entity: 'Widget'}) }}",
+                        type: 'GET'
                     }
                 },
                 library: {
@@ -184,6 +194,10 @@
                     savePref: {
                         url: "{{ urlFor("user.pref") }}",
                         type: 'POST'
+                    },
+                    permissions: {
+                        url: "{{ urlFor("user.permissions.form") }}",
+                        type: 'GET'
                     }
                 }
             };

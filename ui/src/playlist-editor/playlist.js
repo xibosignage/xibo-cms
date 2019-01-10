@@ -267,6 +267,8 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             widget.editTransition('in');
         } else if(draggableSubType == 'transitionOut') {
             widget.editTransition('out');
+        } else if(draggableSubType == 'permissions') {
+            widget.editPermissions();
         }
     }
 };

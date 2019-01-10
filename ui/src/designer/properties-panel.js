@@ -170,7 +170,7 @@ PropertiesPanel.prototype.render = function(element, step) {
 
         // Prevent rendering null html
         if(res.html === null || res.success === false) {
-            self.DOMObject.html('');
+            self.DOMObject.html('<div class="unsuccessMessage form-title">' + res.message + '</div>');
             return;
         }
 

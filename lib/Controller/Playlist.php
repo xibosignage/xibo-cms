@@ -678,6 +678,18 @@ class Playlist extends Base
 
             /* @var Widget $widget */
             $widget->module = $this->moduleFactory->createWithWidget($widget);
+
+            // Augment with tags
+            $widget->tags = $widget->module->getMediaTags();
+
+            // Augment with editable flag
+            $widget->isEditable = $this->getUser()->checkEditable($widget);
+
+            // Augment with deletable flag
+            $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+
+            // Augment with permissions flag
+            $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
         }
 
         // Pass to view

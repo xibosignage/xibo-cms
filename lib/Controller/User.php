@@ -1244,13 +1244,9 @@ class User extends Base
             }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Region') {
             // We always cascade region permissions down to the Playlist
-            // TODO: we should change this to $object->regionPlaylist in 2.0
-            $object->load();
+            $object->load(['loadPlaylists' => true]);
 
-            foreach ($object->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
-            }
+            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */

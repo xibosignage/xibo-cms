@@ -25,6 +25,26 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.type = 'widget';
     this.subType = data.type;
 
+    // Permissions
+    this.isEditable = data.isEditable;
+    this.isDeletable = data.isDeletable;
+    this.isPermissionsModifiable = data.isPermissionsModifiable;
+
+    // widget tags
+    this.tags = data.tags;
+
+    // Widget colouring
+    if(playlistRegionColouring === 'Permissions Colouring') {
+        this.widgetColouring = (data.isEditable) ? 'timelineMediaItemColouring_enabled' : 'timelineMediaItemColouring_disabled';
+    } else {
+        this.widgetColouring = '';
+
+        for(let index = 0;index < this.tags.length; index++) {
+            const element = this.tags[index];
+            this.widgetColouring += this.tags[index].tag + ' ';
+        }
+    }
+    
     this.selected = false;
 
     this.singleWidget = false;
@@ -229,19 +249,37 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
                     app.common.showLoadingScreen();
 
+                    let dataToSave = '';
+                    let options = {
+                        addToHistory: false // options.addToHistory
+                    };
+
+                    // Get data to save
+                    if(property === 'Permissions') {
+                        dataToSave = formHelpers.permissionsFormBeforeSubmit(dialog);
+                        options.customRequestPath = {
+                            url: dialog.find('.permissionsGrid').data('url'),
+                            type: 'POST'
+                        };
+                    } else {
+                        dataToSave = form.serialize();
+                    }
+
+                    // If there is a type to replace
+                    if(type !== undefined) {
+                        options.customRequestReplace = {
+                            tag: ':type',
+                            replace: type
+                        };
+                    }
+
                     app.manager.addChange(
                         'save' + property,
                         'widget', // targetType 
                         self.widgetId,  // targetId
                         null,  // oldValues
-                        form.serialize(), // newValues
-                        {
-                            addToHistory: false, // options.addToHistory
-                            customRequestReplace: {
-                                tag: ':type',
-                                replace: type
-                            }
-                        }
+                        dataToSave, // newValues
+                        options
                     ).then((res) => { // Success
 
                         app.common.hideLoadingScreen();
@@ -292,6 +330,10 @@ Widget.prototype.editPropertyForm = function(property, type) {
             dialog.find('.bootbox-body').html(res.html);
 
             dialog.data('extra', res.extra);
+
+            if(property === 'Permissions') { 
+                formHelpers.permissionsFormAfterOpen(dialog);
+            }
 
             // Call Xibo Init for this form
             XiboInitialise('#' + dialog.attr('id'));
@@ -346,6 +388,13 @@ Widget.prototype.editExpiry = function() {
  */
 Widget.prototype.editTransition = function(type) {
     this.editPropertyForm('Transition', type);
+};
+
+/**
+ * Edit permissions
+ */
+Widget.prototype.editPermissions = function() {
+    this.editPropertyForm('Permissions');
 };
 
 module.exports = Widget;

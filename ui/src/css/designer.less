@@ -38,6 +38,8 @@
 
 @padding-navigator: 5px;
 
+@unsuccess-message-bg-color: #b3360e;
+
 // CSS
 #layout-editor  {
     min-height: 90vh;
@@ -154,6 +156,10 @@
     padding: 3px;
     margin: 4px 0;
     .border-radius(4px);
+}
+
+#layout-editor #layout-timeline .designer-region:not(.editable) {
+    .box-shadow(inset 0 0 6px 4px grey);
 }
 
 #layout-editor #layout-timeline .designer-region .message {
@@ -415,6 +421,15 @@
     padding: 0;
 }
 
+#layout-editor #properties-panel .form-title.unsuccessMessage {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    color: white;
+    padding: 30px;
+    background-color: @unsuccess-message-bg-color;
+}
+
 #layout-editor #properties-panel-container {
     background: @designer-module-bg-color;
 }
@@ -479,11 +494,19 @@
 }
 
 #layout-editor #layout-navigator .designer-region{
-    .box-shadow(inset 0 0 2px #ddd);
+    .box-shadow(inset 0 0 4px 1px #ddd);
+}
+
+#layout-editor #layout-navigator .designer-region:not(.editable) {
+    .box-shadow(inset 0 0 4px 2px grey);
 }
 
 #layout-editor #layout-navigator-edit .designer-region {
-    .box-shadow(inset 0 0 4px #ddd);
+    .box-shadow(inset 0 0 10px 2px #ddd);
+}
+
+#layout-editor #layout-navigator-edit .designer-region:not(.editable) {
+    .box-shadow(inset 0 0 10px 2px grey);
 }
 
 #layout-editor #layout-navigator-edit {
@@ -546,6 +569,7 @@
 #layout-editor  #layout-timeline .designer-widget.ui-droppable-active {
     .z-index-set(@designer-z-index-select);
     .background-stripes(45deg; @widget-hover-color; lighten(@widget-hover-color, 10%); 10px; 4px);
+    visibility: visible;
 }
 
 #layout-editor #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,

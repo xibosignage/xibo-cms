@@ -99,7 +99,7 @@ $(document).ready(function() {
     toastr.options.positionClass = 'toast-top-right';
 
     // Load layout through an ajax request
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity')
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
         .done(function(res) {
 
             if(res.data.length > 0) {
@@ -262,7 +262,8 @@ lD.selectObject = function(obj = null, forceSelect = false) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
+        // If selected card has the droppable type or "all"
+        if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
 
             // Get card object
             const card = this.toolbar.selectedCard[0];
@@ -360,7 +361,7 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
     lD.common.showLoadingScreen();
 
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity")
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity,tags,permissions")
         .done(function(res) {
             
             lD.common.hideLoadingScreen();
@@ -850,7 +851,16 @@ lD.dropItemAdd = function(droppable, draggable) {
                 widget.editTransition('in');
             } else if(draggableSubType == 'transitionOut') { 
                 widget.editTransition('out');
+            } else if(draggableSubType == 'permissions') {
+                widget.editPermissions();
             }
+        } else if(droppableType == 'region') { // Add to region
+
+            //Get region
+            const regionId = $(droppable).attr('id');
+            const region = lD.getElementByTypeAndId('region', regionId);
+
+            region.editPermissions();
         }
     }
 };

@@ -190,7 +190,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
+        if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
 
             // Get card object
             const card = this.toolbar.selectedCard[0];
