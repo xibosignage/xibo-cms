@@ -163,7 +163,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         } else if ($type == 'media') {
             $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
         } else if ($type == 'widget') {
-            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
+            $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
         }
 
         // Layout Filter
@@ -287,6 +287,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Execute
         $statement->execute($params);
+        $this->log->sql($sql, $params);
 
         $rows = [];
 

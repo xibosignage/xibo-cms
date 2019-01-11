@@ -491,7 +491,7 @@ class Stats extends Base
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
-        while ($row = $result['statData']) {
+        foreach ($result['statData'] as $row) {
 
             // Read the columns
             $type = $this->getSanitizer()->string($row['type']);
