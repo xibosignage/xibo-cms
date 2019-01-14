@@ -24,7 +24,6 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -39,9 +38,11 @@ class StatisticsLayoutTest extends LocalWebTestCase
 
     use LayoutHelperTrait, DisplayHelperTrait;
 
-    protected $startMedias;
-    protected $startLayouts;
-    protected $startDisplays;
+    /** @var XiboLayout */
+    protected $layout;
+
+    /** @var XiboDisplay */
+    protected $display;
 
     /**
      * setUp - called before every test automatically
@@ -49,9 +50,16 @@ class StatisticsLayoutTest extends LocalWebTestCase
     public function setup()
     {
         parent::setup();
-        $this->startMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+
+        // Create a Layout
+        $this->layout = $this->createLayout();
+
+        // Create a Display
+        $this->display = $this->createDisplay();
+        $this->displaySetLicensed($this->display);
+
+        $this->getLogger()->debug('Finished Setup');
+
     }
 
     /**
@@ -59,81 +67,19 @@ class StatisticsLayoutTest extends LocalWebTestCase
      */
     public function tearDown()
     {
-        // tearDown all media files that weren't there initially
-        $finalMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        // Loop over any remaining media files and nuke them
-        foreach ($finalMedias as $media) {
-            /** @var XiboLibrary $media */
-            $flag = true;
-            foreach ($this->startMedias as $startMedia) {
-                if ($startMedia->mediaId == $media->mediaId) {
-                    $flag = false;
-                }
-            }
-            if ($flag) {
-                try {
-                    $media->deleteAssigned();
-                } catch (\Exception $e) {
-                    $this->getLogger()->error('Media: Unable to delete ' . $media->mediaId . '. E:' . $e->getMessage());
-                }
-            }
-        }
+        $this->getLogger()->debug('Tear Down');
 
-        // tearDown all layouts that weren't there initially
-        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        // Loop over any remaining layouts and nuke them
-        foreach ($finalLayouts as $layout) {
-            /** @var XiboLayout $layout */
-            $flag = true;
-            foreach ($this->startLayouts as $startLayout) {
-                if ($startLayout->layoutId == $layout->layoutId) {
-                    $flag = false;
-                }
-            }
-            if ($flag) {
-                try {
-                    $layout->delete();
-                } catch (\Exception $e) {
-                    $this->getLogger()->error('Layout: Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
-                }
-            }
-        }
-
-        // Tear down any displays that weren't there before
-        $finalDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-
-        // Loop over any remaining displays and nuke them
-        foreach ($finalDisplays as $display) {
-            /** @var XiboDisplay $display */
-            $flag = true;
-            foreach ($this->startDisplays as $startDisplay) {
-                if ($startDisplay->displayId == $display->displayId) {
-                    $flag = false;
-                }
-            }
-            if ($flag) {
-                try {
-                    $display->delete();
-                } catch (\Exception $e) {
-                    $this->getLogger()->error('Display: Unable to delete ' . $display->displayId . '. E:' . $e->getMessage());
-                }
-            }
-        }
         parent::tearDown();
-    }
 
-    /**
-     * Test the method call with default values
-     * @group broken
-     */
-    public function testListAll()
-    {
-        $this->client->get('/stats');
+        // Delete the Layout we've been working with
+        $this->deleteLayout($this->layout);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        // Delete the Display
+        $this->deleteDisplay($this->display);
+
+        // Delete stat records
+        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12');
+
     }
 
     /**
@@ -141,14 +87,12 @@ class StatisticsLayoutTest extends LocalWebTestCase
      */
     public function testProof()
     {
-        // Create a Display
-        $display = $this->createDisplay();
-        $this->displaySetLicensed($display);
-        $hardwareId = $display->license;
+        $type = 'layout';
 
-        // Create layout with random name
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        // Checkout layout
+        $layout = $this->checkout($this->layout);
+
+        $hardwareId = $this->display->license;
 
         // Set start and date time
         //
@@ -189,7 +133,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
             '<stats>
                         <stat fromdt="2018-02-12 00:00:00" 
                         todt="2018-02-15 00:00:00" 
-                        type="layout" 
+                        type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="'.$layout->layoutId.'" />
                     </stats>');
@@ -200,7 +144,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
             '<stats>
                         <stat fromdt="2018-02-15 00:00:00" 
                         todt="2018-02-16 00:00:00" 
-                        type="layout" 
+                        type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="'.$layout->layoutId.'"/>
                     </stats>');
@@ -211,7 +155,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
             '<stats>
                         <stat fromdt="2018-02-16 00:00:00" 
                         todt="2018-02-17 00:00:00" 
-                        type="layout" 
+                        type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="'.$layout->layoutId.'"/>
                     </stats>');
@@ -221,13 +165,14 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $this->client->get('/stats' , [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $display->displayId
+            'displayId' => $this->display->displayId,
+            'type' => $type
         ]);
 
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
         $object = json_decode($this->client->response->body());
-        // $this->getLogger()->debug($this->client->response->body());
+        //$this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
         $stats = (new XiboStats($this->getEntityProvider()))->get([$layout->layoutId]);
         //print_r($stats);

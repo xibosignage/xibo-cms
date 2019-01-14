@@ -41,87 +41,64 @@ class StatisticsTest extends LocalWebTestCase
 {
     use LayoutHelperTrait, DisplayHelperTrait;
 
-    protected $startMedias;
-    protected $startLayouts;
-    protected $startDisplays;
-    
+    /** @var XiboLayout */
+    protected $layout;
+
+    /** @var XiboDisplay */
+    protected $display;
+
+    /** @var XiboLibrary */
+    protected $media;
+
+    /** @var XiboLibrary */
+    protected $media2;
+
     /**
      * setUp - called before every test automatically
      */
     public function setup()
     {
         parent::setup();
-        $this->startMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
+
+        // Create a Layout
+        $this->layout = $this->createLayout();
+
+        // Create a Display
+        $this->display = $this->createDisplay();
+        $this->displaySetLicensed($this->display);
+
+        // Upload some media
+        $this->media = (new XiboLibrary($this->getEntityProvider()))
+            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
+
+        $this->media2 = (new XiboLibrary($this->getEntityProvider()))
+            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
+
+        $this->getLogger()->debug('Finished Setup');
+
     }
-    
+
     /**
      * tearDown - called after every test automatically
      */
     public function tearDown()
     {
-        // tearDown all media files that weren't there initially
-        $finalMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining media files and nuke them
-        foreach ($finalMedias as $media) {
-            /** @var XiboLibrary $media */
-            $flag = true;
-            foreach ($this->startMedias as $startMedia) {
-               if ($startMedia->mediaId == $media->mediaId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $media->deleteAssigned();
-                } catch (\Exception $e) {
-                    $this->getLogger()->error('Media: Unable to delete ' . $media->mediaId . '. E:' . $e->getMessage());
-                }
-            }
-        }
+        $this->getLogger()->debug('Tear Down');
 
-        // tearDown all layouts that weren't there initially
-        $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining layouts and nuke them
-        foreach ($finalLayouts as $layout) {
-            /** @var XiboLayout $layout */
-            $flag = true;
-            foreach ($this->startLayouts as $startLayout) {
-               if ($startLayout->layoutId == $layout->layoutId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $layout->delete();
-                } catch (\Exception $e) {
-                    $this->getLogger()->error('Layout: Unable to delete ' . $layout->layoutId . '. E:' . $e->getMessage());
-                }
-            }
-        }
-
-        // Tear down any displays that weren't there before
-        $finalDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-
-        # Loop over any remaining displays and nuke them
-        foreach ($finalDisplays as $display) {
-            /** @var XiboDisplay $display */
-            $flag = true;
-            foreach ($this->startDisplays as $startDisplay) {
-               if ($startDisplay->displayId == $display->displayId) {
-                   $flag = false;
-               }
-            }
-            if ($flag) {
-                try {
-                    $display->delete();
-                } catch (\Exception $e) {
-                    $this->getLogger()->error('Display: Unable to delete ' . $display->displayId . '. E:' . $e->getMessage());
-                }
-            }
-        }
         parent::tearDown();
+
+        // Delete the Layout we've been working with
+        $this->deleteLayout($this->layout);
+
+        // Delete the Display
+        $this->deleteDisplay($this->display);
+
+        // Delete the media records
+        $this->media->deleteAssigned();
+        $this->media2->deleteAssigned();
+
+        // Delete stat records
+        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12');
     }
 
     /**
@@ -144,28 +121,20 @@ class StatisticsTest extends LocalWebTestCase
      */
     public function testProof()
     {
-        // Create a Display
-        $display = $this->createDisplay();
-        $this->displaySetLicensed($display);
-        $hardwareId = $display->license;
+        // Checkout layout
+        $layout = $this->checkout($this->layout);
 
-        // Create layout with random name
-        $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $hardwareId = $this->display->license;
 
         // Add another region
         $region = $layout->regions[0];
         $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 100, 100, 475, 425);
 
-        # Upload three media files
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
-        $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 2', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
-
         # Create and assign new text widget
         $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region2->regionPlaylist->playlistId);
 
         # Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], 10, $region->regionPlaylist['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist['playlistId']);
 
         # Get Widget Id
         $widget = $playlist->widgets[0];
@@ -343,7 +312,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->client->get('/stats', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $display->displayId
+            'displayId' => $this->display->displayId
         ]);
 
         $this->assertSame(200, $this->client->response->status());
