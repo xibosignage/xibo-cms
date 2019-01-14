@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,30 +22,29 @@
 
 namespace Xibo\Tests\Integration;
 
-use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboStats;
-use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
- * Class StatisticsTest
+ * Class StatisticsMediaTest
  * @package Xibo\Tests\Integration
  */
-class StatisticsTest extends LocalWebTestCase
+class StatisticsMediaTest extends LocalWebTestCase
 {
+
     use LayoutHelperTrait, DisplayHelperTrait;
 
     protected $startMedias;
     protected $startLayouts;
     protected $startDisplays;
-    
+
     /**
      * setUp - called before every test automatically
      */
@@ -55,7 +55,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->startLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         $this->startDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
     }
-    
+
     /**
      * tearDown - called after every test automatically
      */
@@ -63,14 +63,14 @@ class StatisticsTest extends LocalWebTestCase
     {
         // tearDown all media files that weren't there initially
         $finalMedias = (new XiboLibrary($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining media files and nuke them
+        // Loop over any remaining media files and nuke them
         foreach ($finalMedias as $media) {
             /** @var XiboLibrary $media */
             $flag = true;
             foreach ($this->startMedias as $startMedia) {
-               if ($startMedia->mediaId == $media->mediaId) {
-                   $flag = false;
-               }
+                if ($startMedia->mediaId == $media->mediaId) {
+                    $flag = false;
+                }
             }
             if ($flag) {
                 try {
@@ -83,14 +83,14 @@ class StatisticsTest extends LocalWebTestCase
 
         // tearDown all layouts that weren't there initially
         $finalLayouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining layouts and nuke them
+        // Loop over any remaining layouts and nuke them
         foreach ($finalLayouts as $layout) {
             /** @var XiboLayout $layout */
             $flag = true;
             foreach ($this->startLayouts as $startLayout) {
-               if ($startLayout->layoutId == $layout->layoutId) {
-                   $flag = false;
-               }
+                if ($startLayout->layoutId == $layout->layoutId) {
+                    $flag = false;
+                }
             }
             if ($flag) {
                 try {
@@ -104,14 +104,14 @@ class StatisticsTest extends LocalWebTestCase
         // Tear down any displays that weren't there before
         $finalDisplays = (new XiboDisplay($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
 
-        # Loop over any remaining displays and nuke them
+        // Loop over any remaining displays and nuke them
         foreach ($finalDisplays as $display) {
             /** @var XiboDisplay $display */
             $flag = true;
             foreach ($this->startDisplays as $startDisplay) {
-               if ($startDisplay->displayId == $display->displayId) {
-                   $flag = false;
-               }
+                if ($startDisplay->displayId == $display->displayId) {
+                    $flag = false;
+                }
             }
             if ($flag) {
                 try {
@@ -138,9 +138,8 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
     }
 
-
     /**
-     * Check if proof of play statistics are correct for all types
+     * Check if proof of play statistics are correct
      */
     public function testProof()
     {
@@ -155,192 +154,112 @@ class StatisticsTest extends LocalWebTestCase
 
         // Add another region
         $region = $layout->regions[0];
-        $region2 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 100, 100, 475, 425);
 
-        # Upload three media files
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
+        // Upload three media files
+        $media = (new XiboLibrary($this->getEntityProvider()))->create('API image ', PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         $media2 = (new XiboLibrary($this->getEntityProvider()))->create('API image 2', PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
 
-        # Create and assign new text widget
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region2->regionPlaylist->playlistId);
-
-        # Assign media to a playlists
+        // Assign media to a playlists
         $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$media->mediaId, $media2->mediaId], 10, $region->regionPlaylist['playlistId']);
 
-        # Get Widget Id
+        // Get Widget Id
         $widget = $playlist->widgets[0];
         $widget2 = $playlist->widgets[1];
 
-        // One word name for the event
-        $eventName = Random::generateString(10, 'event');
+        // Set start and date time
+        //
+        // $fromDt =  '2018-02-12 00:00:00';
+        // $toDt =  '2018-02-17 00:00:00';
 
-        // First insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
-                        type="layout" 
-                        scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '" />
-                    </stats>');
-        $this->assertSame(true, $response);
+        // Add stats to the DB -  known set
+        //
+        // 1 layout, 2 region, 2 medias (1 per region)
+        // type,start,end,layout,media
+        // media,2018-02-12 00:00:00, 2018-02-13 00:00:00, L1, M1
+        // media,2018-02-13 00:00:00, 2018-02-14 00:00:00, L1, M1
+        // media,2018-02-16 00:00:00, 2018-02-17 12:00:00, L1, M1
+        // media,2018-02-14 00:00:00, 2018-02-15 00:00:00, L1, M2
+        // media,2018-02-15 00:00:00, 2018-02-16 00:00:00, L1, M2
+        // media,2018-02-16 00:00:00, 2018-02-16 12:00:00, L1, M2
+        //
+        // Result
+        // M1 60 hours
+        // M2 60 hours
 
+        // First insert - M1
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
+                '<stats>
                         <stat fromdt="2018-02-12 00:00:00" 
                         todt="2018-02-13 00:00:00" 
                         type="media" 
                         scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '" 
-                        mediaid="' . $widget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-14 00:00:00"
-                        todt="2018-02-15 00:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $layout->layoutId . '"
-                        mediaid="' . $widget2->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
-                        type="widget" 
-                        scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '" 
-                        mediaid="' . $text->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
-                        type="event" 
-                        scheduleid="0" 
                         layoutid="'.$layout->layoutId.'" 
-                        tag="'.$eventName.'"/>
+                        mediaid="'.$widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
-        // Second insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00" 
-                        todt="2018-02-16 00:00:00" 
-                        type="layout" 
-                        scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
+        // Second insert - M1
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
                         <stat fromdt="2018-02-13 00:00:00"
                         todt="2018-02-14 00:00:00"
                         type="media"
                         scheduleid="0"
-                        layoutid="' . $layout->layoutId . '"
-                        mediaid="' . $widget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $layout->layoutId . '"
-                        mediaid="' . $widget2->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00" 
-                        todt="2018-02-16 00:00:00" 
-                        type="widget" 
-                        scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '" 
-                        mediaid="' . $text->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00" 
-                        todt="2018-02-16 00:00:00" 
-                        type="event" 
-                        scheduleid="0" 
                         layoutid="'.$layout->layoutId.'"
-                        tag="'.$eventName.'"/>
+                        mediaid="'.$widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
-        // Third insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00" 
-                        todt="2018-02-17 00:00:00" 
-                        type="layout" 
-                        scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
+        // Third insert - M1
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
                         <stat fromdt="2018-02-16 12:00:00"
                         todt="2018-02-17 00:00:00"
                         type="media"
                         scheduleid="0"
-                        layoutid="' . $layout->layoutId . '"
-                        mediaid="' . $widget->widgetId . '"/>
+                        layoutid="'.$layout->layoutId.'"
+                        mediaid="'.$widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
+        // First insert - M2
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+                '<stats>
+                        <stat fromdt="2018-02-14 00:00:00"
+                        todt="2018-02-15 00:00:00"
+                        type="media"
+                        scheduleid="0"
+                        layoutid="'.$layout->layoutId.'"
+                        mediaid="'.$widget2->widgetId.'"/>
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        // Second insert - M2
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+            '<stats>
+                        <stat fromdt="2018-02-15 00:00:00"
+                        todt="2018-02-16 00:00:00"
+                        type="media"
+                        scheduleid="0"
+                        layoutid="'.$layout->layoutId.'"
+                        mediaid="'.$widget2->widgetId.'"/>
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        // Third insert - M2
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
                         <stat fromdt="2018-02-16 00:00:00"
                         todt="2018-02-16 12:00:00"
                         type="media"
                         scheduleid="0"
-                        layoutid="' . $layout->layoutId . '"
-                        mediaid="' . $widget2->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00" 
-                        todt="2018-02-17 00:00:00" 
-                        type="widget" 
-                        scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '" 
-                        mediaid="' . $text->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00" 
-                        todt="2018-02-17 00:00:00" 
-                        type="event" 
-                        scheduleid="0" 
                         layoutid="'.$layout->layoutId.'"
-                        tag="'.$eventName.'"/>
+                        mediaid="'.$widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
         // Get stats and see if they match with what we expect
-        $this->client->get('/stats', [
+        $this->client->get('/stats' , [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $display->displayId
@@ -353,5 +272,6 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
         $stats = (new XiboStats($this->getEntityProvider()))->get([$layout->layoutId]);
         //print_r($stats);
+
     }
 }

@@ -88,9 +88,13 @@ class XmdsWrapper
     {
     
     }
-    
-    function SubmitStats()
+
+    function SubmitStats($hardwareKey, $statXml)
     {
+        $response = $this->client->SubmitStats($this->KEY,
+                                               $hardwareKey,
+                                               $statXml);
+        return $response;
     
     }
     

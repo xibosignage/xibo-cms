@@ -96,8 +96,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addTagStat($statData)
     {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, Tag) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, Tag) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
 
