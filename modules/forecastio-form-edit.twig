@@ -132,7 +132,7 @@
                             {{ forms.message(simpleTextEditorMessage2, 'currentTemplate-advanced-editor-show') }}
                         </div>
 
-                        {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Request Forecast below." %}{% endset %}
+                        {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Get Forecast below." %}{% endset %}
                         {{ forms.textarea("currentTemplate", "", module.getOption("currentTemplate"), helpText, "template-override-controls", "required", 10) }}
                     </div>
 
@@ -188,7 +188,7 @@
                     </div>
 
                     <div class="tab-pane" id="forecast">
-                        {% set message %}{% trans "Please press Request Forecast" %}{% endset %}
+                        {% set message %}{% trans "Please press Get Forecast" %}{% endset %}
                         {{ forms.message(message) }}  
                     </div>
                 </div>

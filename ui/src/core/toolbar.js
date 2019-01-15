@@ -69,6 +69,8 @@ const defaultMenuItems = [
     }
 ];
 
+const tabName = 'Library';
+
 /**
  * Bottom toolbar contructor
  * @param {object} container - the container to render the navigator to
@@ -520,7 +522,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             this.menuItems[menu].title = '"' + customFilter.media + '"';
         } else {
             this.menuIndex += 1;
-            this.menuItems[menu].title = 'Tab ' + this.menuIndex;
+            this.menuItems[menu].title = tabName + ' ' + this.menuIndex;
         }
 
         if(customFilter.tags != '' && customFilter.tags != undefined) {
@@ -650,7 +652,7 @@ Toolbar.prototype.createNewTab = function() {
 
     this.menuItems.push({
         name: 'search',
-        title: 'Tab ' + this.menuIndex,
+        title: tabName + ' ' + this.menuIndex,
         search: true,
         page: 0,
         query: '',
@@ -850,32 +852,44 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
  */
 Toolbar.prototype.selectCard = function(card) {
 
-    const previouslySelected = this.selectedCard;
+    const app = getXiboApp();
 
     // Deselect previous selections
     this.deselectCardsAndDropZones();
 
-    if(previouslySelected[0] != card[0]) {
-        // Select new card
-        $(card).addClass('card-selected');
+    const previouslySelected = this.selectedCard;
 
+    if(previouslySelected[0] != card[0]) {
+        
         // Get card info
         const dropTo = $(card).attr('drop-to');
         const subType = $(card).attr('data-sub-type');
+        const oneClickAdd = $(card).attr('data-one-click-add');
 
-        // Save selected card data
-        this.selectedCard = card;
+        if(oneClickAdd != undefined && oneClickAdd.split(',').indexOf(app.mainObjectType) != -1) {
 
-        // Show designer overlay
-        $('.custom-overlay').show().unbind().click(() => {
-            this.deselectCardsAndDropZones();
-        });
+            // Simulate drop item add
+            app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
 
-        // Set droppable areas as active
-        if(dropTo === 'all' && subType === 'permissions') { 
-            $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
         } else {
-            $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+
+            // Select new card
+            $(card).addClass('card-selected');
+
+            // Save selected card data
+            this.selectedCard = card;
+
+            // Show designer overlay
+            $('.custom-overlay').show().unbind().click(() => {
+                this.deselectCardsAndDropZones();
+            });
+
+            // Set droppable areas as active
+            if(dropTo === 'all' && subType === 'permissions') {
+                $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
+            } else {
+                $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+            }
         }
     }
 };

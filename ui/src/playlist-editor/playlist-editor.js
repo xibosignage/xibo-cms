@@ -189,7 +189,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             this.toolbar.deselectCardsAndDropZones();
 
             // Simulate drop item add
-            this.playlist.addElement(obj, card);
+            this.dropItemAdd(obj, card);
         }
 
     } else {
@@ -237,6 +237,15 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
         // Refresh the designer containers
         this.refreshDesigner();
     }
+};
+
+/**
+ * Add action to take after dropping a draggable item
+ * @param {object} droppable - Target drop object
+ * @param {object} draggable - Target Card
+ */
+pE.dropItemAdd = function(droppable, card) {
+    this.playlist.addElement(droppable, card);
 };
 
 /**
