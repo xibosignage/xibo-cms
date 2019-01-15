@@ -137,7 +137,7 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s', $fromDt, $toDt), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(__('Stats Export %s to %s', $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
         $options = [

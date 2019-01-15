@@ -96,8 +96,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addTagStat($statData)
     {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, Tag) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, Tag) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
 
@@ -164,6 +164,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
         } else if ($type == 'widget') {
             $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
+        } else if ($type == 'event') {
+            $body .= ' AND `stat`.type = \'event\' ';
         }
 
         // Layout Filter

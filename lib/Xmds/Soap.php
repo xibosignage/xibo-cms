@@ -1437,7 +1437,7 @@ class Soap
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
-            $mediaId = 0;
+            $mediaId = null;
 
             // Ignore old "background" stat records.
             if ($widgetId === 'background') {
@@ -1455,7 +1455,7 @@ class Soap
 
                 if (count($media) <= 0) {
                     // Non-media widget
-                    $mediaId = 0;
+                    $mediaId = null;
                 } else {
                     $mediaId = $media[0]->mediaId;
                 }
@@ -1489,7 +1489,7 @@ class Soap
                     'displayId' => $this->display->displayId,
                     'layoutId' => $layoutId,
                 ];
-            } elseif ($type == 'tag') {
+            } elseif ($type == 'event') {
                 $tagStats[] = [
                     'type' => $type,
                     'statDate' => $now,
@@ -1497,6 +1497,7 @@ class Soap
                     'toDt' => $todt,
                     'scheduleId' => $scheduleId,
                     'displayId' => $this->display->displayId,
+                    'layoutId' => $layoutId,
                     'tag' => $tag,
                 ];
             }

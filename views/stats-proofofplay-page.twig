@@ -75,11 +75,13 @@
                             {% set layout %}{% trans "Layout" %}{% endset %}
                             {% set media %}{% trans "Media" %}{% endset %}
                             {% set widget %}{% trans "Widget" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
                             {% set options = [
                                 { typeid: "", type: null },
                                 { typeid: "layout", type: layout },
                                 { typeid: "media", type: media },
-                                { typeid: "widget", type: widget }
+                                { typeid: "widget", type: widget },
+                                { typeid: "event", type: event }
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
                         </form>
