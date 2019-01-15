@@ -164,6 +164,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
         } else if ($type == 'widget') {
             $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
+        } else if ($type == 'event') {
+            $body .= ' AND `stat`.type = \'event\' ';
         }
 
         // Layout Filter
