@@ -12,7 +12,9 @@ const toolsList = [
         name: 'Region',
         type: 'region',
         description: 'Add a region to the layout',
-        dropTo: 'layout'
+        dropTo: 'layout',
+        hideOn: ['playlist'],
+        oneClickAdd: ['layout']
     },
     {
         name: 'Audio',
@@ -62,7 +64,8 @@ const defaultMenuItems = [
         pagination: false,
         page: 0,
         content: [],
-        state: ''
+        state: '',
+        oneClickAdd: ['playlist']
     }
 ];
 
@@ -72,7 +75,7 @@ const defaultMenuItems = [
  * @param {object[]} [customButtons] - customized buttons
  * @param {object} [customActions] - customized actions
  */
-let Toolbar = function(container, customButtons = [], customActions = {}, jumpList = {}) {
+let Toolbar = function(container, customButtons = null, customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
     this.previousOpenedMenu = -1;
@@ -270,13 +273,17 @@ Toolbar.prototype.render = function() {
     // Check if trash bin is active
     let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
 
+    // Check if there are some changes
+    let undoActive = app.manager.changeHistory.length > 0;
+
     // Compile layout template with data
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
         tabsCount: (this.menuItems.length > this.fixedTabs),
         customButtons: this.customButtons,
-        trashActive: trashBinActive
+        trashActive: trashBinActive,
+        undoActive: undoActive
     });
 
     // Append layout html to the main div
@@ -347,21 +354,28 @@ Toolbar.prototype.render = function() {
         this.DOMObject.find('#trashContainer').click(
             this.customActions.deleteSelectedObjectAction
         );
+
+        // Delete object
+        this.DOMObject.find('#undoContainer').click(
+            app.undoLastAction
+        );
     }
 
     // Handle custom buttons
-    for(let index = 0;index < this.customButtons.length;index++) {
+    if(this.customButtons != null) {
+        for(let index = 0;index < this.customButtons.length;index++) {
 
-        // Bind action to button
-        this.DOMObject.find('#' + this.customButtons[index].id).click(
-            this.customButtons[index].action
-        );
+            // Bind action to button
+            this.DOMObject.find('#' + this.customButtons[index].id).click(
+                this.customButtons[index].action
+            );
 
-        // If there is a inactiveCheck, use that function to switch button state
-        if(this.customButtons[index].inactiveCheck != undefined) {
-            const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
-            const toggleValue = this.customButtons[index].inactiveCheck();
-            this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+            // If there is a inactiveCheck, use that function to switch button state
+            if(this.customButtons[index].inactiveCheck != undefined) {
+                const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
+                const toggleValue = this.customButtons[index].inactiveCheck();
+                this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+            }
         }
     }
 
@@ -431,6 +445,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
     // Calculate pagination
     const pagination = this.calculatePagination(menu);
 
+    const app = getXiboApp();
+
     // Enable/Disable page down pagination button according to the page to display
     this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
 
@@ -461,8 +477,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             element.maxSize = libraryUpload.maxSize;
             element.maxSizeMessage = libraryUpload.maxSizeMessage;
 
-            // Hide element if it's outside the "to display" region
-            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length));
+            // Hide element if it's outside the "to display" region or is a hideOn this app
+            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length)) || (element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1);
         }
 
         // Enable/Disable page up pagination button according to the page to display and total elements
@@ -669,8 +685,13 @@ Toolbar.prototype.deleteTab = function(menu) {
     this.menuItems.splice(menu, 1);
 
     if(this.openedMenu >= this.fixedTabs) {
-    this.openedMenu = -1;
+        this.openedMenu = -1;
         this.previousOpenedMenu = -1;
+    }
+
+    // Reset menu index
+    if(this.menuItems.length === this.fixedTabs) {
+        this.menuIndex = this.menuItems.length;
     }
 
     // Save user preferences
@@ -689,9 +710,12 @@ Toolbar.prototype.deleteAllTabs = function() {
     }
     
     if(this.openedMenu >= this.fixedTabs) {
-    this.openedMenu = -1;
+        this.openedMenu = -1;
         this.previousOpenedMenu = -1;
     }
+
+    // Reset menu index
+    this.menuIndex = this.menuItems.length;
 
     // Save user preferences
     this.savePrefs();

@@ -146,8 +146,6 @@ Region.prototype.editPermissions = function() {
                 className: "btn-primary test",
                 callback: function(res) {
 
-                    const form = dialog.find('form');
-
                     app.common.showLoadingScreen();
 
                     app.manager.addChange(

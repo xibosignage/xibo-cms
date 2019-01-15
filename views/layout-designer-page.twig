@@ -74,6 +74,14 @@
                     },
                     designer: {
                         url: "{{ urlFor("layout.designer") }}"
+                    },
+                    schedule: {
+                        url: "{{ urlFor("schedule.now.form", {from: 'Campaign'}) }}",
+                        type: 'GET'
+                    },
+                    saveTemplate: {
+                        url: "{{ urlFor("template.from.layout.form") }}",
+                        type: 'GET'
                     }
                 },
                 region: {
@@ -236,6 +244,8 @@
                 publishTitle: "{% trans "Publish" %}",
                 publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
                 checkoutTitle: "{% trans "Checkout" %}",
+                scheduleTitle: "{% trans "Schedule Now" %}",
+                saveTemplateTitle: "{% trans "Save Template" %}",
                 readOnlyModeTitle: "{% trans "Read Only Mode" %}",
                 readOnlyModeMessage: "{% trans "Read Only Mode - Checkout layout to enable editing!" %}",
                 checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",

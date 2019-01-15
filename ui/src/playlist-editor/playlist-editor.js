@@ -124,17 +124,7 @@ pE.loadEditor = function() {
     // Initialize bottom toolbar
     pE.toolbar = new Toolbar(
         $('#playlist-editor').find('#playlist-editor-toolbar'),
-        [{
-            id: 'undoLastAction',
-            title: playlistTrans.undo,
-            logo: 'fa-undo',
-            class: 'btn-warning',
-            inactiveCheck: function() {
-                return (pE.manager.changeHistory.length <= 0);
-            },
-            inactiveCheckClass: 'hidden',
-            action: pE.undoLastAction
-        }], // Custom buttons
+        null, // Custom buttons
         {
             deleteSelectedObjectAction: pE.deleteSelectedObject
         }

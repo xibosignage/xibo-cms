@@ -6,7 +6,7 @@ describe('Layout Designer (Populated)', function() {
      * @param {string} dropableSelector 
      */
     function dragToElement(draggableSelector, dropableSelector) {
-        
+
         return cy.get(dropableSelector).then(($el) => {
             let position = {
                 x: $el.offset().left + $el.width() / 2 + window.scrollX,
@@ -26,7 +26,7 @@ describe('Layout Designer (Populated)', function() {
                 })
                 .trigger('mouseup');
         });
-        
+
     }
 
     /**
@@ -37,7 +37,7 @@ describe('Layout Designer (Populated)', function() {
 
         cy.server();
         cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
-        
+
         cy.clearToolbarPrefs();
 
         cy.visit('/layout/designer/' + layoutId);
@@ -191,7 +191,7 @@ describe('Layout Designer (Populated)', function() {
                 cy.wait('@reloadWidget');
 
                 // Click the revert button
-                cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+                cy.get('#layout-editor-toolbar #undoContainer').click();
 
                 // Wait for the widget to save
                 cy.wait('@saveWidget');
@@ -280,9 +280,9 @@ describe('Layout Designer (Populated)', function() {
         });
 
         it('should add a audio clip to a widget, and adds a link to open the form in the timeline', () => {
-            
+
             populateLibraryWithMedia();
-            
+
             // Create and alias for reload layout
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
@@ -303,7 +303,7 @@ describe('Layout Designer (Populated)', function() {
 
                 // Save and close the form
                 cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
-                
+
                 // Check if the widget has the audio icon
                 cy.wait('@reloadLayout').then(() => {
                     cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
@@ -315,7 +315,7 @@ describe('Layout Designer (Populated)', function() {
         });
 
         it('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
-            
+
             // Create and alias for reload layout
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
@@ -453,7 +453,7 @@ describe('Layout Designer (Populated)', function() {
 
                 // Confirm delete on modal
                 cy.get('[data-test="deleteObjectModal"] button[data-bb-handler="confirm"]').click();
-                
+
                 // Check toast message
                 cy.get('.toast-success').contains('Deleted');
 
@@ -558,7 +558,7 @@ describe('Layout Designer (Populated)', function() {
                 });
 
                 // Click the revert button
-                cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+                cy.get('#layout-editor-toolbar #undoContainer').click();
 
                 // Wait for the order to save
                 cy.wait('@saveOrder');
@@ -580,7 +580,7 @@ describe('Layout Designer (Populated)', function() {
         });
 
         it('should play a preview in the viewer, in fullscreen mode', () => {
-            
+
             // Click fullscreen button
             cy.get('#layout-viewer #fs-btn').click();
 
@@ -614,7 +614,7 @@ describe('Layout Designer (Populated)', function() {
 
             // Check if the second widget is rendered
             cy.get('#layout-viewer-navbar').contains('text');
-            
+
         });
 
     });
@@ -631,7 +631,9 @@ describe('Layout Designer (Populated)', function() {
 
             goToLayoutAndLoadPrefs(layoutId);
 
-            cy.get('#layout-editor-toolbar button#publishLayout').click();
+            cy.get('#layout-editor-toolbar .navbar-submenu a[data-toggle="dropdown"]').click();
+
+            cy.get('#layout-editor-toolbar div#publishLayout').click();
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 

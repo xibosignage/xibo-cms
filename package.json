@@ -38,7 +38,7 @@
     "blueimp-file-upload": "^9.28.0",
     "blueimp-load-image": "~2.17.1",
     "bootbox": "~4.4.0",
-    "bootstrap": "^3.4.0",
+    "bootstrap": "~3.3.7",
     "bootstrap-calendar": "~0.2.4",
     "bootstrap-colorpicker": "~2.5.2",
     "bootstrap-datetime-picker": "~2.4.4",
@@ -48,7 +48,7 @@
     "bootstrap-tagsinput": "~0.7.1",
     "bootstrap-tour": "^0.12.0",
     "chart.js": "^2.7.3",
-    "ckeditor": "^4.11.1",
+    "ckeditor": "^4.11.2",
     "clean-webpack-plugin": "^0.1.17",
     "colors.js": "~1.2.4",
     "copy-webpack-plugin": "^4.6.0",
@@ -83,6 +83,6 @@
     "underscore": "^1.9.1",
     "url-loader": "^1.1.2",
     "webpack": "^3.12.0",
-    "webpack-merge": "^4.1.5"
+    "webpack-merge": "^4.2.1"
   }
 }

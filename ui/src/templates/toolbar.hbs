@@ -61,7 +61,7 @@
                                 </div>
                         
                                 <button data-search-id="{{@index}}" data-test="searchButton" class="btn btn-primary search-btn" type="button">                                    
-                                    <span>Search!</span>
+                                    <span>Search</span>
                                 </button>
                             </form>
                         {{/if}}
@@ -82,6 +82,44 @@
                 </a>
             </div>
 
+            <ul class="nav navbar-nav navbar-right">
+
+                {{#if customButtons}}
+                    <li class="dropdown navbar-submenu">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Actions<span class="caret"></span></a>
+                        
+                        <ul class="dropdown-menu navbar-submenu-container">
+                            {{#each customButtons}}
+                                <li>
+                                    <div id="{{id}}" class="navbar-submenu-item {{class}}" href="#">
+                                        {{#if logo}}
+                                            <i class="fa {{logo}}"></i>
+                                        {{/if}}
+                                        <span>{{title}}</span>
+                                    </div>
+                                </li>
+                            {{/each}}
+                        </ul>
+                    </li>
+                {{/if}}
+
+                <li>
+                    <div id="layoutJumpListContainer" class="navbar-btn" hidden></div>
+                </li>
+
+                <li>
+                    <a id="undoContainer" class="navbar-peak-button navbar-undo {{#if undoActive}}active{{/if}}">
+                        <i class="fa fa-undo"></i>
+                    </a>
+                </li>
+
+                <li>
+                    <a id="trashContainer" class="navbar-peak-button navbar-bin {{#if trashActive}}active{{/if}}">
+                        <i class="fa fa-trash"></i>
+                    </a>
+                </li>
+            </ul>
+
             <ul class="nav navbar-nav navbar-buttons hide-on-read-only">
                 {{#each menuItems}}
                     <li>
@@ -95,43 +133,18 @@
                 {{/each}}
 
                 <li>
-                    <a id="btn-menu-new-tab" class="btn-menu-tool">
+                    <a id="btn-menu-new-tab" title="Create new tab" class="btn-menu-tool">
                         <i class="fa fa-search-plus"></i>
                     </a>
-                </li>
-            </ul>
-
-            <ul class="nav navbar-nav navbar-right">
-
-                <li>
-                    <div id="layoutJumpListContainer" class="navbar-btn" hidden></div>
                 </li>
 
                 {{#if tabsCount}}
                     <li>
-                        <button id="deleteAllTabs" class="btn btn-danger navbar-btn hide-on-read-only" href="#">
-                            <span>Close Tabs</span>
-                            <i class="fa fa-times"></i>
-                        </button>
+                        <a id="deleteAllTabs" title="Close all tabs" class="btn-menu-tool btn-menu-tool-delete btn-danger hide-on-read-only" href="#">
+                            <i class="fa fa-times-rectangle-o"></i>
+                        </a>
                     </li>
                 {{/if}}
-
-                {{#each customButtons}}
-                    <li>
-                        <button id="{{id}}" class="btn {{class}} navbar-btn" href="#">
-                            <span>{{title}}</span>
-                            {{#if logo}}
-                                <i class="fa {{logo}}"></i>
-                            {{/if}}
-                        </button>
-                    </li>
-                {{/each}}
-
-                <li>
-                    <a id="trashContainer" class="navbar-bin {{#if trashActive}}active{{/if}}">
-                        <i class="fa fa-trash"></i>
-                    </a>
-                </li>
             </ul>
         </div>
     </div>

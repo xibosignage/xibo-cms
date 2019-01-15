@@ -77,7 +77,7 @@
                 {% endif %}
 
                 {% set title %}{% trans "Transition" %}{% endset %}
-                {% set helpText %}{% trans "What transition should be applied when this item is finished?" %}{% endset %}
+                {% set helpText %}{% trans "What transition should be applied when this item starts?" %}{% endset %}
                 {{ forms.dropdown("transitionType", "single", title, trans, transitionsWithEmpty, "code", "transition", helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}
