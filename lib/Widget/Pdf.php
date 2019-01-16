@@ -124,7 +124,9 @@ class Pdf extends ModuleWidget
             'duration' => $duration,
             'durationIsPerItem' => false,
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height
+            'originalHeight' => $this->region->height,
+            'previewWidth' => intval($this->getSanitizer()->getDouble('width')),
+            'previewHeight' => intval($this->getSanitizer()->getDouble('height'))
         );
 
         // File name?
