@@ -99,7 +99,7 @@ $(document).ready(function() {
     toastr.options.positionClass = 'toast-top-right';
 
     // Load layout through an ajax request
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity')
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
         .done(function(res) {
 
             if(res.data.length > 0) {
@@ -144,6 +144,17 @@ $(document).ready(function() {
                     // Custom buttons
                     [
                         {
+                            id: 'checkoutLayout',
+                            title: layoutDesignerTrans.checkoutTitle,
+                            logo: 'fa-edit',
+                            class: 'btn-success',
+                            action: lD.showCheckoutScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == true);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        },
+                        {
                             id: 'publishLayout',
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
@@ -155,26 +166,26 @@ $(document).ready(function() {
                             inactiveCheckClass: 'hidden',
                         },
                         {
-                            id: 'checkoutLayout',
-                            title: layoutDesignerTrans.checkoutTitle,
-                            logo: 'fa-edit',
+                            id: 'scheduleLayout',
+                            title: layoutDesignerTrans.scheduleTitle,
+                            logo: 'fa-clock-o',
                             class: 'btn-info',
-                            action: lD.showCheckoutScreen,
+                            action: lD.showScheduleScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
                             inactiveCheckClass: 'hidden',
                         },
                         {
-                            id: 'undoLastAction',
-                            title: layoutDesignerTrans.undo,
-                            logo: 'fa-undo',
+                            id: 'saveTemplate',
+                            title: layoutDesignerTrans.saveTemplateTitle,
+                            logo: 'fa-floppy-o',
                             class: 'btn-warning',
-                            inactiveCheck: function(){
-                                return (lD.manager.changeHistory.length <= 0);
+                            action: lD.showSaveTemplateScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == true);
                             },
                             inactiveCheckClass: 'hidden',
-                            action: lD.undoLastAction
                         }
                     ],
                     // Custom actions
@@ -262,7 +273,8 @@ lD.selectObject = function(obj = null, forceSelect = false) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
+        // If selected card has the droppable type or "all"
+        if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
 
             // Get card object
             const card = this.toolbar.selectedCard[0];
@@ -360,7 +372,7 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
     lD.common.showLoadingScreen();
 
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity")
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity,tags,permissions")
         .done(function(res) {
             
             lD.common.hideLoadingScreen();
@@ -637,6 +649,128 @@ lD.showPublishScreen = function() {
 };
 
 /**
+ * Layout schedule screen
+ */
+lD.showScheduleScreen = function() {
+    lD.loadFormFromAPI('schedule', lD.layout.campaignId);
+};
+
+/**
+ * Layout save template screen
+ */
+lD.showSaveTemplateScreen = function() {
+    lD.loadFormFromAPI('saveTemplate', lD.layout.layoutId);
+};
+
+/**
+ * Load form from the API
+ */
+lD.loadFormFromAPI = function(type, id = null) {
+
+    console.log('loadFormFromAPI');
+    
+    const self = this;
+
+    const app = getXiboApp();
+
+    // Load form the API
+    const linkToAPI = urlsForApi.layout[type];
+
+    let requestPath = linkToAPI.url;
+
+    // Replace ID
+    if(id != null) {
+        requestPath = requestPath.replace(':id', id);
+    }
+    
+    // Create dialog
+    var calculatedId = new Date().getTime();
+
+    // Request and load element form
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+
+            // Create buttons
+            let generatedButtons = {
+                cancel: {
+                    label: translations.cancel,
+                    className: 'btn-default'
+                }
+            };
+
+            // Get buttons from form
+            for(var button in res.buttons) {
+                if(res.buttons.hasOwnProperty(button)) {
+                    if(button != 'Cancel') {
+                        let buttonType = 'btn-default';
+
+                        if(button === 'Save') {
+                            buttonType = 'btn-primary';
+                        }
+
+                        let url = res.buttons[button];
+
+                        generatedButtons[button] = {
+                            label: button,
+                            className: buttonType,
+                            callback: function(result) {
+                                // Call global function by the function name
+                                eval(url);
+                                return false;
+                            }
+                        };
+                    }
+                }
+            }
+
+            // Create dialog
+            let dialog = bootbox.dialog({
+                className: 'second-dialog',
+                title: res.dialogTitle,
+                message: res.html,
+                buttons: generatedButtons
+            }).attr('id', calculatedId).attr('data-test', type + 'LayoutForm');
+
+            dialog.data('extra', res.extra);
+
+            // Form open callback
+            if(res.callBack != undefined && typeof window[res.callBack] === 'function') {
+                window[res.callBack]();
+            }
+
+            // Call Xibo Init for this form
+            XiboInitialise('#' + dialog.attr('id'));
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error('Form load failed!');
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error('Form load failed!');
+    });
+};
+
+/**
  * Revert last action
  */
 lD.undoLastAction = function() {
@@ -850,7 +984,16 @@ lD.dropItemAdd = function(droppable, draggable) {
                 widget.editTransition('in');
             } else if(draggableSubType == 'transitionOut') { 
                 widget.editTransition('out');
+            } else if(draggableSubType == 'permissions') {
+                widget.editPermissions();
             }
+        } else if(droppableType == 'region') { // Add to region
+
+            //Get region
+            const regionId = $(droppable).attr('id');
+            const region = lD.getElementByTypeAndId('region', regionId);
+
+            region.editPermissions();
         }
     }
 };

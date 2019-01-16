@@ -12,7 +12,9 @@ const toolsList = [
         name: 'Region',
         type: 'region',
         description: 'Add a region to the layout',
-        dropTo: 'layout'
+        dropTo: 'layout',
+        hideOn: ['playlist'],
+        oneClickAdd: ['layout']
     },
     {
         name: 'Audio',
@@ -37,6 +39,12 @@ const toolsList = [
         type: 'transitionOut',
         description: 'Add a out transition to a widget',
         dropTo: 'widget'
+    },
+    {
+        name: 'Permissions',
+        type: 'permissions',
+        description: 'Edit object permissions',
+        dropTo: 'all'
     }
 ];
 
@@ -56,9 +64,12 @@ const defaultMenuItems = [
         pagination: false,
         page: 0,
         content: [],
-        state: ''
+        state: '',
+        oneClickAdd: ['playlist']
     }
 ];
+
+const tabName = 'Library';
 
 /**
  * Bottom toolbar contructor
@@ -66,7 +77,7 @@ const defaultMenuItems = [
  * @param {object[]} [customButtons] - customized buttons
  * @param {object} [customActions] - customized actions
  */
-let Toolbar = function(container, customButtons = [], customActions = {}, jumpList = {}) {
+let Toolbar = function(container, customButtons = null, customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
     this.previousOpenedMenu = -1;
@@ -126,9 +137,9 @@ Toolbar.prototype.loadPrefs = function() {
 
             // Populate the toolbar with the returned data
             self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
-            self.openedMenu = (loadedData.openedMenu) ? loadedData.openedMenu : -1;
-            self.previousOpenedMenu = (loadedData.previousOpenedMenu) ? loadedData.openedMenu : -1;
-            
+            self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
+            self.previousOpenedMenu = (loadedData.previousOpenedMenu != undefined) ? loadedData.openedMenu : -1;
+
             // Set menu index
             self.menuIndex = self.menuItems.length;
 
@@ -262,7 +273,10 @@ Toolbar.prototype.render = function() {
     this.selectedCard = {};
 
     // Check if trash bin is active
-    let trashBinActive = (app.selectedObject.type === 'region' || app.selectedObject.type === 'widget') && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+    let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+
+    // Check if there are some changes
+    let undoActive = app.manager.changeHistory.length > 0;
 
     // Compile layout template with data
     const html = ToolbarTemplate({
@@ -270,7 +284,8 @@ Toolbar.prototype.render = function() {
         menuItems: this.menuItems,
         tabsCount: (this.menuItems.length > this.fixedTabs),
         customButtons: this.customButtons,
-        trashActive: trashBinActive
+        trashActive: trashBinActive,
+        undoActive: undoActive
     });
 
     // Append layout html to the main div
@@ -341,21 +356,28 @@ Toolbar.prototype.render = function() {
         this.DOMObject.find('#trashContainer').click(
             this.customActions.deleteSelectedObjectAction
         );
+
+        // Delete object
+        this.DOMObject.find('#undoContainer').click(
+            app.undoLastAction
+        );
     }
 
     // Handle custom buttons
-    for(let index = 0;index < this.customButtons.length;index++) {
+    if(this.customButtons != null) {
+        for(let index = 0;index < this.customButtons.length;index++) {
 
-        // Bind action to button
-        this.DOMObject.find('#' + this.customButtons[index].id).click(
-            this.customButtons[index].action
-        );
+            // Bind action to button
+            this.DOMObject.find('#' + this.customButtons[index].id).click(
+                this.customButtons[index].action
+            );
 
-        // If there is a inactiveCheck, use that function to switch button state
-        if(this.customButtons[index].inactiveCheck != undefined) {
-            const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
-            const toggleValue = this.customButtons[index].inactiveCheck();
-            this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+            // If there is a inactiveCheck, use that function to switch button state
+            if(this.customButtons[index].inactiveCheck != undefined) {
+                const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
+                const toggleValue = this.customButtons[index].inactiveCheck();
+                this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+            }
         }
     }
 
@@ -383,6 +405,9 @@ Toolbar.prototype.render = function() {
             opacity: 0.3,
             helper: 'clone',
             start: function() {
+                // Deselect previous selections
+                self.deselectCardsAndDropZones();
+
                 $('.custom-overlay').show();
             }, 
             stop: function() {
@@ -422,6 +447,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
     // Calculate pagination
     const pagination = this.calculatePagination(menu);
 
+    const app = getXiboApp();
+
     // Enable/Disable page down pagination button according to the page to display
     this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
 
@@ -452,8 +479,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             element.maxSize = libraryUpload.maxSize;
             element.maxSizeMessage = libraryUpload.maxSizeMessage;
 
-            // Hide element if it's outside the "to display" region
-            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length));
+            // Hide element if it's outside the "to display" region or is a hideOn this app
+            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length)) || (element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1);
         }
 
         // Enable/Disable page up pagination button according to the page to display and total elements
@@ -495,7 +522,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             this.menuItems[menu].title = '"' + customFilter.media + '"';
         } else {
             this.menuIndex += 1;
-            this.menuItems[menu].title = 'Tab ' + this.menuIndex;
+            this.menuItems[menu].title = tabName + ' ' + this.menuIndex;
         }
 
         if(customFilter.tags != '' && customFilter.tags != undefined) {
@@ -625,7 +652,7 @@ Toolbar.prototype.createNewTab = function() {
 
     this.menuItems.push({
         name: 'search',
-        title: 'Tab ' + this.menuIndex,
+        title: tabName + ' ' + this.menuIndex,
         search: true,
         page: 0,
         query: '',
@@ -660,8 +687,13 @@ Toolbar.prototype.deleteTab = function(menu) {
     this.menuItems.splice(menu, 1);
 
     if(this.openedMenu >= this.fixedTabs) {
-    this.openedMenu = -1;
+        this.openedMenu = -1;
         this.previousOpenedMenu = -1;
+    }
+
+    // Reset menu index
+    if(this.menuItems.length === this.fixedTabs) {
+        this.menuIndex = this.menuItems.length;
     }
 
     // Save user preferences
@@ -680,9 +712,12 @@ Toolbar.prototype.deleteAllTabs = function() {
     }
     
     if(this.openedMenu >= this.fixedTabs) {
-    this.openedMenu = -1;
+        this.openedMenu = -1;
         this.previousOpenedMenu = -1;
     }
+
+    // Reset menu index
+    this.menuIndex = this.menuItems.length;
 
     // Save user preferences
     this.savePrefs();
@@ -817,28 +852,45 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
  */
 Toolbar.prototype.selectCard = function(card) {
 
-    const previouslySelected = this.selectedCard;
+    const app = getXiboApp();
 
     // Deselect previous selections
     this.deselectCardsAndDropZones();
 
-    if(previouslySelected[0] != card[0]) {
-        // Select new card
-        $(card).addClass('card-selected');
+    const previouslySelected = this.selectedCard;
 
+    if(previouslySelected[0] != card[0]) {
+        
         // Get card info
         const dropTo = $(card).attr('drop-to');
+        const subType = $(card).attr('data-sub-type');
+        const oneClickAdd = $(card).attr('data-one-click-add');
 
-        // Save selected card data
-        this.selectedCard = card;
+        if(oneClickAdd != undefined && oneClickAdd.split(',').indexOf(app.mainObjectType) != -1) {
 
-        // Show designer overlay
-        $('.custom-overlay').show().unbind().click(() => {
-            this.deselectCardsAndDropZones();
-        });
+            // Simulate drop item add
+            app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
 
-        // Set droppable areas as active
-        $('[data-type="' + dropTo + '"].ui-droppable').addClass('ui-droppable-active');
+        } else {
+
+            // Select new card
+            $(card).addClass('card-selected');
+
+            // Save selected card data
+            this.selectedCard = card;
+
+            // Show designer overlay
+            $('.custom-overlay').show().unbind().click(() => {
+                this.deselectCardsAndDropZones();
+            });
+
+            // Set droppable areas as active
+            if(dropTo === 'all' && subType === 'permissions') {
+                $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
+            } else {
+                $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+            }
+        }
     }
 };
 

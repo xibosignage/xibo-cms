@@ -124,17 +124,7 @@ pE.loadEditor = function() {
     // Initialize bottom toolbar
     pE.toolbar = new Toolbar(
         $('#playlist-editor').find('#playlist-editor-toolbar'),
-        [{
-            id: 'undoLastAction',
-            title: playlistTrans.undo,
-            logo: 'fa-undo',
-            class: 'btn-warning',
-            inactiveCheck: function() {
-                return (pE.manager.changeHistory.length <= 0);
-            },
-            inactiveCheckClass: 'hidden',
-            action: pE.undoLastAction
-        }], // Custom buttons
+        null, // Custom buttons
         {
             deleteSelectedObjectAction: pE.deleteSelectedObject
         }
@@ -190,7 +180,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
+        if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
 
             // Get card object
             const card = this.toolbar.selectedCard[0];
@@ -199,7 +189,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             this.toolbar.deselectCardsAndDropZones();
 
             // Simulate drop item add
-            this.playlist.addElement(obj, card);
+            this.dropItemAdd(obj, card);
         }
 
     } else {
@@ -247,6 +237,15 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
         // Refresh the designer containers
         this.refreshDesigner();
     }
+};
+
+/**
+ * Add action to take after dropping a draggable item
+ * @param {object} droppable - Target drop object
+ * @param {object} draggable - Target Card
+ */
+pE.dropItemAdd = function(droppable, card) {
+    this.playlist.addElement(droppable, card);
 };
 
 /**

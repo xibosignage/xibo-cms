@@ -1,4 +1,4 @@
-<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}" class="designer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}}" style="
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}" class="designer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}}" style="
 width: {{ durationPercentage }}%;">
     
     {{#if audio}}
@@ -14,7 +14,7 @@ width: {{ durationPercentage }}%;">
     {{/gt}}
 
 
-    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }}">{{ duration }}</div>
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">{{ duration }}</div>
     <div class="widgetTitle">
         <span class="widgetName">
             {{widgetName}}

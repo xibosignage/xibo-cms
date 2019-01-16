@@ -180,7 +180,7 @@ describe('Playlist Editor', function() {
                     });
 
                     // Click the revert button
-                    cy.get('#playlist-editor-toolbar #undoLastAction').click({force: true});
+                    cy.get('#playlist-editor-toolbar #undoContainer').click();
 
                     // Wait for the widget to be deleted and for the playlist to reload
                     cy.wait('@deleteWidget');
@@ -289,7 +289,7 @@ describe('Playlist Editor', function() {
                 cy.wait('@reloadWidget');
 
                 // Click the revert button
-                cy.get('#playlist-editor-toolbar #undoLastAction').click({force: true});
+                cy.get('#playlist-editor-toolbar #undoContainer').click();
 
                 // Wait for the widget to save
                 cy.wait('@saveWidget');

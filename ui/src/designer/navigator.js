@@ -116,7 +116,7 @@ Navigator.prototype.render = function(layout) {
 
     // Find all the regions and enable drag and resize
     if(this.editMode) {
-        this.DOMObject.find('#regions .designer-region').resizable({
+        this.DOMObject.find('#regions .designer-region.editable').resizable({
                 containment: layoutContainer
         }).draggable({
                 containment: layoutContainer
@@ -155,7 +155,11 @@ Navigator.prototype.render = function(layout) {
         });
 
         this.DOMObject.find('.designer-region').droppable({
-            accept: '[drop-to="region"]',
+            greedy: true,
+            accept: function(el) {
+                return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
+                    ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+            },
             drop: function(event, ui) {
                 lD.dropItemAdd(event.target, ui.draggable[0]);
             }
@@ -193,7 +197,7 @@ Navigator.prototype.renderNavbar = function() {
 
     this.navbarContainer.html(navigatorLayoutNavbarTemplate(
         {
-            selected: ((lD.selectedObject.type === 'region') ? '' : 'disabled'),
+            selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
             undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled')
         }
     ));
@@ -286,7 +290,7 @@ Navigator.prototype.renderNavbar = function() {
 
     this.navbarContainer.find('#delete-btn').click(function() {
 
-        if(lD.selectedObject.type === 'region') {
+        if(lD.selectedObject.isDeletable) {
 
             bootbox.confirm({
                 title: 'Delete Region',

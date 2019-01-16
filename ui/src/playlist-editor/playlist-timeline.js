@@ -31,7 +31,11 @@ PlaylistTimeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.playlist-widget').droppable({
-        accept: '[drop-to="widget"]',
+        greedy: true,
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
+                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
         drop: function(event, ui) {
             pE.playlist.addElement(event.target, ui.draggable[0]);
         }

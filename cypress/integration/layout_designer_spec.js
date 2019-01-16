@@ -151,7 +151,9 @@ describe('Layout Designer (Empty)', function() {
             cy.server();
             cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
-            cy.get('#layout-editor-toolbar button#publishLayout').click();
+            cy.get('#layout-editor-toolbar .navbar-submenu a[data-toggle="dropdown"]').click();
+
+            cy.get('#layout-editor-toolbar div#publishLayout').click();
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 
@@ -295,7 +297,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
 
             // Click the revert button
-            cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+            cy.get('#layout-editor-toolbar #undoContainer').click();
 
             // Wait for the layout to reload
             cy.wait('@reloadLayout').then(() => {

@@ -844,18 +844,49 @@ class Layout extends Base
             // Populate the status message
             $layout->getStatusMessage();
 
-            // Annotate each Widget with its validity
-            if (in_array('widget_validity', $embed)) {
+            // Annotate each Widget with its validity, tags and permissions
+            if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
                 foreach ($layout->getWidgets() as $widget) {
                     /* @var Widget $widget */
                     $module = $this->moduleFactory->createWithWidget($widget);
 
-                    try {
-                        $widget->isValid = (int)$module->isValid();
-                    } catch (XiboException $xiboException) {
-                        $widget->isValid = 0;
+                    // Augment with tags
+                    $widget->tags = $module->getMediaTags();
+
+                    if (in_array('permissions', $embed)) {
+                        // Augment with editable flag
+                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+
+                        // Augment with deletable flag
+                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+
+                        // Augment with permissions flag
+                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                    }
+
+                    if (in_array('widget_validity', $embed)) {
+                        try {
+                            $widget->isValid = (int)$module->isValid();
+                        } catch (XiboException $xiboException) {
+                            $widget->isValid = 0;
+                        }
                     }
                 }
+
+                // Augment regions with permissions
+                foreach ($layout->regions as $region) {
+                    if (in_array('permissions', $embed)) {
+                        // Augment with editable flag
+                        $region->isEditable = $this->getUser()->checkEditable($region);
+
+                         // Augment with deletable flag
+                        $region->isDeletable = $this->getUser()->checkDeleteable($region);
+
+                        // Augment with permissions flag
+                        $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
+                    }
+                }
+
             }
 
             if ($this->isApi())
