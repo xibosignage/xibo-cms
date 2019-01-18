@@ -71,12 +71,14 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.transitions = function() {
 
         let trans = {};
+        let widgetDurationInMs = this.getDuration() * 1000;
 
         if(this.getOptions().transIn) {
             trans.in = {
                 name: 'transitionIn',
                 type: this.getOptions().transIn,
                 duration: this.getOptions().transInDuration,
+                percDuration: (this.getOptions().transInDuration != undefined) ? (parseFloat(this.getOptions().transInDuration) / widgetDurationInMs * 100) : 0,
                 direction: this.getOptions().transInDirection
             };
         }
@@ -86,6 +88,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
                 name: 'transitionIn',
                 type: this.getOptions().transOut,
                 duration: this.getOptions().transOutDuration,
+                percDuration: (this.getOptions().transOutDuration != undefined) ? (parseFloat(this.getOptions().transOutDuration) / widgetDurationInMs * 100) : 0,
                 direction: this.getOptions().transOutDirection
             };
         }
@@ -112,13 +115,13 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         }
 
         // Get duration percentage based on the layout
-        const duration = (this.getDuration() / this.layoutObject.duration) * 100;
+        const duration = (this.getTotalDuration() / this.layoutObject.duration) * 100;
         
         // If the widget doesn't have the loop flag and is a single widget, extend it
         if(!this.loop && this.singleWidget){
             
             // Verify if the widget duration is less than the layout duration 
-            if(parseFloat(this.getDuration()) < parseFloat(this.layoutObject.duration)) {
+            if(parseFloat(this.getTotalDuration()) < parseFloat(this.layoutObject.duration)) {
                 this.extend = true;
                 this.extendSize = 100 - duration; // Extend size is the rest of the region width
             }
@@ -182,6 +185,23 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
 
         return this.duration;
     };
+
+    /**
+     * Get widget calculated duration with the transition out value if exists
+     * @returns {number} - Widget duration in seconds
+     * @
+     */
+    this.getTotalDuration = function() {
+
+        let totalDuration = this.getDuration();
+
+            // Extend with transition out duration if exists
+        if(this.getOptions().transOutDuration != undefined) {
+            totalDuration += parseFloat(this.getOptions().transOutDuration) / 1000;
+        }
+
+        return totalDuration;
+    };
 };
 
 /**
@@ -194,7 +214,7 @@ Widget.prototype.createClone = function() {
         id: 'ghost_' + this.id,
         widgetName: this.widgetName(),
         subType: this.subType,
-        duration: this.getDuration(),
+        duration: this.getTotalDuration(),
         regionId: this.regionId,
         durationPercentage: function() { // so that can be calculated on template rendering time
             return (this.duration / self.layoutObject.duration) * 100;

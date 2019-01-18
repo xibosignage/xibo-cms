@@ -66,18 +66,19 @@
                     {% set trans = module.getOption("transIn") %}
                     {% set transDuration = module.getOption("transInDuration") %}
                     {% set transDirection = module.getOption("transInDirection") %}
+                    {% set helpText %}{% trans "What transition should be applied when this item starts?" %}{% endset %}
                 {% elseif type == "out" %}
                     {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.out) %}
                     {% set trans = module.getOption("transOut") %}
                     {% set transDuration = module.getOption("transOutDuration") %}
                     {% set transDirection = module.getOption("transOutDirection") %}
+                    {% set helpText %}{% trans "What transition should be applied when this item finishes?" %}{% endset %}
                 {% else %}
                     {% set message %}{% trans "Unknown Transition Type Requested" %}{% endset %}
                     {{ forms.message(message) }}
                 {% endif %}
 
                 {% set title %}{% trans "Transition" %}{% endset %}
-                {% set helpText %}{% trans "What transition should be applied when this item starts?" %}{% endset %}
                 {{ forms.dropdown("transitionType", "single", title, trans, transitionsWithEmpty, "code", "transition", helpText) }}
 
                 {% set title %}{% trans "Duration" %}{% endset %}

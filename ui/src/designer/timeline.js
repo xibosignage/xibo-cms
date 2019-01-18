@@ -106,8 +106,8 @@ Timeline.prototype.calculateStartingZoom = function(regions) {
     let shorterWidgetDuration = -1;
     for(let region in regions) {
         for(let widget in regions[region].widgets) {
-            if(regions[region].widgets[widget].getDuration() < shorterWidgetDuration || shorterWidgetDuration === -1) {
-                shorterWidgetDuration = regions[region].widgets[widget].getDuration();
+            if(regions[region].widgets[widget].getTotalDuration() < shorterWidgetDuration || shorterWidgetDuration === -1) {
+                shorterWidgetDuration = regions[region].widgets[widget].getTotalDuration();
             }
         }
     }
@@ -140,7 +140,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
         for(let widget in regions[region].widgets) {
 
             // Calculate the ratio of the widget compared to the region length
-            const widthRatio = regions[region].widgets[widget].getDuration() / visibleDuration;
+            const widthRatio = regions[region].widgets[widget].getTotalDuration() / visibleDuration;
 
             // Mark region as hidden if the widget is too small to be displayed
             if(widthRatio < (this.properties.widgetMinimumVisibleRatio/100)) {
@@ -174,7 +174,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
 
         // calculate widgets total duration
         for(let widget in currentRegion.widgets) {
-            widgetsTotalDuration += currentRegion.widgets[widget].getDuration();
+            widgetsTotalDuration += currentRegion.widgets[widget].getTotalDuration();
         }
 
         // starting and ending time to check/draw ghosts in
@@ -200,7 +200,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
             for(let widget in currentRegion.widgets) {
 
                 // if the next widget shows on the time span, add it to the array
-                if(auxTime + currentRegion.widgets[widget].getDuration() > ghostsStartTime) {
+                if(auxTime + currentRegion.widgets[widget].getTotalDuration() > ghostsStartTime) {
                     // clone widget to create a ghost
                     let ghost = currentRegion.widgets[widget].createClone();
 
@@ -213,11 +213,11 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
                     // Add ghost to the array
                     ghostWidgetsObject.push(ghost);
                 } else {                
-                    paddingLeft += currentRegion.widgets[widget].getDuration();
+                    paddingLeft += currentRegion.widgets[widget].getTotalDuration();
                 }
 
                 // Advance auxiliar time with the widget duration
-                auxTime += currentRegion.widgets[widget].getDuration();
+                auxTime += currentRegion.widgets[widget].getTotalDuration();
 
                 // if the time has passed the end ghost time, break out from the widget loop
                 if(auxTime >= ghostsEndTime){
@@ -331,7 +331,9 @@ Timeline.prototype.render = function(layout) {
 
     this.DOMObject.find('.designer-widget .editProperty').click(function(e) {
         e.stopPropagation();
-        const widget = lD.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
+
+        const parent = $(this).parents('.designer-widget.editable:first');
+        const widget = lD.getElementByTypeAndId(parent.data('type'), parent.attr('id'), parent.data('widgetRegion'));
 
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
