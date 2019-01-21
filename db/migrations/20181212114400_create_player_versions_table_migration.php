@@ -55,7 +55,7 @@ class CreatePlayerVersionsTableMigration extends AbstractMigration
                 'validExtensions' => 'apk,ipk,wgt',
                 'previewEnabled' => 0,
                 'assignable' => 0,
-                'renderAs' => null,
+                'render_as' => null,
                 'viewPath' => '../modules',
                 'class' => 'Xibo\\\Widget\\\PlayerSoftware',
                 'defaultDuration' => 10

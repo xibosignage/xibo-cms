@@ -59,12 +59,16 @@ class PlayerUpgradeAndOverrideConfigMigration extends AbstractMigration
 
         $displayTable->save();
 
+        // Get system user
+	    $user = $this->fetchRow("SELECT userId FROM `user` WHERE userTypeId = 1");
+
         // add default display profile for tizen
         if (!$this->fetchRow('SELECT * FROM displayprofile WHERE type = \'sssp\' AND isDefault = 1')) {
             $displayProfileTable->insert([
-                'name' => 'Samsung Smart Signage',
+                'name' => 'Tizen',
                 'type' => 'sssp',
                 'config' => '[]',
+                'userId' => $user[0]['userId'],
                 'isDefault' => 1
             ])->save();
         }
