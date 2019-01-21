@@ -29,6 +29,7 @@ class Soap5 extends Soap4
      * @param string $xmrPubKey
      * @return string
      * @throws \SoapFault
+     * @throws \Xibo\Exception\XiboException
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
@@ -95,11 +96,14 @@ class Soap5 extends Soap4
                 $displayElement->setAttribute('status', 0);
                 $displayElement->setAttribute('code', 'READY');
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
-                $displayElement->setAttribute('version_instructions', $display->versionInstructions);
 
                 // Display Settings
-                $settings = $display->getSettings();
-
+                if (isset($this->display->overrideConfig))
+                    $settings = $this->display->getSettings(['displayOverride' => true]);
+                else
+                    $settings = $this->display->getSettings();
+                $id = null;
+                $version = '';
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {                    
                     // Disable the CEF browser option on Windows players
@@ -112,11 +116,29 @@ class Soap5 extends Soap4
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
+                    if (strtolower($arrayItem['name']) == 'versionmediaid' && $arrayItem['value'] != null ) {
+                        $id = $arrayItem['value'];
+                    }
+
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }
 
+                if ($clientType != 'windows' && $id != null) {
+                    $version = $this->playerVersionFactory->getByMediaId($id);
+                    if ($clientType == 'android') {
+                        $version = json_encode(['id' => $id, 'file' => $id . '.apk', 'code' => $version->code]);
+                    }
+                    elseif ($clientType == 'lg') {
+                        $version = json_encode(['id' => $id, 'file' => $id . '.ipk', 'code' => $version->code]);
+                    }
+                    elseif ($clientType == 'sssp') {
+                        $version = json_encode(['url' => Wsdl::getRoot() . '/playersoftware/:cmsKey/' . $this->display->displayId]);
+                    }
+                }
+
+                $displayElement->setAttribute('version_instructions', $version);
                 // Add some special settings
                 $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';
                 $node = $return->createElement($nodeName);

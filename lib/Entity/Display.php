@@ -55,6 +55,12 @@ class Display implements \JsonSerializable
     use EntityTrait;
 
     /**
+     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
+     * @var string[]
+     */
+    public $overrideConfig = [];
+
+    /**
      * @SWG\Property(description="The ID of this Display")
      * @var int
      */
@@ -206,12 +212,6 @@ class Display implements \JsonSerializable
     public $longitude;
 
     /**
-     * @SWG\Property(description="A JSON string representing the player installer that should be installed")
-     * @var string
-     */
-    public $versionInstructions;
-
-    /**
      * @SWG\Property(description="A string representing the player type")
      * @var string
      */
@@ -318,6 +318,12 @@ class Display implements \JsonSerializable
      * @var Tag[]
      */
     public $tags;
+
+    /**
+     * @SWG\Property(description="Media Id of the installer file overridden per display")
+     * @var int
+     */
+    public $versionMediaId = null;
 
     /**
      * Commands
@@ -539,11 +545,27 @@ class Display implements \JsonSerializable
 
     /**
      * Load
+     * @param array $options
+     * @throws NotFoundException
      */
-    public function load()
+    public function load($options = [])
     {
+        if ($this->loaded)
+            return;
+
+        $options = array_merge([
+            'loadConfig' => false
+        ], $options);
+
+        if ($options['loadConfig']) {
+            $this->overrideConfig = json_decode($this->overrideConfig, true);
+            $this->getLog()->debug('Config loaded Override [%d]: %s', count($this->overrideConfig), json_encode($this->overrideConfig, JSON_PRETTY_PRINT));
+        }
+
         // Load this displays group membership
         $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
+
+        $this->loaded = true;
     }
 
     /**
@@ -699,9 +721,9 @@ class Display implements \JsonSerializable
                     xmrChannel = :xmrChannel,
                     xmrPubKey = :xmrPubKey,
                     `lastCommandSuccess` = :lastCommandSuccess,
-                    `version_instructions` = :versionInstructions,
                     `deviceName` = :deviceName,
-                    `timeZone` = :timeZone
+                    `timeZone` = :timeZone,
+                    `overrideConfig` = :overrideConfig
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -737,9 +759,9 @@ class Display implements \JsonSerializable
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
-            'versionInstructions' => $this->versionInstructions,
             'deviceName' => $this->deviceName,
             'timeZone' => $this->timeZone,
+            'overrideConfig' => ($this->overrideConfig == '') ? '[]' :json_encode($this->overrideConfig),
             'displayId' => $this->displayId
         ]);
 
@@ -759,9 +781,13 @@ class Display implements \JsonSerializable
      * Get the Settings Profile for this Display
      * @return array
      */
-    public function getSettings()
+    public function getSettings($options = [])
     {
-        return $this->setConfig();
+        $options = array_merge([
+            'displayOverride' => false
+        ], $options);
+
+        return $this->setConfig($options);
     }
 
     /**
@@ -802,9 +828,16 @@ class Display implements \JsonSerializable
      * Set the config array
      * @return array
      */
-    private function setConfig()
+    private function setConfig($options = [])
     {
+        $options = array_merge([
+            'displayOverride' => false
+        ], $options);
+
+        $override = false;
+
         if ($this->_config == null) {
+            $this->load(['loadConfig' => true]);
 
             try {
                 if ($this->displayProfileId == 0) {
@@ -820,8 +853,18 @@ class Display implements \JsonSerializable
 
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
+            if (isset($this->overrideConfig)) {
+                foreach ($this->overrideConfig as $setting) {
+                    if ($setting['name'] == 'versionMediaId' && $setting['value'] != 0)
+                        $override = true;
+                }
+            }
 
-            $this->_config = $displayProfile->getProfileConfig();
+            if ($override && $options['displayOverride'])
+                $this->_config = $this->overrideConfig;
+            else
+                $this->_config = $displayProfile->getProfileConfig();
+
             $this->commands = $displayProfile->commands;
         }
 

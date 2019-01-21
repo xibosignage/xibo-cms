@@ -21,9 +21,11 @@ trait DisplayHelperTrait
 {
     /**
      * @param int $status
+     * @param string $type
      * @return XiboDisplay
+     * @throws \Exception
      */
-    protected function createDisplay($status = null)
+    protected function createDisplay($status = null, $type = 'windows')
     {
         // Generate names for display and xmr channel
         $hardwareId = Random::generateString(12, 'phpunit');
@@ -40,7 +42,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
         // Register our display
         $this->getXmdsWrapper()->RegisterDisplay($hardwareId,
             $hardwareId,
-            'windows',
+            $type,
             null,
             null,
             null,

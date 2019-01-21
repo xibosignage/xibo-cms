@@ -35,6 +35,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
@@ -110,6 +111,9 @@ class Display extends Base
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /** @var  RequiredFileFactory */
     private $requiredFileFactory;
 
@@ -147,7 +151,7 @@ class Display extends Base
      * @param NotificationFactory $notificationFactory
      * @param UserGroupFactory $userGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -166,6 +170,7 @@ class Display extends Base
         $this->tagFactory = $tagFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -500,7 +505,10 @@ class Display extends Base
             /* @var \Xibo\Entity\Display $display */
             if (in_array('displaygroups', $embed)) {
                 $display->load();
-            } else {
+            } elseif (in_array('overrideconfig', $embed)) {
+                $display->includeProperty('overrideConfig');
+            }
+            else {
                 $display->excludeProperty('displayGroups');
             }
 
@@ -697,13 +705,6 @@ class Display extends Base
                     'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions')
                 );
-
-                // Version Information
-                $display->buttons[] = array(
-                    'id' => 'display_button_version_instructions',
-                    'url' => $this->urlFor('displayGroup.version.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Version Information')
-                );
             }
 
             if ($this->getUser()->checkEditable($display)) {
@@ -738,6 +739,7 @@ class Display extends Base
     function editForm($displayId)
     {
         $display = $this->displayFactory->getById($displayId, true);
+        $display->load(['loadConfig' => true]);
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -794,6 +796,23 @@ class Display extends Base
             $layouts = [];
         }
 
+        $playerVersions  = $this->playerVersionFactory->query(null, ['playerType' => $display->clientType]);
+        $versions = [];
+
+        // Go through the player versions from factory and supply it as a parameter versions to edit form - on the form we default to value set previously on the profile or to the newest Code version if it's a new display profile.
+        foreach ($playerVersions as $playerVersion) {
+            $versions[] = $playerVersion;
+        }
+        $overrideVersionMediaId = null;
+
+        if (isset($display->overrideConfig)) {
+            foreach ($display->overrideConfig as $setting) {
+                if ($setting['name'] == 'versionMediaId')
+                    $overrideVersionMediaId = $setting['value'];
+            }
+        }
+
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
@@ -802,7 +821,9 @@ class Display extends Base
             'settings' => $profile,
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
-            'help' => $this->getHelp()->link('Display', 'Edit')
+            'help' => $this->getHelp()->link('Display', 'Edit'),
+            'versions' => $versions,
+            'overrideVersionMediaId' => $overrideVersionMediaId
         ]);
     }
 
@@ -1006,6 +1027,7 @@ class Display extends Base
         // Update properties
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
             $display->display = $this->getSanitizer()->getString('display');
+        $display->load(['loadConfig' => true]);
 
         $display->description = $this->getSanitizer()->getString('description');
         $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');
@@ -1024,6 +1046,44 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
+
+        $currentProfile = $display->getSettings();
+        $combined = [];
+        foreach ($currentProfile as $setting) {
+            // Validate the parameter
+            $value = null;
+
+            switch ($setting['type']) {
+                case 'string':
+                    $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
+                    break;
+
+                case 'int':
+                    $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
+                    break;
+
+                case 'double':
+                    $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
+                    break;
+
+                case 'checkbox':
+                    $value = $this->getSanitizer()->getCheckbox($setting['name']);
+                    break;
+
+                default:
+                    $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
+            }
+
+            // Add to the combined array
+            $combined[] = array(
+                'name' => $setting['name'],
+                'value' => $value,
+                'type' => $setting['type']
+            );
+        }
+
+        // Recursively merge the arrays and update
+        $display->overrideConfig = $combined;
 
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));

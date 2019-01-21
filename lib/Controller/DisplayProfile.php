@@ -24,6 +24,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -48,6 +49,9 @@ class DisplayProfile extends Base
      */
     private $commandFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -61,13 +65,14 @@ class DisplayProfile extends Base
      * @param DisplayProfileFactory $displayProfileFactory
      * @param CommandFactory $commandFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->pool = $pool;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->commandFactory = $commandFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -305,9 +310,17 @@ class DisplayProfile extends Base
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
+        // Get the Player Version for this display profile type
+        $playerVersions  = $this->playerVersionFactory->query(null, ['playerType' => $displayProfile->type]);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
+
+        $versions = [];
+        // Go through the player versions from factory and supply it as a parameter versions to edit form - on the form we default to value set previously on the profile or to the newest Code version if it's a new display profile.
+        foreach ($playerVersions as $playerVersion) {
+                $versions[] = $playerVersion;
+        }
 
         // Get a list of unassigned Commands
         $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
@@ -321,7 +334,8 @@ class DisplayProfile extends Base
             'displayProfile' => $displayProfile,
             'tabs' => $displayProfile->configTabs,
             'config' => $displayProfile->configDefault,
-            'commands' => array_merge($displayProfile->commands, $unassignedCommands)
+            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
+            'versions' => $versions
         ]);
     }
 

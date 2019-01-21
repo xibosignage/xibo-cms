@@ -536,6 +536,10 @@ class MediaFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
+        if ($this->getSanitizer()->getString('notPlayerSoftware', $filterBy) == 1) {
+            $body .= ' AND media.type <> "playersoftware" ';
+        }
+
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
@@ -546,6 +550,7 @@ class MediaFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) == 1) {
             $body .= '
                 AND media.type <> \'genericfile\'
+                AND media.type <> \'playersoftware\'
                 AND media.type <> \'font\'
             ';
         }
@@ -553,6 +558,7 @@ class MediaFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) == 0) {
             $body .= '
                 AND (media.type = \'genericfile\'
+                OR media.type = \'playersoftware\'
                 OR media.type = \'font\')
             ';
         }
@@ -566,6 +572,7 @@ class MediaFactory extends BaseFactory
                 AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout` WHERE backgroundImageId IS NOT NULL)
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
+                AND media.type <> \'playersoftware\'
             ';
 
             // DataSets with library images

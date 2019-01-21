@@ -1,0 +1,275 @@
+{#
+/**
+* Copyright (C) 2018 Xibo Signage Ltd
+*
+* Xibo - Digital Signage - http://www.xibo.org.uk
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="btns" href="#" id="playerSoftwareUploadForm" title="{% trans "Add a new media item to the player software library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</a></li>
+    </ul>
+{% endblock %}
+
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Player Software" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="playerSoftwareView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set android %}{% trans "Android" %}{% endset %}
+                            {% set windows %}{% trans "Windows" %}{% endset %}
+                            {% set webos %}{% trans "webOS" %}{% endset %}
+                            {% set sssp %}{% trans "SSSP" %}{% endset %}
+                            {% set options = [
+                                { optionid: "", option: "" },
+                                { optionid: "android", option: android},
+                                { optionid: "windows", option: windows},
+                                { optionid: "lg", option: webos},
+                                { optionid: "sssp", option: sssp}
+                            ] %}
+                            {{ inline.dropdown("playerType", "single", title, "", options, "optionid", "option") }}
+
+                            {% set title %}{% trans "Version" %}{% endset %}
+                            {{ inline.dropdown("playerVersion", "single", title, "", [{"version": none, "version": none}]|merge(versions), "version", "version") }}
+
+                            {% set title %}{% trans "Code" %}{% endset %}
+                            {{ inline.input("playerCode", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="playerSoftwareItems" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Version ID" %}</th>
+                            <th>{% trans "Player Version Name" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Version" %}</th>
+                            <th>{% trans "Code" %}</th>
+                            <th>{% trans "Media ID" %}</th>
+                            <th>{% trans "Permissions" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table;
+        $(document).ready(function() {
+            table = $("#playerSoftwareItems").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data = {};
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=playerSoftwareGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "playerSoftwareGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[2, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("playersoftware.search") }}",
+                    "data": function (d) {
+                        $.extend(d, $("#playerSoftwareItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "versionId"},
+                    {"data": "playerShowVersion" },
+                    {"data": "type"},
+                    {"data": "version"},
+                    {"data": "code"},
+                    {"data": "mediaId"},
+                    {
+                        "data": "groupsWithPermissions",
+                        "render": dataTableCreatePermissions
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ],
+
+                createdRow: function (row, data, index) {
+                    if (data.version === "" || data.version === null || data.code === 0) {
+                        $(row).addClass('danger');
+                        $(row).attr('Title', "{{ warningLabel }}");
+                    }
+                },
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#playerSoftwareItems_wrapper').find('.col-sm-6').eq(1));
+        });
+
+        $("#playerSoftwareUploadForm").click(function(e) {
+            e.preventDefault();
+
+            openUploadForm({
+                trans: {
+                    addFiles: "{% trans "Add files" %}",
+                    startUpload: "{% trans "Start upload" %}",
+                    cancelUpload: "{% trans "Cancel upload" %}"
+                },
+                upload: {
+                    maxSize: {{ libraryUpload.maxSize }},
+                    maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                    validExt: "{{ validExt }}"
+                }
+            });
+        });
+
+        /**
+         * Opens the upload form
+         * @param templateOptions
+         */
+        function openUploadForm(templateOptions) {
+
+            var template = Handlebars.compile($("#template-file-upload").html());
+
+            // Handle bars and open a dialog
+            bootbox.dialog({
+                message: template(templateOptions),
+                title: "{% trans "Upload Version" %}",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function() {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                }
+            }).on('shown.bs.modal', function() {
+                // Configure the upload form
+                var url = "{{ urlFor("library.add") }}";
+                var form = $(this).find("form");
+                var options = {
+                    url: url,
+                    disableImageResize: true,
+                    previewMaxWidth: 100,
+                    previewMaxHeight: 100,
+                    previewCrop: true
+                };
+                var refreshSessionInterval;
+
+                // Initialize the jQuery File Upload widget:
+                if(templateOptions.oldMediaId === undefined || templateOptions.oldMediaId === null) {
+                    form.fileupload(options);
+                } else {
+                    options = $.extend({}, options, {
+                        maxNumberOfFiles: 1,
+                        limitMultiFileUploads: 1
+                    });
+                    form.fileupload(options);
+                }
+
+                // Upload server status check for browsers with CORS support:
+                if ($.support.cors) {
+                    $.ajax({
+                        url: url,
+                        type: 'HEAD'
+                    }).fail(function () {
+                        $('<span class="alert alert-error"/>')
+                            .text('Upload server currently unavailable - ' + new Date())
+                            .appendTo(form);
+                    });
+                }
+
+                // Enable iframe cross-domain access via redirect option:
+                form.fileupload(
+                    'option',
+                    'redirect',
+                    window.location.href.replace(
+                        /\/[^\/]*$/,
+                        '/cors/result.html?%s'
+                    )
+                );
+
+                form.bind('fileuploadsubmit', function (e, data) {
+                    var inputs = data.context.find(':input');
+                    if (inputs.filter('[required][value=""]').first().focus().length) {
+                        return false;
+                    }
+                    data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+                    inputs.filter("input").prop("disabled", true);
+                }).bind('fileuploadstart', function (e, data) {
+                    if (form.fileupload("active") <= 0)
+                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+
+                    return true;
+                }).bind('fileuploaddone', function (e, data) {
+                    if (refreshSessionInterval != null && form.fileupload("active") <= 0)
+                        clearInterval(refreshSessionInterval);
+                    if (templateOptions.oldMediaId !== undefined && templateOptions.oldMediaId !== null) {
+                        XiboDialogClose();
+                        table.ajax.reload();
+                    }
+                });
+            });
+        }
+
+    </script>
+{% endblock %}

@@ -67,6 +67,48 @@
                         {{ forms.time(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "dropdown" %}
                         {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
+                    {% elseif field.fieldType == "dropdownVersion" %}
+                        {% if displayProfile.type == "android" %}
+                            {% set attributes = [
+                                { name: "data-width", value: "300px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("playersoftware.search") },
+                                { name: "data-search-term", value: "playerShowVersion" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "playerShowVersion" },
+                                { name: "data-filter-options", value: '{"playerType":"android"}' }
+                            ] %}
+                        {% endif %}
+                        {% if displayProfile.type == "lg" %}
+                            {% set attributes = [
+                                { name: "data-width", value: "300px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("playersoftware.search") },
+                                { name: "data-search-term", value: "playerShowVersion" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "playerShowVersion" },
+                                { name: "data-filter-options", value: '{"playerType":"lg"}' }
+                            ] %}
+                        {% endif %}
+                        {% if displayProfile.type == "sssp" %}
+                            {% set attributes = [
+                                { name: "data-width", value: "300px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("playersoftware.search") },
+                                { name: "data-search-term", value: "playerShowVersion" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "playerShowVersion" },
+                                { name: "data-filter-options", value: '{"playerType":"sssp"}' }
+                            ] %}
+                        {% endif %}
+                        {{ forms.dropdown(field.name, "single", field.title, field.value, versions, "mediaId", "playerShowVersion", field.helpText, "pagedSelect", "", "", "", attributes) }}
+
                     {% endif %}
                 {% endfor %}
                 </div>
@@ -88,7 +130,6 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                </div>
             </form>
         </div>
     </div>

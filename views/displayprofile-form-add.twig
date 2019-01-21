@@ -36,10 +36,12 @@ In theory it is fine, although  it may be better to user clientTypes from contro
                 {% set windows %}{% trans "Windows" %}{% endset %}
                 {% set android %}{% trans "Android" %}{% endset %}
                 {% set lg %}{% trans "LG" %}{% endset %}
+                {% set sssp %}{% trans "Samsung Smart Signage" %}{% endset %}
                 {% set options = [
-                { typeid: "android", type: android },
-                { typeid: "lg", type: lg },
-                { typeid: "windows", type: windows }
+                    { typeid: "android", type: android },
+                    { typeid: "lg", type: lg },
+                    { typeid: "windows", type: windows },
+                    { typeid: "sssp", type: sssp }
                 ] %}
                 {{ forms.dropdown("type", "single", title,"", options, "typeid","type", helpText) }} 
 

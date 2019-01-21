@@ -1,0 +1,177 @@
+<?php
+/**
+* Copyright (C) 2018 Xibo Signage Ltd
+*
+* Xibo - Digital Signage - http://www.xibo.org.uk
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+*/
+namespace Xibo\Tests\integration;
+
+use Xibo\Entity\Display;
+use Xibo\Entity\PlayerVersion;
+use Xibo\Helper\Random;
+use Xibo\OAuth2\Client\Entity\XiboDisplay;
+use Xibo\OAuth2\Client\Entity\XiboDisplayProfile;
+use Xibo\OAuth2\Client\Entity\XiboLibrary;
+use Xibo\Tests\Helper\DisplayHelperTrait;
+use Xibo\Tests\Helper\LayoutHelperTrait;
+use Xibo\Tests\LocalWebTestCase;
+
+/**
+ * Class PlayerSoftwareTest
+ * @package Xibo\Tests\integration
+ */
+class PlayerSoftwareTest extends LocalWebTestCase
+{
+    use LayoutHelperTrait;
+    use DisplayHelperTrait;
+
+    /** @var XiboLibrary */
+    protected $media;
+
+    /** @var XiboLibrary */
+    protected $media2;
+
+    /** @var XiboDisplay */
+    protected $display;
+
+    /** @var XiboDisplayProfile */
+    protected $displayProfile;
+
+    /** @var PlayerVersion */
+    protected $version;
+
+    protected $versionId;
+    protected $versionId2;
+
+    // <editor-fold desc="Init">
+    public function setup()
+    {
+        parent::setup();
+
+        $this->getLogger()->debug('Setup test for  ' . get_class() . ' Test');
+
+        // Add a media items
+        $this->media = (new XiboLibrary($this->getEntityProvider()))
+            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
+
+        // upload second version
+        $this->media2 = (new XiboLibrary($this->getEntityProvider()))
+            ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.8_R108.apk');
+
+        // Get the version
+        $version = $this->client->get('/playersoftware', ['mediaId' => $this->media->mediaId]);
+        $response = json_decode($version);
+        $data = $response->data->data;
+        foreach ($data as $actualVersion) {
+            $this->versionId = $actualVersion->versionId;
+        }
+
+        $this->versionId2 = $this->versionId + 1;
+
+        // Create a Display
+        $this->display = $this->createDisplay(null, 'android');
+
+        $this->displaySetStatus($this->display, Display::$STATUS_DONE);
+        $this->displaySetLicensed($this->display);
+
+        // Create a display profile
+        $this->displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->create(Random::generateString(), 'android', 0);
+        // Edit display profile to add the uploaded apk to the config
+        $this->client->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
+            'name' => $this->displayProfile->name,
+            'type' => $this->displayProfile->type,
+            'isDefault' => $this->displayProfile->type,
+            'versionMediaId' => $this->media->mediaId
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        // Edit display, assign it to the created display profile
+        $this->client->put('/display/' . $this->display->displayId, [
+            'display' => $this->display->display,
+            'licensed' => $this->display->licensed,
+            'license' => $this->display->license,
+            'displayProfileId' => $this->displayProfile->displayProfileId,
+            'defaultLayoutId' => $this->display->defaultLayoutId
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded'] );
+
+        $this->getLogger()->debug('Finished Setup');
+    }
+
+    public function tearDown()
+    {
+        $this->getLogger()->debug('Tear Down');
+
+        parent::tearDown();
+
+        // Delete the media we've been working with
+        $this->client->delete('/playersoftware/' . $this->versionId);
+        $this->client->delete('/playersoftware/' . $this->versionId2);
+        // Delete the Display
+        $this->deleteDisplay($this->display);
+        // Delete the Display profile
+        $this->displayProfile->delete();
+    }
+    // </editor-fold>
+
+    public function testVersionFromProfile()
+    {
+        // Ensure the Version Instructions are present on the Register Display call and that
+        // Register our display
+        $register = $this->getXmdsWrapper()->RegisterDisplay($this->display->license,
+            $this->display->license,
+            'android',
+            null,
+            null,
+            null,
+            '00:16:D9:C9:AL:69',
+            $this->display->xmrChannel,
+            $this->display->xmrPubKey
+        );
+
+        $this->assertContains($this->media->storedAs, $register, 'Version information not in Register');
+        $this->assertContains('61', $register, 'Version information Code not in Register');
+        $this->getLogger()->debug($register);
+    }
+
+    public function testVersionOverride()
+    {
+        // Edit display, set the versionMediaId
+        $this->client->put('/display/' . $this->display->displayId, [
+            'display' => $this->display->display,
+            'licensed' => $this->display->licensed,
+            'license' => $this->display->license,
+            'versionMediaId' => $this->media2->mediaId,
+            'defaultLayoutId' => $this->display->defaultLayoutId
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded'] );
+
+        // call register
+        $register = $this->getXmdsWrapper()->RegisterDisplay($this->display->license,
+            $this->display->license,
+            'android',
+            null,
+            null,
+            null,
+            '00:16:D9:C9:AL:69',
+            $this->display->xmrChannel,
+            $this->display->xmrPubKey
+        );
+        // make sure the media ID set on the display itself is in the register
+        $this->assertContains($this->media2->storedAs, $register, 'Version information not in Register');
+        $this->assertContains('108', $register, 'Version information Code not in Register');
+        $this->getLogger()->debug($register);
+    }
+}
