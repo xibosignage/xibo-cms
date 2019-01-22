@@ -60,7 +60,7 @@ class PlayerUpgradeAndOverrideConfigMigration extends AbstractMigration
         $displayTable->save();
 
         // Get system user
-	    $user = $this->fetchRow("SELECT userId FROM `user` WHERE userTypeId = 1");
+        $user = $this->fetchRow("SELECT userId FROM `user` WHERE userTypeId = 1");
 
         // add default display profile for tizen
         if (!$this->fetchRow('SELECT * FROM displayprofile WHERE type = \'sssp\' AND isDefault = 1')) {
