@@ -509,7 +509,7 @@ class ConfigService implements ConfigServiceInterface
             if ($this->getSetting('PROXY_AUTH') != '') {
                 $scheme = explode('://', $proxy);
 
-                $proxy = $scheme[0] . $this->getSetting('PROXY_AUTH') . '@' . $scheme[1];
+                $proxy = $scheme[0] . '://' . $this->getSetting('PROXY_AUTH') . '@' . $scheme[1];
             }
 
             $httpOptions['proxy'] = [
