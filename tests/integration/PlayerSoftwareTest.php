@@ -96,7 +96,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
         $this->getEntityProvider()->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
             'name' => $this->displayProfile->name,
             'type' => $this->displayProfile->type,
-            'isDefault' => $this->displayProfile->type,
+            'isDefault' => $this->displayProfile->isDefault,
             'versionMediaId' => $this->media->mediaId
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
@@ -121,6 +121,8 @@ class PlayerSoftwareTest extends LocalWebTestCase
 
     public function testVersionFromProfile()
     {
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+
         // Edit display, assign it to the created display profile
         $this->client->put('/display/' . $this->display->displayId, [
             'display' => $this->display->display,
@@ -149,14 +151,15 @@ class PlayerSoftwareTest extends LocalWebTestCase
             $this->display->xmrChannel,
             $this->display->xmrPubKey
         );
-
+        $this->getLogger()->debug($register);
         $this->assertContains($this->media->storedAs, $register, 'Version information not in Register');
         $this->assertContains('61', $register, 'Version information Code not in Register');
-        $this->getLogger()->debug($register);
     }
 
     public function testVersionOverride()
     {
+        $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
+
         // Edit display, set the versionMediaId
         $this->client->put('/display/' . $this->display->displayId, [
             'display' => $this->display->display,
@@ -191,8 +194,8 @@ class PlayerSoftwareTest extends LocalWebTestCase
             $this->display->xmrPubKey
         );
         // make sure the media ID set on the display itself is in the register
+        $this->getLogger()->debug($register);
         $this->assertContains($this->media2->storedAs, $register, 'Version information not in Register');
         $this->assertContains('108', $register, 'Version information Code not in Register');
-        $this->getLogger()->debug($register);
     }
 }
