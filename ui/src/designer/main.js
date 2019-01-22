@@ -22,6 +22,7 @@
 const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
+const contextMenuTemplate = require('../templates/context-menu.hbs');
 
 // Include modules
 const Layout = require('../designer/layout.js');
@@ -666,8 +667,6 @@ lD.showSaveTemplateScreen = function() {
  * Load form from the API
  */
 lD.loadFormFromAPI = function(type, id = null) {
-
-    console.log('loadFormFromAPI');
     
     const self = this;
 
@@ -993,7 +992,7 @@ lD.dropItemAdd = function(droppable, draggable) {
             const regionId = $(droppable).attr('id');
             const region = lD.getElementByTypeAndId('region', regionId);
 
-            region.editPermissions();
+            region.editPropertyForm('Permissions');
         }
     }
 };
@@ -1286,5 +1285,58 @@ lD.layoutStatus = function() {
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
+    });
+};
+
+/**
+ * Open object context menu
+ * @param {object} obj - Target object
+ * @param {object=} position - Page menu position
+ */
+lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
+
+    let objId = $(obj).attr('id');
+    let objType = $(obj).data('type');
+    let objRegionId = null;
+
+    if(objType == 'widget') {
+        objRegionId = $(obj).data('widgetRegion');
+    }
+
+    // Get object
+    let layoutObject = lD.getElementByTypeAndId(objType, objId, objRegionId);
+
+    // Create menu and append to the designer div
+    lD.designerDiv.append(contextMenuTemplate(layoutObject));
+    
+    // Set menu position ( and fix page limits )
+    let contextMenuWidth = lD.designerDiv.find('.context-menu').outerWidth();
+    let contextMenuHeight = lD.designerDiv.find('.context-menu').outerHeight();
+
+    let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
+    let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
+
+    lD.designerDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+
+    // Click overlay to close menu
+    lD.designerDiv.find('.context-menu-overlay').click((ev)=> {
+
+        if($(ev.target).hasClass('context-menu-overlay')) {
+            lD.designerDiv.find('.context-menu-overlay').remove();
+        }
+    });
+
+    // Handle buttons
+    lD.designerDiv.find('.context-menu .context-menu-btn').click((ev) => {
+        let target = $(ev.currentTarget);
+
+        if(target.data('action') == 'Delete') {
+            lD.deleteObject(objType, layoutObject[objType + 'Id']);
+        } else {
+            layoutObject.editPropertyForm(target.data('property'), target.data('propertyType'));   
+        }
+
+        // Remove context menu
+        lD.designerDiv.find('.context-menu-overlay').remove();
     });
 };

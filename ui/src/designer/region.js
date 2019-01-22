@@ -112,16 +112,17 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
 };
 
 /**
- * Edit permissions
+ * Edit property by type
+ * @param {string} property - property to edit
  */
-Region.prototype.editPermissions = function() {
+Region.prototype.editPropertyForm = function(property) {
 
     const self = this;
 
     const app = getXiboApp();
 
     // Load form the API
-    const linkToAPI = urlsForApi.region['getPermissions'];
+    const linkToAPI = urlsForApi.region['get' + property];
 
     let requestPath = linkToAPI.url;
 
@@ -134,7 +135,7 @@ Region.prototype.editPermissions = function() {
     // Create dialog
     let dialog = bootbox.dialog({
         className: 'second-dialog',
-        title: 'Load Permissions for region',
+        title: 'Load ' + property + ' for region',
         message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
         buttons: {
             cancel: {
@@ -148,19 +149,29 @@ Region.prototype.editPermissions = function() {
 
                     app.common.showLoadingScreen();
 
+                    let dataToSave = '';
+                    let options = {
+                        addToHistory: false // options.addToHistory
+                    };
+
+                    // Get data to save
+                    if(property === 'Permissions') {
+                        dataToSave = formHelpers.permissionsFormBeforeSubmit(dialog);
+                        options.customRequestPath = {
+                            url: dialog.find('.permissionsGrid').data('url'),
+                            type: 'POST'
+                        };
+                    } else {
+                        dataToSave = form.serialize();
+                    }
+
                     app.manager.addChange(
-                        'savePermission',
+                        'save' + property,
                         'widget', // targetType 
                         self.regionId,  // targetId
                         null,  // oldValues
-                        formHelpers.permissionsFormBeforeSubmit(dialog), // newValues
-                        {
-                            addToHistory: false, // options.addToHistory
-                            customRequestPath: {
-                                url: dialog.find('.permissionsGrid').data('url'),
-                                type: 'POST'
-                            }
-                        }
+                        dataToSave, // newValues
+                        options
                     ).then((res) => { // Success
 
                         app.common.hideLoadingScreen();
@@ -195,7 +206,7 @@ Region.prototype.editPermissions = function() {
 
             }
         }
-    }).attr('id', calculatedId).attr('data-test', 'regionPermissionsForm');
+    }).attr('id', calculatedId).attr('data-test', 'region' + property + 'Form');
 
     // Request and load element form
     $.ajax({
@@ -212,7 +223,9 @@ Region.prototype.editPermissions = function() {
 
             dialog.data('extra', res.extra);
 
-            formHelpers.permissionsFormAfterOpen(dialog);
+            if(property == 'Permissions') {
+                formHelpers.permissionsFormAfterOpen(dialog);
+            }
 
             // Call Xibo Init for this form
             XiboInitialise('#' + dialog.attr('id'));
@@ -225,7 +238,7 @@ Region.prototype.editPermissions = function() {
                 location.reload(false);
             } else {
 
-                toastr.error('Permissions form load failed!');
+                toastr.error(property + ' form load failed!');
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -241,7 +254,7 @@ Region.prototype.editPermissions = function() {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error('Permissions form load failed!');
+        toastr.error(property + ' form load failed!');
 
         dialog.modal('hide');
     });

@@ -23,7 +23,7 @@ const playlistEditorTemplate = require('../templates/playlist-editor.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const dropZoneTemplate = require('../templates/drop-zone.hbs');
-const formButtonsTemplate = require('../templates/form-buttons.hbs');
+const contextMenuTemplate = require('../templates/context-menu.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -612,5 +612,54 @@ pE.openUploadFormModelShown = function(form) {
         data.formData = inputs.serializeArray().concat(form.serializeArray());
 
         inputs.filter("input").prop("disabled", true);
+    });
+};
+
+
+/**
+ * Open object context menu
+ * @param {object} obj - Target object
+ * @param {object=} position - Page menu position
+ */
+pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
+    
+    let objId = $(obj).attr('id');
+    let objType = $(obj).data('type');
+
+    // Get object
+    let layoutObject = pE.getElementByTypeAndId(objType, objId);
+
+    // Create menu and append to the designer div
+    pE.editorDiv.append(contextMenuTemplate(layoutObject));
+
+    // Set menu position ( and fix page limits )
+    let contextMenuWidth = pE.editorDiv.find('.context-menu').outerWidth();
+    let contextMenuHeight = pE.editorDiv.find('.context-menu').outerHeight();
+
+    let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
+    let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
+
+    pE.editorDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+
+    // Click overlay to close menu
+    pE.editorDiv.find('.context-menu-overlay').click((ev) => {
+
+        if($(ev.target).hasClass('context-menu-overlay')) {
+            pE.editorDiv.find('.context-menu-overlay').remove();
+        }
+    });
+
+    // Handle buttons
+    pE.editorDiv.find('.context-menu .context-menu-btn').click((ev) => {
+        let target = $(ev.currentTarget);
+
+        if(target.data('action') == 'Delete') {
+            pE.deleteObject(objType, layoutObject[objType + 'Id']);
+        } else {
+            layoutObject.editPropertyForm(target.data('property'), target.data('propertyType'));
+        }
+
+        // Remove context menu
+        pE.editorDiv.find('.context-menu-overlay').remove();
     });
 };

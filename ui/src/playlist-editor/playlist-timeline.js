@@ -42,11 +42,25 @@ PlaylistTimeline.prototype.render = function(layout) {
     });
 
     // Handle widget attached audio click
-    this.DOMObject.find('.playlist-widget .editProperty').click(function(e) {
+    this.DOMObject.find('.playlist-widget.editable .editProperty').click(function(e) {
         e.stopPropagation();
         const widget = pE.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
+    });
+
+    this.DOMObject.find('.playlist-widget').contextmenu(function(ev) {
+        
+        if($(ev.currentTarget).is('.editable, .deletable, .permissionsModifiable')) {
+            // Open context menu
+            pE.openContextMenu(ev.currentTarget, {
+                x: ev.pageX,
+                y: ev.pageY
+            });
+        }
+
+        // Prevent browser menu to open
+        return false;
     });
 
     // Save order function with debounce

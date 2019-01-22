@@ -329,7 +329,7 @@ Timeline.prototype.render = function(layout) {
         }
     });
 
-    this.DOMObject.find('.designer-widget .editProperty').click(function(e) {
+    this.DOMObject.find('.designer-widget.editable .editProperty').click(function(e) {
         e.stopPropagation();
 
         const parent = $(this).parents('.designer-widget.editable:first');
@@ -375,6 +375,20 @@ Timeline.prototype.render = function(layout) {
                     toastr.error(errorMessage);
                 });
             }
+        });
+
+        this.DOMObject.find('.designer-region, .designer-widget:not(.designer-widget-ghost)').contextmenu(function(ev) {
+            
+            if($(ev.currentTarget).is('.editable, .deletable, .permissionsModifiable')) {
+                // Open context menu
+                lD.openContextMenu(ev.currentTarget, {
+                    x: ev.pageX,
+                    y: ev.pageY
+                });
+            }
+
+            // Prevent browser menu to open
+            return false;
         });
     }
     

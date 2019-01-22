@@ -169,6 +169,23 @@ Navigator.prototype.render = function(layout) {
         this.DOMObject.find('#edit-btn').click(function() {
             lD.toggleNavigatorEditing(true);
         }.bind(this));
+
+        // Handle right click context menu
+        let editMode = this.editMode;
+        this.DOMObject.find('.designer-region').contextmenu(function(ev) {
+
+            if(!editMode && $(ev.currentTarget).is('.deletable, .permissionsModifiable')) {
+
+                // Open context menu
+                lD.openContextMenu(ev.currentTarget, {
+                    x: ev.pageX,
+                    y: ev.pageY
+                });
+            }
+
+            return false;
+        });
+
     } else {
         // Hide edit button
         this.DOMObject.find('#edit-btn').hide();

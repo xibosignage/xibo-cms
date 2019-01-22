@@ -13,6 +13,15 @@
 
 @loading-overlay-z-index: 2000;
 
+@context-menu-bg-color: #30426a;
+@context-menu-border-color: #337ab7;
+
+@context-menu-btn-color: #e7e7e7;
+@context-menu-btn-hover-color: #fff;
+
+@context-menu-bin-btn-color: #e64c4c;
+@context-menu-bin-btn-hover-color: #d18282;
+
 // CSS
 .page-content>.row.header {
         margin-bottom: 10px;
@@ -294,4 +303,42 @@
 .bg_not_found_icon {
     &:extend(.fa-exclamation-triangle all);
     padding: 0 5px;
+}
+
+/* Context menu */
+.context-menu-overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 4;
+}
+
+.context-menu {
+    position: absolute;
+    z-index: 5;
+    opacity: 0.9;
+    background: @context-menu-bg-color;
+    border: @context-menu-border-color solid 2px;
+    padding: 5px;
+}
+
+.context-menu .context-menu-btn {
+    display: inline-block;
+    font-size: 18px;
+    color: @context-menu-btn-color;
+    cursor: pointer;
+}
+
+.context-menu .context-menu-btn:hover {
+    color: @context-menu-btn-hover-color;
+}
+
+.context-menu .deleteBtn {
+    color: @context-menu-bin-btn-color;
+}
+
+.context-menu .deleteBtn:hover {
+    color: @context-menu-bin-btn-hover-color;
 }

@@ -1,0 +1,44 @@
+<div class="context-menu-overlay">
+    <div class="context-menu context-menu-{{type}}">
+
+        {{#if sortControls}}
+            <div class="sort-controls-container">
+                <span>sort-controls-container</span>
+            </div>
+        {{/if}}
+
+        <div class="main-button-container">
+            {{#eq type "widget"}}
+                {{#if isEditable}}
+                    <div class="context-menu-btn audioBtn" data-property="Audio">
+                        <i class="fa tool-icon-audio"></i>
+                    </div>
+
+                    <div class="context-menu-btn expiryBtn" data-property="Expiry">
+                        <i class="fa tool-icon-expiry"></i>
+                    </div>
+                
+                    <div class="context-menu-btn transitionInBtn" data-property="Transition" data-property-type="in">
+                        <i class="fa tool-icon-transitionIn"></i>
+                    </div>
+                    
+                    <div class="context-menu-btn transitionOutBtn" data-property="Transition" data-property-type="out">
+                        <i class="fa tool-icon-transitionOut"></i>
+                    </div>
+                {{/if}}
+            {{/eq}}
+
+            {{#if isPermissionsModifiable}}
+                <div class="context-menu-btn permissionsBtn" data-property="Permissions">
+                    <i class="fa tool-icon-permissions"></i>
+                </div>
+            {{/if}}
+
+            {{#if isDeletable}}
+                <div class="context-menu-btn deleteBtn" data-action="Delete">
+                    <i class="fa fa-trash"></i>
+                </div>
+            {{/if}}
+        </div>
+    </div>
+</div>
