@@ -1,0 +1,48 @@
+{#
+/**
+* Copyright (C) 2018 Xibo Signage Ltd
+*
+* Xibo - Digital Signage - http://www.xibo.org.uk
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Delete Version" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#versionDeleteForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="versionDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("playersoftware.delete", {"id": version.versionId}) }}">
+                {% set message %}{% trans "Are you sure you want to delete this file?" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set message %}{% trans "Deleting a file cannot be reversed." %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

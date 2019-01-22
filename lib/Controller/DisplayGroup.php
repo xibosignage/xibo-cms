@@ -295,13 +295,6 @@ class DisplayGroup extends Base
                     'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
                     'text' => __('Permissions')
                 );
-
-                // Version Information
-                $group->buttons[] = array(
-                    'id' => 'display_button_version_instructions',
-                    'url' => $this->urlFor('displayGroup.version.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Version Information')
-                );
             }
 
             if ($this->getUser()->checkEditable($group)) {
@@ -1302,95 +1295,6 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Layouts unassigned from %s'), $displayGroup->displayGroup),
-            'id' => $displayGroup->displayGroupId
-        ]);
-    }
-
-    /**
-     * Version Form
-     * @param int $displayGroupId
-     */
-    public function versionForm($displayGroupId)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-        if (!$this->getUser()->checkEditable($displayGroup))
-            throw new AccessDeniedException();
-
-        // List of effected displays
-        $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
-
-        $this->getState()->template = 'displaygroup-form-version';
-        $this->getState()->setData([
-            'displayGroup' => $displayGroup,
-            'displays' => $displays,
-            'help' => $this->getHelp()->link('DisplayGroup', 'Version')
-        ]);
-    }
-
-    /**
-     * Version Update
-     * @param int $displayGroupId
-     *
-     * @SWG\Post(
-     *  path="/displaygroup/{displayGroupId}/version",
-     *  operationId="displayGroupDisplayVersion",
-     *  tags={"displayGroup"},
-     *  summary="Set the Version for this Display",
-     *  description="Sets the version instructions on all Displays in the Group",
-     *  @SWG\Parameter(
-     *      name="displayGroupId",
-     *      type="integer",
-     *      in="path",
-     *      description="The Display Group ID",
-     *      required=true
-     *  ),
-     *  @SWG\Parameter(
-     *      name="mediaId",
-     *      type="integer",
-     *      in="formData",
-     *      description="The Media Id of the Installer File",
-     *      required=true
-     *  ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
-     * @throws XiboException
-     */
-    public function version($displayGroupId)
-    {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-
-        if (!$this->getUser()->checkEditable($displayGroup))
-            throw new AccessDeniedException();
-
-        $media = $this->mediaFactory->getById($this->getSanitizer()->getInt('mediaId'));
-
-        if (!$this->getUser()->checkViewable($media))
-            throw new AccessDeniedException();
-
-        // Assign the media file
-        $displayGroup->assignMedia($media);
-        $displayGroup->setCollectRequired(true);
-
-        // Update each display in the group with the new version
-        foreach ($this->displayFactory->getByDisplayGroupId($displayGroupId) as $display) {
-            /* @var Display $display */
-            $display->versionInstructions = json_encode(['id' => $media->mediaId, 'file' => $media->storedAs]);
-            $display->save(['validate' => false]);
-        }
-
-        // Save the group (for the file assignment)
-        $displayGroup->save(['manageDisplayLinks' => false]);
-
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Version set for %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
     }

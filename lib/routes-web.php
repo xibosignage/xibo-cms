@@ -241,7 +241,6 @@ $app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:delete
 $app->get('/displaygroup/form/members/:id', '\Xibo\Controller\DisplayGroup:membersForm')->name('displayGroup.members.form');
 $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
 $app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
-$app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
 $app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
 $app->get('/displaygroup/form/collect/:id', '\Xibo\Controller\DisplayGroup:collectNowForm')->name('displayGroup.collectNow.form');
 
@@ -370,3 +369,8 @@ $app->get('/task/form/add', '\Xibo\Controller\Task:addForm')->name('task.add.for
 $app->get('/task/form/edit/:id', '\Xibo\Controller\Task:editForm')->name('task.edit.form');
 $app->get('/task/form/delete/:id', '\Xibo\Controller\Task:deleteForm')->name('task.delete.form');
 $app->get('/task/form/runNow/:id', '\Xibo\Controller\Task:runNowForm')->name('task.runNow.form');
+
+// Player Software
+$app->get('/playersoftware/view', '\Xibo\Controller\PlayerSoftware:displayPage')->name('playersoftware.view');
+$app->get('/playersoftware/form/edit/:id', '\Xibo\Controller\PlayerSoftware:editForm')->name('playersoftware.edit.form');
+$app->get('/playersoftware/form/delete/:id', '\Xibo\Controller\PlayerSoftware:deleteForm')->name('playersoftware.delete.form');

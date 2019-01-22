@@ -802,29 +802,6 @@ class DisplayGroupTest extends LocalWebTestCase
     }
 
     /**
-     * Assign apk version to a group
-     */
-    public function testVersion()
-    {
-        # Create new random name
-        $name = Random::generateString(8, 'phpunit');
-        # Create new display group
-        $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create($name, 'phpunit description', 0, '');
-        # Upload a known apk file
-        $media = (new XiboLibrary($this->getEntityProvider()))->create('API imagee', PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');
-        # Asign apk to the display group
-        $this->client->post('/displaygroup/' . $displayGroup->displayGroupId . '/version', [
-        	'mediaId' => $media->mediaId
-        	]);
-
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
-        # Clean up
-        $displayGroup->delete();
-        $media->delete();
-    }
-
-    /**
      * Collect now action test
      */
     public function testCollectNow()

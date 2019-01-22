@@ -113,6 +113,7 @@ class LayoutTest extends LocalWebTestCase
             $this->skipTest("There are pre-existing Layouts");
             return;
         }
+
         $this->client->get('/layout');
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());

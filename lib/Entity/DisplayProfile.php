@@ -964,6 +964,17 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'versionMediaId',
+                        'tabId' => 'advanced',
+                        'title' => __('Player Version'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdownVersion',
+                        'default' => 'versionMediaId',
+                        'helpText' => __('Select Player version file, it will be sent to all players assigned to this display profile'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'startOnBoot',
                         'tabId' => 'advanced',
                         'title' => __('Start during device start up?'),
@@ -1296,6 +1307,17 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ],
                     [
+                        'name' => 'versionMediaId',
+                        'tabId' => 'advanced',
+                        'title' => __('Player Version'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdownVersion',
+                        'default' => null,
+                        'helpText' => __('Select Player version file, it will be sent to all players assigned to this display profile'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
                         'name' => 'actionBarMode',
                         'tabId' => 'advanced',
                         'title' => __('Action Bar Mode'),
@@ -1335,6 +1357,211 @@ class DisplayProfile implements \JsonSerializable
                         ],
                         'default' => 1,
                         'helpText' => __('The size of the screenshot to return when requested.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'mediaInventoryTimer',
+                        'tabId' => 'advanced',
+                        'title' => __('Send progress while downloading'),
+                        'type' => 'int',
+                        'fieldType' => 'text',
+                        'default' => 0,
+                        'helpText' => __('How often, in minutes, should the Display send its download progress while it is downloading new content?'),
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'logLevel',
+                        'tabId' => 'advanced',
+                        'title' => __('Log Level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => [
+                            ['id' => 'audit', 'value' => 'Audit'],
+                            ['id' => 'error', 'value' => 'Error'],
+                            ['id' => 'off', 'value' => 'Off']
+                        ],
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'timers',
+                        'tabId' => 'timers',
+                        'title' => __('On/Off Timers'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the on/off timers to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'pictureOptions',
+                        'tabId' => 'pictureOptions',
+                        'title' => __('Picture Options'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the picture options to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'lockOptions',
+                        'tabId' => 'lockOptions',
+                        'title' => __('Lock Options'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the lock options to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ]
+                ]
+            ],
+            'sssp' => [
+                'synonym' => 'xiboforsssp',
+                'tabs' => [
+                    ['id' => 'general', 'name' => __('General')],
+                    ['id' => 'timers', 'name' => __('Timers')],
+                    ['id' => 'pictureOptions', 'name' => __('Picture')],
+                    ['id' => 'lockOptions', 'name' => __('Monitor Settings')],
+                    ['id' => 'advanced', 'name' => __('Advanced')],
+                ],
+                'settings' => [
+                    [
+                        'name' => 'emailAddress',
+                        'tabId' => 'general',
+                        'title' => __('Email Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('The email address will be used to license this client. This is the email address you provided when you purchased the licence.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'collectInterval',
+                        'tabId' => 'general',
+                        'title' => __('Collect interval'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 60, 'value' => __('1 minute')),
+                            array('id' => 300, 'value' => __('5 minutes')),
+                            array('id' => 600, 'value' => __('10 minutes')),
+                            array('id' => 1800, 'value' => __('30 minutes')),
+                            array('id' => 3600, 'value' => __('1 hour')),
+                            array('id' => 14400, 'value' => __('4 hours')),
+                            array('id' => 43200, 'value' => __('12 hours')),
+                            array('id' => 86400, 'value' => __('24 hours'))
+                        ),
+                        'default' => 300,
+                        'helpText' => __('How often should the Player check for new content.'),
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'xmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'orientation',
+                        'tabId' => 'general',
+                        'title' => __('Orientation'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 0, 'value' => __('Landscape')),
+                            array('id' => 1, 'value' => __('Portrait')),
+                            array('id' => 8, 'value' => __('Reverse Landscape')),
+                            array('id' => 9, 'value' => __('Reverse Portrait'))
+                        ),
+                        'default' => 0,
+                        'helpText' => __('Set the orientation of the device.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'downloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'downloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'versionMediaId',
+                        'tabId' => 'advanced',
+                        'title' => __('Player Version'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdownVersion',
+                        'default' => null,
+                        'helpText' => __('Select Player version file, it will be sent to all players assigned to this display profile'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'actionBarMode',
+                        'tabId' => 'advanced',
+                        'title' => __('Action Bar Mode'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 0, 'value' => 'Hide'),
+                            array('id' => 1, 'value' => 'Timed')
+                        ),
+                        'default' => 1,
+                        'helpText' => __('How should the action bar behave?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'actionBarDisplayDuration',
+                        'tabId' => 'advanced',
+                        'title' => __('Action Bar Display Duration'),
+                        'type' => 'int',
+                        'fieldType' => 'text',
+                        'default' => 30,
+                        'helpText' => __('How long should the Action Bar be shown for, in seconds?'),
+                        'validation' => 'numeric',
                         'enabled' => true,
                         'groupClass' => NULL
                     ],

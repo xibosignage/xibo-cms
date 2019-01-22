@@ -249,7 +249,6 @@ $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayG
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
 $app->delete('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:delete')->name('displayGroup.delete');
-$app->post('/displaygroup/:id/version', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
 
 $app->post('/displaygroup/:id/display/assign', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
 $app->post('/displaygroup/:id/display/unassign', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
@@ -475,3 +474,16 @@ $app->post('/task', '\Xibo\Controller\Task:add')->name('task.add');
 $app->put('/task/:id', '\Xibo\Controller\Task:edit')->name('task.edit');
 $app->delete('/task/:id', '\Xibo\Controller\Task:delete')->name('task.delete');
 $app->post('/task/:id/run', '\Xibo\Controller\Task:runNow')->name('task.runNow');
+
+/**
+ * Player Versions
+ * @SWG\Tag(
+ *  name="version",
+ *  description="Player Versions"
+ * )
+ */
+$app->get('/playersoftware', '\Xibo\Controller\PlayerSoftware:grid')->name('playersoftware.search');
+$app->put('/playersoftware/:id', '\Xibo\Controller\PlayerSoftware:edit')->name('playersoftware.edit');
+$app->delete('/playersoftware/:id', '\Xibo\Controller\PlayerSoftware:delete')->name('playersoftware.delete');
+$app->get('/playersoftware/:cmsKey/:displayId/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSssp')->name('playersoftware.sssp');
+$app->get('/playersoftware/:cmsKey/:displayId', '\Xibo\Controller\PlayerSoftware:getVersionFile')->name('playersoftware.version.file');

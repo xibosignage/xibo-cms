@@ -58,6 +58,10 @@
                 <li class="sidebar-list"><a href="{{ urlFor("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
+            {% if currentUser.routeViewable("/playersoftware") %}
+                <li class="sidebar-list"><a href="{{ urlFor("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
+            {% endif %}
+
             {% if currentUser.routeViewable("/command") %}
                 <li class="sidebar-list"><a href="{{ urlFor("command.view") }}">{% trans "Commands" %}</a></li>
             {% endif %}
