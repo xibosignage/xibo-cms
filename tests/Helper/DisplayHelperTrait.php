@@ -88,6 +88,8 @@ pbBhRgkIdydXoZZdjQIDAQAB
      */
     protected function displaySetLicensed($display)
     {
+        $display->licensed = 1;
+
         $this->getStore()->update('UPDATE `display` SET licensed = 1, auditingUntil = :auditingUntil WHERE displayId = :displayId', [
             'displayId' => $display->displayId,
             'auditingUntil' => (time() + 86400)
