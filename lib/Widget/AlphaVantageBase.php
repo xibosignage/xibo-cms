@@ -162,7 +162,7 @@ abstract class AlphaVantageBase extends ModuleWidget
                 $client = new Client();
 
 
-                $request = $client->request('GET', 'https://exchangeratesapi.io/api/' . $yesterday, $this->getConfig()->getGuzzleProxy([
+                $request = $client->request('GET', 'https://api.exchangeratesapi.io/' . $yesterday, $this->getConfig()->getGuzzleProxy([
                     'query' => [
                         'base' => $base
                     ]
