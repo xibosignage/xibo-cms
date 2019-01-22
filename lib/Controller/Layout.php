@@ -1078,6 +1078,15 @@ class Layout extends Base
 
                 $layout->buttons[] = ['divider' => true];
 
+                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
+                    // Save template button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_save_template',
+                        'url' => $this->urlFor('template.from.layout.form', ['id' => $layout->layoutId]),
+                        'text' => __('Save Template')
+                    );
+                }
+
                 // Export Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_export',
