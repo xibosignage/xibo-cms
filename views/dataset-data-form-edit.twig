@@ -39,7 +39,7 @@
         <div class="col-md-12">
             <form id="dataSetEditData" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.data.edit", {id: dataSet.dataSetId, rowId: row.id}) }}">
                 {% for col in dataSet.getColumn() %}
-                    {% if col.dataSetColumnTypeId == 1 or col.dataSetColumnTypeId == 3 %}
+                    {% if col.dataSetColumnTypeId == 1 %}
                         {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}
                         {% set heading = attribute(row, col.heading) %}
 

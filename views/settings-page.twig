@@ -250,7 +250,7 @@
                                 {% if theme.isSettingVisible("DISPLAY_AUTO_AUTH") %}
                                     {% set title %}{% trans "Automatically authorise new Displays?" %}{% endset %}
                                     {% set helpText %}{% trans "If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout." %}{% endset %}
-                                    {{ forms.checkbox("DISPLAY_AUTO_AUTH", title, theme.getSetting("DISPLAY_AUTO_AUTH"), helpText, "", "", not theme.isSettingEditable("DISPLAY_AUTO_AUTH")) }}
+                                    {{ forms.checkbox("DISPLAY_AUTO_AUTH", title, theme.getSetting("DISPLAY_AUTO_AUTH", 0), helpText, "", "", not theme.isSettingEditable("DISPLAY_AUTO_AUTH")) }}
                                 {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_general">

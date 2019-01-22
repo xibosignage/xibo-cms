@@ -151,8 +151,8 @@ class Pdf extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        // We have a short cache duration because this module doesn't rely on any external sources and we're just
+        // We have a long cache duration because this module doesn't rely on any external sources and we're just
         // creating some HTML.
-        return 1;
+        return 86400 * 365;
     }
 }
