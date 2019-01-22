@@ -1145,6 +1145,13 @@ class LayoutFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) != 0) {
             $body .= " AND layout.layoutId = :layoutId ";
             $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', 0, $filterBy);
+        } else if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
+            // Exclude templates by default
+            if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
+                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            } else {
+                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+            }
         }
 
         // Layout Draft
@@ -1251,15 +1258,6 @@ class LayoutFactory extends BaseFactory
                 }
 
                 $body .= " ) ";
-            }
-        }
-
-        // Exclude templates by default
-        if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
-            if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
-                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
-            } else {
-                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
             }
         }
 
