@@ -28,7 +28,6 @@ use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayProfile;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\Tests\Helper\DisplayHelperTrait;
-use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -37,7 +36,6 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class PlayerSoftwareTest extends LocalWebTestCase
 {
-    use LayoutHelperTrait;
     use DisplayHelperTrait;
 
     /** @var XiboLibrary */
