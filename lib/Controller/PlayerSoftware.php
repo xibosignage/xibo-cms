@@ -373,7 +373,7 @@ class PlayerSoftware extends Base
         $app = $this->getApp();
         $app->response()->header('content-type', 'application/xml');
         // get the media ID from display profile
-        $mediaId = $display->getSetting('versionMediaId', null);
+        $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
         $media = $this->mediaFactory->getById($mediaId);
 
         $mediaName = explode('.wgt', $media->fileName);
@@ -406,11 +406,14 @@ class PlayerSoftware extends Base
         // Check if CMS key is correct
         if ($cmsKey != $this->getConfig()->getSetting('SERVER_KEY'))
             throw new InvalidArgumentException(__('The Server key you entered does not match with the server key at this address'), 'cmsKey');
+
         $this->setNoOutput(true);
+
         // Get display and media
         $display = $this->displayFactory->getById($displayId);
-        $mediaId = $display->getSetting('versionMediaId', null);
+        $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
         $media = $this->mediaFactory->getById($mediaId);
+
         // Create a widget from media and call getResource on it
         $widget = $this->moduleFactory->createWithMedia($media);
         $widget->getResource($displayId);

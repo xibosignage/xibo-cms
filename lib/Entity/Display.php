@@ -52,6 +52,7 @@ class Display implements \JsonSerializable
     public static $STATUS_PENDING = 3;
 
     private $_config;
+    private $_configOverride;
     use EntityTrait;
 
     /**
@@ -320,12 +321,6 @@ class Display implements \JsonSerializable
     public $tags;
 
     /**
-     * @SWG\Property(description="Media Id of the installer file overridden per display")
-     * @var int
-     */
-    public $versionMediaId = null;
-
-    /**
      * Commands
      * @var array[Command]
      */
@@ -559,7 +554,6 @@ class Display implements \JsonSerializable
 
         if ($options['loadConfig']) {
             $this->overrideConfig = json_decode($this->overrideConfig, true);
-            $this->getLog()->debug('Config loaded Override [%d]: %s', count($this->overrideConfig), json_encode($this->overrideConfig, JSON_PRETTY_PRINT));
         }
 
         // Load this displays group membership
@@ -806,18 +800,33 @@ class Display implements \JsonSerializable
      * Get a particular setting
      * @param string $key
      * @param mixed $default
+     * @param array $options
      * @return mixed
+     * @throws NotFoundException
      */
-    public function getSetting($key, $default)
+    public function getSetting($key, $default, $options = [])
     {
-        $this->setConfig();
+        $options = array_merge([
+            'displayOverride' => false
+        ], $options);
+
+        $this->setConfig($options);
 
         // Find
         $return = $default;
-        foreach($this->_config as $row) {
-            if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                $return = $row['value'];
-                break;
+        if ($options['displayOverride']) {
+            foreach ($this->_configOverride as $row) {
+                if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                    $return = $row['value'];
+                    break;
+                }
+            }
+        } else {
+            foreach ($this->_config as $row) {
+                if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                    $return = $row['value'];
+                    break;
+                }
             }
         }
 
@@ -826,15 +835,15 @@ class Display implements \JsonSerializable
 
     /**
      * Set the config array
+     * @param array $options
      * @return array
+     * @throws NotFoundException
      */
     private function setConfig($options = [])
     {
         $options = array_merge([
             'displayOverride' => false
         ], $options);
-
-        $override = false;
 
         if ($this->_config == null) {
             $this->load(['loadConfig' => true]);
@@ -853,22 +862,17 @@ class Display implements \JsonSerializable
 
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
-            if (isset($this->overrideConfig)) {
-                foreach ($this->overrideConfig as $setting) {
-                    if ($setting['name'] == 'versionMediaId' && $setting['value'] != 0)
-                        $override = true;
-                }
-            }
 
-            if ($override && $options['displayOverride'])
-                $this->_config = $this->overrideConfig;
-            else
-                $this->_config = $displayProfile->getProfileConfig();
+            $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
+            $this->_config = $displayProfile->getProfileConfig();
 
             $this->commands = $displayProfile->commands;
         }
 
-        return $this->_config;
+        if ($options['displayOverride'])
+            return $this->_configOverride;
+        else
+            return $this->_config;
     }
 
     /**

@@ -107,7 +107,7 @@
                                 { name: "data-filter-options", value: '{"playerType":"sssp"}' }
                             ] %}
                         {% endif %}
-                        {{ forms.dropdown(field.name, "single", field.title, field.value, versions, "mediaId", "playerShowVersion", field.helpText, "pagedSelect", "", "", "", attributes) }}
+                        {{ forms.dropdown(field.name, "single", field.title, field.value, [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", field.helpText, "pagedSelect", "", "", "", attributes) }}
 
                     {% endif %}
                 {% endfor %}

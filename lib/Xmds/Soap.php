@@ -429,18 +429,8 @@ class Soap
 
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
-        if (isset($this->display->overrideConfig))
-            $settings = $this->display->getSettings(['displayOverride' => true]);
-        else
-            $settings = $this->display->getSettings();
 
-        $playerVersionMediaId = null;
-
-        foreach ($settings as $setting) {
-            if (strtolower($setting['name']) == 'versionmediaid' && $setting['value'] != null) {
-                $playerVersionMediaId = $setting['value'];
-            }
-        }
+        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
         if ($this->display->clientType == 'sssp') {
             $playerVersionMediaId = null;

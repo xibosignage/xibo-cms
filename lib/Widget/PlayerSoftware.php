@@ -95,7 +95,6 @@ class PlayerSoftware extends ModuleWidget
 
     public function postProcess($media)
     {
-        $this->getLog()->debug('MEDIA IN POST PROCESS IS ' . json_encode($media, JSON_PRETTY_PRINT));
         $storedAs = $media->storedAs;
         $extension = strtolower(substr(strrchr($storedAs, '.'), 1));
         if ($extension == 'apk') {

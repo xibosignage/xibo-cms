@@ -98,11 +98,8 @@ class Soap5 extends Soap4
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
 
                 // Display Settings
-                if (isset($this->display->overrideConfig))
-                    $settings = $this->display->getSettings(['displayOverride' => true]);
-                else
-                    $settings = $this->display->getSettings();
-                $id = null;
+                $settings = $this->display->getSettings(['displayOverride' => true]);
+
                 $version = '';
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {                    
@@ -116,17 +113,16 @@ class Soap5 extends Soap4
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
-                    if (strtolower($arrayItem['name']) == 'versionmediaid' && $arrayItem['value'] != null ) {
-                        $id = $arrayItem['value'];
-                    }
-
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }
 
+                $id = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
                 if ($clientType != 'windows' && $id != null) {
                     $version = $this->playerVersionFactory->getByMediaId($id);
+
                     if ($clientType == 'android') {
                         $version = json_encode(['id' => $id, 'file' => $id . '.apk', 'code' => $version->code]);
                     }
@@ -134,7 +130,7 @@ class Soap5 extends Soap4
                         $version = json_encode(['id' => $id, 'file' => $id . '.ipk', 'code' => $version->code]);
                     }
                     elseif ($clientType == 'sssp') {
-                        $version = json_encode(['url' => Wsdl::getRoot() . '/playersoftware/:cmsKey/' . $this->display->displayId]);
+                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/:cmsKey/' . $this->display->displayId]);
                     }
                 }
 

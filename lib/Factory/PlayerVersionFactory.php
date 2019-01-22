@@ -234,7 +234,6 @@ class PlayerVersionFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $this->getLog()->debug('PLAYER VERSION ROW IS ' . json_encode($row, JSON_PRETTY_PRINT));
             $entries[] = $version = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'mediaId', 'code'

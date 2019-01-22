@@ -536,7 +536,7 @@ class MediaFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        if ($this->getSanitizer()->getString('notPlayerSoftware', $filterBy) == 1) {
+        if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
             $body .= ' AND media.type <> "playersoftware" ';
         }
 

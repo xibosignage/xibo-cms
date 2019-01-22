@@ -310,17 +310,21 @@ class DisplayProfile extends Base
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
+        $versionId = null;
+        $playerVersions = '';
+
+        foreach ($displayProfile->config as $setting) {
+            if ($setting['name'] == 'versionMediaId') {
+                $versionId = $setting['value'];
+            }
+        }
+
         // Get the Player Version for this display profile type
-        $playerVersions  = $this->playerVersionFactory->query(null, ['playerType' => $displayProfile->type]);
+        if ($versionId != 0)
+            $playerVersions  = $this->playerVersionFactory->getByMediaId($versionId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
-
-        $versions = [];
-        // Go through the player versions from factory and supply it as a parameter versions to edit form - on the form we default to value set previously on the profile or to the newest Code version if it's a new display profile.
-        foreach ($playerVersions as $playerVersion) {
-                $versions[] = $playerVersion;
-        }
 
         // Get a list of unassigned Commands
         $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
@@ -335,7 +339,7 @@ class DisplayProfile extends Base
             'tabs' => $displayProfile->configTabs,
             'config' => $displayProfile->configDefault,
             'commands' => array_merge($displayProfile->commands, $unassignedCommands),
-            'versions' => $versions
+            'versions' => [$playerVersions]
         ]);
     }
 

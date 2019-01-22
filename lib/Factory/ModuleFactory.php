@@ -578,7 +578,7 @@ class ModuleFactory extends BaseFactory
             $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('notPlayerSoftware', $filterBy) == 1) {
+        if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
             $body .= ' AND name <> "Player Software" ';
         }
 
