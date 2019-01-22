@@ -305,7 +305,11 @@ class LocalWebTestCase extends WebTestCase
     {
         // Create if necessary
         if (self::$logger === null) {
+            if (isset($_SERVER['PHPUNIT_LOG_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_TO_CONSOLE']) {
                 self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+            } else {
+                self::$logger = new NullLogger();
+            }
         }
 
         return self::$logger;
