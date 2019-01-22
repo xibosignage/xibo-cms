@@ -350,7 +350,10 @@ class Layout implements \JsonSerializable
         $countRegions = is_array($this->regions) ? count($this->regions) : 0;
         $countTags = is_array($this->tags) ? count($this->tags) : 0;
 
-        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, $countRegions, $countTags, $this->layoutId, $this->status, count($this->getStatusMessage()));
+        $statusMessages = $this->getStatusMessage();
+        $countMessages = is_array($statusMessages) ? count($statusMessages) : 0;
+
+        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, $countRegions, $countTags, $this->layoutId, $this->status, $countMessages);
     }
 
     /**
