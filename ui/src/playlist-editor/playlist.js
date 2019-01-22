@@ -51,7 +51,7 @@ Playlist.prototype.createDataStructure = function(data) {
         this.isEmpty = false;
 
         // Increase playlist Duration
-        playlistDuration += newWidget.getDuration();
+        playlistDuration += newWidget.getTotalDuration();
     }
 
     // Set playlist duration

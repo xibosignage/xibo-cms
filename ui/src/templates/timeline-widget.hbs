@@ -1,27 +1,39 @@
-<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}" class="designer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}}" style="
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}" class="designer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}" style="
 width: {{ durationPercentage }}%;">
     
-    {{#if audio}}
-        <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
-    {{/if}}
-
     {{#each transitions}}
-        <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
+        <div class="widget-transition-container transition-{{@key}}" style="
+            width: {{percDuration}}%;">
+            <div class="widget-transition transition-{{@key}} editProperty text-center" data-property="Transition"
+                data-property-type="{{@key}}">
+                <i class="fa fa-sign-{{@key}}"></i>
+            </div>
+        </div>
     {{/each}}
+    
+    <div class="widgetItem widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
+        {{ duration }}
+    </div>
 
-    {{#gt fromDt 0}}
-        <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
-    {{/gt}}
+    <div class="widgetItem widgetInfo">
+         <div class="widgetTitle">
+            <span class="widgetName">
+                {{widgetName}}
+            </span>
+            <span class="widgetSubType">
+                [{{ subType }}]
+            </span>
+        </div>
+    </div>
 
-
-    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">{{ duration }}</div>
-    <div class="widgetTitle">
-        <span class="widgetName">
-            {{widgetName}}
-        </span>
-        <span class="widgetSubType">
-            [{{ subType }}]
-        </span>
+    <div class="widgetItem widgetProperties">
+        {{#if audio}}
+            <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
+        {{/if}}
+    
+        {{#gt fromDt 0}}
+            <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
+        {{/gt}}
     </div>
 </div>
 

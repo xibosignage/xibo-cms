@@ -201,6 +201,10 @@ Viewer.prototype.render = function(element, layout, page = 1) {
                 this.showInlineEditor();
             }
 
+            // Set complementary colour to the preview content
+            const complementaryColor = $c.complement(layout.backgroundColor);
+            this.DOMObject.find('#viewer-preview').css('color', complementaryColor);
+
             // Handle fullscreen button
             this.DOMObject.find('#fs-btn').click(function() {
                 this.toggleFullscreen();
