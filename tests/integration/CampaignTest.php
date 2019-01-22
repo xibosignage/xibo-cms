@@ -228,7 +228,6 @@ class CampaignTest extends LocalWebTestCase
             $this->getResolutionId('landscape')
         );
 
-        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Call assign on the default layout
         $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, [
             'layoutId' => [
@@ -267,7 +266,6 @@ class CampaignTest extends LocalWebTestCase
             $this->getResolutionId('landscape')
         );
 
-        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Assign layout to campaign
         $campaign->assignLayout($layout->layoutId);
         # Call unassign on the created layout
@@ -296,7 +294,6 @@ class CampaignTest extends LocalWebTestCase
             $this->getResolutionId('landscape')
         );
 
-        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
         // Call assign on the layout specific campaignId
         $this->client->post('/campaign/layout/assign/' . $layout->campaignId, [
             'layoutId' => [
