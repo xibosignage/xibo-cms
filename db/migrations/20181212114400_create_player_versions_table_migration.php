@@ -57,7 +57,7 @@ class CreatePlayerVersionsTableMigration extends AbstractMigration
                 'assignable' => 0,
                 'render_as' => null,
                 'viewPath' => '../modules',
-                'class' => 'Xibo\\\Widget\\\PlayerSoftware',
+                'class' => 'Xibo\Widget\PlayerSoftware',
                 'defaultDuration' => 10
             ])->save();
         }
