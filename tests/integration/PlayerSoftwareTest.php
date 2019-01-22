@@ -73,15 +73,18 @@ class PlayerSoftwareTest extends LocalWebTestCase
         $this->media2 = (new XiboLibrary($this->getEntityProvider()))
             ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.8_R108.apk');
 
-        // Get the version
-        $version = $this->client->get('/playersoftware', ['mediaId' => $this->media->mediaId]);
-        $response = json_decode($version);
-        $data = $response->data->data;
-        foreach ($data as $actualVersion) {
-            $this->versionId = $actualVersion->versionId;
+        // Get the versions
+        $version = $this->getEntityProvider()->get('/playersoftware', ['mediaId' => $this->media->mediaId]);
+
+        foreach ($version as $actualVersion) {
+            $this->versionId = $actualVersion['versionId'];
         }
 
-        $this->versionId2 = $this->versionId + 1;
+        $version2 = $this->getEntityProvider()->get('/playersoftware', ['mediaId' => $this->media2->mediaId]);
+
+        foreach ($version2 as $actualVersion) {
+            $this->versionId2 = $actualVersion['versionId'];
+        }
 
         // Create a Display
         $this->display = $this->createDisplay(null, 'android');
@@ -92,21 +95,12 @@ class PlayerSoftwareTest extends LocalWebTestCase
         // Create a display profile
         $this->displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->create(Random::generateString(), 'android', 0);
         // Edit display profile to add the uploaded apk to the config
-        $this->client->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
+        $this->getEntityProvider()->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
             'name' => $this->displayProfile->name,
             'type' => $this->displayProfile->type,
             'isDefault' => $this->displayProfile->type,
             'versionMediaId' => $this->media->mediaId
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
-        // Edit display, assign it to the created display profile
-        $this->client->put('/display/' . $this->display->displayId, [
-            'display' => $this->display->display,
-            'licensed' => $this->display->licensed,
-            'license' => $this->display->license,
-            'displayProfileId' => $this->displayProfile->displayProfileId,
-            'defaultLayoutId' => $this->display->defaultLayoutId
-        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded'] );
 
         $this->getLogger()->debug('Finished Setup');
     }
@@ -118,8 +112,8 @@ class PlayerSoftwareTest extends LocalWebTestCase
         parent::tearDown();
 
         // Delete the media we've been working with
-        $this->client->delete('/playersoftware/' . $this->versionId);
-        $this->client->delete('/playersoftware/' . $this->versionId2);
+        $this->getEntityProvider()->delete('/playersoftware/' . $this->versionId);
+        $this->getEntityProvider()->delete('/playersoftware/' . $this->versionId2);
         // Delete the Display
         $this->deleteDisplay($this->display);
         // Delete the Display profile
@@ -129,6 +123,22 @@ class PlayerSoftwareTest extends LocalWebTestCase
 
     public function testVersionFromProfile()
     {
+        // Edit display, assign it to the created display profile
+        $this->client->put('/display/' . $this->display->displayId, [
+            'display' => $this->display->display,
+            'licensed' => $this->display->licensed,
+            'license' => $this->display->license,
+            'defaultLayoutId' => $this->display->defaultLayoutId,
+            'displayProfileId' => $this->displayProfile->displayProfileId,
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded'] );
+
+        // Check response
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
+        $this->assertNotEmpty($this->client->response->body());
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame($this->displayProfile->displayProfileId, $object->data->displayProfileId, $this->client->response->getBody());
+
         // Ensure the Version Instructions are present on the Register Display call and that
         // Register our display
         $register = $this->getXmdsWrapper()->RegisterDisplay($this->display->license,
@@ -155,8 +165,21 @@ class PlayerSoftwareTest extends LocalWebTestCase
             'licensed' => $this->display->licensed,
             'license' => $this->display->license,
             'versionMediaId' => $this->media2->mediaId,
-            'defaultLayoutId' => $this->display->defaultLayoutId
+            'defaultLayoutId' => $this->display->defaultLayoutId,
+            'displayProfileId' => $this->displayProfile->displayProfileId
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded'] );
+
+        // Check response
+        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
+        $this->assertNotEmpty($this->client->response->body());
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame($this->displayProfile->displayProfileId, $object->data->displayProfileId, $this->client->response->getBody());
+        $this->assertNotEmpty($object->data->overrideConfig);
+        foreach ($object->data->overrideConfig as $override) {
+            if ($override->name === 'versionMediaId')
+                $this->assertSame($this->media2->mediaId, $override->value, json_encode($object->data->overrideConfig));
+        }
 
         // call register
         $register = $this->getXmdsWrapper()->RegisterDisplay($this->display->license,

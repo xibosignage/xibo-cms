@@ -1050,6 +1050,7 @@ class Display extends Base
                 'type' => 'int'
                 ]
             ];
+            $display->includeProperty('overrideConfig');
         } else {
             $display->overrideConfig = [];
         }
