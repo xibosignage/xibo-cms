@@ -347,7 +347,13 @@ class Layout implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, count($this->regions), count($this->tags), $this->layoutId, $this->status, count($this->getStatusMessage()));
+        $countRegions = is_array($this->regions) ? count($this->regions) : 0;
+        $countTags = is_array($this->tags) ? count($this->tags) : 0;
+
+        $statusMessages = $this->getStatusMessage();
+        $countMessages = is_array($statusMessages) ? count($statusMessages) : 0;
+
+        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, $countRegions, $countTags, $this->layoutId, $this->status, $countMessages);
     }
 
     /**

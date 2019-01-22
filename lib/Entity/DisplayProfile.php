@@ -208,8 +208,10 @@ class DisplayProfile implements \JsonSerializable
             return;
 
         if ($options['loadConfig']) {
-
-            $this->config = json_decode($this->config, true);
+            // Decode the config string (unless its already an array)
+            if (!is_array($this->config)) {
+                $this->config = json_decode($this->config, true);
+            }
             $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
             $this->configDefault = $this->loadFromFile();
