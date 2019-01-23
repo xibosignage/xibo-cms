@@ -149,3 +149,6 @@ ALTER TABLE `lkwidgetmedia` ADD CONSTRAINT `lkwidgetmedia_ibfk_2` FOREIGN KEY (`
 
 ALTER TABLE datasetrss
   ADD CONSTRAINT datasetrss_dataset_DataSetID_fk FOREIGN KEY (dataSetId) REFERENCES dataset (DataSetID);
+
+ALTER TABLE player_software
+  ADD CONSTRAINT mediaId FOREIGN KEY (mediaId) REFERENCES media (mediaId);
