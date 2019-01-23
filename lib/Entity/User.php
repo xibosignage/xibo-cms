@@ -372,6 +372,7 @@ class User implements \JsonSerializable
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetFactory $widgetFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      * @return $this
      */
     public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)

@@ -150,6 +150,7 @@ class Display extends Base
      * @param TagFactory $tagFactory
      * @param NotificationFactory $notificationFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory)
     {
