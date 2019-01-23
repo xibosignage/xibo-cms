@@ -415,13 +415,36 @@ let formHelpers = function() {
                     }
 
                 });
+            } else {
+
+                // If one of the targets is a boostrap switch, switch it off
+                forceBootstrapSwitchesOff();
             }
+        };
+
+
+        // Function to switch off all the bootstrapSwitch
+        const forceBootstrapSwitchesOff = function() {
+            // If one of the targets is a boostrap switch, switch it off
+            $.each(targetsObject, function(targetSelector, targetTemplateField) {
+                let $target = $(targetSelector, dialog);
+
+                // Turn off the bootstrapSwitch
+                if($target.attr('type') === 'checkbox' && $target.hasClass('bootstrap-switch-target')) { // bootstrap switch
+                    $target.bootstrapSwitch('state', false);
+                }
+            });
         };
 
         // Register an onchange listener to manipulate the template content if the selector is changed.
         $trigger.on('change', function() {
             applyTemplateContentIfNecessary(data);
         });
+
+        // On load, if the trigger is uncheckedand a target is a boostrap switch, switch it off
+        if(!$trigger.is(":checked")) {
+            forceBootstrapSwitchesOff();
+        }
     };
 
     /**
