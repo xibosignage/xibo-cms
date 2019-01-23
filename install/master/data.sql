@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.12', 5, 2, 143);
+('1.8.12', 5, 2, 145);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -102,12 +102,13 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
   (11, 'datasetview', 'DataSet View', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\DataSetView', 60),
   (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\ShellCommand', 3),
   (13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\LocalVideo', 60),
-  (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,ipk,js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
+  (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
   (15, 'clock', 'Clock', 1, 1, '', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]', '../modules', 'Xibo\\Widget\\Clock', 5),
   (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
   (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0),
   (18, 'pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\Pdf', 60),
-  (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10);
+  (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10),
+  (20, 'playersoftware', 'Player Software', 1, 0, 'A module for managing Player Versions', 'forms/library.gif', 1, 'apk,ipk,wgt', 0, 0, null, null, '../modules', 'Xibo\\Widget\\PlayerSoftware', 10);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (1, 'icondashboard', 'Icon Dashboard', 1),
@@ -148,7 +149,8 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (36, 'notification', 'Notifications', 0),
   (37, 'drawer', 'Notification Drawer', 0),
   (38, 'daypart', 'Dayparting', 0),
-  (39, 'task', 'Tasks', 1);
+  (39, 'task', 'Tasks', 1),
+  (40, 'playersoftware', 'Player Software', 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`, `userId`) VALUES
@@ -292,7 +294,7 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (3, 'thumbnail');
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
-VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1'),  ('webOS', 'lg', '[]', '1', '1');
+VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1'),  ('webOS', 'lg', '[]', '1', '1'), ('Tizen', 'sssp', '[]', '1', '1');
 
 INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (1, 'Xibo\\Entity\\Page'),

@@ -34,6 +34,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -124,6 +125,9 @@ class Soap
     /** @var  DayPartFactory */
     protected $dayPartFactory;
 
+    /** @var  PlayerVersionFactory */
+    protected $playerVersionFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -147,8 +151,9 @@ class Soap
      * @param DisplayEventFactory $displayEventFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -171,6 +176,7 @@ class Soap
         $this->displayEventFactory = $displayEventFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -424,6 +430,12 @@ class Soap
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
 
+        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($this->display->clientType == 'sssp') {
+            $playerVersionMediaId = null;
+        }
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -434,6 +446,7 @@ class Soap
             //  2 - Media Linked to Displays
             //  3 - Media Linked to Widgets in the Scheduled Layouts
             //  4 - Background Images for all Scheduled Layouts
+            //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
                 SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                    FROM `media`
@@ -471,10 +484,20 @@ class Soap
                       FROM `layout`
                      WHERE layoutId IN (%s)
                  )
-                ORDER BY DownloadOrder
             ";
 
-            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList));
+            if ($playerVersionMediaId != null) {
+                $SQL .= " UNION ALL 
+                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
+                            FROM `media`
+                            WHERE `media`.type = 'playersoftware' 
+                            AND `media`.mediaId = %d
+                ";
+            }
+
+            $SQL .= " ORDER BY DownloadOrder ";
+
+            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList, $playerVersionMediaId));
             $sth->execute(array(
                 'displayId' => $this->display->displayId
             ));

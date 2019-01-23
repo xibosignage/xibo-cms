@@ -22,46 +22,6 @@
       "step": "Fix database constraints and indexes",
       "type": "php",
       "action": "Xibo\\Upgrade\\FixForeignKeysForWidgetMedia"
-    },
-    {
-      "step": "Add a setting allowing users to auto authorise new displays",
-      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('DISPLAY_AUTO_AUTH', '0', 'checkbox', 'If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.', null, 'displays', 1, 'Automatically authorise new Displays?', '', 25, '', 1, 'checkbox'); "
-    },
-    {
-      "step": "Rename Dashboard to Icon Dashboard",
-      "action": "UPDATE `pages` set title = 'Icon Dashboard', name = 'icondashboard' WHERE name = 'dashboard';"
-    },
-    {
-      "step": "Change the DataSet View module name",
-      "action": "UPDATE `module` set Name = 'DataSet View' WHERE Module = 'datasetview'; "
-    },
-    {
-      "step": "Add M4V extension to Video module",
-      "action": "UPDATE `module` SET validextensions = CONCAT(validextensions, ',m4v') WHERE module = 'video' LIMIT 1;"
-    },
-    {
-      "step": "Update PHONE_HOME helpText",
-      "action": "UPDATE `setting` SET helptext = 'Should the CMS send anonymous statistics to help improve the software?' WHERE `setting` = 'PHONE_HOME'; "
-    },
-    {
-      "step": "Update PHONE_HOME_KEY helpText",
-      "action": "UPDATE `setting` SET helptext = 'Key used to distinguish each CMS instance. This is generated randomly based on the time you first installed the CMS, and is completely untraceable.' WHERE `setting` = 'PHONE_HOME_KEY'; "
-    },
-    {
-      "step": "Update MAINTENANCE_ALWAYS_ALERT helpText",
-      "action": "UPDATE `setting` SET helptext = 'Should the CMS send an email if a display is in an error state every time maintenance runs?' WHERE `setting` = 'MAINTENANCE_ALWAYS_ALERT'; "
-    },
-    {
-      "step": "Update SCHEDULE_LOOKAHEAD helpText",
-      "action": "UPDATE `setting` SET helptext = 'Should the CMS send future schedule information to clients?' WHERE `setting` = 'SCHEDULE_LOOKAHEAD'; "
-    },
-    {
-      "step": "Add the setting EVENT_SYNC",
-      "action": "INSERT INTO `setting` (`setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES ('EVENT_SYNC', '0', 'checkbox', 'If checked you will have an option to enable Synchronise this Event checkbox for applicable events', null, 'general', 0, 'Show Synchronise this Event checkbox on applicable events?', '', 55, '', 0, 'checkbox'); "
-    },
-    {
-      "step": "Add syncEvent column to schedule table",
-      "action": "ALTER TABLE schedule ADD syncEvent tinyint DEFAULT 0 NOT NULL; "
     }
   ]
 }

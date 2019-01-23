@@ -39,6 +39,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -95,6 +96,9 @@ class Library extends Base
      * @var WidgetFactory
      */
     private $widgetFactory;
+
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
 
     /**
      * @var PlaylistFactory
@@ -161,8 +165,9 @@ class Library extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -184,6 +189,7 @@ class Library extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -250,6 +256,15 @@ class Library extends Base
     }
 
     /**
+     * Get PlayerVersion Factory
+     * @return PlayerVersionFactory
+     */
+    public function getPlayerVersionFactory()
+    {
+        return $this->playerVersionFactory;
+    }
+
+    /**
      * Get UserGroup Factory
      * @return UserGroupFactory
      */
@@ -309,8 +324,9 @@ class Library extends Base
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1]),
-            'groups' => $this->userGroupFactory->query()
+            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1]),
+            'groups' => $this->userGroupFactory->query(),
+            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1]))
         ]);
     }
 
@@ -420,7 +436,8 @@ class Library extends Base
             'duration' => $this->getSanitizer()->getString('duration'),
             'fileSize' => $this->getSanitizer()->getString('fileSize'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'assignable' => $this->getSanitizer()->getInt('assignable')
+            'assignable' => $this->getSanitizer()->getInt('assignable'),
+            'notPlayerSoftware' => 1
         ]));
 
         // Add some additional row content
@@ -525,7 +542,7 @@ class Library extends Base
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
 
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
 
         $this->getState()->template = 'library-form-delete';
@@ -573,7 +590,7 @@ class Library extends Base
             throw new AccessDeniedException();
 
         // Check
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer()->getCheckbox('forceDelete') == 0)
@@ -896,7 +913,7 @@ class Library extends Base
 
             // Eligable for delete
             $i++;
-            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
             $item->load();
             $item->delete();
         }

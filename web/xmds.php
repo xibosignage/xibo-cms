@@ -253,7 +253,8 @@ try {
         $app->notificationFactory,
         $app->displayEventFactory,
         $app->scheduleFactory,
-        $app->dayPartFactory
+        $app->dayPartFactory,
+        $app->playerVersionFactory
     );
     $soap->handle();
 

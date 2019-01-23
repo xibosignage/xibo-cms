@@ -24,6 +24,7 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -48,6 +49,9 @@ class DisplayProfile extends Base
      */
     private $commandFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -61,13 +65,14 @@ class DisplayProfile extends Base
      * @param DisplayProfileFactory $displayProfileFactory
      * @param CommandFactory $commandFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->pool = $pool;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->commandFactory = $commandFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -305,6 +310,18 @@ class DisplayProfile extends Base
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
+        $versionId = null;
+        $playerVersions = '';
+
+        foreach ($displayProfile->config as $setting) {
+            if ($setting['name'] == 'versionMediaId') {
+                $versionId = $setting['value'];
+            }
+        }
+
+        // Get the Player Version for this display profile type
+        if ($versionId != 0)
+            $playerVersions  = $this->playerVersionFactory->getByMediaId($versionId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
@@ -321,7 +338,8 @@ class DisplayProfile extends Base
             'displayProfile' => $displayProfile,
             'tabs' => $displayProfile->configTabs,
             'config' => $displayProfile->configDefault,
-            'commands' => array_merge($displayProfile->commands, $unassignedCommands)
+            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
+            'versions' => [$playerVersions]
         ]);
     }
 

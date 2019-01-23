@@ -45,6 +45,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -187,6 +188,9 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var  PermissionFactory */
     protected $permissionFactory;
+
+    /** @var  PlayerVersionFactory */
+    protected $playerVersionFactory;
 
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
@@ -1074,7 +1078,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getMedia()
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         return $media;
     }
 

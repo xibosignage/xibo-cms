@@ -63,7 +63,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
 
-            $controller->getLog()->debug('Module Type = %s, Name = ', $module->getModuleType(), $module->getModuleName());
+            $controller->getLog()->debug('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName());
 
             // Do we need to run any pre-processing on the file?
             $module->preProcessFile($filePath);
@@ -229,7 +229,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         $controller->getLog()->debug('No prior media found');
                     }
 
-                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory());
+                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory(), $controller->getPlayerVersionFactory());
                     $oldMedia->delete();
 
                 } else {

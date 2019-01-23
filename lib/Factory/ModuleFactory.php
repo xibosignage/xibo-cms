@@ -576,6 +576,10 @@ class ModuleFactory extends BaseFactory
                 $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
             }
 
+            if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
+                $body .= ' AND name <> "Player Software" ';
+            }
+
             // Sorting?
             $order = '';
             if (is_array($sortOrder))
