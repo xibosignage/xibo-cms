@@ -863,7 +863,9 @@ class Display implements \JsonSerializable
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
 
-            $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
+            if (isset($this->overrideConfig))
+                $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
+
             $this->_config = $displayProfile->getProfileConfig();
 
             $this->commands = $displayProfile->commands;
