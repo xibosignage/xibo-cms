@@ -68,7 +68,7 @@ class PlayerUpgradeAndOverrideConfigMigration extends AbstractMigration
                 'name' => 'Tizen',
                 'type' => 'sssp',
                 'config' => '[]',
-                'userId' => $user[0]['userId'],
+                'userId' => $user['userId'],
                 'isDefault' => 1
             ])->save();
         }
