@@ -201,7 +201,6 @@ class DisplayFactory extends BaseFactory
                   display.cidr,
                   ' . $functionPrefix . 'X(display.GeoLocation) AS latitude,
                   ' . $functionPrefix . 'Y(display.GeoLocation) AS longitude,
-                  display.version_instructions AS versionInstructions,
                   display.client_type AS clientType,
                   display.client_version AS clientVersion,
                   display.client_code AS clientCode,
@@ -214,8 +213,9 @@ class DisplayFactory extends BaseFactory
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
-                  `display`.deviceName , 
-                  `display`.timeZone
+                  `display`.deviceName, 
+                  `display`.timeZone,
+                  `display`.overrideConfig
               ';
 
         if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1 && DBVERSION >= 134) {
@@ -463,7 +463,7 @@ class DisplayFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, [
+            $display = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'auditingUntil',
                     'wakeOnLanEnabled',
@@ -480,6 +480,8 @@ class DisplayFactory extends BaseFactory
                     'lastCommandSuccess'
                 ]
             ]);
+            $display->excludeProperty('overrideConfig');
+            $entries[] = $display;
         }
 
         // Paging

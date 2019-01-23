@@ -37,6 +37,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -313,6 +314,9 @@ class User implements \JsonSerializable
     /** @var WidgetFactory */
     private $widgetFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -368,9 +372,10 @@ class User implements \JsonSerializable
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetFactory $widgetFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -379,6 +384,7 @@ class User implements \JsonSerializable
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetFactory = $widgetFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
         return $this;
     }
 
@@ -792,7 +798,7 @@ class User implements \JsonSerializable
         // Delete any media
         foreach ($this->media as $media) {
             /* @var Media $media */
-            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
             $media->delete();
         }
 

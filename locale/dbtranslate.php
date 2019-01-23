@@ -66,6 +66,7 @@ echo __('Notification Drawer');
 echo __('Notifications');
 echo __('Dayparting');
 echo __('Tasks');
+echo __('Player Software');
 
 // Settings translations
 echo __('Media Permissions');
@@ -263,6 +264,8 @@ echo __('PDF');
 echo __('PDF document viewer');
 echo __('Notification');
 echo __('Display Notifications from the Notification Centre');
+echo __('Player Software');
+echo __('A module for managing Player Versions');
 
 echo __('Stocks Module');
 echo __('A module for showing Stock quotes');
