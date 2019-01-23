@@ -806,7 +806,11 @@ class Display extends Base
             $mediaId = 0;
 
         if ($mediaId != 0)
-            $playerVersions  = $this->playerVersionFactory->getByMediaId($mediaId);
+            try {
+                $playerVersions = $this->playerVersionFactory->getByMediaId($mediaId);
+            } catch (NotFoundException $e) {
+                $playerVersions = null;
+            }
 
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
