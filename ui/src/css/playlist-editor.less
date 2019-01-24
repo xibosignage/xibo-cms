@@ -218,27 +218,25 @@
 .playlist-widget .widgetLabel {
     color: @playlist-editor-main-background-color;
     width: 25px;
-    display: inline-block;
     height: 100%;
     text-align: center;
-}
-
-.playlist-widget .widgetTitle {
-    display: inline-block;
-}
-
-.playlist-widget .widgetTitle .widgetName {
-    font-style: italic;
-    color: @playlist-editor-widget-fg-color;overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 150px;
     float: left;
 }
 
-.playlist-widget .widgetTitle .widgetSubType {
+.playlist-widget .widgetName {
+    font-style: italic;
+    color: @playlist-editor-widget-fg-color;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 50%;
+    float: left;
+}
+
+.playlist-widget .widgetSubType {
     color: @playlist-editor-widget-fg-color2;
-    padding-left: 5px;
+    padding: 0 2px;
+    float: left;
 }
 
 .playlist-widget i.editProperty:hover {

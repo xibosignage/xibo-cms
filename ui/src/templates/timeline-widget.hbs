@@ -15,16 +15,13 @@ width: {{ durationPercentage }}%;">
         {{ duration }}
     </div>
 
-    <div class="widgetItem widgetInfo">
-         <div class="widgetTitle">
-            <span class="widgetName">
-                {{widgetName}}
-            </span>
-            <span class="widgetSubType">
-                [{{ subType }}]
-            </span>
-        </div>
-    </div>
+    <span class="widgetItem widgetSubType">
+        [{{ subType }}]
+    </span>
+
+    <span class="widgetItem widgetName" title="{{widgetName}}">
+        {{widgetName}}
+    </span>
 
     <div class="widgetItem widgetProperties">
         {{#if audio}}
