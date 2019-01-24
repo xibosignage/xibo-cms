@@ -246,13 +246,21 @@
     padding: 0 4px;
 }
 
-#layout-editor #layout-timeline .designer-widget .widgetTitle .widgetName {
+#layout-editor #layout-timeline .designer-widget .widgetName {
     font-style: italic;
     color: @timeline-widget-fg-color;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 50%;
+    float: left;
+    padding: 0 2px;
 }
 
-#layout-editor #layout-timeline .designer-widget .widgetTitle .widgetSubType {
+#layout-editor #layout-timeline .designer-widget .widgetSubType {
     color: @timeline-widget-fg-color2;
+    padding: 0 2px;
+    float: left;
 }
 
 #layout-editor #layout-timeline .designer-widget .widget-transition-container {
@@ -320,7 +328,13 @@
     color: @timeline-ghost-fg-color;
     font-weight: bold;
     float: left;
+    display: flex;
     height: 100%;
+}
+
+#layout-editor #layout-timeline .designer-widget-ghost .widgetName,
+#layout-editor #layout-timeline .designer-widget-ghost .widgetSubType {
+    color: @timeline-ghost-fg-color;
 }
 
 #layout-editor #layout-timeline .designer-widget-sortable-highlight {
