@@ -44,7 +44,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
 
             // Check for a user quota
-            $controller->getUser()->isQuotaFullByUser();
+            // this method has the ability to reconnect to MySQL in the event that the upload has taken a long time.
+            // OSX-381
+            $controller->getUser()->isQuotaFullByUser(true);
 
             // Get some parameters
             if ($index === null) {
