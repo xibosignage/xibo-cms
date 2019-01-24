@@ -1,5 +1,15 @@
 <div id="timeline-container">
     <div id="controls-container" class="text-center">
+        <span class="layout-info left">
+            <span class="layout-info-name hidden-xs hidden-sm hidden-md">"{{layout.name}}"</span>
+            <span class="hidden-lg"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>
+        </span>
+
+        <span class="layout-info right">
+            <span class="hidden-xs hidden-sm hidden-md"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>&nbsp;
+            <span><i class="fa fa-arrows"></i>&nbsp;{{layout.width}}x{{layout.height}}</span>
+        </span>
+
         <div id="minTime" class="label label-info label-time pull-left">
             {{properties.minTime}}s
         </div>
