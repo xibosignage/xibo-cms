@@ -55,6 +55,11 @@
                         {% set title %}{% trans "Layer" %}{% endset %}
                         {% set helpText %}{% trans "The layering order of this region (z-index). Advanced use only." %}{% endset %}
                         {{ forms.number("zIndex", title, region.zIndex, helpText) }}
+
+                        {% set title %}{% trans "Make this Region full screen, dimensions will be set to [width] by [height]." %}{% endset %}
+                        <div>
+                            <button type="button" id="setFullScreenButton" class="btn btn-block">{{title}}</button>
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="transitionTab">

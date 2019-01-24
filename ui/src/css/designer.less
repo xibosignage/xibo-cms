@@ -146,13 +146,34 @@
     background-color: @designer-secondary-color;
 }
 
-#layout-editor #layout-timeline #controls-container .label-time{
+#layout-editor #layout-timeline #controls-container .label-time {
     background: #f7f7f7;
     color: #333;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     width: 60px;
+}
+
+#layout-editor #layout-timeline #controls-container .layout-info {
+    color: #f7f7f7;
+    position: absolute; 
+}
+
+#layout-editor #layout-timeline #controls-container .layout-info.left {
+    left: 80px;
+}
+
+#layout-editor #layout-timeline #controls-container .layout-info.right {
+    right: 80px;
+}
+
+#layout-editor #layout-timeline #controls-container .layout-info-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+    float: left;
 }
 
 #layout-editor #layout-timeline .designer-region {
