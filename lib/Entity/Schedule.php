@@ -740,6 +740,12 @@ class Schedule implements \JsonSerializable
         // If we are a daypart event, look up the start/end times for the event
         $this->calculateDayPartTimes($start, $end);
 
+        // Does the original event fall into this window?
+        if ($start <= $generateToDt && $end > $generateFromDt) {
+            // Add the detail for the main event (this is the event that originally triggered the generation)
+            $this->addDetail($start->format('U'), $end->format('U'));
+        }
+
         // If we don't have any recurrence, we are done
         if (empty($this->recurrenceType) || empty($this->recurrenceDetail))
             return;
