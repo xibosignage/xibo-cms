@@ -876,12 +876,22 @@ class Media implements \JsonSerializable
      */
     private function moveFile($from, $to)
     {
-        $return = copy($from, $to);
+        // Try to move the file first
+        $moved = rename($from, $to);
 
-        if (!@unlink($from))
-            $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+        if (!$moved) {
+            $this->getLog()->info('Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.');
 
-        return $return;
+            // Copy
+            $moved = copy($from, $to);
+
+            // Delete
+            if (!@unlink($from)) {
+                $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+            }
+        }
+
+        return $moved;
     }
 
     /**
