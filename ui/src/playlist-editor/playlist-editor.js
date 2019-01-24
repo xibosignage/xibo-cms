@@ -50,7 +50,7 @@ window.pE = {
     mainObjectId: '',
 
     // Playlist
-    playlist : {},
+    playlist: {},
 
     // Editor DOM div
     editorDiv: {},
@@ -77,7 +77,7 @@ window.pE = {
 
 // Load Layout and build app structure
 pE.loadEditor = function() {
-    
+
     pE.common.showLoadingScreen();
 
     // Save and change toastr positioning
@@ -93,76 +93,96 @@ pE.loadEditor = function() {
     // Update main object id
     pE.mainObjectId = playlistId;
 
-    // Append layout html to the main div
-    pE.editorDiv.html(playlistEditorTemplate());
+    // Show loading template
+    pE.editorDiv.html(loadingTemplate());
 
-    // Initialize timeline and create data structure
-    pE.playlist = new Playlist(playlistId, playlistData);
+    // Load playlist through an ajax request
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    .done(function(res) {
 
-    // Initialize properties panel
-    pE.propertiesPanel = new PropertiesPanel(
-        pE.editorDiv.find('#playlist-properties-panel')
-    );
+        if(res.data.length > 0) {
 
-    // Initialize timeline
-    pE.timeline = new PlaylistTimeline(
-        pE.editorDiv.find('#playlist-timeline')
-    );
+            // Append layout html to the main div
+            pE.editorDiv.html(playlistEditorTemplate());
 
-    // Append manager to the modal container
-    $("#layout-manager").appendTo("#playlist-editor");
+            // Initialize timeline and create data structure
+            pE.playlist = new Playlist(playlistId, res.data[0]);
 
-    // Initialize manager
-    pE.manager = new Manager(
-        $('#playlist-editor').find('#layout-manager'),
-        false //(serverMode == 'Test') Turn of manager visibility for now
-    );
+            // Initialize properties panel
+            pE.propertiesPanel = new PropertiesPanel(
+                pE.editorDiv.find('#playlist-properties-panel')
+            );
 
-    // Append toolbar to the modal container
-    $("#playlist-editor-toolbar").appendTo("#playlist-editor");
+            // Initialize timeline
+            pE.timeline = new PlaylistTimeline(
+                pE.editorDiv.find('#playlist-timeline')
+            );
 
-    // Initialize bottom toolbar
-    pE.toolbar = new Toolbar(
-        $('#playlist-editor').find('#playlist-editor-toolbar'),
-        null, // Custom buttons
-        {
-            deleteSelectedObjectAction: pE.deleteSelectedObject
+            // Append manager to the modal container
+            $("#layout-manager").appendTo("#playlist-editor");
+
+            // Initialize manager
+            pE.manager = new Manager(
+                $('#playlist-editor').find('#layout-manager'),
+                false //(serverMode == 'Test') Turn of manager visibility for now
+            );
+
+            // Append toolbar to the modal container
+            $("#playlist-editor-toolbar").appendTo("#playlist-editor");
+
+            // Initialize bottom toolbar
+            pE.toolbar = new Toolbar(
+                $('#playlist-editor').find('#playlist-editor-toolbar'),
+                null, // Custom buttons
+                {
+                    deleteSelectedObjectAction: pE.deleteSelectedObject
+                }
+            );
+
+            // Default selected 
+            pE.selectObject();
+
+            // Setup helpers
+            formHelpers.setup(pE, pE.playlist);
+
+            // Add widget to editor div
+            pE.editorDiv.find('#playlist-editor-container').droppable({
+                accept: '[drop-to="region"]',
+                drop: function(event, ui) {
+                    pE.playlist.addElement(event.target, ui.draggable[0]);
+                }
+            }).attr('data-type', 'region');
+
+            // Editor container select ( faking drag and drop ) to add a element to the playlist
+            pE.editorDiv.find('#playlist-editor-container').click(function(e) {
+                if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+                    e.stopPropagation();
+                    pE.selectObject($(this));
+                }
+            });
+
+            // Handle keyboard keys
+            $('body').off('keydown').keydown(function(handler) {
+                if(!$(handler.target).is($('input'))) {
+
+                    if(handler.key == 'Delete') {
+                        pE.deleteSelectedObject();
+                    }
+                }
+            });
+
+            pE.common.hideLoadingScreen();
+
+        } else {
+            pE.showErrorMessage();
         }
-    );
+    }).fail(function(jqXHR, textStatus, errorThrown) {
 
-    // Default selected 
-    pE.selectObject();
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
 
-    // Setup helpers
-    formHelpers.setup(pE, pE.playlist);
-
-    // Add widget to editor div
-    pE.editorDiv.find('#playlist-editor-container').droppable({
-        accept: '[drop-to="region"]',
-        drop: function(event, ui) {
-            pE.playlist.addElement(event.target, ui.draggable[0]);
-        }
-    }).attr('data-type', 'region');
-
-    // Editor container select ( faking drag and drop ) to add a element to the playlist
-    pE.editorDiv.find('#playlist-editor-container').click(function(e) {
-        if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
-            e.stopPropagation();
-            pE.selectObject($(this));
-        }
+        pE.showErrorMessage();
     });
-
-    // Handle keyboard keys
-    $('body').off('keydown').keydown(function(handler) {
-        if(!$(handler.target).is($('input'))) {
-
-            if(handler.key == 'Delete') {
-                pE.deleteSelectedObject();
-            }
-        }
-    });
-
-    pE.common.hideLoadingScreen();
 };
 
 // Get Xibo app
@@ -176,7 +196,7 @@ window.getXiboApp = function() {
  * @param {bool=} forceUnselect - Clean selected object
  */
 pE.selectObject = function(obj = null, forceUnselect = false) {
-    
+
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -217,7 +237,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
                 this.playlist.widgets[newId].selected = true;
                 this.selectedObject.type = 'widget';
                 this.selectedObject = this.playlist.widgets[newId];
-                
+
             }
         } else {
 
@@ -344,7 +364,7 @@ pE.deleteObject = function(objectType, objectId) {
                 }
             }
         }).attr('data-test', 'deleteObjectModal');
-        
+
     }
 };
 
@@ -352,10 +372,10 @@ pE.deleteObject = function(objectType, objectId) {
  * Refresh designer
  */
 pE.refreshDesigner = function() {
-    
+
     // Remove temporary data
     this.clearTemporaryData();
-    
+
     // Render containers
     this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
@@ -410,22 +430,15 @@ pE.renderContainer = function(container, element = {}) {
  */
 pE.reloadData = function() {
 
-    const linkToAPI = urlsForApi.playlist.get;
-    let requestPath = linkToAPI.url;
-
-    // replace id if necessary/exists
-    requestPath = requestPath.replace(':id', pE.playlist.playlistId);
-
     pE.common.showLoadingScreen();
 
-    $.get(
-        requestPath
-    ).done(function(res) {
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    .done(function(res) {
 
         pE.common.hideLoadingScreen();
 
-        if(res.success) {
-            pE.playlist = new Playlist(pE.playlist.playlistId, res.data.playlist);
+        if(res.data.length > 0) {
+            pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
             pE.refreshDesigner();
         } else {
@@ -467,9 +480,9 @@ pE.saveOrder = function() {
     const self = this;
 
     pE.common.showLoadingScreen('saveOrder');
-    
+
     this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
-        
+
         pE.common.hideLoadingScreen('saveOrder');
 
         // Behavior if successful            
@@ -498,7 +511,7 @@ pE.saveOrder = function() {
  * Close playlist editor
  */
 pE.close = function() {
-    
+
     // Restore toastr positioning
     toastr.options.positionClass = this.toastrPosition;
 
@@ -622,7 +635,7 @@ pE.openUploadFormModelShown = function(form) {
  * @param {object=} position - Page menu position
  */
 pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
-    
+
     let objId = $(obj).attr('id');
     let objType = $(obj).data('type');
 
