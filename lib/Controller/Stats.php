@@ -247,6 +247,9 @@ class Stats extends Base
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $type = strtolower($this->getSanitizer()->getString('type'));
+        $tags = $this->getSanitizer()->getString('tags');
+        $tagsType = $this->getSanitizer()->getString('tagsType');
+
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -295,8 +298,19 @@ class Stats extends Base
                 AND `widgetoption`.type = \'attrib\'
                 AND `widgetoption`.option = \'name\'
               LEFT OUTER JOIN `media`
-              ON `media`.mediaId = `stat`.mediaId
-           WHERE stat.type <> \'displaydown\'
+              ON `media`.mediaId = `stat`.mediaId 
+              ';
+        if ($tags != '' ) {
+            if ($tagsType === 'dg') {
+                $body .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup`
+                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
+                         AND `displaygroup`.isDisplaySpecific = 1 ';
+            }
+        }
+
+        $body .= ' WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
                 AND stat.start <= :toDt
                 AND stat.displayID IN (' . implode(',', $display_ids) . ')
@@ -306,6 +320,85 @@ class Stats extends Base
             'fromDt' => $this->getDate()->getLocalDate($fromDt),
             'toDt' => $this->getDate()->getLocalDate($toDt)
         ];
+
+        if ($tags != '') {
+                if (trim($tags) === '--no-tag') {
+                    if ($tagsType === 'dg') {
+                        $body .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                        )
+                        ';
+                    }
+
+                    if ($tagsType === 'layout') {
+                        $body .= ' AND `layout`.layoutId NOT IN (
+                    SELECT `lktaglayout`.layoutId
+                     FROM tag
+                        INNER JOIN `lktaglayout`
+                        ON `lktaglayout`.tagId = tag.tagId
+                        )
+                        ';
+                    }
+
+                    if ($tagsType === 'media') {
+                        $body .= ' AND `media`.mediaId NOT IN (
+                    SELECT `lktagmedia`.mediaId
+                     FROM tag
+                        INNER JOIN `lktagmedia`
+                        ON `lktagmedia`.tagId = tag.tagId
+                        )
+                        ';
+                    }
+                } else {
+                    $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                    if ($tagsType === 'dg') {
+                        $body .= " AND `displaygroup`.displaygroupId IN (
+                        SELECT `lktagdisplaygroup`.displaygroupId
+                          FROM tag
+                            INNER JOIN `lktagdisplaygroup`
+                            ON `lktagdisplaygroup`.tagId = tag.tagId
+                        ";
+                    }
+                    if ($tagsType === 'layout') {
+                        $body .= " AND `layout`.layoutId IN (
+                        SELECT `lktaglayout`.layoutId
+                          FROM tag
+                            INNER JOIN `lktaglayout`
+                            ON `lktaglayout`.tagId = tag.tagId
+                    ";
+                    }
+
+                    if ($tagsType === 'media') {
+                        $body .= " AND `media`.mediaId IN (
+                        SELECT `lktagmedia`.mediaId
+                          FROM tag
+                            INNER JOIN `lktagmedia`
+                            ON `lktagmedia`.tagId = tag.tagId
+                    ";
+                    }
+
+                $i = 0;
+
+                foreach (explode(',', $tags) as $tag) {
+                    $i++;
+
+                    if ($i == 1)
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    else
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
+                }
+
+                $body .= " ) ";
+            }
+        }
 
         // Type filter
         if ($type == 'layout') {

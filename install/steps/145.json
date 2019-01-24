@@ -12,11 +12,11 @@
     },
     {
       "step": "Add player software widget to modules",
-      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('playersoftware', 'Player Software', 1, 0, 'A module for managing Player Versions', 'forms/library.gif', 1, 'apk,ipk,wgt', 0, 0, null, null, '../modules', 'Xibo\\Widget\\PlayerSoftware', 10); "
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('playersoftware', 'Player Software', 1, 0, 'A module for managing Player Versions', 'forms/library.gif', 1, 'apk,ipk,wgt', 0, 0, null, null, '../modules', 'Xibo\\\\Widget\\\\PlayerSoftware', 10); "
     },
     {
       "step": "Remove apk,ipk from valid extensions in genericfile module",
-      "action": "UPDATE `module` SET validextensions = REPLACE(validextensions, 'apk,ipk', '') WHERE module = 'genericfile' LIMIT 1;"
+      "action": "UPDATE `module` SET validextensions = REPLACE(validextensions, 'apk,ipk,', '') WHERE module = 'genericfile' LIMIT 1;"
     },
     {
       "step": "Player Software page",

@@ -321,7 +321,11 @@ class DisplayProfile extends Base
 
         // Get the Player Version for this display profile type
         if ($versionId != 0)
-            $playerVersions  = $this->playerVersionFactory->getByMediaId($versionId);
+            try {
+                $playerVersions = $this->playerVersionFactory->getByMediaId($versionId);
+            } catch (NotFoundException $e) {
+                $playerVersions = null;
+            }
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
