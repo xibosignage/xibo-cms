@@ -82,6 +82,24 @@
                                 { typeid: "widget", type: widget }
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
+
+                            {% set title %}{% trans "Tags from" %}{% endset %}
+                            {% set dg %}{% trans "Display Group" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set options = [
+                                { tagsTypeid: "dg", tagsType: dg },
+                                { tagsTypeid: "layout", tagsType: layout },
+                                { tagsTypeid: "media", tagsType: media }
+                            ] %}
+                            {{ inline.dropdown("tagsType", "single", title, "dg", options, "tagsTypeid", "tagsType") }}
+
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                            {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
+                            {{ inline.checkbox("exactTags", title) }}
                         </form>
                     </div>
                 </div>

@@ -186,9 +186,6 @@ class PlayerSoftware extends Base
             );
         }
 
-        if (count($versions) <= 0)
-            throw new NotFoundException('Version file not found', 'PlayerSoftware');
-
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playerVersionFactory->countLast();
         $this->getState()->setData($versions);

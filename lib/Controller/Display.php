@@ -150,6 +150,7 @@ class Display extends Base
      * @param TagFactory $tagFactory
      * @param NotificationFactory $notificationFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory)
     {
@@ -806,7 +807,11 @@ class Display extends Base
             $mediaId = 0;
 
         if ($mediaId != 0)
-            $playerVersions  = $this->playerVersionFactory->getByMediaId($mediaId);
+            try {
+                $playerVersions = $this->playerVersionFactory->getByMediaId($mediaId);
+            } catch (NotFoundException $e) {
+                $playerVersions = null;
+            }
 
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
