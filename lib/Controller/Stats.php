@@ -285,35 +285,6 @@ class Stats extends Base
               stat.displayId
         ';
 
-        if ($tags != '' ) {
-            if ($tagsType === 'dg') {
-                $select .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
-              FROM tag
-                INNER JOIN lktagdisplaygroup
-                  ON lktagdisplaygroup.tagId = tag.tagId
-                WHERE lktagdisplaygroup.displayGroupId = displaygroup.DisplayGroupID
-                GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
-            }
-
-            if ($tagsType === 'layout') {
-                $select .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
-              FROM tag
-                INNER JOIN lktaglayout
-                  ON lktaglayout.tagId = tag.tagId
-                WHERE lktaglayout.layoutId = layout.layoutId
-                GROUP BY lktaglayout.layoutId) AS tags ';
-            }
-
-            if ($tagsType === 'media') {
-                $select .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
-              FROM tag
-                INNER JOIN lktagmedia
-                  ON lktagmedia.tagId = tag.tagId
-                WHERE lktagmedia.mediaId = media.mediaId
-                GROUP BY lktagmedia.mediaId) AS tags ';
-            }
-        }
-
         $body = '
             FROM stat
               INNER JOIN display

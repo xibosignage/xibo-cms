@@ -577,7 +577,7 @@ class ModuleFactory extends BaseFactory
             }
 
             if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
-                $body .= ' AND module <> "playersoftware" ';
+                $body .= ' AND module <> \'playersoftware\' ';
             }
 
             // Sorting?
