@@ -851,6 +851,8 @@ class Layout extends Base
                     /* @var Widget $widget */
                     $module = $this->moduleFactory->createWithWidget($widget);
 
+                    $widget->name = $module->getName();
+
                     // Augment with tags
                     $widget->tags = $module->getMediaTags();
 

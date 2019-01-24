@@ -17,6 +17,8 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         this.id = 'widget_' + id; // widget_widgetID
     }
 
+    this.widgetName = data.name;
+
     this.layoutObject = layoutObject;
 
     this.isValid = data.isValid;
@@ -96,13 +98,6 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         return trans;
     };
 
-        /**
-     * Return the widget name
-     * @returns {string} - Widget name
-     */
-    this.widgetName = function() {
-        return this.getOptions().name;
-    };
 
     /**
      * Return the percentage for the widget on the timeline
@@ -212,7 +207,7 @@ Widget.prototype.createClone = function() {
 
     const widgetClone = {
         id: 'ghost_' + this.id,
-        widgetName: this.widgetName(),
+        widgetName: this.widgetName,
         subType: this.subType,
         duration: this.getTotalDuration(),
         regionId: this.regionId,
