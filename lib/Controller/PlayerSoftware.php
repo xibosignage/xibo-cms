@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
-use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -33,8 +32,8 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\WidgetFactory;
@@ -305,18 +304,25 @@ class PlayerSoftware extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="playerShowVersion",
+     *      in="formData",
+     *      description="The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="version",
      *      in="formData",
      *      description="The Version number",
      *      type="string",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="code",
      *      in="formData",
      *      description="The Code number",
      *      type="integer",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -335,6 +341,7 @@ class PlayerSoftware extends Base
 
         $version->version = $this->getSanitizer()->getString('version');
         $version->code = $this->getSanitizer()->getInt('code');
+        $version->playerShowVersion = $this->getSanitizer()->getString('playerShowVersion');
 
         $version->save();
 

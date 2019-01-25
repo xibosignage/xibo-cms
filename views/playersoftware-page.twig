@@ -71,6 +71,7 @@
                             <th>{% trans "Version" %}</th>
                             <th>{% trans "Code" %}</th>
                             <th>{% trans "Media ID" %}</th>
+                            <th>{% trans "Original File Name" %}</th>
                             <th>{% trans "Permissions" %}</th>
                             <th></th>
                         </tr>
@@ -139,6 +140,7 @@
                     {"data": "version"},
                     {"data": "code"},
                     {"data": "mediaId"},
+                    {"data": "originalFileName"},
                     {
                         "data": "groupsWithPermissions",
                         "render": dataTableCreatePermissions

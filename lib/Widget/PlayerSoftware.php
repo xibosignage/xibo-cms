@@ -21,9 +21,6 @@
  */
 namespace Xibo\Widget;
 
-use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 
@@ -95,22 +92,70 @@ class PlayerSoftware extends ModuleWidget
 
     public function postProcess($media)
     {
-        $storedAs = $media->storedAs;
-        $extension = strtolower(substr(strrchr($storedAs, '.'), 1));
-        if ($extension == 'apk') {
-            $type = 'android';
-            $code = strtolower(substr(strrchr($media->fileName, 'R'), 1, 3));
-        } elseif ($extension == 'ipk') {
-            $type = 'lg';
-            $code = strtolower(substr(strrchr($media->fileName, 'R'), 1, 2));
+        $version = '';
+        $code = null;
+        $type = '';
+        $explode = explode('_', $media->fileName);
+        $explodeExt = explode('.', $media->fileName);
+        $playerShowVersion = $explodeExt[0];
+
+        // standard releases
+        if (count($explode) === 5) {
+            if (strpos($explode[4], '.') !== false) {
+                $explodeExtension = explode('.', $explode[4]);
+                $explode[4] = $explodeExtension[0];
+            }
+
+            if (strpos($explode[3], 'v') !== false) {
+                $version = strtolower(substr(strrchr($explode[3], 'v'), 1, 3)) ;
+            }
+            if (strpos($explode[4], 'R') !== false) {
+                $code = strtolower(substr(strrchr($explode[4], 'R'), 1, 3)) ;
+            }
+            $playerShowVersion = $version . ' Revision ' . $code;
+            // for DSDevices specific apk
+        } elseif (count($explode) === 6) {
+            if (strpos($explode[5], '.') !== false) {
+                $explodeExtension = explode('.', $explode[5]);
+                $explode[5] = $explodeExtension[0];
+            }
+            if (strpos($explode[3], 'v') !== false) {
+                $version = strtolower(substr(strrchr($explode[3], 'v'), 1, 3)) ;
+            }
+            if (strpos($explode[4], 'R') !== false) {
+                $code = strtolower(substr(strrchr($explode[4], 'R'), 1, 3)) ;
+            }
+            $playerShowVersion = $version . ' Revision ' . $code . ' ' . $explode[5];
+            // for white labels
+        } elseif (count($explode) === 3) {
+            if (strpos($explode[2], '.') !== false) {
+                $explodeExtension = explode('.', $explode[2]);
+                $explode[2] = $explodeExtension[0];
+            }
+            if (strpos($explode[1], 'v') !== false) {
+                $version = strtolower(substr(strrchr($explode[1], 'v'), 1, 3)) ;
+            }
+            if (strpos($explode[2], 'R') !== false) {
+                $code = strtolower(substr(strrchr($explode[2], 'R'), 1, 3)) ;
+            }
+            $playerShowVersion = $version . ' Revision ' . $code . ' ' . $explode[0];
         } else {
-            $type = 'sssp';
-            $code = strtolower(substr(strrchr($media->fileName, 'R'), 1, 2));
+            $this->getLog()->info('Exact matches to the file name pattern not found for file ' . $explodeExt[0] . ' Please adjust Version and Code on Player Version page.');
         }
 
-        $version = strtolower(substr(strrchr($media->fileName, 'v'), 1, 3));
 
-        return $this->getPlayerVersionFactory()->create($type, $version, $code, $media->mediaId);
+        $storedAs = $media->storedAs;
+        $extension = strtolower(substr(strrchr($storedAs, '.'), 1));
+
+        if ($extension == 'apk') {
+            $type = 'android';
+        } elseif ($extension == 'ipk') {
+            $type = 'lg';
+        } elseif ($extension == 'wgt') {
+            $type = 'sssp';
+        }
+
+        return $this->getPlayerVersionFactory()->create($type, $version, $code, $media->mediaId, $playerShowVersion);
     }
 
     public function getValidExtensions()
