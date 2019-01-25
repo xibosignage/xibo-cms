@@ -133,6 +133,26 @@ class DisplayProfile implements \JsonSerializable
     }
 
     /**
+     * Get Setting
+     * @param $setting
+     * @param null $default
+     * @return mixed
+     */
+    public function getSetting($setting, $default = null)
+    {
+        $this->load();
+
+        foreach ($this->getProfileConfig() as $config) {
+            if ($config['name'] == $setting || $config['name'] == ucfirst($setting)) {
+                $default = $config['value'];
+                break;
+            }
+        }
+
+        return $default;
+    }
+
+    /**
      * @param $clientType
      */
     public function setClientType($clientType)

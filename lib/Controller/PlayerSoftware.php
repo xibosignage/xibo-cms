@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
-use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -33,8 +32,8 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\WidgetFactory;
@@ -49,6 +48,9 @@ use Xibo\Service\SanitizerServiceInterface;
 */
 class PlayerSoftware extends Base
 {
+    /** @var \Stash\Interfaces\PoolInterface */
+    private $pool;
+
     /** @var  DisplayProfileFactory */
     private $displayProfileFactory;
 
@@ -85,6 +87,7 @@ class PlayerSoftware extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
+     * @param \Stash\Interfaces\PoolInterface $pool
      * @param MediaFactory $mediaFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DisplayProfileFactory $displayProfileFactory
@@ -95,10 +98,11 @@ class PlayerSoftware extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
+        $this->pool = $pool;
         $this->mediaFactory = $mediaFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->displayProfileFactory = $displayProfileFactory;
@@ -355,64 +359,111 @@ class PlayerSoftware extends Base
     }
 
     /**
-     * @param string $cmsKey
-     * @param int $displayId
+     * Install Route for SSSP XML
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getSsspInstall()
+    {
+        // Get the default SSSP display profile
+        $profile = $this->displayProfileFactory->getDefaultByType('sssp');
+
+        // See if it has a version file (if not or we can't load it, 404)
+        $mediaId = $profile->getSetting('versionMediaId');
+
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
+
+            $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
+
+            $this->outputSsspXml($versionInformation->version, $media->fileSize);
+        } else {
+            throw new NotFoundException(__('Installer file is not available in this CMS'), 'versionMediaId');
+        }
+
+        $this->setNoOutput(true);
+    }
+
+    /**
+     * Install Route for SSSP WGT
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getSsspInstallDownload()
+    {
+        // Get the default SSSP display profile
+        $profile = $this->displayProfileFactory->getDefaultByType('sssp');
+
+        // See if it has a version file (if not or we can't load it, 404)
+        $mediaId = $profile->getSetting('versionMediaId');
+
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
+
+            // Create a widget from media and call getResource on it
+            $widget = $this->moduleFactory->createWithMedia($media);
+            $widget->getResource(0);
+
+        } else {
+            throw new NotFoundException(__('Installer file is not available in this CMS'), 'versionMediaId');
+        }
+
+        $this->setNoOutput(true);
+    }
+
+    /**
+     * Upgrade Route for SSSP XML
+     * @param string $nonce
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \Xibo\Exception\ConfigurationException
      */
-    public function getSssp($cmsKey, $displayId)
+    public function getSssp($nonce)
     {
-        // Check if CMS key is correct
-        if ($cmsKey != $this->getConfig()->getSetting('SERVER_KEY'))
-            throw new InvalidArgumentException(__('The Server key you entered does not match with the server key at this address'), 'cmsKey');
+        // Use the cache to get the displayId for this nonce
+        $cache = $this->pool->getItem('/playerVersion/' . $nonce);
+
+        if ($cache->isMiss()) {
+            throw new NotFoundException(__('Installer file is not available in this CMS'), 'nonce');
+        }
+
+        $displayId = $cache->get();
+
         // Get the Display
         $display = $this->displayFactory->getById($displayId);
+
         // Check if display is SSSP, throw Exception if it's not
         if ($display->clientType != 'sssp') {
             throw new InvalidArgumentException(__('File available only for SSSP displays'), 'clientType');
         }
 
-        $this->setNoOutput(true);
         // Add the correct header
         $app = $this->getApp();
         $app->response()->header('content-type', 'application/xml');
+
         // get the media ID from display profile
         $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
         $media = $this->mediaFactory->getById($mediaId);
 
-        $mediaName = explode('.wgt', $media->fileName);
         $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-        // create sssp_config XML file with provided information
-        $ssspDocument = new \DOMDocument('1.0', 'UTF-8');
-        $versionNode = $ssspDocument->createElement('widget');
-        $version = $ssspDocument->createElement('ver', $versionInformation->version);
-        $size = $ssspDocument->createElement('size', $media->fileSize);
-        $name = $ssspDocument->createElement('widgetname', $mediaName[0]);
-
-        $ssspDocument->appendChild($versionNode);
-        $versionNode->appendChild($version);
-        $versionNode->appendChild($size);
-        $versionNode->appendChild($name);
-        $ssspDocument->formatOutput = true;
-
-        echo $ssspDocument->saveXML();
+        $this->outputSsspXml($versionInformation->version, $media->fileSize);
+        $this->setNoOutput(true);
     }
 
     /**
-     * @param string $cmsKey
-     * @param int $displayId
+     * Upgrade Route for SSSP WGT
+     * @param string $nonce
      * @throws NotFoundException
-     * @throws InvalidArgumentException
      */
-    public function getVersionFile($cmsKey, $displayId)
+    public function getVersionFile($nonce)
     {
-        // Check if CMS key is correct
-        if ($cmsKey != $this->getConfig()->getSetting('SERVER_KEY'))
-            throw new InvalidArgumentException(__('The Server key you entered does not match with the server key at this address'), 'cmsKey');
+        // Use the cache to get the displayId for this nonce
+        $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
-        $this->setNoOutput(true);
+        if ($cache->isMiss()) {
+            throw new NotFoundException(__('Installer file is not available in this CMS'), 'nonce');
+        }
+
+        $displayId = $cache->get();
 
         // Get display and media
         $display = $this->displayFactory->getById($displayId);
@@ -422,5 +473,33 @@ class PlayerSoftware extends Base
         // Create a widget from media and call getResource on it
         $widget = $this->moduleFactory->createWithMedia($media);
         $widget->getResource($displayId);
+
+        $this->setNoOutput(true);
+    }
+
+    /**
+     * Output the SSP XML
+     * @param $version
+     * @param $size
+     * @param $widgetName
+     */
+    private function outputSsspXml($version, $size)
+    {
+        // create sssp_config XML file with provided information
+        $ssspDocument = new \DOMDocument('1.0', 'UTF-8');
+        $versionNode = $ssspDocument->createElement('widget');
+        $version = $ssspDocument->createElement('ver', $version);
+        $size = $ssspDocument->createElement('size', $size);
+
+        // Our widget name is always sssp_dl (this is appended to both the install and upgrade routes)
+        $name = $ssspDocument->createElement('widgetname', 'sssp_dl');
+
+        $ssspDocument->appendChild($versionNode);
+        $versionNode->appendChild($version);
+        $versionNode->appendChild($size);
+        $versionNode->appendChild($name);
+        $ssspDocument->formatOutput = true;
+
+        echo $ssspDocument->saveXML();
     }
 }

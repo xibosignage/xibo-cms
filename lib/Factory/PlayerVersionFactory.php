@@ -23,10 +23,6 @@
 namespace Xibo\Factory;
 
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Pool;
-use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -34,7 +30,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Widget\PlayerSoftware;
 
 /**
  * Class PlayerVersionFactory
@@ -172,6 +167,7 @@ class PlayerVersionFactory extends BaseFactory
                player_software.playerShowVersion,
                media.mediaId,
                media.originalFileName,
+               media.storedAs,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT `group`.group)

@@ -80,6 +80,11 @@ class WidgetSyncTask implements TaskInterface
                 if ($layoutId !== $currentLayoutId) {
                     $countLayouts++;
 
+                    // Add a little break in here
+                    if ($currentLayoutId !== 0) {
+                        usleep(10000);
+                    }
+
                     // We've changed layout
                     // load in the new one
                     $layout = $this->layoutFactory->getById($layoutId);
@@ -114,6 +119,7 @@ class WidgetSyncTask implements TaskInterface
                                 // Have we done this widget before?
                                 if (in_array($widget->widgetId, $widgetsDone) && !$module->isCacheDisplaySpecific()) {
                                     $this->log->debug('This widgetId ' . $widget->widgetId . ' has been done before and is not display specific, so we skip');
+                                    continue;
                                 }
 
                                 // Record start time
@@ -134,9 +140,6 @@ class WidgetSyncTask implements TaskInterface
                                 // Commit so that any images we've downloaded have their cache times updated for the next request
                                 // this makes sense because we've got a file cache that is already written out.
                                 $this->store->commitIfNecessary();
-
-                                // Add a little break in here
-                                usleep(10000);
                             }
                         }
                     }
