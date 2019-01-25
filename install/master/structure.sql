@@ -1188,5 +1188,6 @@ versionId int PRIMARY KEY AUTO_INCREMENT,
 player_type varchar(15) DEFAULT NULL,
 player_version varchar(15) DEFAULT NULL,
 player_code int(11)  DEFAULT NULL,
+playerShowVersion varchar(50), NOT NULL,
 mediaId int
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
