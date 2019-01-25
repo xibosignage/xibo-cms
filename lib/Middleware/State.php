@@ -179,7 +179,14 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/login/forgotten', '/clock', '/about', '/login/ping', '/rss/:psk', '/playersoftware/:cmsKey/:displayId', '/playersoftware/:cmsKey/:displayId/sssp_config.xml');
+        $app->publicRoutes = [
+            '/login', '/login/forgotten', '/clock', '/about', '/login/ping',
+            '/rss/:psk',
+            '/sssp_config.xml',
+            '/sssp_dl.wgt',
+            '/playersoftware/:nonce/sssp_dl.wgt',
+            '/playersoftware/:nonce/sssp_config.xml'
+        ];
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
@@ -799,6 +806,7 @@ class State extends Middleware
                 $container->helpService,
                 $container->dateService,
                 $container->configService,
+                $container->pool,
                 $container->mediaFactory,
                 $container->playerVersionFactory,
                 $container->displayProfileFactory,

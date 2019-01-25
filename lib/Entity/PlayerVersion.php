@@ -22,11 +22,6 @@
 namespace Xibo\Entity;
 
 
-use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -91,6 +86,12 @@ class PlayerVersion implements \JsonSerializable
      * @var string
      */
     public $originalFileName;
+
+    /**
+     * @SWG\Property(description="Stored As")
+     * @var string
+     */
+    public $storedAs;
 
     /**
      * @var ConfigServiceInterface
