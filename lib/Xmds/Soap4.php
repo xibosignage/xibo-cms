@@ -25,6 +25,7 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Helper\Random;
 
 /**
  * Class Soap4
@@ -114,19 +115,27 @@ class Soap4 extends Soap
                     $displayElement->appendChild($node);
                 }
 
-                $id = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+                // Player upgrades
+                $upgradeMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
-                if ($clientType != 'windows' && $id != null) {
-                    $version = $this->playerVersionFactory->getByMediaId($id);
+                if ($clientType != 'windows' && $upgradeMediaId != null) {
+                    $version = $this->playerVersionFactory->getByMediaId($upgradeMediaId);
 
                     if ($clientType == 'android') {
-                        $version = json_encode(['id' => $id, 'file' => $id . '.apk', 'code' => $version->code]);
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code]);
                     }
                     elseif ($clientType == 'lg') {
-                        $version = json_encode(['id' => $id, 'file' => $id . '.ipk', 'code' => $version->code]);
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code]);
                     }
                     elseif ($clientType == 'sssp') {
-                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/:cmsKey/' . $this->display->displayId]);
+                        // Create a nonce and store it in the cache for this display.
+                        $nonce = Random::generateString();
+                        $cache = $this->getPool()->getItem('/playerVersion/' . $nonce);
+                        $cache->set($this->display->displayId);
+                        $cache->expiresAfter(86400);
+                        $this->getPool()->saveDeferred($cache);
+
+                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
                     }
                 }
 

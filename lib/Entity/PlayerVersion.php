@@ -88,6 +88,12 @@ class PlayerVersion implements \JsonSerializable
     public $originalFileName;
 
     /**
+     * @SWG\Property(description="Stored As")
+     * @var string
+     */
+    public $storedAs;
+
+    /**
      * @var ConfigServiceInterface
      */
     private $config;

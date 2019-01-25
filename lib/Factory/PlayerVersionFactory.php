@@ -167,6 +167,7 @@ class PlayerVersionFactory extends BaseFactory
                player_software.playerShowVersion,
                media.mediaId,
                media.originalFileName,
+               media.storedAs,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT `group`.group)
