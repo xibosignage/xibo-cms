@@ -969,8 +969,8 @@ class DisplayProfile implements \JsonSerializable
                         'title' => __('Player Version'),
                         'type' => 'int',
                         'fieldType' => 'dropdownVersion',
-                        'default' => 'versionMediaId',
-                        'helpText' => __('Select Player version file, it will be sent to all players assigned to this display profile'),
+                        'default' => null,
+                        'helpText' => __('Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -1313,7 +1313,7 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'int',
                         'fieldType' => 'dropdownVersion',
                         'default' => null,
-                        'helpText' => __('Select Player version file, it will be sent to all players assigned to this display profile'),
+                        'helpText' => __('Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
@@ -1534,7 +1534,7 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'int',
                         'fieldType' => 'dropdownVersion',
                         'default' => null,
-                        'helpText' => __('Select Player version file, it will be sent to all players assigned to this display profile'),
+                        'helpText' => __('Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
