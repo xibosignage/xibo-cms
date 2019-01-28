@@ -229,9 +229,9 @@ Navigator.prototype.renderNavbar = function() {
         }).catch((err) => {
             lD.common.hideLoadingScreen();
             if(err) {
-                toastr.error('Save all changes failed: ' + err);
+                toastr.error(errorMessagesTrans.saveAllChangesFailed + ' ' + err);
             } else {
-                toastr.error('Save all changes failed!');
+                toastr.error(errorMessagesTrans.saveAllChangesFailed);
             }
         });
     });
@@ -255,18 +255,16 @@ Navigator.prototype.renderNavbar = function() {
 
             lD.common.hideLoadingScreen();
 
-            console.error(error);
-
             // Show error returned or custom message to the user
-            let errorMessage = 'Revert failed: ';
+            let errorMessage = '';
 
             if(typeof error == 'string') {
-                errorMessage += error;
+                errorMessage = error;
             } else {
-                errorMessage += error.errorThrown;
+                errorMessage = error.errorThrown;
             }
 
-            toastr.error(errorMessage);
+            toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
         });
     });
 
@@ -274,8 +272,6 @@ Navigator.prototype.renderNavbar = function() {
         lD.common.showLoadingScreen();
         
         lD.manager.saveAllChanges().then((res) => {
-
-            toastr.success('All changes saved!');
 
             lD.layout.addElement('region').then((res) => { // Success
 
@@ -288,20 +284,20 @@ Navigator.prototype.renderNavbar = function() {
 
                 lD.common.hideLoadingScreen(); 
                 // Show error returned or custom message to the user
-                let errorMessage = 'Create region failed: ' + error;
+                let errorMessage = '';
 
                 if(typeof error == 'string') {
-                    errorMessage += error;
+                    errorMessage = error;
                 } else {
-                    errorMessage += error.errorThrown;
+                    errorMessage = error.errorThrown;
                 }
 
-                toastr.error(errorMessage);
+                toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
             });
         }).catch((err) => {
 
             lD.common.hideLoadingScreen(); 
-            toastr.error('Save all changes failed!');
+            toastr.error(errorMessagesTrans.saveAllChangesFailed);
         });
     });
 
@@ -310,15 +306,15 @@ Navigator.prototype.renderNavbar = function() {
         if(lD.selectedObject.isDeletable) {
 
             bootbox.confirm({
-                title: 'Delete Region',
-                message: 'Are you sure? All changes related to this object will be erased',
+                title: editorsTrans.deleteTitle.replace('%obj%', 'region'),
+                message: editorsTrans.deleteConfirm,
                 buttons: {
                     confirm: {
-                        label: 'Yes',
+                        label: editorsTrans.yes,
                         className: 'btn-danger'
                     },
                     cancel: {
-                        label: 'No',
+                        label: editorsTrans.no,
                         className: 'btn-default'
                     }
                 },
@@ -340,15 +336,15 @@ Navigator.prototype.renderNavbar = function() {
                             lD.common.hideLoadingScreen();
                             
                                     // Show error returned or custom message to the user
-                                    let errorMessage = 'Delete element failed: ' + error;
+                                    let errorMessage = '';
 
                                     if(typeof error == 'string') {
-                                        errorMessage += error;
+                                        errorMessage = error;
                                     } else {
-                                        errorMessage += error.errorThrown;
+                                        errorMessage = error.errorThrown;
                                     }
 
-                                    toastr.error(errorMessage);
+                                    toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
                                 });
                     }
                 }

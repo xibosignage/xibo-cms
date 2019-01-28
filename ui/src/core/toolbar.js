@@ -9,41 +9,41 @@ window.formHelpers = require('../helpers/form-helpers.js');
 
 const toolsList = [
     {
-        name: 'Region',
+        name: toolbarTrans.tools.region.name,
         type: 'region',
-        description: 'Add a region to the layout',
+        description: toolbarTrans.tools.region.description,
         dropTo: 'layout',
         hideOn: ['playlist'],
         oneClickAdd: ['layout']
     },
     {
-        name: 'Audio',
+        name: toolbarTrans.tools.audio.name,
         type: 'audio',
-        description: 'Attach audio to a widget',
+        description: toolbarTrans.tools.audio.name,
         dropTo: 'widget'
     },
     {
-        name: 'Expiry Dates',
+        name: toolbarTrans.tools.expiry.name,
         type: 'expiry',
-        description: 'Set expiry dates to a widget',
+        description: toolbarTrans.tools.expiry.name,
         dropTo: 'widget'
     },
     {
-        name: 'Transition In',
+        name: toolbarTrans.tools.transitionIn.name,
         type: 'transitionIn',
-        description: 'Add a in transition to a widget',
+        description: toolbarTrans.tools.transitionIn.name,
         dropTo: 'widget'
     },
     {
-        name: 'Transition Out',
+        name: toolbarTrans.tools.transitionOut.name,
         type: 'transitionOut',
-        description: 'Add a out transition to a widget',
+        description: toolbarTrans.tools.transitionOut.name,
         dropTo: 'widget'
     },
     {
-        name: 'Permissions',
+        name: toolbarTrans.tools.permissions.name,
         type: 'permissions',
-        description: 'Edit object permissions',
+        description: toolbarTrans.tools.permissions.name,
         dropTo: 'all'
     }
 ];
@@ -51,7 +51,7 @@ const toolsList = [
 const defaultMenuItems = [
     {
         name: 'tools',
-        title: 'Tools',
+        title: toolbarTrans.menuItems.tools,
         tool: true,
         pagination: false,
         page: 0,
@@ -60,7 +60,7 @@ const defaultMenuItems = [
     },
     {
         name: 'widgets',
-        title: 'Widgets',
+        title: toolbarTrans.menuItems.widgets,
         pagination: false,
         page: 0,
         content: [],
@@ -68,8 +68,6 @@ const defaultMenuItems = [
         oneClickAdd: ['playlist']
     }
 ];
-
-const tabName = 'Library';
 
 /**
  * Bottom toolbar contructor
@@ -141,7 +139,11 @@ Toolbar.prototype.loadPrefs = function() {
             self.previousOpenedMenu = (loadedData.previousOpenedMenu != undefined) ? loadedData.openedMenu : -1;
 
             // Set menu index
-            self.menuIndex = self.menuItems.length;
+            if(loadedData.menuIndex != undefined) {
+                self.menuIndex = loadedData.menuIndex;
+            } else {
+                self.menuIndex = self.menuItems.length;
+            }
 
             // Render to reflect the loaded toolbar
             self.render();
@@ -173,7 +175,7 @@ Toolbar.prototype.loadPrefs = function() {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error('User load preferences failed!');
+        toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
 
     });
 };
@@ -214,7 +216,8 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
                 value: JSON.stringify({
                     menuItems: menuItemsToSave,
                     openedMenu: openedMenu,
-                    previousOpenedMenu: previousOpenedMenu
+                    previousOpenedMenu: previousOpenedMenu,
+                    menuIndex: this.menuIndex
                 })
             }
         ]
@@ -239,7 +242,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
                 location.reload(false);
             } else {
 
-            toastr.error('User save preferences failed!');
+                toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -256,7 +259,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error('User save preferences failed!');
+        toastr.error(errorMessagesTrans.userSavePreferencesFailed);
     });
 
 };
@@ -272,11 +275,29 @@ Toolbar.prototype.render = function() {
     // Deselect selected card on render
     this.selectedCard = {};
 
+    // Get toolbar trans
+    let newToolbarTrans = toolbarTrans;
+
     // Check if trash bin is active
     let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+    
+    // Get text for bin tooltip
+    if(trashBinActive) {
+        newToolbarTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
+    }
 
     // Check if there are some changes
     let undoActive = app.manager.changeHistory.length > 0;
+
+    // Get last action text for popup
+    if(undoActive) { 
+        let lastAction = app.manager.changeHistory[app.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined ) {
+            newToolbarTrans.undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            newToolbarTrans.undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
 
     // Compile layout template with data
     const html = ToolbarTemplate({
@@ -285,7 +306,8 @@ Toolbar.prototype.render = function() {
         tabsCount: (this.menuItems.length > this.fixedTabs),
         customButtons: this.customButtons,
         trashActive: trashBinActive,
-        undoActive: undoActive
+        undoActive: undoActive,
+        trans: newToolbarTrans
     });
 
     // Append layout html to the main div
@@ -522,7 +544,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             this.menuItems[menu].title = '"' + customFilter.media + '"';
         } else {
             this.menuIndex += 1;
-            this.menuItems[menu].title = tabName + ' ' + this.menuIndex;
+            this.menuItems[menu].title = toolbarTrans.tabName.replace('%tagId%', this.menuIndex);
         }
 
         if(customFilter.tags != '' && customFilter.tags != undefined) {
@@ -542,7 +564,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         }).done(function(res) {
 
             if(res.data.length == 0) {
-                toastr.info('No results for the filter!', 'Search');
+                toastr.info(toolbarTrans.noResults, toolbarTrans.search);
                 self.menuItems[menu].content = null;
             } else {
                 //Convert tags into an array
@@ -551,7 +573,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
                         el.tags = el.tags.split(',');
                         el.tagsCount = el.tags.length;
                         el.tagsShow = (el.tagsCount === 1) ? true : false;
-                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('[tagCount]', el.tagsCount);
+                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('%tagCount%', el.tagsCount);
 
                     } else {
                         el.tagsCount = 0;
@@ -576,7 +598,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         }).catch(function(jqXHR, textStatus, errorThrown) {
 
             console.error(jqXHR, textStatus, errorThrown);
-            toastr.error('Library load failed!');
+            toastr.error(errorMessagesTrans.libraryLoadFailed);
 
             // Unlock buttons
             self.searchButtonsLock = false;
@@ -652,21 +674,21 @@ Toolbar.prototype.createNewTab = function() {
 
     this.menuItems.push({
         name: 'search',
-        title: tabName + ' ' + this.menuIndex,
+        title: toolbarTrans.tabName.replace('%tagId%', this.menuIndex),
         search: true,
         page: 0,
         query: '',
         filters: {
             name: {
-                name: 'Name',
+                name: toolbarTrans.searchFilters.name,
                 value: ''
             },
             tag: {
-                name: 'Tag',
+                name: toolbarTrans.searchFilters.tag,
                 value: ''
             },
             type: {
-                name: 'Type',
+                name: toolbarTrans.searchFilters.type,
                 values: moduleListFiltered
             },
         },

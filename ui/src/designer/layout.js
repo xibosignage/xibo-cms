@@ -212,13 +212,13 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
 
             lD.common.hideLoadingScreen('deleteElement'); 
 
-            toastr.error('Remove all changes failed!');
+            toastr.error(errorMessagesTrans.removeAllChangesFailed);
         });
     }).catch(function() {
 
         lD.common.hideLoadingScreen('deleteElement'); 
         
-        toastr.error('Save all changes failed!');
+        toastr.error(errorMessagesTrans.saveAllChangesFailed);
     });
     
 };
@@ -249,7 +249,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
 
     if(JSON.stringify(newOrder) === JSON.stringify(oldOrder)) {
         return Promise.resolve({
-            message: 'List order not Changed!'
+            message: errorMessagesTrans.listOrderNotChanged
         });
     }
 
@@ -264,7 +264,8 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
             widgets: newOrder
         }
     ).catch((error) => {
-        toastr.error('Playlist save order failed! ' + error);
+        toastr.error(errorMessagesTrans.playlistOrderSave);
+        console.log(error);
     });
 };
 

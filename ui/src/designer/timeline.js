@@ -364,15 +364,16 @@ Timeline.prototype.render = function(layout) {
                     lD.common.hideLoadingScreen();
 
                     // Show error returned or custom message to the user
-                    let errorMessage = 'Save order failed: ' + error;
+                    // Show error returned or custom message to the user
+                    let errorMessage = '';
 
                     if(typeof error == 'string') {
-                        errorMessage += error;
+                        errorMessage = error;
                     } else {
-                        errorMessage += error.errorThrown;
+                        errorMessage = error.errorThrown;
                     }
 
-                    toastr.error(errorMessage);
+                    toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
                 });
             }
         });

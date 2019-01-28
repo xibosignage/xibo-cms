@@ -248,8 +248,8 @@ Widget.prototype.editPropertyForm = function(property, type) {
     // Create dialog
     let dialog = bootbox.dialog({
         className: 'second-dialog',
-        title: 'Load ' + property + ' for widget',
-        message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+        title: editorsTrans.loadPropertyForObject.replace('%prop%', property).replace('%obj%', 'widget'),
+        message: '<p><i class="fa fa-spin fa-spinner"></i> ' + editorsTrans.loading + '...</p>',
         buttons: {
             cancel: {
                 label: translations.cancel,
@@ -361,7 +361,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
                 location.reload(false);
             } else {
 
-                toastr.error(property + ' form load failed!');
+                toastr.error(errorMessagesTrans.formLoadFailed);
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -377,7 +377,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error(property + ' form load failed!');
+        toastr.error(errorMessagesTrans.formLoadFailed);
 
         dialog.modal('hide');
     });

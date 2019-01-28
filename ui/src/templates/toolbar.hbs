@@ -29,11 +29,11 @@
                                     {{#unless hideElement}}
                                         {{!-- Load cards according to type searchItem/Widget --}}
                                         {{#if ../search}}
-                                            {{> toolbar-card-media}}
+                                            {{> toolbar-card-media trans=../../trans}}
                                         {{else if ../tool}}
-                                            {{> toolbar-card-tool}}
+                                            {{> toolbar-card-tool trans=../../trans}}
                                         {{else}}
-                                            {{> toolbar-card}}
+                                            {{> toolbar-card trans=../../trans}}
                                         {{/if}}
                                     {{/unless}}
                                 {{/each}}
@@ -60,8 +60,8 @@
                         
                                 </div>
                         
-                                <button data-search-id="{{@index}}" data-test="searchButton" class="btn btn-primary search-btn" type="button">                                    
-                                    <span>Search</span>
+                                <button data-search-id="{{@index}}" title="{{../trans.search}}" data-test="searchButton" class="btn btn-primary search-btn" type="button">                                    
+                                    <span>{{../trans.search}}</span>
                                 </button>
                             </form>
                         {{/if}}
@@ -86,7 +86,7 @@
 
                 {{#if customButtons}}
                     <li class="dropdown navbar-submenu">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Actions<span class="caret"></span></a>
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
                         
                         <ul class="dropdown-menu navbar-submenu-container">
                             {{#each customButtons}}
@@ -104,17 +104,17 @@
                 {{/if}}
 
                 <li>
-                    <div id="layoutJumpListContainer" class="navbar-btn" hidden></div>
+                    <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="top" title="{{trans.changeLayout}}" class="navbar-btn" hidden></div>
                 </li>
 
                 <li>
-                    <a id="undoContainer" class="navbar-peak-button navbar-undo {{#if undoActive}}active{{/if}}">
+                    <a id="undoContainer" data-toggle="tooltip" data-placement="top" title="{{trans.undoActiveTitle}}" class="navbar-peak-button navbar-undo {{#if undoActive}}active{{/if}}">
                         <i class="fa fa-undo"></i>
                     </a>
                 </li>
 
                 <li>
-                    <a id="trashContainer" class="navbar-peak-button navbar-bin {{#if trashActive}}active{{/if}}">
+                    <a id="trashContainer" data-toggle="tooltip" data-placement="top" title="{{trans.trashBinActiveTitle}}" class="navbar-peak-button navbar-bin {{#if trashActive}}active{{/if}}">
                         <i class="fa fa-trash"></i>
                     </a>
                 </li>
@@ -133,14 +133,14 @@
                 {{/each}}
 
                 <li>
-                    <a id="btn-menu-new-tab" title="Create new tab" class="btn-menu-tool">
+                    <a id="btn-menu-new-tab" data-toggle="tooltip" data-placement="top" title="{{trans.createNewTab}}" class="btn-menu-tool">
                         <i class="fa fa-search-plus"></i>
                     </a>
                 </li>
 
                 {{#if tabsCount}}
                     <li>
-                        <a id="deleteAllTabs" title="Close all tabs" class="btn-menu-tool btn-menu-tool-delete btn-danger hide-on-read-only" href="#">
+                        <a id="deleteAllTabs" data-toggle="tooltip" data-placement="top" title="{{trans.closeAllTabs}}" class="btn-menu-tool btn-menu-tool-delete btn-danger hide-on-read-only" href="#">
                             <i class="fa fa-times-rectangle-o"></i>
                         </a>
                     </li>

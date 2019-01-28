@@ -195,14 +195,14 @@ PropertiesPanel.prototype.render = function(element, step) {
 
             // Add back button
             buttons.back = {
-                name: 'Back',
+                name: editorsTrans.back,
                 type: 'btn-default',
                 action: 'back'
             };
 
             // Add save button
             buttons.save = {
-                name: 'Save',
+                name: translations.save,
                 type: 'btn-info',
                 action: 'save'
             };
@@ -284,7 +284,7 @@ PropertiesPanel.prototype.render = function(element, step) {
         self.renderRequest = undefined;
 
         if(data.statusText != 'requestAborted') {
-            toastr.error('Get form failed!', 'Error');
+            toastr.error(errorMessagesTrans.getFormFailed, errorMessagesTrans.error);
         }
     });
 

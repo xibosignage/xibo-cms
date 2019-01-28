@@ -98,91 +98,91 @@ pE.loadEditor = function() {
 
     // Load playlist through an ajax request
     $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
-    .done(function(res) {
+        .done(function(res) {
 
-        if(res.data.length > 0) {
+            if(res.data.length > 0) {
 
-            // Append layout html to the main div
-            pE.editorDiv.html(playlistEditorTemplate());
+                // Append layout html to the main div
+                pE.editorDiv.html(playlistEditorTemplate());
 
-            // Initialize timeline and create data structure
-            pE.playlist = new Playlist(playlistId, res.data[0]);
+                // Initialize timeline and create data structure
+                pE.playlist = new Playlist(playlistId, res.data[0]);
 
-            // Initialize properties panel
-            pE.propertiesPanel = new PropertiesPanel(
-                pE.editorDiv.find('#playlist-properties-panel')
-            );
+                // Initialize properties panel
+                pE.propertiesPanel = new PropertiesPanel(
+                    pE.editorDiv.find('#playlist-properties-panel')
+                );
 
-            // Initialize timeline
-            pE.timeline = new PlaylistTimeline(
-                pE.editorDiv.find('#playlist-timeline')
-            );
+                // Initialize timeline
+                pE.timeline = new PlaylistTimeline(
+                    pE.editorDiv.find('#playlist-timeline')
+                );
 
-            // Append manager to the modal container
-            $("#layout-manager").appendTo("#playlist-editor");
+                // Append manager to the modal container
+                $("#layout-manager").appendTo("#playlist-editor");
 
-            // Initialize manager
-            pE.manager = new Manager(
-                $('#playlist-editor').find('#layout-manager'),
-                false //(serverMode == 'Test') Turn of manager visibility for now
-            );
+                // Initialize manager
+                pE.manager = new Manager(
+                    $('#playlist-editor').find('#layout-manager'),
+                    false //(serverMode == 'Test') Turn of manager visibility for now
+                );
 
-            // Append toolbar to the modal container
-            $("#playlist-editor-toolbar").appendTo("#playlist-editor");
+                // Append toolbar to the modal container
+                $("#playlist-editor-toolbar").appendTo("#playlist-editor");
 
-            // Initialize bottom toolbar
-            pE.toolbar = new Toolbar(
-                $('#playlist-editor').find('#playlist-editor-toolbar'),
-                null, // Custom buttons
-                {
-                    deleteSelectedObjectAction: pE.deleteSelectedObject
-                }
-            );
-
-            // Default selected 
-            pE.selectObject();
-
-            // Setup helpers
-            formHelpers.setup(pE, pE.playlist);
-
-            // Add widget to editor div
-            pE.editorDiv.find('#playlist-editor-container').droppable({
-                accept: '[drop-to="region"]',
-                drop: function(event, ui) {
-                    pE.playlist.addElement(event.target, ui.draggable[0]);
-                }
-            }).attr('data-type', 'region');
-
-            // Editor container select ( faking drag and drop ) to add a element to the playlist
-            pE.editorDiv.find('#playlist-editor-container').click(function(e) {
-                if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
-                    e.stopPropagation();
-                    pE.selectObject($(this));
-                }
-            });
-
-            // Handle keyboard keys
-            $('body').off('keydown').keydown(function(handler) {
-                if(!$(handler.target).is($('input'))) {
-
-                    if(handler.key == 'Delete') {
-                        pE.deleteSelectedObject();
+                // Initialize bottom toolbar
+                pE.toolbar = new Toolbar(
+                    $('#playlist-editor').find('#playlist-editor-toolbar'),
+                    null, // Custom buttons
+                    {
+                        deleteSelectedObjectAction: pE.deleteSelectedObject
                     }
-                }
-            });
+                );
 
-            pE.common.hideLoadingScreen();
+                // Default selected 
+                pE.selectObject();
 
-        } else {
+                // Setup helpers
+                formHelpers.setup(pE, pE.playlist);
+
+                // Add widget to editor div
+                pE.editorDiv.find('#playlist-editor-container').droppable({
+                    accept: '[drop-to="region"]',
+                    drop: function(event, ui) {
+                        pE.playlist.addElement(event.target, ui.draggable[0]);
+                    }
+                }).attr('data-type', 'region');
+
+                // Editor container select ( faking drag and drop ) to add a element to the playlist
+                pE.editorDiv.find('#playlist-editor-container').click(function(e) {
+                    if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+                        e.stopPropagation();
+                        pE.selectObject($(this));
+                    }
+                });
+
+                // Handle keyboard keys
+                $('body').off('keydown').keydown(function(handler) {
+                    if(!$(handler.target).is($('input'))) {
+
+                        if(handler.key == 'Delete') {
+                            pE.deleteSelectedObject();
+                        }
+                    }
+                });
+
+                pE.common.hideLoadingScreen();
+
+            } else {
+                pE.showErrorMessage();
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+
+            // Output error to console
+            console.error(jqXHR, textStatus, errorThrown);
+
             pE.showErrorMessage();
-        }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-
-        // Output error to console
-        console.error(jqXHR, textStatus, errorThrown);
-
-        pE.showErrorMessage();
-    });
+        });
 };
 
 // Get Xibo app
@@ -292,15 +292,15 @@ pE.undoLastAction = function() {
         pE.common.hideLoadingScreen();
 
         // Show error returned or custom message to the user
-        let errorMessage = 'Revert failed: ';
+        let errorMessage = '';
 
         if(typeof error == 'string') {
-            errorMessage += error;
+            errorMessage = error;
         } else {
-            errorMessage += error.errorThrown;
+            errorMessage = error.errorThrown;
         }
 
-        toastr.error(errorMessage);
+        toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
     });
 };
 
@@ -321,15 +321,15 @@ pE.deleteObject = function(objectType, objectId) {
 
         bootbox.confirm({
             className: 'second-dialog',
-            title: 'Delete ' + objectType,
-            message: 'Are you sure? All changes related to this object will be erased',
+            title: editorsTrans.deleteTitle.replace('%obj%', objectType),
+            message: editorsTrans.deleteConfirm,
             buttons: {
                 confirm: {
-                    label: 'Yes',
+                    label: editorsTrans.yes,
                     className: 'btn-danger'
                 },
                 cancel: {
-                    label: 'No',
+                    label: editorsTrans.no,
                     className: 'btn-default'
                 }
             },
@@ -351,15 +351,15 @@ pE.deleteObject = function(objectType, objectId) {
                         pE.common.hideLoadingScreen();
 
                         // Show error returned or custom message to the user
-                        let errorMessage = 'Delete element failed: ' + error;
+                        let errorMessage = '';
 
                         if(typeof error == 'string') {
-                            errorMessage += error;
+                            errorMessage = error;
                         } else {
-                            errorMessage += error.errorThrown;
+                            errorMessage = error.errorThrown;
                         }
 
-                        toastr.error(errorMessage);
+                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
                     });
                 }
             }
@@ -433,29 +433,29 @@ pE.reloadData = function() {
     pE.common.showLoadingScreen();
 
     $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
-    .done(function(res) {
+        .done(function(res) {
 
-        pE.common.hideLoadingScreen();
+            pE.common.hideLoadingScreen();
 
-        if(res.data.length > 0) {
-            pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
+            if(res.data.length > 0) {
+                pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
-            pE.refreshDesigner();
-        } else {
+                pE.refreshDesigner();
+            } else {
+                pE.showErrorMessage();
+            }
+
+            // Reload the form helper connection
+            formHelpers.setup(pE, pE.playlist);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+
+            pE.common.hideLoadingScreen();
+
+            // Output error to console
+            console.error(jqXHR, textStatus, errorThrown);
+
             pE.showErrorMessage();
-        }
-
-        // Reload the form helper connection
-        formHelpers.setup(pE, pE.playlist);
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-
-        pE.common.hideLoadingScreen();
-
-        // Output error to console
-        console.error(jqXHR, textStatus, errorThrown);
-
-        pE.showErrorMessage();
-    });
+        });
 };
 
 /**
@@ -465,8 +465,8 @@ pE.showErrorMessage = function() {
     // Output error on screen
     const htmlError = messageTemplate({
         messageType: 'danger',
-        messageTitle: 'ERROR',
-        messageDescription: 'There was a problem loading the playlist!'
+        messageTitle: errorMessagesTrans.error,
+        messageDescription: errorMessagesTrans.loadingPlaylist
     });
 
     pE.editorDiv.html(htmlError);
@@ -495,15 +495,15 @@ pE.saveOrder = function() {
         pE.common.hideLoadingScreen('saveOrder');
 
         // Show error returned or custom message to the user
-        let errorMessage = 'Save order failed: ' + error;
+        let errorMessage = '';
 
         if(typeof error == 'string') {
-            errorMessage += error;
+            errorMessage = error;
         } else {
-            errorMessage += error.errorThrown;
+            errorMessage = error.errorThrown;
         }
 
-        toastr.error(errorMessage);
+        toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
     });
 };
 

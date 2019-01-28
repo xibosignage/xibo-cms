@@ -587,8 +587,8 @@ lD.showErrorMessage = function() {
     // Output error on screen
     const htmlError = messageTemplate({
         messageType: 'danger',
-        messageTitle: 'ERROR',
-        messageDescription: 'There was a problem loading the layout!'
+        messageTitle: errorMessagesTrans.error,
+        messageDescription: errorMessagesTrans.loadingLayout,
     });
 
     lD.designerDiv.html(htmlError);
@@ -751,7 +751,7 @@ lD.loadFormFromAPI = function(type, id = null) {
                 location.reload(false);
             } else {
 
-                toastr.error('Form load failed!');
+                toastr.error(errorMessagesTrans.formLoadFailed);
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -765,7 +765,7 @@ lD.loadFormFromAPI = function(type, id = null) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error('Form load failed!');
+        toastr.error(errorMessagesTrans.formLoadFailed);
     });
 };
 
@@ -792,15 +792,15 @@ lD.undoLastAction = function() {
         lD.common.hideLoadingScreen('undoLastAction');
 
         // Show error returned or custom message to the user
-        let errorMessage = 'Revert failed: ';
+        let errorMessage = '';
 
         if(typeof error == 'string') {
-            errorMessage += error;
+            errorMessage =  error;
         } else {
-            errorMessage += error.errorThrown;
+            errorMessage = error.errorThrown;
         }
 
-        toastr.error(errorMessage);
+        toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
     });
 };
 
@@ -840,15 +840,15 @@ lD.deleteObject = function(objectType, objectId) {
     if(objectType === 'region' || objectType === 'widget') {
 
         bootbox.confirm({
-            title: 'Delete ' + objectType,
-            message: 'Are you sure? All changes related to this object will be erased',
+            title: editorsTrans.deleteTitle.replace('%obj%', objectType),
+            message: editorsTrans.deleteConfirm,
             buttons: {
                 confirm: {
-                    label: 'Yes',
+                    label: editorsTrans.yes,
                     className: 'btn-danger'
                 },
                 cancel: {
-                    label: 'No',
+                    label: editorsTrans.no,
                     className: 'btn-default'
                 }
             },
@@ -870,15 +870,15 @@ lD.deleteObject = function(objectType, objectId) {
                         lD.common.hideLoadingScreen('deleteObject');
 
                         // Show error returned or custom message to the user
-                        let errorMessage = 'Delete element failed: ' + error;
+                        let errorMessage = '';
 
                         if(typeof error == 'string') {
-                            errorMessage += error;
+                            errorMessage = error;
                         } else {
-                            errorMessage += error.errorThrown;
+                            errorMessage = error.errorThrown;
                         }
 
-                        toastr.error(errorMessage);
+                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
                     });
                 }
             }
@@ -931,7 +931,7 @@ lD.dropItemAdd = function(droppable, draggable) {
 
                 lD.manager.saveAllChanges().then((res) => {
 
-                    toastr.success('All changes saved!');
+                    toastr.success(editorsTrans.allChangesSaved);
 
                     lD.layout.addElement('region').then((res) => { // Success
 
@@ -947,21 +947,21 @@ lD.dropItemAdd = function(droppable, draggable) {
                         lD.common.hideLoadingScreen('addRegionToLayout'); 
 
                         // Show error returned or custom message to the user
-                        let errorMessage = 'Create region failed: ' + error;
+                        let errorMessage = '';
 
                         if(typeof error == 'string') {
-                            errorMessage += error;
+                            errorMessage = error;
                         } else {
-                            errorMessage += error.errorThrown;
+                            errorMessage = error.errorThrown;
                         }
 
-                        toastr.error(errorMessage);
+                        toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
                     });
                 }).catch((err) => {
 
                     lD.common.hideLoadingScreen('addRegionToLayout'); 
 
-                    toastr.error('Save all changes failed!');
+                    toastr.error(errorMessagesTrans.saveAllChangesFailed);
                 });
 
             }
@@ -1079,16 +1079,16 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
             let errorMessage = '';
 
             if(typeof error == 'string') {
-                errorMessage += error;
+                errorMessage = error;
             } else {
-                errorMessage += error.errorThrown;
+                errorMessage = error.errorThrown;
             }
 
             // Remove added change from the history manager
             lD.manager.removeLastChange();
 
             // Show toast message
-            toastr.error(errorMessage);
+            toastr.error(errorMessagesTrans.addModuleFailed.replace('%error%', errorMessage));
         });
     }  
 };
@@ -1136,15 +1136,16 @@ lD.addMediaToPlaylist = function(playlistId, mediaId) {
         lD.common.hideLoadingScreen('addMediaToPlaylist');
 
         // Show error returned or custom message to the user
-        let errorMessage = 'Add media failed: ';
+        let errorMessage = '';
 
         if(typeof error == 'string') {
-            errorMessage += error;
+            errorMessage = error;
         } else {
-            errorMessage += error.errorThrown;
+            errorMessage = error.errorThrown;
         }
 
-        toastr.error(errorMessage);
+        // Show toast message
+        toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
     });
 };
 
