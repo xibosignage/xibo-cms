@@ -1,7 +1,7 @@
 {#
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -280,6 +280,18 @@
 
                         {% set title %}{% trans "Optional Stylesheet" %}{% endset %}
                         {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), title, "", "", 10) }}
+
+                        {% set title %}{% trans "Use event timezone?" %}{% endset %}
+                        {% set helpText %}{% trans "If an event specifies a timezone, should it be used. Deselection means the CMS timezone will be used." %}{% endset %}
+                        {{ forms.checkbox("useEventTimezone", title, module.getOption("useEventTimezone", 1), helpText) }}
+
+                        {% set title %}{% trans "Use calendar timezone?" %}{% endset %}
+                        {% set helpText %}{% trans "If use event timezone is selected and your calendar feed specifies its own time zone should this be used? Deselecting means the CMS timezone will be used." %}{% endset %}
+                        {{ forms.checkbox("useCalendarTimezone", title, module.getOption("useCalendarTimezone", 1), helpText) }}
+
+                        {% set title %}{% trans "Windows format Calendar?" %}{% endset %}
+                        {% set helpText %}{% trans "Does the calendar feed come from Windows - if unsure leave unselected." %}{% endset %}
+                        {{ forms.checkbox("windowsFormatCalendar", title, module.getOption("windowsFormatCalendar", 0), helpText) }}
 
                     </div>
                 </div>

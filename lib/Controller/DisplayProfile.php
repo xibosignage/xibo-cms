@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -177,6 +178,12 @@ class DisplayProfile extends Base
                 'text' => __('Edit')
             );
 
+            $profile->buttons[] = array(
+                'id' => 'displayprofile_button_copy',
+                'url' => $this->urlFor('displayProfile.copy.form', ['id' => $profile->displayProfileId]),
+                'text' => __('Copy')
+            );
+
             if ($this->getUser()->checkDeleteable($profile)) {
                 $profile->buttons[] = array(
                     'id' => 'displayprofile_button_delete',
@@ -305,6 +312,7 @@ class DisplayProfile extends Base
     /**
      * Edit Profile Form
      * @param int $displayProfileId
+     * @throws \Xibo\Exception\XiboException
      */
     public function editForm($displayProfileId)
     {
@@ -350,6 +358,7 @@ class DisplayProfile extends Base
     /**
      * Edit
      * @param $displayProfileId
+     * @throws \Xibo\Exception\XiboException
      * 
      * @SWG\Put(
      *  path="/displayprofile/{displayProfileId}",
@@ -386,14 +395,8 @@ class DisplayProfile extends Base
      *      required=true
      *   ),
      *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/DisplayProfile"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the new record",
-     *          type="string"
-     *      )
+     *      response=204,
+     *      description="successful operation"
      *  )
      * )
      */
@@ -497,6 +500,7 @@ class DisplayProfile extends Base
     /**
      * Delete Display Profile
      * @param int $displayProfileId
+     * @throws \Xibo\Exception\XiboException
      *
      * @SWG\Delete(
      *  path="/displayprofile/{displayProfileId}",
@@ -523,7 +527,7 @@ class DisplayProfile extends Base
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
         if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
-            throw new AccessDeniedException(__('You do not have permission to edit this profile'));
+            throw new AccessDeniedException(__('You do not have permission to delete this profile'));
 
         $displayProfile->delete();
 
@@ -531,6 +535,82 @@ class DisplayProfile extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $displayProfile->name)
+        ]);
+    }
+
+    /**
+     * @param $displayProfileId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function copyForm($displayProfileId)
+    {
+        // Create a form out of the config object.
+        $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
+            throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+
+        $this->getState()->template = 'displayprofile-form-copy';
+        $this->getState()->setData([
+            'displayProfile' => $displayProfile
+        ]);
+    }
+
+    /**
+     * Copy Display Profile
+     * @param int $displayProfileId
+     * @throws \Xibo\Exception\XiboException
+     *
+     * @SWG\Post(
+     *  path="/displayprofile/{displayProfileId}/copy",
+     *  operationId="displayProfileCopy",
+     *  tags={"displayprofile"},
+     *  summary="Copy Display Profile",
+     *  description="Copy an existing Display Profile",
+     *  @SWG\Parameter(
+     *      name="displayProfileId",
+     *      in="path",
+     *      description="The Display Profile ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="path",
+     *      description="The name for the copy",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayProfile"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    public function copy($displayProfileId)
+    {
+        // Create a form out of the config object.
+        $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
+            throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+
+        $new = clone $displayProfile;
+        $new->name = $this->getSanitizer()->getString('name');
+        $new->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $new->name),
+            'id' => $new->displayProfileId,
+            'data' => $new
         ]);
     }
 }

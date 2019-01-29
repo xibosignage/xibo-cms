@@ -270,6 +270,7 @@ $app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('disp
 $app->post('/displayprofile', '\Xibo\Controller\DisplayProfile:add')->name('displayProfile.add');
 $app->put('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:edit')->name('displayProfile.edit');
 $app->delete('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:delete')->name('displayProfile.delete');
+$app->post('/displayprofile/:id/copy', '\Xibo\Controller\DisplayProfile:copy')->name('displayProfile.copy');
 
 /**
  * DataSet

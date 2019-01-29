@@ -245,6 +245,7 @@ $app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')
 $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')->name('displayProfile.add.form');
 $app->get('/displayprofile/form/edit/:id', '\Xibo\Controller\DisplayProfile:editForm')->name('displayProfile.edit.form');
 $app->get('/displayprofile/form/delete/:id', '\Xibo\Controller\DisplayProfile:deleteForm')->name('displayProfile.delete.form');
+$app->get('/displayprofile/form/copy/:id', '\Xibo\Controller\DisplayProfile:copyForm')->name('displayProfile.copy.form');
 
 //
 // group
