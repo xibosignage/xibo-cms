@@ -637,10 +637,13 @@ describe('Layout Designer (Populated)', function() {
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 
-            // Get the id from the published layout and check if its on the layouts table as published
+            // Get the id from the published layout and check if the designer reloaded to the Read Only Mode of that layout
             cy.wait('@layoutPublish').then((res) => {
-                cy.get('table#layouts tbody [role="row"]:first-child').contains(res.response.body.data.layoutId);
-                cy.get('table#layouts tbody [role="row"]:first-child').contains('Published');
+                // Check if the page redirected to the layout designer with the new published layout
+                cy.url().should('include', '/layout/designer/' + res.response.body.data.layoutId);
+
+                // Check if the read only message appears
+                cy.get('#read-only-message').should('exist');
             });
         });
     });

@@ -23,6 +23,10 @@
         // Structure with API URLs
         let urlsForApi = {
             layout: {
+                designer: {
+                    url: "{{ urlFor("layout.designer") }}",
+                    type: 'GET'
+                },
                 get: {
                     url: "{{ urlFor("layout.search") }}",
                     type: 'GET'

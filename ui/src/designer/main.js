@@ -479,10 +479,11 @@ lD.publishLayout = function() {
         lD.common.hideLoadingScreen();
 
         if(res.success) {
-
+            
             toastr.success(res.message);
 
-            window.location.href = urlsForApi.layout.list.url;
+            // Redirect to the new published layout ( read only mode )
+            window.location.href = urlsForApi.layout.designer.url.replace(':id', res.data.layoutId);
         } else {
 
             // Login Form needed?
