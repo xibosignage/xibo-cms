@@ -1,12 +1,24 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-In theory it is fine, although  it may be better to user clientTypes from controller??
-
 #}
 
 {% extends "form-base.twig" %}
@@ -35,13 +47,15 @@ In theory it is fine, although  it may be better to user clientTypes from contro
                 {% set helpText %}{% trans "What type of display client is this profile intended for?" %}{% endset %}
                 {% set windows %}{% trans "Windows" %}{% endset %}
                 {% set android %}{% trans "Android" %}{% endset %}
-                {% set lg %}{% trans "LG" %}{% endset %}
+                {% set linux %}{% trans "Linux" %}{% endset %}
                 {% set sssp %}{% trans "Tizen" %}{% endset %}
+                {% set lg %}{% trans "webOS" %}{% endset %}
                 {% set options = [
                     { typeid: "android", type: android },
+                    { typeid: "linux", type: linux },
+                    { typeid: "sssp", type: sssp },
                     { typeid: "lg", type: lg },
-                    { typeid: "windows", type: windows },
-                    { typeid: "sssp", type: sssp }
+                    { typeid: "windows", type: windows }
                 ] %}
                 {{ forms.dropdown("type", "single", title,"", options, "typeid","type", helpText) }} 
 

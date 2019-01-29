@@ -33,6 +33,10 @@
     {
       "step": "Add default display profile for Tizen",
       "action": "INSERT INTO displayprofile (name, type, config, userId, isDefault) VALUES ('Tizen', 'sssp', '[]', 1, 1) ;"
+    },
+    {
+      "step": "Add default display profile for Linux",
+      "action": "INSERT INTO displayprofile (name, type, config, userId, isDefault) VALUES ('Linux', 'linux', '[]', 1, 1) ;"
     }
   ]
 }

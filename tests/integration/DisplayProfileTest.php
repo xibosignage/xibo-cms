@@ -30,7 +30,8 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     {
         // tearDown all profiles that weren't there initially
         $finalProfiles = (new XiboDisplayProfile($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
-        # Loop over any remaining profiles and nuke them
+
+        // Loop over any remaining profiles and nuke them
         foreach ($finalProfiles as $displayProfile) {
             /** @var XiboDisplayProfile $displayProfile */
             $flag = true;
@@ -41,9 +42,9 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
             }
             if ($flag) {
                 try {
-                    $DisplayProfile->delete();
+                    $displayProfile->delete();
                 } catch (\Exception $e) {
-                    fwrite(STDERR, 'Unable to delete ' . $displayProfile->displayProfileId . '. E:' . $e->getMessage());
+                    $this->getLogger()->error('Unable to delete ' . $displayProfile->displayProfileId . '. E:' . $e->getMessage());
                 }
             }
         }
@@ -71,7 +72,6 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testAddSuccess($profileName, $profileType, $profileIsDefault)
     {
-
         // Loop through any pre-existing profiles to make sure we're not
         // going to get a clash
         foreach ($this->startProfiles as $tmpProfile) {
@@ -107,14 +107,16 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
      * Format (profile name, type(windows/android), isDefault flag)
      * @return array
      */
-
-        public function provideSuccessCases()
+    public function provideSuccessCases()
     {
-        # Cases we provide to testAddSuccess, you can extend it by simply adding new case here
+        // Cases we provide to testAddSuccess, you can extend it by simply adding new case here
         return [
             'Android notDefault' => ['test profile', 'android', 0],
             'Windows notDefault' => ['different test profile', 'windows', 0],
-            'French Android' => ['Test de Français 1', 'android', 0]
+            'French Android' => ['Test de Français 1', 'android', 0],
+            'Linux' => ['Test de Français 1', 'linux', 0],
+            'Tizen' => ['Test de Français 1', 'sssp', 0],
+            'webOS' => ['Test de Français 1', 'lg', 0]
         ];
     }
 
