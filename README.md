@@ -86,6 +86,16 @@ Editing files in your favourite editor on your host file system will cause them 
 Your database is persisted in `/containers/db` and will survive reboots, etc.
 
 
+## Translations
+To parse the translations:
+
+```bash
+docker exec -it xibo-cms-tempel_web_1 /var/www/cms/bin/locale.php
+```
+
+```bash
+find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
+```
 
 
 # Application Structure
