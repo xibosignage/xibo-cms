@@ -180,7 +180,7 @@
                 { id: 1, value: light },
                 { id: 2, value: dark }
                 ] %}
-                {{ forms.dropdown("themeId", "single", title, module.getOption("themeId"), options, "id", "value", helpText, "analogue-control-group") }}
+                {{ forms.dropdown("themeId", "single", title, module.getOption("theme"), options, "id", "value", helpText, "analogue-control-group") }}
 
                 {% set message %}{% trans "Enter a format for the Digital Clock below. e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
                 {{ forms.message(message, "digital-control-group") }}
