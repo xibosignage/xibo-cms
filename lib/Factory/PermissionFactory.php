@@ -326,15 +326,15 @@ class PermissionFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $permission = $this->createEmpty();
-            $permission->permissionId = $row['permissionId'];
-            $permission->groupId = $row['groupId'];
-            $permission->view = $row['view'];
-            $permission->edit = $row['edit'];
-            $permission->delete = $row['delete'];
-            $permission->objectId = $objectId;
+            $permission->permissionId = intval($row['permissionId']);
+            $permission->groupId = intval($row['groupId']);
+            $permission->view = intval($row['view']);
+            $permission->edit = intval($row['edit']);
+            $permission->delete = intval($row['delete']);
+            $permission->objectId = intval($objectId);
             $permission->entity = $entity;
-            $permission->entityId = $entityId;
-            $permission->isUser = $row['isuserspecific'];
+            $permission->entityId = intval($entityId);
+            $permission->isUser = intval($row['isuserspecific']);
             $permission->group = $this->getSanitizer()->string($row['group']);
 
             $permissions[] = $permission;
