@@ -1267,6 +1267,206 @@
                 }
             }
         },
+        "/dataset/{dataSetId}/rss": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Search RSSs",
+                "description": "Search RSSs for DataSet",
+                "operationId": "dataSetRSSSearch",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/DataSetFeed"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Add RSS",
+                "description": "Add a RSS to a DataSet",
+                "operationId": "dataSetColumnAdd",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "title",
+                        "in": "formData",
+                        "description": "The title for the RSS",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "title",
+                        "in": "formData",
+                        "description": "The author for the RSS",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "summaryColumnId",
+                        "in": "formData",
+                        "description": "The columnId to be used as each item summary",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "contentColumnId",
+                        "in": "formData",
+                        "description": "The columnId to be used as each item content",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "publishedDateColumnId",
+                        "in": "formData",
+                        "description": "The columnId to be used as each item published date",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSetRss"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{dataSetId}/rss/{$rssId}": {
+            "put": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Edit Rss",
+                "description": "Edit DataSet Rss Feed",
+                "operationId": "dataSetRssEdit",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rssId",
+                        "in": "path",
+                        "description": "The RSS ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "title",
+                        "in": "formData",
+                        "description": "The title for the RSS",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "title",
+                        "in": "formData",
+                        "description": "The author for the RSS",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "summaryColumnId",
+                        "in": "formData",
+                        "description": "The rssId to be used as each item summary",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "contentColumnId",
+                        "in": "formData",
+                        "description": "The columnId to be used as each item content",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "publishedDateColumnId",
+                        "in": "formData",
+                        "description": "The columnId to be used as each item published date",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "regeneratePsk",
+                        "in": "formData",
+                        "description": "Regenerate the PSK?",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/dataset/{dataSetId}/rss/{rssId}": {
+            "delete": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Delete RSS",
+                "description": "Delete DataSet RSS",
+                "operationId": "dataSetRSSDelete",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rssId",
+                        "in": "path",
+                        "description": "The RSS ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/daypart": {
             "get": {
                 "tags": [
@@ -1552,6 +1752,20 @@
                         "type": "string"
                     },
                     {
+                        "name": "clientType",
+                        "in": "formData",
+                        "description": "Filter by Client Type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "clientCode",
+                        "in": "formData",
+                        "description": "Filter by Client Code",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "embed",
                         "in": "formData",
                         "description": "Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
@@ -1571,6 +1785,27 @@
                         "description": "Filter by Display Profile",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "mediaInventoryStatus",
+                        "in": "formData",
+                        "description": "Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "loggedIn",
+                        "in": "formData",
+                        "description": "Filter by Logged In flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "lastAccessed",
+                        "in": "formData",
+                        "description": "Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2002,9 +2237,9 @@
                         "type": "integer"
                     },
                     {
-                        "name": "dynamicContent",
+                        "name": "dynamicCriteria",
                         "in": "formData",
-                        "description": "The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+                        "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
                         "required": false,
                         "type": "string"
                     }
@@ -2421,37 +2656,6 @@
                 }
             }
         },
-        "/displaygroup/{displayGroupId}/version": {
-            "post": {
-                "tags": [
-                    "displayGroup"
-                ],
-                "summary": "Set the Version for this Display",
-                "description": "Sets the version instructions on all Displays in the Group",
-                "operationId": "displayGroupDisplayVersion",
-                "parameters": [
-                    {
-                        "name": "displayGroupId",
-                        "in": "path",
-                        "description": "The Display Group ID",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "mediaId",
-                        "in": "formData",
-                        "description": "The Media Id of the Installer File",
-                        "required": true,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "successful operation"
-                    }
-                }
-            }
-        },
         "/displaygroup/{displayGroupId}/action/collectNow": {
             "post": {
                 "tags": [
@@ -2678,7 +2882,14 @@
                     {
                         "name": "type",
                         "in": "formData",
-                        "description": "Filter by DisplayProfile Type (windows|android)",
+                        "description": "Filter by DisplayProfile Type (windows|android|lg)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as config,commands,configWithDefault",
                         "required": false,
                         "type": "string"
                     }
@@ -2780,17 +2991,8 @@
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/DisplayProfile"
-                        },
-                        "headers": {
-                            "Location": {
-                                "description": "Location of the new record",
-                                "type": "string"
-                            }
-                        }
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             },
@@ -2813,6 +3015,46 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displayprofile/{displayProfileId}/copy": {
+            "post": {
+                "tags": [
+                    "displayprofile"
+                ],
+                "summary": "Copy Display Profile",
+                "description": "Copy an existing Display Profile",
+                "operationId": "displayProfileCopy",
+                "parameters": [
+                    {
+                        "name": "displayProfileId",
+                        "in": "path",
+                        "description": "The Display Profile ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "The name for the copy",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayProfile"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -3640,6 +3882,53 @@
                 }
             }
         },
+        "/library/copy/{mediaId}": {
+            "post": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Copy Media",
+                "description": "Copy a Media, providing a new name and tags if applicable",
+                "operationId": "mediaCopy",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The media ID to Copy",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The name for the new Media",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "The Optional tags for new Media",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/about": {
             "get": {
                 "tags": [
@@ -3876,6 +4165,13 @@
                         "description": "Filter by Subject",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as userGroups,displayGroups",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -4063,6 +4359,76 @@
                         "name": "notificationId",
                         "in": "path",
                         "description": "The Notification Id to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playersoftware/{versionId}": {
+            "put": {
+                "tags": [
+                    "Player Software"
+                ],
+                "summary": "Edit Player Version",
+                "description": "Edit a Player Version file information",
+                "operationId": "playersoftwareEdit",
+                "parameters": [
+                    {
+                        "name": "versionId",
+                        "in": "path",
+                        "description": "The Version ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playerShowVersion",
+                        "in": "formData",
+                        "description": "The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "version",
+                        "in": "formData",
+                        "description": "The Version number",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "The Code number",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Player Software"
+                ],
+                "summary": "Delete Version",
+                "description": "Delete Version file from the Library and Player Versions table",
+                "operationId": "playerSoftwareDelete",
+                "parameters": [
+                    {
+                        "name": "versionId",
+                        "in": "path",
+                        "description": "The Version ID to Delete",
                         "required": true,
                         "type": "integer"
                     }
@@ -5297,6 +5663,13 @@
                         "description": "Flag indicating whether to hide the navigation",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "isPasswordChangeRequired",
+                        "in": "formData",
+                        "description": "A flag indicating whether password change should be forced for this user",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5309,6 +5682,214 @@
                             "Location": {
                                 "description": "Location of the new record",
                                 "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{userId}": {
+            "put": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Edit User",
+                "description": "Edit existing User",
+                "operationId": "userEdit",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "The user ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userName",
+                        "in": "formData",
+                        "description": "The User Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "email",
+                        "in": "formData",
+                        "description": "The user email address",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userTypeId",
+                        "in": "formData",
+                        "description": "The user type ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "homePageId",
+                        "in": "formData",
+                        "description": "The homepage to use for this User",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "libraryQuota",
+                        "in": "formData",
+                        "description": "The users library quota in kilobytes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "newPassword",
+                        "in": "formData",
+                        "description": "New User password",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "retypeNewPassword",
+                        "in": "formData",
+                        "description": "Repeat the new User password",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "retired",
+                        "in": "formData",
+                        "description": "Flag indicating whether to retire this user",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "firstName",
+                        "in": "formData",
+                        "description": "The users first name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "lastName",
+                        "in": "formData",
+                        "description": "The users last name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "phone",
+                        "in": "formData",
+                        "description": "The users phone number",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref1",
+                        "in": "formData",
+                        "description": "Reference 1",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref2",
+                        "in": "formData",
+                        "description": "Reference 2",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref3",
+                        "in": "formData",
+                        "description": "Reference 3",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref4",
+                        "in": "formData",
+                        "description": "Reference 4",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ref5",
+                        "in": "formData",
+                        "description": "Reference 5",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "newUserWizard",
+                        "in": "formData",
+                        "description": "Flag indicating whether to show the new user guide",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "hideNavigation",
+                        "in": "formData",
+                        "description": "Flag indicating whether to hide the navigation",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isPasswordChangeRequired",
+                        "in": "formData",
+                        "description": "A flag indicating whether password change should be forced for this user",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "User Delete",
+                "description": "Delete user",
+                "operationId": "userDelete",
+                "parameters": [
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "description": "Id of the user to delete",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "deleteAllItems",
+                        "in": "formData",
+                        "description": "Flag indicating whether to delete all items owned by that user",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "reassignUserId",
+                        "in": "formData",
+                        "description": "Reassign all items owned by this user to the specified user ID",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/User"
                             }
                         }
                     }
@@ -6137,7 +6718,7 @@
                     {
                         "name": "items",
                         "in": "formData",
-                        "description": "Items wanted",
+                        "description": "A comma separated list of Currency Acronyms/Abbreviations, e.g. GBP,USD,EUR. For the best results enter no more than 5 items.",
                         "required": true,
                         "type": "string"
                     },
@@ -6355,14 +6936,14 @@
                     {
                         "name": "upperLimit",
                         "in": "formData",
-                        "description": "EDIT Only - Upper low limit for this dataSet, 0 for nor limit",
+                        "description": "EDIT Only - Upper row limit for this dataSet, 0 for no limit",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "lowerLimit",
                         "in": "formData",
-                        "description": "EDIT Only - Lower low limit for this dataSet, 0 for nor limit",
+                        "description": "EDIT Only - Lower row limit for this dataSet, 0 for no limit",
                         "required": false,
                         "type": "integer"
                     },
@@ -6893,14 +7474,14 @@
                     {
                         "name": "longitude",
                         "in": "formData",
-                        "description": "The longitude for this weather widget, only pass if useDisplayLocation set to 0",
+                        "description": "The longitude for this Google Traffic widget, only pass if useDisplayLocation set to 0",
                         "required": false,
                         "type": "number"
                     },
                     {
                         "name": "latitude",
                         "in": "formData",
-                        "description": "The latitude for this weather widget, only pass if useDisplayLocation set to 0",
+                        "description": "The latitude for this Google Traffic widget, only pass if useDisplayLocation set to 0",
                         "required": false,
                         "type": "number"
                     }
@@ -7411,7 +7992,7 @@
                     {
                         "name": "items",
                         "in": "formData",
-                        "description": "Items wanted, can be comma separated",
+                        "description": "A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.",
                         "required": true,
                         "type": "string"
                     },
@@ -7692,6 +8273,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "updateIntervalImages",
+                        "in": "formData",
+                        "description": "EDIT Only - Update interval for downloaded Images, in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "effect",
                         "in": "formData",
                         "description": "Edit only - Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
@@ -7725,6 +8313,13 @@
                         "description": "EDIT Only and SourceId=1 - Take the items form the beginning or the end of the list, available options: start, end",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "reverseOrder",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should we reverse the order of the feed items as well?",
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "durationIsPerItem",
@@ -8948,6 +9543,13 @@
         },
         "Display": {
             "properties": {
+                "overrideConfig": {
+                    "description": "The configuration options that will overwrite Display Profile Config",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "displayId": {
                     "description": "The ID of this Display",
                     "type": "integer"
@@ -9049,10 +9651,6 @@
                     "description": "The display longitude",
                     "type": "number",
                     "format": "double"
-                },
-                "versionInstructions": {
-                    "description": "A JSON string representing the player installer that should be installed",
-                    "type": "string"
                 },
                 "clientType": {
                     "description": "A string representing the player type",
@@ -9656,6 +10254,46 @@
                 }
             }
         },
+        "PlayerVersion": {
+            "properties": {
+                "versionId": {
+                    "description": "Version ID",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "Player type",
+                    "type": "string"
+                },
+                "version": {
+                    "description": "Version number",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "Code number",
+                    "type": "integer"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this Media",
+                    "type": "string"
+                },
+                "mediaId": {
+                    "description": "The Media ID",
+                    "type": "integer"
+                },
+                "playerShowVersion": {
+                    "description": "Player version to show",
+                    "type": "string"
+                },
+                "originalFileName": {
+                    "description": "Original name of the uploaded installer file",
+                    "type": "string"
+                },
+                "storedAs": {
+                    "description": "Stored As",
+                    "type": "string"
+                }
+            }
+        },
         "Playlist": {
             "properties": {
                 "playlistId": {
@@ -9929,6 +10567,10 @@
                     "description": "Does this event have custom from/to date times?",
                     "type": "integer"
                 },
+                "syncEvent": {
+                    "description": "Flag indicating whether the event should be synchronised across displays",
+                    "type": "integer"
+                },
                 "syncTimezone": {
                     "description": "Flag indicating whether the event will sync to the Display timezone",
                     "type": "integer"
@@ -10043,6 +10685,10 @@
                 },
                 "retired": {
                     "description": "A flag indicating whether the user is retired",
+                    "type": "integer"
+                },
+                "isPasswordChangeRequired": {
+                    "description": "A flag indicating whether password change should be forced for this user",
                     "type": "integer"
                 },
                 "groupId": {
@@ -10472,6 +11118,10 @@
         {
             "name": "task",
             "description": "Tasks"
+        },
+        {
+            "name": "version",
+            "description": "Player Versions"
         }
     ],
     "externalDocs": {
