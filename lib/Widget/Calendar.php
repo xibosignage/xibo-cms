@@ -125,6 +125,10 @@ class Calendar extends ModuleWidget
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null)));
         $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
 
+        $this->setOption('useEventTimezone', $this->getSanitizer()->getCheckbox('useEventTimezone'));
+        $this->setOption('useCalendarTimezone', $this->getSanitizer()->getCheckbox('useCalendarTimezone'));
+        $this->setOption('windowsFormatCalendar', $this->getSanitizer()->getCheckbox('windowsFormatCalendar'));
+
         $this->validate();
         $this->saveWidget();
     }
@@ -267,10 +271,10 @@ class Calendar extends ModuleWidget
                     // Prepare the items array, sorting it and removing any items that have expired.
                     $.each(items, function(index, element) {
                         // Parse the item and add it to the array if it has not finished yet
-                        var endDate = moment(element.endDate, "X");
+                        var endDate = moment(element.endDate);
                         
                         if (endDate.isAfter(now)) {
-                            if (moment(element.startDate, "X").isBefore(now)) {
+                            if (moment(element.startDate).isBefore(now)) {
                                 parsedItems.push(element.currentEventItem);
                             } else {
                                 parsedItems.push(element.item);
@@ -367,7 +371,9 @@ class Calendar extends ModuleWidget
         $items = [];
 
         // Create an ICal helper and pass it the contents of the file.
-        $iCal = new ICal();
+        $iCal = new ICal(false, [
+            'replaceWindowsTimeZoneIds' => ($this->getSetting('replaceWindowsTimeZoneIds', 0) == 1)
+        ]);
 
         try {
             $iCal->initString($feed);
@@ -375,6 +381,11 @@ class Calendar extends ModuleWidget
             $this->getLog()->debug($exception->getMessage() . $exception->getTraceAsString());
 
             throw new ConfigurationException(__('The iCal provided is not valid, please choose a valid feed'));
+        }
+
+        // Before we parse anything - should we use the calendar timezone as a base for our calculations?
+        if ($this->getSetting('useCalendarTimezone') == 1) {
+            $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         }
 
         // We've got something at least, so prepare the template
@@ -388,7 +399,6 @@ class Calendar extends ModuleWidget
 
         // Get a date format
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->GetSetting('DATE_FORMAT'));
-        $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         
         // Decide on the Range we're interested in
         // $iCal->eventsFromInterval only works for future events
@@ -400,27 +410,32 @@ class Calendar extends ModuleWidget
         $this->getLog()->debug('Start of day is ' . $startOfDay->toDateTimeString());
         $this->getLog()->debug('End of day is ' . $endOfDay->toDateTimeString());
 
+        // Force timezone of each event?
+        $useEventTimezone = $this->getSetting('useEventTimezone', 1);
+
         // Go through each event returned
         foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
             /** @var \ICal\Event $event */
-            $startDt = Date::createFromFormat('U', $iCal->iCalDateToUnixTimestamp($event->dtstart));
-            $endDt = Date::createFromFormat('U', $iCal->iCalDateToUnixTimestamp($event->dtend));
+            $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart, $useEventTimezone));
+            $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend, $useEventTimezone));
 
-            if ($excludeAllDay && $startDt->equalTo($startOfDay) && $endDt->equalTo($endOfDay))
+            $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / ' . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
+
+            if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1))
                 continue;
 
             // Substitute for all matches in the template
-            $rowString = $this->substituteForEvent($matches, $template, $iCal, $dateFormat, $event);
+            $rowString = $this->substituteForEvent($matches, $template, $startDt, $endDt, $dateFormat, $event);
 
             if ($currentEventTemplate != '') {
-                $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate, $iCal, $dateFormat, $event);
+                $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate, $startDt, $endDt, $dateFormat, $event);
             } else {
                 $currentEventRow = $rowString;
             }
 
             $items[] = [
-                'startDate' => $iCal->iCalDateToUnixTimestamp($event->dtstart),
-                'endDate' => $iCal->iCalDateToUnixTimestamp($event->dtend),
+                'startDate' => $startDt->format('c'),
+                'endDate' => $endDt->format('c'),
                 'item' => $rowString,
                 'currentEventItem' => $currentEventRow
             ];
@@ -432,12 +447,13 @@ class Calendar extends ModuleWidget
     /**
      * @param $matches
      * @param $string
-     * @param ICal $iCal
+     * @param Date $startDt
+     * @param Date $endDt
      * @param $dateFormat
      * @param $event
      * @return mixed
      */
-    private function substituteForEvent($matches, $string, $iCal, $dateFormat, $event)
+    private function substituteForEvent($matches, $string, $startDt, $endDt, $dateFormat, $event)
     {
         // Run through all [] substitutes in $matches
         foreach ($matches[0] as $sub) {
@@ -462,11 +478,11 @@ class Calendar extends ModuleWidget
                     break;
 
                 case '[StartDate]':
-                    $replace = $iCal->iCalDateToDateTime($event->dtstart, true)->format($dateFormat);
+                    $replace = $startDt->format($dateFormat);
                     break;
 
                 case '[EndDate]':
-                    $replace = $iCal->iCalDateToDateTime($event->dtend, true)->format($dateFormat);
+                    $replace = $endDt->format($dateFormat);
                     break;
             }
 
