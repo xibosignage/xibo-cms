@@ -1,5 +1,5 @@
 INSERT INTO `version` (`app_ver`, `XmdsVersion`, `XlfVersion`, `DBVersion`) VALUES
-('1.8.12', 5, 2, 143);
+('1.8.12', 5, 2, 145);
 
 INSERT INTO `group` (`groupID`, `group`, `IsUserSpecific`, `IsEveryone`, `isSystemNotification`) VALUES
 (1, 'Users', 0, 0, 0),
@@ -92,25 +92,26 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
   (1, 'Image', 'Image', 1, 0, 'Images. PNG, JPG, BMP, GIF', 'forms/image.gif', 1, 'jpg,jpeg,png,bmp,gif', 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Image', 10),
-  (2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Video', 0),
+  (2, 'Video', 'Video', 1, 0, 'Videos - support varies depending on the client hardware you are using.', 'forms/video.gif', 1, 'wmv,avi,mpg,mpeg,webm,mp4,m4v', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Video', 0),
   (3, 'Flash', 'Flash', 1, 0, 'Flash', 'forms/flash.gif', 1, 'swf', 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Flash', 10),
   (4, 'PowerPoint', 'PowerPoint', 1, 0, 'Powerpoint. PPT, PPS', 'forms/powerpoint.gif', 1, 'ppt,pps,pptx', 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\PowerPoint', 10),
   (5, 'Webpage', 'Webpage', 1, 1, 'Webpages.', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\WebPage', 60),
   (6, 'Ticker', 'Ticker', 1, 1, 'RSS Ticker.', 'forms/ticker.gif', 1, NULL, 1, 1, NULL, '[]', '../modules', 'Xibo\\Widget\\Ticker', 5),
   (7, 'Text', 'Text', 1, 1, 'Text. With Directional Controls.', 'forms/text.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Text', 5),
   (8, 'Embedded', 'Embedded', 1, 1, 'Embedded HTML', 'forms/webpage.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Embedded', 60),
-  (11, 'datasetview', 'Data Set', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\DataSetView', 60),
+  (11, 'datasetview', 'DataSet View', 1, 1, 'A view on a DataSet', 'forms/datasetview.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\DataSetView', 60),
   (12, 'shellcommand', 'Shell Command', 1, 1, 'Execute a shell command on the client', 'forms/shellcommand.gif', 1, NULL, 1, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\ShellCommand', 3),
   (13, 'localvideo', 'Local Video', 1, 1, 'Play a video locally stored on the client', 'forms/video.gif', 1, NULL, 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\LocalVideo', 60),
-  (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'apk,ipk,js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
+  (14, 'genericfile', 'Generic File', 1, 0, 'A generic file to be stored in the library', 'forms/library.gif', 1, 'js,html,htm', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\GenericFile', 10),
   (15, 'clock', 'Clock', 1, 1, '', 'forms/library.gif', 1, NULL, 1, 1, 'html', '[]', '../modules', 'Xibo\\Widget\\Clock', 5),
   (16, 'font', 'Font', 1, 0, 'A font to use in other Modules', 'forms/library.gif', 1, 'ttf,otf,eot,svg,woff', 0, 0, NULL, NULL, '../modules', 'Xibo\\Widget\\Font', 10),
   (17, 'audio', 'Audio', 1, 0, 'Audio - support varies depending on the client hardware', 'forms/video.gif', 1, 'mp3,wav', 0, 1, NULL, NULL, '../modules', 'Xibo\\Widget\\Audio', 0),
   (18, 'pdf', 'PDF', 1, 0, 'PDF document viewer', 'forms/pdf.gif', 1, 'pdf', 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\Pdf', 60),
-  (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10);
+  (19, 'notificationview', 'Notification', 1, 1, 'Display Notifications from the Notification Centre', 'forms/library.gif', 1, null, 1, 1, 'html', null, '../modules', 'Xibo\\Widget\\NotificationView', 10),
+  (20, 'playersoftware', 'Player Software', 1, 0, 'A module for managing Player Versions', 'forms/library.gif', 1, 'apk,ipk,wgt', 0, 0, null, null, '../modules', 'Xibo\\Widget\\PlayerSoftware', 10);
 
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
-  (1, 'dashboard', 'Dashboard', 1),
+  (1, 'icondashboard', 'Icon Dashboard', 1),
   (2, 'schedule', 'Schedule', 1),
   (3, 'mediamanager', 'Media Dashboard', 1),
   (4, 'layout', 'Layout', 1),
@@ -148,7 +149,8 @@ INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (36, 'notification', 'Notifications', 0),
   (37, 'drawer', 'Notification Drawer', 0),
   (38, 'daypart', 'Dayparting', 0),
-  (39, 'task', 'Tasks', 1);
+  (39, 'task', 'Tasks', 1),
+  (40, 'playersoftware', 'Player Software', 0);
 
 
 INSERT INTO `resolution` (`resolutionID`, `resolution`, `width`, `height`, `intended_width`, `intended_height`, `version`, `enabled`, `userId`) VALUES
@@ -173,8 +175,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (33, 'LIBRARY_LOCATION', '', 'text', 'The fully qualified path to the CMS library location.', NULL, 'configuration', 1, 'Library Location', 'required', 10, '', 1, 'string'),
 (34, 'SERVER_KEY', '', 'text', NULL, NULL, 'configuration', 1, 'CMS Secret Key', 'required', 20, '', 1, 'string'),
 (35, 'HELP_BASE', 'http://www.xibo.org.uk/manual/en/', 'text', NULL, NULL, 'general', 1, 'Location of the Manual', 'required', 10, 'http://www.xibo.org.uk/manual/', 1, 'string'),
-(36, 'PHONE_HOME', 'On', 'dropdown', 'Should the server send anonymous statistics back to the Xibo project?', 'On|Off', 'general', 1, 'Allow usage tracking?', '', 10, 'On', 1, 'word'),
-(37, 'PHONE_HOME_KEY', '', 'text', 'Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.', NULL, 'general', 0, 'Phone home key', '', 20, '', 0, 'string'),
+(36, 'PHONE_HOME', 'On', 'dropdown', 'Should the CMS send anonymous statistics to help improve the software?', 'On|Off', 'general', 1, 'Allow usage tracking?', '', 10, 'On', 1, 'word'),
+(37, 'PHONE_HOME_KEY', '', 'text', 'Key used to distinguish each CMS instance. This is generated randomly based on the time you first installed the CMS, and is completely untraceable.', NULL, 'general', 0, 'Phone home key', '', 20, '', 0, 'string'),
 (38, 'PHONE_HOME_URL', 'http://www.xibo.org.uk/stats/track.php', 'text', 'The URL to connect to to PHONE_HOME (if enabled)', NULL, 'network', 0, 'Phone home URL', '', 60, 'http://www.xibo.org.uk/stats/track.php', 0, 'string'),
 (39, 'PHONE_HOME_DATE', '0', 'text', 'The last time we PHONED_HOME in seconds since the epoch', NULL, 'general', 0, 'Phone home time', '', 30, '0', 0, 'int'),
 (40, 'SERVER_MODE', 'Production', 'dropdown', 'This should only be set if you want to display the maximum allowed error messaging through the user interface. <br /> Useful for capturing critical php errors and environment issues.', 'Production|Test', 'troubleshooting', 1, 'Server Mode', '', 30, 'Production', 1, 'word'),
@@ -186,8 +188,8 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (46, 'MAINTENANCE_ALERT_TOUT', '12', 'number', 'How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis.', NULL, 'maintenance', 1, 'Max Display Timeout', '', 80, '12', 1, 'int'),
 (47, 'SHOW_DISPLAY_AS_VNCLINK', '', 'text', 'Turn the display name in display management into a link using the IP address last collected. The %s is replaced with the IP address. Leave blank to disable.', NULL, 'displays', 1, 'Add a link to the Display name using this format mask?', '', 30, '', 1, 'string'),
 (48, 'SHOW_DISPLAY_AS_VNC_TGT', '_top', 'text', 'If the display name is shown as a link in display management, what target should the link have? Set _top to open the link in the same window or _blank to open in a new window.', NULL, 'displays', 1, 'The target attribute for the above link', '', 40, '_top', 1, 'string'),
-(49, 'MAINTENANCE_ALWAYS_ALERT', 'Off', 'dropdown', 'Should Xibo send an email if a display is in an error state every time the maintenance script runs?', 'On|Off', 'maintenance', 1, 'Send repeat Display Timeouts', '', 80, 'Off', 1, 'word'),
-(50, 'SCHEDULE_LOOKAHEAD', 'On', 'dropdown', 'Should Xibo send future schedule information to clients?', 'On|Off', 'general', 0, 'Send Schedule in advance?', '', 40, 'On', 1, 'word'),
+(49, 'MAINTENANCE_ALWAYS_ALERT', 'Off', 'dropdown', 'Should the CMS send an email if a display is in an error state every time maintenance runs?', 'On|Off', 'maintenance', 1, 'Send repeat Display Timeouts', '', 80, 'Off', 1, 'word'),
+(50, 'SCHEDULE_LOOKAHEAD', 'On', 'dropdown', 'Should the CMS send future schedule information to clients?', 'On|Off', 'general', 0, 'Send Schedule in advance?', '', 40, 'On', 1, 'word'),
 (51, 'REQUIRED_FILES_LOOKAHEAD', '172800', 'number', 'How many seconds in to the future should the calls to RequiredFiles look?', NULL, 'general', 1, 'Send files in advance?', '', 50, '172800', 1, 'int'),
 (52, 'REGION_OPTIONS_COLOURING', 'Media Colouring', 'dropdown', NULL, 'Media Colouring|Permissions Colouring', 'permissions', 1, 'How to colour Media on the Region Timeline', '', 30, 'Media Colouring', 1, 'string'),
 (53, 'LAYOUT_COPY_MEDIA_CHECKB', 'Unchecked', 'dropdown', 'Default the checkbox for making duplicates of media when copying layouts', 'Checked|Unchecked', 'defaults', 1, 'Default copy media when copying a layout?', '', 20, 'Unchecked', 1, 'word'),
@@ -240,7 +242,9 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (101, 'mail_from_name', '', 'text', 'Mail will be sent under this name', null, 'maintenance', 1, 'Sending email name', '', 45, '', 1, 'string'),
 (102, 'SCHEDULE_SHOW_LAYOUT_NAME', '0', 'checkbox', 'If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.', null, 'permissions', 1, 'Show event Layout regardless of User permission?', '', 45, '', 1, 'checkbox'),
 (103, 'DEFAULT_USERGROUP', '1', 'text', 'The default User Group for new Users', '1', 'users', 1, 'Default User Group', '', 4, '', 1, 'int'),
-(104, 'PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reminder enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reminder', '', 50, 'Off', 1, 'string');
+(104, 'PASSWORD_REMINDER_ENABLED', 'Off', 'dropdown', 'Is password reminder enabled?', 'On|On except Admin|Off', 'users', 1, 'Password Reminder', '', 50, 'Off', 1, 'string'),
+(105, 'DISPLAY_AUTO_AUTH', '0', 'checkbox', 'If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.', null, 'displays', 1, 'Automatically authorise new Displays?', '', 25, '', 1, 'checkbox'),
+(106, 'EVENT_SYNC', '0', 'checkbox', 'If checked you will have an option to enable Synchronise this Event checkbox for applicable events', null, 'general', 0, 'Show Synchronise this Event checkbox on applicable events?', '', 55, '', 0, 'checkbox');
 
 INSERT INTO `usertype` (`usertypeid`, `usertype`) VALUES
 (1, 'Super Admin'),
@@ -290,7 +294,7 @@ INSERT INTO `tag` (`tagId`, `tag`) VALUES
 (3, 'thumbnail');
 
 INSERT INTO `displayprofile` (`name`, `type`, `config`, `isdefault`, `userid`)
-VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1'),  ('webOS', 'lg', '[]', '1', '1');
+VALUES ('Windows', 'windows', '[]', '1', '1'), ('Android', 'android', '[]', '1', '1'),  ('webOS', 'lg', '[]', '1', '1'), ('Tizen', 'sssp', '[]', '1', '1'), ('Linux', 'linux', '[]', '1', '1');
 
 INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (1, 'Xibo\\Entity\\Page'),
@@ -304,7 +308,7 @@ INSERT INTO `permissionentity` (`entityId`, `entity`) VALUES
 (10, 'Xibo\\Entity\\Notification'),
 (11, 'Xibo\\Entity\\DayPart');
 
-INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access'),('mcaas', 'Media Conversion as a Service');
+INSERT INTO `oauth_scopes` (id, description) VALUES ('all', 'All access');
 
 INSERT INTO `permission` (entityId, groupId, objectId, view, edit, `delete`) VALUES
   (1, 1, 1, 1, 0, 0),

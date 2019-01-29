@@ -44,7 +44,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
 
             // Check for a user quota
-            $controller->getUser()->isQuotaFullByUser();
+            // this method has the ability to reconnect to MySQL in the event that the upload has taken a long time.
+            // OSX-381
+            $controller->getUser()->isQuotaFullByUser(true);
 
             // Get some parameters
             if ($index === null) {
@@ -63,7 +65,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
 
-            $controller->getLog()->debug('Module Type = %s, Name = ', $module->getModuleType(), $module->getModuleName());
+            $controller->getLog()->debug('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName());
 
             // Do we need to run any pre-processing on the file?
             $module->preProcessFile($filePath);
@@ -169,7 +171,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $controller->getDispatcher()->dispatch(LibraryReplaceWidgetEvent::$NAME, new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia));
 
                             // Save
-                            $widget->save();
+                            $widget->save(['alwaysUpdate' => true]);
                         }
                     }
 
@@ -229,7 +231,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         $controller->getLog()->debug('No prior media found');
                     }
 
-                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory());
+                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory(), $controller->getPlayerVersionFactory());
                     $oldMedia->delete();
 
                 } else {

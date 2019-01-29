@@ -35,6 +35,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
@@ -110,6 +111,9 @@ class Display extends Base
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /** @var  RequiredFileFactory */
     private $requiredFileFactory;
 
@@ -146,8 +150,9 @@ class Display extends Base
      * @param TagFactory $tagFactory
      * @param NotificationFactory $notificationFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -166,6 +171,7 @@ class Display extends Base
         $this->tagFactory = $tagFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -394,6 +400,20 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="clientType",
+     *      in="formData",
+     *      description="Filter by Client Type",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="clientCode",
+     *      in="formData",
+     *      description="Filter by Client Code",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="formData",
      *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
@@ -412,6 +432,27 @@ class Display extends Base
      *      in="formData",
      *      description="Filter by Display Profile",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  *  @SWG\Parameter(
+     *      name="mediaInventoryStatus",
+     *      in="formData",
+     *      description="Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  *  @SWG\Parameter(
+     *      name="loggedIn",
+     *      in="formData",
+     *      description="Filter by Logged In flag",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  *  @SWG\Parameter(
+     *      name="lastAccessed",
+     *      in="formData",
+     *      description="Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -436,12 +477,17 @@ class Display extends Base
             'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
+            'clientType' => $this->getSanitizer()->getString('clientType'),
+            'clientCode' => $this->getSanitizer()->getString('clientCode'),
             'authorised' => $this->getSanitizer()->getInt('authorised'),
             'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'showTags' => true,
-            'clientAddress' => $this->getSanitizer()->getString('clientAddress')
+            'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
+            'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
+            'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
+            'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null
         ];
 
         // Get a list of displays
@@ -462,6 +508,10 @@ class Display extends Base
                 $display->load();
             } else {
                 $display->excludeProperty('displayGroups');
+            }
+
+            if (in_array('overrideconfig', $embed)) {
+                $display->includeProperty('overrideConfig');
             }
 
             // Current layout from cache
@@ -657,13 +707,6 @@ class Display extends Base
                     'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions')
                 );
-
-                // Version Information
-                $display->buttons[] = array(
-                    'id' => 'display_button_version_instructions',
-                    'url' => $this->urlFor('displayGroup.version.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Version Information')
-                );
             }
 
             if ($this->getUser()->checkEditable($display)) {
@@ -698,6 +741,10 @@ class Display extends Base
     function editForm($displayId)
     {
         $display = $this->displayFactory->getById($displayId, true);
+        $playerVersions = null;
+        $mediaId = null;
+
+        $display->load();
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -754,6 +801,18 @@ class Display extends Base
             $layouts = [];
         }
 
+        $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($display->overrideConfig === [])
+            $mediaId = 0;
+
+        if ($mediaId != 0)
+            try {
+                $playerVersions = $this->playerVersionFactory->getByMediaId($mediaId);
+            } catch (NotFoundException $e) {
+                $playerVersions = null;
+            }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
@@ -761,8 +820,10 @@ class Display extends Base
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
-            'displayLockName' => ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
-            'help' => $this->getHelp()->link('Display', 'Edit')
+            'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
+            'help' => $this->getHelp()->link('Display', 'Edit'),
+            'versions' => [$playerVersions],
+            'overrideVersionMediaId' => $display->getSetting('versionMediaId', null, ['displayOverride' => true])
         ]);
     }
 
@@ -967,6 +1028,8 @@ class Display extends Base
         if ($this->getConfig()->GetSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
             $display->display = $this->getSanitizer()->getString('display');
 
+        $display->load();
+
         $display->description = $this->getSanitizer()->getString('description');
         $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');
         $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
@@ -984,6 +1047,18 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
+        if ($this->getSanitizer()->getInt('versionMediaId') != 0 ) {
+            $display->overrideConfig = [
+                [
+                'name' => 'versionMediaId',
+                'value' => $this->getSanitizer()->getInt('versionMediaId', 0),
+                'type' => 'int'
+                ]
+            ];
+            $display->includeProperty('overrideConfig');
+        } else {
+            $display->overrideConfig = [];
+        }
 
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));

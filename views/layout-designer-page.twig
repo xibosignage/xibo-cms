@@ -267,6 +267,11 @@
                         {"data": "name"},
                         {"data": "mediaType"},
                         {
+                            "sortable": false,
+                            "visible": true,
+                            "data": dataTableCreateTags
+                        },
+                        {
                             "name": "mediaId",
                             "data": null,
                             "render": function (data, type, row, meta) {
@@ -324,6 +329,7 @@
                         }).prependTo(newItem);
                     });
                 });
+                mediaTable.on('draw', { form: $("#libraryAssignFilterOptions").find("form") }, dataTableCreateTagEvents);
                 mediaTable.on('processing.dt', dataTableProcessing);
 
                 // Make our little list sortable

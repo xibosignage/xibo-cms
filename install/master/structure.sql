@@ -181,7 +181,6 @@ CREATE TABLE IF NOT EXISTS `display` (
   `SecureOn` varchar(17) DEFAULT NULL,
   `Cidr` varchar(6) DEFAULT NULL,
   `GeoLocation` point DEFAULT NULL,
-  `version_instructions` varchar(255) DEFAULT NULL,
   `client_type` varchar(20) DEFAULT NULL,
   `client_version` varchar(15) DEFAULT NULL,
   `client_code` smallint(6) DEFAULT NULL,
@@ -194,6 +193,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `lastCommandSuccess` tinyint(4) NOT NULL DEFAULT '2',
   `deviceName` VARCHAR(254) DEFAULT NULL,
   `timeZone` VARCHAR(254) DEFAULT NULL,
+  `overrideConfig` text NOT NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -820,6 +820,7 @@ CREATE TABLE IF NOT EXISTS `schedule` (
   `recurrenceRepeatsOn` VARCHAR(14) NULL,
   `lastRecurrenceWatermark` BIGINT(20) NULL,
   `syncTimezone` tinyint(4) NOT NULL DEFAULT '0',
+  `syncEvent` tinyint(4) NOT NULL DEFAULT '0',
   PRIMARY KEY (`eventID`),
   KEY `layoutID` (`CampaignID`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 COMMENT='High level schedule information' AUTO_INCREMENT=1 ;
@@ -1166,3 +1167,27 @@ CREATE TABLE IF NOT EXISTS `requiredfile` (
   `size` BIGINT(20) DEFAULT 0 NOT NULL,
   PRIMARY KEY (`rfId`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+
+CREATE TABLE datasetrss (
+  id int PRIMARY KEY AUTO_INCREMENT,
+  dataSetId int NOT NULL,
+  psk varchar(254) NOT NULL,
+  title varchar(254),
+  author varchar(254),
+  titleColumnId int,
+  summaryColumnId int,
+  contentColumnId int,
+  publishedDateColumnId int,
+  sort text,
+  filter text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE player_software (
+versionId int PRIMARY KEY AUTO_INCREMENT,
+player_type varchar(15) DEFAULT NULL,
+player_version varchar(15) DEFAULT NULL,
+player_code int(11)  DEFAULT NULL,
+playerShowVersion varchar(50) NOT NULL,
+mediaId int
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

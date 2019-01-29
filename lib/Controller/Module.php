@@ -34,6 +34,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -112,6 +113,9 @@ class Module extends Base
 
     /** @var ScheduleFactory  */
     private $scheduleFactory;
+
+    /** @var PlayerVersionFactory  */
+    private $playerVersionFactory;
 
     /**
      * Set common dependencies.
@@ -629,7 +633,7 @@ class Module extends Base
                 if (!$this->getUser()->checkDeleteable($media))
                     throw new AccessDeniedException();
 
-                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
 
                 $media->delete();
             }

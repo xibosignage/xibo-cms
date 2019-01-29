@@ -1,0 +1,7 @@
+{
+  "title": "Player Software",
+  "author": "Xibo Signage Ltd",
+  "description": "A module for managing Player Versions",
+  "name": "playersoftware",
+  "class": "Xibo\\Widget\\PlayerSoftware"
+}

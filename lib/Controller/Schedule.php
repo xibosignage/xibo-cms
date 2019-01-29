@@ -378,6 +378,8 @@ class Schedule extends Base
      *      description="successful response"
      *  )
      * )
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function eventList($displayGroupId)
     {
@@ -433,7 +435,7 @@ class Schedule extends Base
                 continue;
 
             // Assess schedules
-            $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder']]);
+            $schedule = $this->scheduleFactory->createEmpty()->hydrate($event, ['intProperties' => ['isPriority', 'syncTimezone', 'displayOrder', 'fromDt', 'toDt']]);
             $schedule->load();
 
             $this->getLog()->debug('EventId ' . $schedule->eventId . ' exists in the schedule window, checking its instances for activity');
@@ -509,9 +511,10 @@ class Schedule extends Base
                     }
                 }
 
-                $this->getLog()->debug('Adding scheduled event');
+                $this->getLog()->debug('Adding scheduled events: ' . json_encode($scheduleEvents));
 
                 foreach ($scheduleEvents as $scheduleEvent) {
+                    $schedule = clone $schedule;
                     $schedule->fromDt = $scheduleEvent->fromDt;
                     $schedule->toDt = $scheduleEvent->toDt;
                     $schedule->layoutId = intval($event['layoutId']);
@@ -792,6 +795,7 @@ class Schedule extends Base
             $schedule->dayPartId = $customDayPart->dayPartId;
 
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
+        $schedule->syncEvent = $this->getSanitizer()->getCheckbox('syncEvent', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
@@ -1044,6 +1048,7 @@ class Schedule extends Base
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', $schedule->isPriority);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $schedule->dayPartId);
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
+        $schedule->syncEvent = $this->getSanitizer()->getCheckbox('syncEvent', 0);
         $schedule->recurrenceType = $this->getSanitizer()->getString('recurrenceType');
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');

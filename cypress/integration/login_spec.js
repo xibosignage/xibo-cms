@@ -15,7 +15,7 @@ describe('Login', function() {
         cy.get('button[type=submit]')
             .click();
 
-        cy.url().should('include', '/dashboard');
+        cy.url().should('include', 'dashboard');
 
         cy.contains('xibo_admin');
     });

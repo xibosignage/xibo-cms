@@ -17,6 +17,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\WidgetFactory;
@@ -56,6 +57,9 @@ class Maintenance extends Base
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
+    /** @var  PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -73,8 +77,9 @@ class Maintenance extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->taskFactory = $taskFactory;
@@ -85,6 +90,7 @@ class Maintenance extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -326,7 +332,7 @@ class Maintenance extends Base
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
                 $this->mediaFactory->getById($media[$file]['mediaid'])
-                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
+                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory)
                     ->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
@@ -334,7 +340,7 @@ class Maintenance extends Base
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
                 $this->mediaFactory->getById($media[$file]['mediaid'])
-                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
+                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory)
                     ->delete();
             }
             else {
@@ -443,8 +449,10 @@ class Maintenance extends Base
         }
 
         // Return the file with PHP
+        ob_end_flush();
         readfile($zipFile);
 
         $this->setNoOutput(true);
+        exit;
     }
 }

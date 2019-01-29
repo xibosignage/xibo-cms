@@ -83,7 +83,7 @@
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, module.getModule().defaultDuration, helpText, "duration-fields", "required") }}
 
-                {% set message %}{% trans "This module is compatibile only with Xibo for webOS player" %}{% endset %}
+                {% set message %}{% trans "This module is compatibile only with webOS player" %}{% endset %}
                 {{ forms.message(message, "alert alert-info") }}
             </form>
         </div>

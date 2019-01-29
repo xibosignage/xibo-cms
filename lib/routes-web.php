@@ -37,11 +37,11 @@ $app->get('/', function () use ($app) {
 })->setName('home');
 
 // Dashboards
-$app->get('/dashboard/status', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
-$app->get('/dashboard/status/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
-$app->get('/dashboard/icon', '\Xibo\Controller\IconDashboard:displayPage')->name('dashboard.view');
-$app->get('/dashboard/media', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
-$app->get('/dashboard/media/data', '\Xibo\Controller\MediaManager:grid')->name('mediaManager.search');
+$app->get('/statusdashboard', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
+$app->get('/statusdashboard/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
+$app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
+$app->get('/mediadashboard', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
+$app->get('/mediadashboard/data', '\Xibo\Controller\MediaManager:grid')->name('mediaManager.search');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
@@ -137,7 +137,7 @@ $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('libr
 $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 $app->get('/library/fontlist', '\Xibo\Controller\Library:fontList')->name('library.font.list');
-
+$app->get('/library/form/copy/:id', '\Xibo\Controller\Library:copyForm')->name('library.copy.form');
 
 //
 // display
@@ -219,6 +219,11 @@ $app->get('/dataset/:id/column/form/delete/:colId', '\Xibo\Controller\DataSetCol
 $app->get('/dataset/data/form/add/:id', '\Xibo\Controller\DataSetData:addForm')->name('dataSet.data.add.form');
 $app->get('/dataset/data/form/edit/:id/:rowId', '\Xibo\Controller\DataSetData:editForm')->name('dataSet.data.edit.form');
 $app->get('/dataset/data/form/delete/:id/:rowId', '\Xibo\Controller\DataSetData:deleteForm')->name('dataSet.data.delete.form');
+// RSS
+$app->get('/dataset/:id/rss/view', '\Xibo\Controller\DataSetRss:displayPage')->name('dataSet.rss.view');
+$app->get('/dataset/:id/rss/form/add', '\Xibo\Controller\DataSetRss:addForm')->name('dataSet.rss.add.form');
+$app->get('/dataset/:id/rss/form/edit/:rssId', '\Xibo\Controller\DataSetRss:editForm')->name('dataSet.rss.edit.form');
+$app->get('/dataset/:id/rss/form/delete/:rssId', '\Xibo\Controller\DataSetRss:deleteForm')->name('dataSet.rss.delete.form');
 
 //
 // displaygroup
@@ -230,7 +235,6 @@ $app->get('/displaygroup/form/delete/:id', '\Xibo\Controller\DisplayGroup:delete
 $app->get('/displaygroup/form/members/:id', '\Xibo\Controller\DisplayGroup:membersForm')->name('displayGroup.members.form');
 $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaForm')->name('displayGroup.media.form');
 $app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
-$app->get('/displaygroup/form/version/:id', '\Xibo\Controller\DisplayGroup:versionForm')->name('displayGroup.version.form');
 $app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
 $app->get('/displaygroup/form/collect/:id', '\Xibo\Controller\DisplayGroup:collectNowForm')->name('displayGroup.collectNow.form');
 
@@ -241,6 +245,7 @@ $app->get('/displayprofile/view', '\Xibo\Controller\DisplayProfile:displayPage')
 $app->get('/displayprofile/form/add', '\Xibo\Controller\DisplayProfile:addForm')->name('displayProfile.add.form');
 $app->get('/displayprofile/form/edit/:id', '\Xibo\Controller\DisplayProfile:editForm')->name('displayProfile.edit.form');
 $app->get('/displayprofile/form/delete/:id', '\Xibo\Controller\DisplayProfile:deleteForm')->name('displayProfile.delete.form');
+$app->get('/displayprofile/form/copy/:id', '\Xibo\Controller\DisplayProfile:copyForm')->name('displayProfile.copy.form');
 
 //
 // group
@@ -359,3 +364,8 @@ $app->get('/task/form/add', '\Xibo\Controller\Task:addForm')->name('task.add.for
 $app->get('/task/form/edit/:id', '\Xibo\Controller\Task:editForm')->name('task.edit.form');
 $app->get('/task/form/delete/:id', '\Xibo\Controller\Task:deleteForm')->name('task.delete.form');
 $app->get('/task/form/runNow/:id', '\Xibo\Controller\Task:runNowForm')->name('task.runNow.form');
+
+// Player Software
+$app->get('/playersoftware/view', '\Xibo\Controller\PlayerSoftware:displayPage')->name('playersoftware.view');
+$app->get('/playersoftware/form/edit/:id', '\Xibo\Controller\PlayerSoftware:editForm')->name('playersoftware.edit.form');
+$app->get('/playersoftware/form/delete/:id', '\Xibo\Controller\PlayerSoftware:deleteForm')->name('playersoftware.delete.form');

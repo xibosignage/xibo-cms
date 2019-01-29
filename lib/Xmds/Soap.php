@@ -34,6 +34,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -124,6 +125,9 @@ class Soap
     /** @var  DayPartFactory */
     protected $dayPartFactory;
 
+    /** @var  PlayerVersionFactory */
+    protected $playerVersionFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -147,8 +151,9 @@ class Soap
      * @param DisplayEventFactory $displayEventFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -171,6 +176,7 @@ class Soap
         $this->displayEventFactory = $displayEventFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -399,7 +405,7 @@ class Soap
             foreach ($sth->fetchAll() as $row) {
                 $layoutId = $this->getSanitizer()->int($row['layoutID']);
 
-                if ($row['scheduleId'] != 0) {
+                if ($row['eventId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
                     try {
@@ -424,6 +430,12 @@ class Soap
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
 
+        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($this->display->clientType == 'sssp') {
+            $playerVersionMediaId = null;
+        }
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -434,6 +446,7 @@ class Soap
             //  2 - Media Linked to Displays
             //  3 - Media Linked to Widgets in the Scheduled Layouts
             //  4 - Background Images for all Scheduled Layouts
+            //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
                 SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                    FROM `media`
@@ -471,10 +484,20 @@ class Soap
                       FROM `layout`
                      WHERE layoutId IN (%s)
                  )
-                ORDER BY DownloadOrder
             ";
 
-            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList));
+            if ($playerVersionMediaId != null) {
+                $SQL .= " UNION ALL 
+                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
+                            FROM `media`
+                            WHERE `media`.type = 'playersoftware' 
+                            AND `media`.mediaId = %d
+                ";
+            }
+
+            $SQL .= " ORDER BY DownloadOrder ";
+
+            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList, $playerVersionMediaId));
             $sth->execute(array(
                 'displayId' => $this->display->displayId
             ));
@@ -893,6 +916,7 @@ class Soap
 
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
+                    $syncEvent = $this->getSanitizer()->int($row['syncEvent']);
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
@@ -916,6 +940,7 @@ class Soap
                         $layout->setAttribute("todt", $toDt);
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
+                        $layout->setAttribute("syncEvent", $syncEvent);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
@@ -1772,6 +1797,8 @@ class Soap
     /**
      * Check we haven't exceeded the bandwidth limits
      *  - Note, display logging doesn't work in here, this is CMS level logging
+     *
+     * @return bool true if the check passes, false if it fails
      */
     protected function checkBandwidth()
     {
@@ -1780,31 +1807,18 @@ class Soap
 
         $xmdsLimit = $this->getConfig()->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
 
-        if ($xmdsLimit <= 0)
-            return true;
-
         try {
-            $dbh = $this->getStore()->getConnection();
+            $bandwidthUsage = 0;
 
-            // Test bandwidth for the current month
-            $sth = $dbh->prepare('SELECT IFNULL(SUM(Size), 0) AS BandwidthUsage FROM `bandwidth` WHERE Month = :month');
-            $sth->execute(array(
-                'month' => strtotime(date('m') . '/02/' . date('Y') . ' 00:00:00')
-            ));
-
-            $bandwidthUsageBytes = $sth->fetchColumn(0);
-            $bandwidthUsage = ($bandwidthUsageBytes >= ($xmdsLimit * 1024)) ? false : true;
-
-            $this->getLog()->debug('Checking bandwidth usage against allowance: ' . ByteFormatter::format($xmdsLimit * 1024) . '. ' . ByteFormatter::format($bandwidthUsageBytes));
-
-            if (!$bandwidthUsage) {
+            if ($this->bandwidthFactory->isBandwidthExceeded($xmdsLimit, $bandwidthUsage)) {
+                // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __('Bandwidth allowance exceeded');
                 $date = $this->dateService->parse();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
 
-                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsageBytes)));
+                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsage)));
 
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
@@ -1816,10 +1830,12 @@ class Soap
 
                     $this->getLog()->critical($subject);
                 }
+
+                return false;
+            } else {
+                // Bandwidth not exceeded.
+                return true;
             }
-
-            return $bandwidthUsage;
-
         } catch (\Exception $e) {
             $this->getLog()->error($e->getMessage());
             return false;

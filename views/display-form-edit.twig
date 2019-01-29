@@ -167,6 +167,51 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set helpText %}{% trans "Remove the XMR configuration for this Player and send a rekey action." %}{% endset %}
                         {{ forms.checkbox("rekeyXmr", title, 0, helpText) }}
 
+                        {% if display.clientType != 'windows' %}
+                            {% set title %}{% trans "Player Version Override" %}{% endset %}
+                            {% set helpText %}{% trans "Select Player version file, it will be sent to all players in preference to the version assigned in display profile" %}{% endset %}
+                            {% if display.clientType == "android" %}
+                                {% set attributes = [
+                                    { name: "data-width", value: "300px" },
+                                    { name: "data-allow-clear", value: "true" },
+                                    { name: "data-placeholder--id", value: null },
+                                    { name: "data-placeholder--value", value: "" },
+                                    { name: "data-search-url", value: urlFor("playersoftware.search") },
+                                    { name: "data-search-term", value: "playerShowVersion" },
+                                    { name: "data-id-property", value: "mediaId" },
+                                    { name: "data-text-property", value: "playerShowVersion" },
+                                    { name: "data-filter-options", value: '{"playerType":"android"}' }
+                                ] %}
+                            {% endif %}
+                            {% if display.clientType == "lg" %}
+                                {% set attributes = [
+                                    { name: "data-width", value: "300px" },
+                                    { name: "data-allow-clear", value: "true" },
+                                    { name: "data-placeholder--id", value: null },
+                                    { name: "data-placeholder--value", value: "" },
+                                    { name: "data-search-url", value: urlFor("playersoftware.search") },
+                                    { name: "data-search-term", value: "playerShowVersion" },
+                                    { name: "data-id-property", value: "mediaId" },
+                                    { name: "data-text-property", value: "playerShowVersion" },
+                                    { name: "data-filter-options", value: '{"playerType":"lg"}' }
+                                ] %}
+                            {% endif %}
+                            {% if display.clientType == "sssp" %}
+                                {% set attributes = [
+                                    { name: "data-width", value: "300px" },
+                                    { name: "data-allow-clear", value: "true" },
+                                    { name: "data-placeholder--id", value: null },
+                                    { name: "data-placeholder--value", value: "" },
+                                    { name: "data-search-url", value: urlFor("playersoftware.search") },
+                                    { name: "data-search-term", value: "playerShowVersion" },
+                                    { name: "data-id-property", value: "mediaId" },
+                                    { name: "data-text-property", value: "playerShowVersion" },
+                                    { name: "data-filter-options", value: '{"playerType":"sssp"}' }
+                                ] %}
+                            {% endif %}
+                            {{ forms.dropdown("versionMediaId", "single", title, overrideVersionMediaId, [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+                        {% endif %}
+
                         {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
                         {{ forms.message(message) }}
 

@@ -196,6 +196,12 @@ class Schedule implements \JsonSerializable
     public $lastRecurrenceWatermark;
 
     /**
+     * @SWG\Property(description="Flag indicating whether the event should be synchronised across displays")
+     * @var int
+     */
+    public $syncEvent = 0;
+
+    /**
      * @SWG\Property(description="Flag indicating whether the event will sync to the Display timezone")
      * @var int
      */
@@ -560,8 +566,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `dayPartId`, `syncTimezone`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :dayPartId, :syncTimezone)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :dayPartId, :syncTimezone, :syncEvent)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -576,7 +582,8 @@ class Schedule implements \JsonSerializable
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
             'dayPartId' => $this->dayPartId,
-            'syncTimezone' => $this->syncTimezone
+            'syncTimezone' => $this->syncTimezone,
+            'syncEvent' => $this->syncEvent
         ]);
     }
 
@@ -600,7 +607,8 @@ class Schedule implements \JsonSerializable
             recurrence_range = :recurrenceRange,
             `recurrenceRepeatsOn` = :recurrenceRepeatsOn,
             `dayPartId` = :dayPartId,
-            `syncTimezone` = :syncTimezone
+            `syncTimezone` = :syncTimezone,
+            `syncEvent` = :syncEvent
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -617,6 +625,7 @@ class Schedule implements \JsonSerializable
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
+            'syncEvent' => $this->syncEvent,
             'eventId' => $this->eventId
         ]);
     }
@@ -630,6 +639,13 @@ class Schedule implements \JsonSerializable
      */
     public function getEvents($fromDt, $toDt)
     {
+        // Events scheduled "always" will return one event
+        if ($this->isAlwaysDayPart()) {
+            // Create events with min/max dates
+            $this->addDetail(Schedule::$DATE_MIN, Schedule::$DATE_MAX);
+            return $this->scheduleEvents;
+        }
+
         // Copy the dates as we are going to be operating on them.
         $fromDt = $fromDt->copy();
         $toDt = $toDt->copy();
@@ -657,9 +673,26 @@ class Schedule implements \JsonSerializable
             $toDt->addMonth();
         }
 
+        // Load the dates into a date object for parsing
+        $eventStart = $this->getDate()->parse($this->fromDt, 'U');
+        $eventEnd = ($this->toDt == null) ? $eventStart->copy() : $this->getDate()->parse($this->toDt, 'U');
+
+        // Does the original event go over the month boundary?
+        if ($eventStart->month !== $eventEnd->month) {
+            // We expect some residual events to spill out into the month we are generating
+            // wind back the generate from date
+            $fromDt->subMonth();
+
+            $this->getLog()->debug('Expecting events from the prior month to spill over into this one, pulled back the generate from dt to ' . $fromDt->toRssString());
+        } else {
+            $this->getLog()->debug('The main event has a start and end date within the month, no need to pull it in from the prior month. [eventId:' . $this->eventId . ']');
+        }
+
         // Request month cache
         while ($fromDt < $toDt) {
-            $this->generateMonth($fromDt);
+
+            // Events for the month.
+            $this->generateMonth($fromDt, $eventStart, $eventEnd);
 
             $this->getLog()->debug('Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT));
 
@@ -689,11 +722,13 @@ class Schedule implements \JsonSerializable
     /**
      * Generate Instances
      * @param Date $generateFromDt
+     * @param Date $start
+     * @param Date $end
      * @throws XiboException
      */
-    private function generateMonth($generateFromDt)
+    private function generateMonth($generateFromDt, $start, $end)
     {
-        $generateFromDt->startOfMonth();
+        $generateFromDt->copy()->startOfMonth();
         $generateToDt = $generateFromDt->copy()->addMonth();
 
         $this->getLog()->debug('Request for schedule events on eventId ' . $this->eventId
@@ -702,17 +737,6 @@ class Schedule implements \JsonSerializable
             . ' [eventId:' . $this->eventId . ']'
         );
 
-        // Events scheduled "always" will return one event
-        if ($this->isAlwaysDayPart()) {
-            // Create events with min/max dates
-            $this->addDetail(Schedule::$DATE_MIN, Schedule::$DATE_MAX);
-            return;
-        }
-
-        // Load the dates into a date object for parsing
-        $start = $this->getDate()->parse($this->fromDt, 'U');
-        $end = ($this->toDt == null) ? $start->copy() : $this->getDate()->parse($this->toDt, 'U');
-
         // If we are a daypart event, look up the start/end times for the event
         $this->calculateDayPartTimes($start, $end);
 
@@ -720,8 +744,6 @@ class Schedule implements \JsonSerializable
         if ($start <= $generateToDt && $end > $generateFromDt) {
             // Add the detail for the main event (this is the event that originally triggered the generation)
             $this->addDetail($start->format('U'), $end->format('U'));
-        } else {
-            $this->getLog()->debug('Main event is not in the current generation window. [eventId:' . $this->eventId . ']');
         }
 
         // If we don't have any recurrence, we are done

@@ -270,6 +270,10 @@
                 {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                 {% set fieldUpdateInterval %}{{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}{% endset %}
 
+                {% set title %}{% trans "Update Interval Images (mins)" %}{% endset %}
+                {% set helpText %}{% trans "Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings." %}{% endset %}
+                {% set fieldUpdateIntervalImages %}{{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages")), helpText, "", "required") }}{% endset %}
+
                 {% set title %}{% trans "Duration is per item" %}{% endset %}
                 {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
                 {% set fieldDurationIsPerItem %}{{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}{% endset %}
@@ -394,6 +398,10 @@
                         ] %}
                         {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
 
+                        {% set title %}{% trans "Reverse Order?" %}{% endset %}
+                        {% set helpText %}{% trans "Should we reverse the order of the feed items?" %}{% endset %}
+                        {{ forms.checkbox("reverseOrder", title, module.getOption("reverseOrder"), helpText) }}
+
                         {{ fieldDurationIsPerItem }}
 
                         {% set title %}{% trans "Randomise?" %}{% endset %}
@@ -404,6 +412,7 @@
                     <div class="tab-pane" id="advanced">
                         {{ fieldBackgroundColor }}
                         {{ fieldUpdateInterval }}
+                        {{ fieldUpdateIntervalImages }}
 
                         {% set title %}{% trans "Copyright" %}{% endset %}
                         {% set helpText %}{% trans "Copyright information to display as the last item in this feed. This can be styled with the #copyright CSS selector." %}{% endset %}
@@ -510,6 +519,7 @@
                         {{ fieldBackgroundColor }}
                         {{ fieldDurationIsPerItem }}
                         {{ fieldUpdateInterval }}
+                        {{ fieldUpdateIntervalImages }}
 
                         {% set title %}{% trans "Lower Row Limit" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the Lower Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}

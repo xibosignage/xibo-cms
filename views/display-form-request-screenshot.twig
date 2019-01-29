@@ -18,7 +18,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#displayRequestScreenshotForm").submit()
+    {% trans "Save" %}, displayRequestScreenshotFormSubmit()
 {% endblock %}
 
 {% block formHtml %}

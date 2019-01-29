@@ -39,6 +39,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -95,6 +96,9 @@ class Library extends Base
      * @var WidgetFactory
      */
     private $widgetFactory;
+
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
 
     /**
      * @var PlaylistFactory
@@ -161,8 +165,9 @@ class Library extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -184,6 +189,7 @@ class Library extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -250,6 +256,15 @@ class Library extends Base
     }
 
     /**
+     * Get PlayerVersion Factory
+     * @return PlayerVersionFactory
+     */
+    public function getPlayerVersionFactory()
+    {
+        return $this->playerVersionFactory;
+    }
+
+    /**
      * Get UserGroup Factory
      * @return UserGroupFactory
      */
@@ -309,8 +324,9 @@ class Library extends Base
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1]),
-            'groups' => $this->userGroupFactory->query()
+            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1]),
+            'groups' => $this->userGroupFactory->query(),
+            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1]))
         ]);
     }
 
@@ -420,7 +436,8 @@ class Library extends Base
             'duration' => $this->getSanitizer()->getString('duration'),
             'fileSize' => $this->getSanitizer()->getString('fileSize'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'assignable' => $this->getSanitizer()->getInt('assignable')
+            'assignable' => $this->getSanitizer()->getInt('assignable'),
+            'notPlayerSoftware' => 1
         ]));
 
         // Add some additional row content
@@ -455,6 +472,13 @@ class Library extends Base
                     'id' => 'content_button_edit',
                     'url' => $this->urlFor('library.edit.form', ['id' => $media->mediaId]),
                     'text' => __('Edit')
+                );
+
+                // Copy Button
+                $media->buttons[] = array(
+                    'id' => 'media_button_copy',
+                    'url' => $this->urlFor('library.copy.form', ['id' => $media->mediaId]),
+                    'text' => __('Copy')
                 );
             }
 
@@ -518,7 +542,7 @@ class Library extends Base
         if (!$this->getUser()->checkDeleteable($media))
             throw new AccessDeniedException();
 
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
 
         $this->getState()->template = 'library-form-delete';
@@ -566,7 +590,7 @@ class Library extends Base
             throw new AccessDeniedException();
 
         // Check
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer()->getCheckbox('forceDelete') == 0)
@@ -889,7 +913,7 @@ class Library extends Base
 
             // Eligable for delete
             $i++;
-            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
             $item->load();
             $item->delete();
         }
@@ -1287,7 +1311,7 @@ class Library extends Base
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
-            $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+            $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
             $entry->delete();
         }
     }
@@ -1609,5 +1633,104 @@ class Library extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($layouts);
+    }
+
+    /**
+     * Copy Media form
+     * @param $mediaId
+     * @throws NotFoundException
+     */
+    public function copyForm($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'library-form-copy';
+        $this->getState()->setData([
+            'media' => $media,
+            'help' => $this->getHelp()->link('Media', 'Copy')
+        ]);
+    }
+
+    /**
+     * Copies a Media
+     *
+     * @SWG\Post(
+     *  path="/library/copy/{mediaId}",
+     *  operationId="mediaCopy",
+     *  tags={"library"},
+     *  summary="Copy Media",
+     *  description="Copy a Media, providing a new name and tags if applicable",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The media ID to Copy",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The name for the new Media",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="The Optional tags for new Media",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param int $mediaId
+     *
+     * @throws NotFoundException
+     * @throws XiboException
+     */
+    public function copy($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Load the media for Copy
+        $media->load();
+        $media = clone $media;
+
+        // Set new Name and tags
+        $media->name = $this->getSanitizer()->getString('name');
+        $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        // Set the Owner to user making the Copy
+        $media->setOwner($this->getUser()->userId);
+
+        // Save the new Media
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Copied as %s'), $media->name),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
     }
 }

@@ -201,7 +201,6 @@ class DisplayFactory extends BaseFactory
                   display.cidr,
                   ' . $functionPrefix . 'X(display.GeoLocation) AS latitude,
                   ' . $functionPrefix . 'Y(display.GeoLocation) AS longitude,
-                  display.version_instructions AS versionInstructions,
                   display.client_type AS clientType,
                   display.client_version AS clientVersion,
                   display.client_code AS clientCode,
@@ -214,8 +213,9 @@ class DisplayFactory extends BaseFactory
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
-                  `display`.deviceName , 
-                  `display`.timeZone
+                  `display`.deviceName, 
+                  `display`.timeZone,
+                  `display`.overrideConfig
               ';
 
         if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1 && DBVERSION >= 134) {
@@ -329,6 +329,31 @@ class DisplayFactory extends BaseFactory
             $params['clientVersion'] = '%' . $this->getSanitizer()->getString('clientVersion', $filterBy) . '%';
         }
 
+        if ($this->getSanitizer()->getString('clientType', $filterBy) != '') {
+            $body .= ' AND display.client_type = :clientType ';
+            $params['clientType'] = $this->getSanitizer()->getString('clientType', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('clientCode', $filterBy) != '') {
+            $body .= ' AND display.client_code LIKE :clientCode ';
+            $params['clientCode'] = '%' . $this->getSanitizer()->getString('clientCode', $filterBy) . '%';
+        }
+
+        if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) != '') {
+            $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
+            $params['mediaInventoryStatus'] = $this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('loggedIn', -1, $filterBy) != -1) {
+            $body .= ' AND display.loggedIn = :loggedIn ';
+            $params['loggedIn'] = $this->getSanitizer()->getInt('loggedIn', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('lastAccessed', $filterBy) !== null) {
+            $body .= ' AND display.lastAccessed > :lastAccessed ';
+            $params['lastAccessed'] = $this->getSanitizer()->getInt('lastAccessed', $filterBy);
+        }
+
         // Exclude a group?
         if ($this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy) !== null) {
             $body .= " AND display.DisplayID NOT IN ";
@@ -438,7 +463,7 @@ class DisplayFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, [
+            $display = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'auditingUntil',
                     'wakeOnLanEnabled',
@@ -455,6 +480,9 @@ class DisplayFactory extends BaseFactory
                     'lastCommandSuccess'
                 ]
             ]);
+            $display->excludeProperty('overrideConfig');
+            $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
+            $entries[] = $display;
         }
 
         // Paging

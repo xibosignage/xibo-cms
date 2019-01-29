@@ -114,7 +114,7 @@ if (isset($_GET['file'])) {
     $sendFileMode = $app->configService->GetSetting('SENDFILE_MODE');
 
     if ($sendFileMode == 'Off') {
-        $app->logService->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404', 'services');
+        $app->logService->notice('HTTP GetFile request received but SendFile Mode is Off. Issuing 404');
         header('HTTP/1.0 404 Not Found');
         exit;
     }
@@ -166,6 +166,10 @@ if (isset($_GET['file'])) {
             $logBandwidth = ($app->configService->GetSetting('CDN_URL') != '');
 
         } else {
+            // Check that we've not used all of our bandwidth already (if we have an allowance)
+            if ($app->bandwidthFactory->isBandwidthExceeded($app->configService->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
+                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
 
             // Log bandwidth here if we are NOT a CDN
             $logBandwidth = ($app->configService->GetSetting('CDN_URL') == '');
@@ -249,7 +253,8 @@ try {
         $app->notificationFactory,
         $app->displayEventFactory,
         $app->scheduleFactory,
-        $app->dayPartFactory
+        $app->dayPartFactory,
+        $app->playerVersionFactory
     );
     $soap->handle();
 

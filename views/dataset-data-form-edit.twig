@@ -39,7 +39,7 @@
         <div class="col-md-12">
             <form id="dataSetEditData" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.data.edit", {id: dataSet.dataSetId, rowId: row.id}) }}">
                 {% for col in dataSet.getColumn() %}
-                    {% if col.dataSetColumnTypeId == 1 or col.dataSetColumnTypeId == 3 %}
+                    {% if col.dataSetColumnTypeId == 1 %}
                         {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}
                         {% set heading = attribute(row, col.heading) %}
 
@@ -54,7 +54,9 @@
                                 { name: "data-search-term", value: "media" },
                                 { name: "data-id-property", value: "mediaId" },
                                 { name: "data-text-property", value: "name" },
-                                { name: "data-filter-options", value: '{"type":"image"}' }
+                                { name: "data-filter-options", value: '{"type":"image"}' },
+                                { name: "data-allow-clear", value: "true"},
+                                { name: "data-placeholder", value: "Select an Image"}
                             ] %}
                             {% set images = attribute(row, "__images") %}
                             {% set images = attribute(images, col.dataSetColumnId) %}

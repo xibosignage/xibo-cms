@@ -1,0 +1,42 @@
+{
+  "dbVersion": 145,
+  "appVersion": "1.8.12",
+  "steps": [
+    {
+      "step": "Add player_software table",
+      "action": "CREATE TABLE `player_software` ( versionId int PRIMARY KEY AUTO_INCREMENT, player_type varchar(15) DEFAULT NULL, player_version varchar(15) DEFAULT NULL, player_code int(11) DEFAULT NULL, playerShowVersion varchar(50) NOT NULL, mediaId int) ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+    },
+    {
+      "step": "player_software Keys",
+      "action": "ALTER TABLE `player_software` ADD CONSTRAINT mediaId FOREIGN KEY (mediaId) REFERENCES media (mediaId);"
+    },
+    {
+      "step": "Add player software widget to modules",
+      "action": "INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES ('playersoftware', 'Player Software', 1, 0, 'A module for managing Player Versions', 'forms/library.gif', 1, 'apk,ipk,wgt', 0, 0, null, null, '../modules', 'Xibo\\\\Widget\\\\PlayerSoftware', 10); "
+    },
+    {
+      "step": "Remove apk,ipk from valid extensions in genericfile module",
+      "action": "UPDATE `module` SET validextensions = REPLACE(validextensions, 'apk,ipk,', '') WHERE module = 'genericfile' LIMIT 1;"
+    },
+    {
+      "step": "Player Software page",
+      "action": "INSERT INTO pages (name, title, asHome) VALUES ('playersoftware', 'Player Software', 0);"
+    },
+    {
+      "step": "Remove version_instructions column from Display table",
+      "action": "ALTER TABLE display DROP COLUMN version_instructions;"
+    },
+    {
+      "step": "Add overrideConfig column to Display table",
+      "action": "ALTER TABLE display ADD `overrideConfig` text NOT NULL;"
+    },
+    {
+      "step": "Add default display profile for Tizen",
+      "action": "INSERT INTO displayprofile (name, type, config, userId, isDefault) VALUES ('Tizen', 'sssp', '[]', 1, 1) ;"
+    },
+    {
+      "step": "Add default display profile for Linux",
+      "action": "INSERT INTO displayprofile (name, type, config, userId, isDefault) VALUES ('Linux', 'linux', '[]', 1, 1) ;"
+    }
+  ]
+}

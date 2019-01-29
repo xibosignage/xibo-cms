@@ -98,7 +98,7 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
     XMR_HOST=xmr \
-    CMS_DB_VERSION=143 \
+    CMS_DB_VERSION=145 \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
     MYSQL_USER=cms \

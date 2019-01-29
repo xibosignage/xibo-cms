@@ -167,7 +167,7 @@ class Stocks extends AlphaVantageBase
      *  @SWG\Parameter(
      *      name="items",
      *      in="formData",
-     *      description="Items wanted, can be comma separated",
+     *      description="A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.",
      *      type="string",
      *      required=true
      *   ),
@@ -382,7 +382,7 @@ class Stocks extends AlphaVantageBase
                         'Currency' => $currency
                     ];
 
-                    $parsedResult['Change'] = round($parsedResult['RawYesterdayTradePriceOnly'] - $parsedResult['RawLastTradePriceOnly'], 4);
+                    $parsedResult['Change'] = round($parsedResult['RawLastTradePriceOnly'] - $parsedResult['RawYesterdayTradePriceOnly'], 4);
 
                     break;
                 }

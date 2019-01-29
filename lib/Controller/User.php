@@ -39,6 +39,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
@@ -119,6 +120,9 @@ class User extends Base
     /** @var WidgetFactory */
     private $widgetFactory;
 
+    /** @var PlayerVersionFactory  */
+    private $playerVersionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -145,7 +149,7 @@ class User extends Base
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -163,6 +167,7 @@ class User extends Base
         $this->sessionFactory = $sessionFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetFactory = $widgetFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -815,7 +820,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 

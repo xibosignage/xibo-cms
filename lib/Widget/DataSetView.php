@@ -265,14 +265,14 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="upperLimit",
      *      in="formData",
-     *      description="EDIT Only - Upper low limit for this dataSet, 0 for nor limit",
+     *      description="EDIT Only - Upper row limit for this dataSet, 0 for no limit",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="lowerLimit",
      *      in="formData",
-     *      description="EDIT Only - Lower low limit for this dataSet, 0 for nor limit",
+     *      description="EDIT Only - Lower row limit for this dataSet, 0 for no limit",
      *      type="integer",
      *      required=false
      *   ),
@@ -886,6 +886,12 @@ class DataSetView extends ModuleWidget
     {
         // DataSetViews are display specific
         return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
     }
 
     /** @inheritdoc */

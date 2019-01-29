@@ -613,6 +613,7 @@ var processScheduleFormElements = function(el) {
             var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
+            var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
 
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
@@ -620,6 +621,7 @@ var processScheduleFormElements = function(el) {
             $(".day-part-control").css('display', dayPartControlDisplay);
             $(".command-control").css('display', commandControlDisplay);
             $(".preview-button-container").css('display', previewControlDisplay);
+            $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
 
             // Depending on the event type selected we either want to filter in or filter out the
             // campaigns.

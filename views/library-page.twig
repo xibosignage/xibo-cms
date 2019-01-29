@@ -208,7 +208,7 @@
                 upload: {
                     maxSize: {{ libraryUpload.maxSize }},
                     maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                    validExt: "{{ libraryUpload.validExt }}"
+                    validExt: "{{ validExt }}"
                 },
                 updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == "Checked" %}true{% else %}false{% endif %},
                 deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == "Checked" %}true{% else %}false{% endif %}
@@ -284,16 +284,25 @@
                 // Configure the upload form
                 var url = "{{ urlFor("library.add") }}";
                 var form = $(this).find("form");
-                var refreshSessionInterval;
-
-                // Initialize the jQuery File Upload widget:
-                form.fileupload({
+                var options = {
                     url: url,
                     disableImageResize: true,
                     previewMaxWidth: 100,
                     previewMaxHeight: 100,
                     previewCrop: true
-                });
+                };
+                var refreshSessionInterval;
+
+                // Initialize the jQuery File Upload widget:
+                if(templateOptions.oldMediaId === undefined || templateOptions.oldMediaId === null) {
+                    form.fileupload(options);
+                } else {
+                    options = $.extend({}, options, {
+                        maxNumberOfFiles: 1,
+                        limitMultiFileUploads: 1
+                    });
+                    form.fileupload(options);
+                }
 
                 // Upload server status check for browsers with CORS support:
                 if ($.support.cors) {
@@ -333,6 +342,10 @@
                 }).bind('fileuploaddone', function (e, data) {
                     if (refreshSessionInterval != null && form.fileupload("active") <= 0)
                         clearInterval(refreshSessionInterval);
+                    if (templateOptions.oldMediaId !== undefined && templateOptions.oldMediaId !== null) {
+                        XiboDialogClose();
+                        table.ajax.reload();
+                    }
                 });
             });
         }

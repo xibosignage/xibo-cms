@@ -118,6 +118,11 @@
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
                         {{ forms.checkbox("syncTimezone", title, event.syncTimezone, helpText) }}
 
+                        {% if settings.EVENT_SYNC == 1 %}
+                            {% set title %}{% trans "Synchronise this event?" %}{% endset %}
+                            {% set helpText %}{% trans "When selected, all selected players will attempt to synchronise the output (Supported on Android player only)" %}{% endset %}
+                            {{ forms.checkbox("syncEvent", title, event.syncEvent, helpText, "sync-schedule-control") }}
+                        {% endif %}
                     </div>
                     
                     <div class="tab-pane" id="repeats">

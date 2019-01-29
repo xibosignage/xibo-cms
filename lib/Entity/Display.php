@@ -52,7 +52,14 @@ class Display implements \JsonSerializable
     public static $STATUS_PENDING = 3;
 
     private $_config;
+    private $_configOverride;
     use EntityTrait;
+
+    /**
+     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
+     * @var string[]
+     */
+    public $overrideConfig = [];
 
     /**
      * @SWG\Property(description="The ID of this Display")
@@ -204,12 +211,6 @@ class Display implements \JsonSerializable
      * @var double
      */
     public $longitude;
-
-    /**
-     * @SWG\Property(description="A JSON string representing the player installer that should be installed")
-     * @var string
-     */
-    public $versionInstructions;
 
     /**
      * @SWG\Property(description="A string representing the player type")
@@ -460,6 +461,7 @@ class Display implements \JsonSerializable
 
     /**
      * Validate the Object as it stands
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -472,21 +474,11 @@ class Display implements \JsonSerializable
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
             throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
-        // Check the number of licensed displays
+        // Check if there are display slots available
         $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
-        if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
-
-            if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
-                $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
-
-                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
-
-                if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays)
-                    throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
-            }
-        }
+        if (!$this->isDisplaySlotAvailable())
+            throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
 
         // Broadcast Address
         if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
@@ -521,12 +513,44 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * Check if there is display slot available, returns true when there are display slots available, return false if there are no display slots available
+     * @return boolean
+     */
+    public function isDisplaySlotAvailable()
+    {
+        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+
+        // Check the number of licensed displays
+        if ($maxDisplays > 0) {
+            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+
+            if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
+                $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
+
+                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+
+                if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
      * Load
+     * @throws NotFoundException
      */
     public function load()
     {
+        if ($this->loaded)
+            return;
+
         // Load this displays group membership
         $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
+
+        $this->loaded = true;
     }
 
     /**
@@ -622,7 +646,7 @@ class Display implements \JsonSerializable
             'auditingUntil' => 0,
             'defaultlayoutid' => $this->defaultLayoutId,
             'license' => $this->license,
-            'licensed' => 0,
+            'licensed' => $this->licensed,
             'inc_schedule' => 0,
             'email_alert' => 0,
             'alert_timeout' => 0,
@@ -675,9 +699,9 @@ class Display implements \JsonSerializable
                     xmrChannel = :xmrChannel,
                     xmrPubKey = :xmrPubKey,
                     `lastCommandSuccess` = :lastCommandSuccess,
-                    `version_instructions` = :versionInstructions,
                     `deviceName` = :deviceName,
-                    `timeZone` = :timeZone
+                    `timeZone` = :timeZone,
+                    `overrideConfig` = :overrideConfig
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -713,9 +737,9 @@ class Display implements \JsonSerializable
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
-            'versionInstructions' => $this->versionInstructions,
             'deviceName' => $this->deviceName,
             'timeZone' => $this->timeZone,
+            'overrideConfig' => ($this->overrideConfig == '') ? null : json_encode($this->overrideConfig),
             'displayId' => $this->displayId
         ]);
 
@@ -735,9 +759,13 @@ class Display implements \JsonSerializable
      * Get the Settings Profile for this Display
      * @return array
      */
-    public function getSettings()
+    public function getSettings($options = [])
     {
-        return $this->setConfig();
+        $options = array_merge([
+            'displayOverride' => false
+        ], $options);
+
+        return $this->setConfig($options);
     }
 
     /**
@@ -756,18 +784,33 @@ class Display implements \JsonSerializable
      * Get a particular setting
      * @param string $key
      * @param mixed $default
+     * @param array $options
      * @return mixed
+     * @throws NotFoundException
      */
-    public function getSetting($key, $default)
+    public function getSetting($key, $default, $options = [])
     {
-        $this->setConfig();
+        $options = array_merge([
+            'displayOverride' => false
+        ], $options);
+
+        $this->setConfig($options);
 
         // Find
         $return = $default;
-        foreach($this->_config as $row) {
-            if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                $return = $row['value'];
-                break;
+        if ($options['displayOverride']) {
+            foreach ($this->_configOverride as $row) {
+                if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                    $return = $row['value'];
+                    break;
+                }
+            }
+        } else {
+            foreach ($this->_config as $row) {
+                if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                    $return = $row['value'];
+                    break;
+                }
             }
         }
 
@@ -776,11 +819,18 @@ class Display implements \JsonSerializable
 
     /**
      * Set the config array
+     * @param array $options
      * @return array
+     * @throws NotFoundException
      */
-    private function setConfig()
+    private function setConfig($options = [])
     {
+        $options = array_merge([
+            'displayOverride' => false
+        ], $options);
+
         if ($this->_config == null) {
+            $this->load();
 
             try {
                 if ($this->displayProfileId == 0) {
@@ -797,11 +847,17 @@ class Display implements \JsonSerializable
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
 
+            // Merge in any overrides we have on our display.
+            $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
+
             $this->_config = $displayProfile->getProfileConfig();
             $this->commands = $displayProfile->commands;
         }
 
-        return $this->_config;
+        if ($options['displayOverride'])
+            return $this->_configOverride;
+        else
+            return $this->_config;
     }
 
     /**

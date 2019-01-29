@@ -22,36 +22,100 @@
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayView">
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="active"><a href="#filter-general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+                            <li><a href="#filter-advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+                        </ul>
                         <form class="form-inline">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="filter-general">
+                                    {% set title %}{% trans "Name" %}{% endset %}
+                                    {{ inline.input("display", title) }}
 
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("display", title) }}
+                                    {% set title %}{% trans "Status" %}{% endset %}
+                                    {% set check %}{% trans "Up to date" %}{% endset %}
+                                    {% set cloud %}{% trans "Out of date" %}{% endset %}
+                                    {% set cross %}{% trans "Downloading" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "1", option: check},
+                                        { optionid: "3", option: cloud},
+                                        { optionid: "2", option: cross}
+                                    ] %}
+                                    {{ inline.dropdown("mediaInventoryStatus", "single", title, "", options, "optionid", "option") }}
 
-                            {% set title %}{% trans "Mac Address" %}{% endset %}
-                            {{ inline.input("macAddress", title) }}
+                                    {% set title %}{% trans "Logged In?" %}{% endset %}
+                                    {% set yesOption %}{% trans "Yes" %}{% endset %}
+                                    {% set noOption %}{% trans "No" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "1", option: yesOption},
+                                        { optionid: "0", option: noOption}
+                                    ] %}
+                                    {{ inline.dropdown("loggedIn", "single", title, "", options, "optionid", "option") }}
 
-                            {% set title %}{% trans "Display Group" %}{% endset %}
-                            {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                                    {% set title %}{% trans "Authorised?" %}{% endset %}
+                                    {% set yesOption %}{% trans "Yes" %}{% endset %}
+                                    {% set noOption %}{% trans "No" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "1", option: yesOption },
+                                        { optionid: "0", option: noOption},
+                                    ] %}
+                                    {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
-                            {% set title %}{% trans "Display Profile" %}{% endset %}
-                            {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+                                    {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
 
-                            {% set title %}{% trans "Authorised?" %}{% endset %}
-                            {% set yesOption %}{% trans "Yes" %}{% endset %}
-                            {% set noOption %}{% trans "No" %}{% endset %}
-                            {% set options = [
-                            { optionid: "", option: "" },
-                            { optionid: "1", option: yesOption },
-                            { optionid: "0", option: noOption},
-                            ] %}
-                            {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
+                                    {% set title %}{% trans "Display Group" %}{% endset %}
+                                    {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText) }}
+                                    {% set title %}{% trans "Display Profile" %}{% endset %}
+                                    {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+                                </div>
 
-                            {% set title %}{% trans "IP Address" %}{% endset %}
-                            {{ inline.input("clientAddress", title) }}
+                                <div class="tab-pane" id="filter-advanced">
+                                    {% set title %}{% trans "Last Accessed" %}{% endset %}
+                                    <div class="form-group">
+                                        <label class="control-label" for="lastAccessed">{{ title }}</label>
+                                        <div class="input-group date" style="display:table;">
+                                            <input type="hidden" name="lastAccessed" id="lastAccessed" />
+                                            <input class="form-control datePicker dateControl" name="lastAccessedLink"
+                                                   type="text" id="lastAccessedLink" data-link-field="lastAccessed"
+                                                   data-link-format="yyyy-mm-dd hh:ii:ss" readonly />
+                                            <span class="input-group-addon" id="lastAccessedControlCancel">
+                                                <span class="fa fa-times-circle"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {% set title %}{% trans "Client Type" %}{% endset %}
+                                    {% set android %}{% trans "Android" %}{% endset %}
+                                    {% set linux %}{% trans "Linux" %}{% endset %}
+                                    {% set sssp %}{% trans "Tizen" %}{% endset %}
+                                    {% set webos %}{% trans "webOS" %}{% endset %}
+                                    {% set windows %}{% trans "Windows" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "android", option: android},
+                                        { optionid: "linux", option: linux},
+                                        { optionid: "sssp", option: sssp},
+                                        { optionid: "lg", option: webos},
+                                        { optionid: "windows", option: windows}
+                                    ] %}
+                                    {{ inline.dropdown("clientType", "single", title, "", options, "optionid", "option") }}
+
+                                    {% set title %}{% trans "Client Code" %}{% endset %}
+                                    {{ inline.input("clientCode", title) }}
+
+                                    {% set title %}{% trans "Mac Address" %}{% endset %}
+                                    {{ inline.input("macAddress", title) }}
+
+                                    {% set title %}{% trans "IP Address" %}{% endset %}
+                                    {{ inline.input("clientAddress", title) }}
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -202,7 +266,7 @@
                             else
                                 icon = "fa-cloud-download";
 
-                            return "<span class='fa " + icon + "'></span>";
+                            return "<span class='fa " + icon + "' title='" + (row.statusDescription) + "'></span>";
                         }
                     },
                     {"data": "licensed", "render": dataTableTickCrossColumn},
@@ -258,8 +322,9 @@
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "timeZone", "visible": false},
-                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false},
+                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
                     {
+                        "name": "thumbnail",
                         "orderable": false,
                         "data": function (data, type) {
                             if (type != "display")
@@ -327,7 +392,29 @@
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
             });
+
+            $("#lastAccessedControlCancel").on('click', function() {
+                // Clear the date picker
+                var $lastAccessed = $("#lastAccessed");
+                $lastAccessed.val("");
+                $("#lastAccessedLink").val("");
+
+                table.ajax.reload();
+
+                // Reset local storage
+                localStorage.setItem("displayView", JSON.stringify($lastAccessed.closest("form").serializeArray()));
+            });
         });
+
+        function displayRequestScreenshotFormSubmit() {
+            $("#displayRequestScreenshotForm").submit();
+            XiboDialogClose();
+            var table = $('#displays').DataTable();
+
+            if (!table.column(["thumbnail:name"]).visible()) {
+                table.columns(["screenShotRequested:name", "thumbnail:name"]).visible(true);
+            }
+        }
 
         function setDefaultMultiSelectFormOpen(dialog) {
             console.log('Multi-select form opened for default layout');

@@ -22,7 +22,8 @@
 
 /* Translations from the Database that need to be registered with Gettext */
 
-echo __('Dashboard');
+echo __('Icon Dashboard');
+echo __('Status Dashboard');
 echo __('Media Dashboard');
 echo __('Schedule');
 echo __('Layout');
@@ -65,6 +66,7 @@ echo __('Notification Drawer');
 echo __('Notifications');
 echo __('Dayparting');
 echo __('Tasks');
+echo __('Player Software');
 
 // Settings translations
 echo __('Media Permissions');
@@ -97,9 +99,9 @@ echo __('Max Display Timeout');
 echo __('Add a link to the Display name using this format mask?');
 echo __('The target attribute for the above link');
 echo __('Send repeat Display Timeouts');
-echo __('Should Xibo send an email if a display is in an error state every time the maintenance script runs?');
+echo __('Should the CMS send an email if a display is in an error state every time maintenance runs?');
 echo __('Send Schedule in advance?');
-echo __('Should Xibo send future schedule information to clients?');
+echo __('Should the CMS send future schedule information to clients?');
 echo __('Send files in advance?');
 echo __('How many seconds in to the future should the calls to RequiredFiles look?');
 echo __('How to colour Media on the Region Timeline');
@@ -202,10 +204,13 @@ echo __('Show event Layout regardless of User permission?');
 echo __('If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout.');
 echo __('Default User Group');
 echo __('The default User Group for new Users');
-echo __('Password Reminder');
-echo __('Is password reminder enabled?');
+echo __('Password Reset');
+echo __('Is password reset enabled?');
 echo __('On except Admin');
-
+echo __('Automatically authorise new Displays?');
+echo __('If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout.');
+echo __('Show Synchronise this Event checkbox on applicable events?');
+echo __('If checked you will have an option to enable Synchronise this Event checkbox for applicable events');
 
 // Transitions
 echo __('Fade In');
@@ -259,6 +264,8 @@ echo __('PDF');
 echo __('PDF document viewer');
 echo __('Notification');
 echo __('Display Notifications from the Notification Centre');
+echo __('Player Software');
+echo __('A module for managing Player Versions');
 
 echo __('Stocks Module');
 echo __('A module for showing Stock quotes');
@@ -299,8 +306,8 @@ echo __('Default height for PPT files');
 echo __('Default length for PPT files (in seconds)');
 echo __('Default length for SWF files');
 echo __('Turn on the auditing information. Warning this will quickly fill up the log');
-echo __('Should the server send anonymous statistics back to the Xibo project?');
-echo __('Key used to distinguish each Xibo instance. This is generated randomly based on the time you first installed Xibo, and is completely untraceable.');
+echo __('Should the CMS send anonymous statistics to help improve the software?');
+echo __('Key used to distinguish each CMS instance. This is generated randomly based on the time you first installed the CMS, and is completely untraceable.');
 echo __('The URL to connect to to PHONE_HOME (if enabled)');
 echo __('The last time we PHONED_HOME in seconds since the epoch');
 echo __('This should only be set if you want to display the maximum allowed error messaging through the user interface. <br /> Useful for capturing critical php errors and environment issues.');
