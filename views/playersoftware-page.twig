@@ -41,15 +41,13 @@
                         <form class="form-inline">
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set android %}{% trans "Android" %}{% endset %}
-                            {% set windows %}{% trans "Windows" %}{% endset %}
-                            {% set webos %}{% trans "webOS" %}{% endset %}
                             {% set sssp %}{% trans "Tizen" %}{% endset %}
+                            {% set webos %}{% trans "webOS" %}{% endset %}
                             {% set options = [
                                 { optionid: "", option: "" },
                                 { optionid: "android", option: android},
-                                { optionid: "windows", option: windows},
-                                { optionid: "lg", option: webos},
-                                { optionid: "sssp", option: sssp}
+                                { optionid: "sssp", option: sssp},
+                                { optionid: "lg", option: webos}
                             ] %}
                             {{ inline.dropdown("playerType", "single", title, "", options, "optionid", "option") }}
 
