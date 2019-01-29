@@ -1010,7 +1010,7 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         const validExt = moduleData.validExt.replace(/,/g, "|");
 
         lD.openUploadForm({
-            trans: playlistTrans,
+            trans: uploadTrans,
             upload: {
                 maxSize: moduleData.maxSize,
                 maxSizeMessage: moduleData.maxSizeMessage,
@@ -1020,6 +1020,13 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
             playlistId: playlistId
         }, 
         {
+            viewLibrary: {
+                label: uploadTrans.viewLibrary,
+                className: "btn-white",
+                callback: function() {
+                    lD.toolbar.openNewTabAndSearch(moduleType);
+                }
+            },
             main: {
                 label: translations.done,
                 className: "btn-primary",
@@ -1164,7 +1171,7 @@ lD.openUploadForm = function(templateOptions, buttons) {
     // Handle bars and open a dialog
     bootbox.dialog({
         message: template(templateOptions),
-        title: playlistTrans.uploadMessage,
+        title: uploadTrans.uploadMessage,
         buttons: buttons,
         animate: false,
         updateInAllChecked: uploadFormUpdateAllDefault,

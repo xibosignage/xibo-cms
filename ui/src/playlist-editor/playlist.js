@@ -170,7 +170,7 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             const validExt = $(draggable).data('validExt').replace(/,/g, "|");
 
             pE.openUploadForm({
-                trans: playlistTrans,
+                trans: uploadTrans,
                 upload: {
                     maxSize: $(draggable).data().maxSize,
                     maxSizeMessage: $(draggable).data().maxSizeMessage,
@@ -179,15 +179,22 @@ Playlist.prototype.addElement = function(droppable, draggable) {
                 },
                 playlistId: playlistId
             },
-                {
-                    main: {
-                        label: translations.done,
-                        className: "btn-primary",
-                        callback: function() {
-                            pE.reloadData();
-                        }
+            {
+                viewLibrary: {
+                    label: uploadTrans.viewLibrary,
+                    className: "btn-white",
+                    callback: function() {
+                        pE.toolbar.openNewTabAndSearch(draggableSubType);
                     }
-                });
+                },
+                main: {
+                    label: translations.done,
+                    className: "btn-primary",
+                    callback: function() {
+                        pE.reloadData();
+                    }
+                }
+            });
 
         } else { // Add widget to a region
 

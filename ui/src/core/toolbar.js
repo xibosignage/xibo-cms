@@ -933,4 +933,21 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
     this.selectedCard = {};
 };
 
+
+/**
+ * Opens a new tab and search for the given media type
+ * @param {string} type - Type of media
+ */
+Toolbar.prototype.openNewTabAndSearch = function(type) {
+    // Create a new tab
+    this.createNewTab();
+
+    // Switch the selected tab's Type select box to the type we want
+    this.menuItems[this.openedMenu].filters.type.value = type;
+    this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type').val(type);
+
+    // Search/Load Content
+    this.loadContent(this.openedMenu); 
+};
+
 module.exports = Toolbar;

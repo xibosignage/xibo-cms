@@ -570,7 +570,7 @@ pE.openUploadForm = function(templateOptions, buttons) {
     bootbox.dialog({
         className: 'second-dialog',
         message: template(templateOptions),
-        title: playlistTrans.uploadMessage,
+        title: uploadTrans.uploadMessage,
         buttons: buttons,
         animate: false,
         updateInAllChecked: uploadFormUpdateAllDefault,
