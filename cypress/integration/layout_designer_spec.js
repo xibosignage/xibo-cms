@@ -171,7 +171,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
             // Select and search image items
-            cy.get('.toolbar-pane.active #input-type').select('audio');
+            cy.get('.toolbar-pane.active .input-type').select('audio');
             cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Check if there are audio items in the search content
@@ -347,7 +347,7 @@ describe('Layout Designer (Empty)', function() {
                 cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
                 // Select and search image items
-                cy.get('.toolbar-pane.active #input-type').select('image');
+                cy.get('.toolbar-pane.active .input-type').select('image');
                 cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
                 // Get a card and drag it to the region

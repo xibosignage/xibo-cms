@@ -332,14 +332,14 @@ Toolbar.prototype.render = function() {
                 toolbar.deleteTab(index);
             });
 
-            this.DOMObject.find('#content-' + index + ' #pag-btn-left').click(function() {
+            this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
                 if(!toolbar.searchButtonsLock) {
                     toolbar.menuItems[index].page -= 1;
                     toolbar.loadContent(index); 
                 }
             });
 
-            this.DOMObject.find('#content-' + index + ' #pag-btn-right').click(function() {
+            this.DOMObject.find('#content-' + index + ' #pag-btn-right-' + index).click(function() {
                 if(!toolbar.searchButtonsLock) {
                     toolbar.menuItems[index].page += 1;
                     toolbar.loadContent(index);
@@ -524,9 +524,9 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         this.searchButtonsLock = true;
 
         // Save filters
-        this.menuItems[menu].filters.name.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-name').val();
-        this.menuItems[menu].filters.tag.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-tag').val();
-        this.menuItems[menu].filters.type.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-type').val();
+        this.menuItems[menu].filters.name.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
+        this.menuItems[menu].filters.tag.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
+        this.menuItems[menu].filters.type.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
 
         // Create filter
         let customFilter = {

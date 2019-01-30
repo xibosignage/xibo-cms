@@ -18,7 +18,7 @@
                     <div id="content-{{@index}}" class="toolbar-pane {{state}}">
                         {{!-- Show content if exists --}}
                         {{#if content}}
-                            <button id="pag-btn-left" {{pagBtnLeftDisabled}} class="btn btn-primary pagination-btn">
+                            <button id="pag-btn-left-{{@index}}" {{pagBtnLeftDisabled}} class="btn btn-primary pagination-btn pag-btn-left">
                                 <i class="fa fa-arrow-left"></i>
                             </button>
                     
@@ -39,30 +39,29 @@
                                 {{/each}}
                             </div>
 
-                            <button id="pag-btn-right" {{pagBtnRightDisabled}} class="btn btn-primary pagination-btn">
+                            <button id="pag-btn-right-{{@index}}" {{pagBtnRightDisabled}} class="btn btn-primary pagination-btn pag-btn-right">
                                 <i class="fa fa-arrow-right"></i>
                             </button>
                         {{/if}}
 
                         {{#if search}}
                             <form id="media-search-form-{{@index}}" class="form-inline">
-                                <div class="form-group">
-                                    <input id="input-name" type="text" value="{{filters.name.value}}" class="form-control" placeholder="{{filters.name.name}}">
+                                <div class="form-group search-form-group">
+                                    <input id="input-name-{{@index}}" type="text" value="{{filters.name.value}}" class="form-control input-name" placeholder="{{filters.name.name}}">
                                     
-                                    <input id="input-tag" type="text" value="{{filters.tag.value}}" data-role="tagsinput" class="form-control" placeholder="{{filters.tag.name}}">
+                                    <input id="input-tag-{{@index}}" type="text" value="{{filters.tag.value}}" data-role="tagsinput" class="form-control input-tag" placeholder="{{filters.tag.name}}">
                                 
-                                    <select id="input-type" class="form-control">
+                                    <select id="input-type-{{@index}}" class="form-control input-type">
                                         <option value="">{{filters.type.name}}</option>
                                         {{#each filters.type.values}}
                                             <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
                                         {{/each}}
                                     </select>
-                        
+                                
+                                    <button data-search-id="{{@index}}" data-test="searchButton" class="btn btn-primary btn-menu-tab search-btn" type="button">                                    
+                                        <span>{{../trans.search}}</span>
+                                    </button>
                                 </div>
-                        
-                                <button data-search-id="{{@index}}" title="{{../trans.search}}" data-test="searchButton" class="btn btn-primary search-btn" type="button">                                    
-                                    <span>{{../trans.search}}</span>
-                                </button>
                             </form>
                         {{/if}}
                         
