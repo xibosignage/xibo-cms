@@ -113,7 +113,7 @@ INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`,
 INSERT INTO `pages` (`pageID`, `name`, `title`, `asHome`) VALUES
   (1, 'icondashboard', 'Icon Dashboard', 1),
   (2, 'schedule', 'Schedule', 1),
-  (3, 'mediadashboard', 'Media Dashboard', 1),
+  (3, 'mediamanager', 'Media Dashboard', 1),
   (4, 'layout', 'Layout', 1),
   (5, 'library', 'Library', 1),
   (6, 'display', 'Displays', 1),
