@@ -40,8 +40,8 @@ $app->get('/', function () use ($app) {
 $app->get('/statusdashboard', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
 $app->get('/statusdashboard/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
 $app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
-$app->get('/mediadashboard', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
-$app->get('/mediadashboard/data', '\Xibo\Controller\MediaManager:grid')->name('mediaManager.search');
+$app->get('/mediadashboard', '\Xibo\Controller\MediaManager:displayPage')->name('mediadashboard.view');
+$app->get('/mediadashboard/data', '\Xibo\Controller\MediaManager:grid')->name('mediadashboard.search');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
