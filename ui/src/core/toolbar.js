@@ -150,7 +150,7 @@ Toolbar.prototype.loadPrefs = function() {
 
             // If there was a opened menu, load content for that one
             if(self.openedMenu != -1) {
-                self.loadContent(self.openedMenu);
+                self.openTab(self.openedMenu);
             }
         } else {
 

@@ -381,7 +381,6 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
             if(res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
 
-
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
 
@@ -398,6 +397,11 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
             
                 // Reload the form helper connection
                 formHelpers.setup(lD, lD.layout);
+
+                // If there was a opened menu in the toolbar, open that tab
+                if(lD.toolbar.openedMenu != -1) {
+                    lD.toolbar.openTab(lD.toolbar.openedMenu);
+                }
                 
             } else {
                 lD.showErrorMessage();
