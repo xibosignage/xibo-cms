@@ -444,7 +444,7 @@ Toolbar.prototype.render = function() {
         });
 
         // Initialize tooltips
-        this.DOMObject.find('[data-toggle="tooltip"]').tooltip();
+        this.DOMObject.find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
 
         // Initialize tagsinput
         this.DOMObject.find('input[data-role="tagsinput"]').tagsinput();
@@ -455,7 +455,7 @@ Toolbar.prototype.render = function() {
             var tagText = $(this).text();
 
             // Add text to form
-            self.DOMObject.find("#input-tag").tagsinput('add', tagText, {allowDuplicates: false});
+            self.DOMObject.find('.toolbar-pane.active .input-tag').tagsinput('add', tagText, {allowDuplicates: false});
         });
     }
 };
@@ -944,7 +944,7 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
 
     // Switch the selected tab's Type select box to the type we want
     this.menuItems[this.openedMenu].filters.type.value = type;
-    this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type').val(type);
+    this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type-' + this.openedMenu).val(type);
 
     // Search/Load Content
     this.loadContent(this.openedMenu); 

@@ -1319,8 +1319,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     // Get object
     let layoutObject = lD.getElementByTypeAndId(objType, objId, objRegionId);
 
-    // Create menu and append to the designer div
-    lD.designerDiv.append(contextMenuTemplate(layoutObject));
+    // Create menu and append to the designer div ( using the object extended with translations )
+    lD.designerDiv.append(contextMenuTemplate(Object.assign(layoutObject, {trans: contextMenuTrans})));
     
     // Set menu position ( and fix page limits )
     let contextMenuWidth = lD.designerDiv.find('.context-menu').outerWidth();
@@ -1330,6 +1330,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
     lD.designerDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+
+    // Initialize tooltips
+    lD.designerDiv.find('.context-menu').find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
 
     // Click overlay to close menu
     lD.designerDiv.find('.context-menu-overlay').click((ev)=> {
@@ -1345,8 +1348,11 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
         if(target.data('action') == 'Delete') {
             lD.deleteObject(objType, layoutObject[objType + 'Id']);
+        } else if(target.data('action') == 'Move') {
+            // Move widget in the timeline
+            lD.timeline.moveWidgetInRegion(layoutObject.regionId, layoutObject.id, target.data('actionType'));
         } else {
-            layoutObject.editPropertyForm(target.data('property'), target.data('propertyType'));   
+            layoutObject.editPropertyForm(target.data('property'), target.data('propertyType'));
         }
 
         // Remove context menu

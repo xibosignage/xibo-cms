@@ -13,7 +13,8 @@
         var libraryAddUrl = "{{ urlFor("library.add") }}";
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
-            
+        var tooltipDelay = {'show': 500, 'hide': 0};
+
         // MODULES LIST
         var modulesList = [];
         {% for module in modules %}
@@ -230,6 +231,19 @@
                 startUpload: "{% trans "Start upload" %}",
                 cancelUpload: "{% trans "Cancel upload" %}",
                 viewLibrary: "{% trans "View Library" %}",
+            };
+
+            var contextMenuTrans = {
+                editAudio: "{% trans "Edit Attached Audio" %}",
+                editExpiry: "{% trans "Edit Expiry Dates" %}",
+                editTransIn: "{% trans "Edit Transition In" %}",
+                editTransOut: "{% trans "Edit Transition Out" %}",
+                editPermissions: "{% trans "Edit Permissions" %}",
+                moveLeft: "{% trans "Move one step left" %}",
+                moveRight: "{% trans "Move one step right" %}",
+                moveTopLeft: "{% trans "Move to the top left" %}",
+                moveTopRight: "{% trans "Move to the top right" %}",
+                delete: "{% trans "Delete" %}"
             };
 
             var toolbarTrans = {

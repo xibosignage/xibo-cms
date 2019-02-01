@@ -16,11 +16,16 @@
 @context-menu-bg-color: #30426a;
 @context-menu-border-color: #337ab7;
 
-@context-menu-btn-color: #e7e7e7;
-@context-menu-btn-hover-color: #fff;
+@context-menu-btn-color: #eee;
+@context-menu-btn-hover-color: #d2d82b;
+
+@context-menu-btn-move-color: #eee;
+@context-menu-btn-move-hover-color: #d2d82b;
 
 @context-menu-bin-btn-color: #e64c4c;
 @context-menu-bin-btn-hover-color: #d18282;
+
+@context-menu-shadow: #1d2c4e;
 
 // CSS
 .page-content>.row.header {
@@ -318,16 +323,33 @@
     height: 100%;
     top: 0;
     left: 0;
-    z-index: 4;
+    z-index: @loading-overlay-z-index;
 }
 
 .context-menu {
     position: absolute;
-    z-index: 5;
+    z-index: (@loading-overlay-z-index + 1);
     opacity: 0.9;
     background: @context-menu-bg-color;
     border: @context-menu-border-color solid 2px;
-    padding: 5px;
+    .box-shadow(2px 2px 5px @context-menu-shadow);
+}
+
+.context-menu .sort-controls-container {
+    text-align: center;
+    background: @properties-panel-nav-active-fg-color;
+}
+
+.context-menu .sort-controls-container .context-menu-btn {
+    color: @context-menu-btn-move-color;
+}
+
+.context-menu .sort-controls-container .context-menu-btn:hover {
+    color: @context-menu-btn-move-hover-color;
+}
+
+.context-menu .main-button-container {
+    margin: 2px 5px;
 }
 
 .context-menu .context-menu-btn {

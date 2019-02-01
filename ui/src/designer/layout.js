@@ -88,6 +88,9 @@ Layout.prototype.createDataStructure = function(data) {
                 this
             );
 
+            // Mark the widget as sortable if region can be sorted/edited
+            newWidget.isSortable = newRegion.isEditable;
+
             // Add newWidget to the Region widget object
             newRegion.widgets[newWidget.id] = newWidget;
 

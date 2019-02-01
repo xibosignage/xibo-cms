@@ -16,6 +16,9 @@ let Timeline = function(container) {
         right: 0
     };
 
+    // Boolean to represent if a sort is happening
+    this.beingSorted = false;
+
     // Properties to be used for the template
     this.properties = {
         zoom: -1, // Zoom by default is -1 so that can be calculated based on the widgets of the regions
@@ -245,6 +248,76 @@ Timeline.prototype.resetZoom = function() {
 };
 
 /**
+ * Move a widget in a region
+ * @param {string} regionId - The target region
+ * @param {string} widgetId - The widget to be moved
+ * @param {string} moveType - "topLeft"; "left"; "right"; "topRight";
+ */
+Timeline.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
+
+    let getElement = this.DOMObject.find('#' + regionId + ' #' + widgetId);
+
+    switch(moveType) {
+        case 'oneRight':
+            getElement.insertAfter(getElement.next('.designer-widget:not(.designer-widget-ghost)'));
+            break;
+
+        case 'oneLeft':
+            getElement.insertBefore(getElement.prev('.designer-widget:not(.designer-widget-ghost)'));
+            break;
+
+        case 'topRight':
+            getElement.insertAfter(getElement.nextAll('.designer-widget:not(.designer-widget-ghost)').last());
+            break;
+
+        case 'topLeft':
+            getElement.prependTo(getElement.parent());
+            break;
+
+        default:
+            console.warn('Change type not known');        
+            return;
+    }
+
+    // Save new order
+    lD.common.showLoadingScreen();
+
+    // Get playlist
+    const region = this.DOMObject.find('#' + regionId);
+    const playlist = lD.getElementByTypeAndId($(region).data('type'), $(region).attr('id')).playlists;
+
+    // Add sort class
+    $(region).addClass('to-sort');
+
+    lD.layout.savePlaylistOrder(playlist, $(region).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
+
+        lD.common.hideLoadingScreen();
+
+        // Behavior if successful            
+        toastr.success(res.message);
+        lD.reloadData(lD.layout);
+    }).catch((error) => { // Fail/error
+
+        // Remove sort class
+        $(region).removeClass('to-sort');
+
+        lD.common.hideLoadingScreen();
+
+        // Show error returned or custom message to the user
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if(typeof error == 'string') {
+            errorMessage = error;
+        } else {
+            errorMessage = error.errorThrown;
+        }
+
+        toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
+    });
+};
+
+/**
  * Render Timeline and the layout
  * @param {Object} layout - the layout object to be rendered
  */
@@ -254,6 +327,9 @@ Timeline.prototype.render = function(layout) {
     if(this.properties.zoom === -1) {
         this.calculateStartingZoom(layout.regions);
     }
+
+    // Reset being sorted flag
+    this.beingSorted = false;
 
     // Calulate time values based on scroll position
     this.calculateTimeValues();
@@ -344,10 +420,33 @@ Timeline.prototype.render = function(layout) {
         this.DOMObject.find('#regions .designer-region.editable').sortable({
             items: '.designer-widget:not(.designer-widget-ghost)',
             placeholder: 'designer-widget-sortable-highlight',
-            opacity: '.5',
+            opacity: '.6',
+            axis: 'x', // Restrict movement to X axis
+            helper: 'clone',
+            start: function(event, ui) {
+
+                // Set sorted flag as true
+                self.beingSorted = true;
+
+                // Hide the trash container
+                lD.toolbar.DOMObject.find('#trashContainer').removeClass('active');
+
+                // Get element width and timeline zoom/scale
+                let zoom = self.DOMObject.find('#regions').data('zoom') / 100;
+                let elementWidth = $(ui.item).width();
+
+                // set helper new width
+                $(ui.helper).width(elementWidth * zoom);
+            },
             stop: function() {
 
+                // Reset being sorted flag
+                self.beingSorted = false;
+
                 lD.common.showLoadingScreen();
+
+                // Add sort class
+                $(this).addClass('to-sort');
 
                 // Get playlist
                 const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
@@ -360,6 +459,9 @@ Timeline.prototype.render = function(layout) {
                     toastr.success(res.message);
                     lD.reloadData(lD.layout);
                 }).catch((error) => { // Fail/error
+
+                    // Remove sort class
+                    $(this).removeClass('to-sort');
                     
                     lD.common.hideLoadingScreen();
 
@@ -395,9 +497,9 @@ Timeline.prototype.render = function(layout) {
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll(_.debounce(function() {
-
+        
         // If regions are still not rendered, leave method
-        if(self.properties.scrollWidth != $(this).find("#regions").width()) {
+        if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
         }
 

@@ -30,6 +30,7 @@
 @timeline-widget-fg-color: #333;
 @timeline-widget-fg-color2: #555;
 @timeline-widget-border-color: #868686;
+@timeline-widget-to-sort-bg-color: #d2d82b;
 
 @timeline-ghost-bg-color: #c5c5c5;
 @timeline-ghost-fg-color: #fff;
@@ -338,12 +339,13 @@
 }
 
 #layout-editor #layout-timeline .designer-widget-sortable-highlight {
-    background: #ffe921;
+    background: #d2d82b;
     float: left;
-    width: 5%;
+    width: 20px;
     height: 100%;
     border: none;
 }
+
 
 #layout-editor #layout-timeline .ghost-padding {
     .set-transparent-color(background; #111111; 20%);
@@ -665,6 +667,10 @@
 
 #layout-editor  #layout-timeline .designer-widget.invalid-widget {
     .box-shadow(inset 0px 0px 10px 3px red);
+}
+
+#layout-editor  #layout-timeline .designer-region.to-sort .designer-widget {
+    background: @timeline-widget-to-sort-bg-color !important;
 }
 
 #layout-editor .designer-region.ui-droppable-active {

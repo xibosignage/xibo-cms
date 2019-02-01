@@ -640,10 +640,10 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let objType = $(obj).data('type');
 
     // Get object
-    let layoutObject = pE.getElementByTypeAndId(objType, objId);
+    let playlistObject = pE.getElementByTypeAndId(objType, objId);
 
-    // Create menu and append to the designer div
-    pE.editorDiv.append(contextMenuTemplate(layoutObject));
+    // Create menu and append to the designer div ( using the object extended with translations )
+    pE.editorDiv.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
 
     // Set menu position ( and fix page limits )
     let contextMenuWidth = pE.editorDiv.find('.context-menu').outerWidth();
@@ -653,6 +653,9 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
     pE.editorDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+
+    // Initialize tooltips
+    pE.editorDiv.find('.context-menu').find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
 
     // Click overlay to close menu
     pE.editorDiv.find('.context-menu-overlay').click((ev) => {
@@ -667,9 +670,9 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
-            pE.deleteObject(objType, layoutObject[objType + 'Id']);
+            pE.deleteObject(objType, playlistObject[objType + 'Id']);
         } else {
-            layoutObject.editPropertyForm(target.data('property'), target.data('propertyType'));
+            playlistObject.editPropertyForm(target.data('property'), target.data('propertyType'));
         }
 
         // Remove context menu
