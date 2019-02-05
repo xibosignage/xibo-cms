@@ -163,16 +163,24 @@ Layout.prototype.calculateTimeValues = function() {
 /**
  * Add a new empty element to the layout
  * @param {string} elementType - element type (widget, region, ...)
+ * @param {object =} [positionToAdd] - Position to add the element to
  */
-Layout.prototype.addElement = function(elementType) {
+Layout.prototype.addElement = function(elementType, positionToAdd = null) {
 
+    let newValues = null;
+    
+    /// Get position values if they exist
+    if(positionToAdd !== null) {
+        newValues = positionToAdd;
+    }
+    
     // Add a create change to the history array, and a option to update the Id on the change to the newly created object
     return lD.manager.addChange(
         "create",
         elementType, // targetType
         null, // targetId
         null, // oldValues
-        null, // newValues
+        newValues, // newValues
         {
             updateTargetId: true // options.updateTargetId
         }

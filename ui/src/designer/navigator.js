@@ -4,6 +4,11 @@
 const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
 const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-edit-navbar.hbs');
 
+const regionDefaultValues = {
+    width: 250,
+    height: 250
+};
+
 /**
  * Navigator contructor
  * @param {object} container - the container to render the navigator to
@@ -150,7 +155,41 @@ Navigator.prototype.render = function(layout) {
         this.DOMObject.find('[data-type="layout"]').droppable({
             accept: '[drop-to="layout"]',
             drop: function(event, ui) {
-                lD.dropItemAdd(event.target, ui.draggable[0]);
+
+
+
+                // Calculate ratio
+                let ratio = lD.layout.width / $(event.target).width();
+
+                // Calculate drop position
+                let dropPosition = {
+                    top: ui.offset.top + ($(ui.helper).height() / 2),
+                    left: ui.offset.left + ($(ui.helper).width() / 2)
+                };
+
+                // Calculate relative layout position
+                let positionInLayoutScaled = {
+                    top: dropPosition.top - $(event.target).offset().top,
+                    left: dropPosition.left - $(event.target).offset().left
+                };
+                
+                // Calculate real layout position
+                let positionInLayout = {
+                    top: parseInt(positionInLayoutScaled.top * ratio),
+                    left: parseInt(positionInLayoutScaled.left * ratio),
+                };
+
+                // Prevent region to go beyond layout borders
+                if(positionInLayout.top + regionDefaultValues.height > lD.layout.height) {
+                    positionInLayout.top = lD.layout.height - regionDefaultValues.height;
+                }
+
+                if(positionInLayout.left + regionDefaultValues.width > lD.layout.width) {
+                    positionInLayout.left = lD.layout.width - regionDefaultValues.width;
+                }
+
+                // Add item to the layout
+                lD.dropItemAdd(event.target, ui.draggable[0], {positionToAdd: positionInLayout});
             }
         });
 

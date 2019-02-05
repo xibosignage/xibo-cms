@@ -895,14 +895,16 @@ lD.deleteObject = function(objectType, objectId) {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
+ * @param {object =} [options] - Options
+ * @param {object} [options.positionToAdd = null] - Position object {top, left}
  */
-lD.dropItemAdd = function(droppable, draggable) {
+lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
 
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
-
+    
     if(draggableType == 'media') { // Adding media from search tab to a region
 
         // Get playlist Id
@@ -938,7 +940,7 @@ lD.dropItemAdd = function(droppable, draggable) {
 
                     toastr.success(editorsTrans.allChangesSaved);
 
-                    lD.layout.addElement('region').then((res) => { // Success
+                    lD.layout.addElement('region', positionToAdd).then((res) => { // Success
 
                         lD.common.hideLoadingScreen('addRegionToLayout'); 
 

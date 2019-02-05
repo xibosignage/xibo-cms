@@ -6,7 +6,6 @@ const timelineTemplate = require('../templates/timeline.hbs');
 /**
  * Timeline contructor
  * @param {object} container - the container to render the timeline to
- * @param {object =} [options] - Timeline options
  */
 let Timeline = function(container) {
     this.DOMObject = container;
