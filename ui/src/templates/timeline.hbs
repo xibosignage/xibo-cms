@@ -1,6 +1,9 @@
 <div id="timeline-container">
     <div id="controls-container" class="text-center">
         <span class="layout-info left">
+            <span id="layout-info-status" class="label label-default" data-status-code="" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-html="true" >
+                <i class="fa fa-spinner fa-spin"></i>
+            </span>
             <span class="layout-info-name hidden-xs hidden-sm hidden-md">"{{layout.name}}"</span>
             <span class="hidden-lg"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>
         </span>
@@ -10,19 +13,19 @@
             <span><i class="fa fa-arrows"></i>&nbsp;{{layout.width}}x{{layout.height}}</span>
         </span>
 
-        <div id="minTime" class="label label-info label-time pull-left">
+        <div id="minTime" class="label label-custom label-time pull-left">
             {{properties.minTime}}s
         </div>
-        <button id="zoomOut"  {{properties.zoomOutDisable}} class="btn label label-warning label-control">
+        <button id="zoomOut"  {{properties.zoomOutDisable}} class="btn label label-custom label-control">
             <i class="fa fa-search-minus"></i>
         </button>
-        <button id="zoom" class="btn label label-primary label-control">
+        <button id="zoom" class="btn label label-custom label-control">
             {{properties.deltaTime}}s
         </button>
-        <button id="zoomIn" {{properties.zoomInDisable}} class="btn label label-success label-control">
+        <button id="zoomIn" {{properties.zoomInDisable}} class="btn label label-custom label-control">
             <i class="fa fa-search-plus"></i>
         </button>
-        <div id="maxTime" class="label label-info label-time pull-right">
+        <div id="maxTime" class="label label-custom label-time pull-right">
             {{properties.maxTime}}s
         </div>
     </div>

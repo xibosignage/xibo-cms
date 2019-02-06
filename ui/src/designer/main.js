@@ -219,7 +219,8 @@ $(document).ready(function() {
                 formHelpers.setup(lD, lD.layout);
 
                 // Call layout status every minute
-                setInterval(lD.layoutStatus, 1000 * 60); // Every minute
+                lD.checkLayoutStatus();
+                setInterval(lD.checkLayoutStatus, 1000 * 60); // Every minute
 
                 // Default selected object is the layout
                 lD.selectObject();
@@ -402,6 +403,9 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 if(lD.toolbar.openedMenu != -1) {
                     lD.toolbar.openTab(lD.toolbar.openedMenu);
                 }
+
+                // Check layout status
+                lD.checkLayoutStatus();
                 
             } else {
                 lD.showErrorMessage();
@@ -1269,7 +1273,7 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
 /**
  * Call layout status
  */
-lD.layoutStatus = function() {
+lD.checkLayoutStatus = function() {
     
     const linkToAPI = urlsForApi.layout.status;
     let requestPath = linkToAPI.url;
@@ -1296,6 +1300,9 @@ lD.layoutStatus = function() {
                     console.error(res.message);
                 }
             }
+        } else {
+            // Update layout status
+            lD.layout.updateStatus(res.extra.status, res.html, res.extra.statusMessage);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console

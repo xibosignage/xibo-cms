@@ -514,6 +514,79 @@ Timeline.prototype.render = function(layout) {
             self.render(layout);
         }
     }, 500));
+
+    // Update layout status
+    this.updateLayoutStatus();
+};
+
+/**
+ * Update layout status in the info fields
+ */
+Timeline.prototype.updateLayoutStatus = function() {
+
+    const statusContainer = this.DOMObject.find('#layout-info-status');
+
+    // Use status loader icon
+    statusContainer.find('i').removeClass().addClass('fa fa-spinner fa-spin');
+    statusContainer.removeClass().addClass('label label-default');
+
+    // Prevent the update if there's no layout status yet
+    if(lD.layout.status == undefined) {
+        return;
+    }
+
+    let title = '';
+    let content = '';
+
+    const labelCodes = {
+        '1': 'success',
+        '2': 'warning',
+        '3': 'info',
+        '': 'danger'
+    };
+
+    const iconCodes = {
+        '1': 'check',
+        '2': 'question',
+        '3': 'cogs',
+        '': 'times'
+    };
+
+    // Create title and description
+    if(lD.layout.status.messages.length > 0) {
+        title = lD.layout.status.description;
+        for (let index = 0; index < lD.layout.status.messages.length; index++) {
+            content += '<div class="status-message">' + lD.layout.status.messages[index] + '</div>';
+        }
+    } else {
+        title = '';
+        content = '<div class="status-title text-center">' + lD.layout.status.description + '</div>';
+    }
+
+    // Update label
+    let labelType = (labelCodes[lD.layout.status.code] != undefined) ? labelCodes[lD.layout.status.code] : labelCodes[''];
+    statusContainer.removeClass().addClass('label label-' + labelType)
+        .attr('data-status-code', lD.layout.status.code);
+    
+        // Create or update popover
+    if(statusContainer.data('bs.popover') == undefined) {
+        // Create popover
+        statusContainer.popover(
+                {
+                    delay: tooltipDelay,
+                    title: title,
+                    content: content
+                }
+            );
+    } else {
+        // Update popover
+        statusContainer.data('bs.popover').options.title = title;
+        statusContainer.data('bs.popover').options.content = content;
+    }
+    
+    // Change Icon
+    let iconType = (iconCodes[lD.layout.status.code] != undefined) ? iconCodes[lD.layout.status.code] : iconCodes[''];
+    statusContainer.find('i').removeClass().addClass('fa fa-' + iconType);
 };
 
 module.exports = Timeline;

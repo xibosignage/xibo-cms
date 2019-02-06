@@ -280,4 +280,22 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
     });
 };
 
+/**
+ * Update layout status fields
+ * @param {int} status - Status code
+ * @param {string} statusFeedback - Status feedback message
+ * @param {string[]} statusMessages - Status messages array
+ */
+Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages) {
+    // Update status property
+    this.status = {
+        code: status,
+        description: statusFeedback,
+        messages: statusMessages
+    };
+
+    // Update timeline
+    lD.timeline.updateLayoutStatus();
+};
+
 module.exports = Layout;
