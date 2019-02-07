@@ -498,10 +498,21 @@ class Module extends Base
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
 
+        // Media file?
+        $media = null;
+        if ($module->getModule()->regionSpecific == 0) {
+            try {
+                $media = $module->getMedia();
+            } catch (NotFoundException $e) {
+                
+            }
+        }
+
         // Pass to view
         $this->getState()->template = $module->editForm();
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
+            'media' => $media,
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
         ]));
     }

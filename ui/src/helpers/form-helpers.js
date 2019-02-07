@@ -115,6 +115,29 @@ let formHelpers = function() {
     };
 
     /**
+     * Use a callback to toggle a selector visibility
+     * @param {jQuery} triggerFields - jQuery element for the input field that triggers the "change" and "input" events
+     * @param {jQuery} targetFields - jQuery element(s) for the input fields to be compared with the values to be toggled
+     * @param {*} compareValue - value to be used to compare with the trigger input
+     * @param {function} test - Function to test the condition (a,b)
+     */
+    this.setupConditionalInputFields = function(triggerFields, targetFields, compareValue, test) {
+
+        /**
+         * Check test and toggle visibility
+         */
+        const checkTestAndApply = function() {
+            targetFields.toggle(test(compareValue));
+        };
+
+        // Init
+        checkTestAndApply();
+
+        // Change
+        triggerFields.on('change input', checkTestAndApply);
+    };
+
+    /**
      * Append an error message on form ( create or update a previously created one )
      * @param {object} form - Form object that contains one object with id = "errorMessage"
      * @param {string} message- Message to be displayed
