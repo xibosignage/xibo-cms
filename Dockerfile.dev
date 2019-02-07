@@ -44,6 +44,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-simplexml \
     php7-mbstring \
     php7-memcached \
+    php7-tokenizer \
     php7-zlib \
     mysql-client \
     ssmtp \

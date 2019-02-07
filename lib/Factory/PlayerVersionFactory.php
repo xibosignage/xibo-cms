@@ -23,10 +23,6 @@
 namespace Xibo\Factory;
 
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Pool;
-use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -34,7 +30,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Widget\PlayerSoftware;
 
 /**
  * Class PlayerVersionFactory
@@ -87,15 +82,17 @@ class PlayerVersionFactory extends BaseFactory
      * @param int $version
      * @param int $code
      * @param int $mediaId
+     * @param string $playerShowVersion
      * @return PlayerVersion
      */
-    public function create($type, $version, $code, $mediaId)
+    public function create($type, $version, $code, $mediaId, $playerShowVersion)
     {
         $playerVersion = $this->createEmpty();
         $playerVersion->type = $type;
         $playerVersion->version = $version;
         $playerVersion->code = $code;
         $playerVersion->mediaId = $mediaId;
+        $playerVersion->playerShowVersion = $playerShowVersion;
         $playerVersion->save();
 
         return $playerVersion;
@@ -167,9 +164,10 @@ class PlayerVersionFactory extends BaseFactory
                player_software.player_type AS type,
                player_software.player_version AS version,
                player_software.player_code AS code,
-               concat(player_software.player_version, " Revision ", player_software.player_code) AS playerShowVersion,
+               player_software.playerShowVersion,
                media.mediaId,
                media.originalFileName,
+               media.storedAs,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -266,7 +264,7 @@ class PlayerVersionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $version = $this->createEmpty()->hydrate($row);
         }
-        $this->getLog()->debug('PLAYER DISTINCT TYPES ENTRIES ARE ' . json_encode($entries, JSON_PRETTY_PRINT));
+
         return $entries;
     }
 
@@ -283,7 +281,7 @@ class PlayerVersionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $version = $this->createEmpty()->hydrate($row);
         }
-        $this->getLog()->debug('PLAYER DISTINCT VERSIONS ENTRIES ARE ' . json_encode($entries, JSON_PRETTY_PRINT));
+
         return $entries;
     }
 }

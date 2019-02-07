@@ -39,13 +39,17 @@
     <div class="row">
         <div class="col-md-12">
             <form id="playersoftwareEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("playersoftware.edit", {"id": version.versionId}) }}" data-media-id="{{ version.versionId }}" data-valid-extensions="{{ validExtensions }}">
-                    {% set title %}{% trans "Version" %}{% endset %}
-                    {% set helpText %}{% trans "The Version number of this installer file, this should be correctly populated on upload, otherwise adjust it here" %}{% endset %}
-                    {{ forms.input("version", title, version.version, helpText) }}
+                {% set title %}{% trans "Player Version Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display" %}{% endset %}
+                {{ forms.input("playerShowVersion", title, version.playerShowVersion, helpText) }}
 
-                    {% set title %}{% trans "Code" %}{% endset %}
-                    {% set helpText %}{% trans "The Code number of this installer file, this should be correctly populated on upload, otherwise adjust it here" %}{% endset %}
-                    {{ forms.number("code", title, version.code, helpText) }}
+                {% set title %}{% trans "Version" %}{% endset %}
+                {% set helpText %}{% trans "The Version number of this installer file, this should be correctly populated on upload, otherwise adjust it here" %}{% endset %}
+                {{ forms.input("version", title, version.version, helpText) }}
+
+                {% set title %}{% trans "Code" %}{% endset %}
+                {% set helpText %}{% trans "The Code number of this installer file, this should be correctly populated on upload, otherwise adjust it here" %}{% endset %}
+                {{ forms.number("code", title, version.code, helpText) }}
             </form>
         </div>
     </div>

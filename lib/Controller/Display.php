@@ -744,7 +744,7 @@ class Display extends Base
         $playerVersions = null;
         $mediaId = null;
 
-        $display->load(['loadConfig' => true]);
+        $display->load();
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
@@ -1028,7 +1028,7 @@ class Display extends Base
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
             $display->display = $this->getSanitizer()->getString('display');
 
-        $display->load(['loadConfig' => true]);
+        $display->load();
 
         $display->description = $this->getSanitizer()->getString('description');
         $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');

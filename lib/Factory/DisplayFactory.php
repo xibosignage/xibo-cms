@@ -481,6 +481,7 @@ class DisplayFactory extends BaseFactory
                 ]
             ]);
             $display->excludeProperty('overrideConfig');
+            $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
             $entries[] = $display;
         }
 

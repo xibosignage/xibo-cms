@@ -125,6 +125,18 @@ convenience the Docker MySQL container exposes mysql on port 3306 to the Vagrant
 over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
 
 
+## Translations
+To parse the translations:
+
+```bash
+docker exec -it xibo-cms-tempel_web_1 /var/www/cms/bin/locale.php
+```
+
+```bash
+find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
+```
+
+
 # Application Structure
 
 To find out more about the application code and how everything fits together, please refer to the [advanced section of the manual](https://xibo.org.uk/manual/en/advanced.html).

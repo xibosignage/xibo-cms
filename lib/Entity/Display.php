@@ -540,21 +540,12 @@ class Display implements \JsonSerializable
 
     /**
      * Load
-     * @param array $options
      * @throws NotFoundException
      */
-    public function load($options = [])
+    public function load()
     {
         if ($this->loaded)
             return;
-
-        $options = array_merge([
-            'loadConfig' => false
-        ], $options);
-
-        if ($options['loadConfig']) {
-            $this->overrideConfig = json_decode($this->overrideConfig, true);
-        }
 
         // Load this displays group membership
         $this->displayGroups = $this->displayGroupFactory->getByDisplayId($this->displayId);
@@ -755,7 +746,7 @@ class Display implements \JsonSerializable
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'deviceName' => $this->deviceName,
             'timeZone' => $this->timeZone,
-            'overrideConfig' => ($this->overrideConfig == '') ? '[]' :json_encode($this->overrideConfig),
+            'overrideConfig' => ($this->overrideConfig == '') ? null : json_encode($this->overrideConfig),
             'displayId' => $this->displayId
         ]);
 
@@ -846,7 +837,7 @@ class Display implements \JsonSerializable
         ], $options);
 
         if ($this->_config == null) {
-            $this->load(['loadConfig' => true]);
+            $this->load();
 
             try {
                 if ($this->displayProfileId == 0) {
@@ -863,8 +854,8 @@ class Display implements \JsonSerializable
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
 
-            if (isset($this->overrideConfig))
-                $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
+            // Merge in any overrides we have on our display.
+            $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
 
             $this->_config = $displayProfile->getProfileConfig();
 

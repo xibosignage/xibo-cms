@@ -22,11 +22,6 @@
 namespace Xibo\Entity;
 
 
-use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -93,6 +88,12 @@ class PlayerVersion implements \JsonSerializable
     public $originalFileName;
 
     /**
+     * @SWG\Property(description="Stored As")
+     * @var string
+     */
+    public $storedAs;
+
+    /**
      * @var ConfigServiceInterface
      */
     private $config;
@@ -130,13 +131,14 @@ class PlayerVersion implements \JsonSerializable
     private function add()
     {
         $this->versionId = $this->getStore()->insert('
-            INSERT INTO `player_software` (`player_type`, `player_version`, `player_code`, `mediaId`)
-              VALUES (:type, :version, :code, :mediaId)
+            INSERT INTO `player_software` (`player_type`, `player_version`, `player_code`, `mediaId`, `playerShowVersion`)
+              VALUES (:type, :version, :code, :mediaId, :playerShowVersion)
         ', [
             'type' => $this->type,
             'version' => $this->version,
             'code' => $this->code,
-            'mediaId' => $this->mediaId
+            'mediaId' => $this->mediaId,
+            'playerShowVersion' => $this->playerShowVersion
         ]);
     }
 
@@ -148,13 +150,15 @@ class PlayerVersion implements \JsonSerializable
         $sql = '
           UPDATE `player_software`
             SET `player_version` = :version,
-                `player_code` = :code
+                `player_code` = :code,
+                `playerShowVersion` = :playerShowVersion
            WHERE versionId = :versionId
         ';
 
         $params = [
             'version' => $this->version,
             'code' => $this->code,
+            'playerShowVersion' => $this->playerShowVersion,
             'versionId' => $this->versionId
         ];
 
