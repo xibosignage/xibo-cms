@@ -129,7 +129,7 @@ describe('Playlist Editor', function() {
             cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
 
             // Select and search image items
-            cy.get('.toolbar-pane.active #input-type').select('image');
+            cy.get('.toolbar-pane.active .input-type').select('image');
             cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Get a card and drag it to the region
@@ -161,7 +161,7 @@ describe('Playlist Editor', function() {
             cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
 
             // Select and search image items
-            cy.get('.toolbar-pane.active #input-type').select('image');
+            cy.get('.toolbar-pane.active .input-type').select('image');
             cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Get a card and drag it to the region

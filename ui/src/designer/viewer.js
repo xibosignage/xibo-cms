@@ -215,8 +215,8 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             self.renderRequest = undefined;
 
             if(res.statusText != 'requestAborted') {
-                toastr.error('Preview failed!');
-                this.DOMObject.html('Preview failed');
+                toastr.error(errorMessagesTrans.previewFailed);
+                this.DOMObject.html(errorMessagesTrans.previewFailed);
             }
 
         }.bind(this));

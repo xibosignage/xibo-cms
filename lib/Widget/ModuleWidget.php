@@ -435,6 +435,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function setDuration($duration)
     {
+        // Check if duration has a positive value
+        if ($duration < 0) {
+            throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
+        }
+
         $this->widget->duration = $duration;
     }
 

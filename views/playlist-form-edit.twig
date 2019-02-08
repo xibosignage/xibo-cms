@@ -79,7 +79,7 @@
                         {{ forms.inputWithTags("tags", title, playlist.tags, helpText) }}
 
                         {% set title %}{% trans "Dynamic?" %}{% endset %}
-                        {% set helpText %}{% trans "Is this Playlist to have its Widget assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
+                        {% set helpText %}{% trans "Is the Playlist to have Library media assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
                         {{ forms.checkbox("isDynamic", title, playlist.isDynamic, helpText) }}
                     </div>
                     <div class="tab-pane" id="populate">

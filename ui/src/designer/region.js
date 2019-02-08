@@ -100,7 +100,8 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
                 upload: false // options.upload
             }
         ).catch((error) => { 
-            toastr.error('Transform region failed! ' + error);
+            toastr.error(errorMessagesTrans.transformRegionFailed);
+            console.log(error);
         });
     }
 
@@ -135,8 +136,8 @@ Region.prototype.editPropertyForm = function(property) {
     // Create dialog
     let dialog = bootbox.dialog({
         className: 'second-dialog',
-        title: 'Load ' + property + ' for region',
-        message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+        title: editorsTrans.loadPropertyForObject.replace('%prop%', property).replace('%obj%', 'region'),
+        message: '<p><i class="fa fa-spin fa-spinner"></i>' + editorsTrans.loading + '...</p>',
         buttons: {
             cancel: {
                 label: translations.cancel,
@@ -238,7 +239,7 @@ Region.prototype.editPropertyForm = function(property) {
                 location.reload(false);
             } else {
 
-                toastr.error(property + ' form load failed!');
+                toastr.error(errorMessagesTrans.formLoadFailed);
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -254,7 +255,7 @@ Region.prototype.editPropertyForm = function(property) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error(property + ' form load failed!');
+        toastr.error(errorMessagesTrans.formLoadFailed);
 
         dialog.modal('hide');
     });

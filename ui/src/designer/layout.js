@@ -88,6 +88,9 @@ Layout.prototype.createDataStructure = function(data) {
                 this
             );
 
+            // Mark the widget as sortable if region can be sorted/edited
+            newWidget.isSortable = newRegion.isEditable;
+
             // Add newWidget to the Region widget object
             newRegion.widgets[newWidget.id] = newWidget;
 
@@ -160,16 +163,24 @@ Layout.prototype.calculateTimeValues = function() {
 /**
  * Add a new empty element to the layout
  * @param {string} elementType - element type (widget, region, ...)
+ * @param {object =} [positionToAdd] - Position to add the element to
  */
-Layout.prototype.addElement = function(elementType) {
+Layout.prototype.addElement = function(elementType, positionToAdd = null) {
 
+    let newValues = null;
+    
+    /// Get position values if they exist
+    if(positionToAdd !== null) {
+        newValues = positionToAdd;
+    }
+    
     // Add a create change to the history array, and a option to update the Id on the change to the newly created object
     return lD.manager.addChange(
         "create",
         elementType, // targetType
         null, // targetId
         null, // oldValues
-        null, // newValues
+        newValues, // newValues
         {
             updateTargetId: true // options.updateTargetId
         }
@@ -212,13 +223,13 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
 
             lD.common.hideLoadingScreen('deleteElement'); 
 
-            toastr.error('Remove all changes failed!');
+            toastr.error(errorMessagesTrans.removeAllChangesFailed);
         });
     }).catch(function() {
 
         lD.common.hideLoadingScreen('deleteElement'); 
         
-        toastr.error('Save all changes failed!');
+        toastr.error(errorMessagesTrans.saveAllChangesFailed);
     });
     
 };
@@ -249,7 +260,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
 
     if(JSON.stringify(newOrder) === JSON.stringify(oldOrder)) {
         return Promise.resolve({
-            message: 'List order not Changed!'
+            message: errorMessagesTrans.listOrderNotChanged
         });
     }
 
@@ -264,8 +275,27 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
             widgets: newOrder
         }
     ).catch((error) => {
-        toastr.error('Playlist save order failed! ' + error);
+        toastr.error(errorMessagesTrans.playlistOrderSave);
+        console.log(error);
     });
+};
+
+/**
+ * Update layout status fields
+ * @param {int} status - Status code
+ * @param {string} statusFeedback - Status feedback message
+ * @param {string[]} statusMessages - Status messages array
+ */
+Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages) {
+    // Update status property
+    this.status = {
+        code: status,
+        description: statusFeedback,
+        messages: statusMessages
+    };
+
+    // Update timeline
+    lD.timeline.updateLayoutStatus();
 };
 
 module.exports = Layout;
