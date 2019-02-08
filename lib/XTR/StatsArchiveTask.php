@@ -95,7 +95,10 @@ class StatsArchiveTask implements TaskInterface
         $fromDt = $this->date->getLocalDate($fromDt);
         $toDt = $this->date->getLocalDate($toDt);
 
-        $result = $this->timeSeriesStore->getStats($fromDt, $toDt);
+        $resultSet = $this->timeSeriesStore->getStats($fromDt, $toDt);
+
+        // Get results as array
+        $result = $resultSet->getArray();
 
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
@@ -137,7 +140,7 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s', $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(__('Stats Export %s to %s - '.bin2hex(random_bytes(5)), $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
         $options = [

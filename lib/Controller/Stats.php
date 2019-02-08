@@ -256,6 +256,9 @@ class Stats extends Base
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $type = strtolower($this->getSanitizer()->getString('type'));
+        $tags = $this->getSanitizer()->getString('tags');
+        $tagsType = $this->getSanitizer()->getString('tagsType');
+        $exactTags = $this->getSanitizer()->getCheckbox('exactTags');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -306,7 +309,7 @@ class Stats extends Base
         }
 
         // Call the time series interface getStatsReport
-        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $start, $length);
+        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
 
         // Sanitize results
         $rows = array();
@@ -485,13 +488,13 @@ class Stats extends Base
         $fromDt = $this->getDate()->getLocalDate($fromDt);
         $toDt = $this->getDate()->getLocalDate($toDt);
 
-        // Call the time series interface exportStats
-        $result =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
+        // Get result set
+        $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
-        foreach ($result['statData'] as $row) {
+        while ($row = $resultSet->getNextRow() ) {
 
             // Read the columns
             $type = $this->getSanitizer()->string($row['type']);
@@ -499,10 +502,11 @@ class Stats extends Base
             $toDt = $this->getSanitizer()->string($row['end']);
             $layout = $this->getSanitizer()->string($row['layout']);
             $display = $this->getSanitizer()->string($row['display']);
-            $media = $this->getSanitizer()->string($row['media']);
-            $tag = $this->getSanitizer()->string($row['tag']);
+            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
+            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
 
             fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
+
         }
 
         fclose($out);

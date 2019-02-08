@@ -1432,8 +1432,8 @@ class Soap
                 $scheduleId = 0;
 
             $layoutId = $node->getAttribute('layoutid');
-            
-            // Slightly confusing behaviour here to support old players without introducting a different call in 
+
+            // Slightly confusing behaviour here to support old players without introducting a different call in
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
@@ -1466,62 +1466,25 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            if (($type == 'media') || ($type == 'widget')) {
-                $mediaStats[] = [
-                    'type' => $type,
-                    'statDate' => $now,
-                    'fromDt' => $fromdt,
-                    'toDt' => $todt,
-                    'scheduleId' => $scheduleId,
-                    'displayId' => $this->display->displayId,
-                    'layoutId' => $layoutId,
-                    'mediaId' => $mediaId,
-                    'tag' => $tag,
-                    'widgetId' => $widgetId,
-                ];
-            } elseif ($type == 'layout') {
-                $layoutStats[] = [
-                    'type' => $type,
-                    'statDate' => $now,
-                    'fromDt' => $fromdt,
-                    'toDt' => $todt,
-                    'scheduleId' => $scheduleId,
-                    'displayId' => $this->display->displayId,
-                    'layoutId' => $layoutId,
-                ];
-            } elseif ($type == 'event') {
-                $tagStats[] = [
-                    'type' => $type,
-                    'statDate' => $now,
-                    'fromDt' => $fromdt,
-                    'toDt' => $todt,
-                    'scheduleId' => $scheduleId,
-                    'displayId' => $this->display->displayId,
-                    'layoutId' => $layoutId,
-                    'tag' => $tag,
-                ];
-            }
+            $stats[] = [
+                'type' => $type,
+                'statDate' => $now,
+                'fromDt' => $fromdt,
+                'toDt' => $todt,
+                'scheduleId' => $scheduleId,
+                'displayId' => $this->display->displayId,
+                'layoutId' => (int) $layoutId,
+                'mediaId' => $mediaId,
+                'tag' => $tag,
+                'widgetId' => (int) $widgetId,
+            ];
         }
 
-        /*Insert media stats*/
-        if (count($mediaStats) > 0) {
-            $this->getTimeSeriesStore()->addMediaStat($mediaStats);
+        /*Insert stats*/
+        if (count($stats) > 0) {
+            $this->getTimeSeriesStore()->addStat($stats);
         } else {
-            $this->getLog()->info('0 media stats resolved from data package');
-        }
-
-        /*Insert layout stats*/
-        if (count($layoutStats) > 0) {
-            $this->getTimeSeriesStore()->addLayoutStat($layoutStats);
-        } else {
-            $this->getLog()->info('0 layout stats resolved from data package');
-        }
-
-        /*Insert tag stats*/
-        if (count($tagStats) > 0) {
-            $this->getTimeSeriesStore()->addTagStat($tagStats);
-        } else {
-            $this->getLog()->info('0 tag stats resolved from data package');
+            $this->getLog()->info('0 stats resolved from data package');
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));

@@ -94,7 +94,14 @@ class Storage extends Middleware
                     ->setDependencies($container->logService)
                     ->setStore($container->store);
             } else {
-                return $container->configService->timeSeriesStore->setDependencies($container->logService);
+                return $container->configService->timeSeriesStore->setDependencies(
+                    $container->logService,
+                    $container->mediaFactory,
+                    $container->widgetFactory,
+                    $container->layoutFactory,
+                    $container->displayFactory,
+                    $container->displayGroupFactory
+                    );
             }
         });
     }
