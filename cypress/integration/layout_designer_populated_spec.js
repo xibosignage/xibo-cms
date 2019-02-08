@@ -509,7 +509,7 @@ describe('Layout Designer (Populated)', function() {
                         which: 1,
                         pageX: $oldWidget.offset().left + $oldWidget.width() * 1.5 + offsetX
                     })
-                    .trigger('mouseup');
+                    .trigger('mouseup', {force: true});
 
                 cy.wait('@saveOrder');
 
@@ -543,7 +543,7 @@ describe('Layout Designer (Populated)', function() {
                         which: 1,
                         pageX: $oldWidget.offset().left + $oldWidget.width() * 1.5 + offsetX
                     })
-                    .trigger('mouseup');
+                    .trigger('mouseup', {force: true});
 
                 cy.wait('@saveOrder');
 
