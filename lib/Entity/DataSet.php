@@ -573,7 +573,7 @@ class DataSet implements \JsonSerializable
      */
     public function isTruncateEnabled()
     {
-        return $this->clearRate !== 0;
+        return intval($this->clearRate) !== 0;
     }
 
     /**
