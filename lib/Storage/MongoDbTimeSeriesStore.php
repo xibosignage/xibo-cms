@@ -87,9 +87,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $this->displayGroupFactory = $displayGroupFactory;
 
         try {
-            $this->client = new Client('mongodb://'.$this->config['host'].':'. $this->config['port'], ['username' => $this->config['username'], 'password' => $this->config['password']]);
-        } catch (\Exception $e) {
-            echo $e->getMessage() . "\n";
+            $this->client = new Client('mongodb://'.$this->config['host'].':'. $this->config['port'],
+                [
+                    'username' => $this->config['username'],
+                    'password' => $this->config['password']
+                ]);
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
         }
 
         return $this;
@@ -154,7 +158,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         try {
             $collection->insertMany($statData);
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            echo $e->getMessage();
+            $this->log->error($e->getMessage());
         }
     }
 
@@ -321,9 +325,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $result = $cursor->toArray();
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            echo $e->getMessage();
+            $this->log->error($e->getMessage());
         }
 
+        $this->log->debug($cursor, JSON_PRETTY_PRINT);
         $this->log->debug($result, JSON_PRETTY_PRINT);
 
         $totalStats = 0;
@@ -344,7 +349,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $resTotal = $totalStatCursor->toArray();
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            echo $e->getMessage();
+            $this->log->error($e->getMessage());
         }
 
         if(count($resTotal) > 0) {
@@ -393,11 +398,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ]
             ])->toArray();
 
-            return $earliestDate;
-
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            return $e;
+            $this->log->error($e->getMessage());
         }
+
+        return $earliestDate;
+
     }
 
     /** @inheritdoc */
@@ -419,25 +425,29 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
-        $cursor = $collection->aggregate([
-            $match,
-            [
-                '$project' => [
-                    'type'=> 1,
-                    'start'=> 1,
-                    'end'=> 1,
-                    'layout'=> '$layoutName',
-                    'display'=> '$displayName',
-                    'media'=> '$mediaName',
-                    'tag'=> '$eventName',
-                    'displayId'=> 1,
-                    'layoutId'=> 1,
-                    'widgetId'=> 1,
-                    'mediaId'=> 1,
+        try{
+            $cursor = $collection->aggregate([
+                $match,
+                [
+                    '$project' => [
+                        'type'=> 1,
+                        'start'=> 1,
+                        'end'=> 1,
+                        'layout'=> '$layoutName',
+                        'display'=> '$displayName',
+                        'media'=> '$mediaName',
+                        'tag'=> '$eventName',
+                        'displayId'=> 1,
+                        'layoutId'=> 1,
+                        'widgetId'=> 1,
+                        'mediaId'=> 1,
 
+                    ]
                 ]
-            ]
-        ]);
+            ]);
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
 
         $result = new TimeSeriesMongoDbResults($cursor);
 
@@ -448,21 +458,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-        $options = array_merge([
-            'maxAttempts' => 10,
-            'statsDeleteSleep' => 3,
-            'limit' => 10000,
-        ], $options);
 
         $fromDt = date(DATE_ISO8601, strtotime($fromDt));
         $toDt = date(DATE_ISO8601, strtotime($maxage));
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
-        $count = 0;
         $i = 0;
         $rows = 1;
+        $options = array_merge([
+            'maxAttempts' => 10,
+            'statsDeleteSleep' => 3,
+            'limit' => 10000,
+        ], $options);
 
+        $count = 0;
         while ($rows > 0) {
 
             $i++;
@@ -481,7 +491,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             try{
                 $findResult = $collection->find($query, ['limit' => $options['limit']])->toArray();
             } catch (\MongoDB\Exception\RuntimeException $e) {
-                return $e;
+                $this->log->error($e->getMessage());
             }
 
             $idsArray = array_map(function ($res) { return $res['_id']; }, $findResult);
@@ -492,7 +502,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ]);
 
             } catch (\MongoDB\Exception\RuntimeException $e) {
-                return $e;
+                $this->log->error($e->getMessage());
+                throw new \RuntimeException('Stats cannot be deleted.');
             }
 
             $rows = $deleteResult->getDeletedCount();
