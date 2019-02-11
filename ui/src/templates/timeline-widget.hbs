@@ -35,8 +35,14 @@ width: {{ durationPercentage }}%;">
 </div>
 
 {{#if extend}}
-    <div class="extension" style="
+    <div class="widgetExtension" style="
     width: {{extendSize}}%;">
-         {{ subType }}
+        <span class="widgetSubType">
+            [{{ subType }}]
+        </span>
+        
+        <span class="widgetName">
+            {{widgetName}}
+        </span>
     </div>
 {{/if}}

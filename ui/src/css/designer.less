@@ -395,13 +395,17 @@
     height: 100%;
 }
 
-#layout-editor #layout-timeline .extension {
-    color: #999;
+#layout-editor #layout-timeline .widgetExtension {
+    color: @timeline-ghost-fg-color;
+    padding: 0 4px;
     font-weight: bold;
     float: left;
     .set-transparent-color(background; #f3f3f3; 50%);
     height: 80%;
-    margin-top: 0.2em;
+    margin-top: 0.25em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Layout Viewer */
