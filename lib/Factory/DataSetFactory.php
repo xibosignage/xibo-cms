@@ -281,7 +281,7 @@ class DataSetFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
-                'intProperties' => ['isLookup', 'isRemote']
+                'intProperties' => ['isLookup', 'isRemote', 'clearRate', 'refreshRate', 'lastDataEdit', 'runsAfter', 'lastSync', 'lastClear']
             ]);
         }
 
