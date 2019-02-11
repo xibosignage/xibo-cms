@@ -176,7 +176,14 @@ class State extends Middleware
         });
 
         // Set some public routes
-        $app->publicRoutes = array('/login', '/login/forgotten', '/clock', '/about', '/login/ping', '/rss/:psk');
+        $app->publicRoutes = [
+            '/login', '/login/forgotten', '/clock', '/about', '/login/ping',
+            '/rss/:psk',
+            '/sssp_config.xml',
+            '/sssp_dl.wgt',
+            '/playersoftware/:nonce/sssp_dl.wgt',
+            '/playersoftware/:nonce/sssp_config.xml'
+        ];
 
         // The state of the application response
         $app->container->singleton('state', function() { return new ApplicationState(); });
@@ -523,7 +530,8 @@ class State extends Middleware
                 $container->requiredFileFactory,
                 $container->tagFactory,
                 $container->notificationFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->playerVersionFactory
             );
         });
 
@@ -559,7 +567,8 @@ class State extends Middleware
                 $container->configService,
                 $container->pool,
                 $container->displayProfileFactory,
-                $container->commandFactory
+                $container->commandFactory,
+                $container->playerVersionFactory
             );
         });
 
@@ -666,7 +675,8 @@ class State extends Middleware
                 $container->dataSetFactory,
                 $container->displayFactory,
                 $container->scheduleFactory,
-                $container->dayPartFactory
+                $container->dayPartFactory,
+                $container->playerVersionFactory
             );
         });
 
@@ -778,6 +788,28 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->userGroupFactory,
                 $container->displayNotifyService
+            );
+        });
+
+        $app->container->singleton('\Xibo\Controller\PlayerSoftware', function($container) {
+            return new \Xibo\Controller\PlayerSoftware(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->pool,
+                $container->mediaFactory,
+                $container->playerVersionFactory,
+                $container->displayProfileFactory,
+                $container->moduleFactory,
+                $container->layoutFactory,
+                $container->widgetFactory,
+                $container->displayGroupFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -1009,7 +1041,8 @@ class State extends Middleware
                 $container->displayFactory,
                 $container->sessionFactory,
                 $container->displayGroupFactory,
-                $container->widgetFactory
+                $container->widgetFactory,
+                $container->playerVersionFactory
             );
         });
 
@@ -1312,6 +1345,18 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService
+            );
+        });
+
+        $container->singleton('playerVersionFactory', function($container) {
+            return new \Xibo\Factory\PlayerVersionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->configService,
+                $container->mediaFactory
             );
         });
 

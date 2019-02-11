@@ -256,6 +256,9 @@ class Stats extends Base
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $type = strtolower($this->getSanitizer()->getString('type'));
+        $tags = $this->getSanitizer()->getString('tags');
+        $tagsType = $this->getSanitizer()->getString('tagsType');
+        $exactTags = $this->getSanitizer()->getCheckbox('exactTags');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -270,8 +273,7 @@ class Stats extends Base
         $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
-        $displayIds = array();
-
+        $displayIds = [];
         foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
@@ -280,8 +282,8 @@ class Stats extends Base
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
         // Clear the displayIds if the user selected a display for which they don't have permission
-        if($displayId != 0) {
-            if(!in_array($displayId, $displayIds)){
+        if ($displayId != 0) {
+            if (!in_array($displayId, $displayIds)) {
                 $displayIds = [];
             } else {
                 $displayIds = [$displayId];
@@ -306,10 +308,10 @@ class Stats extends Base
         }
 
         // Call the time series interface getStatsReport
-        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $start, $length);
+        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
 
         // Sanitize results
-        $rows = array();
+        $rows = [];
         foreach ($result['statData'] as $row) {
             $entry = [];
 
@@ -341,6 +343,7 @@ class Stats extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+
     }
 
     /**
@@ -463,8 +466,7 @@ class Stats extends Base
         $displayId = $this->getSanitizer()->getInt('displayId');
 
         // Get an array of display id this user has access to.
-        $displayIds = array();
-
+        $displayIds = [];
         foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
@@ -473,8 +475,8 @@ class Stats extends Base
             throw new AccessDeniedException();
 
         // Clear the displayIds if the user selected a display for which they don't have permission
-        if($displayId != 0) {
-            if(!in_array($displayId, $displayIds)){
+        if ($displayId != 0) {
+            if (!in_array($displayId, $displayIds)) {
                 $displayIds = [];
             } else {
                 $displayIds = [$displayId];
@@ -485,13 +487,13 @@ class Stats extends Base
         $fromDt = $this->getDate()->getLocalDate($fromDt);
         $toDt = $this->getDate()->getLocalDate($toDt);
 
-        // Call the time series interface exportStats
-        $result =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
+        // Get result set
+        $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
-        foreach ($result['statData'] as $row) {
+        while ($row = $resultSet->getNextRow() ) {
 
             // Read the columns
             $type = $this->getSanitizer()->string($row['type']);
@@ -499,8 +501,8 @@ class Stats extends Base
             $toDt = $this->getSanitizer()->string($row['end']);
             $layout = $this->getSanitizer()->string($row['layout']);
             $display = $this->getSanitizer()->string($row['display']);
-            $media = $this->getSanitizer()->string($row['media']);
-            $tag = $this->getSanitizer()->string($row['tag']);
+            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
+            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
 
             fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
         }

@@ -6,7 +6,6 @@ const timelineTemplate = require('../templates/timeline.hbs');
 /**
  * Timeline contructor
  * @param {object} container - the container to render the timeline to
- * @param {object =} [options] - Timeline options
  */
 let Timeline = function(container) {
     this.DOMObject = container;
@@ -15,6 +14,9 @@ let Timeline = function(container) {
         left: 0,
         right: 0
     };
+
+    // Boolean to represent if a sort is happening
+    this.beingSorted = false;
 
     // Properties to be used for the template
     this.properties = {
@@ -106,8 +108,8 @@ Timeline.prototype.calculateStartingZoom = function(regions) {
     let shorterWidgetDuration = -1;
     for(let region in regions) {
         for(let widget in regions[region].widgets) {
-            if(regions[region].widgets[widget].getDuration() < shorterWidgetDuration || shorterWidgetDuration === -1) {
-                shorterWidgetDuration = regions[region].widgets[widget].getDuration();
+            if(regions[region].widgets[widget].getTotalDuration() < shorterWidgetDuration || shorterWidgetDuration === -1) {
+                shorterWidgetDuration = regions[region].widgets[widget].getTotalDuration();
             }
         }
     }
@@ -140,7 +142,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
         for(let widget in regions[region].widgets) {
 
             // Calculate the ratio of the widget compared to the region length
-            const widthRatio = regions[region].widgets[widget].getDuration() / visibleDuration;
+            const widthRatio = regions[region].widgets[widget].getTotalDuration() / visibleDuration;
 
             // Mark region as hidden if the widget is too small to be displayed
             if(widthRatio < (this.properties.widgetMinimumVisibleRatio/100)) {
@@ -174,7 +176,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
 
         // calculate widgets total duration
         for(let widget in currentRegion.widgets) {
-            widgetsTotalDuration += currentRegion.widgets[widget].getDuration();
+            widgetsTotalDuration += currentRegion.widgets[widget].getTotalDuration();
         }
 
         // starting and ending time to check/draw ghosts in
@@ -200,7 +202,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
             for(let widget in currentRegion.widgets) {
 
                 // if the next widget shows on the time span, add it to the array
-                if(auxTime + currentRegion.widgets[widget].getDuration() > ghostsStartTime) {
+                if(auxTime + currentRegion.widgets[widget].getTotalDuration() > ghostsStartTime) {
                     // clone widget to create a ghost
                     let ghost = currentRegion.widgets[widget].createClone();
 
@@ -213,11 +215,11 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
                     // Add ghost to the array
                     ghostWidgetsObject.push(ghost);
                 } else {                
-                    paddingLeft += currentRegion.widgets[widget].getDuration();
+                    paddingLeft += currentRegion.widgets[widget].getTotalDuration();
                 }
 
                 // Advance auxiliar time with the widget duration
-                auxTime += currentRegion.widgets[widget].getDuration();
+                auxTime += currentRegion.widgets[widget].getTotalDuration();
 
                 // if the time has passed the end ghost time, break out from the widget loop
                 if(auxTime >= ghostsEndTime){
@@ -245,6 +247,76 @@ Timeline.prototype.resetZoom = function() {
 };
 
 /**
+ * Move a widget in a region
+ * @param {string} regionId - The target region
+ * @param {string} widgetId - The widget to be moved
+ * @param {string} moveType - "topLeft"; "left"; "right"; "topRight";
+ */
+Timeline.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
+
+    let getElement = this.DOMObject.find('#' + regionId + ' #' + widgetId);
+
+    switch(moveType) {
+        case 'oneRight':
+            getElement.insertAfter(getElement.next('.designer-widget:not(.designer-widget-ghost)'));
+            break;
+
+        case 'oneLeft':
+            getElement.insertBefore(getElement.prev('.designer-widget:not(.designer-widget-ghost)'));
+            break;
+
+        case 'topRight':
+            getElement.insertAfter(getElement.nextAll('.designer-widget:not(.designer-widget-ghost)').last());
+            break;
+
+        case 'topLeft':
+            getElement.prependTo(getElement.parent());
+            break;
+
+        default:
+            console.warn('Change type not known');        
+            return;
+    }
+
+    // Save new order
+    lD.common.showLoadingScreen();
+
+    // Get playlist
+    const region = this.DOMObject.find('#' + regionId);
+    const playlist = lD.getElementByTypeAndId($(region).data('type'), $(region).attr('id')).playlists;
+
+    // Add sort class
+    $(region).addClass('to-sort');
+
+    lD.layout.savePlaylistOrder(playlist, $(region).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
+
+        lD.common.hideLoadingScreen();
+
+        // Behavior if successful            
+        toastr.success(res.message);
+        lD.reloadData(lD.layout);
+    }).catch((error) => { // Fail/error
+
+        // Remove sort class
+        $(region).removeClass('to-sort');
+
+        lD.common.hideLoadingScreen();
+
+        // Show error returned or custom message to the user
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if(typeof error == 'string') {
+            errorMessage = error;
+        } else {
+            errorMessage = error.errorThrown;
+        }
+
+        toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
+    });
+};
+
+/**
  * Render Timeline and the layout
  * @param {Object} layout - the layout object to be rendered
  */
@@ -254,6 +326,9 @@ Timeline.prototype.render = function(layout) {
     if(this.properties.zoom === -1) {
         this.calculateStartingZoom(layout.regions);
     }
+
+    // Reset being sorted flag
+    this.beingSorted = false;
 
     // Calulate time values based on scroll position
     this.calculateTimeValues();
@@ -309,22 +384,31 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.designer-region').droppable({
-        accept: '[drop-to="region"]',
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
+                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
 
-    this.DOMObject.find('.designer-widget:not(.designer-widget-ghost)').droppable({
-        accept: '[drop-to="widget"]',
+    this.DOMObject.find('.designer-widget').droppable({
+        greedy: true,
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
+                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     });
 
-    this.DOMObject.find('.designer-widget .editProperty').click(function(e) {
+    this.DOMObject.find('.designer-widget.editable .editProperty').click(function(e) {
         e.stopPropagation();
-        const widget = lD.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
+
+        const parent = $(this).parents('.designer-widget.editable:first');
+        const widget = lD.getElementByTypeAndId(parent.data('type'), parent.attr('id'), parent.data('widgetRegion'));
 
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });
@@ -332,48 +416,89 @@ Timeline.prototype.render = function(layout) {
     
     if(lD.readOnlyMode === false) {
 
-    this.DOMObject.find('#regions .designer-region').sortable({
-        items: '.designer-widget:not(.designer-widget-ghost)',
-        placeholder: 'designer-widget-sortable-highlight',
-        opacity: '.5',
-        stop: function() {
+        this.DOMObject.find('#regions .designer-region.editable').sortable({
+            items: '.designer-widget:not(.designer-widget-ghost)',
+            placeholder: 'designer-widget-sortable-highlight',
+            opacity: '.6',
+            axis: 'x', // Restrict movement to X axis
+            helper: 'clone',
+            start: function(event, ui) {
 
-            lD.common.showLoadingScreen();
+                // Set sorted flag as true
+                self.beingSorted = true;
 
-            // Get playlist
-            const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
+                // Hide the trash container
+                lD.toolbar.DOMObject.find('#trashContainer').removeClass('active');
 
-            lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
+                // Get element width and timeline zoom/scale
+                let zoom = self.DOMObject.find('#regions').data('zoom') / 100;
+                let elementWidth = $(ui.item).width();
 
-                lD.common.hideLoadingScreen();
+                // set helper new width
+                $(ui.helper).width(elementWidth * zoom);
+            },
+            stop: function() {
 
-                // Behavior if successful            
-                toastr.success(res.message);
-                lD.reloadData(lD.layout);
-            }).catch((error) => { // Fail/error
-                
-                lD.common.hideLoadingScreen();
+                // Reset being sorted flag
+                self.beingSorted = false;
 
-                // Show error returned or custom message to the user
-                let errorMessage = 'Save order failed: ' + error;
+                lD.common.showLoadingScreen();
 
-                if(typeof error == 'string') {
-                    errorMessage += error;
-                } else {
-                    errorMessage += error.errorThrown;
-                }
+                // Add sort class
+                $(this).addClass('to-sort');
 
-                toastr.error(errorMessage);
-            });
-        }
-    });
+                // Get playlist
+                const playlist = lD.getElementByTypeAndId($(this).data('type'), $(this).attr('id')).playlists;
+
+                lD.layout.savePlaylistOrder(playlist, $(this).find('.designer-widget:not(.designer-widget-ghost)')).then((res) => { // Success
+
+                    lD.common.hideLoadingScreen();
+
+                    // Behavior if successful            
+                    toastr.success(res.message);
+                    lD.reloadData(lD.layout);
+                }).catch((error) => { // Fail/error
+
+                    // Remove sort class
+                    $(this).removeClass('to-sort');
+                    
+                    lD.common.hideLoadingScreen();
+
+                    // Show error returned or custom message to the user
+                    // Show error returned or custom message to the user
+                    let errorMessage = '';
+
+                    if(typeof error == 'string') {
+                        errorMessage = error;
+                    } else {
+                        errorMessage = error.errorThrown;
+                    }
+
+                    toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
+                });
+            }
+        });
+
+        this.DOMObject.find('.designer-region, .designer-widget:not(.designer-widget-ghost)').contextmenu(function(ev) {
+            
+            if($(ev.currentTarget).is('.editable, .deletable, .permissionsModifiable')) {
+                // Open context menu
+                lD.openContextMenu(ev.currentTarget, {
+                    x: ev.pageX,
+                    y: ev.pageY
+                });
+            }
+
+            // Prevent browser menu to open
+            return false;
+        });
     }
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll(_.debounce(function() {
-
+        
         // If regions are still not rendered, leave method
-        if(self.properties.scrollWidth != $(this).find("#regions").width()) {
+        if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
         }
 
@@ -389,6 +514,79 @@ Timeline.prototype.render = function(layout) {
             self.render(layout);
         }
     }, 500));
+
+    // Update layout status
+    this.updateLayoutStatus();
+};
+
+/**
+ * Update layout status in the info fields
+ */
+Timeline.prototype.updateLayoutStatus = function() {
+
+    const statusContainer = this.DOMObject.find('#layout-info-status');
+
+    // Use status loader icon
+    statusContainer.find('i').removeClass().addClass('fa fa-spinner fa-spin');
+    statusContainer.removeClass().addClass('label label-default');
+
+    // Prevent the update if there's no layout status yet
+    if(lD.layout.status == undefined) {
+        return;
+    }
+
+    let title = '';
+    let content = '';
+
+    const labelCodes = {
+        '1': 'success',
+        '2': 'warning',
+        '3': 'info',
+        '': 'danger'
+    };
+
+    const iconCodes = {
+        '1': 'check',
+        '2': 'question',
+        '3': 'cogs',
+        '': 'times'
+    };
+
+    // Create title and description
+    if(lD.layout.status.messages.length > 0) {
+        title = lD.layout.status.description;
+        for (let index = 0; index < lD.layout.status.messages.length; index++) {
+            content += '<div class="status-message">' + lD.layout.status.messages[index] + '</div>';
+        }
+    } else {
+        title = '';
+        content = '<div class="status-title text-center">' + lD.layout.status.description + '</div>';
+    }
+
+    // Update label
+    let labelType = (labelCodes[lD.layout.status.code] != undefined) ? labelCodes[lD.layout.status.code] : labelCodes[''];
+    statusContainer.removeClass().addClass('label label-' + labelType)
+        .attr('data-status-code', lD.layout.status.code);
+    
+        // Create or update popover
+    if(statusContainer.data('bs.popover') == undefined) {
+        // Create popover
+        statusContainer.popover(
+                {
+                    delay: tooltipDelay,
+                    title: title,
+                    content: content
+                }
+            );
+    } else {
+        // Update popover
+        statusContainer.data('bs.popover').options.title = title;
+        statusContainer.data('bs.popover').options.content = content;
+    }
+    
+    // Change Icon
+    let iconType = (iconCodes[lD.layout.status.code] != undefined) ? iconCodes[lD.layout.status.code] : iconCodes[''];
+    statusContainer.find('i').removeClass().addClass('fa fa-' + iconType);
 };
 
 module.exports = Timeline;

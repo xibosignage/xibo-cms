@@ -1,11 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
- * (Soap.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Xmds;
 
 define('BLACKLIST_ALL', "All");
@@ -32,6 +45,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -127,6 +141,9 @@ class Soap
     /** @var  DayPartFactory */
     protected $dayPartFactory;
 
+    /** @var  PlayerVersionFactory */
+    protected $playerVersionFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -151,8 +168,11 @@ class Soap
      * @param DisplayEventFactory $displayEventFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory)
+
+    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
+
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -176,6 +196,7 @@ class Soap
         $this->displayEventFactory = $displayEventFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -439,6 +460,12 @@ class Soap
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
 
+        $playerVersionMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+        if ($this->display->clientType == 'sssp') {
+            $playerVersionMediaId = null;
+        }
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -449,6 +476,7 @@ class Soap
             //  2 - Media Linked to Displays
             //  3 - Media Linked to Widgets in the Scheduled Layouts (linked through Playlists)
             //  4 - Background Images for all Scheduled Layouts
+            //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
                 SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                    FROM `media`
@@ -486,10 +514,20 @@ class Soap
                       FROM `layout`
                      WHERE layoutId IN (%s)
                  )
-                ORDER BY DownloadOrder
             ";
 
-            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList));
+            if ($playerVersionMediaId != null) {
+                $SQL .= " UNION ALL 
+                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
+                            FROM `media`
+                            WHERE `media`.type = 'playersoftware' 
+                            AND `media`.mediaId = %d
+                ";
+            }
+
+            $SQL .= " ORDER BY DownloadOrder ";
+
+            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList, $playerVersionMediaId));
             $sth->execute(array(
                 'displayId' => $this->display->displayId
             ));
@@ -858,10 +896,22 @@ class Soap
             // Layouts (pop in the default)
             $layoutIds = [$this->display->defaultLayoutId];
 
+            // Calculate a sync key
+            $syncKey = [];
+
+            // Preparse events
             foreach ($events as $event) {
-                if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds))
+                if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds)) {
                     $layoutIds[] = $event['layoutId'];
+                }
+
+                // Are we a sync event?
+                if (intval($event['syncEvent']) == 1) {
+                    $syncKey[] = $event['eventId'];
+                }
             }
+
+            $syncKey = (count($syncKey) > 0) ? implode('-', $syncKey) : '';
 
             $SQL = '
                 SELECT DISTINCT `region`.layoutId, `media`.storedAs
@@ -924,7 +974,6 @@ class Soap
 
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
-                    $syncEvent = $this->getSanitizer()->int($row['syncEvent']);
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
@@ -948,7 +997,7 @@ class Soap
                         $layout->setAttribute("todt", $toDt);
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
-                        $layout->setAttribute("syncEvent", $syncEvent);
+                        $layout->setAttribute("syncEvent", $syncKey);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
@@ -1432,8 +1481,8 @@ class Soap
                 $scheduleId = 0;
 
             $layoutId = $node->getAttribute('layoutid');
-            
-            // Slightly confusing behaviour here to support old players without introducting a different call in 
+
+            // Slightly confusing behaviour here to support old players without introducting a different call in
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
@@ -1466,62 +1515,25 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            if (($type == 'media') || ($type == 'widget')) {
-                $mediaStats[] = [
-                    'type' => $type,
-                    'statDate' => $now,
-                    'fromDt' => $fromdt,
-                    'toDt' => $todt,
-                    'scheduleId' => $scheduleId,
-                    'displayId' => $this->display->displayId,
-                    'layoutId' => $layoutId,
-                    'mediaId' => $mediaId,
-                    'tag' => $tag,
-                    'widgetId' => $widgetId,
-                ];
-            } elseif ($type == 'layout') {
-                $layoutStats[] = [
-                    'type' => $type,
-                    'statDate' => $now,
-                    'fromDt' => $fromdt,
-                    'toDt' => $todt,
-                    'scheduleId' => $scheduleId,
-                    'displayId' => $this->display->displayId,
-                    'layoutId' => $layoutId,
-                ];
-            } elseif ($type == 'event') {
-                $tagStats[] = [
-                    'type' => $type,
-                    'statDate' => $now,
-                    'fromDt' => $fromdt,
-                    'toDt' => $todt,
-                    'scheduleId' => $scheduleId,
-                    'displayId' => $this->display->displayId,
-                    'layoutId' => $layoutId,
-                    'tag' => $tag,
-                ];
-            }
+            $stats[] = [
+                'type' => $type,
+                'statDate' => $now,
+                'fromDt' => $fromdt,
+                'toDt' => $todt,
+                'scheduleId' => $scheduleId,
+                'displayId' => $this->display->displayId,
+                'layoutId' => (int) $layoutId,
+                'mediaId' => $mediaId,
+                'tag' => $tag,
+                'widgetId' => (int) $widgetId,
+            ];
         }
 
-        /*Insert media stats*/
-        if (count($mediaStats) > 0) {
-            $this->getTimeSeriesStore()->addMediaStat($mediaStats);
+        /*Insert stats*/
+        if (count($stats) > 0) {
+            $this->getTimeSeriesStore()->addStat($stats);
         } else {
-            $this->getLog()->info('0 media stats resolved from data package');
-        }
-
-        /*Insert layout stats*/
-        if (count($layoutStats) > 0) {
-            $this->getTimeSeriesStore()->addLayoutStat($layoutStats);
-        } else {
-            $this->getLog()->info('0 layout stats resolved from data package');
-        }
-
-        /*Insert tag stats*/
-        if (count($tagStats) > 0) {
-            $this->getTimeSeriesStore()->addTagStat($tagStats);
-        } else {
-            $this->getLog()->info('0 tag stats resolved from data package');
+            $this->getLog()->info('0 stats resolved from data package');
         }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITSTATS, strlen($statXml));

@@ -22,6 +22,10 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\WidgetFactory;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -39,26 +43,18 @@ interface TimeSeriesStoreInterface
     /**
      * Set Time series Dependencies
      * @param LogServiceInterface $logger
+     * @param MediaFactory $mediaFactory
+     * @param WidgetFactory $widgetFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function setDependencies($logger);
+    public function setDependencies($logger, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null);
 
     /**
-     * Add Media statistics
+     * Add statistics
      * @param $statData array
      */
-    public function addMediaStat($statData);
-
-    /**
-     * Add Layout statistics
-     * @param $statData array
-     */
-    public function addLayoutStat($statData);
-
-    /**
-     * Add Tag statistics
-     * @param $statData array
-     */
-    public function addTagStat($statData);
+    public function addStat($statData);
 
     /**
      * Retrieve statistics
@@ -69,11 +65,14 @@ interface TimeSeriesStoreInterface
      * @param $mediaIds array[mixed]|null
      * @param $type mixed
      * @param $columns array
+     * @param $tags string
+     * @param $tagsType string
+     * @param $exactTags mixed
      * @param $start int
      * @param $length int
      * @return array[array statData, int count, int totalStats]
      */
-    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $start = null, $length = null);
+    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null);
 
     /**
      * Get the earliest date
@@ -86,7 +85,7 @@ interface TimeSeriesStoreInterface
      * @param $fromDt string
      * @param $toDt string
      * @param $displayIds array
-     * @return array[array statData]
+     * @return TimeSeriesResultsInterface
      */
     public function getStats($fromDt, $toDt, $displayIds = null);
 
@@ -96,10 +95,8 @@ interface TimeSeriesStoreInterface
      * @param $toDt string
      * @param $options array
      * @return int number of deleted stat records
-     * @throws \PDOException
+     * @throws \Exception
      */
     public function deleteStats($toDt, $fromDt = null, $options = []);
-
-
 
 }

@@ -51,7 +51,7 @@ Playlist.prototype.createDataStructure = function(data) {
         this.isEmpty = false;
 
         // Increase playlist Duration
-        playlistDuration += newWidget.getDuration();
+        playlistDuration += newWidget.getTotalDuration();
     }
 
     // Set playlist duration
@@ -149,15 +149,16 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             pE.common.hideLoadingScreen();
 
             // Show error returned or custom message to the user
-            let errorMessage = 'Add media failed: ';
+            let errorMessage = '';
 
             if(typeof error == 'string') {
-                errorMessage += error;
+                errorMessage = error;
             } else {
-                errorMessage += error.errorThrown;
+                errorMessage = error.errorThrown;
             }
 
-            toastr.error(errorMessage);
+            // Show toast message
+            toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
         });
     } else if(draggableType == 'module') { // Add widget/module
 
@@ -169,7 +170,7 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             const validExt = $(draggable).data('validExt').replace(/,/g, "|");
 
             pE.openUploadForm({
-                trans: playlistTrans,
+                trans: uploadTrans,
                 upload: {
                     maxSize: $(draggable).data().maxSize,
                     maxSizeMessage: $(draggable).data().maxSizeMessage,
@@ -178,15 +179,22 @@ Playlist.prototype.addElement = function(droppable, draggable) {
                 },
                 playlistId: playlistId
             },
-                {
-                    main: {
-                        label: translations.done,
-                        className: "btn-primary",
-                        callback: function() {
-                            pE.reloadData();
-                        }
+            {
+                viewLibrary: {
+                    label: uploadTrans.viewLibrary,
+                    className: "btn-white",
+                    callback: function() {
+                        pE.toolbar.openNewTabAndSearch(draggableSubType);
                     }
-                });
+                },
+                main: {
+                    label: translations.done,
+                    className: "btn-primary",
+                    callback: function() {
+                        pE.reloadData();
+                    }
+                }
+            });
 
         } else { // Add widget to a region
 
@@ -267,6 +275,8 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             widget.editTransition('in');
         } else if(draggableSubType == 'transitionOut') {
             widget.editTransition('out');
+        } else if(draggableSubType == 'permissions') {
+            widget.editPermissions();
         }
     }
 };
@@ -303,7 +313,7 @@ Playlist.prototype.deleteElement = function(elementType, elementId) {
     }).catch(function() {
         pE.common.hideLoadingScreen();
 
-        toastr.error('Remove all changes failed!');
+        toastr.error(errorMessagesTrans.removeAllChangesFailed);
     });
 
 };
@@ -316,7 +326,7 @@ Playlist.prototype.saveOrder = function(widgets) {
 
     if($.isEmptyObject(pE.playlist.widgets)) {
         return Promise.resolve({
-            message: 'No widgets need saving!'
+            message: errorMessagesTrans.noWidgetsNeedSaving
         });
     }
 
@@ -339,7 +349,7 @@ Playlist.prototype.saveOrder = function(widgets) {
 
     if(JSON.stringify(newOrder) === JSON.stringify(oldOrder)) {
         return Promise.resolve({
-            message: 'List order not Changed!'
+            message: errorMessagesTrans.listOrderNotChanged
         });
     }
 
@@ -354,7 +364,8 @@ Playlist.prototype.saveOrder = function(widgets) {
             widgets: newOrder
         }
     ).catch((error) => {
-        toastr.error('Playlist save order failed! ' + error);
+        toastr.error(errorMessagesTrans.playlistOrderSave);
+        console.log(error);
     });
 
 };

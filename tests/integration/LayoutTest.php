@@ -113,6 +113,7 @@ class LayoutTest extends LocalWebTestCase
             $this->skipTest("There are pre-existing Layouts");
             return;
         }
+
         $this->client->get('/layout');
         $this->assertSame(200, $this->client->response->status());
         $this->assertNotEmpty($this->client->response->body());
@@ -428,7 +429,7 @@ class LayoutTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
-        $this->assertGreaterThan(0, count($layout), 'Cannot find layout for test');
+
         // Assign layout to campaign
         $campaign->assignLayout($layout->layoutId);
         # Check if it's assigned 

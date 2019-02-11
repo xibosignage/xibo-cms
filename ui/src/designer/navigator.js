@@ -4,6 +4,11 @@
 const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
 const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-edit-navbar.hbs');
 
+const regionDefaultValues = {
+    width: 250,
+    height: 250
+};
+
 /**
  * Navigator contructor
  * @param {object} container - the container to render the navigator to
@@ -116,7 +121,7 @@ Navigator.prototype.render = function(layout) {
 
     // Find all the regions and enable drag and resize
     if(this.editMode) {
-        this.DOMObject.find('#regions .designer-region').resizable({
+        this.DOMObject.find('#regions .designer-region.editable').resizable({
                 containment: layoutContainer
         }).draggable({
                 containment: layoutContainer
@@ -150,12 +155,50 @@ Navigator.prototype.render = function(layout) {
         this.DOMObject.find('[data-type="layout"]').droppable({
             accept: '[drop-to="layout"]',
             drop: function(event, ui) {
-                lD.dropItemAdd(event.target, ui.draggable[0]);
+
+
+
+                // Calculate ratio
+                let ratio = lD.layout.width / $(event.target).width();
+
+                // Calculate drop position
+                let dropPosition = {
+                    top: ui.offset.top + ($(ui.helper).height() / 2),
+                    left: ui.offset.left + ($(ui.helper).width() / 2)
+                };
+
+                // Calculate relative layout position
+                let positionInLayoutScaled = {
+                    top: dropPosition.top - $(event.target).offset().top,
+                    left: dropPosition.left - $(event.target).offset().left
+                };
+                
+                // Calculate real layout position
+                let positionInLayout = {
+                    top: parseInt(positionInLayoutScaled.top * ratio),
+                    left: parseInt(positionInLayoutScaled.left * ratio),
+                };
+
+                // Prevent region to go beyond layout borders
+                if(positionInLayout.top + regionDefaultValues.height > lD.layout.height) {
+                    positionInLayout.top = lD.layout.height - regionDefaultValues.height;
+                }
+
+                if(positionInLayout.left + regionDefaultValues.width > lD.layout.width) {
+                    positionInLayout.left = lD.layout.width - regionDefaultValues.width;
+                }
+
+                // Add item to the layout
+                lD.dropItemAdd(event.target, ui.draggable[0], {positionToAdd: positionInLayout});
             }
         });
 
         this.DOMObject.find('.designer-region').droppable({
-            accept: '[drop-to="region"]',
+            greedy: true,
+            accept: function(el) {
+                return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
+                    ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+            },
             drop: function(event, ui) {
                 lD.dropItemAdd(event.target, ui.draggable[0]);
             }
@@ -165,6 +208,23 @@ Navigator.prototype.render = function(layout) {
         this.DOMObject.find('#edit-btn').click(function() {
             lD.toggleNavigatorEditing(true);
         }.bind(this));
+
+        // Handle right click context menu
+        let editMode = this.editMode;
+        this.DOMObject.find('.designer-region').contextmenu(function(ev) {
+
+            if(!editMode && $(ev.currentTarget).is('.deletable, .permissionsModifiable')) {
+
+                // Open context menu
+                lD.openContextMenu(ev.currentTarget, {
+                    x: ev.pageX,
+                    y: ev.pageY
+                });
+            }
+
+            return false;
+        });
+
     } else {
         // Hide edit button
         this.DOMObject.find('#edit-btn').hide();
@@ -193,7 +253,7 @@ Navigator.prototype.renderNavbar = function() {
 
     this.navbarContainer.html(navigatorLayoutNavbarTemplate(
         {
-            selected: ((lD.selectedObject.type === 'region') ? '' : 'disabled'),
+            selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
             undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled')
         }
     ));
@@ -208,9 +268,9 @@ Navigator.prototype.renderNavbar = function() {
         }).catch((err) => {
             lD.common.hideLoadingScreen();
             if(err) {
-                toastr.error('Save all changes failed: ' + err);
+                toastr.error(errorMessagesTrans.saveAllChangesFailed + ' ' + err);
             } else {
-                toastr.error('Save all changes failed!');
+                toastr.error(errorMessagesTrans.saveAllChangesFailed);
             }
         });
     });
@@ -234,18 +294,16 @@ Navigator.prototype.renderNavbar = function() {
 
             lD.common.hideLoadingScreen();
 
-            console.error(error);
-
             // Show error returned or custom message to the user
-            let errorMessage = 'Revert failed: ';
+            let errorMessage = '';
 
             if(typeof error == 'string') {
-                errorMessage += error;
+                errorMessage = error;
             } else {
-                errorMessage += error.errorThrown;
+                errorMessage = error.errorThrown;
             }
 
-            toastr.error(errorMessage);
+            toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
         });
     });
 
@@ -253,8 +311,6 @@ Navigator.prototype.renderNavbar = function() {
         lD.common.showLoadingScreen();
         
         lD.manager.saveAllChanges().then((res) => {
-
-            toastr.success('All changes saved!');
 
             lD.layout.addElement('region').then((res) => { // Success
 
@@ -267,37 +323,37 @@ Navigator.prototype.renderNavbar = function() {
 
                 lD.common.hideLoadingScreen(); 
                 // Show error returned or custom message to the user
-                let errorMessage = 'Create region failed: ' + error;
+                let errorMessage = '';
 
                 if(typeof error == 'string') {
-                    errorMessage += error;
+                    errorMessage = error;
                 } else {
-                    errorMessage += error.errorThrown;
+                    errorMessage = error.errorThrown;
                 }
 
-                toastr.error(errorMessage);
+                toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
             });
         }).catch((err) => {
 
             lD.common.hideLoadingScreen(); 
-            toastr.error('Save all changes failed!');
+            toastr.error(errorMessagesTrans.saveAllChangesFailed);
         });
     });
 
     this.navbarContainer.find('#delete-btn').click(function() {
 
-        if(lD.selectedObject.type === 'region') {
+        if(lD.selectedObject.isDeletable) {
 
             bootbox.confirm({
-                title: 'Delete Region',
-                message: 'Are you sure? All changes related to this object will be erased',
+                title: editorsTrans.deleteTitle.replace('%obj%', 'region'),
+                message: editorsTrans.deleteConfirm,
                 buttons: {
                     confirm: {
-                        label: 'Yes',
+                        label: editorsTrans.yes,
                         className: 'btn-danger'
                     },
                     cancel: {
-                        label: 'No',
+                        label: editorsTrans.no,
                         className: 'btn-default'
                     }
                 },
@@ -319,15 +375,15 @@ Navigator.prototype.renderNavbar = function() {
                             lD.common.hideLoadingScreen();
                             
                                     // Show error returned or custom message to the user
-                                    let errorMessage = 'Delete element failed: ' + error;
+                                    let errorMessage = '';
 
                                     if(typeof error == 'string') {
-                                        errorMessage += error;
+                                        errorMessage = error;
                                     } else {
-                                        errorMessage += error.errorThrown;
+                                        errorMessage = error.errorThrown;
                                     }
 
-                                    toastr.error(errorMessage);
+                                    toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
                                 });
                     }
                 }

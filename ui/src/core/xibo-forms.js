@@ -561,6 +561,10 @@ function permissionsFormOpen(dialog) {
 
     var grid = $("#permissionsTable").closest(".XiboGrid");
 
+    // initialise the permissions array
+    if (grid.data().permissions.length <= 0)
+        grid.data().permissions = {};
+
     var table = $("#permissionsTable").DataTable({ "language": dataTablesLanguage,
         serverSide: true, stateSave: true,
         "filter": false,
@@ -589,21 +593,49 @@ function permissionsFormOpen(dialog) {
                     if (type != "display")
                         return data;
 
-                    return "<input type=\"checkbox\" data-permission=\"view\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                    var checked;
+                    if (row.groupId in grid.data().permissions) {
+                        var cache = grid.data().permissions[row.groupId];
+
+                        checked = (cache.view !== undefined && cache.view === 1) ? 1 : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    // Cached changes to this field?
+                    return "<input type=\"checkbox\" data-permission=\"view\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
                 }
             },
             { "data": "edit", "render": function (data, type, row, meta) {
                     if (type != "display")
                         return data;
 
-                    return "<input type=\"checkbox\" data-permission=\"edit\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                    var checked;
+                    if (row.groupId in grid.data().permissions) {
+                        var cache = grid.data().permissions[row.groupId];
+
+                        checked = (cache.edit !== undefined && cache.edit === 1) ? 1 : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    return "<input type=\"checkbox\" data-permission=\"edit\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
                 }
             },
             { "data": "delete", "render": function (data, type, row, meta) {
                     if (type != "display")
                         return data;
 
-                    return "<input type=\"checkbox\" data-permission=\"delete\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                    var checked;
+                    if (row.groupId in grid.data().permissions) {
+                        var cache = grid.data().permissions[row.groupId];
+
+                        checked = (cache.delete !== undefined && cache.delete === 1) ? 1 : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    return "<input type=\"checkbox\" data-permission=\"delete\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
                 }
             }
         ]
@@ -611,10 +643,6 @@ function permissionsFormOpen(dialog) {
 
     table.on('draw', function (e, settings) {
         dataTableDraw(e, settings);
-
-        // permissions should be an object not an array
-        if (grid.data().permissions.length <= 0)
-            grid.data().permissions = {};
 
         // Bind to the checkboxes change event
         var target = $("#" + e.target.id);

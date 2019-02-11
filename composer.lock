@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b76bef2d0d24ee90787e4a1ed0588c81",
+    "content-hash": "1fb711ce472326f4b57c18b196d35122",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -1703,6 +1703,71 @@
                 "server"
             ],
             "time": "2018-06-23T16:27:31+00:00"
+        },
+        {
+            "name": "mongodb/mongodb",
+            "version": "1.4.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mongodb/mongo-php-library.git",
+                "reference": "bd148eab0493e38354e45e2cd7db59b90fdcad79"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/bd148eab0493e38354e45e2cd7db59b90fdcad79",
+                "reference": "bd148eab0493e38354e45e2cd7db59b90fdcad79",
+                "shasum": ""
+            },
+            "require": {
+                "ext-hash": "*",
+                "ext-json": "*",
+                "ext-mongodb": "^1.5.0",
+                "php": ">=5.5"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.36 || ^6.4"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MongoDB\\": "src/"
+                },
+                "files": [
+                    "src/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Jeremy Mikola",
+                    "email": "jmikola@gmail.com"
+                },
+                {
+                    "name": "Derick Rethans",
+                    "email": "github@derickrethans.nl"
+                },
+                {
+                    "name": "Katherine Walker",
+                    "email": "katherine.walker@mongodb.com"
+                }
+            ],
+            "description": "MongoDB driver library",
+            "homepage": "https://jira.mongodb.org/browse/PHPLIB",
+            "keywords": [
+                "database",
+                "driver",
+                "mongodb",
+                "persistence"
+            ],
+            "time": "2018-07-18T14:33:41+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -4381,6 +4446,7 @@
                 "testing",
                 "xunit"
             ],
+            "abandoned": true,
             "time": "2016-12-02T14:39:14+00:00"
         },
         {

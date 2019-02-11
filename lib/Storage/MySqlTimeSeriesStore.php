@@ -47,14 +47,14 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log)
+    public function setDependencies($log, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null)
     {
         $this->log = $log;
         return $this;
     }
 
     /** @inheritdoc */
-    public function addMediaStat($statData)
+    public function addStat($statData)
     {
         $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
         $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
@@ -74,46 +74,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function addLayoutStat($statData)
-    {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?)';
-
-        $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
-
-        // Flatten the array
-        $data = [];
-        foreach ($statData as $stat) {
-            foreach ($stat as $field) {
-                $data[] = $field;
-            }
-        }
-
-        $this->store->isolated($sql, $data);
-
-    }
-
-    /** @inheritdoc */
-    public function addTagStat($statData)
-    {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, Tag) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?)';
-
-        $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
-
-        // Flatten the array
-        $data = [];
-        foreach ($statData as $stat) {
-            foreach ($stat as $field) {
-                $data[] = $field;
-            }
-        }
-
-        $this->store->isolated($sql, $data);
-    }
-
-    /** @inheritdoc */
-    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $start = null, $length = null)
+    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
 
         // Media on Layouts Ran
@@ -146,7 +107,19 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 AND `widgetoption`.option = \'name\'
               LEFT OUTER JOIN `media`
               ON `media`.mediaId = `stat`.mediaId
-           WHERE stat.type <> \'displaydown\'
+              ';
+
+        if ($tags != '' ) {
+            if ($tagsType === 'dg') {
+                $body .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup`
+                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
+                         AND `displaygroup`.isDisplaySpecific = 1 ';
+            }
+        }
+
+        $body .= ' WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
                 AND stat.start <= :toDt
                 AND stat.displayID IN (' . implode(',', $displayIds) . ')
@@ -156,6 +129,77 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             'fromDt' => $fromDt,
             'toDt' => $toDt
         ];
+
+        if ($tags != '') {
+            if (trim($tags) === '--no-tag') {
+                if ($tagsType === 'dg') {
+                    $body .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                     FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                        )
+                        ';
+                }
+                if ($tagsType === 'layout') {
+                    $body .= ' AND `layout`.layoutId NOT IN (
+                    SELECT `lktaglayout`.layoutId
+                     FROM tag
+                        INNER JOIN `lktaglayout`
+                        ON `lktaglayout`.tagId = tag.tagId
+                        )
+                        ';
+                }
+                if ($tagsType === 'media') {
+                    $body .= ' AND `media`.mediaId NOT IN (
+                    SELECT `lktagmedia`.mediaId
+                     FROM tag
+                        INNER JOIN `lktagmedia`
+                        ON `lktagmedia`.tagId = tag.tagId
+                        )
+                        ';
+                }
+            } else {
+                $operator = $exactTags == 1 ? '=' : 'LIKE';
+                if ($tagsType === 'dg') {
+                    $body .= " AND `displaygroup`.displaygroupId IN (
+                        SELECT `lktagdisplaygroup`.displaygroupId
+                          FROM tag
+                            INNER JOIN `lktagdisplaygroup`
+                            ON `lktagdisplaygroup`.tagId = tag.tagId
+                        ";
+                }
+                if ($tagsType === 'layout') {
+                    $body .= " AND `layout`.layoutId IN (
+                        SELECT `lktaglayout`.layoutId
+                          FROM tag
+                            INNER JOIN `lktaglayout`
+                            ON `lktaglayout`.tagId = tag.tagId
+                    ";
+                }
+                if ($tagsType === 'media') {
+                    $body .= " AND `media`.mediaId IN (
+                        SELECT `lktagmedia`.mediaId
+                          FROM tag
+                            INNER JOIN `lktagmedia`
+                            ON `lktagmedia`.tagId = tag.tagId
+                    ";
+                }
+                $i = 0;
+                foreach (explode(',', $tags) as $tag) {
+                    $i++;
+                    if ($i == 1)
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    else
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                    if ($operator === '=')
+                        $params['tags' . $i] = $tag;
+                    else
+                        $params['tags' . $i] = '%' . $tag . '%';
+                }
+                $body .= " ) ";
+            }
+        }
 
         // Type filter
         if ($type == 'layout') {
@@ -200,11 +244,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
 
         $order = '';
-        if($columns != null)
+        if ($columns != null)
             $order = 'ORDER BY ' . implode(',', $columns);
 
         $limit= '';
-        if($length != null)
+        if ($length != null)
             $limit = ' LIMIT ' . $start . ', ' . $length;
 
         /*Execute sql statement*/
@@ -258,7 +302,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStats($fromDt, $toDt, $displayIds = null)
     {
         $sql = '
-        SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
+        SELECT stat.*, display.Display as display, layout.Layout as layout, media.Name AS media
           FROM stat
             INNER JOIN display
             ON stat.DisplayID = display.DisplayID
@@ -272,7 +316,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
           
         ';
 
-        if(count($displayIds) > 0) {
+        if (count($displayIds) > 0) {
             $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
         }
 
@@ -291,29 +335,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $statement->execute($params);
         $this->log->sql($sql, $params);
 
-        $rows = [];
+        $result = new TimeSeriesMySQLResults($statement);
 
-        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
-
-            $entry = [];
-            // Read the columns
-            $entry['type'] = $row['type'];
-            $entry['start'] = $row['start'];
-            $entry['end'] = $row['end'];
-            $entry['layout'] = $row['Layout'];
-            $entry['display'] = $row['Display'];
-            $entry['media'] = $row['MediaName'];
-            $entry['tag'] = $row['tag'];
-            $entry['displayId'] = $row['displayId'];
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
-            $entry['mediaId'] = $row['mediaId'];
-
-            $rows[] = $entry;
-
-        }
-
-        return ['statData'=> $rows];
+        return $result;
 
     }
 
@@ -329,7 +353,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 'limit' => 10000,
             ], $options);
 
-            if($fromDt != null) {
+            if ($fromDt != null) {
                 $delete = $this->store->getConnection()
                     ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT :limit');
 

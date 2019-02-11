@@ -123,13 +123,13 @@ describe('Playlist Editor', function() {
 
             // Create and alias for reload playlist
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             // Open a new tab
             cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
 
             // Select and search image items
-            cy.get('.toolbar-pane.active #input-type').select('image');
+            cy.get('.toolbar-pane.active .input-type').select('image');
             cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Get a card and drag it to the region
@@ -154,14 +154,14 @@ describe('Playlist Editor', function() {
 
             // Create and alias for reload playlist
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
             cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
 
             // Open a new tab
             cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
 
             // Select and search image items
-            cy.get('.toolbar-pane.active #input-type').select('image');
+            cy.get('.toolbar-pane.active .input-type').select('image');
             cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Get a card and drag it to the region
@@ -180,7 +180,7 @@ describe('Playlist Editor', function() {
                     });
 
                     // Click the revert button
-                    cy.get('#playlist-editor-toolbar #undoLastAction').click({force: true});
+                    cy.get('#playlist-editor-toolbar #undoContainer').click();
 
                     // Wait for the widget to be deleted and for the playlist to reload
                     cy.wait('@deleteWidget');
@@ -289,7 +289,7 @@ describe('Playlist Editor', function() {
                 cy.wait('@reloadWidget');
 
                 // Click the revert button
-                cy.get('#playlist-editor-toolbar #undoLastAction').click({force: true});
+                cy.get('#playlist-editor-toolbar #undoContainer').click();
 
                 // Wait for the widget to save
                 cy.wait('@saveWidget');
@@ -303,7 +303,7 @@ describe('Playlist Editor', function() {
         it.skip('saves the widgets order when sorting by dragging', () => {
             cy.server();
             cy.route('POST', '**/playlist/order/*').as('saveOrder');
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             cy.get('#timeline-container [data-type="widget"]:first-child').then(($oldWidget) => {
 
@@ -338,7 +338,7 @@ describe('Playlist Editor', function() {
         it.skip('should revert the widgets order when using the undo feature', () => {
             cy.server();
             cy.route('POST', '**/playlist/order/*').as('saveOrder');
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             cy.get('#timeline-container [data-type="widget"]:first-child').then(($oldWidget) => {
 
@@ -384,7 +384,7 @@ describe('Playlist Editor', function() {
 
         it('should delete a widget using the toolbar bin', () => {
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             // Select a widget from the navigator
             cy.get('#playlist-timeline [data-type="widget"]:first-child').click().then(($el) => {
@@ -414,7 +414,7 @@ describe('Playlist Editor', function() {
 
             // Create and alias for reload playlist
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             // Open toolbar Tools tab
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
@@ -445,7 +445,7 @@ describe('Playlist Editor', function() {
         it('attaches expiry dates to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
             
             // Open toolbar Tools tab
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
@@ -479,7 +479,7 @@ describe('Playlist Editor', function() {
         it.skip('adds a transition to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
             // Create and alias for reload playlist
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             // Open toolbar Tools tab
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
@@ -511,7 +511,7 @@ describe('Playlist Editor', function() {
         it('check if the form to attach a transition to a widget by click to add appears', () => {
             // Create and alias for reload playlist
             cy.server();
-            cy.route('/playlist/form/timeline/*').as('reloadPlaylist');
+            cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
             // Open toolbar Tools tab
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();

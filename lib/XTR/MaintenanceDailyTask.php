@@ -114,7 +114,7 @@ class MaintenanceDailyTask implements TaskInterface
 
             try {
                 $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
-                if($result > 0) {
+                if ($result > 0) {
                     $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
                 }
             } catch (\RuntimeException $exception) {

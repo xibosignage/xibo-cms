@@ -201,6 +201,10 @@ Viewer.prototype.render = function(element, layout, page = 1) {
                 this.showInlineEditor();
             }
 
+            // Set complementary colour to the preview content
+            const complementaryColor = $c.complement(layout.backgroundColor);
+            this.DOMObject.find('#viewer-preview').css('color', complementaryColor);
+
             // Handle fullscreen button
             this.DOMObject.find('#fs-btn').click(function() {
                 this.toggleFullscreen();
@@ -211,8 +215,8 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             self.renderRequest = undefined;
 
             if(res.statusText != 'requestAborted') {
-                toastr.error('Preview failed!');
-                this.DOMObject.html('Preview failed');
+                toastr.error(errorMessagesTrans.previewFailed);
+                this.DOMObject.html(errorMessagesTrans.previewFailed);
             }
 
         }.bind(this));

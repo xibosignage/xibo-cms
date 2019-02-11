@@ -39,6 +39,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
@@ -119,6 +120,9 @@ class User extends Base
     /** @var WidgetFactory */
     private $widgetFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -142,10 +146,11 @@ class User extends Base
      * @param SessionFactory $sessionFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetFactory $widgetFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -163,6 +168,7 @@ class User extends Base
         $this->sessionFactory = $sessionFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetFactory = $widgetFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
     }
 
     /**
@@ -815,7 +821,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
@@ -1244,13 +1250,9 @@ class User extends Base
             }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Region') {
             // We always cascade region permissions down to the Playlist
-            // TODO: we should change this to $object->regionPlaylist in 2.0
-            $object->load();
+            $object->load(['loadPlaylists' => true]);
 
-            foreach ($object->playlists as $playlist) {
-                /* @var Playlist $playlist */
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
-            }
+            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */

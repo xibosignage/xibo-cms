@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -844,18 +845,51 @@ class Layout extends Base
             // Populate the status message
             $layout->getStatusMessage();
 
-            // Annotate each Widget with its validity
-            if (in_array('widget_validity', $embed)) {
+            // Annotate each Widget with its validity, tags and permissions
+            if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
                 foreach ($layout->getWidgets() as $widget) {
                     /* @var Widget $widget */
                     $module = $this->moduleFactory->createWithWidget($widget);
 
-                    try {
-                        $widget->isValid = (int)$module->isValid();
-                    } catch (XiboException $xiboException) {
-                        $widget->isValid = 0;
+                    $widget->name = $module->getName();
+
+                    // Augment with tags
+                    $widget->tags = $module->getMediaTags();
+
+                    if (in_array('permissions', $embed)) {
+                        // Augment with editable flag
+                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+
+                        // Augment with deletable flag
+                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+
+                        // Augment with permissions flag
+                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                    }
+
+                    if (in_array('widget_validity', $embed)) {
+                        try {
+                            $widget->isValid = (int)$module->isValid();
+                        } catch (XiboException $xiboException) {
+                            $widget->isValid = 0;
+                        }
                     }
                 }
+
+                // Augment regions with permissions
+                foreach ($layout->regions as $region) {
+                    if (in_array('permissions', $embed)) {
+                        // Augment with editable flag
+                        $region->isEditable = $this->getUser()->checkEditable($region);
+
+                         // Augment with deletable flag
+                        $region->isDeletable = $this->getUser()->checkDeleteable($region);
+
+                        // Augment with permissions flag
+                        $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
+                    }
+                }
+
             }
 
             if ($this->isApi())
@@ -1045,6 +1079,15 @@ class Layout extends Base
                 }
 
                 $layout->buttons[] = ['divider' => true];
+
+                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
+                    // Save template button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_save_template',
+                        'url' => $this->urlFor('template.from.layout.form', ['id' => $layout->layoutId]),
+                        'text' => __('Save Template')
+                    );
+                }
 
                 // Export Button
                 $layout->buttons[] = array(

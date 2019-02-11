@@ -59,13 +59,16 @@ class DisplayProfileFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new DisplayProfile(
+        $displayProfile = new DisplayProfile(
             $this->getStore(),
             $this->getLog(),
             $this->config,
             $this->dispatcher,
             $this->commandFactory
         );
+        $displayProfile->config = [];
+
+        return $displayProfile;
     }
 
     /**

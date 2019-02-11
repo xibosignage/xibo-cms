@@ -9,41 +9,49 @@ window.formHelpers = require('../helpers/form-helpers.js');
 
 const toolsList = [
     {
-        name: 'Region',
+        name: toolbarTrans.tools.region.name,
         type: 'region',
-        description: 'Add a region to the layout',
-        dropTo: 'layout'
+        description: toolbarTrans.tools.region.description,
+        dropTo: 'layout',
+        hideOn: ['playlist'],
+        oneClickAdd: ['layout']
     },
     {
-        name: 'Audio',
+        name: toolbarTrans.tools.audio.name,
         type: 'audio',
-        description: 'Attach audio to a widget',
+        description: toolbarTrans.tools.audio.name,
         dropTo: 'widget'
     },
     {
-        name: 'Expiry Dates',
+        name: toolbarTrans.tools.expiry.name,
         type: 'expiry',
-        description: 'Set expiry dates to a widget',
+        description: toolbarTrans.tools.expiry.name,
         dropTo: 'widget'
     },
     {
-        name: 'Transition In',
+        name: toolbarTrans.tools.transitionIn.name,
         type: 'transitionIn',
-        description: 'Add a in transition to a widget',
+        description: toolbarTrans.tools.transitionIn.name,
         dropTo: 'widget'
     },
     {
-        name: 'Transition Out',
+        name: toolbarTrans.tools.transitionOut.name,
         type: 'transitionOut',
-        description: 'Add a out transition to a widget',
+        description: toolbarTrans.tools.transitionOut.name,
         dropTo: 'widget'
+    },
+    {
+        name: toolbarTrans.tools.permissions.name,
+        type: 'permissions',
+        description: toolbarTrans.tools.permissions.name,
+        dropTo: 'all'
     }
 ];
 
 const defaultMenuItems = [
     {
         name: 'tools',
-        title: 'Tools',
+        title: toolbarTrans.menuItems.tools,
         tool: true,
         pagination: false,
         page: 0,
@@ -52,11 +60,12 @@ const defaultMenuItems = [
     },
     {
         name: 'widgets',
-        title: 'Widgets',
+        title: toolbarTrans.menuItems.widgets,
         pagination: false,
         page: 0,
         content: [],
-        state: ''
+        state: '',
+        oneClickAdd: ['playlist']
     }
 ];
 
@@ -66,7 +75,7 @@ const defaultMenuItems = [
  * @param {object[]} [customButtons] - customized buttons
  * @param {object} [customActions] - customized actions
  */
-let Toolbar = function(container, customButtons = [], customActions = {}, jumpList = {}) {
+let Toolbar = function(container, customButtons = null, customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
     this.previousOpenedMenu = -1;
@@ -126,18 +135,22 @@ Toolbar.prototype.loadPrefs = function() {
 
             // Populate the toolbar with the returned data
             self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
-            self.openedMenu = (loadedData.openedMenu) ? loadedData.openedMenu : -1;
-            self.previousOpenedMenu = (loadedData.previousOpenedMenu) ? loadedData.openedMenu : -1;
-            
+            self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
+            self.previousOpenedMenu = (loadedData.previousOpenedMenu != undefined) ? loadedData.openedMenu : -1;
+
             // Set menu index
-            self.menuIndex = self.menuItems.length;
+            if(loadedData.menuIndex != undefined) {
+                self.menuIndex = loadedData.menuIndex;
+            } else {
+                self.menuIndex = self.menuItems.length;
+            }
 
             // Render to reflect the loaded toolbar
             self.render();
 
             // If there was a opened menu, load content for that one
             if(self.openedMenu != -1) {
-                self.loadContent(self.openedMenu);
+                self.openTab(self.openedMenu);
             }
         } else {
 
@@ -162,7 +175,7 @@ Toolbar.prototype.loadPrefs = function() {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error('User load preferences failed!');
+        toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
 
     });
 };
@@ -203,7 +216,8 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
                 value: JSON.stringify({
                     menuItems: menuItemsToSave,
                     openedMenu: openedMenu,
-                    previousOpenedMenu: previousOpenedMenu
+                    previousOpenedMenu: previousOpenedMenu,
+                    menuIndex: this.menuIndex
                 })
             }
         ]
@@ -228,7 +242,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
                 location.reload(false);
             } else {
 
-            toastr.error('User save preferences failed!');
+                toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -245,7 +259,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error('User save preferences failed!');
+        toastr.error(errorMessagesTrans.userSavePreferencesFailed);
     });
 
 };
@@ -261,8 +275,29 @@ Toolbar.prototype.render = function() {
     // Deselect selected card on render
     this.selectedCard = {};
 
+    // Get toolbar trans
+    let newToolbarTrans = toolbarTrans;
+
     // Check if trash bin is active
-    let trashBinActive = (app.selectedObject.type === 'region' || app.selectedObject.type === 'widget') && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+    let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+    
+    // Get text for bin tooltip
+    if(trashBinActive) {
+        newToolbarTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
+    }
+
+    // Check if there are some changes
+    let undoActive = app.manager.changeHistory.length > 0;
+
+    // Get last action text for popup
+    if(undoActive) { 
+        let lastAction = app.manager.changeHistory[app.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined ) {
+            newToolbarTrans.undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            newToolbarTrans.undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
 
     // Compile layout template with data
     const html = ToolbarTemplate({
@@ -270,7 +305,9 @@ Toolbar.prototype.render = function() {
         menuItems: this.menuItems,
         tabsCount: (this.menuItems.length > this.fixedTabs),
         customButtons: this.customButtons,
-        trashActive: trashBinActive
+        trashActive: trashBinActive,
+        undoActive: undoActive,
+        trans: newToolbarTrans
     });
 
     // Append layout html to the main div
@@ -295,14 +332,14 @@ Toolbar.prototype.render = function() {
                 toolbar.deleteTab(index);
             });
 
-            this.DOMObject.find('#content-' + index + ' #pag-btn-left').click(function() {
+            this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
                 if(!toolbar.searchButtonsLock) {
                     toolbar.menuItems[index].page -= 1;
                     toolbar.loadContent(index); 
                 }
             });
 
-            this.DOMObject.find('#content-' + index + ' #pag-btn-right').click(function() {
+            this.DOMObject.find('#content-' + index + ' #pag-btn-right-' + index).click(function() {
                 if(!toolbar.searchButtonsLock) {
                     toolbar.menuItems[index].page += 1;
                     toolbar.loadContent(index);
@@ -341,21 +378,28 @@ Toolbar.prototype.render = function() {
         this.DOMObject.find('#trashContainer').click(
             this.customActions.deleteSelectedObjectAction
         );
+
+        // Delete object
+        this.DOMObject.find('#undoContainer').click(
+            app.undoLastAction
+        );
     }
 
     // Handle custom buttons
-    for(let index = 0;index < this.customButtons.length;index++) {
+    if(this.customButtons != null) {
+        for(let index = 0;index < this.customButtons.length;index++) {
 
-        // Bind action to button
-        this.DOMObject.find('#' + this.customButtons[index].id).click(
-            this.customButtons[index].action
-        );
+            // Bind action to button
+            this.DOMObject.find('#' + this.customButtons[index].id).click(
+                this.customButtons[index].action
+            );
 
-        // If there is a inactiveCheck, use that function to switch button state
-        if(this.customButtons[index].inactiveCheck != undefined) {
-            const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
-            const toggleValue = this.customButtons[index].inactiveCheck();
-            this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+            // If there is a inactiveCheck, use that function to switch button state
+            if(this.customButtons[index].inactiveCheck != undefined) {
+                const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
+                const toggleValue = this.customButtons[index].inactiveCheck();
+                this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+            }
         }
     }
 
@@ -383,6 +427,9 @@ Toolbar.prototype.render = function() {
             opacity: 0.3,
             helper: 'clone',
             start: function() {
+                // Deselect previous selections
+                self.deselectCardsAndDropZones();
+
                 $('.custom-overlay').show();
             }, 
             stop: function() {
@@ -397,7 +444,7 @@ Toolbar.prototype.render = function() {
         });
 
         // Initialize tooltips
-        this.DOMObject.find('[data-toggle="tooltip"]').tooltip();
+        this.DOMObject.find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
 
         // Initialize tagsinput
         this.DOMObject.find('input[data-role="tagsinput"]').tagsinput();
@@ -408,7 +455,7 @@ Toolbar.prototype.render = function() {
             var tagText = $(this).text();
 
             // Add text to form
-            self.DOMObject.find("#input-tag").tagsinput('add', tagText, {allowDuplicates: false});
+            self.DOMObject.find('.toolbar-pane.active .input-tag').tagsinput('add', tagText, {allowDuplicates: false});
         });
     }
 };
@@ -421,6 +468,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
 
     // Calculate pagination
     const pagination = this.calculatePagination(menu);
+
+    const app = getXiboApp();
 
     // Enable/Disable page down pagination button according to the page to display
     this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
@@ -452,8 +501,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             element.maxSize = libraryUpload.maxSize;
             element.maxSizeMessage = libraryUpload.maxSizeMessage;
 
-            // Hide element if it's outside the "to display" region
-            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length));
+            // Hide element if it's outside the "to display" region or is a hideOn this app
+            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length)) || (element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1);
         }
 
         // Enable/Disable page up pagination button according to the page to display and total elements
@@ -475,9 +524,9 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         this.searchButtonsLock = true;
 
         // Save filters
-        this.menuItems[menu].filters.name.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-name').val();
-        this.menuItems[menu].filters.tag.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-tag').val();
-        this.menuItems[menu].filters.type.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-type').val();
+        this.menuItems[menu].filters.name.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
+        this.menuItems[menu].filters.tag.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
+        this.menuItems[menu].filters.type.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
 
         // Create filter
         let customFilter = {
@@ -495,7 +544,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             this.menuItems[menu].title = '"' + customFilter.media + '"';
         } else {
             this.menuIndex += 1;
-            this.menuItems[menu].title = 'Tab ' + this.menuIndex;
+            this.menuItems[menu].title = toolbarTrans.tabName.replace('%tagId%', this.menuIndex);
         }
 
         if(customFilter.tags != '' && customFilter.tags != undefined) {
@@ -515,7 +564,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         }).done(function(res) {
 
             if(res.data.length == 0) {
-                toastr.info('No results for the filter!', 'Search');
+                toastr.info(toolbarTrans.noResults, toolbarTrans.search);
                 self.menuItems[menu].content = null;
             } else {
                 //Convert tags into an array
@@ -524,7 +573,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
                         el.tags = el.tags.split(',');
                         el.tagsCount = el.tags.length;
                         el.tagsShow = (el.tagsCount === 1) ? true : false;
-                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('[tagCount]', el.tagsCount);
+                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('%tagCount%', el.tagsCount);
 
                     } else {
                         el.tagsCount = 0;
@@ -549,7 +598,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         }).catch(function(jqXHR, textStatus, errorThrown) {
 
             console.error(jqXHR, textStatus, errorThrown);
-            toastr.error('Library load failed!');
+            toastr.error(errorMessagesTrans.libraryLoadFailed);
 
             // Unlock buttons
             self.searchButtonsLock = false;
@@ -625,21 +674,21 @@ Toolbar.prototype.createNewTab = function() {
 
     this.menuItems.push({
         name: 'search',
-        title: 'Tab ' + this.menuIndex,
+        title: toolbarTrans.tabName.replace('%tagId%', this.menuIndex),
         search: true,
         page: 0,
         query: '',
         filters: {
             name: {
-                name: 'Name',
+                name: toolbarTrans.searchFilters.name,
                 value: ''
             },
             tag: {
-                name: 'Tag',
+                name: toolbarTrans.searchFilters.tag,
                 value: ''
             },
             type: {
-                name: 'Type',
+                name: toolbarTrans.searchFilters.type,
                 values: moduleListFiltered
             },
         },
@@ -660,8 +709,13 @@ Toolbar.prototype.deleteTab = function(menu) {
     this.menuItems.splice(menu, 1);
 
     if(this.openedMenu >= this.fixedTabs) {
-    this.openedMenu = -1;
+        this.openedMenu = -1;
         this.previousOpenedMenu = -1;
+    }
+
+    // Reset menu index
+    if(this.menuItems.length === this.fixedTabs) {
+        this.menuIndex = this.menuItems.length;
     }
 
     // Save user preferences
@@ -680,9 +734,12 @@ Toolbar.prototype.deleteAllTabs = function() {
     }
     
     if(this.openedMenu >= this.fixedTabs) {
-    this.openedMenu = -1;
+        this.openedMenu = -1;
         this.previousOpenedMenu = -1;
     }
+
+    // Reset menu index
+    this.menuIndex = this.menuItems.length;
 
     // Save user preferences
     this.savePrefs();
@@ -817,28 +874,45 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
  */
 Toolbar.prototype.selectCard = function(card) {
 
-    const previouslySelected = this.selectedCard;
+    const app = getXiboApp();
 
     // Deselect previous selections
     this.deselectCardsAndDropZones();
 
-    if(previouslySelected[0] != card[0]) {
-        // Select new card
-        $(card).addClass('card-selected');
+    const previouslySelected = this.selectedCard;
 
+    if(previouslySelected[0] != card[0]) {
+        
         // Get card info
         const dropTo = $(card).attr('drop-to');
+        const subType = $(card).attr('data-sub-type');
+        const oneClickAdd = $(card).attr('data-one-click-add');
 
-        // Save selected card data
-        this.selectedCard = card;
+        if(oneClickAdd != undefined && oneClickAdd.split(',').indexOf(app.mainObjectType) != -1) {
 
-        // Show designer overlay
-        $('.custom-overlay').show().unbind().click(() => {
-            this.deselectCardsAndDropZones();
-        });
+            // Simulate drop item add
+            app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
 
-        // Set droppable areas as active
-        $('[data-type="' + dropTo + '"].ui-droppable').addClass('ui-droppable-active');
+        } else {
+
+            // Select new card
+            $(card).addClass('card-selected');
+
+            // Save selected card data
+            this.selectedCard = card;
+
+            // Show designer overlay
+            $('.custom-overlay').show().unbind().click(() => {
+                this.deselectCardsAndDropZones();
+            });
+
+            // Set droppable areas as active
+            if(dropTo === 'all' && subType === 'permissions') {
+                $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
+            } else {
+                $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+            }
+        }
     }
 };
 
@@ -857,6 +931,23 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 
     // Deselect card
     this.selectedCard = {};
+};
+
+
+/**
+ * Opens a new tab and search for the given media type
+ * @param {string} type - Type of media
+ */
+Toolbar.prototype.openNewTabAndSearch = function(type) {
+    // Create a new tab
+    this.createNewTab();
+
+    // Switch the selected tab's Type select box to the type we want
+    this.menuItems[this.openedMenu].filters.type.value = type;
+    this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type-' + this.openedMenu).val(type);
+
+    // Search/Load Content
+    this.loadContent(this.openedMenu); 
 };
 
 module.exports = Toolbar;

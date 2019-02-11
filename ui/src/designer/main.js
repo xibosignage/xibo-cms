@@ -22,6 +22,7 @@
 const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
+const contextMenuTemplate = require('../templates/context-menu.hbs');
 
 // Include modules
 const Layout = require('../designer/layout.js');
@@ -99,7 +100,7 @@ $(document).ready(function() {
     toastr.options.positionClass = 'toast-top-right';
 
     // Load layout through an ajax request
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity')
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
         .done(function(res) {
 
             if(res.data.length > 0) {
@@ -144,6 +145,17 @@ $(document).ready(function() {
                     // Custom buttons
                     [
                         {
+                            id: 'checkoutLayout',
+                            title: layoutDesignerTrans.checkoutTitle,
+                            logo: 'fa-edit',
+                            class: 'btn-success',
+                            action: lD.showCheckoutScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == true);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        },
+                        {
                             id: 'publishLayout',
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
@@ -155,26 +167,26 @@ $(document).ready(function() {
                             inactiveCheckClass: 'hidden',
                         },
                         {
-                            id: 'checkoutLayout',
-                            title: layoutDesignerTrans.checkoutTitle,
-                            logo: 'fa-edit',
+                            id: 'scheduleLayout',
+                            title: layoutDesignerTrans.scheduleTitle,
+                            logo: 'fa-clock-o',
                             class: 'btn-info',
-                            action: lD.showCheckoutScreen,
+                            action: lD.showScheduleScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
                             inactiveCheckClass: 'hidden',
                         },
                         {
-                            id: 'undoLastAction',
-                            title: layoutDesignerTrans.undo,
-                            logo: 'fa-undo',
+                            id: 'saveTemplate',
+                            title: layoutDesignerTrans.saveTemplateTitle,
+                            logo: 'fa-floppy-o',
                             class: 'btn-warning',
-                            inactiveCheck: function(){
-                                return (lD.manager.changeHistory.length <= 0);
+                            action: lD.showSaveTemplateScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == true);
                             },
                             inactiveCheckClass: 'hidden',
-                            action: lD.undoLastAction
                         }
                     ],
                     // Custom actions
@@ -207,7 +219,8 @@ $(document).ready(function() {
                 formHelpers.setup(lD, lD.layout);
 
                 // Call layout status every minute
-                setInterval(lD.layoutStatus, 1000 * 60); // Every minute
+                lD.checkLayoutStatus();
+                setInterval(lD.checkLayoutStatus, 1000 * 60); // Every minute
 
                 // Default selected object is the layout
                 lD.selectObject();
@@ -262,7 +275,8 @@ lD.selectObject = function(obj = null, forceSelect = false) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
-        if(obj.data('type') == $(this.toolbar.selectedCard).attr('drop-to')) {
+        // If selected card has the droppable type or "all"
+        if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
 
             // Get card object
             const card = this.toolbar.selectedCard[0];
@@ -360,14 +374,13 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
     lD.common.showLoadingScreen();
 
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity")
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity,tags,permissions")
         .done(function(res) {
             
             lD.common.hideLoadingScreen();
             
             if(res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
-
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
@@ -385,6 +398,14 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
             
                 // Reload the form helper connection
                 formHelpers.setup(lD, lD.layout);
+
+                // If there was a opened menu in the toolbar, open that tab
+                if(lD.toolbar.openedMenu != -1) {
+                    lD.toolbar.openTab(lD.toolbar.openedMenu);
+                }
+
+                // Check layout status
+                lD.checkLayoutStatus();
                 
             } else {
                 lD.showErrorMessage();
@@ -466,10 +487,11 @@ lD.publishLayout = function() {
         lD.common.hideLoadingScreen();
 
         if(res.success) {
-
+            
             toastr.success(res.message);
 
-            window.location.href = urlsForApi.layout.list.url;
+            // Redirect to the new published layout ( read only mode )
+            window.location.href = urlsForApi.layout.designer.url.replace(':id', res.data.layoutId);
         } else {
 
             // Login Form needed?
@@ -574,8 +596,8 @@ lD.showErrorMessage = function() {
     // Output error on screen
     const htmlError = messageTemplate({
         messageType: 'danger',
-        messageTitle: 'ERROR',
-        messageDescription: 'There was a problem loading the layout!'
+        messageTitle: errorMessagesTrans.error,
+        messageDescription: errorMessagesTrans.loadingLayout,
     });
 
     lD.designerDiv.html(htmlError);
@@ -637,6 +659,126 @@ lD.showPublishScreen = function() {
 };
 
 /**
+ * Layout schedule screen
+ */
+lD.showScheduleScreen = function() {
+    lD.loadFormFromAPI('schedule', lD.layout.campaignId);
+};
+
+/**
+ * Layout save template screen
+ */
+lD.showSaveTemplateScreen = function() {
+    lD.loadFormFromAPI('saveTemplate', lD.layout.layoutId);
+};
+
+/**
+ * Load form from the API
+ */
+lD.loadFormFromAPI = function(type, id = null) {
+    
+    const self = this;
+
+    const app = getXiboApp();
+
+    // Load form the API
+    const linkToAPI = urlsForApi.layout[type];
+
+    let requestPath = linkToAPI.url;
+
+    // Replace ID
+    if(id != null) {
+        requestPath = requestPath.replace(':id', id);
+    }
+    
+    // Create dialog
+    var calculatedId = new Date().getTime();
+
+    // Request and load element form
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+
+            // Create buttons
+            let generatedButtons = {
+                cancel: {
+                    label: translations.cancel,
+                    className: 'btn-default'
+                }
+            };
+
+            // Get buttons from form
+            for(var button in res.buttons) {
+                if(res.buttons.hasOwnProperty(button)) {
+                    if(button != 'Cancel') {
+                        let buttonType = 'btn-default';
+
+                        if(button === 'Save') {
+                            buttonType = 'btn-primary';
+                        }
+
+                        let url = res.buttons[button];
+
+                        generatedButtons[button] = {
+                            label: button,
+                            className: buttonType,
+                            callback: function(result) {
+                                // Call global function by the function name
+                                eval(url);
+                                return false;
+                            }
+                        };
+                    }
+                }
+            }
+
+            // Create dialog
+            let dialog = bootbox.dialog({
+                className: 'second-dialog',
+                title: res.dialogTitle,
+                message: res.html,
+                buttons: generatedButtons
+            }).attr('id', calculatedId).attr('data-test', type + 'LayoutForm');
+
+            dialog.data('extra', res.extra);
+
+            // Form open callback
+            if(res.callBack != undefined && typeof window[res.callBack] === 'function') {
+                window[res.callBack]();
+            }
+
+            // Call Xibo Init for this form
+            XiboInitialise('#' + dialog.attr('id'));
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error(errorMessagesTrans.formLoadFailed);
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.formLoadFailed);
+    });
+};
+
+/**
  * Revert last action
  */
 lD.undoLastAction = function() {
@@ -659,15 +801,15 @@ lD.undoLastAction = function() {
         lD.common.hideLoadingScreen('undoLastAction');
 
         // Show error returned or custom message to the user
-        let errorMessage = 'Revert failed: ';
+        let errorMessage = '';
 
         if(typeof error == 'string') {
-            errorMessage += error;
+            errorMessage =  error;
         } else {
-            errorMessage += error.errorThrown;
+            errorMessage = error.errorThrown;
         }
 
-        toastr.error(errorMessage);
+        toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
     });
 };
 
@@ -707,15 +849,15 @@ lD.deleteObject = function(objectType, objectId) {
     if(objectType === 'region' || objectType === 'widget') {
 
         bootbox.confirm({
-            title: 'Delete ' + objectType,
-            message: 'Are you sure? All changes related to this object will be erased',
+            title: editorsTrans.deleteTitle.replace('%obj%', objectType),
+            message: editorsTrans.deleteConfirm,
             buttons: {
                 confirm: {
-                    label: 'Yes',
+                    label: editorsTrans.yes,
                     className: 'btn-danger'
                 },
                 cancel: {
-                    label: 'No',
+                    label: editorsTrans.no,
                     className: 'btn-default'
                 }
             },
@@ -737,15 +879,15 @@ lD.deleteObject = function(objectType, objectId) {
                         lD.common.hideLoadingScreen('deleteObject');
 
                         // Show error returned or custom message to the user
-                        let errorMessage = 'Delete element failed: ' + error;
+                        let errorMessage = '';
 
                         if(typeof error == 'string') {
-                            errorMessage += error;
+                            errorMessage = error;
                         } else {
-                            errorMessage += error.errorThrown;
+                            errorMessage = error.errorThrown;
                         }
 
-                        toastr.error(errorMessage);
+                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
                     });
                 }
             }
@@ -757,14 +899,16 @@ lD.deleteObject = function(objectType, objectId) {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
+ * @param {object =} [options] - Options
+ * @param {object} [options.positionToAdd = null] - Position object {top, left}
  */
-lD.dropItemAdd = function(droppable, draggable) {
+lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
 
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
-
+    
     if(draggableType == 'media') { // Adding media from search tab to a region
 
         // Get playlist Id
@@ -798,9 +942,9 @@ lD.dropItemAdd = function(droppable, draggable) {
 
                 lD.manager.saveAllChanges().then((res) => {
 
-                    toastr.success('All changes saved!');
+                    toastr.success(editorsTrans.allChangesSaved);
 
-                    lD.layout.addElement('region').then((res) => { // Success
+                    lD.layout.addElement('region', positionToAdd).then((res) => { // Success
 
                         lD.common.hideLoadingScreen('addRegionToLayout'); 
 
@@ -814,21 +958,21 @@ lD.dropItemAdd = function(droppable, draggable) {
                         lD.common.hideLoadingScreen('addRegionToLayout'); 
 
                         // Show error returned or custom message to the user
-                        let errorMessage = 'Create region failed: ' + error;
+                        let errorMessage = '';
 
                         if(typeof error == 'string') {
-                            errorMessage += error;
+                            errorMessage = error;
                         } else {
-                            errorMessage += error.errorThrown;
+                            errorMessage = error.errorThrown;
                         }
 
-                        toastr.error(errorMessage);
+                        toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
                     });
                 }).catch((err) => {
 
                     lD.common.hideLoadingScreen('addRegionToLayout'); 
 
-                    toastr.error('Save all changes failed!');
+                    toastr.error(errorMessagesTrans.saveAllChangesFailed);
                 });
 
             }
@@ -850,7 +994,16 @@ lD.dropItemAdd = function(droppable, draggable) {
                 widget.editTransition('in');
             } else if(draggableSubType == 'transitionOut') { 
                 widget.editTransition('out');
+            } else if(draggableSubType == 'permissions') {
+                widget.editPermissions();
             }
+        } else if(droppableType == 'region') { // Add to region
+
+            //Get region
+            const regionId = $(droppable).attr('id');
+            const region = lD.getElementByTypeAndId('region', regionId);
+
+            region.editPropertyForm('Permissions');
         }
     }
 };
@@ -868,7 +1021,7 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         const validExt = moduleData.validExt.replace(/,/g, "|");
 
         lD.openUploadForm({
-            trans: playlistTrans,
+            trans: uploadTrans,
             upload: {
                 maxSize: moduleData.maxSize,
                 maxSizeMessage: moduleData.maxSizeMessage,
@@ -878,6 +1031,13 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
             playlistId: playlistId
         }, 
         {
+            viewLibrary: {
+                label: uploadTrans.viewLibrary,
+                className: "btn-white",
+                callback: function() {
+                    lD.toolbar.openNewTabAndSearch(moduleType);
+                }
+            },
             main: {
                 label: translations.done,
                 className: "btn-primary",
@@ -937,16 +1097,16 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
             let errorMessage = '';
 
             if(typeof error == 'string') {
-                errorMessage += error;
+                errorMessage = error;
             } else {
-                errorMessage += error.errorThrown;
+                errorMessage = error.errorThrown;
             }
 
             // Remove added change from the history manager
             lD.manager.removeLastChange();
 
             // Show toast message
-            toastr.error(errorMessage);
+            toastr.error(errorMessagesTrans.addModuleFailed.replace('%error%', errorMessage));
         });
     }  
 };
@@ -994,15 +1154,16 @@ lD.addMediaToPlaylist = function(playlistId, mediaId) {
         lD.common.hideLoadingScreen('addMediaToPlaylist');
 
         // Show error returned or custom message to the user
-        let errorMessage = 'Add media failed: ';
+        let errorMessage = '';
 
         if(typeof error == 'string') {
-            errorMessage += error;
+            errorMessage = error;
         } else {
-            errorMessage += error.errorThrown;
+            errorMessage = error.errorThrown;
         }
 
-        toastr.error(errorMessage);
+        // Show toast message
+        toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
     });
 };
 
@@ -1021,7 +1182,7 @@ lD.openUploadForm = function(templateOptions, buttons) {
     // Handle bars and open a dialog
     bootbox.dialog({
         message: template(templateOptions),
-        title: playlistTrans.uploadMessage,
+        title: uploadTrans.uploadMessage,
         buttons: buttons,
         animate: false,
         updateInAllChecked: uploadFormUpdateAllDefault,
@@ -1112,7 +1273,7 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
 /**
  * Call layout status
  */
-lD.layoutStatus = function() {
+lD.checkLayoutStatus = function() {
     
     const linkToAPI = urlsForApi.layout.status;
     let requestPath = linkToAPI.url;
@@ -1139,9 +1300,71 @@ lD.layoutStatus = function() {
                     console.error(res.message);
                 }
             }
+        } else {
+            // Update layout status
+            lD.layout.updateStatus(res.extra.status, res.html, res.extra.statusMessage);
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
+    });
+};
+
+/**
+ * Open object context menu
+ * @param {object} obj - Target object
+ * @param {object=} position - Page menu position
+ */
+lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
+
+    let objId = $(obj).attr('id');
+    let objType = $(obj).data('type');
+    let objRegionId = null;
+
+    if(objType == 'widget') {
+        objRegionId = $(obj).data('widgetRegion');
+    }
+
+    // Get object
+    let layoutObject = lD.getElementByTypeAndId(objType, objId, objRegionId);
+
+    // Create menu and append to the designer div ( using the object extended with translations )
+    lD.designerDiv.append(contextMenuTemplate(Object.assign(layoutObject, {trans: contextMenuTrans})));
+    
+    // Set menu position ( and fix page limits )
+    let contextMenuWidth = lD.designerDiv.find('.context-menu').outerWidth();
+    let contextMenuHeight = lD.designerDiv.find('.context-menu').outerHeight();
+
+    let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
+    let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
+
+    lD.designerDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+
+    // Initialize tooltips
+    lD.designerDiv.find('.context-menu').find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
+
+    // Click overlay to close menu
+    lD.designerDiv.find('.context-menu-overlay').click((ev)=> {
+
+        if($(ev.target).hasClass('context-menu-overlay')) {
+            lD.designerDiv.find('.context-menu-overlay').remove();
+        }
+    });
+
+    // Handle buttons
+    lD.designerDiv.find('.context-menu .context-menu-btn').click((ev) => {
+        let target = $(ev.currentTarget);
+
+        if(target.data('action') == 'Delete') {
+            lD.deleteObject(objType, layoutObject[objType + 'Id']);
+        } else if(target.data('action') == 'Move') {
+            // Move widget in the timeline
+            lD.timeline.moveWidgetInRegion(layoutObject.regionId, layoutObject.id, target.data('actionType'));
+        } else {
+            layoutObject.editPropertyForm(target.data('property'), target.data('propertyType'));
+        }
+
+        // Remove context menu
+        lD.designerDiv.find('.context-menu-overlay').remove();
     });
 };

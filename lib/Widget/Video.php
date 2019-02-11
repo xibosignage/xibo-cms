@@ -124,11 +124,13 @@ class Video extends ModuleWidget
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 
         // Only loop if the duration is > 0
-        if ($this->getUseDuration() == 0 || $this->getDuration() == 0)
+        if ($this->getUseDuration() == 0 || $this->getDuration() == 0) {
+            $this->setDuration(0);
             $this->setOption('loop', 0);
-        else
+        } else {
             $this->setOption('loop', $this->getSanitizer()->getCheckbox('loop'));
-
+        }
+        
         $this->saveWidget();
     }
 

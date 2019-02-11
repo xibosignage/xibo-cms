@@ -271,6 +271,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', $this->getSanitizer()->getInt('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DISPLAY_AUTO_AUTH')) {
+            $this->getConfig()->changeSetting('DISPLAY_AUTO_AUTH', $this->getSanitizer()->getCheckbox('DISPLAY_AUTO_AUTH'));
+        }
+
         if ($this->getConfig()->isSettingEditable('HELP_BASE')) {
             $this->getConfig()->changeSetting('HELP_BASE', $this->getSanitizer()->getString('HELP_BASE'));
         }

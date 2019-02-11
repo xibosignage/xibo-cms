@@ -151,7 +151,9 @@ describe('Layout Designer (Empty)', function() {
             cy.server();
             cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
-            cy.get('#layout-editor-toolbar button#publishLayout').click();
+            cy.get('#layout-editor-toolbar .navbar-submenu a[data-toggle="dropdown"]').click();
+
+            cy.get('#layout-editor-toolbar div#publishLayout').click();
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 
@@ -169,7 +171,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
             // Select and search image items
-            cy.get('.toolbar-pane.active #input-type').select('audio');
+            cy.get('.toolbar-pane.active .input-type').select('audio');
             cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Check if there are audio items in the search content
@@ -295,7 +297,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
 
             // Click the revert button
-            cy.get('#layout-editor-toolbar #undoLastAction').click({force: true});
+            cy.get('#layout-editor-toolbar #undoContainer').click();
 
             // Wait for the layout to reload
             cy.wait('@reloadLayout').then(() => {
@@ -345,7 +347,7 @@ describe('Layout Designer (Empty)', function() {
                 cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
                 // Select and search image items
-                cy.get('.toolbar-pane.active #input-type').select('image');
+                cy.get('.toolbar-pane.active .input-type').select('image');
                 cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
                 // Get a card and drag it to the region

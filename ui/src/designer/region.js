@@ -26,6 +26,11 @@ let Region = function(id, data, {backgroundColor = '#555555'} = {}) {
 
     this.options = data.regionOptions;
 
+    // Permissions
+    this.isEditable = data.isEditable;
+    this.isDeletable = data.isDeletable;
+    this.isPermissionsModifiable = data.isPermissionsModifiable;
+
     // set real dimentions
     this.dimensions = {
         width: data.width,
@@ -95,7 +100,8 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
                 upload: false // options.upload
             }
         ).catch((error) => { 
-            toastr.error('Transform region failed! ' + error);
+            toastr.error(errorMessagesTrans.transformRegionFailed);
+            console.log(error);
         });
     }
 
@@ -104,6 +110,155 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
     this.dimensions.height = transform.height;
     this.dimensions.top = transform.top;
     this.dimensions.left = transform.left;
+};
+
+/**
+ * Edit property by type
+ * @param {string} property - property to edit
+ */
+Region.prototype.editPropertyForm = function(property) {
+
+    const self = this;
+
+    const app = getXiboApp();
+
+    // Load form the API
+    const linkToAPI = urlsForApi.region['get' + property];
+
+    let requestPath = linkToAPI.url;
+
+    // Replace widget id
+    requestPath = requestPath.replace(':id', this.regionId);
+
+    // Create dialog
+    var calculatedId = new Date().getTime();
+
+    // Create dialog
+    let dialog = bootbox.dialog({
+        className: 'second-dialog',
+        title: editorsTrans.loadPropertyForObject.replace('%prop%', property).replace('%obj%', 'region'),
+        message: '<p><i class="fa fa-spin fa-spinner"></i>' + editorsTrans.loading + '...</p>',
+        buttons: {
+            cancel: {
+                label: translations.cancel,
+                className: "btn-default"
+            },
+            done: {
+                label: translations.done,
+                className: "btn-primary test",
+                callback: function(res) {
+
+                    app.common.showLoadingScreen();
+
+                    let dataToSave = '';
+                    let options = {
+                        addToHistory: false // options.addToHistory
+                    };
+
+                    // Get data to save
+                    if(property === 'Permissions') {
+                        dataToSave = formHelpers.permissionsFormBeforeSubmit(dialog);
+                        options.customRequestPath = {
+                            url: dialog.find('.permissionsGrid').data('url'),
+                            type: 'POST'
+                        };
+                    } else {
+                        dataToSave = form.serialize();
+                    }
+
+                    app.manager.addChange(
+                        'save' + property,
+                        'widget', // targetType 
+                        self.regionId,  // targetId
+                        null,  // oldValues
+                        dataToSave, // newValues
+                        options
+                    ).then((res) => { // Success
+
+                        app.common.hideLoadingScreen();
+
+                        // Behavior if successful 
+                        toastr.success(res.message);
+
+                        dialog.modal('hide');
+
+                        app.reloadData(app.layout);
+
+                    }).catch((error) => { // Fail/error
+
+                        app.common.hideLoadingScreen();
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = '';
+
+                        if(typeof error == 'string') {
+                            errorMessage += error;
+                        } else {
+                            errorMessage += error.errorThrown;
+                        }
+
+                        // Display message in form
+                        formHelpers.displayErrorMessage(dialog.find('form'), errorMessage, 'danger');
+
+                        // Show toast message
+                        toastr.error(errorMessage);
+                    });
+                }
+
+            }
+        }
+    }).attr('id', calculatedId).attr('data-test', 'region' + property + 'Form');
+
+    // Request and load element form
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+            // Add title
+            dialog.find('.modal-title').html(res.dialogTitle);
+
+            // Add body main content
+            dialog.find('.bootbox-body').html(res.html);
+
+            dialog.data('extra', res.extra);
+
+            if(property == 'Permissions') {
+                formHelpers.permissionsFormAfterOpen(dialog);
+            }
+
+            // Call Xibo Init for this form
+            XiboInitialise('#' + dialog.attr('id'));
+
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+
+                toastr.error(errorMessagesTrans.formLoadFailed);
+
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
+                dialog.modal('hide');
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.formLoadFailed);
+
+        dialog.modal('hide');
+    });
 };
 
 module.exports = Region;

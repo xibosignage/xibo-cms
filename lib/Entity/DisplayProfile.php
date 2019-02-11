@@ -115,6 +115,12 @@ class DisplayProfile implements \JsonSerializable
         $this->commandFactory = $commandFactory;
     }
 
+    public function __clone()
+    {
+        $this->displayProfileId = null;
+        $this->isDefault = 0;
+    }
+
     /**
      * Get Id
      * @return int
@@ -130,6 +136,26 @@ class DisplayProfile implements \JsonSerializable
     public function getOwnerId()
     {
         return $this->userId;
+    }
+
+    /**
+     * Get Setting
+     * @param $setting
+     * @param null $default
+     * @return mixed
+     */
+    public function getSetting($setting, $default = null)
+    {
+        $this->load();
+
+        foreach ($this->getProfileConfig() as $config) {
+            if ($config['name'] == $setting || $config['name'] == ucfirst($setting)) {
+                $default = $config['value'];
+                break;
+            }
+        }
+
+        return $default;
     }
 
     /**
@@ -208,8 +234,10 @@ class DisplayProfile implements \JsonSerializable
             return;
 
         if ($options['loadConfig']) {
-
-            $this->config = json_decode($this->config, true);
+            // Decode the config string (unless its already an array)
+            if (!is_array($this->config)) {
+                $this->config = json_decode($this->config, true);
+            }
             $this->getLog()->debug('Config loaded [%d]: %s', count($this->config), json_encode($this->config, JSON_PRETTY_PRINT));
 
             $this->configDefault = $this->loadFromFile();
@@ -962,6 +990,17 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'versionMediaId',
+                        'tabId' => 'advanced',
+                        'title' => __('Player Version'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdownVersion',
+                        'default' => null,
+                        'helpText' => __('Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'startOnBoot',
                         'tabId' => 'advanced',
                         'title' => __('Start during device start up?'),
@@ -1189,6 +1228,255 @@ class DisplayProfile implements \JsonSerializable
                     )
                 )
             ),
+            'linux' => array(
+                'synonym' => 'xiboforlinux',
+                'tabs' => array(
+                    array('id' => 'general', 'name' => __('General')),
+                    array('id' => 'location', 'name' => __('Location')),
+                    array('id' => 'trouble', 'name' => __('Troubleshooting')),
+                    array('id' => 'advanced', 'name' => __('Advanced')),
+                ),
+                'settings' => [
+                    array(
+                        'name' => 'collectInterval',
+                        'tabId' => 'general',
+                        'title' => __('Collect interval'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 60, 'value' => __('1 minute')),
+                            array('id' => 300, 'value' => __('5 minutes')),
+                            array('id' => 600, 'value' => __('10 minutes')),
+                            array('id' => 900, 'value' => __('15 minutes')),
+                            array('id' => 1800, 'value' => __('30 minutes')),
+                            array('id' => 3600, 'value' => __('1 hour')),
+                            array('id' => 14400, 'value' => __('4 hours')),
+                            array('id' => 43200, 'value' => __('12 hours')),
+                            array('id' => 86400, 'value' => __('24 hours'))
+                        ),
+                        'default' => 900,
+                        'helpText' => __('How often should the Player check for new content.'),
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'downloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'downloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'xmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'sizeX',
+                        'tabId' => 'location',
+                        'title' => __('Width'),
+                        'type' => 'double',
+                        'fieldType' => 'number',
+                        'default' => '0',
+                        'helpText' => __('The Width of the Display Window. 0 means full width.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'sizeY',
+                        'tabId' => 'location',
+                        'title' => __('Height'),
+                        'type' => 'double',
+                        'fieldType' => 'number',
+                        'default' => '0',
+                        'helpText' => __('The Height of the Display Window. 0 means full height.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'offsetX',
+                        'tabId' => 'location',
+                        'title' => __('Left Coordinate'),
+                        'type' => 'double',
+                        'fieldType' => 'number',
+                        'default' => '0',
+                        'helpText' => __('The left pixel position the display window should be sized from.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'offsetY',
+                        'tabId' => 'location',
+                        'title' => __('Top Coordinate'),
+                        'type' => 'double',
+                        'fieldType' => 'number',
+                        'default' => '0',
+                        'helpText' => __('The top pixel position the display window should be sized from.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'logLevel',
+                        'tabId' => 'trouble',
+                        'title' => __('Log Level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'audit', 'value' => 'Audit'),
+                            array('id' => 'info', 'value' => 'Information'),
+                            array('id' => 'error', 'value' => 'Error'),
+                            array('id' => 'off', 'value' => 'Off')
+                        ),
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'enableShellCommands',
+                        'tabId' => 'advanced',
+                        'title' => __('Enable Shell Commands'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Enable the Shell Command module.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'expireModifiedLayouts',
+                        'tabId' => 'advanced',
+                        'title' => __('Expire Modified Layouts'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'maxConcurrentDownloads',
+                        'tabId' => 'advanced',
+                        'title' => __('Maximum concurrent downloads'),
+                        'type' => 'int',
+                        'fieldType' => 'text',
+                        'default' => '2',
+                        'helpText' => __('The maximum number of concurrent downloads the client will attempt.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'shellCommandAllowList',
+                        'tabId' => 'advanced',
+                        'title' => __('Shell Command Allow List'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Which shell commands should the client execute?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'sendCurrentLayoutAsStatusUpdate',
+                        'tabId' => 'advanced',
+                        'title' => __('Notify current layout'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN.'),
+                        'enabled' => false,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'screenShotRequestInterval',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen shot interval'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => 0,
+                        'helpText' => __('The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive.'),
+                        'enabled' => false,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'screenShotSize',
+                        'tabId' => 'advanced',
+                        'title' => __('Screen Shot Size'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => 200,
+                        'helpText' => __('The size of the largest dimension. Empty or 0 means the screen size.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'maxLogFileUploads',
+                        'tabId' => 'advanced',
+                        'title' => __('Limit the number of log files uploaded concurrently'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => 3,
+                        'helpText' => __('The number of log files to upload concurrently. The lower the number the longer it will take, but the better for memory usage.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'embeddedServerPort',
+                        'tabId' => 'advanced',
+                        'title' => __('Embedded Web Server Port'),
+                        'type' => 'int',
+                        'fieldType' => 'number',
+                        'default' => 9696,
+                        'helpText' => __('The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
+                        'name' => 'preventSleep',
+                        'tabId' => 'advanced',
+                        'title' => __('Prevent Sleep?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 1,
+                        'helpText' => __('Stop the player PC power management from Sleeping the PC'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    )
+                ]
+            ),
             'lg' => [
                 'synonym' => 'xiboforwebos',
                 'tabs' => [
@@ -1294,6 +1582,17 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ],
                     [
+                        'name' => 'versionMediaId',
+                        'tabId' => 'advanced',
+                        'title' => __('Player Version'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdownVersion',
+                        'default' => null,
+                        'helpText' => __('Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
                         'name' => 'actionBarMode',
                         'tabId' => 'advanced',
                         'title' => __('Action Bar Mode'),
@@ -1333,6 +1632,211 @@ class DisplayProfile implements \JsonSerializable
                         ],
                         'default' => 1,
                         'helpText' => __('The size of the screenshot to return when requested.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'mediaInventoryTimer',
+                        'tabId' => 'advanced',
+                        'title' => __('Send progress while downloading'),
+                        'type' => 'int',
+                        'fieldType' => 'text',
+                        'default' => 0,
+                        'helpText' => __('How often, in minutes, should the Display send its download progress while it is downloading new content?'),
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'logLevel',
+                        'tabId' => 'advanced',
+                        'title' => __('Log Level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => [
+                            ['id' => 'audit', 'value' => 'Audit'],
+                            ['id' => 'error', 'value' => 'Error'],
+                            ['id' => 'off', 'value' => 'Off']
+                        ],
+                        'default' => 'error',
+                        'helpText' => __('The logging level that should be recorded by the Player.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'timers',
+                        'tabId' => 'timers',
+                        'title' => __('On/Off Timers'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the on/off timers to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'pictureOptions',
+                        'tabId' => 'pictureOptions',
+                        'title' => __('Picture Options'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the picture options to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'lockOptions',
+                        'tabId' => 'lockOptions',
+                        'title' => __('Lock Options'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '{}',
+                        'helpText' => __('A JSON object indicating the lock options to set'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ]
+                ]
+            ],
+            'sssp' => [
+                'synonym' => 'xiboforsssp',
+                'tabs' => [
+                    ['id' => 'general', 'name' => __('General')],
+                    ['id' => 'timers', 'name' => __('Timers')],
+                    ['id' => 'pictureOptions', 'name' => __('Picture')],
+                    ['id' => 'lockOptions', 'name' => __('Monitor Settings')],
+                    ['id' => 'advanced', 'name' => __('Advanced')],
+                ],
+                'settings' => [
+                    [
+                        'name' => 'emailAddress',
+                        'tabId' => 'general',
+                        'title' => __('Email Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('The email address will be used to license this client. This is the email address you provided when you purchased the licence.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'collectInterval',
+                        'tabId' => 'general',
+                        'title' => __('Collect interval'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 60, 'value' => __('1 minute')),
+                            array('id' => 300, 'value' => __('5 minutes')),
+                            array('id' => 600, 'value' => __('10 minutes')),
+                            array('id' => 1800, 'value' => __('30 minutes')),
+                            array('id' => 3600, 'value' => __('1 hour')),
+                            array('id' => 14400, 'value' => __('4 hours')),
+                            array('id' => 43200, 'value' => __('12 hours')),
+                            array('id' => 86400, 'value' => __('24 hours'))
+                        ),
+                        'default' => 300,
+                        'helpText' => __('How often should the Player check for new content.'),
+                        'validation' => 'numeric',
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'xmrNetworkAddress',
+                        'tabId' => 'general',
+                        'title' => __('XMR Public Address'),
+                        'type' => 'string',
+                        'fieldType' => 'text',
+                        'default' => '',
+                        'helpText' => __('Please enter the public address for XMR.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'statsEnabled',
+                        'tabId' => 'general',
+                        'title' => __('Enable stats reporting?'),
+                        'type' => 'checkbox',
+                        'fieldType' => 'checkbox',
+                        'default' => 0,
+                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'orientation',
+                        'tabId' => 'general',
+                        'title' => __('Orientation'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 0, 'value' => __('Landscape')),
+                            array('id' => 1, 'value' => __('Portrait')),
+                            array('id' => 8, 'value' => __('Reverse Landscape')),
+                            array('id' => 9, 'value' => __('Reverse Portrait'))
+                        ),
+                        'default' => 0,
+                        'helpText' => __('Set the orientation of the device.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'downloadStartWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window Start Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The start of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'downloadEndWindow',
+                        'tabId' => 'general',
+                        'title' => __('Download Window End Time'),
+                        'type' => 'string',
+                        'fieldType' => 'timePicker',
+                        'default' => '00:00',
+                        'helpText' => __('The end of the time window to connect to the CMS and download updates.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'versionMediaId',
+                        'tabId' => 'advanced',
+                        'title' => __('Player Version'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdownVersion',
+                        'default' => null,
+                        'helpText' => __('Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'actionBarMode',
+                        'tabId' => 'advanced',
+                        'title' => __('Action Bar Mode'),
+                        'type' => 'int',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 0, 'value' => 'Hide'),
+                            array('id' => 1, 'value' => 'Timed')
+                        ),
+                        'default' => 1,
+                        'helpText' => __('How should the action bar behave?'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'actionBarDisplayDuration',
+                        'tabId' => 'advanced',
+                        'title' => __('Action Bar Display Duration'),
+                        'type' => 'int',
+                        'fieldType' => 'text',
+                        'default' => 30,
+                        'helpText' => __('How long should the Action Bar be shown for, in seconds?'),
+                        'validation' => 'numeric',
                         'enabled' => true,
                         'groupClass' => NULL
                     ],

@@ -249,7 +249,6 @@ $app->get('/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('displayG
 $app->post('/displaygroup', '\Xibo\Controller\DisplayGroup:add')->name('displayGroup.add');
 $app->put('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:edit')->name('displayGroup.edit');
 $app->delete('/displaygroup/:id', '\Xibo\Controller\DisplayGroup:delete')->name('displayGroup.delete');
-$app->post('/displaygroup/:id/version', '\Xibo\Controller\DisplayGroup:version')->name('displayGroup.version');
 
 $app->post('/displaygroup/:id/display/assign', '\Xibo\Controller\DisplayGroup:assignDisplay')->name('displayGroup.assign.display');
 $app->post('/displaygroup/:id/display/unassign', '\Xibo\Controller\DisplayGroup:unassignDisplay')->name('displayGroup.unassign.display');
@@ -278,6 +277,7 @@ $app->get('/displayprofile', '\Xibo\Controller\DisplayProfile:grid')->name('disp
 $app->post('/displayprofile', '\Xibo\Controller\DisplayProfile:add')->name('displayProfile.add');
 $app->put('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:edit')->name('displayProfile.edit');
 $app->delete('/displayprofile/:id', '\Xibo\Controller\DisplayProfile:delete')->name('displayProfile.delete');
+$app->post('/displayprofile/:id/copy', '\Xibo\Controller\DisplayProfile:copy')->name('displayProfile.copy');
 
 /**
  * DataSet
@@ -475,3 +475,20 @@ $app->post('/task', '\Xibo\Controller\Task:add')->name('task.add');
 $app->put('/task/:id', '\Xibo\Controller\Task:edit')->name('task.edit');
 $app->delete('/task/:id', '\Xibo\Controller\Task:delete')->name('task.delete');
 $app->post('/task/:id/run', '\Xibo\Controller\Task:runNow')->name('task.runNow');
+
+/**
+ * Player Versions
+ * @SWG\Tag(
+ *  name="version",
+ *  description="Player Versions"
+ * )
+ */
+$app->get('/playersoftware', '\Xibo\Controller\PlayerSoftware:grid')->name('playersoftware.search');
+$app->put('/playersoftware/:id', '\Xibo\Controller\PlayerSoftware:edit')->name('playersoftware.edit');
+$app->delete('/playersoftware/:id', '\Xibo\Controller\PlayerSoftware:delete')->name('playersoftware.delete');
+
+// Install
+$app->get('/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSsspInstall')->name('playersoftware.sssp.install');
+$app->get('/sssp_dl.wgt', '\Xibo\Controller\PlayerSoftware:getSsspInstallDownload')->name('playersoftware.sssp.install.download');
+$app->get('/playersoftware/:nonce/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSssp')->name('playersoftware.sssp');
+$app->get('/playersoftware/:nonce/sssp_dl.wgt', '\Xibo\Controller\PlayerSoftware:getVersionFile')->name('playersoftware.version.file');

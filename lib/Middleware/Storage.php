@@ -89,12 +89,22 @@ class Storage extends Middleware
 
         // Register the statistics database service
         $container->singleton('timeSeriesStore', function($container) {
-            if($container->configService->timeSeriesStore == null) {
+            if ($container->configService->timeSeriesStore == null) {
                 return (new MySqlTimeSeriesStore())
                     ->setDependencies($container->logService)
                     ->setStore($container->store);
             } else {
-                return $container->configService->timeSeriesStore->setDependencies($container->logService);
+                $timeSeriesStore = $container->configService->timeSeriesStore;
+                $timeSeriesStore = $timeSeriesStore();
+
+                return $timeSeriesStore->setDependencies(
+                    $container->logService,
+                    $container->mediaFactory,
+                    $container->widgetFactory,
+                    $container->layoutFactory,
+                    $container->displayFactory,
+                    $container->displayGroupFactory
+                );
             }
         });
     }

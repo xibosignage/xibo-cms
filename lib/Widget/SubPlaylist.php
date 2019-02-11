@@ -187,18 +187,16 @@ class SubPlaylist extends ModuleWidget
      */
     public function preview($width, $height, $scaleOverride = 0)
     {
-        $this->getLog()->debug('Previewing Sub-Playlist');
+        // Output a summary
+        $resolvedWidgets = $this->getSubPlaylistResolvedWidgets();
 
-        //TODO: make this hook itself into the preview properly so that you can see the actual widgets rather than a list
-        $output = '<h1>Sub Playlist</h1><ul>';
-
-        foreach ($this->getSubPlaylistResolvedWidgets() as $widget) {
-            $output .= '<li>' . $widget->type . $widget->getOptionValue('name', '') . '</li>';
-        }
-
-        $this->getLog()->debug('Finished Preview Sub-Playlist');
-
-        return $output . '</ul>';
+        $output = '
+            <div style="text-align:center;">
+                <i alt="' . __($this->module->name) . ' thumbnail" class="fa module-preview-icon module-icon-' . __($this->module->type) . '"></i>
+                <br/>
+                ' . __('%d Widgets / %d seconds', count($resolvedWidgets), $this->getSubPlaylistResolvedDuration()) . '
+            </div>';
+        return $output;
     }
 
     /**
