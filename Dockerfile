@@ -7,8 +7,7 @@ RUN apk update && apk upgrade && apk add \
     gcc \
     musl-dev \
     apache2-dev \
-    apache2 \
-    make
+    apache2
 
 RUN cd / && \
     apxs -cia mod_xsendfile.c
@@ -88,23 +87,13 @@ RUN apk update && apk upgrade && apk add tar \
     php7-mbstring \
     php7-memcached \
     php7-zlib \
-    php7-pear \
-    php7-dev \
+    php7-mongodb \
     mysql-client \
     ssmtp \
     apache2 \
     ca-certificates \
     tzdata \
-    php7-openssl
-
-# Install packages
-RUN apk --update add --no-cache \
-        # to compile pecl
-        autoconf openssl-dev g++ make
-
-RUN rm -rf /var/cache/apk/* \
-    && pecl install -f mongodb \
-    && echo 'extension=mongodb.so' > /etc/php7/conf.d/30_mongodb.ini
+    && rm -rf /var/cache/apk/*
 
 # Add all necessary config files in one layer
 ADD docker/ /
