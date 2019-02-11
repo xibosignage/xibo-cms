@@ -69,6 +69,22 @@
 
             {% if passwordReminderEnabled %}<p><a href="#" id="reminder-form-toggle">{% trans "Forgotten your password?" %}</a></p>{% endif %}
         </form>
+        {% if authCASEnabled %}
+        <form id="cas-login-form" class="form-signin text-center" action="{{ urlFor("cas.login") }}" method="post">
+            <input name="priorRoute" type="hidden" value="{{ flash.priorRoute }}" />
+            <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
+            <p><img class="login-logo" src="{{ theme.uri("img/cas.png") }}"></p>
+
+            <p>{% trans "Click here to login with your Central Authentication Server" %}</p>
+
+            {% if flash.cas_login_message %}
+            <div class="alert alert-danger">{{ flash.cas_login_message }}</div>
+            {% endif %}
+
+            <p><button class="btn btn-large btn-primary" type="submit" name="logincas">{% trans "CAS Login" %}</button></p>
+        </form>
+        {% endif %}
+
 
         {% if passwordReminderEnabled %}
         <form id="reminder-form" class="form-signin text-center hidden" action="{{ urlFor("login.forgotten") }}" method="post">

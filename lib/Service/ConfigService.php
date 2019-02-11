@@ -73,6 +73,7 @@ class ConfigService implements ConfigServiceInterface
     public $logProcessors = null;
     public $authentication = null;
     public $samlSettings = null;
+    public $casSettings = null;
     public $cacheDrivers = null;
     public $cacheNamespace = 'Xibo';
 
@@ -206,6 +207,10 @@ class ConfigService implements ConfigServiceInterface
         // Saml settings
         if (isset($samlSettings))
             $config->samlSettings = $samlSettings;
+
+        // CAS settings
+        if (isset($casSettings))
+            $config->casSettings = $casSettings;
 
         // Cache drivers
         if (isset($cacheDrivers))
