@@ -133,7 +133,7 @@ Layout.prototype.calculateTimeValues = function() {
         let singleWidget = false;
 
         // If there is only one widget in the playlist, check the loop option for that region
-        if(widgets.length === 1) {
+        if(Object.keys(widgets).length === 1) {
 
             singleWidget = true;
             // Check the loop option
