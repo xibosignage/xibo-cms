@@ -11,6 +11,27 @@
     function region_form_edit_open() {
         // Transition type affects the transition-group visibility
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#transitionType', ['.transition-group'], null, true);
+
+        // Handle set region as fullscreen button
+        // Get layout object
+        const layout = getXiboApp().layout;
+        const form = $(this).find('form');
+        let buttonText = form.find('#setFullScreenButton').html();
+
+        // Replace button text tags
+        form.find('#setFullScreenButton').html(buttonText.replace('[width]', layout.width).replace('[height]', layout.height));
+
+        // Handle click action
+        form.find('#setFullScreenButton').click(() => {
+            // Set position values to 0
+            form.find('#top').val(0);
+            form.find('#left').val(0);
+
+            // Set dimensions values to be the same as the layout's
+            form.find('#width').val(layout.width);
+            form.find('#height').val(layout.height);
+        });
+        
     }
 
 </script>

@@ -45,6 +45,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
@@ -195,6 +196,9 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
+
+    /** @var PlayerVersionFactory */
+    protected $playerVersionFactory;
 
     /** @var PlaylistFactory */
     protected $playlistFactory;
@@ -431,6 +435,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function setDuration($duration)
     {
+        // Check if duration has a positive value
+        if ($duration < 0) {
+            throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
+        }
+
         $this->widget->duration = $duration;
     }
 
@@ -1070,7 +1079,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getMedia()
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         return $media;
     }
 

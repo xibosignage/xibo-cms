@@ -31,18 +31,36 @@ PlaylistTimeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.playlist-widget').droppable({
-        accept: '[drop-to="widget"]',
+        greedy: true,
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
+                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
         drop: function(event, ui) {
             pE.playlist.addElement(event.target, ui.draggable[0]);
         }
     });
 
     // Handle widget attached audio click
-    this.DOMObject.find('.playlist-widget .editProperty').click(function(e) {
+    this.DOMObject.find('.playlist-widget.editable .editProperty').click(function(e) {
         e.stopPropagation();
         const widget = pE.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
 
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
+    });
+
+    this.DOMObject.find('.playlist-widget').contextmenu(function(ev) {
+        
+        if($(ev.currentTarget).is('.editable, .deletable, .permissionsModifiable')) {
+            // Open context menu
+            pE.openContextMenu(ev.currentTarget, {
+                x: ev.pageX,
+                y: ev.pageY
+            });
+        }
+
+        // Prevent browser menu to open
+        return false;
     });
 
     // Save order function with debounce

@@ -124,7 +124,9 @@ class Pdf extends ModuleWidget
             'duration' => $duration,
             'durationIsPerItem' => false,
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height
+            'originalHeight' => $this->region->height,
+            'previewWidth' => intval($this->getSanitizer()->getDouble('width')),
+            'previewHeight' => intval($this->getSanitizer()->getDouble('height'))
         );
 
         // File name?
@@ -149,8 +151,8 @@ class Pdf extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        // We have a short cache duration because this module doesn't rely on any external sources and we're just
+        // We have a long cache duration because this module doesn't rely on any external sources and we're just
         // creating some HTML.
-        return 1;
+        return 86400 * 365;
     }
 }

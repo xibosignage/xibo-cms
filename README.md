@@ -1,6 +1,6 @@
 # Introduction
 Xibo - Digital Signage - https://xibo.org.uk
-Copyright (C) 2006-2018 Spring Signage Ltd and Contributors.
+Copyright (C) 2006-2019 Xibo Signage Ltd and Contributors.
 
 
 
@@ -123,6 +123,18 @@ and Docker container.
 Database data is maintained in the guest VM and is persisted when the VM is power cycled (`vagrant halt / vagrant up`). For
 convenience the Docker MySQL container exposes mysql on port 3306 to the Vagrant VM. You can therefore connect to MySQL
 over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
+
+
+## Translations
+To parse the translations:
+
+```bash
+docker exec -it xibo-cms-tempel_web_1 /var/www/cms/bin/locale.php
+```
+
+```bash
+find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
+```
 
 
 # Application Structure

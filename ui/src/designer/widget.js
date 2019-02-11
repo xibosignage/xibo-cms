@@ -17,6 +17,8 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         this.id = 'widget_' + id; // widget_widgetID
     }
 
+    this.widgetName = data.name;
+
     this.layoutObject = layoutObject;
 
     this.isValid = data.isValid;
@@ -25,6 +27,26 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.type = 'widget';
     this.subType = data.type;
 
+    // Permissions
+    this.isEditable = data.isEditable;
+    this.isDeletable = data.isDeletable;
+    this.isPermissionsModifiable = data.isPermissionsModifiable;
+
+    // widget tags
+    this.tags = data.tags;
+
+    // Widget colouring
+    if(playlistRegionColouring === 'Permissions Colouring') {
+        this.widgetColouring = (data.isEditable) ? 'timelineMediaItemColouring_enabled' : 'timelineMediaItemColouring_disabled';
+    } else {
+        this.widgetColouring = '';
+
+        for(let index = 0;index < this.tags.length; index++) {
+            const element = this.tags[index];
+            this.widgetColouring += this.tags[index].tag + ' ';
+        }
+    }
+    
     this.selected = false;
 
     this.singleWidget = false;
@@ -51,12 +73,14 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.transitions = function() {
 
         let trans = {};
+        let widgetDurationInMs = this.getDuration() * 1000;
 
         if(this.getOptions().transIn) {
             trans.in = {
                 name: 'transitionIn',
                 type: this.getOptions().transIn,
                 duration: this.getOptions().transInDuration,
+                percDuration: (this.getOptions().transInDuration != undefined) ? (parseFloat(this.getOptions().transInDuration) / widgetDurationInMs * 100) : 0,
                 direction: this.getOptions().transInDirection
             };
         }
@@ -66,6 +90,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
                 name: 'transitionIn',
                 type: this.getOptions().transOut,
                 duration: this.getOptions().transOutDuration,
+                percDuration: (this.getOptions().transOutDuration != undefined) ? (parseFloat(this.getOptions().transOutDuration) / widgetDurationInMs * 100) : 0,
                 direction: this.getOptions().transOutDirection
             };
         }
@@ -73,13 +98,6 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         return trans;
     };
 
-        /**
-     * Return the widget name
-     * @returns {string} - Widget name
-     */
-    this.widgetName = function() {
-        return this.getOptions().name;
-    };
 
     /**
      * Return the percentage for the widget on the timeline
@@ -92,13 +110,13 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         }
 
         // Get duration percentage based on the layout
-        const duration = (this.getDuration() / this.layoutObject.duration) * 100;
+        const duration = (this.getTotalDuration() / this.layoutObject.duration) * 100;
         
         // If the widget doesn't have the loop flag and is a single widget, extend it
         if(!this.loop && this.singleWidget){
             
             // Verify if the widget duration is less than the layout duration 
-            if(parseFloat(this.getDuration()) < parseFloat(this.layoutObject.duration)) {
+            if(parseFloat(this.getTotalDuration()) < parseFloat(this.layoutObject.duration)) {
                 this.extend = true;
                 this.extendSize = 100 - duration; // Extend size is the rest of the region width
             }
@@ -162,6 +180,23 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
 
         return this.duration;
     };
+
+    /**
+     * Get widget calculated duration with the transition out value if exists
+     * @returns {number} - Widget duration in seconds
+     * @
+     */
+    this.getTotalDuration = function() {
+
+        let totalDuration = this.getDuration();
+
+            // Extend with transition out duration if exists
+        if(this.getOptions().transOutDuration != undefined) {
+            totalDuration += parseFloat(this.getOptions().transOutDuration) / 1000;
+        }
+
+        return totalDuration;
+    };
 };
 
 /**
@@ -172,9 +207,9 @@ Widget.prototype.createClone = function() {
 
     const widgetClone = {
         id: 'ghost_' + this.id,
-        widgetName: this.widgetName(),
+        widgetName: this.widgetName,
         subType: this.subType,
-        duration: this.getDuration(),
+        duration: this.getTotalDuration(),
         regionId: this.regionId,
         durationPercentage: function() { // so that can be calculated on template rendering time
             return (this.duration / self.layoutObject.duration) * 100;
@@ -213,8 +248,8 @@ Widget.prototype.editPropertyForm = function(property, type) {
     // Create dialog
     let dialog = bootbox.dialog({
         className: 'second-dialog',
-        title: 'Load ' + property + ' for widget',
-        message: '<p><i class="fa fa-spin fa-spinner"></i> Loading...</p>',
+        title: editorsTrans.loadPropertyForObject.replace('%prop%', property).replace('%obj%', 'widget'),
+        message: '<p><i class="fa fa-spin fa-spinner"></i> ' + editorsTrans.loading + '...</p>',
         buttons: {
             cancel: {
                 label: translations.cancel,
@@ -229,19 +264,37 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
                     app.common.showLoadingScreen();
 
+                    let dataToSave = '';
+                    let options = {
+                        addToHistory: false // options.addToHistory
+                    };
+
+                    // Get data to save
+                    if(property === 'Permissions') {
+                        dataToSave = formHelpers.permissionsFormBeforeSubmit(dialog);
+                        options.customRequestPath = {
+                            url: dialog.find('.permissionsGrid').data('url'),
+                            type: 'POST'
+                        };
+                    } else {
+                        dataToSave = form.serialize();
+                    }
+
+                    // If there is a type to replace
+                    if(type !== undefined) {
+                        options.customRequestReplace = {
+                            tag: ':type',
+                            replace: type
+                        };
+                    }
+
                     app.manager.addChange(
                         'save' + property,
                         'widget', // targetType 
                         self.widgetId,  // targetId
                         null,  // oldValues
-                        form.serialize(), // newValues
-                        {
-                            addToHistory: false, // options.addToHistory
-                            customRequestReplace: {
-                                tag: ':type',
-                                replace: type
-                            }
-                        }
+                        dataToSave, // newValues
+                        options
                     ).then((res) => { // Success
 
                         app.common.hideLoadingScreen();
@@ -293,6 +346,10 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
             dialog.data('extra', res.extra);
 
+            if(property === 'Permissions') { 
+                formHelpers.permissionsFormAfterOpen(dialog);
+            }
+
             // Call Xibo Init for this form
             XiboInitialise('#' + dialog.attr('id'));
 
@@ -304,7 +361,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
                 location.reload(false);
             } else {
 
-                toastr.error(property + ' form load failed!');
+                toastr.error(errorMessagesTrans.formLoadFailed);
 
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -320,7 +377,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
-        toastr.error(property + ' form load failed!');
+        toastr.error(errorMessagesTrans.formLoadFailed);
 
         dialog.modal('hide');
     });
@@ -346,6 +403,13 @@ Widget.prototype.editExpiry = function() {
  */
 Widget.prototype.editTransition = function(type) {
     this.editPropertyForm('Transition', type);
+};
+
+/**
+ * Edit permissions
+ */
+Widget.prototype.editPermissions = function() {
+    this.editPropertyForm('Permissions');
 };
 
 module.exports = Widget;

@@ -16,7 +16,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '2.0.0-alpha1';
+    public static $WEBSITE_VERSION_NAME = '2.0.0-beta';
     public static $XMDS_VERSION = '5';
     public static $XLF_VERSION = '2';
     public static $VERSION_REQUIRED = '5.5';

@@ -34,6 +34,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
@@ -241,6 +242,11 @@ class Media implements \JsonSerializable
     private $permissionFactory;
 
     /**
+     * @var PlayerVersionFactory
+     */
+    private $playerVersionFactory;
+
+    /**
      * @var PlaylistFactory
      */
     private $playlistFactory;
@@ -279,15 +285,17 @@ class Media implements \JsonSerializable
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      * @return $this
      */
-    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
+    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory)
     {
         $this->layoutFactory = $layoutFactory;
         $this->widgetFactory = $widgetFactory;
         $this->displayGroupFactory  = $displayGroupFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
         return $this;
     }
 
@@ -868,12 +876,22 @@ class Media implements \JsonSerializable
      */
     private function moveFile($from, $to)
     {
-        $return = copy($from, $to);
+        // Try to move the file first
+        $moved = rename($from, $to);
 
-        if (!@unlink($from))
-            $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+        if (!$moved) {
+            $this->getLog()->info('Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.');
 
-        return $return;
+            // Copy
+            $moved = copy($from, $to);
+
+            // Delete
+            if (!@unlink($from)) {
+                $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+            }
+        }
+
+        return $moved;
     }
 
     /**

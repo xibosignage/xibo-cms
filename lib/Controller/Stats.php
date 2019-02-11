@@ -344,6 +344,7 @@ class Stats extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+
     }
 
     /**
@@ -506,7 +507,6 @@ class Stats extends Base
             $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
 
             fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
-
         }
 
         fclose($out);

@@ -27,6 +27,7 @@ jQuery.fn.extend({
             "durationIsPerItem": false,
             "numItems": 0,
             "takeItemsFrom": "start",
+            "reverseOrder": 0,
             "itemsPerPage": 0,
             "speed": "2",
             "previewWidth": 0,
@@ -115,7 +116,7 @@ jQuery.fn.extend({
             items = items.slice(0, options.numItems);
 
             // Reverse the items again (so they are in the correct order)
-            if (options.takeItemsFrom === "end") {
+            if ( (options.takeItemsFrom === "end" && options.reverseOrder === 0) || (options.takeItemsFrom === "start" && options.reverseOrder === 1)) {
                 //console.log("[Xibo] Reversing items");
                 items.reverse();
             }

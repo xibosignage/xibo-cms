@@ -14,6 +14,13 @@
 @toolbar-tab-border-color: #337ab7;
 @toolbar-tab-min-width: 80px; 
 @toolbar-z-index: 1040;
+@bin-bg-color: #e05050;
+@bin-fg-color: #ddd;
+@bin-bg-color-hover: #d92626;
+
+@undo-bg-color: #f0ad4e;
+@undo-fg-color: #ddd;
+@undo-bg-color-hover: #ec971f;
 
 // CSS
 .sidebar-footer {
@@ -36,10 +43,8 @@
     margin: 8px 3px;
 }
 
-.editor-toolbar .container-toolbar .navbar-bin {
-    background: #e05050;
-    color: white;
-    margin-left: 10px;
+.editor-toolbar .container-toolbar .navbar-peak-button {
+    margin-left: 5px;
     width: 60px;
     text-align: center;
     font-size: 20px;
@@ -48,12 +53,26 @@
     display: none;
 }
 
-.editor-toolbar .container-toolbar .navbar-bin.active {
+.editor-toolbar .container-toolbar .navbar-peak-button.active {
     display: block;
 }
 
-.editor-toolbar .container-toolbar .navbar-bin:hover {
-    background: #d92626 !important;
+.editor-toolbar .container-toolbar .navbar-peak-button.navbar-bin {
+    background: @bin-bg-color;
+    color: @bin-fg-color;
+}
+
+.editor-toolbar .container-toolbar .navbar-peak-button.navbar-bin:hover {
+    background: @bin-bg-color-hover !important;
+}
+
+.editor-toolbar .container-toolbar .navbar-peak-button.navbar-undo {
+    background: @undo-bg-color;
+    color: @undo-fg-color;
+}
+
+.editor-toolbar .container-toolbar .navbar-peak-button.navbar-undo:hover {
+    background: @undo-bg-color-hover !important;
 }
 
 .editor-toolbar .container-toolbar .navbar-right {
@@ -98,11 +117,11 @@
     opacity: 1;
 }
 
-.editor-toolbar .toolbar-content button#pag-btn-left {
+.editor-toolbar .toolbar-content button.pag-btn-left {
     float: left;
 }
 
-.editor-toolbar .toolbar-content button#pag-btn-right {
+.editor-toolbar .toolbar-content button.pag-btn-right {
     float: right;
 }
 
@@ -184,7 +203,7 @@
 }
 
 .editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .add-area:active {
-    .box-shadow(inset 0 0 10px #fff)
+    .box-shadow(inset 0 0 10px #fff);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card:hover .drag-area:hover {
@@ -287,6 +306,21 @@
     background: @toolbar-tab-hover-color !important;
 }
 
+.editor-toolbar .navbar-submenu-container {
+    background: @toolbar-main-color;    
+}
+
+.editor-toolbar .navbar-submenu.open .dropdown-toggle {
+    background: white !important;
+    color: #444;    
+}
+
+.editor-toolbar .navbar-submenu-item {
+    color: @toolbar-tab-fg-color;    
+    padding: 4px;
+    cursor: pointer;
+}
+
 .editor-toolbar .btn-menu-tool {
     color: lightgray;
     border-style: solid;
@@ -299,6 +333,17 @@
     color: white;
 }
 
+.editor-toolbar .btn-menu-tool-delete {
+    padding-left: 8px;
+    padding-right: 8px;
+    background: @bin-bg-color;
+    color: @bin-fg-color;
+}
+
+.editor-toolbar .btn-menu-tool-delete:hover {
+    color: white;
+    background-color: @bin-bg-color-hover !important;
+}
 
 .editor-toolbar .navbar-buttons a .close-tab-button {
     display: none;

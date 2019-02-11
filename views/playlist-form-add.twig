@@ -79,7 +79,7 @@
                         {{ forms.inputWithTags("tags", title, "", helpText) }}
 
                         {% set title %}{% trans "Dynamic?" %}{% endset %}
-                        {% set helpText %}{% trans "Is this Playlist to have its Widget assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
+                        {% set helpText %}{% trans "Is the Playlist to have Library media assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
                         {{ forms.checkbox("isDynamic", title, 0, helpText) }}
 
                         {% set message %}{% trans "If you want to prepopulate your Playlist with Media using a search, then you can do so on the filter tab. Leave the Dynamic checkbox unticked to make it a one-time assignment." %}{% endset %}

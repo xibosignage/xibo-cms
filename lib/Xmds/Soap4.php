@@ -25,6 +25,7 @@ use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Helper\Random;
 
 /**
  * Class Soap4
@@ -101,10 +102,10 @@ class Soap4 extends Soap
                 $displayElement->setAttribute('status', 0);
                 $displayElement->setAttribute('code', 'READY');
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
-                $displayElement->setAttribute('version_instructions', $display->versionInstructions);
 
                 // Display Settings
-                $settings = $display->getSettings();
+                $settings = $this->display->getSettings(['displayOverride' => true]);
+                $version = '';
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
@@ -113,6 +114,32 @@ class Soap4 extends Soap
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }
+
+                // Player upgrades
+                $upgradeMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+
+                if ($clientType != 'windows' && $upgradeMediaId != null) {
+                    $version = $this->playerVersionFactory->getByMediaId($upgradeMediaId);
+
+                    if ($clientType == 'android') {
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code]);
+                    }
+                    elseif ($clientType == 'lg') {
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code]);
+                    }
+                    elseif ($clientType == 'sssp') {
+                        // Create a nonce and store it in the cache for this display.
+                        $nonce = Random::generateString();
+                        $cache = $this->getPool()->getItem('/playerVersion/' . $nonce);
+                        $cache->set($this->display->displayId);
+                        $cache->expiresAfter(86400);
+                        $this->getPool()->saveDeferred($cache);
+
+                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
+                    }
+                }
+
+                $displayElement->setAttribute('version_instructions', $version);
 
                 // Add some special settings
                 $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';

@@ -115,6 +115,29 @@ let formHelpers = function() {
     };
 
     /**
+     * Use a callback to toggle a selector visibility
+     * @param {jQuery} triggerFields - jQuery element for the input field that triggers the "change" and "input" events
+     * @param {jQuery} targetFields - jQuery element(s) for the input fields to be compared with the values to be toggled
+     * @param {*} compareValue - value to be used to compare with the trigger input
+     * @param {function} test - Function to test the condition (a,b)
+     */
+    this.setupConditionalInputFields = function(triggerFields, targetFields, compareValue, test) {
+
+        /**
+         * Check test and toggle visibility
+         */
+        const checkTestAndApply = function() {
+            targetFields.toggle(test(compareValue));
+        };
+
+        // Init
+        checkTestAndApply();
+
+        // Change
+        triggerFields.on('change input', checkTestAndApply);
+    };
+
+    /**
      * Append an error message on form ( create or update a previously created one )
      * @param {object} form - Form object that contains one object with id = "errorMessage"
      * @param {string} message- Message to be displayed
@@ -415,13 +438,36 @@ let formHelpers = function() {
                     }
 
                 });
+            } else {
+
+                // If one of the targets is a boostrap switch, switch it off
+                forceBootstrapSwitchesOff();
             }
+        };
+
+
+        // Function to switch off all the bootstrapSwitch
+        const forceBootstrapSwitchesOff = function() {
+            // If one of the targets is a boostrap switch, switch it off
+            $.each(targetsObject, function(targetSelector, targetTemplateField) {
+                let $target = $(targetSelector, dialog);
+
+                // Turn off the bootstrapSwitch
+                if($target.attr('type') === 'checkbox' && $target.hasClass('bootstrap-switch-target')) { // bootstrap switch
+                    $target.bootstrapSwitch('state', false);
+                }
+            });
         };
 
         // Register an onchange listener to manipulate the template content if the selector is changed.
         $trigger.on('change', function() {
             applyTemplateContentIfNecessary(data);
         });
+
+        // On load, if the trigger is uncheckedand a target is a boostrap switch, switch it off
+        if(!$trigger.is(":checked")) {
+            forceBootstrapSwitchesOff();
+        }
     };
 
     /**
@@ -944,7 +990,6 @@ let formHelpers = function() {
 
     /**
      * Hide or show the form dimension controls for the editor
-     * @param {object} dialog - Dialog object
      * @param {boolean} toggleFlag - Flag to show/hide controls
      * @param {string} instanceToDestroy - Name of the instance marked to be destroyed
      */
@@ -962,6 +1007,113 @@ let formHelpers = function() {
         }
     };
 
+    /**
+     * Run after opening the permission form to set up the fields      
+     * @param {object} dialog - Dialog object
+     */
+    this.permissionsFormAfterOpen = function(dialog) {
+
+        var grid = $("#permissionsTable", dialog).closest(".XiboGrid");
+
+        var table = $("#permissionsTable", dialog).DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true, stateSave: true,
+            "filter": false,
+            searchDelay: 3000,
+            "order": [[0, "asc"]],
+            ajax: {
+                url: grid.data().url,
+                "data": function(d) {
+                    $.extend(d, grid.find(".permissionsTableFilter form").serializeObject());
+                }
+            },
+            "columns": [
+                {
+                    "data": "group",
+                    "render": function(data, type, row, meta) {
+                        if(type != "display")
+                            return data;
+
+                        if(row.isUser == 1)
+                            return data;
+                        else
+                            return '<strong>' + data + '</strong>';
+                    }
+                },
+                {
+                    "data": "view", "render": function(data, type, row, meta) {
+                        if(type != "display")
+                            return data;
+
+                        return "<input type=\"checkbox\" data-permission=\"view\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                    }
+                },
+                {
+                    "data": "edit", "render": function(data, type, row, meta) {
+                        if(type != "display")
+                            return data;
+
+                        return "<input type=\"checkbox\" data-permission=\"edit\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                    }
+                },
+                {
+                    "data": "delete", "render": function(data, type, row, meta) {
+                        if(type != "display")
+                            return data;
+
+                        return "<input type=\"checkbox\" data-permission=\"delete\" data-group-id=\"" + row.groupId + "\" " + ((data == 1) ? "checked" : "") + " />";
+                    }
+                }
+            ]
+        });
+
+        table.on('draw', function(e, settings) {
+            dataTableDraw(e, settings);
+
+            // permissions should be an object not an array
+            if(grid.data().permissions.length <= 0)
+                grid.data().permissions = {};
+
+            // Bind to the checkboxes change event
+            var target = $("#" + e.target.id);
+            target.find("input[type=checkbox]").change(function() {
+                // Update our global permissions data with this
+                var groupId = $(this).data().groupId;
+                var permission = $(this).data().permission;
+                var value = $(this).is(":checked");
+                //console.log("Setting permissions on groupId: " + groupId + ". Permission " + permission + ". Value: " + value);
+                if(grid.data().permissions[groupId] === undefined) {
+                    grid.data().permissions[groupId] = {};
+                }
+                grid.data().permissions[groupId][permission] = (value) ? 1 : 0;
+            });
+        });
+        table.on('processing.dt', dataTableProcessing);
+
+        // Bind our filter
+        grid.find(".permissionsTableFilter form input, .permissionsTableFilter form select").change(function() {
+            table.ajax.reload();
+        });
+    };
+
+    /**
+    * Run before submitting the permission form to process data
+    * @param {object} dialog - Dialog object
+    * @returns {object} Processed data
+    */
+    this.permissionsFormBeforeSubmit = function(dialog) {
+
+        var $formContainer = $(".permissions-form", dialog);
+        
+        var permissions = {
+            "groupIds": $('.permissionsGrid', dialog).data().permissions,
+            "ownerId": $formContainer.find("select[name=ownerId]").val(),
+            "cascade": $formContainer.find("#cascade").is(":checked")
+        };
+
+        return $.param(permissions);
+    };
 };
+
 
 module.exports = new formHelpers();

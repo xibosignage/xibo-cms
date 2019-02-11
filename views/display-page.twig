@@ -94,11 +94,13 @@
                                     {% set android %}{% trans "Android" %}{% endset %}
                                     {% set windows %}{% trans "Windows" %}{% endset %}
                                     {% set webos %}{% trans "webOS" %}{% endset %}
+                                    {% set sssp %}{% trans "Tizen" %}{% endset %}
                                     {% set options = [
                                         { optionid: "", option: "" },
                                         { optionid: "android", option: android},
                                         { optionid: "windows", option: windows},
-                                        { optionid: "lg", option: webos}
+                                        { optionid: "lg", option: webos},
+                                        { optionid: "sssp", option: sssp}
                                     ] %}
                                     {{ inline.dropdown("clientType", "single", title, "", options, "optionid", "option") }}
 
@@ -318,8 +320,9 @@
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "timeZone", "visible": false},
-                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false},
+                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
                     {
+                        "name": "thumbnail",
                         "orderable": false,
                         "data": function (data, type) {
                             if (type != "display")
@@ -400,6 +403,16 @@
                 localStorage.setItem("displayView", JSON.stringify($lastAccessed.closest("form").serializeArray()));
             });
         });
+
+        function displayRequestScreenshotFormSubmit() {
+            $("#displayRequestScreenshotForm").submit();
+            XiboDialogClose();
+            var table = $('#displays').DataTable();
+
+            if (!table.column(["thumbnail:name"]).visible()) {
+                table.columns(["screenShotRequested:name", "thumbnail:name"]).visible(true);
+            }
+        }
 
         function setDefaultMultiSelectFormOpen(dialog) {
             console.log('Multi-select form opened for default layout');

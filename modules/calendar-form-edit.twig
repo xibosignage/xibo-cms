@@ -1,7 +1,7 @@
 {#
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -57,7 +57,7 @@
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
                         {{ forms.input("name", title, module.getOption("name"), helpText) }}
-                        
+
                         {% set title %}{% trans "Set a duration?" %}{% endset %}
                         {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
                         {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
@@ -75,7 +75,7 @@
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
-                        
+
                         {# What range are we looking to return #}
                         {% set title %}{% trans "Interval" %}{% endset %}
                         {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
@@ -85,10 +85,23 @@
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
                         {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
-                        
+
                         {% set title %}{% trans "Exclude all day events?" %}{% endset %}
                         {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
                         {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+
+                        {% set title %}{% trans "Use event timezone?" %}{% endset %}
+                        {% set helpText %}{% trans "If an event specifies a timezone, should it be used. Deselection means the CMS timezone will be used." %}{% endset %}
+                        {{ forms.checkbox("useEventTimezone", title, module.getOption("useEventTimezone", 1), helpText) }}
+
+                        {% set title %}{% trans "Use calendar timezone?" %}{% endset %}
+                        {% set helpText %}{% trans "If use event timezone is selected and your calendar feed specifies its own time zone should this be used? Deselecting means the CMS timezone will be used." %}{% endset %}
+                        {{ forms.checkbox("useCalendarTimezone", title, module.getOption("useCalendarTimezone", 1), helpText) }}
+
+                        {% set title %}{% trans "Windows format Calendar?" %}{% endset %}
+                        {% set helpText %}{% trans "Does the calendar feed come from Windows - if unsure leave unselected." %}{% endset %}
+                        {{ forms.checkbox("windowsFormatCalendar", title, module.getOption("windowsFormatCalendar", 0), helpText) }}
+
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
@@ -153,16 +166,16 @@
                         {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
                     </div>
 
-                    
+
                     <div class="tab-pane" id="templateTab">
 
                         <div class="form-content-title container-fluid text-right">
                             <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %}
+                                data-size="small"
+                                data-label-text="{% trans "Visual editor" %}"
+                                data-label-width="80px"
+                                data-on-text="{% trans "On" %}"
                                 data-off-text="{% trans "Off" %}">
                         </div>
 
@@ -191,7 +204,7 @@
                             <div class="col-sm-6">
                                 <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                 <div class="col-sm-8 ckeditor_select_container">
-                                    <select id="ckeditor_snippets_select" 
+                                    <select id="ckeditor_snippets_select"
                                     class="ckeditor_snippets_select form-control"
                                     data-linked-to="template">
                                         <option value=""></option>
@@ -203,7 +216,7 @@
                                         <option value="EndDate">EndDate</option>
                                     </select>
                                 </div>
-                            </div>  
+                            </div>
                             <div class="col-sm-6">
                                 <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
                                 <div class="col-sm-8">
@@ -225,17 +238,17 @@
 
                         <div class="form-content-title container-fluid text-right">
                             <h4 class="col-xs-6 text-left">{% trans "Current Event Template" %}</h4>
-                            
+
                             <div class="current-event-template">
-                                <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
+                                <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %}
+                                    data-size="small"
+                                    data-label-text="{% trans "Visual editor" %}"
+                                    data-label-width="80px"
+                                    data-on-text="{% trans "On" %}"
                                     data-off-text="{% trans "Off" %}">
                             </div>
                         </div>
-                        
+
                         {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
                         {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
                         {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
@@ -258,7 +271,7 @@
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_snippets_select" 
+                                        <select id="ckeditor_snippets_select"
                                         class="ckeditor_snippets_select form-control"
                                         data-linked-to="currentEventTemplate">
                                             <option value=""></option>
@@ -271,7 +284,7 @@
                                         </select>
                                     </div>
                                 </div>
-                            </div>  
+                            </div>
                             <div class="col-sm-6">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
@@ -298,11 +311,11 @@
 
                         <div class="form-content-title container-fluid text-right">
                             <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
+                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %}
+                                data-size="small"
+                                data-label-text="{% trans "Visual editor" %}"
+                                data-label-width="80px"
+                                data-on-text="{% trans "On" %}"
                                 data-off-text="{% trans "Off" %}">
                         </div>
 

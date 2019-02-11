@@ -19,12 +19,13 @@ class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
         $object = json_decode($this->client->response->body());
 
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object->data, $this->client->response->body());
         $this->assertObjectHasAttribute('draw', $object->data, $this->client->response->body());
         $this->assertObjectHasAttribute('recordsTotal', $object->data, $this->client->response->body());
         $this->assertObjectHasAttribute('recordsFiltered', $object->data, $this->client->response->body());
 
         // Make sure the recordsTotal is not greater than 10 (the default paging)
-        $this->assertLessThanOrEqual(10, count($object->data));
+        $this->assertLessThanOrEqual(10, count($object->data->data));
     }
 
     public function testExportForm()

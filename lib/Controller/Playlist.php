@@ -146,6 +146,9 @@ class Playlist extends Base
     {
         $this->getState()->template = 'grid';
 
+        // Embed?
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         // Playlists
         $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'name' => $this->getSanitizer()->getString('name'),
@@ -159,6 +162,45 @@ class Playlist extends Base
         ]));
 
         foreach ($playlists as $playlist) {
+
+            // Handle embeds
+            if (in_array('widgets', $embed)) {
+
+                $loadPermissions = in_array('permissions', $embed);
+                $loadTags = in_array('tags', $embed);
+
+                $playlist->load([
+                    'loadPermissions' => $loadPermissions,
+                    'loadWidgets' => true,
+                    'loadTags' => $loadTags
+                ]);
+
+                foreach ($playlist->widgets as $widget) {
+
+                    /* @var Widget $widget */
+                    $widget->module = $this->moduleFactory->createWithWidget($widget);
+
+                    // Embed the name of this widget
+                    $widget->name = $widget->module->getName();
+
+                    // Augment with tags?
+                    if ($loadTags) {
+                        $widget->tags = $widget->module->getMediaTags();
+                    }
+
+                    // Permissions?
+                    if ($loadPermissions) {
+                        // Augment with editable flag
+                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+
+                        // Augment with deletable flag
+                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+
+                        // Augment with permissions flag
+                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                    }
+                }
+            }
 
             if ($this->isApi())
                 continue;
@@ -672,21 +714,10 @@ class Playlist extends Base
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
-        $playlist->load();
-
-        foreach ($playlist->widgets as $widget) {
-
-            /* @var Widget $widget */
-            $widget->module = $this->moduleFactory->createWithWidget($widget);
-        }
-
         // Pass to view
         $this->getState()->template = 'region-form-timeline';
         $this->getState()->setData([
-            'region' => ['regionId' => -1],
             'playlist' => $playlist,
-            'modules' => $this->moduleFactory->getAssignableModules(),
-            'transitions' => $this->transitionData(),
             'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
     }
@@ -723,18 +754,19 @@ class Playlist extends Base
      *      )
      *  )
      * )
+     *
+     * This is not used by the WEB app - remains here for API usage only
+     * TODO: deprecate
      */
     public function widgetGrid()
     {
         $this->getState()->template = 'grid';
 
-        // Transitions
-        $transIn = $this->transitionFactory->getEnabledByType('in');
-        $transOut = $this->transitionFactory->getEnabledByType('out');
         $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'widgetId' => $this->getSanitizer()->getInt('widgetId')
         ]));
+
         foreach ($widgets as $widget) {
             /* @var Widget $widget */
             $widget->load();
@@ -746,60 +778,6 @@ class Playlist extends Base
 
             // Add property for transition
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
-
-            if ($this->isApi())
-                continue;
-
-            $widget->includeProperty('buttons');
-
-            if ($this->getUser()->checkEditable($widget)) {
-                $widget->buttons[] = array(
-                    'id' => 'timeline_button_edit',
-                    'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
-                    'text' => __('Edit')
-                );
-            }
-
-            if ($this->getUser()->checkDeleteable($widget)) {
-                $widget->buttons[] = array(
-                    'id' => 'timeline_button_delete',
-                    'url' => $this->urlFor('module.widget.delete.form', ['id' => $widget->widgetId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('module.widget.delete', ['id' => $widget->widgetId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'timeline_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $widget->module->getName()),
-                        array('name' => 'options', 'value' => 'unassign')
-                    )
-                );
-            }
-
-            if ($this->getUser()->checkPermissionsModifyable($widget)) {
-                $widget->buttons[] = array(
-                    'id' => 'timeline_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Widget', 'id' => $widget->widgetId]),
-                    'text' => __('Permissions')
-                );
-            }
-
-            if (count($transIn) > 0) {
-                $widget->buttons[] = array(
-                    'id' => 'timeline_button_trans_in',
-                    'url' => $this->urlFor('module.widget.transition.edit.form', ['id' => $widget->widgetId, 'type' => 'in']),
-                    'text' => __('In Transition')
-                );
-            }
-
-            if (count($transOut) > 0) {
-                $widget->buttons[] = array(
-                    'id' => 'timeline_button_trans_in',
-                    'url' => $this->urlFor('module.widget.transition.edit.form', ['id' => $widget->widgetId, 'type' => 'out']),
-                    'text' => __('Out Transition')
-                );
-            }
         }
 
         // Store the table rows
@@ -1071,26 +1049,5 @@ class Playlist extends Base
             'message' => __('Order Changed'),
             'data' => $playlist
         ]);
-    }
-
-    /**
-     * @return array
-     */
-    private function transitionData()
-    {
-        return [
-            'in' => $this->transitionFactory->getEnabledByType('in'),
-            'out' => $this->transitionFactory->getEnabledByType('out'),
-            'compassPoints' => array(
-                array('id' => 'N', 'name' => __('North')),
-                array('id' => 'NE', 'name' => __('North East')),
-                array('id' => 'E', 'name' => __('East')),
-                array('id' => 'SE', 'name' => __('South East')),
-                array('id' => 'S', 'name' => __('South')),
-                array('id' => 'SW', 'name' => __('South West')),
-                array('id' => 'W', 'name' => __('West')),
-                array('id' => 'NW', 'name' => __('North West'))
-            )
-        ];
     }
 }

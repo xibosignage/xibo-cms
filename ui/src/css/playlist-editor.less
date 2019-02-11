@@ -22,6 +22,8 @@
 
 @playlist-editor-timeline-fg-color: #3a3eb6;
 
+@playlist-editor-unsuccess-message-bg-color: #b3360e;
+
 // CSS
 .editor-modal {
     display: block;
@@ -142,6 +144,11 @@
     height: 30px;
 }
 
+.form-title.unsuccessMessage {
+    margin: 20px 0;
+    background-color: @playlist-editor-unsuccess-message-bg-color;
+}
+
 .form-title-widget {
     color: #222;
     background: @playlist-editor-widget-selected-color;
@@ -169,6 +176,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     padding: 0 4px;
+}
+
+.playlist-widget:not(.editable) {
+    .box-shadow(inset 0 0 4px 2px grey);
 }
 
 .playlist-widget.selectable {
@@ -207,22 +218,25 @@
 .playlist-widget .widgetLabel {
     color: @playlist-editor-main-background-color;
     width: 25px;
-    display: inline-block;
     height: 100%;
     text-align: center;
+    float: left;
 }
 
-.playlist-widget .widgetTitle {
-    display: inline-block;
-}
-
-.playlist-widget .widgetTitle .widgetName {
+.playlist-widget .widgetName {
     font-style: italic;
     color: @playlist-editor-widget-fg-color;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 50%;
+    float: left;
 }
 
-.playlist-widget .widgetTitle .widgetSubType {
+.playlist-widget .widgetSubType {
     color: @playlist-editor-widget-fg-color2;
+    padding: 0 2px;
+    float: left;
 }
 
 .playlist-widget i.editProperty:hover {

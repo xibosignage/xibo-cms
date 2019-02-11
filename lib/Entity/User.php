@@ -37,6 +37,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -313,6 +314,9 @@ class User implements \JsonSerializable
     /** @var WidgetFactory */
     private $widgetFactory;
 
+    /** @var PlayerVersionFactory */
+    private $playerVersionFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -368,9 +372,10 @@ class User implements \JsonSerializable
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetFactory $widgetFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -379,6 +384,7 @@ class User implements \JsonSerializable
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetFactory = $widgetFactory;
+        $this->playerVersionFactory = $playerVersionFactory;
         return $this;
     }
 
@@ -792,7 +798,7 @@ class User implements \JsonSerializable
         // Delete any media
         foreach ($this->media as $media) {
             /* @var Media $media */
-            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
             $media->delete();
         }
 
@@ -1231,28 +1237,23 @@ class User implements \JsonSerializable
 
     /**
      * Is this users library quota full
+     * @param boolean $reconnect
      * @throws LibraryFullException when the library is full or cannot be determined
      */
-    public function isQuotaFullByUser()
+    public function isQuotaFullByUser($reconnect = false)
     {
-        $dbh = $this->getStore()->getConnection();
         $groupId = 0;
         $userQuota = 0;
 
         // Get the maximum quota of this users groups and their own quota
-        $quotaSth = $dbh->prepare('
+        $rows = $this->getStore()->select('
             SELECT group.groupId, IFNULL(group.libraryQuota, 0) AS libraryQuota
               FROM `group`
                 INNER JOIN `lkusergroup`
                 ON group.groupId = lkusergroup.groupId
              WHERE lkusergroup.userId = :userId
             ORDER BY `group`.isUserSpecific DESC, IFNULL(group.libraryQuota, 0) DESC
-        ');
-
-        $quotaSth->execute(['userId' => $this->userId]);
-
-        // Loop over until we have a quota
-        $rows = $quotaSth->fetchAll(\PDO::FETCH_ASSOC);
+        ', ['userId' => $this->userId], null, $reconnect);
 
         if (count($rows) <= 0) {
             throw new LibraryFullException('Problem calculating this users library quota.');
@@ -1268,23 +1269,21 @@ class User implements \JsonSerializable
         }
 
         if ($userQuota > 0) {
-
             // If there is a quota, then test it against the current library position for this user.
             //   use the groupId that generated the quota in order to calculate the usage
-            $sth = $dbh->prepare('
+            $rows = $this->getStore()->select('
               SELECT IFNULL(SUM(FileSize), 0) AS SumSize
                 FROM `media`
                   INNER JOIN `lkusergroup`
                   ON lkusergroup.userId = media.userId
                WHERE lkusergroup.groupId = :groupId
-            ');
+            ', ['groupId' => $groupId], null, true);
 
-            $sth->execute(['groupId' => $groupId]);
-
-            if (!$row = $sth->fetch())
+            if (count($rows) <= 0) {
                 throw new LibraryFullException("Error Processing Request", 1);
+            }
 
-            $fileSize = intval($row['SumSize']);
+            $fileSize = intval($rows[0]['SumSize']);
 
             if (($fileSize / 1024) >= $userQuota) {
                 $this->getLog()->debug('User has exceeded library quota. FileSize: ' . $fileSize . ' bytes, quota is ' . $userQuota * 1024);

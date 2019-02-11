@@ -87,6 +87,10 @@
                         ] %}
                         {{ forms.dropdown("takeItemsFrom", "single", title, module.getOption("takeItemsFrom", "start"), options, "takeitemsfromid", "takeitemsfrom", helpText) }}
 
+                        {% set title %}{% trans "Reverse Order?" %}{% endset %}
+                        {% set helpText %}{% trans "Should we reverse the order of the feed items?" %}{% endset %}
+                        {{ forms.checkbox("reverseOrder", title, module.getOption("reverseOrder"), helpText) }}
+
                         {% set title %}{% trans "Randomise?" %}{% endset %}
                         {% set helpText %}{% trans "Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order." %}{% endset %}
                         {{ forms.checkbox("randomiseItems", title, module.getOption("randomiseItems"), helpText) }}
@@ -204,7 +208,7 @@
                         {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
 
                         {% set useTemplatesMessage %}
-                           {% trans "Use the Templates select field to access and set the custom template values." %}                     
+                           {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}                     
                         {% endset %}
                         {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
                     </div>
