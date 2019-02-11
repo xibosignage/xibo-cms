@@ -122,7 +122,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $mediaName = $media->name; //dont remove used later
                 $statData[$k]['mediaName'] = $mediaName;
                 $tagFilter['media']= explode(',', $media->tags);
-                // $tagFilter['media']= explode(',', $this->mediaFactory->getById(323)->tags);
 
             }
             // Widget name
@@ -138,7 +137,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $statData[$k]['layoutName'] = $layout->layout;
 
             // Layout tags
-            // $tagFilter['layout']= explode(',', $this->layoutFactory->getById(602)->tags);
             $tagFilter['layout']= explode(',', $layout->tags);
 
             // Display name
@@ -147,7 +145,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             // Display tags
             $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
-            // $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById(339)->tags);
 
             // TagFilter array
             $statData[$k]['tagFilter'] = $tagFilter;
@@ -181,7 +178,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         ];
 
         // Tag Filter
-        if($tags != null) {
+        if ($tags != null) {
 
             $tagsArray = explode(',', $tags);
 
@@ -246,7 +243,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         $order = ['_id.type'=> 1]; // default sorting by type
-        if($array != null) {
+        if ($array != null) {
             $order = $array;
         }
 
@@ -352,7 +349,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $this->log->error($e->getMessage());
         }
 
-        if(count($resTotal) > 0) {
+        if (count($resTotal) > 0) {
             $totalStats = $resTotal[0]['totals'];
         }
 
@@ -477,7 +474,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $i++;
 
-            if($fromDt != null) {
+            if ($fromDt != null) {
                 $query = [
                     'end' => ['$gt' => $fromDt],
                     'start' => ['$lte' => $toDt]

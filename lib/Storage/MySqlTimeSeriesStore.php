@@ -244,11 +244,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
 
         $order = '';
-        if($columns != null)
+        if ($columns != null)
             $order = 'ORDER BY ' . implode(',', $columns);
 
         $limit= '';
-        if($length != null)
+        if ($length != null)
             $limit = ' LIMIT ' . $start . ', ' . $length;
 
         /*Execute sql statement*/
@@ -316,7 +316,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
           
         ';
 
-        if(count($displayIds) > 0) {
+        if (count($displayIds) > 0) {
             $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
         }
 
@@ -353,7 +353,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 'limit' => 10000,
             ], $options);
 
-            if($fromDt != null) {
+            if ($fromDt != null) {
                 $delete = $this->store->getConnection()
                     ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT :limit');
 

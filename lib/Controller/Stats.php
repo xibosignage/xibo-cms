@@ -273,8 +273,7 @@ class Stats extends Base
         $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
         // Get an array of display id this user has access to.
-        $displayIds = array();
-
+        $displayIds = [];
         foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
@@ -283,8 +282,8 @@ class Stats extends Base
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
         // Clear the displayIds if the user selected a display for which they don't have permission
-        if($displayId != 0) {
-            if(!in_array($displayId, $displayIds)){
+        if ($displayId != 0) {
+            if (!in_array($displayId, $displayIds)) {
                 $displayIds = [];
             } else {
                 $displayIds = [$displayId];
@@ -312,7 +311,7 @@ class Stats extends Base
         $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
 
         // Sanitize results
-        $rows = array();
+        $rows = [];
         foreach ($result['statData'] as $row) {
             $entry = [];
 
@@ -467,8 +466,7 @@ class Stats extends Base
         $displayId = $this->getSanitizer()->getInt('displayId');
 
         // Get an array of display id this user has access to.
-        $displayIds = array();
-
+        $displayIds = [];
         foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
@@ -477,8 +475,8 @@ class Stats extends Base
             throw new AccessDeniedException();
 
         // Clear the displayIds if the user selected a display for which they don't have permission
-        if($displayId != 0) {
-            if(!in_array($displayId, $displayIds)){
+        if ($displayId != 0) {
+            if (!in_array($displayId, $displayIds)) {
                 $displayIds = [];
             } else {
                 $displayIds = [$displayId];
