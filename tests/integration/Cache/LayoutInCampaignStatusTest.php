@@ -71,7 +71,7 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // Assign the layout to our campaign
-        $this->campaign->assignLayout($this->layout->layoutId);
+        $this->campaign->assignLayout([$this->layout->layoutId], [1]);
 
         // Create a Display
         $this->display = $this->createDisplay();

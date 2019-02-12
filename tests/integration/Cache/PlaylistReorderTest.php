@@ -50,7 +50,7 @@ class PlaylistReorderTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
@@ -117,7 +117,7 @@ class PlaylistReorderTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Edit region
-        $this->client->post('/playlist/order/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+        $this->client->post('/playlist/order/' . $layout->regions[0]->regionPlaylist->playlistId, [
             'widgets' => [
                 $this->widget1->widgetId => 2,
                 $this->widget2->widgetId => 1
