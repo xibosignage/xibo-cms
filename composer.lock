@@ -3690,16 +3690,16 @@
         },
         {
             "name": "xibosignage/oauth2-xibo-cms",
-            "version": "v2.0-beta2",
+            "version": "v2.0-beta.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
-                "reference": "cda0b58f452ba9feb349d2302170a8490577b725"
+                "reference": "8e6ddb4be070257233c225f8829b8117f9d978c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/cda0b58f452ba9feb349d2302170a8490577b725",
-                "reference": "cda0b58f452ba9feb349d2302170a8490577b725",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/8e6ddb4be070257233c225f8829b8117f9d978c3",
+                "reference": "8e6ddb4be070257233c225f8829b8117f9d978c3",
                 "shasum": ""
             },
             "require": {
@@ -3741,7 +3741,7 @@
                 "xibo",
                 "xibo cms"
             ],
-            "time": "2019-02-11T16:13:09+00:00"
+            "time": "2019-02-12T14:29:57+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
