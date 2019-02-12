@@ -117,6 +117,17 @@
 
                                     {{ forms.checkbox("LIBRARY_MEDIA_DELETEOLDVER_CHECKB", title, theme.getSetting("LIBRARY_MEDIA_DELETEOLDVER_CHECKB"), helpText, "", "", not theme.isSettingEditable("LIBRARY_MEDIA_UPDATEINALL_CHECKB")) }}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_TRANSITION_DURATION") %}
+                                    {% set title %}{% trans "Default Transition duration" %}{% endset %}
+                                    {% set helpText %}{% trans "Default duration for in and out transitions" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_TRANSITION_DURATION") %}
+                                        {{ forms.number("DEFAULT_TRANSITION_DURATION", title, theme.getSetting("DEFAULT_TRANSITION_DURATION", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_TRANSITION_DURATION", title, theme.getSetting("DEFAULT_TRANSITION_DURATION", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_displays">
                                 <h3 class="section-heading">{% trans "Displays" %}</h3>
