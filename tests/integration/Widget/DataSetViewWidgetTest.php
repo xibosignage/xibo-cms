@@ -65,7 +65,7 @@ class DataSetViewWidgetTest extends LocalWebTestCase
         $layout = $this->checkout($this->publishedLayout);
 
         // Create a Widget for us to edit.
-        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'step' => 1,
             'dataSetId' => $this->dataSet->dataSetId

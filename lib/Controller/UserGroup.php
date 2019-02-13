@@ -869,7 +869,7 @@ class UserGroup extends Base
         }
 
         $this->getState()->hydrate([
-            'httpStatus' => 204,
+            'httpStatus' => 201,
             'message' => sprintf(__('Copied %s'), $group->group),
             'id' => $newGroup->groupId,
             'data' => $newGroup

@@ -73,7 +73,7 @@ class DataSetDataEditTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Add a couple of text widgets to the region
-        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'step' => 1,
             'dataSetId' => $this->dataSet->dataSetId
@@ -101,6 +101,7 @@ class DataSetDataEditTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );
