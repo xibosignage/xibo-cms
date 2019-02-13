@@ -212,18 +212,20 @@ pbBhRgkIdydXoZZdjQIDAQAB
         $this->assertSame($macAddress, $display->macAddress, 'Mac Address not set correctly by XMDS Register Display');
         $auditingTime = time()+3600;
         # Edit display and add broadcast channel
-        $display->edit($display->display,
-        $display->description, 
-        date('Y-m-d H:i:s', $auditingTime), 
-        $display->defaultLayoutId, 
-        $display->licensed, 
-        $display->license, 
-        $display->incSchedule, 
-        $display->emailAlert, 
-        $display->wakeOnLanEnabled, 
-        '127.0.0.1',
-        0,
-        0);
+        $display->edit(
+            $display->display,
+            $display->description,
+            $display->tags,
+            date('Y-m-d H:i:s', $auditingTime),
+            $display->defaultLayoutId,
+            $display->licensed,
+            $display->license,
+            $display->incSchedule,
+            $display->emailAlert,
+            $display->alertTimeout,
+            $display->wakeOnLanEnabled,
+            null,
+            '127.0.0.1');
         # Call WOL
         $this->client->post('/display/wol/' . $display->displayId);
         $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());

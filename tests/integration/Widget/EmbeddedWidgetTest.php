@@ -57,7 +57,7 @@ class EmbeddedWidgetTest extends LocalWebTestCase
         $layout = $this->checkout($this->publishedLayout);
 
         // Create a Widget for us to edit.
-        $response = $this->getEntityProvider()->post('/playlist/widget/embedded/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/embedded/' . $layout->regions[0]->regionPlaylist->playlistId);
 
         $this->widgetId = $response['widgetId'];
     }

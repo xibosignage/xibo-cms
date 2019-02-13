@@ -114,7 +114,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
     {
         // Requery the Display
         try {
-            $check = (new XiboDisplay($this->getEntityProvider()))->getById($display->displayGroupId);
+            $check = (new XiboDisplay($this->getEntityProvider()))->getById($display->displayId);
 
             $this->getLogger()->debug('Tested Display ' . $display->display . '. Status returned is ' . $check->mediaInventoryStatus);
 

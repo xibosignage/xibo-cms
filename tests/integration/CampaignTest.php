@@ -267,7 +267,7 @@ class CampaignTest extends LocalWebTestCase
         );
 
         // Assign layout to campaign
-        $campaign->assignLayout($layout->layoutId);
+        $campaign->assignLayout([$layout->layoutId], [1]);
         # Call unassign on the created layout
         $this->client->post('/campaign/layout/unassign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout->layoutId, 'displayOrder' => 1]]]);
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());

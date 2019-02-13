@@ -70,7 +70,7 @@ class WidgetAddTest extends LocalWebTestCase
      */
     public function testAdd()
     {
-        $playlistId = $this->layout->regions[0]->regionPlaylist['playlistId'];
+        $playlistId = $this->layout->regions[0]->regionPlaylist->playlistId;
 
         $this->getLogger()->debug('testAdd - ' . $playlistId);
 
@@ -91,7 +91,7 @@ class WidgetAddTest extends LocalWebTestCase
      */
     public function testAddNonRegionSpecific()
     {
-        $playlistId = $this->layout->regions[0]->regionPlaylist['playlistId'];
+        $playlistId = $this->layout->regions[0]->regionPlaylist->playlistId;
 
         $this->getLogger()->debug('testAddNonRegionSpecific - ' . $playlistId);
 

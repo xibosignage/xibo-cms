@@ -48,7 +48,7 @@ class LayoutEditTest extends LocalWebTestCase
         // We need to add a widget to it, so that the Layout tests out as valid
         $layout = $this->checkout($this->layout);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
@@ -71,6 +71,7 @@ class LayoutEditTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );

@@ -339,6 +339,7 @@ class ScheduleTest extends LocalWebTestCase
             NULL,
             NULL,
             0,
+            0,
             0
         );
         $fromDt = time() + 3600;
@@ -386,6 +387,7 @@ class ScheduleTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );

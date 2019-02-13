@@ -209,6 +209,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_DELETEOLDVER_CHECKB'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_DURATION')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_DURATION', $this->getSanitizer()->getInt('DEFAULT_TRANSITION_DURATION'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
             $this->getConfig()->changeSetting('DEFAULT_LAYOUT', $this->getSanitizer()->getInt('DEFAULT_LAYOUT'));
         }
