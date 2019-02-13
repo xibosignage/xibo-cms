@@ -187,6 +187,20 @@ trait LayoutHelperTrait
     }
 
     /**
+     * @param $layout
+     * @return $this
+     */
+    protected function addSimpleWidget($layout)
+    {
+        $this->getEntityProvider()->post('/playlist/widget/clock/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        return $this;
+    }
+
+    /**
      * @param $response
      * @return \Xibo\OAuth2\Client\Entity\XiboEntity|XiboLayout
      */

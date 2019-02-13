@@ -49,11 +49,8 @@ class DisplayGroupDisplayUnassignTest extends LocalWebTestCase
         // Checkout
         $layout = $this->checkout($this->layout);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
-            'text' => 'Widget A',
-            'duration' => 100,
-            'useDuration' => 1
-        ]);
+        // Add a simple widget
+        $this->addSimpleWidget($layout);
 
         // Check us in again
         $this->layout = $this->publish($this->layout);

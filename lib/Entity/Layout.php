@@ -1264,14 +1264,14 @@ class Layout implements \JsonSerializable
 
                 // Will continue and save the status as 4
                 $this->status = 4;
-                $this->statusMessage = 'Unexpected Error';
+                $this->pushStatusMessage('Unexpected Error');
 
                 // No need to notify on an errored build
                 $options['notify'] = false;
             }
 
             if ($this->status === 4 && $options['exceptionOnError'])
-                throw new InvalidArgumentException(__('There is an error with this Layout: %s', $this->statusMessage), 'status');
+                throw new InvalidArgumentException(__('There is an error with this Layout: %s', implode(',', $this->getStatusMessage())), 'status');
 
             $this->save([
                 'saveRegions' => true,
