@@ -463,7 +463,7 @@ class Layout implements \JsonSerializable
      */
     public function getStatusMessage()
     {
-        if (empty($this->statusMessage))
+        if ($this->statusMessage === null || empty($this->statusMessage))
             return [];
 
         if (is_array($this->statusMessage))
@@ -1069,7 +1069,7 @@ class Layout implements \JsonSerializable
         // Update the layout status / duration accordingly
         if ($layoutHasEmptyRegion) {
             $status = 4;
-            $this->statusMessage .= __('Empty Region');
+            $this->pushStatusMessage(__('Empty Region'));
         }
 
         $this->status = ($status < $this->status) ? $status : $this->status;
