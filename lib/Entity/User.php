@@ -786,6 +786,7 @@ class User implements \JsonSerializable
         // Delete any Campaigns
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
+            $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->delete();
         }
 
