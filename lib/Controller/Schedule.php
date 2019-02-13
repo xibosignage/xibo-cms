@@ -512,9 +512,12 @@ class Schedule extends Base
                 }
 
                 $this->getLog()->debug('Adding scheduled events: ' . json_encode($scheduleEvents));
+                // We will never save this and we need the eventId on the agenda view
+                $eventId = $schedule->eventId;
 
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $schedule = clone $schedule;
+                    $schedule->eventId = $eventId;
                     $schedule->fromDt = $scheduleEvent->fromDt;
                     $schedule->toDt = $scheduleEvent->toDt;
                     $schedule->layoutId = intval($event['layoutId']);
