@@ -194,7 +194,7 @@ trait LayoutHelperTrait
      */
     protected function addSimpleWidget($layout)
     {
-        $this->getEntityProvider()->post('/playlist/widget/clock/' . $layout->regions[0]->regionPlaylist['playlistId'], [
+        $this->getEntityProvider()->post('/playlist/widget/clock/' . $layout->regions[0]->regionPlaylist->playlistId, [
             'duration' => 100,
             'useDuration' => 1
         ]);
