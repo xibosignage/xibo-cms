@@ -56,8 +56,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addStat($statData)
     {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`, duration, count) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
 
@@ -83,8 +83,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
               display.Display,
               layout.Layout,
               IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
-              COUNT(StatID) AS NumberPlays,
-              SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
+              COUNT(stat.count) AS NumberPlays,
+              SUM(stat.duration) AS Duration,
               MIN(start) AS MinStart,
               MAX(end) AS MaxEnd,
               layout.layoutId,
