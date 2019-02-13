@@ -932,7 +932,7 @@ class Layout implements \JsonSerializable
                 try {
                     $moduleStatus = $module->isValid();
                 } catch (XiboException $xiboException) {
-                    $moduleStatus = 0;
+                    $moduleStatus = 4;
 
                     // Include the exception on
                     $this->pushStatusMessage($xiboException->getMessage());

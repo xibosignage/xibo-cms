@@ -866,7 +866,7 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Make sure we have a number in here
-        if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
+        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))
             throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
 
         return self::$STATUS_VALID;
