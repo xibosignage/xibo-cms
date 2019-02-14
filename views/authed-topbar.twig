@@ -1,0 +1,226 @@
+{#
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<ul class="nav navbar-nav">
+    <li><a href="{{ urlFor("home") }}">{% trans "Dashboard" %}</a></li>
+
+    {% set countViewable = currentUser.countViewable(["/schedule", "/daypart"]) %}
+    {% if countViewable > 0 %}
+        {% if countViewable > 1 %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Schedule" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
+                {% if currentUser.routeViewable("/schedule") %}
+                    <li><a href="{{ urlFor("schedule.view") }}">{% if countViewable > 1 %}{% trans "Calendar" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
+                {% endif %}
+                {% if currentUser.routeViewable("/daypart") %}
+                    <li><a href="{{ urlFor("daypart.view") }}">{% trans "Dayparting" %}</a></li>
+                {% endif %}
+        {% if countViewable > 1 %}
+            </ul>
+        </li>
+        {% endif %}
+    {% endif %}
+
+    {% set countViewable = currentUser.countViewable(["/campaign", "/layout", "/template", "/resolution"]) %}
+    {% if countViewable > 0 %}
+        {% if countViewable > 1 %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Design" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
+            {% if currentUser.routeViewable("/campaign") %}
+                <li><a href="{{ urlFor("campaign.view") }}">{% trans "Campaigns" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/layout") %}
+                <li><a href="{{ urlFor("layout.view") }}">{% trans "Layouts" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/template") %}
+                <li><a href="{{ urlFor("template.view") }}">{% trans "Templates" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/resolution") %}
+                <li><a href="{{ urlFor("resolution.view") }}">{% trans "Resolutions" %}</a></li>
+            {% endif %}
+        {% if countViewable > 1 %}
+            </ul>
+        </li>
+        {% endif %}
+    {% endif %}
+
+    {% set countViewable = currentUser.countViewable(["/library", "/playlist", "/dataset"]) %}
+    {% if countViewable > 0 %}
+        {% if countViewable > 1 %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Library" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
+            {% if currentUser.routeViewable("/playlist") %}
+                <li><a href="{{ urlFor("playlist.view") }}">{% trans "Playlists" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/library") %}
+                <li><a href="{{ urlFor("library.view") }}">{% trans "Media" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/dataset") %}
+                <li><a href="{{ urlFor("dataset.view") }}">{% trans "DataSets" %}</a></li>
+            {% endif %}
+        {% if countViewable > 1 %}
+            </ul>
+        </li>
+        {% endif %}
+    {% endif %}
+
+    {% set countViewable = currentUser.countViewable(["/display", "/displaygroup", "/stats", "/displayprofile"]) %}
+    {% if countViewable > 0 %}
+        {% if countViewable > 1 %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Displays" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
+            {% if currentUser.routeViewable("/display") %}
+                <li><a href="{{ urlFor("display.view") }}">{% trans "Displays" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/displaygroup") %}
+                <li><a href="{{ urlFor("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/displayprofile") %}
+                <li><a href="{{ urlFor("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/playersoftware") %}
+                <li><a href="{{ urlFor("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/command") %}
+                <li><a href="{{ urlFor("command.view") }}">{% trans "Commands" %}</a></li>
+            {% endif %}
+        {% if countViewable > 1 %}
+            </ul>
+        </li>
+        {% endif %}
+    {% endif %}
+
+    {% if currentUser.routeViewable("/user") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+        {% set userMenuViewable = true %}
+    {% else %}
+        {% set userMenuViewable = false %}
+    {% endif %}
+
+    {% set countViewable = currentUser.countViewable(["/usergroup", "/admin", "/application", "/module", "/transition"]) %}
+    {% if countViewable > 0 or userMenuViewable %}
+        {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Administration" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
+            {% if userMenuViewable %}
+                <li><a href="{{ urlFor("user.view") }}">{% trans "Users" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/group") %}
+                <li><a href="{{ urlFor("group.view") }}">{% trans "User Groups" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/admin") %}
+                <li><a href="{{ urlFor("admin.view") }}">{% trans "Settings" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/application") %}
+                <li><a href="{{ urlFor("application.view") }}">{% trans "Applications" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/module") %}
+                <li><a href="{{ urlFor("module.view") }}">{% trans "Modules" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/transition") %}
+                <li><a href="{{ urlFor("transition.view") }}">{% trans "Transitions" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/task") %}
+                <li><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
+            {% endif %}
+        {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
+            </ul>
+        </li>
+        {% endif %}
+    {% endif %}
+
+    {% if currentUser.routeViewable("/stats") %}
+    <li class="dropdown">
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Reporting" %} <span class="caret"></span></a>
+        <ul class="dropdown-menu">
+            {% if currentUser.routeViewable("/stats") %}
+                <li><a href="{{ urlFor("stats.view") }}">{% trans "Display Statistics" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/stats") %}
+                <li><a href="{{ urlFor("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/stats") %}
+                <li><a href="{{ urlFor("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
+            {% endif %}
+        </ul>
+    </li>
+    {% endif %}
+
+    {% set countViewable = currentUser.countViewable(["/log", "/sessions", "/auditlog", "/fault", "/help"]) %}
+    {% if countViewable > 0 %}
+        {% if countViewable > 1 %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Advanced" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
+            {% if currentUser.routeViewable("/log") %}
+                <li><a href="{{ urlFor("log.view") }}">{% trans "Log" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/sessions") %}
+                <li><a href="{{ urlFor("sessions.view") }}">{% trans "Sessions" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/auditlog") %}
+                <li><a href="{{ urlFor("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/fault") %}
+                <li><a href="{{ urlFor("fault.view") }}">{% trans "Report Fault" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/help") %}
+                <li><a href="{{ urlFor("help.view") }}">{% trans "Help Links" %}</a></li>
+            {% endif %}
+        {% if countViewable > 1 %}
+            </ul>
+        </li>
+        {% endif %}
+    {% endif %}
+
+</ul>
