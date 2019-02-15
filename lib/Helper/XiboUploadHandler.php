@@ -91,6 +91,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set the old record to edited
                 $oldMedia->isEdited = 1;
+
                 $oldMedia->save(['validate' => false]);
 
                 // The media name might be empty here, because the user isn't forced to select it
@@ -113,6 +114,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Raise an event for this media item
                 $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
+
+                $media->enableStat = $oldMedia->enableStat;
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -252,6 +255,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Pre-process
                 $module->preProcess($media, $filePath);
+
+                if ($media->enableStat == null) {
+                    $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+                }
 
                 // Save
                 $media->save();

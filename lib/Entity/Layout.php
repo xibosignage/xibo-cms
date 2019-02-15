@@ -216,6 +216,14 @@ class Layout implements \JsonSerializable
      */
     public $statusMessage;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating whether the Layout stat is enabled"
+     * )
+     */
+    public $enableStat;
+
     // Child items
     /** @var Region[]  */
     public $regions = [];
@@ -1339,6 +1347,7 @@ class Layout implements \JsonSerializable
         $this->layout = $parent->layout;
         $this->description = $parent->description;
         $this->retired = $parent->retired;
+        $this->enableStat = $parent->enableStat;
 
         // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
         $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
@@ -1415,10 +1424,10 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        $this->getLog()->debug('Adding Layout ' . $this->layout);
+        $this->getLog()->debug('thanks ' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat)';
 
         $time = $this->date->getLocalDate();
 
@@ -1435,7 +1444,8 @@ class Layout implements \JsonSerializable
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
-            'parentId' => ($this->parentId == null) ? null : $this->parentId
+            'parentId' => ($this->parentId == null) ? null : $this->parentId,
+            'enableStat' => $this->enableStat
         ));
 
         // Add a Campaign
@@ -1500,7 +1510,8 @@ class Layout implements \JsonSerializable
               publishedStatusId = :publishedStatusId,
               `userId` = :userId,
               `schemaVersion` = :schemaVersion,
-              `statusMessage` = :statusMessage
+              `statusMessage` = :statusMessage,
+              enableStat = :enableStat
          WHERE layoutID = :layoutid
         ';
 
@@ -1522,7 +1533,8 @@ class Layout implements \JsonSerializable
             'publishedStatusId' => $this->publishedStatusId,
             'userId' => $this->ownerId,
             'schemaVersion' => $this->schemaVersion,
-            'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage)
+            'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
+            'enableStat' => $this->enableStat
         ));
 
         // Update the Campaign

@@ -1005,6 +1005,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        campaign.CampaignID, ";
         $select .= "        layout.status, ";
         $select .= "        layout.statusMessage, ";
+        $select .= "        layout.enableStat, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
@@ -1330,6 +1331,7 @@ class LayoutFactory extends BaseFactory
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
             $layout->statusMessage = $row['statusMessage'];
+            $layout->enableStat = $row['enableStat'];
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
 

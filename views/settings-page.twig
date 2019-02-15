@@ -216,9 +216,72 @@
                                     {% endif %}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT") %}
+                                    {% set title %}{% trans "Aggregation level" %}{% endset %}
+                                    {% set helpText %}{% trans "Default setting for display profile aggregation level" %}{% endset %}
+
+                                    {% set individuallyOption %}{% trans "Individually" %}{% endset %}
+                                    {% set hourlyOption %}{% trans "Hourly" %}{% endset %}
+                                    {% set dailyOption %}{% trans "Daily" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Individually", value: individuallyOption },
+                                        { id: "Hourly", value: hourlyOption },
+                                        { id: "Daily", value: dailyOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT") %}
+                                        {{ forms.dropdown("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "single", title, theme.getSetting("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "Off"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "Off"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("DISPLAY_PROFILE_STATS_DEFAULT") %}
                                     {% set title %}{% trans "Default setting for Statistics Enabled?" %}{% endset %}
-                                    {{ forms.checkbox("DISPLAY_PROFILE_STATS_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_STATS_DEFAULT"), "", "", "", not theme.isSettingEditable("DISPLAY_PROFILE_STATS_DEFAULT")) }}
+                                    {% set helpText %}{% trans "Check this box if you would like new Display Settings Profiles to be created with their Proof of Play Statistics setting switched on." %}{% endset %}
+                                    {{ forms.checkbox("DISPLAY_PROFILE_STATS_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_STATS_DEFAULT"), helpText, "", "", not theme.isSettingEditable("DISPLAY_PROFILE_STATS_DEFAULT")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("LAYOUT_STATS_ENABLED_DEFAULT") %}
+                                    {% set title %}{% trans "Default setting for enabling Layout Statistics?" %}{% endset %}
+                                    {{ forms.checkbox("LAYOUT_STATS_ENABLED_DEFAULT", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), "", "", "", not theme.isSettingEditable("LAYOUT_STATS_ENABLED_DEFAULT")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("MEDIA_STATS_ENABLED_DEFAULT") %}
+                                    {% set title %}{% trans "Enable Media Statistics?" %}{% endset %}
+                                    {% set helpText %}{% trans "Default setting for enabling Media Statistics?" %}{% endset %}
+
+                                    {% set offOption %}{% trans "Off" %}{% endset %}
+                                    {% set onOption %}{% trans "On" %}{% endset %}
+                                    {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Off", value: offOption },
+                                        { id: "On", value: onOption },
+                                        { id: "Inherit", value: inheritOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("MEDIA_STATS_ENABLED_DEFAULT") %}
+                                        {{ forms.dropdown("MEDIA_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT", "Off"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("MEDIA_STATS_ENABLED_DEFAULT", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT", "Off"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("WIDGET_STATS_ENABLED_DEFAULT") %}
+                                    {% set title %}{% trans "Enable Widget Statistics?" %}{% endset %}
+                                    {% set helpText %}{% trans "Default setting for enabling Widget Statistics?" %}{% endset %}
+
+                                    {% set offOption %}{% trans "Off" %}{% endset %}
+                                    {% set onOption %}{% trans "On" %}{% endset %}
+                                    {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Off", value: offOption },
+                                        { id: "On", value: onOption },
+                                        { id: "Inherit", value: inheritOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("WIDGET_STATS_ENABLED_DEFAULT") %}
+                                        {{ forms.dropdown("WIDGET_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT", "Off"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("WIDGET_STATS_ENABLED_DEFAULT", title, theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT", "Off"), helpText) }}
+                                    {% endif %}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED") %}

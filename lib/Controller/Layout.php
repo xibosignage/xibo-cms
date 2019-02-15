@@ -280,6 +280,10 @@ class Layout extends Base
         else
             $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
 
+        if ($layout->enableStat == null) {
+            $layout->enableStat = $this->getConfig()->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
+        }
+
         // Save
         $layout->save();
 
@@ -392,6 +396,7 @@ class Layout extends Base
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $layout->retired = $this->getSanitizer()->getCheckbox('retired');
+        $layout->enableStat = $this->getSanitizer()->getCheckbox('enableStat');
 
         // Save
         $layout->save([

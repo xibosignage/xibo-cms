@@ -525,6 +525,22 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'aggregationLevel',
+                        'tabId' => 'general',
+                        'title' => __('Aggregation level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Hourly', 'value' => __('Hourly')),
+                            array('id' => 'Daily', 'value' => __('Daily'))
+                        ),
+                        'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'XmrNetworkAddress',
                         'tabId' => 'general',
                         'title' => __('XMR Public Address'),
@@ -913,6 +929,22 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'aggregationLevel',
+                        'tabId' => 'general',
+                        'title' => __('Aggregation level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Hourly', 'value' => __('Hourly')),
+                            array('id' => 'Daily', 'value' => __('Daily'))
+                        ),
+                        'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'orientation',
                         'tabId' => 'location',
                         'title' => __('Orientation'),
@@ -1294,6 +1326,22 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ),
                     array(
+                        'name' => 'aggregationLevel',
+                        'tabId' => 'general',
+                        'title' => __('Aggregation level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Hourly', 'value' => __('Hourly')),
+                            array('id' => 'Daily', 'value' => __('Daily'))
+                        ),
+                        'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ),
+                    array(
                         'name' => 'xmrNetworkAddress',
                         'tabId' => 'general',
                         'title' => __('XMR Public Address'),
@@ -1543,6 +1591,22 @@ class DisplayProfile implements \JsonSerializable
                         'groupClass' => NULL
                     ],
                     [
+                        'name' => 'aggregationLevel',
+                        'tabId' => 'general',
+                        'title' => __('Aggregation level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Hourly', 'value' => __('Hourly')),
+                            array('id' => 'Daily', 'value' => __('Daily'))
+                        ),
+                        'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
                         'name' => 'orientation',
                         'tabId' => 'general',
                         'title' => __('Orientation'),
@@ -1760,6 +1824,22 @@ class DisplayProfile implements \JsonSerializable
                         'fieldType' => 'checkbox',
                         'default' => 0,
                         'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'enabled' => true,
+                        'groupClass' => NULL
+                    ],
+                    [
+                        'name' => 'aggregationLevel',
+                        'tabId' => 'general',
+                        'title' => __('Aggregation level'),
+                        'type' => 'string',
+                        'fieldType' => 'dropdown',
+                        'options' => array(
+                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Hourly', 'value' => __('Hourly')),
+                            array('id' => 'Daily', 'value' => __('Daily'))
+                        ),
+                        'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
