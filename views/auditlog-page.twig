@@ -25,10 +25,32 @@
                         <form class="form-inline">
 
                             {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("fromDt", title) }}
+                            <div class="form-group">
+                                <label class="control-label" for="fromDt">{{ title }}</label>
+                                <div class="input-group date" style="display:table;">
+                                    <input type="hidden" name="fromDt" id="fromDt" />
+                                    <input class="form-control datePicker dateControl" name="fromDtLink"
+                                           type="text" id="fromDtLink" data-link-field="fromDt"
+                                           data-link-format="yyyy-mm-dd 00:00:00" readonly />
+                                    <span class="input-group-addon" id="fromDateControlCancel">
+                                                <span class="fa fa-times-circle"></span>
+                                            </span>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("toDt", title) }}
+                            <div class="form-group">
+                                <label class="control-label" for="toDt">{{ title }}</label>
+                                <div class="input-group date" style="display:table;">
+                                    <input type="hidden" name="toDt" id="toDt" />
+                                    <input class="form-control datePicker dateControl" name="toDtLink"
+                                           type="text" id="toDtLink" data-link-field="toDt"
+                                           data-link-format="yyyy-mm-dd 00:00:00" readonly />
+                                    <span class="input-group-addon" id="toDateControlCancel">
+                                                <span class="fa fa-times-circle"></span>
+                                            </span>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "User" %}{% endset %}
                             {{ inline.input("user", title) }}
@@ -164,6 +186,30 @@
 
             $("#refreshLog").click(function () {
                 table.ajax.reload();
+            });
+
+            $("#fromDateControlCancel").on('click', function() {
+                // Clear the date picker
+                var $fromDt = $("#fromDt");
+                $fromDt.val("");
+                $("#fromDtLink").val("");
+
+                table.ajax.reload();
+
+                // Reset local storage
+                localStorage.setItem("auditView", JSON.stringify($fromDt.closest("form").serializeArray()));
+            });
+
+            $("#toDateControlCancel").on('click', function() {
+                // Clear the date picker
+                var $toDt = $("#toDt");
+                $toDt.val("");
+                $("#toDtLink").val("");
+
+                table.ajax.reload();
+
+                // Reset local storage
+                localStorage.setItem("auditView", JSON.stringify($toDt.closest("form").serializeArray()));
             });
         });
 

@@ -69,6 +69,9 @@ class AuditLog extends Base
 
         $search = [];
 
+        if ($filterFromDt != null && $filterFromDt == $filterToDt) {
+            $filterToDt->addDay(1);
+        }
         // Get the dates and times
         if ($filterFromDt == null)
             $filterFromDt = $this->getDate()->parse()->sub('1 day');
