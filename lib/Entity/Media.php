@@ -79,7 +79,7 @@ class Media implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The module type of this Media")
-     * @var int
+     * @var string
      */
     public $mediaType;
 

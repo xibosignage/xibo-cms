@@ -106,7 +106,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 );
 
                 // Set the duration
-                $media->duration = $module->determineDuration($filePath);
+                if ($oldMedia->mediaType != 'video' && $media->mediaType != 'video')
+                    $media->duration = $oldMedia->duration;
+                else
+                    $media->duration = $module->determineDuration($filePath);
 
                 // Pre-process
                 $module->preProcess($media, $filePath);
