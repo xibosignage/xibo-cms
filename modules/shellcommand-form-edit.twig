@@ -55,6 +55,19 @@
                         {% set title %}{% trans "Use taskkill to terminate commands?" %}{% endset %}
                         {% set helpText %}{% trans "On Windows, should the player use taskkill to terminate commands." %}{% endset %}
                         {{ forms.checkbox("useTaskkill", title, module.getOption("useTaskkill"), helpText, "duration-fields") }}
+
+                        {% set title %}{% trans "Show statistics" %}{% endset %}
+                        {% set helpText %}{% trans "Setting for enabling statistics collection" %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableWidgetStat", "single", title, module.getOption("enableWidgetStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT") ), options, "id", "value", helpText) }}
                     </div>
 
                     <div class="tab-pane" id="configurationTab">

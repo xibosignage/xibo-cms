@@ -47,6 +47,19 @@
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Show statistics" %}{% endset %}
+                {% set helpText %}{% trans "Setting for enabling statistics collection" %}{% endset %}
+
+                {% set offOption %}{% trans "Off" %}{% endset %}
+                {% set onOption %}{% trans "On" %}{% endset %}
+                {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                {% set options = [
+                    { id: "Off", value: offOption },
+                    { id: "On", value: onOption },
+                    { id: "Inherit", value: inheritOption }
+                ] %}
+                {{ forms.dropdown("enableMediaStat", "single", title, module.getOption("enableMediaStat", theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT") ), options, "id", "value", helpText) }}
             </form>
         </div>
     </div>
