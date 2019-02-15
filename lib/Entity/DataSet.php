@@ -997,4 +997,14 @@ class DataSet implements \JsonSerializable
             'id' => $rowId
         ]);
     }
+
+    /**
+     * Copy Row
+     * @param int $dataSetIdSource
+     * @param int $dataSetIdTarget
+     */
+    public function copyRows($dataSetIdSource, $dataSetIdTarget)
+    {
+        $this->getStore()->insert('INSERT INTO `dataset_' . $dataSetIdTarget . '`  SELECT * FROM `dataset_' . $dataSetIdSource . '` ' ,[]);
+    }
 }
