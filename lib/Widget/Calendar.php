@@ -123,6 +123,7 @@ class Calendar extends ModuleWidget
         $this->setOption('useEventTimezone', $this->getSanitizer()->getCheckbox('useEventTimezone'));
         $this->setOption('useCalendarTimezone', $this->getSanitizer()->getCheckbox('useCalendarTimezone'));
         $this->setOption('windowsFormatCalendar', $this->getSanitizer()->getCheckbox('windowsFormatCalendar'));
+        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
 
         $this->isValid();
         $this->saveWidget();

@@ -274,6 +274,7 @@ class Stocks extends AlphaVantageBase
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
         $this->setOption('items', $this->getSanitizer()->getString('items'));
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));

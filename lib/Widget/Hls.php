@@ -147,6 +147,7 @@ class Hls extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 

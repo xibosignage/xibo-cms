@@ -359,6 +359,7 @@ class DataSetView extends ModuleWidget
             $this->setOption('name', $this->getSanitizer()->getString('name'));
             $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
             $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+            $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
             $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
             $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
             $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));

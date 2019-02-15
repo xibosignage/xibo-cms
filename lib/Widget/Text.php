@@ -149,6 +149,7 @@ class Text extends ModuleWidget
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
         $this->setOption('xmds', true);
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));

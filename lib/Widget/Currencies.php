@@ -329,6 +329,7 @@ class Currencies extends AlphaVantageBase
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));

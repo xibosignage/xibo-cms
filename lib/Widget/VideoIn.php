@@ -117,6 +117,7 @@ class VideoIn extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('sourceId', $this->getSanitizer()->getString('sourceId' ,'hdmi'));
+        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
 
         $this->isValid();
 

@@ -358,6 +358,7 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('name', $this->getSanitizer()->getString('name'));
             $this->setOption('effect', $this->getSanitizer()->getString('effect'));
             $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+            $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
             $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
             $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
             $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));

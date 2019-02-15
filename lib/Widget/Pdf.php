@@ -87,6 +87,7 @@ class Pdf extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableMediaStat', $this->getSanitizer()->getString('enableMediaStat'));
 
         $this->isValid();
         $this->saveWidget();
