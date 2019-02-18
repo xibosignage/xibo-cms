@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -197,6 +197,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('GLOBAL_THEME_NAME', $this->getSanitizer()->getString('GLOBAL_THEME_NAME'));
         }
 
+        if ($this->getConfig()->isSettingEditable('NAVIGATION_MENU_POSITION')) {
+            $this->getConfig()->changeSetting('NAVIGATION_MENU_POSITION', $this->getSanitizer()->getString('NAVIGATION_MENU_POSITION'));
+        }
+
         if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_UPDATEINALL_CHECKB')) {
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_UPDATEINALL_CHECKB'));
         }
@@ -207,6 +211,10 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_DELETEOLDVER_CHECKB')) {
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_DELETEOLDVER_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_DURATION')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_DURATION', $this->getSanitizer()->getInt('DEFAULT_TRANSITION_DURATION'));
         }
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {

@@ -10,6 +10,7 @@ namespace Xibo\Tests\Integration;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDataSet;
 use Xibo\OAuth2\Client\Entity\XiboDataSetColumn;
+use Xibo\OAuth2\Client\Entity\XiboDataSetRow;
 use Xibo\Tests\LocalWebTestCase;
 
 class DataSetTest extends LocalWebTestCase
@@ -367,10 +368,11 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Get the row id
-        $row = $dataSet->getDataByRowId($object->id);
+        $row = $dataSet->getData();
+        $this->getLogger()->debug(json_encode($row));
         # Check if data was correctly added to the row
-        $this->assertArrayHasKey($nameCol, $row);
-        $this->assertSame($row[$nameCol], 'test');
+        $this->assertArrayHasKey($nameCol, $row[0]);
+        $this->assertSame($row[0][$nameCol], 'test');
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
         $dataSet->deleteWData();
     }
@@ -391,8 +393,7 @@ class DataSetTest extends LocalWebTestCase
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # Add new row with data to our dataset
         $rowD = 'test';
-        $row = $dataSet->createRow($column->dataSetColumnId, $rowD);
-        $rowCheck = $dataSet->getDataByRowId($row['id']);
+        $row = (new XiboDataSetRow($this->getEntityProvider()))->create($dataSet->dataSetId, $column->dataSetColumnId, $rowD);
         # Edit row data
         $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id'], [
             'dataSetColumnId_' . $column->dataSetColumnId => $data
@@ -402,14 +403,14 @@ class DataSetTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # get the row id
-        $rowCheck = $dataSet->getDataByRowId($object->id);
+        $rowCheck = $dataSet->getData();
         # Check if data was correctly added to the row
-        $this->assertArrayHasKey($nameCol, $rowCheck);
+        $this->assertArrayHasKey($nameCol, $rowCheck[0]);
         if ($data == Null){
-            $this->assertSame($rowCheck[$nameCol], $rowD);
+            $this->assertSame($rowCheck[0][$nameCol], $rowD);
         }
         else {
-         $this->assertSame($rowCheck[$nameCol], $data);           
+         $this->assertSame($rowCheck[0][$nameCol], $data);
         }
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
         $dataSet -> deleteWData();
@@ -447,8 +448,7 @@ class DataSetTest extends LocalWebTestCase
         # Create new column and add it to our dataset
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # Add new row data
-        $row = $dataSet->createRow($column->dataSetColumnId, 'test');
-        $rowCheck = $dataSet->getDataByRowId($row['id']);
+        $row = (new XiboDataSetRow($this->getEntityProvider()))->create($dataSet->dataSetId, $column->dataSetColumnId, 'Row Data');
         # Delete row
         $this->client->delete('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id']);
         $response = json_decode($this->client->response->body());

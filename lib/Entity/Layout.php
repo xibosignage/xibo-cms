@@ -471,7 +471,7 @@ class Layout implements \JsonSerializable
      */
     public function getStatusMessage()
     {
-        if (empty($this->statusMessage))
+        if ($this->statusMessage === null || empty($this->statusMessage))
             return [];
 
         if (is_array($this->statusMessage))
@@ -940,7 +940,7 @@ class Layout implements \JsonSerializable
                 try {
                     $moduleStatus = $module->isValid();
                 } catch (XiboException $xiboException) {
-                    $moduleStatus = 0;
+                    $moduleStatus = 4;
 
                     // Include the exception on
                     $this->pushStatusMessage($xiboException->getMessage());
@@ -1077,7 +1077,7 @@ class Layout implements \JsonSerializable
         // Update the layout status / duration accordingly
         if ($layoutHasEmptyRegion) {
             $status = 4;
-            $this->statusMessage .= __('Empty Region');
+            $this->pushStatusMessage(__('Empty Region'));
         }
 
         $this->status = ($status < $this->status) ? $status : $this->status;
@@ -1272,14 +1272,14 @@ class Layout implements \JsonSerializable
 
                 // Will continue and save the status as 4
                 $this->status = 4;
-                $this->statusMessage = 'Unexpected Error';
+                $this->pushStatusMessage('Unexpected Error');
 
                 // No need to notify on an errored build
                 $options['notify'] = false;
             }
 
             if ($this->status === 4 && $options['exceptionOnError'])
-                throw new InvalidArgumentException(__('There is an error with this Layout: %s', $this->statusMessage), 'status');
+                throw new InvalidArgumentException(__('There is an error with this Layout: %s', implode(',', $this->getStatusMessage())), 'status');
 
             $this->save([
                 'saveRegions' => true,

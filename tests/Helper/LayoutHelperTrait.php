@@ -11,8 +11,10 @@ namespace Xibo\Tests\Helper;
 
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
+use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboResolution;
+use Xibo\OAuth2\Client\Entity\XiboWidget;
 use Xibo\OAuth2\Client\Exception\XiboApiException;
 
 /**
@@ -187,11 +189,27 @@ trait LayoutHelperTrait
     }
 
     /**
+     * @param $layout
+     * @return $this
+     */
+    protected function addSimpleWidget($layout)
+    {
+        $this->getEntityProvider()->post('/playlist/widget/clock/' . $layout->regions[0]->regionPlaylist->playlistId, [
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        return $this;
+    }
+
+    /**
      * @param $response
      * @return \Xibo\OAuth2\Client\Entity\XiboEntity|XiboLayout
      */
     private function constructLayoutFromResponse($response)
     {
+        $hydratedRegions = [];
+        $hydratedWidgets = [];
         /** @var XiboLayout $layout */
         $layout = new XiboLayout($this->getEntityProvider());
         $layout = $layout->hydrate($response);
@@ -200,12 +218,23 @@ trait LayoutHelperTrait
 
         if (isset($response['regions'])) {
             foreach ($response['regions'] as $item) {
+                /** @var XiboRegion $region */
                 $region = new XiboRegion($this->getEntityProvider());
                 $region->hydrate($item);
-
-                // Add to parent object
-                $layout->regions[] = $region;
+                /** @var XiboPlaylist $playlist */
+                $playlist = new XiboPlaylist($this->getEntityProvider());
+                $playlist->hydrate($item['regionPlaylist']);
+                foreach ($playlist->widgets as $widget) {
+                    /** @var XiboWidget $widgetObject */
+                    $widgetObject = new XiboWidget($this->getEntityProvider());
+                    $widgetObject->hydrate($widget);
+                    $hydratedWidgets[] = $widgetObject;
+                }
+                $playlist->widgets = $hydratedWidgets;
+                $region->regionPlaylist = $playlist;
+                $hydratedRegions[] = $region;
             }
+            $layout->regions = $hydratedRegions;
         } else {
             $this->getLogger()->debug('No regions returned with Layout object');
         }

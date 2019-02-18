@@ -59,7 +59,7 @@ class LibraryReviseTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Add it to the Layout
-        (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist['playlistId']);
+        (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist->playlistId);
 
         // Publish
         $this->layout = $this->publish($this->layout);
@@ -81,6 +81,7 @@ class LibraryReviseTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );

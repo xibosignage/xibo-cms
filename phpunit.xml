@@ -26,4 +26,7 @@
     <logging>
         <log type="junit" target="results.xml" logIncompleteSkipped="true"/>
     </logging>
+    <php>
+        <ini name="memory_limit" value="-1" />
+    </php>
 </phpunit>

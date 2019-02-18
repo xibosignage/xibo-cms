@@ -41,3 +41,5 @@ services:
 
 networks:
   default:
+    external:
+      name: xibo-mongo_mongodb

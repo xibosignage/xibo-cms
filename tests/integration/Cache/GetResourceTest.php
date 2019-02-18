@@ -53,7 +53,7 @@ class GetResourceTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Add a resource heavy module to the Layout (one that will download images)
-        $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $layout->regions[0]->regionPlaylist->playlistId);
 
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'uri' => 'http://ceu.xibo.co.uk/mediarss/feed.xml',
@@ -89,6 +89,7 @@ class GetResourceTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );

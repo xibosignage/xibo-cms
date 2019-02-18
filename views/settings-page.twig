@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -93,6 +93,23 @@
                                         {{ forms.disabled("GLOBAL_THEME_NAME", title, theme.getSetting("GLOBAL_THEME_NAME"), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("NAVIGATION_MENU_POSITION") %}
+                                    {% set title %}{% trans "Navigation Menu" %}{% endset %}
+                                    {% set helpText %}{% trans "Where should the navigation menu be positioned? A user can also set this in their preferences." %}{% endset %}
+
+                                    {% set horizontalOption %}{% trans "Horizontal along the top" %}{% endset %}
+                                    {% set verticalOption %}{% trans "Vertically on the left" %}{% endset %}
+                                    {% set options = [
+                                        { id: "horizontal", value: horizontalOption },
+                                        { id: "vertical", value: verticalOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("NAVIGATION_MENU_POSITION") %}
+                                        {{ forms.dropdown("NAVIGATION_MENU_POSITION", "single", title, theme.getSetting("NAVIGATION_MENU_POSITION", "vertical"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("NAVIGATION_MENU_POSITION", title, theme.getSetting("NAVIGATION_MENU_POSITION", "vertical"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_defaults">
                                 <h3 class="section-heading">{% trans "Defaults" %}</h3>
@@ -116,6 +133,17 @@
                                     {% set helpText %}{% trans "Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library." %}{% endset %}
 
                                     {{ forms.checkbox("LIBRARY_MEDIA_DELETEOLDVER_CHECKB", title, theme.getSetting("LIBRARY_MEDIA_DELETEOLDVER_CHECKB"), helpText, "", "", not theme.isSettingEditable("LIBRARY_MEDIA_UPDATEINALL_CHECKB")) }}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_TRANSITION_DURATION") %}
+                                    {% set title %}{% trans "Default Transition duration" %}{% endset %}
+                                    {% set helpText %}{% trans "Default duration for in and out transitions" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_TRANSITION_DURATION") %}
+                                        {{ forms.number("DEFAULT_TRANSITION_DURATION", title, theme.getSetting("DEFAULT_TRANSITION_DURATION", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_TRANSITION_DURATION", title, theme.getSetting("DEFAULT_TRANSITION_DURATION", 0), helpText) }}
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_displays">

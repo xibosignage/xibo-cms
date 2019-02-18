@@ -53,6 +53,7 @@ class LayoutRetireTest extends LocalWebTestCase
             NULL,
             NULL,
             0,
+            0,
             0
         );
 

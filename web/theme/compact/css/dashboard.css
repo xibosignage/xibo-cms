@@ -377,3 +377,37 @@ ul.sidebar .sidebar-title {
 .news-widget div.article {
   padding-top: 15px;
 }
+
+
+
+/* Horizontal Menu */
+.navbar-default {
+  background-color: #273759;
+}
+.navbar-default img.nav-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+}
+.navbar-default .navbar-nav>li>a {
+  line-height: 49px;
+  color: #b2bfdc;
+  border-bottom: 1px solid #273759;
+}
+.navbar-default .navbar-nav>li>a:focus, .navbar-default .navbar-nav>li>a:hover {
+  color: #fff;
+  background-color: #30426a;
+}
+.navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover {
+  color: #fff;
+  border-bottom: 1px solid #e99d1a;
+  background-color: #30426a;
+}
+.navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover {
+  color: #fff;
+  border-bottom: 1px solid #e99d1a;
+  background-color: #30426a;
+}
+.notification-drawer-icon i {
+  font-size: 20px;
+}

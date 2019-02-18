@@ -123,7 +123,7 @@
                         {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText) }}
                             
                         {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set helpText %}{% trans "The format to apply to all dates returned by the ticker. In PHP date format: http://uk3.php.net/manual/en/function.date.php" %}{% endset %}
+                        {% set helpText %}{% trans "Enter the date format to apply to all dates returned: d - day in numbers; 01 to 31 / D - day of the week as text; Mon to Sun: m - month in numbers; 01 to 12 /M - month in text; Jan to Dec - year in two digits; 19 / Y - year in four digits; 2019" %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}

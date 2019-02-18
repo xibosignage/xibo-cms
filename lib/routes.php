@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (routes.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -342,6 +343,11 @@ $app->delete('/log', '\Xibo\Controller\Logging:truncate')->name('log.truncate');
  *  description="Users"
  * )
  */
+// preferences
+$app->get('/user/pref', '\Xibo\Controller\User:pref')->name('user.pref');
+$app->post('/user/pref', '\Xibo\Controller\User:prefEdit');
+$app->put('/user/pref', '\Xibo\Controller\User:prefEditFromForm');
+
 $app->get('/user/me', '\Xibo\Controller\User:myDetails')->name('user.me');
 $app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
 $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
@@ -353,9 +359,6 @@ $app->post('/user/:id/usergroup/assign', '\Xibo\Controller\User:assignUserGroup'
 // permissions
 $app->get('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissionsGrid')->name('user.permissions');
 $app->post('/user/permissions/:entity/:id', '\Xibo\Controller\User:permissions');
-// preferences
-$app->get('/user/pref', '\Xibo\Controller\User:pref')->name('user.pref');
-$app->post('/user/pref', '\Xibo\Controller\User:prefEdit');
 
 /**
  * User Group
