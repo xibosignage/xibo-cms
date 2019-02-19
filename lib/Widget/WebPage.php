@@ -152,7 +152,7 @@ class WebPage extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaling', $this->getSanitizer()->getInt('scaling'));

@@ -146,7 +146,7 @@ class Clock extends ModuleWidget
         $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
-        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
 

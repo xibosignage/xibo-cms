@@ -101,7 +101,7 @@ class LocalVideo extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
-        $this->setOption('enableWidgetStat', $this->getSanitizer()->getString('enableWidgetStat'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
 
