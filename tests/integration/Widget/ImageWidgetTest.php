@@ -65,7 +65,7 @@ class ImageWidgetTest extends LocalWebTestCase
         $this->media = (new XiboLibrary($this->getEntityProvider()))->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
 
         // Assign the media we've created to our regions playlist.
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist->playlistId);
 
         // Store the widgetId
         $this->widgetId = $playlist->widgets[0]->widgetId;

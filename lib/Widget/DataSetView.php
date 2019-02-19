@@ -860,7 +860,7 @@ class DataSetView extends ModuleWidget
         if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
             throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
 
-        if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
+        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))
             throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
 
         // Make sure we haven't entered a silly value in the filter

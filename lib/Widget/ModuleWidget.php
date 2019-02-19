@@ -706,6 +706,8 @@ abstract class ModuleWidget implements ModuleInterface
     {
         // Set the default widget options for this widget and save.
         $this->setDefaultWidgetOptions();
+        $this->setOption('upperLimit', 0);
+        $this->setOption('lowerLimit', 0);
         $this->saveWidget();
     }
 

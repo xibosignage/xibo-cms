@@ -431,7 +431,7 @@ class LayoutTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
 
         // Assign layout to campaign
-        $campaign->assignLayout($layout->layoutId);
+        $campaign->assignLayout([$layout->layoutId], [1]);
         # Check if it's assigned 
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame(1, $campaignCheck->numberLayouts);

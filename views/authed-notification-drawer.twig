@@ -1,0 +1,30 @@
+<li class="dropdown item">
+    <a href="#" class="dropdown-toggle notification-drawer-icon" data-toggle="dropdown">
+        <i class="fa fa-bell"></i> {% if notificationCount > 0 %}<span class="badge red">{{ notificationCount }}</span>{% endif %}
+    </a>
+    <ul class="dropdown-menu dropdown-menu-right notification-drawer">
+        <li class="dropdown-header">{% trans "Notifications" %}<br/>
+
+        </li>
+        {% if notifications|length > 0 %}
+            <li class="divider"></li>
+        {% endif %}
+        {% for notification in notifications %}
+            <li>
+                <a href="#" class="notification">
+                    {% if notification.notificationId %}
+                        <a class="XiboFormButton" href="{{ urlFor("notification.show", {id: notification.notificationId}) }}"><span class="{% if notification.read %}notification-unread{% else %}notification-read{% endif %}">{{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span></span></a>
+                    {% else %}
+                        <span class="fa fa-exclamation-circle"></span> {{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span>
+                    {% endif %}
+                </a>
+            </li>
+        {% endfor %}
+
+        {% if currentUser.routeViewable("/notification") %}
+            <li class="divider"></li>
+
+            <li><a href="{{ urlFor("notification.view") }}">{% trans "Notification Centre" %}</a></li>
+        {% endif %}
+    </ul>
+</li>

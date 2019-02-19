@@ -61,7 +61,7 @@ class ShellCommandWidgetTest extends LocalWebTestCase
         $layout = $this->checkout($this->publishedLayout);
 
         // Create a Widget for us to edit.
-        $response = $this->getEntityProvider()->post('/playlist/widget/shellcommand/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/shellcommand/' . $layout->regions[0]->regionPlaylist->playlistId);
 
         // Create a command
         $this->command = (new XiboCommand($this->getEntityProvider()))->create(Random::generateString(), 'phpunit description', 'phpunitcode');

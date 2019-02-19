@@ -1,11 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (UserOption.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -50,20 +63,33 @@ class UserOption implements \JsonSerializable
         $this->excludeProperty('userId');
     }
 
+    /**
+     * @inheritdoc
+     */
+    public function __toString()
+    {
+        return $this->userId . '-' . $this->option . '-' . md5($this->value);
+    }
+
     public function save()
     {
-        $sql = 'INSERT INTO `useroption` (`userId`, `option`, `value`) VALUES (:userId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2';
-        $this->getStore()->insert($sql, array(
+        if (!$this->hasPropertyChanged('value')) {
+            return;
+        }
+
+        $this->getStore()->insert('INSERT INTO `useroption` (`userId`, `option`, `value`) VALUES (:userId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2', [
             'userId' => $this->userId,
             'option' => $this->option,
             'value' => $this->value,
             'value2' => $this->value,
-        ));
+        ]);
     }
 
     public function delete()
     {
-        $sql = 'DELETE FROM `useroption` WHERE `userId` = :userId AND `option` = :option';
-        $this->getStore()->update($sql, array('userId' => $this->userId, 'option' => $this->option));
+        $this->getStore()->update('DELETE FROM `useroption` WHERE `userId` = :userId AND `option` = :option', [
+            'userId' => $this->userId,
+            'option' => $this->option
+        ]);
     }
 }

@@ -1,7 +1,8 @@
 {#
-/*
- Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -56,7 +57,7 @@
                 ] %}
 
                 {% set title %}{% trans "Background Image" %}{% endset %}
-                {% set helpText %}{% trans "Pick the background image from the library. It is recommended to pick JPG images as Windows Players can only show JPG background images." %}{% endset %}
+                {% set helpText %}{% trans "Pick an image from the Library to use as your background. Please note that Windows Players only support JPG image files." %}{% endset %}
                 {% set noneMessage %}{% trans "None" %}{% endset %}
                 {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
                 {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}

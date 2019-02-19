@@ -82,7 +82,7 @@ class TickerWidgetTest extends LocalWebTestCase
         $layout = $this->checkout($this->publishedLayout);
 
         // Create a Widget for us to edit.
-        $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $layout->regions[0]->regionPlaylist['playlistId']);
+        $response = $this->getEntityProvider()->post('/playlist/widget/ticker/' . $layout->regions[0]->regionPlaylist->playlistId);
 
         $this->widgetId = $response['widgetId'];
 
@@ -101,6 +101,7 @@ class TickerWidgetTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );

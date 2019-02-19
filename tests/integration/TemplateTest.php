@@ -77,7 +77,7 @@ class TemplateTest extends LocalWebTestCase
         $templateId = $object->id;
 
         # delete template as we no longer need it
-        $template = (new XiboLayout($this->getEntityProvider()))->getByTemplateId($object->id);
+        $template = (new XiboLayout($this->getEntityProvider()))->getByTemplateId($templateId);
         $template->delete();
 
         # delete layout as we no longer need it
