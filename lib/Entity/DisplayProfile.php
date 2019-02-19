@@ -516,11 +516,11 @@ class DisplayProfile implements \JsonSerializable
                     array(
                         'name' => 'StatsEnabled',
                         'tabId' => 'general',
-                        'title' => __('Enable stats reporting?'),
+                        'title' => __('Enable Stats Collection??'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
-                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'helpText' => __('Tick to enable the collection of all Proof of Play Statistics to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -531,12 +531,12 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Individual', 'value' => __('Individual')),
                             array('id' => 'Hourly', 'value' => __('Hourly')),
                             array('id' => 'Daily', 'value' => __('Daily'))
                         ),
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
-                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -920,11 +920,11 @@ class DisplayProfile implements \JsonSerializable
                     array(
                         'name' => 'statsEnabled',
                         'tabId' => 'general',
-                        'title' => __('Enable stats reporting?'),
+                        'title' => __('Enable Stats Collection??'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
-                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'helpText' => __('Tick to enable the collection of all Proof of Play Statistics to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -935,12 +935,12 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Individual', 'value' => __('Individual')),
                             array('id' => 'Hourly', 'value' => __('Hourly')),
                             array('id' => 'Daily', 'value' => __('Daily'))
                         ),
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
-                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -1317,11 +1317,11 @@ class DisplayProfile implements \JsonSerializable
                     array(
                         'name' => 'statsEnabled',
                         'tabId' => 'general',
-                        'title' => __('Enable stats reporting?'),
+                        'title' => __('Enable Stats Collection??'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'helpText' => __('Tick to enable the collection of all Proof of Play Statistics to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -1332,12 +1332,12 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Individual', 'value' => __('Individual')),
                             array('id' => 'Hourly', 'value' => __('Hourly')),
                             array('id' => 'Daily', 'value' => __('Daily'))
                         ),
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
-                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ),
@@ -1582,11 +1582,11 @@ class DisplayProfile implements \JsonSerializable
                     [
                         'name' => 'statsEnabled',
                         'tabId' => 'general',
-                        'title' => __('Enable stats reporting?'),
+                        'title' => __('Enable Stats Collection??'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
-                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'helpText' => __('Tick to enable the collection of all Proof of Play Statistics to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
@@ -1597,12 +1597,12 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Individual', 'value' => __('Individual')),
                             array('id' => 'Hourly', 'value' => __('Hourly')),
                             array('id' => 'Daily', 'value' => __('Daily'))
                         ),
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
-                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
@@ -1819,11 +1819,11 @@ class DisplayProfile implements \JsonSerializable
                     [
                         'name' => 'statsEnabled',
                         'tabId' => 'general',
-                        'title' => __('Enable stats reporting?'),
+                        'title' => __('Enable Stats Collection??'),
                         'type' => 'checkbox',
                         'fieldType' => 'checkbox',
                         'default' => 0,
-                        'helpText' => __('Should the application send proof of play stats to the CMS.'),
+                        'helpText' => __('Tick to enable the collection of all Proof of Play Statistics to the CMS.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],
@@ -1834,12 +1834,12 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'Individually', 'value' => __('Individually')),
+                            array('id' => 'Individual', 'value' => __('Individual')),
                             array('id' => 'Hourly', 'value' => __('Hourly')),
                             array('id' => 'Daily', 'value' => __('Daily'))
                         ),
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
-                        'helpText' => __('How often should the Player aggregate proof of play stats.'),
+                        'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
                         'groupClass' => NULL
                     ],

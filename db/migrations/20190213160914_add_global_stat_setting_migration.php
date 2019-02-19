@@ -35,7 +35,7 @@ class AddGlobalStatSettingMigration extends AbstractMigration
             ->insert([
                 [
                     'setting' => 'DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT',
-                    'value' => 'Individually',
+                    'value' => 'Individual',
                     'userSee' => 1,
                     'userChange' => 1
                 ],

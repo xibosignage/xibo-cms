@@ -874,6 +874,7 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
+        $layoutNode->setAttribute('enableStat', $this->enableStat);
 
         // Only set the z-index if present
         if ($this->backgroundzIndex != 0)
@@ -987,6 +988,86 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
                 $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
 
+//                Logic Table
+//
+//                Widget With Media
+//                LAYOUT	MEDIA	WIDGET	Media stats collected?
+//                    ON	ON	    ON	    YES     Widget takes precedence     // Match - 1
+//                    ON	OFF	    ON	    YES     Widget takes precedence     // Match - 1
+//                    ON	INHERIT	ON	    YES     Widget takes precedence     // Match - 1
+//
+//                    OFF	ON	    ON	    YES     Widget takes precedence     // Match - 1
+//                    OFF	OFF	    ON	    YES     Widget takes precedence     // Match - 1
+//                    OFF	INHERIT	ON	    YES     Widget takes precedence     // Match - 1
+//
+//                    ON	ON	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    ON	OFF	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    ON	INHERIT	OFF	    NO      Widget takes precedence     // Match - 2
+//
+//                    OFF	ON	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    OFF	OFF	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    OFF	INHERIT	OFF	    NO      Widget takes precedence     // Match - 2
+//
+//                    ON	ON	    INHERIT	YES     Media takes precedence      // Match - 3
+//                    ON	OFF	    INHERIT	NO      Media takes precedence      // Match - 4
+//                    ON	INHERIT	INHERIT	YES     Media takes precedence and Inherited from Layout        // Match - 5
+//
+//                    OFF	ON	    INHERIT	YES     Media takes precedence      // Match - 3
+//                    OFF	OFF	    INHERIT	NO      Media takes precedence      // Match - 4
+//                    OFF	INHERIT	INHERIT	NO      Media takes precedence and Inherited from Layout        // Match - 6
+//
+//                Widget Without Media
+//                LAYOUT	WIDGET		Widget stats collected?
+//                    ON	ON		    YES	    Widget takes precedence     // Match - 1
+//                    ON	OFF		    NO	    Widget takes precedence     // Match - 2
+//                    ON	INHERIT		YES	    Inherited from Layout       // Match - 7
+//                    OFF	ON		    YES	    Widget takes precedence     // Match - 1
+//                    OFF	OFF		    NO	    Widget takes precedence     // Match - 2
+//                    OFF	INHERIT		NO	    Inherited from Layout       // Match - 8
+
+                // Layout stat collection flag
+                $layoutEnableStat = $this->enableStat;
+
+                // Widget stat collection flag
+                $widgetEnableStat = $widget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+
+                $enableStat = 0; // Match - 0
+
+                if ($widgetEnableStat == 'On') {
+                    $enableStat = 1; // Match - 1
+                } else if ($widgetEnableStat == 'Off') {
+                    $enableStat = 0; // Match - 2
+                } else if ($widgetEnableStat == 'Inherit') {
+
+                    try {
+                        // Media enable stat flag - WIDGET WITH MEDIA
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        $mediaEnableStat = $media->enableStat;
+
+                        if ($mediaEnableStat == 'On') {
+                            $enableStat = 1; // Match - 3
+                        } else if ($mediaEnableStat == 'Off') {
+                            $enableStat = 0; // Match - 4
+                        } else if ($mediaEnableStat == 'Inherit') {
+                            if ($layoutEnableStat == 1) {
+                                $enableStat = 1; // Match - 5
+                            } else {
+                                $enableStat = 0; // Match - 6
+                            }
+                        }
+                    } catch (\Exception $e) { //  - WIDGET WITHOUT MEDIA
+                        $this->getLog()->error($widget->widgetId. ' is not a library media and does not have a media id.');
+                        if ($layoutEnableStat == 1) {
+                            $enableStat = 1;  // Match - 7
+                        } else {
+                            $enableStat = 0;  // Match - 8
+                        }
+                    }
+                }
+
+                // Set enable stat collection flag
+                $mediaNode->setAttribute('enableStat', $enableStat);
+
                 // Create options nodes
                 $optionsNode = $document->createElement('options');
                 $rawNode = $document->createElement('raw');
@@ -1005,8 +1086,14 @@ class Layout implements \JsonSerializable
                     // Add the fileId attribute to the media element
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
+                //$this->getLog()->error($widget->widgetOptions, JSON_PRETTY_PRINT);
+
 
                 foreach ($widget->widgetOptions as $option) {
+
+                    //$this->getLog()->error($option->type);
+
+
                     /* @var WidgetOption $option */
                     if (trim($option->value) === '')
                         continue;
