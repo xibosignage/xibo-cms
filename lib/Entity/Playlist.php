@@ -518,6 +518,10 @@ class Playlist implements \JsonSerializable
             }
         }
 
+        // region delete, the parentId is the regionPlaylist playlistId, we want to remove all linked subplaylists in that regionPlaylist
+        if ($options['regionDelete'] && $this->regionId != 0)
+            $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE parentId = :playlistId', ['playlistId' => $this->playlistId]);
+
         // Delete my closure table records
         $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);
 
