@@ -327,6 +327,14 @@ class DisplayProfile extends Base
             }
         }
 
+        // Decode JSON value and save as value (timers, pictureOptions, lockOptions)
+        foreach ($displayProfile->configDefault as &$setting) {
+            if (in_array($setting['name'], ['timers', 'pictureOptions', 'lockOptions'])) {
+                $settingValues = json_decode((string )$setting['value'], true);
+                $setting['data'] = $settingValues;
+            }
+        }
+
         // Get the Player Version for this display profile type
         if ($versionId != 0)
             try {
@@ -418,25 +426,137 @@ class DisplayProfile extends Base
             // Validate the parameter
             $value = null;
 
-            switch ($setting['type']) {
-                case 'string':
-                    $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
-                    break;
+            if ($setting['name'] == 'timers') {
+                // Options object to be converted to a JSON string
+                $timerOptions = (object)[];
 
-                case 'int':
-                    $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
-                    break;
+                $timers = $this->getSanitizer()->getStringArray('timers');
 
-                case 'double':
-                    $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
-                    break;
+                foreach ($timers as $timer) {
+                    $timerDay = $timer['day'];
 
-                case 'checkbox':
-                    $value = $this->getSanitizer()->getCheckbox($setting['name']);
-                    break;
+                    if(sizeof($timers) == 1 && $timerDay == '') {
+                        break;
+                    } elseif($timerDay == '' || property_exists($timerOptions, $timerDay)) {
+                        // Repeated or Empty day input, throw exception
+                        throw new \InvalidArgumentException(__('On/Off Timers: Please check the days selected and remove the duplicates or empty'));
+                    } else {
+                        // Get time values
+                        $timerOn = $timer['on'];
+                        $timerOff = $timer['off'];
 
-                default:
-                    $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
+                        // Check the on/off times are in the correct format (H:i)
+                        if (strlen($timerOn) != 5 || strlen($timerOff) != 5) {
+                            throw new \InvalidArgumentException(__('On/Off Timers: Please enter a on and off date for any row with a day selected, or remove that row'));
+                        } else {
+                            //Build object and add it to the main options object
+                            $temp = [];
+                            $temp['on'] = $timerOn;
+                            $temp['off'] = $timerOff;
+                            $timerOptions->$timerDay = $temp;
+                        }
+                    }
+                }
+                
+                // Encode option and save it as a string to the lock setting
+                $value = json_encode($timerOptions, JSON_PRETTY_PRINT);
+            } elseif ($setting['name'] == 'pictureOptions') {
+                // Options object to be converted to a JSON string
+                $pictureControlsOptions = (object)[];
+
+                // Special string properties map
+                $specialProperties = (object)[];
+                $specialProperties->dynamicContrast = ["off", "low", "medium", "high"];
+                $specialProperties->superResolution = ["off", "low", "medium", "high"];
+                $specialProperties->colorGamut = ["normal", "extended"];
+                $specialProperties->dynamicColor = ["off", "low", "medium", "high"];
+                $specialProperties->noiseReduction = ["auto", "off", "low", "medium", "high"];
+                $specialProperties->mpegNoiseReduction = ["auto", "off", "low", "medium", "high"];
+                $specialProperties->blackLevel = ["low", "high"];
+                $specialProperties->gamma = ["low", "medium", "high", "high2"];
+
+                // Get array from request
+                $pictureControls = $this->getSanitizer()->getStringArray('pictureControls');
+
+                foreach ($pictureControls as $pictureControl) {
+                    $propertyName = $pictureControl['property'];
+
+                    if(sizeof($pictureControls) == 1 && $propertyName == '') {
+                        break;
+                    } elseif($propertyName == '' || property_exists($pictureControlsOptions, $propertyName)) {
+                        // Repeated or Empty property input, throw exception
+                        throw new \InvalidArgumentException(__('Picture: Please check the settings selected and remove the duplicates or empty'));
+                    } else {
+                        // Get time values
+                        $propertyValue = $pictureControl['value'];
+
+                        // Check the on/off times are in the correct format (H:i)
+                        if (property_exists($specialProperties, $propertyName)) {
+                            $pictureControlsOptions->$propertyName = $specialProperties->$propertyName[$propertyValue];
+                        } else {
+                            //Build object and add it to the main options object
+                            $pictureControlsOptions->$propertyName = (int)$propertyValue;
+                        }
+                    }
+                }
+
+                 // Encode option and save it as a string to the lock setting
+                $value = json_encode($pictureControlsOptions, JSON_PRETTY_PRINT);
+            } elseif ($setting['name'] == 'lockOptions') {  
+                // Get values from lockOptions params
+                $usblock = $this->getSanitizer()->getString('usblock', '');
+                $osdlock = $this->getSanitizer()->getString('osdlock', '');
+                $keylockLocal = $this->getSanitizer()->getString('keylockLocal', '');
+                $keylockRemote = $this->getSanitizer()->getString('keylockRemote', '');
+
+                // Options object to be converted to a JSON string
+                $lockOptions = (object)[];
+
+                if($usblock != 'empty') {
+                    $lockOptions->usblock = $usblock === 'true'? true: false;
+                }
+
+                if($osdlock != 'empty') {
+                    $lockOptions->osdlock = $osdlock === 'true'? true: false;
+                }
+
+                if($keylockLocal != '' || $keylockRemote != '') {
+                    // Keylock sub object
+                    $lockOptions->keylock = (object)[];
+
+                    if($keylockLocal != '') {
+                        $lockOptions->keylock->local = $keylockLocal;
+                    }
+
+                    if($keylockRemote != '') {
+                        $lockOptions->keylock->remote = $keylockRemote;
+                    }
+                }
+
+                // Encode option and save it as a string to the lock setting
+                $value = json_encode($lockOptions, JSON_PRETTY_PRINT);
+            } else {
+
+                switch ($setting['type']) {
+                    case 'string':
+                        $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
+                        break;
+
+                    case 'int':
+                        $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
+                        break;
+
+                    case 'double':
+                        $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
+                        break;
+
+                    case 'checkbox':
+                        $value = $this->getSanitizer()->getCheckbox($setting['name']);
+                        break;
+
+                    default:
+                        $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
+                }
             }
 
             // Add to the combined array
