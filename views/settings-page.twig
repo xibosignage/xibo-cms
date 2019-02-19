@@ -246,37 +246,38 @@
 
                                 {% if theme.isSettingVisible("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT") %}
                                     {% set title %}{% trans "Aggregation level" %}{% endset %}
-                                    {% set helpText %}{% trans "Default setting for display profile aggregation level" %}{% endset %}
+                                    {% set helpText %}{% trans "Set the Default setting to use for the level of collection for Proof of Play Statistics to be applied to Layouts / Media and Widget items." %}{% endset %}
 
-                                    {% set individuallyOption %}{% trans "Individually" %}{% endset %}
+                                    {% set individualOption %}{% trans "Individual" %}{% endset %}
                                     {% set hourlyOption %}{% trans "Hourly" %}{% endset %}
                                     {% set dailyOption %}{% trans "Daily" %}{% endset %}
                                     {% set options = [
-                                        { id: "Individually", value: individuallyOption },
+                                        { id: "Individual", value: individualOption },
                                         { id: "Hourly", value: hourlyOption },
                                         { id: "Daily", value: dailyOption }
                                     ] %}
                                     {% if theme.isSettingEditable("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT") %}
-                                        {{ forms.dropdown("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "single", title, theme.getSetting("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "Off"), options, "id", "value", helpText) }}
+                                        {{ forms.dropdown("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "single", title, theme.getSetting("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT"), options, "id", "value", helpText) }}
                                     {% else %}
-                                        {{ forms.disabled("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", "Off"), helpText) }}
+                                        {{ forms.disabled("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("DISPLAY_PROFILE_STATS_DEFAULT") %}
-                                    {% set title %}{% trans "Default setting for Statistics Enabled?" %}{% endset %}
-                                    {% set helpText %}{% trans "Check this box if you would like new Display Settings Profiles to be created with their Proof of Play Statistics setting switched on." %}{% endset %}
+                                    {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                                    {% set helpText %}{% trans "Set the Default Settings for Proof of Play statistics to be applied to all Displays added to a Display Profile." %}{% endset %}
                                     {{ forms.checkbox("DISPLAY_PROFILE_STATS_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_STATS_DEFAULT"), helpText, "", "", not theme.isSettingEditable("DISPLAY_PROFILE_STATS_DEFAULT")) }}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("LAYOUT_STATS_ENABLED_DEFAULT") %}
-                                    {% set title %}{% trans "Default setting for enabling Layout Statistics?" %}{% endset %}
-                                    {{ forms.checkbox("LAYOUT_STATS_ENABLED_DEFAULT", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), "", "", "", not theme.isSettingEditable("LAYOUT_STATS_ENABLED_DEFAULT")) }}
+                                    {% set title %}{% trans "Enable Layout Stats Collection?" %}{% endset %}
+                                    {% set helpText %}{% trans "Select the Default setting to use for the collection of Proof of Play statistics for all Layout Items." %}{% endset %}
+                                    {{ forms.checkbox("LAYOUT_STATS_ENABLED_DEFAULT", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), helpText, "", "", not theme.isSettingEditable("LAYOUT_STATS_ENABLED_DEFAULT")) }}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("MEDIA_STATS_ENABLED_DEFAULT") %}
-                                    {% set title %}{% trans "Enable Media Statistics?" %}{% endset %}
-                                    {% set helpText %}{% trans "Default setting for enabling Media Statistics?" %}{% endset %}
+                                    {% set title %}{% trans "Enable Media Stats Collection?" %}{% endset %}
+                                    {% set helpText %}{% trans "Select the Default setting to use for the collection of Proof of Play statistics for all Media Items." %}{% endset %}
 
                                     {% set offOption %}{% trans "Off" %}{% endset %}
                                     {% set onOption %}{% trans "On" %}{% endset %}
@@ -287,15 +288,15 @@
                                         { id: "Inherit", value: inheritOption }
                                     ] %}
                                     {% if theme.isSettingEditable("MEDIA_STATS_ENABLED_DEFAULT") %}
-                                        {{ forms.dropdown("MEDIA_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT", "Off"), options, "id", "value", helpText) }}
+                                        {{ forms.dropdown("MEDIA_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT"), options, "id", "value", helpText) }}
                                     {% else %}
-                                        {{ forms.disabled("MEDIA_STATS_ENABLED_DEFAULT", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT", "Off"), helpText) }}
+                                        {{ forms.disabled("MEDIA_STATS_ENABLED_DEFAULT", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("WIDGET_STATS_ENABLED_DEFAULT") %}
-                                    {% set title %}{% trans "Enable Widget Statistics?" %}{% endset %}
-                                    {% set helpText %}{% trans "Default setting for enabling Widget Statistics?" %}{% endset %}
+                                    {% set title %}{% trans "Enable Widget Stats Collection?" %}{% endset %}
+                                    {% set helpText %}{% trans "Select the Default setting to use for the collection for Proof of Play statistics for all Widgets." %}{% endset %}
 
                                     {% set offOption %}{% trans "Off" %}{% endset %}
                                     {% set onOption %}{% trans "On" %}{% endset %}
@@ -306,9 +307,9 @@
                                         { id: "Inherit", value: inheritOption }
                                     ] %}
                                     {% if theme.isSettingEditable("WIDGET_STATS_ENABLED_DEFAULT") %}
-                                        {{ forms.dropdown("WIDGET_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT", "Off"), options, "id", "value", helpText) }}
+                                        {{ forms.dropdown("WIDGET_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT"), options, "id", "value", helpText) }}
                                     {% else %}
-                                        {{ forms.disabled("WIDGET_STATS_ENABLED_DEFAULT", title, theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT", "Off"), helpText) }}
+                                        {{ forms.disabled("WIDGET_STATS_ENABLED_DEFAULT", title, theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 

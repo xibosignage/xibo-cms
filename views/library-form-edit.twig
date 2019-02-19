@@ -44,8 +44,8 @@
                     {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
                     {{ forms.checkbox("retired", title, media.retired, helpText) }}
 
-                    {% set title %}{% trans "Show statistics" %}{% endset %}
-                    {% set helpText %}{% trans "Setting for enabling statistics collection" %}{% endset %}
+                    {% set title %}{% trans "Enable Media Stats Collection?" %}{% endset %}
+                    {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Media Item. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
 
                     {% set offOption %}{% trans "Off" %}{% endset %}
                     {% set onOption %}{% trans "On" %}{% endset %}
