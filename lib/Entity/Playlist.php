@@ -331,6 +331,27 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Get Widget by Id
+     * @param int $widgetId
+     * @param Widget[]|null $widgets
+     * @return Widget
+     * @throws NotFoundException
+     */
+    public function getWidget($widgetId, $widgets = null)
+    {
+        if ($widgets === null)
+            $widgets = $this->widgets;
+
+        foreach ($widgets as $widget) {
+            if ($widget->widgetId == $widgetId) {
+                return $widget;
+            }
+        }
+
+        throw new NotFoundException(sprintf(__('Widget not found with ID %d'), $widgetId));
+    }
+
+    /**
      * @param Widget $widget
      */
     public function assignWidget($widget)
