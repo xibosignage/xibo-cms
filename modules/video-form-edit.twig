@@ -65,6 +65,10 @@
                         {% set title %}{% trans "Mute?" %}{% endset %}
                         {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
                         {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
+
+                        {% set title %}{% trans "Show Full Screen?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the video expand over the top of existing content and show in full screen?" %}{% endset %}
+                        {{ forms.checkbox("showFullScreen", title, module.getOption("showFullScreen", 0), helpText) }}
                     </div>
                 </div>
             </form>

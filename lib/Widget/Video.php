@@ -100,6 +100,13 @@ class Video extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="showFullScreen",
+     *      in="formData",
+     *      description="Edit only - Should the video expand over the top of existing content and show in full screen?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -122,6 +129,7 @@ class Video extends ModuleWidget
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
 
         // Only loop if the duration is > 0
         if ($this->getUseDuration() == 0 || $this->getDuration() == 0) {

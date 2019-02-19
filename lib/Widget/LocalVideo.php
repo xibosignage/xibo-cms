@@ -85,6 +85,13 @@ class LocalVideo extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="showFullScreen",
+     *      in="formData",
+     *      description="Should the video expand over the top of existing content and show in full screen?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -101,6 +108,7 @@ class LocalVideo extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
 
         $this->isValid();
 
