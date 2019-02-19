@@ -50,12 +50,18 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * DataSets
-     * @return array[DataSet]
+     * Get DataSet object, used by TWIG template.
+     *
+     * @return array
+     * @throws NotFoundException
      */
-    public function dataSets()
+    public function getDataSet()
     {
-        return $this->dataSetFactory->query();
+        if ($this->getOption('dataSetId') != 0) {
+            return [$this->dataSetFactory->getById($this->getOption('dataSetId'))];
+        } else {
+            return null;
+        }
     }
 
     /**

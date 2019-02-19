@@ -39,12 +39,12 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("dataSet.search") },
+                    { name: "data-search-url", value: urlFor("module.widget.dataset.search") },
                     { name: "data-search-term", value: "dataSet" },
                     { name: "data-id-property", value: "dataSetId" },
                     { name: "data-text-property", value: "dataSet" }
                 ] %}
-                {{ forms.dropdown("dataSetId", "single", title, "", module.dataSets(), "dataSetId", "dataSet", helpText, "dataset-fields pagedSelect", "", "", "", attributes) }}
+                {{ forms.dropdown("dataSetId", "single", title, "", module.getDataSet(), "dataSetId", "dataSet", helpText, "dataset-fields pagedSelect", "", "", "", attributes) }}
             
                 <input type="hidden" name="step" value="1" />
             </form>
