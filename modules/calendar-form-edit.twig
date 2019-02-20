@@ -81,7 +81,6 @@
                         {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
                         {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
 
-
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
                         {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
@@ -89,6 +88,10 @@
                         {% set title %}{% trans "Exclude all day events?" %}{% endset %}
                         {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
                         {{ forms.checkbox("excludeAllDay", title, module.getOption("excludeAllDay"), helpText) }}
+
+                        {% set title %}{% trans "Exclude current events?" %}{% endset %}
+                        {% set helpText %}{% trans "When current events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeCurrent", title, module.getOption("excludeCurrent"), helpText) }}
 
                         {% set title %}{% trans "Use event timezone?" %}{% endset %}
                         {% set helpText %}{% trans "If an event specifies a timezone, should it be used. Deselection means the CMS timezone will be used." %}{% endset %}
