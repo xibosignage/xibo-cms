@@ -41,6 +41,10 @@
                 {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                 {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
+                {% set title %}{% trans "Show Full Screen?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video expand over the top of existing content and show in full screen?" %}{% endset %}
+                {{ forms.checkbox("showFullScreen", title, module.getOption("showFullScreen", 0), helpText) }}
+
                 {% set message %}{% trans "This module is compatibile only with webOS player" %}{% endset %}
                 {{ forms.message(message, "alert alert-info") }}
             </form>

@@ -115,12 +115,18 @@ class Chart extends ModuleWidget
     }
 
     /**
-     * Used by the TWIG template to show a list of available dataSets
-     * @return DataSet[]
+     * Get DataSet object, used by TWIG template.
+     *
+     * @return array
+     * @throws NotFoundException
      */
-    public function dataSets()
+    public function getDataSet()
     {
-        return $this->dataSetFactory->query();
+        if ($this->getOption('dataSetId') != 0) {
+            return [$this->dataSetFactory->getById($this->getOption('dataSetId'))];
+        } else {
+            return null;
+        }
     }
 
     /** @var DataSetColumn[] */
