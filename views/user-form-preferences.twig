@@ -38,7 +38,7 @@
             <form id="userPreferences" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.pref") }}">
                 {% if theme.isSettingVisible("NAVIGATION_MENU_POSITION") and theme.isSettingEditable("NAVIGATION_MENU_POSITION") %}
                     {% set title %}{% trans "Navigation Menu" %}{% endset %}
-                    {% set helpText %}{% trans "Where should the navigation menu be positioned? After adjusting this setting please refresh your browser window." %}{% endset %}
+                    {% set helpText %}{% trans "Select where the Navigation Menu should be positioned. Once selected please refresh your browser window to apply changes." %}{% endset %}
 
                     {% set defaultOption %}{% trans "Use the default configured by your administrator" %}{% endset %}
                     {% set horizontalOption %}{% trans "Horizontal along the top" %}{% endset %}
@@ -50,6 +50,10 @@
                     ] %}
                     {{ forms.dropdown("navigationMenuPosition", "single", title, currentUser.getOptionValue("navigationMenuPosition", "default"), options, "id", "value", helpText) }}
                 {% endif %}
+            
+                {% set title %}{% trans "Use Library duration?" %}{% endset %}
+                {% set helpText %}{% trans "Assign all Media items based on their Library duration. Leave this option unticked to use the Default Module duration." %}{% endset %}
+                {{ forms.checkbox("useLibraryDuration", title, currentUser.getOptionValue("useLibraryDuration", 0), helpText) }}
             </form>
         </div>
     </div>

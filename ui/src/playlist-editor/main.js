@@ -171,6 +171,9 @@ pE.loadEditor = function() {
                     }
                 });
 
+                // Load user preferences
+                pE.loadAndSavePref('useLibraryDuration', 0);
+
                 pE.common.hideLoadingScreen();
 
             } else {
@@ -677,5 +680,52 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
         // Remove context menu
         pE.editorDiv.find('.context-menu-overlay').remove();
+    });
+};
+
+/**
+ * Load user preference
+ */
+pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
+
+    // Load using the API
+    const linkToAPI = urlsForApi.user.getPref;
+
+    // Request elements based on filters
+    let self = this;
+    $.ajax({
+        url: linkToAPI.url + '?preference=' + prefToLoad,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+            if(res.data.option == prefToLoad) {
+                pE[prefToLoad] = res.data.value;
+            } else {
+                pE[prefToLoad] = defaultValue;
+            }
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+
+                // Render toolbar even if the user prefs load fail
+                self.render();
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
     });
 };
