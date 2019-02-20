@@ -117,7 +117,7 @@ class StatisticsMediaTest extends LocalWebTestCase
         $region = $layout->regions[0];
 
         // Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist->playlistId);
 
         // Get Widget Id
         $widget = $playlist->widgets[0];

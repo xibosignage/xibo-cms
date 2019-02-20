@@ -134,7 +134,7 @@ class StatisticsTest extends LocalWebTestCase
         $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region2->regionPlaylist->playlistId);
 
         # Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist['playlistId']);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist->playlistId);
 
         # Get Widget Id
         $widget = $playlist->widgets[0];
