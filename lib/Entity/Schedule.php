@@ -600,7 +600,7 @@ class Schedule implements \JsonSerializable
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
-            'recurrenceMonthlyRepeatsOn' => $this->recurrenceMonthlyRepeatsOn,
+            'recurrenceMonthlyRepeatsOn' => ($this->recurrenceMonthlyRepeatsOn == null) ? 0 : $this->recurrenceMonthlyRepeatsOn,
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent
