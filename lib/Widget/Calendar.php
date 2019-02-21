@@ -106,6 +106,7 @@ class Calendar extends ModuleWidget
         $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
         $this->setOption('useCurrentTemplate', $this->getSanitizer()->getCheckbox('useCurrentTemplate'));
 
+        $this->setOption('excludeCurrent', $this->getSanitizer()->getCheckbox('excludeCurrent'));
         $this->setOption('excludeAllDay', $this->getSanitizer()->getCheckbox('excludeAllDay'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
 
@@ -224,7 +225,7 @@ class Calendar extends ModuleWidget
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
-                
+                    var excludeCurrent = ' . ($this->getOption('excludeCurrent', 0) == 0 ? 'false' : 'true') . ';
                     var parsedItems = [];
                     var now = moment();
                 
@@ -235,7 +236,10 @@ class Calendar extends ModuleWidget
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {
-                                parsedItems.push(element.currentEventItem);
+                                // This is a currently active event - do we want to add or exclude these?
+                                if (!excludeCurrent) {
+                                    parsedItems.push(element.currentEventItem);
+                                }
                             } else {
                                 parsedItems.push(element.item);
                             }
