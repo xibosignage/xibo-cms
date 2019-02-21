@@ -166,7 +166,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * @SWG\Property(description="Recurrence monthly repeats on - 0 is day of month, 1 is weekday of week")
-     * @var string
+     * @var int
      */
     public $recurrenceMonthlyRepeatsOn;
 
