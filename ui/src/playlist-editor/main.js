@@ -718,9 +718,6 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
                 } else {
                     console.error(res.message);
                 }
-
-                // Render toolbar even if the user prefs load fail
-                self.render();
             }
         }
 
