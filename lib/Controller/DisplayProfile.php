@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -439,7 +440,7 @@ class DisplayProfile extends Base
                         break;
                     } elseif($timerDay == '' || property_exists($timerOptions, $timerDay)) {
                         // Repeated or Empty day input, throw exception
-                        throw new \InvalidArgumentException(__('On/Off Timers: Please check the days selected and remove the duplicates or empty'));
+                        throw new InvalidArgumentException(__('On/Off Timers: Please check the days selected and remove the duplicates or empty'), 'timers');
                     } else {
                         // Get time values
                         $timerOn = $timer['on'];
@@ -447,7 +448,7 @@ class DisplayProfile extends Base
 
                         // Check the on/off times are in the correct format (H:i)
                         if (strlen($timerOn) != 5 || strlen($timerOff) != 5) {
-                            throw new \InvalidArgumentException(__('On/Off Timers: Please enter a on and off date for any row with a day selected, or remove that row'));
+                            throw new InvalidArgumentException(__('On/Off Timers: Please enter a on and off date for any row with a day selected, or remove that row'), 'timers');
                         } else {
                             //Build object and add it to the main options object
                             $temp = [];
@@ -485,7 +486,7 @@ class DisplayProfile extends Base
                         break;
                     } elseif($propertyName == '' || property_exists($pictureControlsOptions, $propertyName)) {
                         // Repeated or Empty property input, throw exception
-                        throw new \InvalidArgumentException(__('Picture: Please check the settings selected and remove the duplicates or empty'));
+                        throw new InvalidArgumentException(__('Picture: Please check the settings selected and remove the duplicates or empty'), 'pictureOptions');
                     } else {
                         // Get time values
                         $propertyValue = $pictureControl['value'];
