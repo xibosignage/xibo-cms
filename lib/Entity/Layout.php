@@ -1049,19 +1049,11 @@ class Layout implements \JsonSerializable
                         } else if ($mediaEnableStat == 'Off') {
                             $enableStat = 0; // Match - 4
                         } else if ($mediaEnableStat == 'Inherit') {
-                            if ($layoutEnableStat == 1) {
-                                $enableStat = 1; // Match - 5
-                            } else {
-                                $enableStat = 0; // Match - 6
-                            }
+                            $enableStat = $layoutEnableStat;  // Match - 5 and 6
                         }
                     } catch (\Exception $e) { //  - WIDGET WITHOUT MEDIA
                         $this->getLog()->error($widget->widgetId. ' is not a library media and does not have a media id.');
-                        if ($layoutEnableStat == 1) {
-                            $enableStat = 1;  // Match - 7
-                        } else {
-                            $enableStat = 0;  // Match - 8
-                        }
+                        $enableStat = $layoutEnableStat;  // Match - 7 and 8
                     }
                 }
 
@@ -1511,7 +1503,7 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        $this->getLog()->debug('thanks ' . $this->layout);
+        $this->getLog()->debug('Adding Layout' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat)';

@@ -274,15 +274,15 @@ class Layout extends Base
         $description = $this->getSanitizer()->getString('description');
         $templateId = $this->getSanitizer()->getInt('layoutId');
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
+        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
 
         if ($templateId != 0)
             $layout = $this->layoutFactory->createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
         else
             $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
 
-        if ($layout->enableStat == null) {
-            $layout->enableStat = $this->getConfig()->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
-        }
+        // Set layout enableStat flag
+        $layout->enableStat = $enableStat;
 
         // Save
         $layout->save();

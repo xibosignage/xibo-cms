@@ -191,9 +191,9 @@ class Media implements \JsonSerializable
     public $modifiedDt;
 
     /**
-     * @var int
+     * @var string
      * @SWG\Property(
-     *  description="Flag indicating whether the Media stat is enabled"
+     *  description="The settings to enable the collection of Media Proof of Play statistics"
      * )
      */
     public $enableStat;
