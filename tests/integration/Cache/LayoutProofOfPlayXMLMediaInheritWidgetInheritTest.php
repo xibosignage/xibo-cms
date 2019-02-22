@@ -150,20 +150,20 @@ class LayoutProofOfPlayXMLMediaInheritWidgetInheritTest extends LocalWebTestCase
 
         parent::tearDown();
 
-//        // Delete the LayoutOff
-//        $this->deleteLayout($this->layoutOff);
-//
-//        // Delete the Display
-//        $this->deleteDisplay($this->display);
-//
-//        // Delete the LayoutOn
-//        $this->deleteLayout($this->layoutOn);
-//
-//        // Delete the Display2
-//        $this->deleteDisplay($this->display2);
-//
-//        // Delete the media record
-//        $this->media->deleteAssigned();
+        // Delete the LayoutOff
+        $this->deleteLayout($this->layoutOff);
+
+        // Delete the Display
+        $this->deleteDisplay($this->display);
+
+        // Delete the LayoutOn
+        $this->deleteLayout($this->layoutOn);
+
+        // Delete the Display2
+        $this->deleteDisplay($this->display2);
+
+        // Delete the media record
+        $this->media->deleteAssigned();
 
     }
     // </editor-fold>
