@@ -55,26 +55,38 @@ fi
 # Check if we need to run an upgrade
 # if DB_EXISTS then see if the version installed matches
 # only upgrade for production containers
-if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT DBVersion from version"
+if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT settingId FROM \`setting\` LIMIT 1"
 then
   echo "Existing Database, checking if we need to upgrade it"
-  # Get the currently installed schema version number
-  CURRENT_DB_VERSION=$(mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -se 'SELECT DBVersion from version')
+  # Determine if there are any migrations to be run
+  /var/www/cms/vendor/bin/phinx status -c "/var/www/cms/phinx.php"
 
-  if [ ! "$CURRENT_DB_VERSION"  == "$CMS_DB_VERSION" ]
+  if [ ! "$?" == 0 ]
   then
     echo "We will upgrade it, take a backup"
+
+    # We're going to run an upgrade. Make a database backup
     mysqldump -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE | gzip > /var/www/backup/db-$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
 
     # Drop app cache on upgrade
     rm -rf /var/www/cms/cache/*
+
+    # Upgrade
+    echo 'Running database migrations'
+    /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
   fi
 else
-  # This is a fresh install so bootstrap the whole system
+  # This is a fresh install so bootstrap the whole
+  # system
+  echo "New install"
+
   echo "Provisioning Database"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/structure.sql"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/data.sql"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/cms/install/master/constraints.sql"
+
+  # Create the database if it doesn't exist
+  mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
+
+  # Populate the database
+  php /var/www/cms/vendor/bin/phinx migrate -c "/var/www/cms/phinx.php"
 
   echo "Configuring Database Settings"
   # Set LIBRARY_LOCATION
@@ -106,15 +118,25 @@ fi
 SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8) && \
 /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 
+# Initially the Dockerimage just creates the custom settings file with zero content
+# If this is a initial run, save the secret also in custom settings if there is nothing defined
+if [ ! -f /var/www/cms/custom/settings-custom.php ];
+then
+   touch /var/www/cms/custom/settings-custom.php
+fi
+if [ -s /var/www/cms/custom/settings-custom.php ];
+then
+  echo "<?php" >> /var/www/cms/custom/settings-custom.php
+  echo "define('SECRET_KEY','$SECRET_KEY');" >> /var/www/cms/custom/settings-custom.php
+  echo "?>" >> /var/www/cms/custom/settings-custom.php
+fi
+
 # Update /etc/periodic/cms-db.env with current environment (for cron)
 echo "MYSQL_USER=$MYSQL_USER"         >  /etc/periodic/cms-db.env
 echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> /etc/periodic/cms-db.env
 echo "MYSQL_HOST=$MYSQL_HOST"         >> /etc/periodic/cms-db.env
 echo "MYSQL_PORT=$MYSQL_PORT"         >> /etc/periodic/cms-db.env
 echo "MYSQL_DATABASE=$MYSQL_DATABASE" >> /etc/periodic/cms-db.env
-
-# Install apache Crontab
-crontab -u apache /etc/periodic/apache
 
 # Configure SSMTP to send emails if required
 echo "root="                                  >  /etc/ssmtp/ssmtp.conf
@@ -141,10 +163,11 @@ echo "IMPORTANT:"
 echo "  -->> Add a Lineness Check in Openshift <<--"
 echo "        - Start after: 60 Second"
 echo "        - Timeout:     60 Seconds"
+echo "        - Type:        Container Command"
 echo "        - Command lines: "
 echo "            1: /bin/bash"
 echo "            2: -c"
-echo "            3: /openshift_liveness.sh"
+echo "            3: cd /var/www/cms ; . /etc/periodic/cms-db.env ; /usr/bin/php bin/xtr.php > /dev/null 2>&1"
 echo ""
 
 echo "Starting webserver"
