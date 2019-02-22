@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "75db61c5acbdcf35593c292da4575d83",
+    "content-hash": "747f76f6ca48e8f5f55eec89f0bbce46",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -3838,16 +3838,16 @@
         },
         {
             "name": "xibosignage/oauth2-xibo-cms",
-            "version": "v2.0-beta.4",
+            "version": "dev-feature/2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
-                "reference": "8e6ddb4be070257233c225f8829b8117f9d978c3"
+                "reference": "a619d731959ee62a67e2838f4c82214ae3e234e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/8e6ddb4be070257233c225f8829b8117f9d978c3",
-                "reference": "8e6ddb4be070257233c225f8829b8117f9d978c3",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/a619d731959ee62a67e2838f4c82214ae3e234e3",
+                "reference": "a619d731959ee62a67e2838f4c82214ae3e234e3",
                 "shasum": ""
             },
             "require": {
@@ -3889,7 +3889,7 @@
                 "xibo",
                 "xibo cms"
             ],
-            "time": "2019-02-12T14:29:57+00:00"
+            "time": "2019-02-20T13:21:52+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -4876,6 +4876,7 @@
                 "mock",
                 "xunit"
             ],
+            "abandoned": true,
             "time": "2017-06-30T09:13:00+00:00"
         },
         {
@@ -5561,7 +5562,8 @@
     "stability-flags": {
         "sallar/jdatetime": 20,
         "onelogin/php-saml": 20,
-        "infostars/picofeed": 20
+        "infostars/picofeed": 20,
+        "xibosignage/oauth2-xibo-cms": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

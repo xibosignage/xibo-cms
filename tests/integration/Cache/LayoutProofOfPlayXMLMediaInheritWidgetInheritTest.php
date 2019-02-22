@@ -198,7 +198,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetInheritTest extends LocalWebTestCase
 ////
 
 
-    public function testLayoutEnableStatOff()
+    public function testLayoutOff()
     {
         // Publish layout
         $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId);
@@ -224,7 +224,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetInheritTest extends LocalWebTestCase
 
     }
 
-    public function testLayoutOnMediaInheritWidgetInherit()
+    public function testLayoutOn()
         {
             // Publish layout
             $response = $this->client->put('/layout/publish/' . $this->layoutOn->layoutId);

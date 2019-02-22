@@ -186,7 +186,7 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
      * Edit
      * @dataProvider layoutEnableStatOffCases
      */
-    public function testLayoutEnableStatOff($layoutEnableStat, $widgetEnableStat, $outputEnableStat)
+    public function testLayoutOff($layoutEnableStat, $widgetEnableStat, $outputEnableStat)
     {
         // Checkout
         $layoutOff = $this->checkout($this->layoutOff);
@@ -225,7 +225,7 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
      * Edit
      * @dataProvider layoutEnableStatOnCases
      */
-    public function testLayoutEnableStatOn($layoutEnableStat, $widgetEnableStat, $outputEnableStat)
+    public function testLayoutOn($layoutEnableStat, $widgetEnableStat, $outputEnableStat)
     {
         // Checkout
         $layoutOn = $this->checkout($this->layoutOn);

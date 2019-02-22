@@ -208,7 +208,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetOffTest extends LocalWebTestCase
 //                    OFF	INHERIT	INHERIT	NO      Media takes precedence and Inherited from Layout        // Match - 6
 ////
 
-    public function testLayoutOffMediaOnWidgetOff()
+    public function testLayoutOff()
     {
         // Publish layout
         $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId);
@@ -234,7 +234,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetOffTest extends LocalWebTestCase
 
     }
 
-    public function testLayoutOnMediaOnWidgetOff()
+    public function testLayoutOn()
     {
 
         // Publish layout
