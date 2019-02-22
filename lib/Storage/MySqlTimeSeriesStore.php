@@ -56,7 +56,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addStat($statData)
     {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`, duration, count) VALUES ';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
         $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
