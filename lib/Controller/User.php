@@ -1561,6 +1561,7 @@ class User extends Base
     public function prefEditFromForm()
     {
         $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
+        $this->getUser()->setOptionValue('useLibraryDuration', $this->getSanitizer()->getCheckbox('useLibraryDuration'));
         $this->getUser()->save();
 
         // Return

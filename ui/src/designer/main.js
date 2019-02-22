@@ -218,6 +218,9 @@ $(document).ready(function() {
                 // Setup helpers
                 formHelpers.setup(lD, lD.layout);
 
+                // Load user preferences
+                lD.loadAndSavePref('useLibraryDuration', 0);
+                
                 // Call layout status every minute
                 lD.checkLayoutStatus();
                 setInterval(lD.checkLayoutStatus, 1000 * 60); // Every minute
@@ -1118,11 +1121,16 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
 lD.addMediaToPlaylist = function(playlistId, mediaId) {
 
     // Get media Id
-    const mediaToAdd = {
+    let mediaToAdd = {
         media: [
             mediaId
         ]
     };
+
+    // Check if library duration options exists and add it to the query
+    if(lD.useLibraryDuration != undefined) {
+        mediaToAdd.useDuration = (lD.useLibraryDuration == "1");
+    }
 
     lD.common.showLoadingScreen('addMediaToPlaylist');
 
@@ -1366,5 +1374,47 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
         // Remove context menu
         lD.designerDiv.find('.context-menu-overlay').remove();
+    });
+};
+
+/**
+ * Load user preference
+ */
+lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
+
+    // Load using the API
+    const linkToAPI = urlsForApi.user.getPref;
+
+    // Request elements based on filters
+    let self = this;
+    $.ajax({
+        url: linkToAPI.url + '?preference=' + prefToLoad,
+        type: linkToAPI.type
+    }).done(function(res) {
+
+        if(res.success) {
+            if(res.data.option == prefToLoad) {
+                lD[prefToLoad] = res.data.value;
+            } else {
+                lD[prefToLoad] = defaultValue;
+            }
+        } else {
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        }
+
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
     });
 };
