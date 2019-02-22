@@ -103,18 +103,21 @@ class Soap5 extends Soap4
 
                 $version = '';
                 // Create the XML nodes
-                foreach ($settings as $arrayItem) {                    
+                foreach ($settings as $arrayItem) {
+                    // Upper case the setting name for windows
+                    $settingName = ($clientType == 'windows') ? ucfirst($arrayItem['name']) : $arrayItem['name'];
+
                     // Disable the CEF browser option on Windows players
-                    if (strtolower($arrayItem['name']) == 'usecefwebbrowser' && ($clientType == 'windows')) {
+                    if (strtolower($settingName) == 'usecefwebbrowser' && ($clientType == 'windows')) {
                         $arrayItem['value'] = 0;
                     }
                   
                     // Override the XMR address if empty
-                    if (strtolower($arrayItem['name']) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
+                    if (strtolower($settingName) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
-                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                    $node = $return->createElement($settingName, (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }

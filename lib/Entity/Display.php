@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (Display.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 
@@ -51,15 +50,7 @@ class Display implements \JsonSerializable
     public static $STATUS_DOWNLOADING = 2;
     public static $STATUS_PENDING = 3;
 
-    private $_config;
-    private $_configOverride;
     use EntityTrait;
-
-    /**
-     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
-     * @var string[]
-     */
-    public $overrideConfig = [];
 
     /**
      * @SWG\Property(description="The ID of this Display")
@@ -321,6 +312,21 @@ class Display implements \JsonSerializable
     public $tags;
 
     /**
+     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
+     * @var array
+     */
+    public $overrideConfig = [];
+
+    /** @var array The configuration from the Display Profile  */
+    private $profileConfig;
+
+    /** @var array Combined config */
+    private $combinedConfig;
+
+    /** @var \Xibo\Entity\DisplayProfile the resolved DisplayProfile for this Display */
+    private $_displayProfile;
+
+    /**
      * Commands
      * @var array[Command]
      */
@@ -436,6 +442,14 @@ class Display implements \JsonSerializable
     public function getCacheKey()
     {
         return self::getCachePrefix() . $this->displayId;
+    }
+
+    /**
+     * @return \Xibo\Entity\DisplayProfile
+     */
+    public function getDisplayProfile()
+    {
+        return $this->_displayProfile;
     }
 
     /**
@@ -800,27 +814,38 @@ class Display implements \JsonSerializable
      * @return mixed
      * @throws NotFoundException
      */
-    public function getSetting($key, $default, $options = [])
+    public function getSetting($key, $default = null, $options = [])
     {
         $options = array_merge([
-            'displayOverride' => false
+            'displayOverride' => true,
+            'displayOnly' => false
         ], $options);
 
         $this->setConfig($options);
 
         // Find
         $return = $default;
-        if ($options['displayOverride']) {
-            foreach ($this->_configOverride as $row) {
+        if ($options['displayOnly']) {
+            // Only get an option if set from the override config on this display
+            foreach ($this->overrideConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    $return = $row['value'];
+                    array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
+                    break;
+                }
+            }
+        } else if ($options['displayOverride']) {
+            // Get the option from the combined array of config
+            foreach ($this->combinedConfig as $row) {
+                if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                    array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }
         } else {
-            foreach ($this->_config as $row) {
+            // Get the option from the profile only
+            foreach ($this->profileConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    $return = $row['value'];
+                    array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }
@@ -841,7 +866,7 @@ class Display implements \JsonSerializable
             'displayOverride' => false
         ], $options);
 
-        if ($this->_config == null) {
+        if ($this->profileConfig == null) {
             $this->load();
 
             try {
@@ -859,18 +884,40 @@ class Display implements \JsonSerializable
                 $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
             }
 
+            // Set our display profile
+            $this->_displayProfile = $displayProfile;
+
             // Merge in any overrides we have on our display.
-            $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
+            $this->profileConfig = $displayProfile->getProfileConfig();
+            $this->combinedConfig = $this->mergeConfigs($this->profileConfig, $this->overrideConfig);
 
-            $this->_config = $displayProfile->getProfileConfig();
-
+            // Set any commands
             $this->commands = $displayProfile->commands;
         }
 
-        if ($options['displayOverride'])
-            return $this->_configOverride;
-        else
-            return $this->_config;
+        return ($options['displayOverride']) ? $this->combinedConfig : $this->profileConfig;
+    }
+
+    /**
+     * Merge two configs
+     * @param $default
+     * @param $override
+     * @return array
+     */
+    private function mergeConfigs($default, $override)
+    {
+        foreach ($default as &$defaultItem) {
+            for ($i = 0; $i < count($override); $i++) {
+                if ($defaultItem['name'] == $override[$i]['name']) {
+                    // merge
+                    $defaultItem = array_merge($defaultItem, $override[$i]);
+                    break;
+                }
+            }
+        }
+
+        // Merge the remainder
+        return $default;
     }
 
     /**
