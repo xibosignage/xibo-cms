@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -197,6 +197,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('GLOBAL_THEME_NAME', $this->getSanitizer()->getString('GLOBAL_THEME_NAME'));
         }
 
+        if ($this->getConfig()->isSettingEditable('NAVIGATION_MENU_POSITION')) {
+            $this->getConfig()->changeSetting('NAVIGATION_MENU_POSITION', $this->getSanitizer()->getString('NAVIGATION_MENU_POSITION'));
+        }
+
         if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_UPDATEINALL_CHECKB')) {
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_UPDATEINALL_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_UPDATEINALL_CHECKB'));
         }
@@ -207,6 +211,10 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('LIBRARY_MEDIA_DELETEOLDVER_CHECKB')) {
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_DELETEOLDVER_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_DURATION')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_DURATION', $this->getSanitizer()->getInt('DEFAULT_TRANSITION_DURATION'));
         }
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
@@ -251,8 +259,24 @@ class Settings extends Base
             $this->getConfig()->changeSetting('MAX_LICENSED_DISPLAYS', $this->getSanitizer()->getInt('MAX_LICENSED_DISPLAYS'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT')) {
+            $this->getConfig()->changeSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT', $this->getSanitizer()->getString('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_STATS_DEFAULT')) {
             $this->getConfig()->changeSetting('DISPLAY_PROFILE_STATS_DEFAULT', $this->getSanitizer()->getCheckbox('DISPLAY_PROFILE_STATS_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LAYOUT_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('LAYOUT_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getCheckbox('LAYOUT_STATS_ENABLED_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MEDIA_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('MEDIA_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getString('MEDIA_STATS_ENABLED_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('WIDGET_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getString('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
         if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED')) {

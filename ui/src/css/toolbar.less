@@ -31,8 +31,18 @@
 .editor-toolbar nav {
     z-index: @toolbar-z-index;
     background: @toolbar-main-color;
-    margin-left: 180px;
+    margin-left: 0;
     border: none;
+}
+
+#page-wrapper .editor-toolbar nav {
+    margin-left: 180px;
+}
+
+@media (max-width: 768px) {
+    .editor-toolbar nav {
+        margin-left: 0;
+    }
 }
 
 .editor-toolbar .container-toolbar {
@@ -367,10 +377,4 @@
 
 .editor-toolbar .bootstrap-tagsinput .label {
     font-size: 95%;
-}
-
-@media (max-width: 768px) {
-    .editor-toolbar nav {
-        margin-left: 0;
-    }
 }

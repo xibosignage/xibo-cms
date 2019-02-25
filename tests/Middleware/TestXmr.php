@@ -43,6 +43,9 @@ class TestXmr extends Middleware
                 $app->logService->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
             }
         }
+
+        // Re-terminate any DB connections
+        $app->store->close();
     }
 
     /**

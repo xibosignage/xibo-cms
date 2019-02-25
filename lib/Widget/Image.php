@@ -137,6 +137,7 @@ class Image extends ModuleWidget
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'center'));
         $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
         $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();

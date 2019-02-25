@@ -121,15 +121,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $media = $this->mediaFactory->getById($stat['mediaId']);
                 $mediaName = $media->name; //dont remove used later
                 $statData[$k]['mediaName'] = $mediaName;
-                $tagFilter['media']= explode(',', $media->tags);
-
+                $tagFilter['media'] = explode(',', $media->tags);
             }
+
             // Widget name
             if ($stat['widgetId'] != null) {
                 $widget = $this->widgetFactory->getById($stat['widgetId']);
-                $widget->load();
-                $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
-                $statData[$k]['widgetName'] = $widgetName;
+                if($widget != null) {
+                    $widget->load();
+                    $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
+                    $statData[$k]['widgetName'] = $widgetName;
+                }
             }
 
             // Layout name
@@ -137,7 +139,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $statData[$k]['layoutName'] = $layout->layout;
 
             // Layout tags
-            $tagFilter['layout']= explode(',', $layout->tags);
+            $tagFilter['layout'] = explode(',', $layout->tags);
 
             // Display name
             $display = $this->displayFactory->getById($stat['displayId']);
@@ -176,6 +178,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ]
             ]
         ];
+
+        // Type Filter
+        if ($type != null) {
+            $match['$match']['type'] = $type;
+        }
 
         // Tag Filter
         if ($tags != null) {
@@ -271,15 +278,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 'start' => 1,
                 'end' => 1,
                 'type' => 1,
-                'duration' => [
-                    '$divide' => [[
-                        '$subtract' =>
-                            [
-                                '$endDate',
-                                '$startDate'
-                            ]], 1000
-                    ]
-                ],
+                'duration' => 1,
+                'count' => 1,
                 'total' => ['$sum' => 1],
             ]
         ];
@@ -299,7 +299,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ],
                 'minStart' => ['$min' => '$start'],
                 'maxEnd' => ['$max' => '$end'],
-                'numberPlays' => ['$sum' => 1],
+                'numberPlays' => ['$sum' => '$count'],
                 'duration' => ['$sum' => '$duration'],
                 'total' => ['$max' => '$total'],
             ],

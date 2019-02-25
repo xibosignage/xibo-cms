@@ -209,6 +209,7 @@ class GoogleTraffic extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
         $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
         $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));

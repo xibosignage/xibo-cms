@@ -83,6 +83,7 @@ class Audio extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         // Only loop if the duration is > 0
         if ($this->getUseDuration() == 0 || $this->getDuration() == 0) {

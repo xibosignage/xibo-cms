@@ -358,6 +358,7 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('name', $this->getSanitizer()->getString('name'));
             $this->setOption('effect', $this->getSanitizer()->getString('effect'));
             $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+            $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
             $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
             $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
             $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
@@ -473,7 +474,6 @@ class DataSetTicker extends ModuleWidget
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
         $duration = $this->getCalculatedDurationForGetResource();
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
-        $numItems = $this->getOption('numItems', 0);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
 
@@ -506,7 +506,6 @@ class DataSetTicker extends ModuleWidget
             'fx' => $effect,
             'duration' => $duration,
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
-            'numItems' => $numItems,
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
             'randomiseItems' => $this->getOption('randomiseItems', 0),
@@ -532,9 +531,7 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Work out how many pages we will be showing.
-        $pages = $numItems;
-        if ($numItems > count($items) || $numItems == 0)
-            $pages = count($items);
+        $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
@@ -870,10 +867,7 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Make sure we have a number in here
-        if (!v::numeric()->validate($this->getOption('numItems', 0)))
-            throw new InvalidArgumentException(__('The value in Number of Items must be numeric.'), 'numItems');
-
-        if (!v::intType()->min(0)->validate($this->getOption('updateInterval')))
+        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))
             throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
 
         return self::$STATUS_VALID;

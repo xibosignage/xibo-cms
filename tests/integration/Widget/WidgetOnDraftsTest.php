@@ -59,7 +59,7 @@ class WidgetOnDraftsTest extends LocalWebTestCase
     public function testEditPublished()
     {
         // Get my Playlist
-        $playlistId = $this->layout->regions[0]->regionPlaylist['playlistId'];
+        $playlistId = $this->layout->regions[0]->regionPlaylist->playlistId;
 
         // Add a widget (and widget will do, it doesn't matter)
         $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId);
@@ -78,7 +78,7 @@ class WidgetOnDraftsTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Get my Playlist
-        $playlistId = $layout->regions[0]->regionPlaylist['playlistId'];
+        $playlistId = $layout->regions[0]->regionPlaylist->playlistId;
 
         // Add a widget (and widget will do, it doesn't matter)
         $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId);

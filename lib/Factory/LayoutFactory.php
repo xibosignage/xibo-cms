@@ -489,6 +489,12 @@ class LayoutFactory extends BaseFactory
                         $widgetOption->value = $mediaOption->textContent;
 
                         $widget->widgetOptions[] = $widgetOption;
+
+                        // Convert the module type of known legacy widgets
+                        if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
+                            $widget->type = 'datasetticker';
+                            $module = $modules[$widget->type];
+                        }
                     }
                 }
 
@@ -908,7 +914,7 @@ class LayoutFactory extends BaseFactory
                 // Also make sure we replace the columnId's with the columnId's in the new "existing" DataSet.
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
-                    if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
+                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker') {
                         $widgetDataSetId = $widget->getOptionValue('dataSetId', 0);
 
                         if ($widgetDataSetId != 0 && $widgetDataSetId == $dataSetId) {
@@ -1005,6 +1011,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        campaign.CampaignID, ";
         $select .= "        layout.status, ";
         $select .= "        layout.statusMessage, ";
+        $select .= "        layout.enableStat, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
@@ -1330,6 +1337,7 @@ class LayoutFactory extends BaseFactory
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
             $layout->statusMessage = $row['statusMessage'];
+            $layout->enableStat = $this->getSanitizer()->int($row['enableStat']);
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
 

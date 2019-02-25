@@ -1530,4 +1530,43 @@ class User extends Base
             'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
         ]);
     }
+
+    /**
+     * Preferences Form
+     */
+    public function preferencesForm()
+    {
+        $this->getState()->template = 'user-form-preferences';
+    }
+
+    /**
+     * @SWG\Pust(
+     *     path="/user/pref",
+     *     operationId="userPrefEditFromForm",
+     *     tags={"user"},
+     *     summary="Save User Preferences",
+     *     description="Save User preferences from the Preferences form.",
+     *     @SWG\Parameter(
+     *      name="navigationMenuPosition",
+     *      in="formData",
+     *      required=true,
+     *      type="string"
+     *   ),
+     *   @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function prefEditFromForm()
+    {
+        $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
+        $this->getUser()->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => __('Updated Preferences')
+        ]);
+    }
 }

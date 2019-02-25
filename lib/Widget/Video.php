@@ -120,6 +120,7 @@ class Video extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 

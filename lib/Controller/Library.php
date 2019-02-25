@@ -810,6 +810,7 @@ class Library extends Base
         $media->duration = $this->getSanitizer()->getInt('duration');
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $media->enableStat = $this->getSanitizer()->getString('enableStat');
 
         // Should we update the media in all layouts?
         if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
@@ -1718,6 +1719,11 @@ class Library extends Base
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         // Set the Owner to user making the Copy
         $media->setOwner($this->getUser()->userId);
+
+        // Set from global setting
+        if ($media->enableStat == null) {
+            $media->enableStat = $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+        }
 
         // Save the new Media
         $media->save();

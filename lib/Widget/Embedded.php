@@ -139,6 +139,7 @@ class Embedded extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
         $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));

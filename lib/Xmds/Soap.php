@@ -1450,9 +1450,6 @@ class Soap
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
         // Store an array of parsed stat data for insert
-        $mediaStats = [];
-        $layoutStats = [];
-        $tagStats = [];
         $now = $this->getDate()->getLocalDate();
 
         // Load the XML into a DOMDocument
@@ -1469,6 +1466,8 @@ class Soap
             $fromdt = $node->getAttribute('fromdt');
             $todt = $node->getAttribute('todt');
             $type = $node->getAttribute('type');
+            $duration = $node->getAttribute('duration');
+            $count = $node->getAttribute('count');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
                 $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
@@ -1515,6 +1514,13 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
+            if ($duration == '') {
+                $start = $this->getDate()->parse($fromdt);
+                $end = $this->getDate()->parse($todt);
+
+                $duration = $end->diffInSeconds($start);
+            }
+
             $stats[] = [
                 'type' => $type,
                 'statDate' => $now,
@@ -1526,6 +1532,8 @@ class Soap
                 'mediaId' => $mediaId,
                 'tag' => $tag,
                 'widgetId' => (int) $widgetId,
+                'duration' => $duration,
+                'count' => ($count != '') ? $count : 1,
             ];
         }
 

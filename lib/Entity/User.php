@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (User.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -241,6 +242,12 @@ class User implements \JsonSerializable
     private $userOptions = [];
 
     /**
+     * User options that have been removed
+     * @var \Xibo\Entity\UserOption[]
+     */
+    private $userOptionsRemoved = [];
+
+    /**
      * Cached Permissions
      * @var array[Permission]
      */
@@ -442,6 +449,20 @@ class User implements \JsonSerializable
     }
 
     /**
+     * Remove the provided option
+     * @param \Xibo\Entity\UserOption $option
+     * @return $this
+     */
+    private function removeOption($option)
+    {
+        $this->getLog()->debug('Removing: ' . $option);
+
+        $this->userOptionsRemoved[] = $option;
+        $this->userOptions = array_diff($this->userOptions, [$option]);
+        return $this;
+    }
+
+    /**
      * Get User Option Value
      * @param string $option
      * @param mixed $default
@@ -454,8 +475,7 @@ class User implements \JsonSerializable
         try {
             $userOption = $this->getOption($option);
             return $userOption->value;
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             return $default;
         }
     }
@@ -468,9 +488,14 @@ class User implements \JsonSerializable
     public function setOptionValue($option, $value)
     {
         try {
-            $this->getOption($option)->value = $value;
-        }
-        catch (NotFoundException $e) {
+            $option = $this->getOption($option);
+
+            if ($value == null) {
+                $this->removeOption($option);
+            } else {
+                $option->value = $value;
+            }
+        } catch (NotFoundException $e) {
             $this->userOptions[] = $this->userOptionFactory->create($this->userId, $option, $value);
         }
     }
@@ -717,6 +742,7 @@ class User implements \JsonSerializable
     /**
      * Save User
      * @param array $options
+     * @throws \Xibo\Exception\XiboException
      */
     public function save($options = [])
     {
@@ -740,6 +766,11 @@ class User implements \JsonSerializable
 
         // Save user options
         if ($options['saveUserOptions']) {
+            // Remove any that have been cleared
+            foreach ($this->userOptionsRemoved as $userOption) {
+                $userOption->delete();
+            }
+
             // Save all Options
             foreach ($this->userOptions as $userOption) {
                 /* @var UserOption $userOption */
@@ -786,6 +817,7 @@ class User implements \JsonSerializable
         // Delete any Campaigns
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
+            $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->delete();
         }
 
@@ -1023,6 +1055,31 @@ class User implements \JsonSerializable
 
         $this->getLog()->debug('Route %s not viewable', $route[0]);
         return false;
+    }
+
+    /**
+     * Given an array of routes, count the ones that are viewable
+     * @param $routes
+     * @return int
+     * @throws \Xibo\Exception\ConfigurationException
+     */
+    public function countViewable($routes)
+    {
+        // Shortcut for super admins.
+        if ($this->userTypeId == 1) {
+            return count($routes);
+        }
+
+        // Test each route
+        $count = 0;
+
+        foreach ($routes as $route) {
+            if ($this->routeViewable($route)) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**

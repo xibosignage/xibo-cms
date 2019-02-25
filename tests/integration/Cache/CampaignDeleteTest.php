@@ -53,11 +53,8 @@ class CampaignDeleteTest extends LocalWebTestCase
         // Checkout
         $layout = $this->checkout($this->layout);
 
-        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist['playlistId'], [
-            'text' => 'Widget A',
-            'duration' => 100,
-            'useDuration' => 1
-        ]);
+        // Add a simple widget
+        $this->addSimpleWidget($layout);
 
         // Check us in again
         $this->layout = $this->publish($this->layout);
@@ -69,7 +66,7 @@ class CampaignDeleteTest extends LocalWebTestCase
         $this->campaign = (new XiboCampaign($this->getEntityProvider()))->create(Random::generateString());
 
         // Assign the Layout to the Campaign
-        $this->campaign->assignLayout($this->layout->layoutId);
+        $this->campaign->assignLayout([$this->layout->layoutId], [1]);
 
         // Create a Display
         $this->display = $this->createDisplay();
@@ -88,6 +85,7 @@ class CampaignDeleteTest extends LocalWebTestCase
             NULL,
             NULL,
             NULL,
+            0,
             0,
             0
         );

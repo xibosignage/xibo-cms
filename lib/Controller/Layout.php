@@ -274,11 +274,15 @@ class Layout extends Base
         $description = $this->getSanitizer()->getString('description');
         $templateId = $this->getSanitizer()->getInt('layoutId');
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
+        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
 
         if ($templateId != 0)
             $layout = $this->layoutFactory->createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
         else
             $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
+
+        // Set layout enableStat flag
+        $layout->enableStat = $enableStat;
 
         // Save
         $layout->save();
@@ -392,6 +396,7 @@ class Layout extends Base
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $layout->retired = $this->getSanitizer()->getCheckbox('retired');
+        $layout->enableStat = $this->getSanitizer()->getCheckbox('enableStat');
 
         // Save
         $layout->save([

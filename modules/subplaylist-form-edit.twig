@@ -24,7 +24,7 @@
             <form id="subPlaylistForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                        {% set helpText %}{% trans "Please select the Playlists to embed. If you have selected more than 1 Playlist to embed, use the Configuration tab to select further options." %}{% endset %}
+                        {% set helpText %}{% trans "Please select one or more Playlists to embed. If selecting more than one use the Configuration tab to adjust how each Playlist is combined." %}{% endset %}
                         {{ forms.message(helpText) }}
 
                         <div class="sub-playlists"></div>

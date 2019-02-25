@@ -126,6 +126,7 @@ class ShellCommand extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');
