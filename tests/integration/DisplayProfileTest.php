@@ -1,15 +1,32 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (displayProfileTest.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Tests\Integration;
-use Xibo\Helper\Random;
+
 use Xibo\OAuth2\Client\Entity\XiboDisplayProfile;
 
-
+/**
+ * Class DisplayProfileTest
+ * @package Xibo\Tests\Integration
+ */
 class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
 {
 
@@ -150,66 +167,5 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
             'NULL name' => [NULL, 'android', 1],
             'is Default 1' => ['TEST PHP', 'android', 1]
         ];
-    }
-
-    /**
-     * Edit an existing profile
-     * @depends testAddSuccess
-     */
-    public function testEdit()
-    {
-        # Load in a known profile
-        /** @var XiboDisplayProfile $displayProfile */
-        $displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->create('phpunit profile', 'android', 0);
-        # Change the profile name
-        $name = Random::generateString(8, 'phpunit');
-        $this->client->put('/displayprofile/' . $displayProfile->displayProfileId, [
-            'name' => $name,
-            'type' => $displayProfile->type,
-            'isDefault' => $displayProfile->isDefault
-        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-       
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        # Examine the returned object and check that it's what we expect
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertObjectHasAttribute('id', $object);
-        $this->assertSame($name, $object->data->name);
-        $this->assertSame('android', $object->data->type);
-        # Check that the profile was actually renamed
-        $displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->getById($object->id);
-        $this->assertSame($name, $displayProfile->name);
-        # Clean up the profile as we no longer need it
-        $displayProfile->delete();
-    }
-
-    /**
-     * Test delete
-     * @depends testAddSuccess
-     * @group minimal
-     */
-    public function testDelete()
-    {
-        $name1 = Random::generateString(8, 'phpunit');
-        $name2 = Random::generateString(8, 'phpunit');
-        # Load in a couple of known profiles
-        $profile1 = (new XiboDisplayProfile($this->getEntityProvider()))->create($name1, 'android', 0);
-        $profile2 = (new XiboDisplayProfile($this->getEntityProvider()))->create($name2, 'windows', 0);
-        # Delete the one we created last
-        $this->client->delete('/displayprofile/' . $profile2->displayProfileId);
-        # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
-        # Check only one remains
-        $profiles = (new XiboDisplayProfile($this->getEntityProvider()))->get();
-        $this->assertEquals(count($this->startProfiles) + 1, count($profiles));
-        $flag = false;
-        foreach ($profiles as $profile) {
-            if ($profile->displayProfileId == $profile1->displayProfileId) {
-                $flag = true;
-            }
-        }
-        $this->assertTrue($flag, 'Display profile ID ' . $profile1->displayProfileId . ' was not found after deleting a different Display Profile');
-        $profile1->delete();
     }
 }
