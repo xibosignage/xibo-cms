@@ -69,10 +69,13 @@ class PdoStorageService implements StorageServiceInterface
     /** @inheritdoc */
     public function close($name = null)
     {
-        if ($name === null && isset($this->conn[$name])) {
+        if ($name !== null && isset($this->conn[$name])) {
             $this->conn[$name] = null;
             unset($this->conn[$name]);
         } else {
+            foreach ($this->conn as &$conn) {
+                $conn = null;
+            }
             $this->conn = [];
         }
     }
