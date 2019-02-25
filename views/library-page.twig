@@ -428,5 +428,21 @@
             });
             $(dialog).find('.modal-body').append($input);
         }
+
+        function setEnableStatMultiSelectFormOpen(dialog) {
+
+            var $select = $('<select id="enableStat" name="enableStat" class="form-control">' +
+                '<option value="Off">Off</option>' +
+                '<option value="On">On</option>' +
+                '<option value="Inherit">Inherit</option>' +
+                '</select>');
+
+            $select.on('change', function() {
+                dialog.data().commitData = {enableStat: $(this).val()};
+            }).trigger('change');
+
+            $(dialog).find('.modal-body').append($select);
+        }
+
     </script>
 {% endblock %}
