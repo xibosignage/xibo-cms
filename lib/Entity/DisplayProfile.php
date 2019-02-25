@@ -181,8 +181,6 @@ class DisplayProfile implements \JsonSerializable
      */
     public function setSetting($setting, $value, $ownConfig = true, &$config = null)
     {
-        // If we are trying to set a null value, then do we do anything?
-
         $this->load();
 
         // Get the setting from default

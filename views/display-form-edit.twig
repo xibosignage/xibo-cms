@@ -33,6 +33,10 @@
     {% trans "Save" %}, $("#displayEditForm").submit()
 {% endblock %}
 
+{% block callBack %}displayEditFormOpen{% endblock %}
+
+{% block extra %}{{ display.overrideConfig|json_encode|raw }}{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -153,7 +157,15 @@
                         {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
                         {{ forms.message(message) }}
 
-                        <div id="settings-from-profile"></div>
+                        <table id="settings-from-profile" class="table table-striped">
+                            <thead>
+                                <th>{{ "Setting"|trans }}</th>
+                                <th>{{ "Profile"|trans }}</th>
+                                <th>{{ "Override"|trans }}</th>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
                     </div>
                     <div class="tab-pane" id="advanced">
                         {% set title %}{% trans "Interleave Default" %}{% endset %}

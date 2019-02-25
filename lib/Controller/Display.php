@@ -1023,22 +1023,10 @@ class Display extends Base
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
 
-        // Get the display profile
-        // call validate on the fields
-
-        //TODO: implement a setSetting routine on the display entity
-        if ($this->getSanitizer()->getInt('versionMediaId') != 0 ) {
-            $display->overrideConfig = [
-                [
-                'name' => 'versionMediaId',
-                'value' => $this->getSanitizer()->getInt('versionMediaId', 0),
-                'type' => 'int'
-                ]
-            ];
-            $display->includeProperty('overrideConfig');
-        } else {
-            $display->overrideConfig = [];
-        }
+        // Get the display profile and use that to pull in any overrides
+        // start with an empty config
+        $display->overrideConfig = [];
+        $this->editConfigFields($display->getDisplayProfile(), $display->overrideConfig);
 
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));

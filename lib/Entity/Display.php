@@ -449,6 +449,28 @@ class Display implements \JsonSerializable
      */
     public function getDisplayProfile()
     {
+        if ($this->_displayProfile === null) {
+
+            try {
+                if ($this->displayProfileId == 0) {
+                    // Load the default profile
+                    $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
+                } else {
+                    // Load the specified profile
+                    $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
+                }
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Cannot get display profile');
+                $this->getLog()->debug($e->getTraceAsString());
+
+                $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
+            }
+
+            // Set our display profile
+            $this->_displayProfile = $displayProfile;
+
+        }
+
         return $this->_displayProfile;
     }
 
@@ -783,7 +805,9 @@ class Display implements \JsonSerializable
 
     /**
      * Get the Settings Profile for this Display
+     * @param array $options
      * @return array
+     * @throws \Xibo\Exception\XiboException
      */
     public function getSettings($options = [])
     {
@@ -800,7 +824,10 @@ class Display implements \JsonSerializable
     public function getCommands()
     {
         if ($this->commands == null) {
-            $this->setConfig();
+            $displayProfile = $this->getDisplayProfile();
+
+            // Set any commands
+            $this->commands = $displayProfile->commands;
         }
 
         return $this->commands;
@@ -869,30 +896,12 @@ class Display implements \JsonSerializable
         if ($this->profileConfig == null) {
             $this->load();
 
-            try {
-                if ($this->displayProfileId == 0) {
-                    // Load the default profile
-                    $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
-                } else {
-                    // Load the specified profile
-                    $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
-                }
-            } catch (NotFoundException $e) {
-                $this->getLog()->error('Cannot get display profile');
-                $this->getLog()->debug($e->getTraceAsString());
-
-                $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
-            }
-
-            // Set our display profile
-            $this->_displayProfile = $displayProfile;
+            // Get the display profile
+            $displayProfile = $this->getDisplayProfile();
 
             // Merge in any overrides we have on our display.
             $this->profileConfig = $displayProfile->getProfileConfig();
             $this->combinedConfig = $this->mergeConfigs($this->profileConfig, $this->overrideConfig);
-
-            // Set any commands
-            $this->commands = $displayProfile->commands;
         }
 
         return ($options['displayOverride']) ? $this->combinedConfig : $this->profileConfig;
@@ -950,6 +959,7 @@ class Display implements \JsonSerializable
      * @param PoolInterface $pool
      * @param int $currentLayoutId
      * @return $this
+     * @throws \Exception
      */
     public function setCurrentLayoutId($pool, $currentLayoutId)
     {
@@ -980,6 +990,7 @@ class Display implements \JsonSerializable
      * @param PoolInterface $pool
      * @param string $date
      * @return $this
+     * @throws \Exception
      */
     public function setCurrentScreenShotTime($pool, $date)
     {
