@@ -17,6 +17,9 @@ let Viewer = function(container, navbarContainer) {
 
     // Element dimensions inside the viewer container
     this.containerElementDimensions = null;
+
+    // State of the inline editor (  0: off, 1: on, 2: edit )
+    this.inlineEditorState = 0;
 };
 
 /**
@@ -195,7 +198,7 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             // Calculate and render background image or color to the preview
             this.calculateBackground(lD.viewer.containerElementDimensions, targetElement, layout);
 
-            // If inline editor is on, show the controls for it
+            // If inline editor is on, show the controls for it ( fixing asyc load problem )
             if(lD.propertiesPanel.inlineEditor) {
                 // Show inline editor controls
                 this.showInlineEditor();
@@ -238,7 +241,8 @@ Viewer.prototype.renderNavbar = function(data, element) {
         {
             extra: data.extra,
             type: element.type,
-            pagingEnable: (data.extra.number_items > 1)
+            pagingEnable: (data.extra.number_items > 1),
+            trans: layoutDesignerTrans
         }
     ));
 
@@ -252,19 +256,6 @@ Viewer.prototype.renderNavbar = function(data, element) {
             this.render(lD.selectedObject, lD.layout, data.extra.current_item + 1);
         }.bind(this));
     }
-
-    // Inline editor controls
-    this.navbarContainer.find('#inline-edit-btn').click(function() {
-        this.editInlineEditorToggle(true);
-    }.bind(this));
-
-    this.navbarContainer.find('#inline-save-btn').click(function() {
-        this.saveInlineEditor(element);
-    }.bind(this));
-
-    this.navbarContainer.find('#inline-close-btn').click(function() {
-        this.closeInlineEditor();
-    }.bind(this));
 };
 
 /**
@@ -291,7 +282,7 @@ Viewer.prototype.toggleFullscreen = function() {
 };
 
 /**
- * Setup Inline Editor button
+ * Setup Inline Editor ( show or hide )
  */
 Viewer.prototype.setupInlineEditor = function(textAreaId, show = true, customNoDataMessage = null) {
 
@@ -321,25 +312,30 @@ Viewer.prototype.showInlineEditor = function() {
 
     // Show closed editor controls
     this.DOMObject.parent().find('.inline-editor-closed').show();
-    this.DOMObject.parent().find('.inline-editor-buttons').show();
 
     // Show form elements
     lD.propertiesPanel.DOMObject.find('.inline-editor-show').show();
 
     // Hide form editor
     lD.propertiesPanel.DOMObject.find('.inline-editor-hide').hide();
+
+    // Handle click to open editor
+    this.DOMObject.find('#inline-editor-overlay').off().click(function() {
+        this.editInlineEditorToggle(true);
+    }.bind(this));
+
+    // Update state
+    this.inlineEditorState = 1;
 };
 
 /**
  * Hide Inline Editor
  */
 Viewer.prototype.hideInlineEditor = function() {
-
     // Hide inline editor controls
     this.DOMObject.parent().find(
         '.inline-editor-opened, ' +
-        '.inline-editor-closed, ' +
-        '.inline-editor-buttons').hide();
+        '.inline-editor-closed').hide();
     
     // Show widget info
     this.DOMObject.parent().find('.inline-editor-hide').show();
@@ -350,14 +346,23 @@ Viewer.prototype.hideInlineEditor = function() {
     // Show inline editor message
     lD.propertiesPanel.DOMObject.find('.inline-editor-hide').show();
 
-    this.destroyInlineEditor();
+    // If opened, needs to be saved/closed
+    if(this.inlineEditorState == 2) {
+        // Close editor content
+        this.closeInlineEditorContent();
+
+        // Show rendered preview
+        this.DOMObject.find('#viewer-preview').show();
+    }
+
+    // Update state
+    this.inlineEditorState = 0;
 };
 
 /**
  * Edit Inline Editor editor ( open or close edit )
  */
 Viewer.prototype.editInlineEditorToggle = function(show = true) {
-
     // Toggle open/close inline editor classes
     this.DOMObject.parent().find('.inline-editor-opened').toggle(show);
     this.DOMObject.parent().find('.inline-editor-hide').toggle(!show);
@@ -365,40 +370,22 @@ Viewer.prototype.editInlineEditorToggle = function(show = true) {
 
     // Load content if editor is toggled on
     if(show) {
-        this.loadInlineEditorContent();
+        this.openInlineEditorContent();
+    } else {
+        this.closeInlineEditorContent();
     }
     
     // Toggle rendered preview
     this.DOMObject.find('#viewer-preview').toggle(!show);
-
-};
-
-/**
- * Save Inline Editor
- */
-Viewer.prototype.saveInlineEditor = function(elementToSave) {
-
-    // Update inline editor text area
-    formHelpers.updateCKEditor('viewer_' + lD.propertiesPanel.inlineEditorId);
-
-    // Re-attach text_editor to form
-    const taText = this.DOMObject.find('#viewer_' + lD.propertiesPanel.inlineEditorId).clone();
-    lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).replaceWith(taText);
-
-    // Save the properties panel form
-    lD.propertiesPanel.save(elementToSave);
 };
 
 /**
  * Load Inline Editor content
  */
-Viewer.prototype.loadInlineEditorContent = function() {
-    
+Viewer.prototype.openInlineEditorContent = function() {
     // Move text area from form to viewer
     const taText = lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).clone();
-
     taText.attr('id', 'viewer_' + taText.attr('id'));
-    
     this.DOMObject.find('#inline-editor').empty().append(taText);
 
     // Move editor controls from the form to the viewer navbar
@@ -414,7 +401,7 @@ Viewer.prototype.loadInlineEditorContent = function() {
     // Clone controls to move the copy to the viewer's navbar
     const controlClones = controls.clone();
     
-        // Change the new controls data link to the new text area
+    // Change the new controls data link to the new text area
     controlClones.find('select').attr('data-linked-to', 'viewer_' + controls.find('select').attr('data-linked-to'));
 
     // Show controls
@@ -423,26 +410,26 @@ Viewer.prototype.loadInlineEditorContent = function() {
     // Append controls to navbar
     this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
 
-    // Setup iniline CKEditor
-    formHelpers.setupCKEditor(this.DOMObject.parent(), null, 'viewer_' + lD.propertiesPanel.inlineEditorId, true, lD.propertiesPanel.customNoDataMessage);
+    // Setup inline CKEditor
+    formHelpers.setupCKEditor(this.DOMObject.parent(), null, 'viewer_' + lD.propertiesPanel.inlineEditorId, true, lD.propertiesPanel.customNoDataMessage, true);
+
+    // Update state
+    this.inlineEditorState = 2;
 };
+
 
 /**
- * Close Inline Editor Edit
+ * Unload Inline Editor content ( reenable on properties panel )
  */
-Viewer.prototype.closeInlineEditor = function() {
+Viewer.prototype.closeInlineEditorContent = function() {
+    // Update inline editor text area
+    let data = CKEDITOR.instances['viewer_' + lD.propertiesPanel.inlineEditorId].getData();
 
-    this.destroyInlineEditor();
-    this.editInlineEditorToggle(false);
-};
+    // Copy data back to properties panel text area
+    lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).val(data);
 
-/* Destroy inline editor */
-Viewer.prototype.destroyInlineEditor = function() {
-
-    // If viewer inline editor exists, remove it
-    if(this.DOMObject.find('#inline-editor #viewer_' + lD.propertiesPanel.inlineEditorId).length > 0) {
-        formHelpers.destroyCKEditor('viewer_' + lD.propertiesPanel.inlineEditorId);
-    }
+    // Update state
+    this.inlineEditorState = 1;
 };
 
 /**
