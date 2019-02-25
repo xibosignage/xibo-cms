@@ -856,7 +856,7 @@ class Display implements \JsonSerializable
             // Only get an option if set from the override config on this display
             foreach ($this->overrideConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
+                    $return = array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }
@@ -864,7 +864,7 @@ class Display implements \JsonSerializable
             // Get the option from the combined array of config
             foreach ($this->combinedConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
+                    $return = array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }
@@ -872,7 +872,7 @@ class Display implements \JsonSerializable
             // Get the option from the profile only
             foreach ($this->profileConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
+                    $return = array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }

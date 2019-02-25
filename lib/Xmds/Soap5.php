@@ -118,7 +118,11 @@ class Soap5 extends Soap4
                     }
 
                     $node = $return->createElement($settingName, (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-                    $node->setAttribute('type', $arrayItem['type']);
+
+                    if (isset($arrayItem['type'])) {
+                        $node->setAttribute('type', $arrayItem['type']);
+                    }
+
                     $displayElement->appendChild($node);
                 }
 
@@ -147,21 +151,29 @@ class Soap5 extends Soap4
                 }
 
                 $displayElement->setAttribute('version_instructions', $version);
+
                 // Add some special settings
                 $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';
                 $node = $return->createElement($nodeName);
                 $node->appendChild($return->createTextNode($display->display));
-                $node->setAttribute('type', 'string');
+
+                if ($clientType == 'windows') {
+                    $node->setAttribute('type', 'string');
+                }
                 $displayElement->appendChild($node);
 
                 $nodeName = ($clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
                 $node = $return->createElement($nodeName, $display->screenShotRequested);
-                $node->setAttribute('type', 'checkbox');
+                if ($clientType == 'windows') {
+                    $node->setAttribute('type', 'checkbox');
+                }
                 $displayElement->appendChild($node);
 
                 $nodeName = ($clientType == 'windows') ? 'DisplayTimeZone' : 'displayTimeZone';
                 $node = $return->createElement($nodeName, (!empty($display->timeZone)) ? $display->timeZone : '');
-                $node->setAttribute('type', 'string');
+                if ($clientType == 'windows') {
+                    $node->setAttribute('type', 'string');
+                }
                 $displayElement->appendChild($node);
 
                 if (!empty($display->timeZone)) {

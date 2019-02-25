@@ -113,7 +113,11 @@ class Soap4 extends Soap
                     $settingName = ($clientType == 'windows') ? ucfirst($arrayItem['name']) : $arrayItem['name'];
 
                     $node = $return->createElement($settingName, (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-                    $node->setAttribute('type', $arrayItem['type']);
+
+                    if (isset($arrayItem['type'])) {
+                        $node->setAttribute('type', $arrayItem['type']);
+                    }
+
                     $displayElement->appendChild($node);
                 }
 
