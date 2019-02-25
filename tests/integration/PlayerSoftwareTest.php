@@ -1,6 +1,6 @@
 <?php
 /**
-* Copyright (C) 2018 Xibo Signage Ltd
+* Copyright (C) 2019 Xibo Signage Ltd
 *
 * Xibo - Digital Signage - http://www.xibo.org.uk
 *
@@ -92,6 +92,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
 
         // Create a display profile
         $this->displayProfile = (new XiboDisplayProfile($this->getEntityProvider()))->create(Random::generateString(), 'android', 0);
+
         // Edit display profile to add the uploaded apk to the config
         $this->getEntityProvider()->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
             'name' => $this->displayProfile->name,
@@ -107,8 +108,6 @@ class PlayerSoftwareTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the media we've been working with
         $this->getEntityProvider()->delete('/playersoftware/' . $this->versionId);
         $this->getEntityProvider()->delete('/playersoftware/' . $this->versionId2);
@@ -116,6 +115,8 @@ class PlayerSoftwareTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
         // Delete the Display profile
         $this->displayProfile->delete();
+
+        parent::tearDown();
     }
     // </editor-fold>
 
@@ -151,7 +152,9 @@ class PlayerSoftwareTest extends LocalWebTestCase
             $this->display->xmrChannel,
             $this->display->xmrPubKey
         );
+
         $this->getLogger()->debug($register);
+
         $this->assertContains($this->media->storedAs, $register, 'Version information not in Register');
         $this->assertContains('61', $register, 'Version information Code not in Register');
     }
@@ -173,10 +176,12 @@ class PlayerSoftwareTest extends LocalWebTestCase
         // Check response
         $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
         $this->assertNotEmpty($this->client->response->body());
+
         $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
         $this->assertSame($this->displayProfile->displayProfileId, $object->data->displayProfileId, $this->client->response->getBody());
         $this->assertNotEmpty($object->data->overrideConfig);
+
         foreach ($object->data->overrideConfig as $override) {
             if ($override->name === 'versionMediaId')
                 $this->assertSame($this->media2->mediaId, $override->value, json_encode($object->data->overrideConfig));
