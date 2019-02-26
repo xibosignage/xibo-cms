@@ -21,6 +21,8 @@
  */
 
 use Phinx\Migration\AbstractMigration;
+use Jenssegers\Date\Date;
+
 
 /**
  * Class AddGlobalStatSettingMigration
@@ -30,18 +32,43 @@ class AddGlobalStatSettingMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $table = $this->table('setting');
+        $earlierMonth = Date::now()->subMonth(1)->format('Y-m-d');
+        $result = $this->fetchRow('SELECT EXISTS (SELECT * FROM `stat` where `stat`.end >  \'' . $earlierMonth . '\')');
+
+        // if there are no stats recorded in last 1 month then layout stat is Off
+        if ($result[0] <= 0 ) {
+            $table = $this->table('setting');
+            $table
+                ->insert([
+                    [
+                        'setting' => 'LAYOUT_STATS_ENABLED_DEFAULT',
+                        'value' => '0',
+                        'userSee' => 1,
+                        'userChange' => 1
+                    ]
+                ])
+                ->save();
+        } else {
+            $table = $this->table('setting');
+            $table
+                ->insert([
+                    [
+                        'setting' => 'LAYOUT_STATS_ENABLED_DEFAULT',
+                        'value' => '1',
+                        'userSee' => 1,
+                        'userChange' => 1
+                    ]
+                ])
+                ->save();
+        }
+
+
+        // Media and widget stat is always set to Inherit
         $table
             ->insert([
                 [
                     'setting' => 'DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT',
                     'value' => 'Individual',
-                    'userSee' => 1,
-                    'userChange' => 1
-                ],
-                [
-                    'setting' => 'LAYOUT_STATS_ENABLED_DEFAULT',
-                    'value' => '0',
                     'userSee' => 1,
                     'userChange' => 1
                 ],

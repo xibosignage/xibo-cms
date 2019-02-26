@@ -874,7 +874,15 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
-        $layoutNode->setAttribute('enableStat', $this->enableStat);
+
+        // Layout stat collection flag
+        if (is_null($this->enableStat)) {
+            $layoutEnableStat =  $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
+            $this->getLog()->debug('Layout enableStat is empty. Get the default setting.');
+        } else {
+            $layoutEnableStat = $this->enableStat;
+        }
+        $layoutNode->setAttribute('enableStat', $layoutEnableStat);
 
         // Only set the z-index if present
         if ($this->backgroundzIndex != 0)
@@ -1025,24 +1033,34 @@ class Layout implements \JsonSerializable
 //                    OFF	OFF		    NO	    Widget takes precedence     // Match - 2
 //                    OFF	INHERIT		NO	    Inherited from Layout       // Match - 8
 
-                // Layout stat collection flag
-                $layoutEnableStat = $this->enableStat;
 
                 // Widget stat collection flag
                 $widgetEnableStat = $widget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+
+                if(($widgetEnableStat === null) || ($widgetEnableStat === "")) {
+                    $widgetEnableStat = $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT');
+                }
 
                 $enableStat = 0; // Match - 0
 
                 if ($widgetEnableStat == 'On') {
                     $enableStat = 1; // Match - 1
+                    $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
                 } else if ($widgetEnableStat == 'Off') {
                     $enableStat = 0; // Match - 2
+                    $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
                 } else if ($widgetEnableStat == 'Inherit') {
 
                     try {
                         // Media enable stat flag - WIDGET WITH MEDIA
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $mediaEnableStat = $media->enableStat;
+
+                        if (($media->enableStat === null) || ($media->enableStat === "")) {
+                            $mediaEnableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+                            $this->getLog()->debug('Media enableStat is empty. Get the default setting.');
+                        } else {
+                            $mediaEnableStat = $media->enableStat;
+                        }
 
                         if ($mediaEnableStat == 'On') {
                             $enableStat = 1; // Match - 3
@@ -1051,9 +1069,14 @@ class Layout implements \JsonSerializable
                         } else if ($mediaEnableStat == 'Inherit') {
                             $enableStat = $layoutEnableStat;  // Match - 5 and 6
                         }
+
+                        $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ((isset($mediaEnableStat)) ? (' Media '.$mediaEnableStat) : '') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+
                     } catch (\Exception $e) { //  - WIDGET WITHOUT MEDIA
-                        $this->getLog()->error($widget->widgetId. ' is not a library media and does not have a media id.');
+                        $this->getLog()->debug($widget->widgetId. ' is not a library media and does not have a media id.');
                         $enableStat = $layoutEnableStat;  // Match - 7 and 8
+
+                        $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
                     }
                 }
 
