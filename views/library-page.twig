@@ -432,9 +432,9 @@
         function setEnableStatMultiSelectFormOpen(dialog) {
 
             var $select = $('<select id="enableStat" name="enableStat" class="form-control">' +
-                '<option value="Off">Off</option>' +
-                '<option value="On">On</option>' +
-                '<option value="Inherit">Inherit</option>' +
+                '<option value="Off">{% trans %} Off {% endtrans %}</option>' +
+                '<option value="On">{% trans %} On {% endtrans %}</option>' +
+                '<option value="Inherit">{% trans %} Inherit {% endtrans %}</option>' +
                 '</select>');
 
             $select.on('change', function() {
