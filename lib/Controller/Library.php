@@ -339,7 +339,7 @@ class Library extends Base
      *  operationId="mediaSetEnableStat",
      *  tags={"library"},
      *  summary="Enable Stats Collection",
-     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.",
+     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a media.",
      *  @SWG\Parameter(
      *      name="mediaId",
      *      in="path",

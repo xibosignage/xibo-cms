@@ -769,7 +769,6 @@ class Layout extends Base
     {
         $layout = $this->layoutFactory->getById($layoutId);
 
-
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
 

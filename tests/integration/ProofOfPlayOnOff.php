@@ -253,4 +253,42 @@ class ProofOfPlayOnOff extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         $this->assertSame($this->layout2->enableStat, $object->data->enableStat);
     }
+
+    /**
+     * Bulk On/Off Layout enableStat
+     * @dataProvider enableStatLayoutCases     
+     */
+    public function testLayoutBulkEnableStat($enableStat)
+    {
+        // Call Set enable stat
+        $this->client->put('/layout/setenablestat/' . $this->layout->layoutId, [
+            'enableStat' => $enableStat
+        ], [
+            'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
+        ]);
+
+        $this->assertSame(200, $this->client->response->status());
+
+        $layout = (new XiboLayout($this->getEntityProvider()))->getById($this->layout->layoutId);
+        $this->assertSame($enableStat, $layout->enableStat);
+    }
+
+    /**
+     * Bulk On/Off/Inherit Media enableStat
+     * @dataProvider enableStatMediaAndWidgetCases
+     */
+    public function testMediaBulkEnableStat($enableStat)
+    {
+        // Call Set enable stat
+        $this->client->put('/library/setenablestat/' . $this->media->mediaId, [
+            'enableStat' => $enableStat
+        ], [
+            'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
+        ]);
+
+        $this->assertSame(200, $this->client->response->status());
+
+        $media = (new XiboLibrary($this->getEntityProvider()))->getById($this->media->mediaId);
+        $this->assertSame($enableStat, $media->enableStat);
+    }
 }
