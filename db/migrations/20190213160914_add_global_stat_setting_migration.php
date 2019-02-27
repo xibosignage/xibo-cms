@@ -33,11 +33,11 @@ class AddGlobalStatSettingMigration extends AbstractMigration
     public function change()
     {
         $earlierMonth = Date::now()->subMonth(1)->format('Y-m-d');
-        $result = $this->fetchRow('SELECT EXISTS (SELECT * FROM `stat` where `stat`.end >  \'' . $earlierMonth . '\')');
+        $result = $this->fetchRow('SELECT EXISTS (SELECT * FROM `stat` where `stat`.end >  \'' . $earlierMonth . '\' LIMIT 1)');
+        $table = $this->table('setting');
 
         // if there are no stats recorded in last 1 month then layout stat is Off
         if ($result[0] <= 0 ) {
-            $table = $this->table('setting');
             $table
                 ->insert([
                     [
@@ -49,7 +49,6 @@ class AddGlobalStatSettingMigration extends AbstractMigration
                 ])
                 ->save();
         } else {
-            $table = $this->table('setting');
             $table
                 ->insert([
                     [
