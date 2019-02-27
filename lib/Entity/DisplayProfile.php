@@ -538,7 +538,7 @@ class DisplayProfile implements \JsonSerializable
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                         'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
-                        'groupClass' => NULL
+                        'groupClass' => "aggregation-level"
                     ),
                     array(
                         'name' => 'XmrNetworkAddress',
@@ -942,7 +942,7 @@ class DisplayProfile implements \JsonSerializable
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                         'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
-                        'groupClass' => NULL
+                        'groupClass' => "aggregation-level"
                     ),
                     array(
                         'name' => 'orientation',
@@ -1339,7 +1339,7 @@ class DisplayProfile implements \JsonSerializable
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                         'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
-                        'groupClass' => NULL
+                        'groupClass' => "aggregation-level"
                     ),
                     array(
                         'name' => 'xmrNetworkAddress',
@@ -1604,7 +1604,7 @@ class DisplayProfile implements \JsonSerializable
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                         'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
-                        'groupClass' => NULL
+                        'groupClass' => "aggregation-level"
                     ],
                     [
                         'name' => 'orientation',
@@ -1841,7 +1841,7 @@ class DisplayProfile implements \JsonSerializable
                         'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                         'helpText' => __('Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items.'),
                         'enabled' => true,
-                        'groupClass' => NULL
+                        'groupClass' => "aggregation-level"
                     ],
                     [
                         'name' => 'orientation',
