@@ -1,16 +1,19 @@
 #!/bin/sh
 
-# Print some details
-echo "MySQL Connection Details:"
-echo "Username: cms"
-echo "Password: $MYSQL_PASSWORD"
-echo "Host: $MYSQL_HOST:$MYSQL_PORT"
-echo ""
-echo "XMR Connection Details:"
-echo "Host: $XMR_HOST"
-echo "CMS Port: 50001"
-echo "Player Port: 9505"
-echo ""
+# Print some details for developers and non-root docker installations
+if [ "$CMS_DEV_MODE" == "true" ] || [ "$NON_ROOT_DOCKER" == "true" ];
+then
+  echo "MySQL Connection Details:"
+  echo "Username: $MYSQL_USER"
+  echo "Password: $MYSQL_PASSWORD"
+  echo "Host: $MYSQL_HOST:$MYSQL_PORT"
+  echo ""
+  echo "XMR Connection Details:"
+  echo "Host: $XMR_HOST"
+  echo "CMS Port: 50001"
+  echo "Player Port: 9505"
+  echo ""
+fi
 
 # Sleep for a few seconds to give MySQL time to initialise
 echo "Waiting for MySQL to start - max 300 seconds"
@@ -25,8 +28,25 @@ fi
 echo "MySQL started"
 sleep 1
 
+# Check to see if we have a settings.php file in this container
+# if we don't, then we will need to create one here (it only contains the $_SERVER environment
+# variables we've already set
+if [ ! -f "/var/www/cms/web/settings.php" ]
+then
+  # Write settings.php
+  echo "Updating settings.php"
+
+  # We won't have a settings.php in place, so we'll need to copy one in
+  cp /tmp/settings.php-template /var/www/cms/web/settings.php
+  chown apache.apache -R /var/www/cms/web/settings.php
+
+  SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+  /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
+fi
+
 # Check if there's a database file to import
-if [ -f "/var/www/backup/import.sql" ]
+MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
+if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Importing Database" 
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/backup/import.sql"
@@ -41,7 +61,6 @@ then
 
   # Configure Maintenance
   echo "Setting up Maintenance"
-  MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 
@@ -52,12 +71,20 @@ then
   echo ""
 fi
 
+# Check if the database exists already
+DB_EXISTS=0
+if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT settingId FROM \`setting\` LIMIT 1"
+then
+  DB_EXISTS=1
+fi
+
 # Check if we need to run an upgrade
 # if DB_EXISTS then see if the version installed matches
 # only upgrade for production containers
-if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT settingId FROM \`setting\` LIMIT 1"
+if [ "$DB_EXISTS" == "1" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
   echo "Existing Database, checking if we need to upgrade it"
+
   # Determine if there are any migrations to be run
   /var/www/cms/vendor/bin/phinx status -c "/var/www/cms/phinx.php"
 
@@ -75,11 +102,12 @@ then
     echo 'Running database migrations'
     /var/www/cms/vendor/bin/phinx migrate -c /var/www/cms/phinx.php
   fi
-else
-  # This is a fresh install so bootstrap the whole
-  # system
-  echo "New install"
+fi
 
+if [ "$DB_EXISTS" == "0" ]
+then
+  # This is a fresh install so bootstrap the whole system
+  echo "New install"
   echo "Provisioning Database"
 
   # Create the database if it doesn't exist
@@ -105,30 +133,12 @@ else
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_KEY' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
 
   # Configure Maintenance
-  MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
   
   echo ""
   echo "Maintenance-Key: ${MAINTENANCE_KEY}"
   echo ""
-fi
-
-# Define the secret if not done already defined
-SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8) && \
-/bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
-
-# Initially the Dockerimage just creates the custom settings file with zero content
-# If this is a initial run, save the secret also in custom settings if there is nothing defined
-if [ ! -f /var/www/cms/custom/settings-custom.php ];
-then
-   touch /var/www/cms/custom/settings-custom.php
-fi
-if [ -s /var/www/cms/custom/settings-custom.php ];
-then
-  echo "<?php" >> /var/www/cms/custom/settings-custom.php
-  echo "define('SECRET_KEY','$SECRET_KEY');" >> /var/www/cms/custom/settings-custom.php
-  echo "?>" >> /var/www/cms/custom/settings-custom.php
 fi
 
 # Update /etc/periodic/cms-db.env with current environment (for cron)
@@ -152,23 +162,98 @@ then
   echo "AuthPass=$CMS_SMTP_PASSWORD" >> /etc/ssmtp/ssmtp.conf
 fi
 
+# Setup standard docker installations which are not built for Non-Root Docker environments like Openshift
+if [ "$CMS_DEV_MODE" == "false" ] && [ "$NON_ROOT_DOCKER" != "true" ];
+then
+    # Import any ca-certificate files that might be needed to use a proxy etc
+    echo "Importing ca-certs"
+    cp -v /var/www/cms/ca-certs/*.pem /usr/local/share/ca-certificates
+    cp -v /var/www/cms/ca-certs/*.crt /usr/local/share/ca-certificates
+    /usr/sbin/update-ca-certificates
+
+    # Update Crontab
+    crontab -u apache /etc/crontabs/apache
+
+    # Secure SSMTP files
+    # Following recommendations here:
+    # https://wiki.archlinux.org/index.php/SSMTP#Security
+    /bin/chgrp ssmtp /etc/ssmtp/ssmtp.conf
+    /bin/chgrp ssmtp /usr/sbin/ssmtp
+    /bin/chmod 640 /etc/ssmtp/ssmtp.conf
+    /bin/chmod g+s /usr/sbin/ssmtp
+
+    mkdir -p /var/www/cms/library/temp
+    chown apache.apache -R /var/www/cms
+
+    # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
+    # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
+    if [ ! "$CMS_ALIAS" == "none" ]
+    then
+        echo "Setting up CMS alias"
+        /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/conf.d/cms.conf
+        /bin/sed -i "s|.*RewriteBase.*$|RewriteBase $CMS_ALIAS|" /var/www/cms/web/.htaccess
+    fi
+
+    # Remove install.php if it exists
+    if [ -e /var/www/cms/web/install/index.php ]
+    then
+        echo "Removing web/install/index.php from production container"
+        rm /var/www/cms/web/install/index.php
+    fi
+fi
+
+if [ "$NON_ROOT_DOCKER" != "true" ];
+then
+  # Configure PHP session.gc_maxlifetime
+  sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php7/php.ini
+  sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7/php.ini
+  sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
+  sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
+  sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
+  
+  # Run CRON in Production mode
+  if [ "$CMS_DEV_MODE" == "false" ]
+  then
+    echo "Starting cron"
+    /usr/sbin/crond
+  fi
+fi
+
+# Define the secret if not done already defined
+SECRET_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8) && \
+/bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
+
+# If this is a initial run, save the secret also in custom settings if there is nothing defined
+# This only makes sens in case /var/www/cms/custom/ is a VOLUME
+if [ ! -f /var/www/cms/custom/settings-custom.php ];
+then
+   touch /var/www/cms/custom/settings-custom.php
+fi
+if [ -s /var/www/cms/custom/settings-custom.php ];
+then
+  echo "<?php" >> /var/www/cms/custom/settings-custom.php
+  echo "define('SECRET_KEY','$SECRET_KEY');" >> /var/www/cms/custom/settings-custom.php
+  echo "?>" >> /var/www/cms/custom/settings-custom.php
+fi
+
 echo "Running maintenance"
 cd /var/www/cms
 /usr/bin/php bin/run.php
 
-#echo "Starting cron"
-#/usr/sbin/crond
-echo ""
-echo "IMPORTANT:"
-echo "  -->> Add a Lineness Check in Openshift <<--"
-echo "        - Start after: 60 Second"
-echo "        - Timeout:     60 Seconds"
-echo "        - Type:        Container Command"
-echo "        - Command lines: "
-echo "            1: /bin/bash"
-echo "            2: -c"
-echo "            3: cd /var/www/cms ; . /etc/periodic/cms-db.env ; /usr/bin/php bin/xtr.php > /dev/null 2>&1"
-echo ""
+if [ "$NON_ROOT_DOCKER" == "true" ];
+then
+  echo ""
+  echo "IMPORTANT:"
+  echo "  -->> Add a Lineness Check in Openshift <<--"
+  echo "        - Start after: 60 Second"
+  echo "        - Timeout:     60 Seconds"
+  echo "        - Type:        Container Command"
+  echo "        - Command lines: "
+  echo "            1: /bin/bash"
+  echo "            2: -c"
+  echo "            3: cd /var/www/cms ; . /etc/periodic/cms-db.env ; /usr/bin/php bin/xtr.php > /dev/null 2>&1"
+  echo ""
+fi
 
 echo "Starting webserver"
 exec /usr/local/bin/httpd-foreground

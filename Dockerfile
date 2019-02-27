@@ -107,6 +107,7 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
+    NON_ROOT_DOCKER=false \
     XMR_HOST=xmr \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
@@ -170,7 +171,6 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /var/www/cms/web/userscripts && \
     chown -R apache:apache /var/www/cms && \
     chmod +x /entrypoint.sh /usr/local/bin/httpd-foreground /usr/local/bin/wait-for-command.sh \
-    /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
