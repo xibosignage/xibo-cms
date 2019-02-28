@@ -120,7 +120,6 @@ class DisplayFactory extends BaseFactory
     public function getByLicence($licence)
     {
         $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
-        $this->getLog()->debug('DISPLAY LOG LICENCE ' . $licence );
 
         if (count($displays) <= 0)
             throw new NotFoundException();
