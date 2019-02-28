@@ -299,28 +299,8 @@ class UserFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
-            // Convert into commas
-            foreach (explode(',', $this->getSanitizer()->getString('userName', $filterBy)) as $term) {
-
-                if (empty(trim($term)))
-                    continue;
-
-                // convert into a space delimited array
-                $names = explode(' ', $term);
-
-                $i = 0;
-                foreach ($names as $searchName) {
-                    $i++;
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $body .= " AND `user`.userName NOT RLIKE (:userName$i) ";
-                        $params['userName' . $i] = ltrim(($searchName), '-');
-                    } else {
-                        $body .= " AND `user`.userName RLIKE (:userName$i) ";
-                        $params['userName' . $i] = $searchName;
-                    }
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('userName', $filterBy));
+            $this->nameFilter('user', 'userName', $terms, $body, $params);
         }
 
         // Email Provided

@@ -608,22 +608,9 @@ class MediaFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('name', $filterBy));
-            $i = 0;
-            foreach($names as $searchName) {
-                $i++;
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body .= ' AND media.name NOT LIKE :notLike' . $i . ' ';
-                    $params['notLike' . $i] = '%' . ltrim($searchName, '-') . '%';
-                }
-                else {
-                    $body .= ' AND media.name LIKE :like' . $i . ' ';
-                    $params['like' . $i] = '%' . $searchName . '%';
-                }
-            }
+        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
+            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+            $this->nameFilter('media', 'name', $terms, $body, $params);
         }
 
         if ($this->getSanitizer()->getString('nameExact', $filterBy) != '') {
@@ -775,7 +762,7 @@ class MediaFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-
+$this->getLog()->debug('BASE FACTORY SQL ' . $sql);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
