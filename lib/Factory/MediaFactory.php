@@ -761,9 +761,7 @@ class MediaFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
-$this->getLog()->debug('BASE FACTORY SQL ' . $sql);
-
+        
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
