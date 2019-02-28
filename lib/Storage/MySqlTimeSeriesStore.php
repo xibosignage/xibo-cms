@@ -95,9 +95,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         $body = '
             FROM stat
-              INNER JOIN display
+              LEFT OUTER JOIN display
               ON stat.DisplayID = display.DisplayID
-              INNER JOIN layout
+              LEFT OUTER JOIN layout
               ON layout.LayoutID = stat.LayoutID
               LEFT OUTER JOIN `widget`
               ON `widget`.widgetId = stat.widgetId
@@ -122,8 +122,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $body .= ' WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
                 AND stat.start <= :toDt
-                AND stat.displayID IN (' . implode(',', $displayIds) . ')
         ';
+
+        // Filter by display
+        if (count($displayIds) > 0 ) {
+            $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ') ';
+        }
 
         $params = [
             'fromDt' => $fromDt,
@@ -304,7 +308,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $sql = '
         SELECT stat.*, display.Display as display, layout.Layout as layout, media.Name AS media
           FROM stat
-            INNER JOIN display
+            LEFT OUTER JOIN display
             ON stat.DisplayID = display.DisplayID
             LEFT OUTER JOIN layout
             ON layout.LayoutID = stat.LayoutID

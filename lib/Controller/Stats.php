@@ -272,20 +272,29 @@ class Stats extends Base
 
         $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
-        // Get an array of display id this user has access to.
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
-        }
+        if ( !$this->getUser()->isSuperAdmin() )
+        {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
 
-        if (count($displayIds) <= 0)
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
-        // Clear the displayIds if the user selected a display for which they don't have permission
-        if ($displayId != 0) {
-            if (!in_array($displayId, $displayIds)) {
-                $displayIds = [];
-            } else {
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
                 $displayIds = [$displayId];
             }
         }
@@ -319,11 +328,13 @@ class Stats extends Base
             $widgetName = $this->getSanitizer()->string($row['media']);
             // If the media name is empty, and the widgetid is not, then we can assume it has been deleted.
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
+            $displayName = $this->getSanitizer()->string($row['display']);
+            $layoutName = $this->getSanitizer()->string($row['layout']);
 
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
-            $entry['display'] = $this->getSanitizer()->string($row['display']);
-            $entry['layout'] = $this->getSanitizer()->string($row['layout']);
+            $entry['display'] = ($displayName != "") ? $displayName : __('Not Found');
+            $entry['layout'] = ($layoutName != "") ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $this->getSanitizer()->int($row['numberPlays']);
             $entry['duration'] = $this->getSanitizer()->int($row['duration']);
@@ -465,20 +476,29 @@ class Stats extends Base
         $toDt = $this->getSanitizer()->getDate('toDt');
         $displayId = $this->getSanitizer()->getInt('displayId');
 
-        // Get an array of display id this user has access to.
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
-        }
+        if ( !$this->getUser()->isSuperAdmin() )
+        {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
 
-        if (count($displayIds) <= 0)
-            throw new AccessDeniedException();
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
-        // Clear the displayIds if the user selected a display for which they don't have permission
-        if ($displayId != 0) {
-            if (!in_array($displayId, $displayIds)) {
-                $displayIds = [];
-            } else {
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
                 $displayIds = [$displayId];
             }
         }
@@ -495,12 +515,15 @@ class Stats extends Base
 
         while ($row = $resultSet->getNextRow() ) {
 
+            $displayName = $this->getSanitizer()->string($row['display']);
+            $layoutName = $this->getSanitizer()->string($row['layout']);
+
             // Read the columns
             $type = $this->getSanitizer()->string($row['type']);
             $fromDt = $this->getSanitizer()->string($row['start']);
             $toDt = $this->getSanitizer()->string($row['end']);
-            $layout = $this->getSanitizer()->string($row['layout']);
-            $display = $this->getSanitizer()->string($row['display']);
+            $layout = ($layoutName != "") ? $layoutName :  __('Not Found');;
+            $display = ($displayName != "") ? $displayName : __('Not Found');
             $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
             $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
 
