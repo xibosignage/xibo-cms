@@ -323,4 +323,36 @@ class StatisticsTest extends LocalWebTestCase
         $stats = (new XiboStats($this->getEntityProvider()))->get([$layout->layoutId]);
         //print_r($stats);
     }
+
+    /**
+     * Check if proof of play statistics can be exported
+     */
+    public function testExport()
+    {
+        // Checkout layout
+        $layout = $this->checkout($this->layout);
+
+        $hardwareId = $this->display->license;
+
+        // One insert
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+            '<stats>
+                        <stat fromdt="2018-02-12 00:00:00" 
+                        todt="2018-02-15 00:00:00" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $layout->layoutId . '" />
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        $this->client->get('/stats/export', [
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-15 00:00:00'
+        ]);
+        $this->assertSame(200, $this->client->response->status());
+
+        $body = $this->client->response->body();
+        $this->assertContains('layout,"2018-02-12', $body);
+    }
+
 }
