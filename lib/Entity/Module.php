@@ -155,6 +155,10 @@ class Module implements \JsonSerializable
     {
         if (!v::intType()->validate($this->defaultDuration))
             throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
+
+        if (!v::alnum(',')->validate($this->validExtensions)) {
+            throw new InvalidArgumentException(__('Comma separated file extensions only please, without the .'), 'validExtensions');
+        }
     }
 
     public function save()
