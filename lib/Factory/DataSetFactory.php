@@ -174,6 +174,10 @@ class DataSetFactory extends BaseFactory
         $entries = array();
         $params = array();
 
+        if ($sortOrder === null) {
+            $sortOrder = ['dataSet'];
+        }
+
         $select  = '
           SELECT dataset.dataSetId,
             dataset.dataSet,

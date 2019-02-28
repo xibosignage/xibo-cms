@@ -29,6 +29,7 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -114,6 +115,9 @@ class Module extends Base
     /** @var ScheduleFactory  */
     private $scheduleFactory;
 
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -138,7 +142,7 @@ class Module extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -156,6 +160,7 @@ class Module extends Base
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -996,6 +1001,12 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-tab-' . $tab;
         $this->getState()->setData($module->getTab($tab));
+    }
+
+    public function getDataSets()
+    {
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($this->dataSetFactory->query());
     }
 
     /**

@@ -770,7 +770,8 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->widgetAudioFactory,
                 $container->displayFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->dataSetFactory
             );
         });
 

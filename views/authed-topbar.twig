@@ -31,7 +31,7 @@
             <ul class="dropdown-menu">
         {% endif %}
                 {% if currentUser.routeViewable("/schedule") %}
-                    <li><a href="{{ urlFor("schedule.view") }}">{% if countViewable > 1 %}{% trans "Calendar" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
+                    <li><a href="{{ urlFor("schedule.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
                 {% endif %}
                 {% if currentUser.routeViewable("/daypart") %}
                     <li><a href="{{ urlFor("daypart.view") }}">{% trans "Dayparting" %}</a></li>

@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -513,8 +514,12 @@ class Schedule extends Base
 
                 $this->getLog()->debug('Adding scheduled events: ' . json_encode($scheduleEvents));
 
+                // We will never save this and we need the eventId on the agenda view
+                $eventId = $schedule->eventId;
+
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $schedule = clone $schedule;
+                    $schedule->eventId = $eventId;
                     $schedule->fromDt = $scheduleEvent->fromDt;
                     $schedule->toDt = $scheduleEvent->toDt;
                     $schedule->layoutId = intval($event['layoutId']);
@@ -800,6 +805,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
+        $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1053,6 +1059,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
+        $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {

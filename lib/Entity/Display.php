@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (Display.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 
@@ -51,15 +50,7 @@ class Display implements \JsonSerializable
     public static $STATUS_DOWNLOADING = 2;
     public static $STATUS_PENDING = 3;
 
-    private $_config;
-    private $_configOverride;
     use EntityTrait;
-
-    /**
-     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
-     * @var string[]
-     */
-    public $overrideConfig = [];
 
     /**
      * @SWG\Property(description="The ID of this Display")
@@ -321,6 +312,21 @@ class Display implements \JsonSerializable
     public $tags;
 
     /**
+     * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
+     * @var array
+     */
+    public $overrideConfig = [];
+
+    /** @var array The configuration from the Display Profile  */
+    private $profileConfig;
+
+    /** @var array Combined config */
+    private $combinedConfig;
+
+    /** @var \Xibo\Entity\DisplayProfile the resolved DisplayProfile for this Display */
+    private $_displayProfile;
+
+    /**
      * Commands
      * @var array[Command]
      */
@@ -439,6 +445,36 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * @return \Xibo\Entity\DisplayProfile
+     */
+    public function getDisplayProfile()
+    {
+        if ($this->_displayProfile === null) {
+
+            try {
+                if ($this->displayProfileId == 0) {
+                    // Load the default profile
+                    $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
+                } else {
+                    // Load the specified profile
+                    $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
+                }
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Cannot get display profile');
+                $this->getLog()->debug($e->getTraceAsString());
+
+                $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
+            }
+
+            // Set our display profile
+            $this->_displayProfile = $displayProfile;
+
+        }
+
+        return $this->_displayProfile;
+    }
+
+    /**
      * Is this display auditing?
      * return bool
      */
@@ -473,12 +509,6 @@ class Display implements \JsonSerializable
 
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
             throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
-
-        // Check if there are display slots available
-        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
-
-        if (!$this->isDisplaySlotAvailable())
-            throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
 
         // Broadcast Address
         if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
@@ -577,13 +607,24 @@ class Display implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'checkDisplaySlotAvailability' => true
         ], $options);
 
         $allowNotify = true;
 
         if ($options['validate'])
             $this->validate();
+
+        if ($options['checkDisplaySlotAvailability']) {
+            // Check if there are display slots available
+            $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+
+            if (!$this->isDisplaySlotAvailable()) {
+                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'),
+                    $maxDisplays), 'maxDisplays');
+            }
+        }
 
         if ($this->displayId == null || $this->displayId == 0) {
             $this->add();
@@ -764,7 +805,9 @@ class Display implements \JsonSerializable
 
     /**
      * Get the Settings Profile for this Display
+     * @param array $options
      * @return array
+     * @throws \Xibo\Exception\XiboException
      */
     public function getSettings($options = [])
     {
@@ -781,7 +824,10 @@ class Display implements \JsonSerializable
     public function getCommands()
     {
         if ($this->commands == null) {
-            $this->setConfig();
+            $displayProfile = $this->getDisplayProfile();
+
+            // Set any commands
+            $this->commands = $displayProfile->commands;
         }
 
         return $this->commands;
@@ -795,27 +841,38 @@ class Display implements \JsonSerializable
      * @return mixed
      * @throws NotFoundException
      */
-    public function getSetting($key, $default, $options = [])
+    public function getSetting($key, $default = null, $options = [])
     {
         $options = array_merge([
-            'displayOverride' => false
+            'displayOverride' => true,
+            'displayOnly' => false
         ], $options);
 
         $this->setConfig($options);
 
         // Find
         $return = $default;
-        if ($options['displayOverride']) {
-            foreach ($this->_configOverride as $row) {
+        if ($options['displayOnly']) {
+            // Only get an option if set from the override config on this display
+            foreach ($this->overrideConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    $return = $row['value'];
+                    $return = array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
+                    break;
+                }
+            }
+        } else if ($options['displayOverride']) {
+            // Get the option from the combined array of config
+            foreach ($this->combinedConfig as $row) {
+                if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
+                    $return = array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }
         } else {
-            foreach ($this->_config as $row) {
+            // Get the option from the profile only
+            foreach ($this->profileConfig as $row) {
                 if ($row['name'] == $key || $row['name'] == ucfirst($key)) {
-                    $return = $row['value'];
+                    $return = array_key_exists('value', $row) ? $row['value'] : ((array_key_exists('default', $row)) ? $row['default'] : $default);
                     break;
                 }
             }
@@ -836,36 +893,40 @@ class Display implements \JsonSerializable
             'displayOverride' => false
         ], $options);
 
-        if ($this->_config == null) {
+        if ($this->profileConfig == null) {
             $this->load();
 
-            try {
-                if ($this->displayProfileId == 0) {
-                    // Load the default profile
-                    $displayProfile = $this->displayProfileFactory->getDefaultByType($this->clientType);
-                } else {
-                    // Load the specified profile
-                    $displayProfile = $this->displayProfileFactory->getById($this->displayProfileId);
-                }
-            } catch (NotFoundException $e) {
-                $this->getLog()->error('Cannot get display profile');
-                $this->getLog()->debug($e->getTraceAsString());
-
-                $displayProfile = $this->displayProfileFactory->getUnknownProfile($this->clientType);
-            }
+            // Get the display profile
+            $displayProfile = $this->getDisplayProfile();
 
             // Merge in any overrides we have on our display.
-            $this->_configOverride = array_replace($displayProfile->getProfileConfig(), $this->overrideConfig);
-
-            $this->_config = $displayProfile->getProfileConfig();
-
-            $this->commands = $displayProfile->commands;
+            $this->profileConfig = $displayProfile->getProfileConfig();
+            $this->combinedConfig = $this->mergeConfigs($this->profileConfig, $this->overrideConfig);
         }
 
-        if ($options['displayOverride'])
-            return $this->_configOverride;
-        else
-            return $this->_config;
+        return ($options['displayOverride']) ? $this->combinedConfig : $this->profileConfig;
+    }
+
+    /**
+     * Merge two configs
+     * @param $default
+     * @param $override
+     * @return array
+     */
+    private function mergeConfigs($default, $override)
+    {
+        foreach ($default as &$defaultItem) {
+            for ($i = 0; $i < count($override); $i++) {
+                if ($defaultItem['name'] == $override[$i]['name']) {
+                    // merge
+                    $defaultItem = array_merge($defaultItem, $override[$i]);
+                    break;
+                }
+            }
+        }
+
+        // Merge the remainder
+        return $default;
     }
 
     /**
@@ -898,6 +959,7 @@ class Display implements \JsonSerializable
      * @param PoolInterface $pool
      * @param int $currentLayoutId
      * @return $this
+     * @throws \Exception
      */
     public function setCurrentLayoutId($pool, $currentLayoutId)
     {
@@ -928,6 +990,7 @@ class Display implements \JsonSerializable
      * @param PoolInterface $pool
      * @param string $date
      * @return $this
+     * @throws \Exception
      */
     public function setCurrentScreenShotTime($pool, $date)
     {

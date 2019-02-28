@@ -1916,11 +1916,6 @@ class Layout extends Base
             'notify' => false
         ]);
 
-        // todo: need to copy the permissions on all child items
-        // idea being that if we make permissions changes while in Draft, we'd want those changes to be reflected
-        // or reverted when we publish or discard.
-
-
         // Update the original
         $layout->publishedStatusId = 2; // Draft
         $layout->save([
@@ -1931,6 +1926,40 @@ class Layout extends Base
             'validate' => false,
             'notify' => false
         ]);
+
+        // Permissions
+        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
+        // Regions/Widgets need to copy down our layout permissions
+        foreach ($draft->regions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $layout->getRegion($region->getOriginalValue('regionId'));
+
+            // Copy over original permissions
+            foreach ($original->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->regionId;
+                $new->save();
+            }
+
+            // Playlist
+            foreach ($original->getPlaylist()->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->getPlaylist()->playlistId;
+                $new->save();
+            }
+
+            // Widgets
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
+
+                // Copy over original permissions
+                foreach ($originalWidget->permissions as $permission) {
+                    $new = clone $permission;
+                    $new->objectId = $widget->widgetId;
+                    $new->save();
+                }
+            }
+        }
 
         // Return
         $this->getState()->hydrate([

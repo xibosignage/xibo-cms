@@ -429,5 +429,22 @@
 
             makePagedSelect($select, dialog);
         }
+
+        function displayEditFormOpen(dialog) {
+
+            var $settings = $(dialog).find('#settings-from-display-profile').find('.form-group');
+            var $table = $(dialog).find('#settings-from-profile tbody').empty();
+            var override = $(dialog).data('extra');
+
+            console.log(override);
+
+            $.each($settings, function(index, element) {
+                var $label = $(element).find('label');
+                var $val = $(element).find('input,select');
+                var over = $label.prop("for");
+                $table.append("<tr><td>" + $label.text() + "</td><td>" + $val.val() + "</td><td>" + override[over] + "</td></tr>");
+            })
+
+        }
     </script>
 {% endblock %}

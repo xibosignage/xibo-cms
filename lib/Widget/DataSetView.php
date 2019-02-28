@@ -50,12 +50,18 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * DataSets
-     * @return array[DataSet]
+     * Get DataSet object, used by TWIG template.
+     *
+     * @return array
+     * @throws NotFoundException
      */
-    public function dataSets()
+    public function getDataSet()
     {
-        return $this->dataSetFactory->query();
+        if ($this->getOption('dataSetId') != 0) {
+            return [$this->dataSetFactory->getById($this->getOption('dataSetId'))];
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -361,6 +367,7 @@ class DataSetView extends ModuleWidget
             $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
             $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
             $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
+            $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
             $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
             $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
             $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
@@ -521,12 +528,30 @@ class DataSetView extends ModuleWidget
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
+        $duration = $this->getCalculatedDurationForGetResource();
+        $durationIsPerItem = $this->getOption('durationIsPerPage', 1);
+        $rowsPerPage = $this->getOption('rowsPerPage', 0);
+
         $options = array(
             'type' => $this->getModuleType(),
-            'duration' => $this->getCalculatedDurationForGetResource(),
+            'duration' => $duration,
             'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height
+            'originalHeight' => $this->region->height,
+            'rowsPerPage' => $rowsPerPage,
+            'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true)
         );
+
+        // Generate the table
+        $table = $this->dataSetTableHtml($displayId, $isPreview);
+
+        // Work out how many pages we will be showing.
+        $pages = $table['countPages'];
+
+        $pages = ($rowsPerPage > 0) ? ceil($pages / $rowsPerPage) : $pages;
+        $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
+
+        // Replace and Control Meta options
+        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Add our fonts.css file
         $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
@@ -534,7 +559,7 @@ class DataSetView extends ModuleWidget
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
         $data['head'] = $headContent;
-        $data['body'] = $this->dataSetTableHtml($displayId, $isPreview);
+        $data['body'] = $table['html'];
 
         // Build some JS nodes
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
@@ -562,9 +587,9 @@ class DataSetView extends ModuleWidget
      * Get the Data Set Table
      * @param int $displayId
      * @param bool $isPreview
-     * @return string
+     * @return array
      */
-    public function dataSetTableHtml($displayId = 0, $isPreview = true)
+    private function dataSetTableHtml($displayId = 0, $isPreview = true)
     {
         // Show a preview of the data set table output.
         $dataSetId = $this->getOption('dataSetId');
@@ -826,7 +851,11 @@ class DataSetView extends ModuleWidget
             $table .= '</table>';
             $table .= '</div>';
 
-            return $table;
+            return [
+                'html' => $table,
+                'countRows' => $totalRows,
+                'countPages' => $totalPages
+            ];
         }
         catch (NotFoundException $e) {
             $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());

@@ -1,11 +1,25 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
-
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
@@ -22,264 +36,20 @@
 {% block callBack %}displayProfileFormOpen{% endblock %}
 
 {% block formHtml %}
-    <div class="row">
-        <div class="col-md-12">
-            <ul class="nav nav-tabs" role="tablist">
-                {% set first = true %}
-                {% for tab in displayProfile.configTabs %}
-                    <li{% if first %} class="active"{% endif %}><a href="#{{ tab.id }}" role="tab" data-toggle="tab">{{ tab.name }}</a></li>
-                    {% set first = false %}
-                {% endfor %}
-                {% if commands|length > 0 %}
-                    <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
-                {% endif %}
-            </ul>
-            <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
-                <div class="tab-content">
-                {% for field in displayProfile.configDefault %}
-                    {% if currentCat != field.tabId %}
-                        {% if currentCat != "" %}
-                            </div>
-                        {% endif %}
-                        <div class="tab-pane{% if currentCat == "" %} active{% endif %}" id="{{ field.tabId }}">
-                            {% if field.tabId == "general" %}
-                                {% set title %}{% trans "Name" %}{% endset %}
-                                {% set helpText %}{% trans "The Name of the Profile - (1 - 50 characters)" %}{% endset %}
-                                {{ forms.input("name", title, displayProfile.name, helpText) }}
+    {# Output the relevant form depending on the display profile player type #}
+    {% if displayProfile.getClientType() == "android" %}
+        {% include "displayprofile-form-edit-android.twig" %}
+    {% elseif displayProfile.getClientType() == "windows" %}
+        {% include "displayprofile-form-edit-windows.twig" %}
+    {% elseif displayProfile.getClientType() == "linux" %}
+        {% include "displayprofile-form-edit-linux.twig" %}
+    {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
+        {% include "displayprofile-form-edit-soc.twig" %}
+    {% else %}
+        {% set message %}{% trans "This is an unknown type of Player and there are no special settings for it." %}{% endset %}
+        {{ forms.message(message) }}
 
-                                {% set title %}{% trans "Default Profile?" %}{% endset %}
-                                {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
-                                {{ forms.checkbox("isDefault", title, displayProfile.isDefault, helpText) }}
-                            {% endif %}
+        {% include "displayprofile-form-edit-common-fields.twig" %}
+    {% endif %}
 
-                        {% set currentCat = field.tabId %}
-                    {% endif %}
-
-                    {# Now we have to output the relevant form field #}
-                    {% if field.enabled != 1 %}
-                        {{ forms.disabled(field.name, field.title, field.value, field.helpText) }}
-                    {% elseif field.name == "timers" %}
-
-                        {% set settingsDesc1 %}
-                            {% trans "Use the form fields to create On/Off timings for the webOS monitor for specific days of the week as required." %}
-                        {% endset %}
-                        {% set settingsDesc2 %}
-                            {% trans "Please note:" %}
-                        {% endset %}
-                        {% set settingsDesc3 %}
-                            {% trans "When the monitor is 'Off' the Player will still work in the background to receive content updates." %}
-                        {% endset %}
-                        <div class="alert alert-info">
-                             <p>{{ settingsDesc1 }}<strong>{{ settingsDesc2 }}</strong>{{ settingsDesc3 }}</p>
-                        </div>
-
-                        {# Days translations #}
-                        {% set monday %}{% trans "Monday" %}{% endset %}
-                        {% set tuesday %}{% trans "Tuesday" %}{% endset %}
-                        {% set wednesday %}{% trans "Wednesday" %}{% endset %}
-                        {% set thursday %}{% trans "Thursday" %}{% endset %}
-                        {% set friday %}{% trans "Friday" %}{% endset %}
-                        {% set saturday %}{% trans "Saturday" %}{% endset %}
-                        {% set sunday %}{% trans "Sunday" %}{% endset %}
-
-                        {% set options = [
-                            { id: "monday", name: monday },
-                            { id: "tuesday", name: tuesday },
-                            { id: "wednesday", name: wednesday },
-                            { id: "thursday", name: thursday },
-                            { id: "friday", name: friday },
-                            { id: "saturday", name: saturday },
-                            { id: "sunday", name: sunday }
-                        ] %}
-
-                        <div id="timers-container" class="container-fluid display-settings-container" data-values="{{ field.value }}" data-options="{{ options|json_encode() }}"></div>
-                    {% elseif field.name == "pictureOptions" %}
-
-                        {% set settingsDesc %}
-                            {% trans "Control monitor settings using the fields below. Use the sliders to set the required range for each setting." %}
-                        {% endset %}
-                        <div class="alert alert-info">
-                             <p>{{ settingsDesc }}</p>
-                        </div>
-
-                        {# Properties names translations #}
-                        {% set backlight %}{% trans "Backlight" %}{% endset %}
-                        {% set contrast %}{% trans "Contrast" %}{% endset %}
-                        {% set brightness %}{% trans "Brightness" %}{% endset %}
-                        {% set sharpness %}{% trans "Sharpness" %}{% endset %}
-                        {% set hSharpness %}{% trans "Horizontal Sharpness" %}{% endset %}
-                        {% set vSharpness %}{% trans "Vertical Sharpness" %}{% endset %}
-                        {% set color %}{% trans "Color" %}{% endset %}
-                        {% set tint %}{% trans "Tint" %}{% endset %}
-                        {% set colorTemperature %}{% trans "Color Temperature" %}{% endset %}
-                        {% set dynamicContrast %}{% trans "Dynamic Contrast" %}{% endset %}
-                        {% set superResolution %}{% trans "Super Resolution" %}{% endset %}
-                        {% set colorGamut %}{% trans "Color Gamut" %}{% endset %}
-                        {% set dynamicColor %}{% trans "Dynamic Color" %}{% endset %}
-                        {% set noiseReduction %}{% trans "Noise Reduction" %}{% endset %}
-                        {% set mpegNoiseReduction %}{% trans "MPEG Noise Reduction" %}{% endset %}
-                        {% set blackLevel %}{% trans "Black Level" %}{% endset %}
-                        {% set gamma %}{% trans "Gamma" %}{% endset %}
-                        
-                        {# Labels translations #}
-                        {% set red %}{% trans "Red" %}{% endset %}
-                        {% set green %}{% trans "Green" %}{% endset %}
-                        {% set warm %}{% trans "Warm" %}{% endset %}
-                        {% set cool %}{% trans "Cool" %}{% endset %}
-
-                        {% set options = { 
-                            backlight: { name: backlight, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 100, step: 1, ticks: [0, 100], ticks_labels: [0, 100] }},
-                            contrast: { name: contrast, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 100, step: 1, ticks: [0, 100], ticks_labels: [0, 100] }},
-                            brightness: { name: brightness, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 100, step: 1, ticks: [0, 100], ticks_labels: [0, 100] }},
-                            sharpness: { name: sharpness, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 50, step: 1, ticks: [0, 50], ticks_labels: [0, 50] }},
-                            hSharpness: { name: hSharpness, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 50, step: 1, ticks: [0, 50], ticks_labels: [0, 50] }},
-                            vSharpness: { name: vSharpness, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 50, step: 1, ticks: [0, 50], ticks_labels: [0, 50] }},
-                            color: { name: color, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 100, step: 1, ticks: [0, 100], ticks_labels: [0, 100] }},
-                            tint: { name: tint, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 100, step: 1, ticks: [0, 100], ticks_labels: [red, green] }},
-                            colorTemperature: { name: colorTemperature, type: "number", inputType: "slider", sliderOptions: { min: 0, max: 100, step: 1, ticks: [0, 100], ticks_labels: [warm, cool] }},
-                            dynamicContrast: { name: dynamicContrast, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 3, step: 1, ticks: [0, 1, 2, 3], ticks_labels: ["off", "low", "medium", "high"], tooltip: "hide" }},
-                            superResolution: { name: superResolution, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 3, step: 1, ticks: [0, 1, 2, 3], ticks_labels: ["off", "low", "medium", "high"], tooltip: "hide" }},
-                            colorGamut: { name: colorGamut, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 1, step: 1, ticks: [0, 1], ticks_labels: ["normal", "extended"], tooltip: "hide" }},
-                            dynamicColor: { name: dynamicColor, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 3, step: 1, ticks: [0, 1, 2, 3], ticks_labels: ["off", "low", "medium", "high"], tooltip: "hide" }},
-                            noiseReduction: { name: noiseReduction, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 4, step: 1, ticks: [0, 1, 2, 3, 4], ticks_labels: ["auto", "off", "low", "medium", "high"], tooltip: "hide" }},
-                            mpegNoiseReduction: { name: mpegNoiseReduction, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 4, step: 1, ticks: [0, 1, 2, 3, 4], ticks_labels: ["auto", "off", "low", "medium", "high"], tooltip: "hide" }},
-                            blackLevel: { name: blackLevel, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 1, step: 1, ticks: [0, 1], ticks_labels: ["low", "high"], tooltip: "hide" }},
-                            gamma: { name: gamma, type: "string", inputType: "slider", sliderOptions: { min: 0, max: 3, step: 1, ticks: [0, 1, 2, 3], ticks_labels: ["low", "medium", "high", "high2"], tooltip: "hide" }}
-                        } %}
-
-                        <div id="picture-options-container" class="container-fluid display-settings-container" data-values="{{ field.value }}" data-options="{{ options|json_encode() }}"></div>
-                    {% elseif field.name == "lockOptions" %}
-                       
-                        <div id="lock-options-container" class="container-fluid display-settings-container" data-value="{{ field.value }}">
-                            {# usblock and osdlock #}
-                            {% set usblockTitle %}{% trans "usblock" %}{% endset %}
-                            {% set usblockHelp %}{% trans "Set access to any device that uses the monitors USB port. Set to ‘False’ the monitor will not accept input or read from USB ports." %}{% endset %}
-                            {% set osdlockTitle %}{% trans "osdlock" %}{% endset %}
-                            {% set osdlockHelp %}{% trans "Set access to the monitor settings via the remote control. Set To ‘False’ the remote control will not change the volume, brightness etc of the monitor." %}{% endset %}
-                            {% set falseText %}{% trans "False" %}{% endset %}
-                            {% set trueText %}{% trans "True" %}{% endset %}
-                            {% set options = [
-                                { val: 'empty', text: '' },
-                                { val: 'false', text: falseText },
-                                { val: 'true', text: trueText }
-                            ] %}
-
-                            {% if field.data.usblock is defined and field.data.usblock is not null %}
-                                {% if field.data.usblock == true  %}
-                                    {% set usblockValue = 'true' %}
-                                {% else %}
-                                    {% set usblockValue = 'false' %}
-                                {% endif %}
-                            {% else %}
-                                {% set usblockValue = 'empty' %}
-                            {% endif %}
-
-                            {% if field.data.osdlock is defined and field.data.osdlock is not null %}
-                                {% if field.data.osdlock == true  %}
-                                    {% set osdlockValue = 'true' %}
-                                {% else %}
-                                    {% set osdlockValue = 'false' %}
-                                {% endif %}
-                            {% else %}
-                                {% set osdlockValue = 'empty' %}
-                            {% endif %}
-
-                            {{ forms.dropdown("usblock", "single", usblockTitle, usblockValue, options, "val", "text", usblockHelp) }}
-                            {{ forms.dropdown("osdlock", "single", osdlockTitle, osdlockValue, options, "val", "text", osdlockHelp) }}
-
-                            {# keylock (local and remote) #}
-                            {% set localKeylockTitle %}{% trans "Keylock (local)" %}{% endset %}
-                            {% set localKeylockHelp %}{% trans "Set the allowed key input for the monitor; Allow All, Block All, Power Only." %}{% endset %}
-                            {% set remoteKeylockTitle %}{% trans "Keylock (remote)" %}{% endset %}
-                            {% set remoteKeylockHelp %}{% trans "Set the allowed key input for the monitor; Allow All, Block All, Power Only." %}{% endset %}
-                            {% set allowallText %}{% trans "Allow All" %}{% endset %}
-                            {% set blockallText %}{% trans "Block All" %}{% endset %}
-                            {% set poweronlyText %}{% trans "Power Only" %}{% endset %}
-                            {% set options = [
-                                { val: "", text: "" },
-                                { val: "allowall", text: allowallText },
-                                { val: "blockall", text: blockallText },
-                                { val: "poweronly", text: poweronlyText }
-                            ] %}
-                            {{ forms.dropdown("keylockLocal", "single", localKeylockTitle, field.data.keylock.local, options, "val", "text", localKeylockHelp) }}
-                            {{ forms.dropdown("keylockRemote", "single", remoteKeylockTitle, field.data.keylock.remote, options, "val", "text", remoteKeylockHelp) }}
-                        </div>
-                    {% elseif field.fieldType == "text" %}
-                        {{ forms.input(field.name, field.title, field.value, field.helpText) }}
-                    {% elseif field.fieldType == "number" %}
-                        {{ forms.number(field.name, field.title, field.value, field.helpText) }}
-                    {% elseif field.fieldType == "email" %}
-                        {{ forms.email(field.name, field.title, field.value, field.helpText) }}
-                    {% elseif field.fieldType == "checkbox" %}
-                        {{ forms.checkbox(field.name, field.title, field.value, field.helpText) }}
-                    {% elseif field.fieldType == "timePicker" %}
-                        {{ forms.time(field.name, field.title, field.value, field.helpText) }}
-                    {% elseif field.fieldType == "dropdown" %}
-                        {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
-                    {% elseif field.fieldType == "dropdownVersion" %}
-                        {% if displayProfile.type == "android" %}
-                            {% set attributes = [
-                                { name: "data-width", value: "300px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("playersoftware.search") },
-                                { name: "data-search-term", value: "playerShowVersion" },
-                                { name: "data-id-property", value: "mediaId" },
-                                { name: "data-text-property", value: "playerShowVersion" },
-                                { name: "data-filter-options", value: '{"playerType":"android"}' }
-                            ] %}
-                        {% endif %}
-                        {% if displayProfile.type == "lg" %}
-                            {% set attributes = [
-                                { name: "data-width", value: "300px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("playersoftware.search") },
-                                { name: "data-search-term", value: "playerShowVersion" },
-                                { name: "data-id-property", value: "mediaId" },
-                                { name: "data-text-property", value: "playerShowVersion" },
-                                { name: "data-filter-options", value: '{"playerType":"lg"}' }
-                            ] %}
-                        {% endif %}
-                        {% if displayProfile.type == "sssp" %}
-                            {% set attributes = [
-                                { name: "data-width", value: "300px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("playersoftware.search") },
-                                { name: "data-search-term", value: "playerShowVersion" },
-                                { name: "data-id-property", value: "mediaId" },
-                                { name: "data-text-property", value: "playerShowVersion" },
-                                { name: "data-filter-options", value: '{"playerType":"sssp"}' }
-                            ] %}
-                        {% endif %}
-                        {{ forms.dropdown(field.name, "single", field.title, field.value, [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", field.helpText, "pagedSelect", "", "", "", attributes) }}
-
-                    {% endif %}
-                {% endfor %}
-                </div>
-                {% if commands|length > 0 %}
-                    <div class="tab-pane" id="commands">
-                        {% for field in commands %}
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ forms.disabled("command", title, field.command, field.description) }}
-
-                            {% set fieldId = "commandString_" ~ field.commandId %}
-                            {% set title %}{% trans "Command" %}{% endset %}
-                            {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
-                            {{ forms.input(fieldId, title, field.commandString, helpText) }}
-
-                            {% set fieldId = "validationString_" ~ field.commandId %}
-                            {% set title %}{% trans "Validation" %}{% endset %}
-                            {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
-                            {{ forms.input(fieldId, title, field.validationString, helpText) }}
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </form>
-        </div>
-    </div>
 {% endblock %}

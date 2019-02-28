@@ -480,7 +480,6 @@ class DisplayFactory extends BaseFactory
                     'lastCommandSuccess'
                 ]
             ]);
-            $display->excludeProperty('overrideConfig');
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);
             $entries[] = $display;
         }

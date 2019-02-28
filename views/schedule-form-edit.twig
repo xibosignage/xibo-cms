@@ -128,7 +128,7 @@
                     
                     <div class="tab-pane" id="repeats">
                         {% set title %}{% trans "Repeats" %}{% endset %}
-                        {% set helpText %}{% trans "What type of repeat is required?" %}{% endset %}
+                        {% set helpText %}{% trans "Select the type of Repeat required for this Event." %}{% endset %}
                         {% set noneOption %}{% trans "None" %}{% endset %}
                         {% set minute %}{% trans "Per Minute" %}{% endset %}
                         {% set hourly %}{% trans "Hourly" %}{% endset %}
@@ -166,12 +166,20 @@
                         ] %}
                         {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
 
+                        {% set helpText %}{% trans "Should this Event Repeat by Day of the month (eg. Monthly on Day 21) or by a Weekday in the month (eg. Monthly on the third Thursday)" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-value", value: event.recurrenceMonthlyRepeatsOn },
+                            { name: "data-trans-day", value: "on the [DAY] day"|trans },
+                            { name: "data-trans-weekday", value: "on the [POSITION] [WEEKDAY]"|trans }
+                        ] %}
+                        {{ forms.dropdown("recurrenceMonthlyRepeatsOn", "single", "", event.recurrenceMonthlyRepeatsOn, [{id: event.recurrenceMonthlyRepeatsOn, name: ""}], "id", "name", helpText, "repeat-monthly-control-group", "", "", "", attributes) }}
+
                         {% set title %}{% trans "Repeat every" %}{% endset %}
-                        {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
+                        {% set helpText %}{% trans "Include a number to determine the Repeat frequency required for this Event." %}{% endset %}
                         {{ forms.number("recurrenceDetail", title, event.recurrenceDetail, helpText, "repeat-control-group") }}
 
                         {% set title %}{% trans "Until" %}{% endset %}
-                        {% set helpText %}{% trans "When should this event stop repeating? Leave empty to repeat forever." %}{% endset %}
+                        {% set helpText %}{% trans "Provide a date and time to end the Repeat for this Event. Leave empty to Repeat indefinitely." %}{% endset %}
                         {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange, helpText, "repeat-control-group", "", "") }}
                     </div>
                 </div>
