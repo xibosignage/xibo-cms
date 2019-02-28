@@ -33,7 +33,12 @@ PropertiesPanel.prototype.elementAction = function(element, subAction) {
  */
 PropertiesPanel.prototype.save = function(element) {
 
-    const self = this;
+    const app = getXiboApp();
+
+    // If inline editor and viewer exist
+    if(this.inlineEditor && (typeof app.viewer != 'undefined')) {
+        app.viewer.hideInlineEditor();
+    }
 
     // Run form open module optional function
     if(element.type === 'widget' && typeof window[element.subType + '_form_edit_submit'] === 'function') {
@@ -46,7 +51,6 @@ PropertiesPanel.prototype.save = function(element) {
     if(form.valid()) {
 
         const formNewData = form.serialize();
-        const app = getXiboApp();
 
         app.common.showLoadingScreen();
 

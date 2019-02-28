@@ -22,6 +22,12 @@
         {{!-- Render Layout --}}
         <div id="inline-editor" class="inline-editor-opened"></div>
 
+        <div id="inline-editor-overlay" class="inline-editor-closed" title="{{ trans.inlineEditor }}">
+            <div class="edit-btn-container">
+                <i id="edit-btn" class="fa fa-edit"></i>
+            </div>
+        </div>
+
         {{!-- Render Widget or Region --}}
         {{#if res.extra.empty}}
             <p class="center-msg">
