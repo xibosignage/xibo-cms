@@ -40,6 +40,16 @@
 @timeline-transition-in-fg-color: #64e01c;
 @timeline-transition-out-fg-color: #ec3737;
 
+@viewer-player-bg-colour: #111;
+@viewer-play-btn-fg-colour: #ccc;
+@viewer-player-btn-shadow-colour: #5c5c5c;
+@viewer-play-btn-hover-fg-colour: #f0f0f0;
+@viewer-player-btn-hover-shadow-colour: #fff;
+@viewer-navbar-bg-colour: #444;
+@viewer-inline-editor-shadow: red;
+@viewer-inline-editor-overlay-fg-colour: #f9f9f9;
+@viewer-inline-editor-overlay-bg-colour: #337ab7;
+
 @designer-overlay-z-index: 1050;
 
 @padding-navigator: 5px;
@@ -433,12 +443,6 @@
     .set-transparent-color(background-color; #000; 90%);
 }
 
-#layout-editor #layout-viewer.viewer-outline  {
-    position: absolute;
-    color: #10c01f;
-    z-index: 0;
-}
-
 #layout-editor #layout-viewer .viewer-element {
     position:relative;
 }
@@ -457,7 +461,7 @@
 }
 
 #layout-editor #layout-viewer .layout-player {
-    background: #000;
+    background: @viewer-player-bg-colour;
 }
 
 #layout-editor #layout-viewer .play-btn-container {
@@ -466,28 +470,25 @@
     display: table;
     height: 100%;
     text-align: center;
-    background: black;
-    background: #0000006b;
+    .set-transparent-color(background; @viewer-player-bg-colour; 60%);
 }
 
 #layout-editor #layout-viewer #play-btn {
     font-size: 70px;
-    color: #aaa;
-    color: rgba(255, 255, 255, 0.65);
-    text-shadow: 0px 0px 5px #5c5c5c;
+    .set-transparent-color(color; @viewer-play-btn-fg-colour; 65%);
+    text-shadow: 0px 0px 5px #2e2e2e;
     vertical-align: middle;
     display: table-cell;
 }
 
 #layout-editor #layout-viewer #play-btn:hover {
     font-size: 70px;
-    color: #f0f0f0;
-    text-shadow: 0px 0px 25px #fff;
+    color: @viewer-play-btn-hover-fg-colour;
 }
 
 /* Viewer navbar */
 #layout-editor #layout-viewer-navbar .viewer-navbar {
-    background: #444;
+    background: @viewer-navbar-bg-colour;
     padding: 4px;
     overflow: auto;
     .border-radius(0 0 2px 2px);
@@ -536,12 +537,45 @@
 /* Viewer inline editor */
 #layout-editor #inline-editor {
     height: inherit;
-    .box-shadow(inset red 0px 0px 10px 0px);
+    .box-shadow(inset @viewer-inline-editor-shadow 0px 0px 10px 0px);
+}
+
+/* Inline Editor Overlay */
+#layout-editor #inline-editor-overlay {
+    position: absolute;
+    text-align: center;
+    cursor: pointer;
+    width: 100%;
+    height: 100%; 
+    .set-transparent-color(background; @viewer-inline-editor-overlay-bg-colour; 20%);
+    .box-shadow(inset @viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
+
+    &:hover {
+        .set-transparent-color(background; @viewer-inline-editor-overlay-bg-colour; 50%);
+    }
+
+    .edit-btn-container {
+        display: table;
+        width: 100%;
+        height: 100%; 
+
+        #edit-btn {
+            font-size: 60px;
+            text-shadow: 0px 0px 5px #2e2e2e;
+            .set-transparent-color(color; @viewer-inline-editor-overlay-fg-colour; 80%);
+            vertical-align: middle;
+            display: table-cell;
+            
+            &:hover {
+                .set-transparent-color(color; @viewer-inline-editor-overlay-fg-colour; 90%);
+            }
+        }
+    }
 }
 
 #layout-editor .inline-editor-opened,
 #layout-editor .inline-editor-closed,
-#layout-editor .inline-editor-buttons {
+#layout-editor .inline-editor-closed#inline-editor-overlay {
     display: none;
 }
 
@@ -608,7 +642,40 @@
 
 #layout-editor #properties-panel-container .form-container form {
     padding-top: 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 40vh;
+    margin-right: -10px;
+    padding-right: 10px;
+
+    /* width */
+    &::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Track */
+    &::-webkit-scrollbar-track {
+        .box-shadow(inset 0 0 5px grey);
+    }
+    
+    /* Handle */
+    &::-webkit-scrollbar-thumb {
+        background: @designer-secondary-color;
+        .border-radius(4px);
+    }
+
+    /* Handle on hover */
+    &::-webkit-scrollbar-thumb:hover {
+        background: lighten(@designer-secondary-color, 20%);
+    }
+
+    &::-webkit-scrollbar-corner {
+        .box-shadow(inset 0 0 5px grey);
+    }
+
 }
+
 
 #layout-editor #properties-panel-container .button-container {
     padding: 10px;

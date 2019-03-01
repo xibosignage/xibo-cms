@@ -130,28 +130,8 @@ class DataSetRssFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getString('title', $filterBy) != null) {
-            // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('title', $filterBy));
-
-            $i = 0;
-            foreach($names as $searchName)
-            {
-                $i++;
-
-                // Ignore if the word is empty
-                if($searchName == '')
-                    continue;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body.= " AND  `datasetrss`.title NOT LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                }
-                else {
-                    $body.= " AND  `datasetrss`.title LIKE :search$i ";
-                    $params['search' . $i] = '%' . $searchName . '%';
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('title', $filterBy));
+            $this->nameFilter('datasetrss', 'title', $terms, $body, $params);
         }
 
         // Sorting?

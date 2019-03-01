@@ -168,18 +168,20 @@ class SubPlaylist extends ModuleWidget
     {
         parent::delete();
 
-        $subPlaylistId = $this->getOption('subPlaylistId', 0);
+        $subPlaylistIds = $this->getAssignedPlaylistIds();
 
         // tidy up the closure table records.
-        $this->getStore()->update('
+        foreach ($subPlaylistIds as $subPlaylistId) {
+            $this->getStore()->update('
             DELETE link
               FROM `lkplaylistplaylist` p, `lkplaylistplaylist` link, `lkplaylistplaylist` c
              WHERE p.parentId = link.parentId AND c.childId = link.childId
                AND p.childId = :parentId AND c.parentId = :childId
         ', [
-            'parentId' => $this->getPlaylistId(),
-            'childId' => $subPlaylistId
-        ]);
+                'parentId' => $this->getPlaylistId(),
+                'childId' => $subPlaylistId
+            ]);
+        }
     }
 
     /**

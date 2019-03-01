@@ -115,12 +115,18 @@ class Chart extends ModuleWidget
     }
 
     /**
-     * Used by the TWIG template to show a list of available dataSets
-     * @return DataSet[]
+     * Get DataSet object, used by TWIG template.
+     *
+     * @return array
+     * @throws NotFoundException
      */
-    public function dataSets()
+    public function getDataSet()
     {
-        return $this->dataSetFactory->query();
+        if ($this->getOption('dataSetId') != 0) {
+            return [$this->dataSetFactory->getById($this->getOption('dataSetId'))];
+        } else {
+            return null;
+        }
     }
 
     /** @var DataSetColumn[] */
@@ -309,6 +315,13 @@ class Chart extends ModuleWidget
      *      type="integer",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="updateInterval",
      *      in="formData",

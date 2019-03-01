@@ -769,6 +769,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="copyRows",
+     *      in="formData",
+     *      description="Flag whether to copy all the row data from the original dataSet",
+     *      type="int",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -781,6 +788,7 @@ class DataSet extends Base
     public function copy($dataSetId)
     {
         $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $copyRows = $this->getSanitizer()->getCheckbox('copyRows', 0);
 
         if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
@@ -795,7 +803,11 @@ class DataSet extends Base
         $dataSet->description = $this->getSanitizer()->getString('description');
         $dataSet->code = $this->getSanitizer()->getString('code');
         $dataSet->userId = $this->getUser()->userId;
+
         $dataSet->save();
+
+        if ($copyRows === 1)
+            $dataSet->copyRows($dataSetId, $dataSet->dataSetId);
 
         // Return
         $this->getState()->hydrate([

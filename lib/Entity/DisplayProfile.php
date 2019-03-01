@@ -1529,9 +1529,9 @@ class DisplayProfile implements \JsonSerializable
                 'synonym' => 'xiboforwebos',
                 'tabs' => [
                     ['id' => 'general', 'name' => __('General')],
-                    ['id' => 'timers', 'name' => __('On/Off Time')],
-                    ['id' => 'pictureOptions', 'name' => __('Picture')],
-                    ['id' => 'lockOptions', 'name' => __('Lock')],
+                    ['id' => 'timers', 'name' => __('On/Off Timers')],
+                    ['id' => 'pictureOptions', 'name' => __('Picture Settings')],
+                    ['id' => 'lockOptions', 'name' => __('Lock Settings')],
                     ['id' => 'advanced', 'name' => __('Advanced')],
                 ],
                 'settings' => [
@@ -1766,9 +1766,9 @@ class DisplayProfile implements \JsonSerializable
                 'synonym' => 'xiboforsssp',
                 'tabs' => [
                     ['id' => 'general', 'name' => __('General')],
-                    ['id' => 'timers', 'name' => __('Timers')],
-                    ['id' => 'pictureOptions', 'name' => __('Picture')],
-                    ['id' => 'lockOptions', 'name' => __('Monitor Settings')],
+                    ['id' => 'timers', 'name' => __('On/Off Timers')],
+                    ['id' => 'pictureOptions', 'name' => __('Picture Settings')],
+                    ['id' => 'lockOptions', 'name' => __('Lock Settings')],
                     ['id' => 'advanced', 'name' => __('Advanced')],
                 ],
                 'settings' => [

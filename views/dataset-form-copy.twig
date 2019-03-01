@@ -23,17 +23,22 @@
     <div class="row">
         <div class="col-md-12">
             <form id="dataSetCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.copy", {"id": dataSet.dataSetId}) }}">
-                    {% set title %}{% trans "Name" %}{% endset %}
-                    {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
-                    {{ forms.input("dataSet", title, "", helpText, "", "required") }}
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
+                {% set dataSetName %}{{ dataSet.dataSet }} 2{% endset %}
+                {{ forms.input("dataSet", title, dataSetName, helpText, "", "required") }}
 
-                    {% set title %}{% trans "Description" %}{% endset %}
-                    {% set helpText %}{% trans "An optional description" %}{% endset %}
-                    {{ forms.input("description", title, "", helpText) }}
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "An optional description" %}{% endset %}
+                {{ forms.input("description", title, "", helpText) }}
 
-                    {% set title %}{% trans "Code" %}{% endset %}
-                    {% set helpText %}{% trans "A code which can be used to lookup this DataSet - usually for an API application" %}{% endset %}
-                    {{ forms.input("code", title, "", helpText) }}
+                {% set title %}{% trans "Code" %}{% endset %}
+                {% set helpText %}{% trans "A code which can be used to lookup this DataSet - usually for an API application" %}{% endset %}
+                {{ forms.input("code", title, "", helpText) }}
+
+                {% set title %}{% trans "Copy rows?" %}{% endset %}
+                {% set helpText %}{% trans "Should we copy all the row data from the original dataSet?" %}{% endset %}
+                {{ forms.checkbox("copyRows", title, 0, helpText) }}
             </form>
         </div>
     </div>

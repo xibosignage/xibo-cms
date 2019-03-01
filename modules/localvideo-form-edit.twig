@@ -44,6 +44,10 @@
                 {% set helpText %}{% trans "Should the video be muted?" %}{% endset %}
                 {{ forms.checkbox("mute", title, module.getOption("mute", 0), helpText, "mute-fields") }}
 
+                {% set title %}{% trans "Show Full Screen?" %}{% endset %}
+                {% set helpText %}{% trans "Should the video expand over the top of existing content and show in full screen?" %}{% endset %}
+                {{ forms.checkbox("showFullScreen", title, module.getOption("showFullScreen", 0), helpText) }}
+
                 {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                 {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
 

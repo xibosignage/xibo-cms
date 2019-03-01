@@ -1419,7 +1419,7 @@ class Layout implements \JsonSerializable
             throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
 
         // Get my parent for later
-        $parent = $this->layoutFactory->getById($this->parentId);
+        $parent = $this->layoutFactory->loadById($this->parentId);
 
         // I am the draft, so I clear my parentId, and set the parentId of my parent, to myself (swapping us)
         // Make me the parent.

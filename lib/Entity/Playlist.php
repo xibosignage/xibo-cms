@@ -331,6 +331,27 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Get Widget by Id
+     * @param int $widgetId
+     * @param Widget[]|null $widgets
+     * @return Widget
+     * @throws NotFoundException
+     */
+    public function getWidget($widgetId, $widgets = null)
+    {
+        if ($widgets === null)
+            $widgets = $this->widgets;
+
+        foreach ($widgets as $widget) {
+            if ($widget->widgetId == $widgetId) {
+                return $widget;
+            }
+        }
+
+        throw new NotFoundException(sprintf(__('Widget not found with ID %d'), $widgetId));
+    }
+
+    /**
      * @param Widget $widget
      */
     public function assignWidget($widget)
@@ -503,20 +524,36 @@ class Playlist implements \JsonSerializable
         $this->notifyLayouts();
 
         // Delete me from any other Playlists using me as a sub-playlist
-        // i'll need to find these widgets at this point and remove them?
         foreach ($this->playlistFactory->query(null, ['childId' => $this->playlistId, 'depth' => 1]) as $parent) {
             // $parent is a playlist to which we belong.
             // find out widget and delete it
             $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . ' we will need to remove it');
             $parent->load();
-
-            foreach($parent->widgets as $widget) {
-                if ($widget->type === 'subplaylist' && $widget->getOptionValue('subPlaylistId', 0) == $this->playlistId) {
-                    $this->getLog()->debug('Found sub-playlist widget to delete, widgetId ' . $widget->widgetId);
-                    $widget->delete(['notify' => false]);
+            foreach ($parent->widgets as $widget) {
+                if ($widget->type === 'subplaylist') {
+                    // we get an array with all subplaylists assigned to the parent
+                    $subPlaylistIds = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
+                    foreach ($subPlaylistIds as $subplaylist) {
+                        // find the matching playlistId to the playlistId we want to delete
+                        if ($subplaylist == $this->playlistId) {
+                            // if there is only one element in the subPlaylistIds array then remove the widget
+                            if (count($subPlaylistIds) === 1) {
+                                $widget->delete(['notify' => false]);
+                            } else {
+                                // if the subPlaylistIds has more than one element, we want to just unassign our playlistId from it and save the widget,
+                                // we don't want to remove the whole widget in this case
+                                $updatedSubplaylistIds = array_diff($subPlaylistIds, [$this->playlistId]);
+                                $widget->setOptionValue('subPlaylistIds', 'attrib', json_encode($updatedSubplaylistIds));
+                                $widget->save();
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        // We want to remove all link records from the closure table using the parentId
+        $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE parentId = :playlistId', ['playlistId' => $this->playlistId]);
 
         // Delete my closure table records
         $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);

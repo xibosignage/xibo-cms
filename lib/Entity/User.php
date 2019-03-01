@@ -490,7 +490,7 @@ class User implements \JsonSerializable
         try {
             $option = $this->getOption($option);
 
-            if ($value == null) {
+            if ($value === null) {
                 $this->removeOption($option);
             } else {
                 $option->value = $value;

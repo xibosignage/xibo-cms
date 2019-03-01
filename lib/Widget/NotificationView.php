@@ -76,6 +76,13 @@ class NotificationView extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="age",
      *      in="formData",
      *      description="The maximum notification age in minutes - 0 for all",

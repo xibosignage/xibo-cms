@@ -157,6 +157,13 @@ class Stocks extends AlphaVantageBase
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="items",
      *      in="formData",
      *      description="A comma separated list of Stock Ticker Symbols, e.g. GOOGL,NVDA,AMZN. For the best results enter no more than 5 items.",

@@ -85,6 +85,20 @@ class LocalVideo extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="showFullScreen",
+     *      in="formData",
+     *      description="Should the video expand over the top of existing content and show in full screen?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -101,6 +115,7 @@ class LocalVideo extends ModuleWidget
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
         $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
