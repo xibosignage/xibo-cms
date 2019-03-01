@@ -258,23 +258,8 @@ class CampaignFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('name', $filterBy));
-
-            $i = 0;
-            foreach($names as $searchName) {
-                $i++;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND campaign.Campaign NOT LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                }
-                else {
-                    $body .= " AND campaign.Campaign LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params);
         }
 
         // Exclude templates by default

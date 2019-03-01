@@ -112,11 +112,16 @@ Playlist.prototype.addElement = function(droppable, draggable) {
     if(draggableType == 'media') { // Adding media from search tab to a region
 
         // Get media Id
-        const mediaToAdd = {
+        let mediaToAdd = {
             media: [
                 $(draggable).data('mediaId')
             ]
         };
+
+        // Check if library duration options exists and add it to the query
+        if(pE.useLibraryDuration != undefined) {
+            mediaToAdd.useDuration = (pE.useLibraryDuration == "1");
+        }
 
         // Show loading screen in the dropzone
         pE.showLocalLoadingScreen();

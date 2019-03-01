@@ -1,13 +1,14 @@
 /*
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -549,6 +550,19 @@ var setupScheduleForm = function(dialog) {
     // Events on change
     $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId").on("change", function() { processScheduleFormElements($(this)) });
 
+    // Handle the repeating monthly selector
+    // Run when the tab changes
+    $('a[data-toggle="tab"]', dialog).on('shown.bs.tab', function (e) {
+        var nth = function(n) {return n+["st","nd","rd"][((n+90)%100-10)%10-1]||"th"};
+        var $fromDt = $(dialog).find("input[name=fromDt]");
+        var fromDt = ($fromDt.val() === null || $fromDt.val() === "") ? moment() : moment($fromDt.val());
+        var $recurrenceMonthlyRepeatsOn = $(dialog).find("select[name=recurrenceMonthlyRepeatsOn]");
+        var $dayOption = $('<option value="0">' + $recurrenceMonthlyRepeatsOn.data("transDay").replace("[DAY]", fromDt.format("Do")) + '</option>');
+        var $weekdayOption = $('<option value="1">' + $recurrenceMonthlyRepeatsOn.data("transWeekday").replace("[POSITION]", nth(Math.ceil(fromDt.date() / 7))).replace("[WEEKDAY]", fromDt.format("dddd")) + '</option>');
+
+        $recurrenceMonthlyRepeatsOn.find("option").remove().end().append($dayOption).append($weekdayOption).val($recurrenceMonthlyRepeatsOn.data("value"));
+    });
+
     // Bind to the dialog submit
     $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
         e.preventDefault();
@@ -598,10 +612,12 @@ var processScheduleFormElements = function(el) {
 
             var repeatControlGroupDisplay = (fieldVal == "") ? "none" : "block";
             var repeatControlGroupWeekDisplay = (fieldVal != "Week") ? "none" : "block";
+            var repeatControlGroupMonthDisplay = (fieldVal !== "Month") ? "none" : "block";
 
             $(".repeat-control-group").css('display', repeatControlGroupDisplay);
             $(".repeat-weekly-control-group").css('display', repeatControlGroupWeekDisplay);
-            
+            $(".repeat-monthly-control-group").css('display', repeatControlGroupMonthDisplay);
+
             break;
         
         case 'eventTypeId':

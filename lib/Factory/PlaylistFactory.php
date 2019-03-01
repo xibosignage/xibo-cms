@@ -264,30 +264,10 @@ class PlaylistFactory extends BaseFactory
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy);
 
-        // Layout Like
+        // Playlist Like
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('name', $filterBy));
-
-            $i = 0;
-            foreach($names as $searchName)
-            {
-                $i++;
-
-                // Ignore if the word is empty
-                if($searchName == '')
-                    continue;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body.= " AND  `playlist`.name NOT LIKE (:search$i) ";
-                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                }
-                else {
-                    $body.= " AND  `playlist`.name LIKE (:search$i) ";
-                    $params['search' . $i] = '%' . $searchName . '%';
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+            $this->nameFilter('playlist', 'name', $terms, $body, $params);
         }
 
         // Tags

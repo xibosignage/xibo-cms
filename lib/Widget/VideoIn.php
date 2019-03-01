@@ -103,6 +103,20 @@ class VideoIn extends ModuleWidget
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="showFullScreen",
+     *      in="formData",
+     *      description="Should the video expand over the top of existing content and show in full screen?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation"
@@ -117,6 +131,7 @@ class VideoIn extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('sourceId', $this->getSanitizer()->getString('sourceId' ,'hdmi'));
+        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
         $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();

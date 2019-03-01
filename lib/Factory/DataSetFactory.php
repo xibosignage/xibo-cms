@@ -174,6 +174,10 @@ class DataSetFactory extends BaseFactory
         $entries = array();
         $params = array();
 
+        if ($sortOrder === null) {
+            $sortOrder = ['dataSet'];
+        }
+
         $select  = '
           SELECT dataset.dataSetId,
             dataset.dataSet,
@@ -237,28 +241,8 @@ class DataSetFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
-        // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('dataSet', $filterBy));
-
-            $i = 0;
-            foreach($names as $searchName)
-            {
-                $i++;
-
-                // Ignore if the word is empty
-                if($searchName == '')
-                  continue;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body.= " AND  `dataset`.dataSet NOT LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                }
-                else {
-                    $body.= " AND  `dataset`.dataSet LIKE :search$i ";
-                    $params['search' . $i] = '%' . $searchName . '%';
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('dataSet', $filterBy));
+            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params);
         }
 
         if ($this->getSanitizer()->getString('code', $filterBy) != null) {

@@ -737,7 +737,7 @@ class LayoutFactory extends BaseFactory
 
                 if ($replaceExisting && !$isFont) {
                     // Media with this name already exists, but we don't want to use it.
-                    $intendedMediaName = 'import_' . $layout . '_' . uniqid();
+                    $intendedMediaName = 'import_' . $layout->layout . '_' . uniqid();
                     throw new NotFoundException();
                 }
 
@@ -1128,28 +1128,8 @@ class LayoutFactory extends BaseFactory
 
         // Layout Like
         if ($this->getSanitizer()->getString('layout', $filterBy) != '') {
-            // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('layout', $filterBy));
-
-            $i = 0;
-            foreach($names as $searchName)
-            {
-                $i++;
-
-                // Ignore if the word is empty
-                if($searchName == '')
-                  continue;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body.= " AND  layout.layout NOT LIKE (:search$i) ";
-                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
-                }
-                else {
-                    $body.= " AND  layout.layout LIKE (:search$i) ";
-                    $params['search' . $i] = '%' . $searchName . '%';
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('layout', $filterBy));
+            $this->nameFilter('layout', 'layout', $terms, $body, $params);
         }
 
         if ($this->getSanitizer()->getString('layoutExact', $filterBy) != '') {

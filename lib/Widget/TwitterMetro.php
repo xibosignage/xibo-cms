@@ -205,6 +205,13 @@ class TwitterMetro extends TwitterBase
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="searchTerm",
      *      in="formData",
      *      description="Twitter search term, you can test your search term in twitter.com search box first",

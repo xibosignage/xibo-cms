@@ -477,8 +477,9 @@ let formHelpers = function() {
      * @param {string} textAreaId - Id of the text area to use for the editor
      * @param {bool=} inline - Inline editor option
      * @param {string=} customNoDataMessage - Custom message to appear when the field is empty
+     * @param {boolean} focusOnBuild - Focus on the editor after building
      */
-    this.setupCKEditor = function(dialog, extraData, textAreaId, inline = false, customNoDataMessage = null) {
+    this.setupCKEditor = function(dialog, extraData, textAreaId, inline = false, customNoDataMessage = null, focusOnBuild = false) {
         
         // Get extra data
         var extra = extraData;
@@ -660,6 +661,10 @@ let formHelpers = function() {
             data = convertLibraryReferences(data);
 
             CKEDITOR.instances[textAreaId].setData(data);
+            
+            if(focusOnBuild) {
+                CKEDITOR.instances[textAreaId].focus();
+            }
         });
 
         // Do we have any snippets selector?
@@ -728,7 +733,7 @@ let formHelpers = function() {
             // Update specific instance
             if(instance != undefined && CKEDITOR.instances[instance] != undefined) {
                 // Parse editor data and update it
-                self.parseCKEditorData(index);
+                self.parseCKEditorData(instance);
             } else {
                 $.each(CKEDITOR.instances, function(index, value) {
                     // Parse editor data and update it

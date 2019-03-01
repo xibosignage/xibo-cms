@@ -85,6 +85,13 @@ class Embedded extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="transparency",
      *      in="formData",
      *      description="Flag (0,1) - Should the HTML be shown with transparent background? - not available on Windows Clients",

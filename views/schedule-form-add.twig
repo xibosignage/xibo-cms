@@ -1,8 +1,23 @@
 {#
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -125,7 +140,7 @@
                     
                     <div class="tab-pane" id="repeats">
                         {% set title %}{% trans "Repeats" %}{% endset %}
-                        {% set helpText %}{% trans "What type of repeat is required?" %}{% endset %}
+                        {% set helpText %}{% trans "Select the type of Repeat required for this Event." %}{% endset %}
                         {% set noneOption %}{% trans "None" %}{% endset %}
                         {% set minute %}{% trans "Per Minute" %}{% endset %}
                         {% set hourly %}{% trans "Hourly" %}{% endset %}
@@ -163,12 +178,19 @@
                         ] %}
                         {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
 
+                        {% set helpText %}{% trans "Select if this monthly Repeat should be determined by the selected date or day in the Month." %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-trans-day", value: "on the [DAY] day"|trans },
+                            { name: "data-trans-weekday", value: "on the [POSITION] [WEEKDAY]"|trans }
+                        ] %}
+                        {{ forms.dropdown("recurrenceMonthlyRepeatsOn", "single", "", 0, [], "id", "name", helpText, "repeat-monthly-control-group", "", "", "", attributes) }}
+
                         {% set title %}{% trans "Repeat every" %}{% endset %}
-                        {% set helpText %}{% trans "How often does this event repeat?" %}{% endset %}
+                        {% set helpText %}{% trans "Include a number to determine the Repeat frequency required for this Event." %}{% endset %}
                         {{ forms.number("recurrenceDetail", title, recurrenceDetail, helpText, "repeat-control-group") }}
 
                         {% set title %}{% trans "Until" %}{% endset %}
-                        {% set helpText %}{% trans "When should this event stop repeating? Leave empty to repeat forever." %}{% endset %}
+                        {% set helpText %}{% trans "Provide a date and time to end the Repeat for this Event. Leave empty to Repeat indefinitely." %}{% endset %}
                         {{ forms.dateTime("recurrenceRange", title, "", helpText, "repeat-control-group", "", "") }}
                     </div>
                 </div>

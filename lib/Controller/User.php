@@ -1223,17 +1223,14 @@ class User extends Base
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
                     $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
-
                     // Playlists
-                    foreach ($region->playlists as $playlist) {
-                        /* @var Playlist $playlist */
-                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
-
-                        // Widgets
-                        foreach ($playlist->widgets as $widget) {
-                            /* @var Widget $widget */
-                            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
-                        }
+                    /* @var Playlist $playlist */
+                    $playlist = $region->regionPlaylist;
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
+                    // Widgets
+                    foreach ($playlist->widgets as $widget) {
+                        /* @var Widget $widget */
+                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
                     }
                 }
             };
@@ -1561,6 +1558,7 @@ class User extends Base
     public function prefEditFromForm()
     {
         $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
+        $this->getUser()->setOptionValue('useLibraryDuration', $this->getSanitizer()->getCheckbox('useLibraryDuration'));
         $this->getUser()->save();
 
         // Return

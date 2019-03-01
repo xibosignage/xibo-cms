@@ -164,22 +164,8 @@ class DisplayProfileFactory extends BaseFactory
 
             // Filter by DisplayProfile Name?
             if ($this->getSanitizer()->getString('displayProfile', $filterBy) != null) {
-                // convert into a space delimited array
-                $names = explode(' ', $this->getSanitizer()->getString('displayProfile', $filterBy));
-
-                $i = 0;
-                foreach ($names as $searchName) {
-                    $i++;
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $body .= " AND  `displayprofile`.name NOT LIKE :search$i ";
-                        $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
-                    }
-                    else {
-                        $body .= " AND  `displayprofile`.name LIKE :search$i ";
-                        $params['search' . $i] = '%' . $searchName . '%';
-                    }
-                }
+                $terms = explode(',', $this->getSanitizer()->getString('displayProfile', $filterBy));
+                $this->nameFilter('displayprofile', 'name', $terms, $body, $params);
             }
 
             if ($this->getSanitizer()->getString('type', $filterBy) != null) {

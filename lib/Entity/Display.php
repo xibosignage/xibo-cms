@@ -474,12 +474,6 @@ class Display implements \JsonSerializable
         if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
             throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
 
-        // Check if there are display slots available
-        $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
-
-        if (!$this->isDisplaySlotAvailable())
-            throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'), $maxDisplays), 'maxDisplays');
-
         // Broadcast Address
         if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
             throw new InvalidArgumentException(__('BroadCast Address is not a valid IP Address'), 'broadCastAddress');
@@ -577,13 +571,24 @@ class Display implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
-            'audit' => true
+            'audit' => true,
+            'checkDisplaySlotAvailability' => true
         ], $options);
 
         $allowNotify = true;
 
         if ($options['validate'])
             $this->validate();
+
+        if ($options['checkDisplaySlotAvailability']) {
+            // Check if there are display slots available
+            $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
+
+            if (!$this->isDisplaySlotAvailable()) {
+                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'),
+                    $maxDisplays), 'maxDisplays');
+            }
+        }
 
         if ($this->displayId == null || $this->displayId == 0) {
             $this->add();

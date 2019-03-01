@@ -1,11 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Schedule.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 use Jenssegers\Date\Date;
@@ -150,6 +163,12 @@ class Schedule implements \JsonSerializable
      * @var string
      */
     public $recurrenceRepeatsOn;
+
+    /**
+     * @SWG\Property(description="Recurrence monthly repeats on - 0 is day of month, 1 is weekday of week")
+     * @var int
+     */
+    public $recurrenceMonthlyRepeatsOn;
 
     /**
      * @SWG\Property(
@@ -566,8 +585,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :dayPartId, :syncTimezone, :syncEvent)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -581,6 +600,7 @@ class Schedule implements \JsonSerializable
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
+            'recurrenceMonthlyRepeatsOn' => ($this->recurrenceMonthlyRepeatsOn == null) ? 0 : $this->recurrenceMonthlyRepeatsOn,
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent
@@ -606,6 +626,7 @@ class Schedule implements \JsonSerializable
             recurrence_detail = :recurrenceDetail,
             recurrence_range = :recurrenceRange,
             `recurrenceRepeatsOn` = :recurrenceRepeatsOn,
+            `recurrenceMonthlyRepeatsOn` = :recurrenceMonthlyRepeatsOn,
             `dayPartId` = :dayPartId,
             `syncTimezone` = :syncTimezone,
             `syncEvent` = :syncEvent
@@ -623,6 +644,7 @@ class Schedule implements \JsonSerializable
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
+            'recurrenceMonthlyRepeatsOn' => $this->recurrenceMonthlyRepeatsOn,
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
@@ -771,6 +793,7 @@ class Schedule implements \JsonSerializable
         // if the last watermark is after the from window, then we need to walk from the beginning
 
         // Handle recurrence
+        $originalStart = $start->copy();
         $lastWatermark = ($this->lastRecurrenceWatermark != 0) ? $this->getDate()->parse($this->lastRecurrenceWatermark, 'U') : $this->getDate()->parse(self::$DATE_MIN, 'U');
 
         $this->getLog()->debug('Recurrence calculation required - last water mark is set to: ' . $lastWatermark->toRssString() . '. Event dates: ' . $start->toRssString() . ' - ' . $end->toRssString() . ' [eventId:' . $this->eventId . ']');
@@ -901,8 +924,25 @@ class Schedule implements \JsonSerializable
                     break;
 
                 case 'Month':
-                    $start->month($start->month + $this->recurrenceDetail);
-                    $end->month($end->month + $this->recurrenceDetail);
+                    // Are we repeating on the day of the month, or the day of the week
+                    if ($this->recurrenceMonthlyRepeatsOn == 1) {
+                        // Week day repeat
+                        $difference = $end->diffInSeconds($start);
+
+                        // Work out the position in the month of this day and the ordinal
+                        $ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+                        $ordinal = $ordinals[ceil($originalStart->day / 7) - 1];
+                        $start->month($start->month + $this->recurrenceDetail)->modify($ordinal . ' ' . $originalStart->format('l') . ' of ' . $start->format('F Y'))->setTimeFrom($originalStart);
+
+                        $this->getLog()->debug('Setting start to: ' . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
+
+                        // Base the end on the start + difference
+                        $end = $start->copy()->addSeconds($difference);
+                    } else {
+                        // Day repeat
+                        $start->month($start->month + $this->recurrenceDetail);
+                        $end->month($end->month + $this->recurrenceDetail);
+                    }
                     break;
 
                 case 'Year':
