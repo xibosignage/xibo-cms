@@ -21,8 +21,6 @@
  */
 
 use Phinx\Migration\AbstractMigration;
-use Jenssegers\Date\Date;
-
 
 /**
  * Class AddGlobalStatSettingMigration
@@ -32,7 +30,9 @@ class AddGlobalStatSettingMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $earlierMonth = Date::now()->subMonth(1)->format('Y-m-d');
+        $dateTime = new \DateTime();
+        $earlierMonth = $dateTime->modify( '-1 month' )->format( 'Y-m-d' );
+
         $result = $this->fetchRow('SELECT EXISTS (SELECT * FROM `stat` where `stat`.end >  \'' . $earlierMonth . '\' LIMIT 1)');
         $table = $this->table('setting');
 
