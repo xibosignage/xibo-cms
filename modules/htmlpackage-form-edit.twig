@@ -59,7 +59,7 @@
                     { id: "On", value: onOption },
                     { id: "Inherit", value: inheritOption }
                 ] %}
-                {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT") ), options, "id", "value", helpText) }}
+                {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT") ), options, "id", "value", helpText) }}
             </form>
         </div>
     </div>

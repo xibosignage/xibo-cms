@@ -172,12 +172,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $match =  [
             '$match' => [
                 'end' => [ '$gt' => $fromDt],
-                'start' => [ '$lte' => $toDt],
-                'displayId' => [
-                    '$in' => $displayIds
-                ]
+                'start' => [ '$lte' => $toDt]
             ]
         ];
+
+        // Display Filter
+        if (count($displayIds) > 0) {
+            $match['$match']['displayId'] = [ '$in' => $displayIds ];
+        }
 
         // Type Filter
         if ($type != null) {

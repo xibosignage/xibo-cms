@@ -371,6 +371,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="Flag indicating whether the Layout stat is enabled",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -724,6 +731,83 @@ class Layout extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Unretired %s'), $layout->layout)
         ]);
+    }
+
+    /**
+     * Set Enable Stats Collection of a layout
+     * @param int $layoutId
+     *
+     * @SWG\Put(
+     *  path="/layout/setenablestat/{layoutId}",
+     *  operationId="layoutSetEnableStat",
+     *  tags={"layout"},
+     *  summary="Enable Stats Collection",
+     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="Flag indicating whether the Layout stat is enabled",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws XiboException
+     */
+    function setEnableStat($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        // Make sure we're not a draft
+        if ($layout->isChild())
+            throw new InvalidArgumentException(__('Cannot modify Layout from its Draft'), 'layoutId');
+
+        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+
+        $layout->enableStat = $enableStat;
+        $layout->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('For Layout %s Enable Stats Collection is set to %s'), $layout->layout, ($layout->enableStat == 1) ? __('On') : __('Off'))
+        ]);
+    }
+
+    /**
+     * Set Enable Stat Form
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function setEnableStatForm($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $data = [
+            'layout' => $layout,
+            'help' => $this->getHelp()->link('Layout', 'EnableStat')
+        ];
+
+        $this->getState()->template = 'layout-form-setenablestat';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -1082,6 +1166,22 @@ class Layout extends Base
                         )
                     );
                 }
+
+                // Set Enable Stat
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_setenablestat',
+                    'url' => $this->urlFor('layout.setenablestat.form', ['id' => $layout->layoutId]),
+                    'text' => __('Enable stats collection?'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.setenablestat', ['id' => $layout->layoutId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'layout_button_setenablestat'),
+                        array('name' => 'text', 'value' => __('Enable stats collection?')),
+                        array('name' => 'rowtitle', 'value' => $layout->layout),
+                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                    )
+                );
 
                 $layout->buttons[] = ['divider' => true];
 

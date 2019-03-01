@@ -70,7 +70,7 @@
 
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Layout. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
-                        {{ forms.checkbox("enableStat", title, layout.enableStat, helpText) }}
+                        {{ forms.checkbox("enableStat", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), helpText) }}
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}

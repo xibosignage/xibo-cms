@@ -193,7 +193,7 @@ class Media implements \JsonSerializable
     /**
      * @var string
      * @SWG\Property(
-     *  description="The settings to enable the collection of Media Proof of Play statistics"
+     *  description="The option to enable the collection of Media Proof of Play statistics"
      * )
      */
     public $enableStat;

@@ -19,6 +19,29 @@
     {% trans "Save" %}, $("#displayProfileForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [
+        {
+        "field": "statsEnabled", "trigger": "init",
+        "operation": "is:checked", "value": false,
+        "actions": { ".aggregation-level": { "display": "none" } }
+        },{
+        "field": "statsEnabled", "trigger": "change",
+        "operation": "is:checked", "value": false,
+        "actions": { ".aggregation-level": { "display": "none" } }
+        },
+        {
+        "field": "statsEnabled", "trigger": "init",
+        "operation": "is:checked", "value": true,
+        "actions": { ".aggregation-level": { "display": "block" } }
+        },{
+        "field": "statsEnabled", "trigger": "change",
+        "operation": "is:checked", "value": true,
+        "actions": { ".aggregation-level": { "display": "block" } }
+        }
+    ]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -66,7 +89,7 @@
                     {% elseif field.fieldType == "timePicker" %}
                         {{ forms.time(field.name, field.title, field.value, field.helpText) }}
                     {% elseif field.fieldType == "dropdown" %}
-                        {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText) }}
+                        {{ forms.dropdown(field.name, "single", field.title, field.value, field.options, "id", "value", field.helpText, field.groupClass) }}
                     {% elseif field.fieldType == "dropdownVersion" %}
                         {% if displayProfile.type == "android" %}
                             {% set attributes = [
