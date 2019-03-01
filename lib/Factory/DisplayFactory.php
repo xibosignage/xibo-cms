@@ -293,25 +293,8 @@ class DisplayFactory extends BaseFactory
 
         // Filter by Display Name?
         if ($this->getSanitizer()->getString('display', $filterBy) != null) {
-            // Convert into commas
-            foreach (explode(',', $this->getSanitizer()->getString('display', $filterBy)) as $term) {
-
-                // convert into a space delimited array
-                $names = explode(' ', $term);
-
-                $i = 0;
-                foreach ($names as $searchName) {
-                    $i++;
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $body .= " AND  display.display NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = ltrim(($searchName), '-');
-                    } else {
-                        $body .= " AND  display.display RLIKE (:search$i) ";
-                        $params['search' . $i] = $searchName;
-                    }
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
+            $this->nameFilter('display', 'display', $terms, $body, $params);
         }
 
         if ($this->getSanitizer()->getString('macAddress', $filterBy) != '') {

@@ -460,6 +460,8 @@ class DisplayGroup extends Base
         $displayGroup->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $this->getSanitizer()->getString('dynamicCriteria');
+        $displayGroup->dynamicCriteriaTags = $this->getSanitizer()->getString('dynamicCriteriaTags');
+
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
 
@@ -544,6 +546,8 @@ class DisplayGroup extends Base
         $displayGroup->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
+        $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteriaTags') : null;
+
         $displayGroup->save();
 
         // Return

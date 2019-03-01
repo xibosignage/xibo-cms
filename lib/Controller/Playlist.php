@@ -345,6 +345,10 @@ class Playlist extends Base
      */
     public function add()
     {
+        if ($this->getSanitizer()->getString('name') == '') {
+            throw new InvalidArgumentException(__('Please enter playlist name'), 'name');
+        }
+
         $playlist = $this->playlistFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
@@ -368,7 +372,7 @@ class Playlist extends Base
         }
 
         // Should we assign any existing media
-        if ($playlist->isDynamic === 0 && (!empty($nameFilter) || !empty($tagFilter))) {
+        if (!empty($nameFilter) || !empty($tagFilter)) {
             $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter]);
 
             if (count($media) > 0) {

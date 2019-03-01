@@ -218,28 +218,8 @@ class UserGroupFactory extends BaseFactory
 
         // Filter by Group Name
         if ($this->getSanitizer()->getString('group', $filterBy) != null) {
-            // Convert into commas
-            foreach (explode(',', $this->getSanitizer()->getString('group', $filterBy)) as $term) {
-
-                if (empty(trim($term)))
-                    continue;
-
-                // convert into a space delimited array
-                $names = explode(' ', $term);
-
-                $i = 0;
-                foreach ($names as $searchName) {
-                    $i++;
-                    // Not like, or like?
-                    if (substr($searchName, 0, 1) == '-') {
-                        $body .= " AND `group`.group NOT RLIKE (:group$i) ";
-                        $params['group' . $i] = ltrim(($searchName), '-');
-                    } else {
-                        $body .= " AND `group`.group RLIKE (:group$i) ";
-                        $params['group' . $i] = $searchName;
-                    }
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('group', $filterBy));
+            $this->nameFilter('group', 'group', $terms, $body, $params);
         }
 
         if ($this->getSanitizer()->getString('exactGroup', $filterBy) != null) {

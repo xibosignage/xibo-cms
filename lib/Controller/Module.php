@@ -266,10 +266,6 @@ class Module extends Base
         $module->getModule()->enabled = $this->getSanitizer()->getCheckbox('enabled');
         $module->getModule()->previewEnabled = $this->getSanitizer()->getCheckbox('previewEnabled');
 
-        // Validation
-        if (strpbrk($module->getModule()->validExtensions, '*.{}[]|') !== false)
-            throw new InvalidArgumentException('Comma separated file extensions only please, without the .', 'validExtensions');
-
         // Install Files for this module
         $module->installFiles();
 

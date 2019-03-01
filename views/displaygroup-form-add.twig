@@ -81,6 +81,10 @@
                 {% set title %}{% trans "Criteria" %}{% endset %}
                 {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
                 {{ forms.input("dynamicCriteria", title, "", helpText, "dynamic-fields") }}
+
+                {% set title %}{% trans "Criteria Tags" %}{% endset %}
+                {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
+                {{ forms.inputWithTags("dynamicCriteriaTags", title, "", helpText, "dynamic-fields") }}
             </form>
         </div>
     </div>
