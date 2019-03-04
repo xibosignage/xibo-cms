@@ -97,9 +97,9 @@ class InstallMigration extends AbstractMigration
         $userType
             ->addColumn('userType', 'string', ['limit' => 16])
             ->insert([
-                ['userType' => 'Super Admin'],
-                ['userType' => 'Group Admin'],
-                ['userType' => 'User'],
+                ['userTypeId' => 1, 'userType' => 'Super Admin'],
+                ['userTypeId' => 2, 'userType' => 'Group Admin'],
+                ['userTypeId' => 3, 'userType' => 'User'],
             ])
             ->save();
 
@@ -126,6 +126,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('ref5', 'string', ['limit' => 254, 'null' => true])
             ->addForeignKey('userTypeId', 'usertype', 'userTypeId')
             ->insert([
+                'userId' => 1,
                 'userTypeId' => 1,
                 'userName' => 'xibo_admin',
                 'userPassword' => '5f4dcc3b5aa765d61d8327deb882cf99',
@@ -152,10 +153,10 @@ class InstallMigration extends AbstractMigration
             ->addColumn('isSystemNotification', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('isDisplayNotification', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->insert([
-                ['group' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 0],
-                ['group' => 'Everyone', 'isUserSpecific' => 0, 'isEveryone' => 1, 'isSystemNotification' => 0],
-                ['group' => 'xibo_admin', 'isUserSpecific' => 1, 'isEveryone' => 0, 'isSystemNotification' => 1],
-                ['group' => 'System Notifications', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 1],
+                ['groupId' => 1, 'group' => 'Users', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 0],
+                ['groupId' => 2, 'group' => 'Everyone', 'isUserSpecific' => 0, 'isEveryone' => 1, 'isSystemNotification' => 0],
+                ['groupId' => 3, 'group' => 'xibo_admin', 'isUserSpecific' => 1, 'isEveryone' => 0, 'isSystemNotification' => 1],
+                ['groupId' => 4, 'group' => 'System Notifications', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 1],
             ])
             ->save();
 
@@ -661,45 +662,45 @@ class InstallMigration extends AbstractMigration
             ->addColumn('title', 'string', ['limit' => 50])
             ->addColumn('asHome', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->insert([
-                ['name' => 'dashboard', 'title' => 'Dashboard', 'asHome' => 1],
-                ['name' => 'schedule', 'title' => 'Schedule', 'asHome' => 1],
-                ['name' => 'mediamanager', 'title' => 'Media Dashboard','asHome' =>  1],
-                ['name' => 'layout', 'title' => 'Layout', 'asHome' => 1],
-                ['name' => 'library', 'title' => 'Library', 'asHome' => 1],
-                ['name' => 'display', 'title' => 'Displays', 'asHome' => 1],
-                ['name' => 'update', 'title' => 'Update', 'asHome' => 0],
-                ['name' => 'admin', 'title' => 'Administration', 'asHome' => 0],
-                ['name' => 'group', 'title' => 'User Groups','asHome' =>  1],
-                ['name' => 'log', 'title' => 'Log', 'asHome' => 1],
-                ['name' => 'user', 'title' => 'Users', 'asHome' => 1],
-                ['name' => 'license', 'title' => 'Licence', 'asHome' => 1],
-                ['name' => 'index', 'title' => 'Home', 'asHome' => 0],
-                ['name' => 'module', 'title' => 'Modules', 'asHome' => 1],
-                ['name' => 'template', 'title' => 'Templates', 'asHome' => 1],
-                ['name' => 'fault', 'title' => 'Report Fault','asHome' =>  1],
-                ['name' => 'stats', 'title' => 'Statistics', 'asHome' => 1],
-                ['name' => 'manual', 'title' => 'Manual', 'asHome' => 0],
-                ['name' => 'resolution', 'title' => 'Resolutions', 'asHome' => 1],
-                ['name' => 'help', 'title' => 'Help Links','asHome' =>  1],
-                ['name' => 'clock', 'title' => 'Clock', 'asHome' => 0],
-                ['name' => 'displaygroup', 'title' => 'Display Groups','asHome' =>  1],
-                ['name' => 'application', 'title' => 'Applications', 'asHome' => 1],
-                ['name' => 'dataset', 'title' => 'DataSets', 'asHome' => 1],
-                ['name' => 'campaign', 'title' => 'Campaigns', 'asHome' => 1],
-                ['name' => 'transition', 'title' => 'Transitions', 'asHome' => 1],
-                ['name' => 'sessions', 'title' => 'Sessions', 'asHome' => 1],
-                ['name' => 'preview', 'title' => 'Preview', 'asHome' => 0],
-                ['name' => 'statusdashboard', 'title' => 'Status Dashboard','asHome' =>  1],
-                ['name' => 'displayprofile', 'title' => 'Display Profiles','asHome' =>  1],
-                ['name' => 'audit', 'title' => 'Audit Trail','asHome' =>  0],
-                ['name' => 'region', 'title' => 'Regions', 'asHome' => 0],
-                ['name' => 'playlist', 'title' => 'Playlist', 'asHome' => 0],
-                ['name' => 'maintenance', 'title' => 'Maintenance', 'asHome' => 0],
-                ['name' => 'command', 'title' => 'Commands', 'asHome' => 1],
-                ['name' => 'notification', 'title' => 'Notifications', 'asHome' => 0],
-                ['name' => 'drawer', 'title' => 'Notification Drawer','asHome' =>  0],
-                ['name' => 'daypart', 'title' => 'Dayparting', 'asHome' => 0],
-                ['name' => 'task', 'title' => 'Tasks', 'asHome' => 1]
+                ['pageId' => 1, 'name' => 'dashboard', 'title' => 'Dashboard', 'asHome' => 1],
+                ['pageId' => 2, 'name' => 'schedule', 'title' => 'Schedule', 'asHome' => 1],
+                ['pageId' => 3, 'name' => 'mediamanager', 'title' => 'Media Dashboard','asHome' =>  1],
+                ['pageId' => 4, 'name' => 'layout', 'title' => 'Layout', 'asHome' => 1],
+                ['pageId' => 5, 'name' => 'library', 'title' => 'Library', 'asHome' => 1],
+                ['pageId' => 6, 'name' => 'display', 'title' => 'Displays', 'asHome' => 1],
+                ['pageId' => 7, 'name' => 'update', 'title' => 'Update', 'asHome' => 0],
+                ['pageId' => 8, 'name' => 'admin', 'title' => 'Administration', 'asHome' => 0],
+                ['pageId' => 9, 'name' => 'group', 'title' => 'User Groups','asHome' =>  1],
+                ['pageId' => 10, 'name' => 'log', 'title' => 'Log', 'asHome' => 1],
+                ['pageId' => 11, 'name' => 'user', 'title' => 'Users', 'asHome' => 1],
+                ['pageId' => 12, 'name' => 'license', 'title' => 'Licence', 'asHome' => 1],
+                ['pageId' => 13, 'name' => 'index', 'title' => 'Home', 'asHome' => 0],
+                ['pageId' => 14, 'name' => 'module', 'title' => 'Modules', 'asHome' => 1],
+                ['pageId' => 15, 'name' => 'template', 'title' => 'Templates', 'asHome' => 1],
+                ['pageId' => 16, 'name' => 'fault', 'title' => 'Report Fault','asHome' =>  1],
+                ['pageId' => 17, 'name' => 'stats', 'title' => 'Statistics', 'asHome' => 1],
+                ['pageId' => 18, 'name' => 'manual', 'title' => 'Manual', 'asHome' => 0],
+                ['pageId' => 19, 'name' => 'resolution', 'title' => 'Resolutions', 'asHome' => 1],
+                ['pageId' => 20, 'name' => 'help', 'title' => 'Help Links','asHome' =>  1],
+                ['pageId' => 21, 'name' => 'clock', 'title' => 'Clock', 'asHome' => 0],
+                ['pageId' => 22, 'name' => 'displaygroup', 'title' => 'Display Groups','asHome' =>  1],
+                ['pageId' => 23, 'name' => 'application', 'title' => 'Applications', 'asHome' => 1],
+                ['pageId' => 24, 'name' => 'dataset', 'title' => 'DataSets', 'asHome' => 1],
+                ['pageId' => 25, 'name' => 'campaign', 'title' => 'Campaigns', 'asHome' => 1],
+                ['pageId' => 26, 'name' => 'transition', 'title' => 'Transitions', 'asHome' => 1],
+                ['pageId' => 27, 'name' => 'sessions', 'title' => 'Sessions', 'asHome' => 1],
+                ['pageId' => 28, 'name' => 'preview', 'title' => 'Preview', 'asHome' => 0],
+                ['pageId' => 29, 'name' => 'statusdashboard', 'title' => 'Status Dashboard','asHome' =>  1],
+                ['pageId' => 30, 'name' => 'displayprofile', 'title' => 'Display Profiles','asHome' =>  1],
+                ['pageId' => 31, 'name' => 'audit', 'title' => 'Audit Trail','asHome' =>  0],
+                ['pageId' => 32, 'name' => 'region', 'title' => 'Regions', 'asHome' => 0],
+                ['pageId' => 33, 'name' => 'playlist', 'title' => 'Playlist', 'asHome' => 0],
+                ['pageId' => 34, 'name' => 'maintenance', 'title' => 'Maintenance', 'asHome' => 0],
+                ['pageId' => 35, 'name' => 'command', 'title' => 'Commands', 'asHome' => 1],
+                ['pageId' => 36, 'name' => 'notification', 'title' => 'Notifications', 'asHome' => 0],
+                ['pageId' => 37, 'name' => 'drawer', 'title' => 'Notification Drawer','asHome' =>  0],
+                ['pageId' => 38, 'name' => 'daypart', 'title' => 'Dayparting', 'asHome' => 0],
+                ['pageId' => 39, 'name' => 'task', 'title' => 'Tasks', 'asHome' => 1]
             ])
             ->save();
 
@@ -707,16 +708,16 @@ class InstallMigration extends AbstractMigration
         $permissionEntity->addColumn('entity', 'string', ['limit' => 50])
             ->addIndex('entity', ['unique' => true])
             ->insert([
-                ['entity' => 'Xibo\Entity\Page'],
-                ['entity' => 'Xibo\Entity\DisplayGroup'],
-                ['entity' => 'Xibo\Entity\Media'],
-                ['entity' => 'Xibo\Entity\Campaign'],
-                ['entity' => 'Xibo\Entity\Widget'],
-                ['entity' => 'Xibo\Entity\Region'],
-                ['entity' => 'Xibo\Entity\Playlist'],
-                ['entity' => 'Xibo\Entity\DataSet'],
-                ['entity' => 'Xibo\Entity\Notification'],
-                ['entity' => 'Xibo\Entity\DayPart'],
+                ['entityId' => 1, 'entity' => 'Xibo\Entity\Page'],
+                ['entityId' => 2, 'entity' => 'Xibo\Entity\DisplayGroup'],
+                ['entityId' => 3, 'entity' => 'Xibo\Entity\Media'],
+                ['entityId' => 4, 'entity' => 'Xibo\Entity\Campaign'],
+                ['entityId' => 5, 'entity' => 'Xibo\Entity\Widget'],
+                ['entityId' => 7, 'entity' => 'Xibo\Entity\Region'],
+                ['entityId' => 8, 'entity' => 'Xibo\Entity\Playlist'],
+                ['entityId' => 9, 'entity' => 'Xibo\Entity\DataSet'],
+                ['entityId' => 10, 'entity' => 'Xibo\Entity\Notification'],
+                ['entityId' => 11, 'entity' => 'Xibo\Entity\DayPart'],
             ])
             ->save();
 
