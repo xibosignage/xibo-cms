@@ -61,7 +61,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    url: "{{ urlFor("mediaManager.search") }}",
+                    url: "{{ urlFor("mediamanager.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#entries").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
