@@ -76,11 +76,19 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * @SWG\Property(
-     *  description="A flag indicating whether this displayGroup is dynamic",
+     *  description="Criteria for this dynamic group. A comma separated set of regular expressions to apply",
      * )
-     * @var int
+     * @var string
      */
     public $dynamicCriteria;
+
+    /**
+     * @SWG\Property(
+     *  description="Criteria for this dynamic group. A comma separated set of tags to apply",
+     * )
+     * @var string
+     */
+    public $dynamicCriteriaTags;
 
     /**
      * @SWG\Property(
@@ -569,7 +577,7 @@ class DisplayGroup implements \JsonSerializable
                 throw new DuplicateEntityException(sprintf(__('You already own a display group called "%s". Please choose another name.'), $this->displayGroup));
 
             // If we are dynamic, then make sure we have some criteria
-            if ($this->isDynamic == 1 && $this->dynamicCriteria == '')
+            if ($this->isDynamic == 1 && ($this->dynamicCriteria == '' && $this->dynamicCriteriaTags == ''))
                 throw new InvalidArgumentException(__('Dynamic Display Groups must have at least one Criteria specified.'), 'dynamicCriteria');
         }
     }
@@ -721,14 +729,15 @@ class DisplayGroup implements \JsonSerializable
     private function add()
     {
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `userId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :userId)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
             'description' => $this->description,
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
+            'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
             'userId' => $this->userId
         ]);
 
@@ -749,6 +758,7 @@ class DisplayGroup implements \JsonSerializable
               Description = :description,
               `isDynamic` = :isDynamic,
               `dynamicCriteria` = :dynamicCriteria,
+              `dynamicCriteriaTags` = :dynamicCriteriaTags,
               `userId` = :userId
            WHERE DisplayGroupID = :displayGroupId
           ', [
@@ -757,6 +767,7 @@ class DisplayGroup implements \JsonSerializable
             'displayGroupId' => $this->displayGroupId,
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
+            'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
             'userId' => $this->userId
         ]);
     }
@@ -776,7 +787,7 @@ class DisplayGroup implements \JsonSerializable
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
-            $this->displays = $this->displayFactory->query(null, ['display' => $this->dynamicCriteria, 'userCheckUserId' => $this->getOwnerId()]);
+            $this->displays = $this->displayFactory->query(null, ['display' => $this->dynamicCriteria, 'tags' => $this->dynamicCriteriaTags, 'userCheckUserId' => $this->getOwnerId()]);
 
             $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 

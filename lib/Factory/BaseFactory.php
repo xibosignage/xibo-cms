@@ -246,4 +246,63 @@ class BaseFactory
             'variable' => $variable
         ];
     }
+
+    /**
+     * Sets the name filter for all factories to use.
+     *
+     * @param string $tableName Table name
+     * @param string $tableColumn Column with the name
+     * @param array $terms An Array exploded by "," of the search names
+     * @param string $body Current SQL body passed by reference
+     * @param array $params Array of parameters passed by reference
+     */
+    public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params)
+    {
+        $i = 0;
+        $j = 0;
+        $searchNames = [];
+        $tableAndColumn = $tableName . '.' . $tableColumn;
+        // Convert into commas
+        foreach ($terms as $term) {
+            // convert into a space delimited array
+            $names = explode(' ', $term);
+            // filter empty array elements, in an attempt to better handle spaces after `,`.
+            $filteredNames = array_filter($names);
+
+            foreach ($filteredNames as $searchName) {
+                $i++;
+                if (!isset($filteredNames[0])) {
+                    $j = 1;
+                }
+                // store searchName array
+                $searchNames[] = $searchName;
+
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-') {
+                    if ($i == 1) {
+                        $body .= " AND ( $tableAndColumn NOT RLIKE (:search$i) ";
+                        $params['search' . $i] = ltrim(($searchName), '-');
+                    } elseif ( (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) || strpos($searchNames[$i-1], '-') !== false ) {
+                        $body .= " AND $tableAndColumn NOT RLIKE (:search$i) ";
+                        $params['search' . $i] = ltrim(($searchName), '-');
+                    } else {
+                        $body .= " OR $tableAndColumn NOT RLIKE (:search$i) ";
+                        $params['search' . $i] = ltrim(($searchName), '-');
+                    }
+                } else {
+                    if ($i === 1) {
+                        $body .= " AND ( $tableAndColumn RLIKE (:search$i) ";
+                        $params['search' . $i] = $searchName;
+                    } elseif (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) {
+                        $body .= " AND $tableAndColumn RLIKE (:search$i) ";
+                        $params['search' . $i] = $searchName;
+                    } else {
+                        $body .= " OR  $tableAndColumn RLIKE (:search$i) ";
+                        $params['search' . $i] = $searchName;
+                    }
+                }
+            }
+        }
+        $body .= ' ) ';
+    }
 }

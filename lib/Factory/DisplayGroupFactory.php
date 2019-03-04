@@ -211,6 +211,7 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.description,
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
+                `displaygroup`.dynamicCriteriaTags,
                 `displaygroup`.userId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 
@@ -299,22 +300,8 @@ class DisplayGroupFactory extends BaseFactory
 
         // Filter by DisplayGroup Name?
         if ($this->getSanitizer()->getString('displayGroup', $filterBy) != null) {
-            // convert into a space delimited array
-            $names = explode(' ', $this->getSanitizer()->getString('displayGroup', $filterBy));
-
-            $i = 0;
-            foreach ($names as $searchName) {
-                $i++;
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    $body .= " AND  `displaygroup`.displayGroup NOT LIKE :search$i ";
-                    $params['search' . $i] = '%' . ltrim(($searchName), '-') . '%';
-                }
-                else {
-                    $body .= " AND  `displaygroup`.displayGroup LIKE :search$i ";
-                    $params['search' . $i] = '%' . $searchName . '%';
-                }
-            }
+            $terms = explode(',', $this->getSanitizer()->getString('displayGroup', $filterBy));
+            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params);
         }
 
         // Tags
