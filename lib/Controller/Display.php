@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -58,6 +59,8 @@ use Xibo\XMR\ScreenShotAction;
  */
 class Display extends Base
 {
+    use DisplayProfileConfigFields;
+
     /**
      * @var StorageServiceInterface
      */
@@ -464,6 +467,8 @@ class Display extends Base
      *      )
      *  )
      * )
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     function grid()
     {
@@ -737,56 +742,23 @@ class Display extends Base
     /**
      * Edit Display Form
      * @param int $displayId
+     * @throws \Xibo\Exception\XiboException
      */
     function editForm($displayId)
     {
         $display = $this->displayFactory->getById($displayId, true);
-        $playerVersions = null;
-        $mediaId = null;
-
-        $display->load();
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
-        // Time format for display
-        $timeFormat = $this->getDate()->extractTimeFormat($this->getConfig()->getSetting('DATE_FORMAT'));
+        // We have permission - load
+        $display->load();
 
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
         // Get the settings from the profile
         $profile = $display->getSettings();
-
-        // Go through each one, and see if it is a drop down
-        for ($i = 0; $i < count($profile); $i++) {
-            // Always update the value string with the source value
-            $profile[$i]['valueString'] = $profile[$i]['value'];
-
-            // Overwrite the value string when we are dealing with dropdowns
-            if ($profile[$i]['fieldType'] == 'dropdown') {
-                // Update our value
-                foreach ($profile[$i]['options'] as $option) {
-                    if ($option['id'] == $profile[$i]['value'])
-                        $profile[$i]['valueString'] = $option['value'];
-                }
-            } else if ($profile[$i]['fieldType'] == 'timePicker') {
-                // Determine the value and its format
-                if ($profile[$i]['value'] == null || $profile[$i]['value'] == '0') {
-                    // Empty (new profile)
-                    $profile[$i]['valueString'] = $this->getDate()->parse('00:00', 'H:i')->format($timeFormat);
-                } else {
-                    // A format has been set
-                    $format = (strlen($profile[$i]['value']) == 5) ? 'H:i' : 'H:i:s';
-                    try {
-                        $profile[$i]['valueString'] = $this->getDate()->parse($profile[$i]['value'], $format)->format($timeFormat);
-                    } catch (\InvalidArgumentException $invalidArgumentException) {
-                        $this->getLog()->error('Display Profile contains an invalid time format, expecting ' . $format . ' value is ' . $profile[$i]['value']);
-                        $profile[$i]['valueString'] = '00:00';
-                    }
-                }
-            }
-        }
 
         // Get a list of timezones
         $timeZones = [];
@@ -801,29 +773,31 @@ class Display extends Base
             $layouts = [];
         }
 
-        $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+        // Player Version Setting
+        $versionId = $display->getSetting('versionMediaId', null, ['displayOnly' => true]);
+        $playerVersions = null;
 
-        if ($display->overrideConfig === [])
-            $mediaId = 0;
-
-        if ($mediaId != 0)
+        // Get the Player Version for this display profile type
+        if ($versionId !== null) {
             try {
-                $playerVersions = $this->playerVersionFactory->getByMediaId($mediaId);
+                $playerVersions = $this->playerVersionFactory->getByMediaId($versionId);
             } catch (NotFoundException $e) {
-                $playerVersions = null;
+                $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
             }
+        }
 
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
+            'displayProfile' => $display->getDisplayProfile(),
+            'lockOptions' => json_decode($display->getDisplayProfile()->getSetting('lockOptions', '[]'), true),
             'layouts' => $layouts,
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
-            'versions' => [$playerVersions],
-            'overrideVersionMediaId' => $display->getSetting('versionMediaId', null, ['displayOverride' => true])
+            'versions' => [$playerVersions]
         ]);
     }
 
@@ -1016,6 +990,8 @@ class Display extends Base
      *      @SWG\Schema(ref="#/definitions/Display")
      *  )
      * )
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     function edit($displayId)
     {
@@ -1047,18 +1023,10 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
-        if ($this->getSanitizer()->getInt('versionMediaId') != 0 ) {
-            $display->overrideConfig = [
-                [
-                'name' => 'versionMediaId',
-                'value' => $this->getSanitizer()->getInt('versionMediaId', 0),
-                'type' => 'int'
-                ]
-            ];
-            $display->includeProperty('overrideConfig');
-        } else {
-            $display->overrideConfig = [];
-        }
+
+        // Get the display profile and use that to pull in any overrides
+        // start with an empty config
+        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), []);
 
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));

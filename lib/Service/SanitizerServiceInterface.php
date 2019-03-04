@@ -40,6 +40,14 @@ interface SanitizerServiceInterface
     public function getParam($param, $default, $source = null, $emptyIsNull = true);
 
     /**
+     * Has Param
+     * @param $param
+     * @param null $source
+     * @return mixed
+     */
+    public function hasParam($param, $source = null);
+
+    /**
      * Get Int
      * @param $param
      * @param null $default
