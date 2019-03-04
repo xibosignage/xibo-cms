@@ -432,19 +432,186 @@
 
         function displayEditFormOpen(dialog) {
 
+            // Setup display profile form
+            displayProfileFormOpen();
+            XiboInitialise('#settings-from-display-profile');
+
             var $settings = $(dialog).find('#settings-from-display-profile').find('.form-group');
             var $table = $(dialog).find('#settings-from-profile tbody').empty();
             var override = $(dialog).data('extra');
 
-            console.log(override);
+            // Parse special fields
+            override.forEach(function(field, index) {
+                if(['lockOptions','pictureOptions', 'timers'].includes(field.name)) {
+                    let parsedValues = JSON.parse(field.value);
+                    
+                    // Add values to the override array
+                    $.each(parsedValues, function(name, value){
+                        // Convert boolean and numbers to string
+                        value = (['boolean','number'].includes(typeof value)) ? value.toString() : value;
 
+                        override.push({name: name, value: value})
+                    });
+                }
+            });
+
+            // Method to create a new input field based on the hidden form
+            const createInputField = function(target, inputName, newValue = null) {
+
+                // Grab input field from hidden table
+                let $inputFields = $settings.find('#' + inputName);
+
+                // If no input field is capture by ID, get special fields
+                if($inputFields.length == 0) {
+                    if( $settings.find('.multiSelect').length > 0) {
+                        // Copy special fields ( timers, pictureOptions ) by selected option
+                        $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
+                    } 
+                } else if($inputFields.length == 1 && $inputFields.attr('type') == 'hidden') {
+                    // Time inputs
+                    $inputFields = $inputFields.parent().find('input');
+                } else if($inputFields.length == 1 && $inputFields.hasClass('select2-hidden-accessible')) {
+                    // Select2 inputs
+                    // Fix for select 2 modal
+                    makePagedSelect($inputFields, $inputFields.parents('.modal:first'));
+
+                    // Get both fields
+                    $inputFields = $inputFields.parent().find('.select2-hidden-accessible, .select2');
+                }
+
+                // Add input field to the target
+                $(target).html($inputFields);
+
+                // Set value if defined
+                if(newValue != null) {
+                    if($(target).find('.multiSelectInputs .timePickerDisplayEditForm').length > 0) {
+                        // MULTI TIMERS
+                        $(target).find('#' + $(target).find('.timersOn').attr('id') + 'Link').timepicker('setTime', newValue.on);
+                        $(target).find('#' + $(target).find('.timersOff').attr('id') + 'Link').timepicker('setTime', newValue.off);
+                    } else if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
+                        // SLIDER
+                        if(!$.isNumeric(newValue)) { // If value is a label, get index
+                            $(target).find('.multiSelectInputs .slider-tick-label').each(function(idx, el) {
+                                if($(el).html() == newValue) {
+                                    newValue = idx;
+                                    return false; 
+                                }
+                            });
+                        }
+                        
+                        // Set value
+                        $(target).find('.pictureControlsSlider').slider('setAttribute', 'value', newValue);
+                    } else if($inputFields.attr('type') == 'checkbox') {
+                        // CHECKBOX
+                        $($inputFields).prop('checked', newValue);
+                    } else {
+                        $($inputFields).val(newValue);
+                    }
+                }
+
+                // If there's a multiselect, set the value of the dropdown ( it's not kept on cloning ) and hide it
+                $(target).find('.multiSelect').val(inputName).hide();
+
+                // Style multi selects
+                if($(target).find('.multiSelectInputs').length > 0) {
+                    // Calculate column size for bootstrap
+                    let colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
+                    
+                    //Remove all style classes and add the new size class
+                    $(target).find('.multiSelectInputs').attr('class', 'multiSelectInputs col-sm-' + colSize)
+                }
+
+                // Set data propeties
+                $(target).attr('data-editing', 'true');
+                $(target).attr('data-input-name', inputName);
+
+                // Remove click to edit event
+                $(target).unbind('click');
+
+                // Fixes for slider
+                $(target).find('.slider').addClass('scaled-slider');
+                $(target).find('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+            };
+
+            // Build table
             $.each($settings, function(index, element) {
                 var $label = $(element).find('label');
-                var $val = $(element).find('input,select');
+                var $input = $(element).find('input,select');
                 var over = $label.prop("for");
-                $table.append("<tr><td>" + $label.text() + "</td><td>" + $val.val() + "</td><td>" + override[over] + "</td></tr>");
-            })
+                var value = '';
+                var text = '';
 
+                if($(element).hasClass('form-group-timers')) {
+                    // Get text and override name
+                    over = $(element).find('.multiSelect').val();
+                    text = $(element).find('.multiSelect option:selected').text();
+                    
+                    // Get value
+                    value = $(element).find('.timersOn').val() + ' - ' + $(element).find('.timersOff').val(); 
+                } else if($(element).hasClass('form-group-picture-options')) {
+                    // Get text and override name
+                    over = $(element).find('.multiSelect').val();
+                    text = $(element).find('.multiSelect option:selected').text();
+
+                    // Get labels
+                    var labels = [];
+                    $(element).find('.multiSelectInputs .slider-tick-label').each(function(idx, el) {
+                        labels.push($(el).html());
+                    });
+
+                    // Get value
+                    value = $(element).find('.multiSelectInputs .pictureControlsSlider').slider('getValue');
+
+                    // If specific value has a label, use it as value
+                    if(labels[value] != undefined) {
+                        value = labels[value];
+                    }
+                } else if($input.attr('type') == 'checkbox'){
+                    // Get text and value
+                    text = $label.text();
+                    value = $input.is(":checked");
+
+                } else if($input.is('select')){
+                    // Get text and value
+                    text = $label.text();
+                    value = $input.find('option:selected').text();
+                } else {
+                    // Get text and value
+                    text = $label.text();
+                    value = $input.val();
+                }
+
+                // Append new row to the table
+                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block"><i class="fa fa-edit"></i> {% trans "Undefined" %}</button></td></tr>').appendTo($table);
+
+                // Get override element
+                var overrideEl = override.find((x) => { return x.name === over; });
+                if(overrideEl != undefined) { //If element was found, create an input
+
+                    // Create input with override value
+                    createInputField($tableNewRow.find('.override-input'), over, overrideEl.value);
+                }
+            });
+
+            // Handlers for field edit
+            $(dialog).find('.override-input[data-editing="false"]').click(function() {
+                const inputName = $(this).data('inputName');
+                createInputField($(this), inputName);
+            });
+
+            // Refresh on tab switch to fix broken labels
+            $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
+                $('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+            });
+
+            // Call XiboInitialise on table
+            XiboInitialise('#settings-from-profile');
         }
     </script>
+
+    <style>
+        #settings-from-profile tr.row-fluid { 
+            height: 50px;
+        }
+    </style>
 {% endblock %}

@@ -22,8 +22,13 @@
         // For the clock type, we need to check if it's not digital, and destroy the inline editor for that specific case
         const self = this;
         const clockTypeChangeBehaviour = function(form) {
-            if(!$(self).data('formEditorOnly') && $(form).find('form #clockTypeId').val() !== '2') {
-                $(form).data().viewerObject.setupInlineEditor('ta_text', false);
+            if(!$(self).data('formEditorOnly')) {
+                if($(form).find('form #clockTypeId').val() !== '2') {
+                    $(form).data().viewerObject.setupInlineEditor('ta_text', false);
+                } else {
+                    let isChecked = $(form).find('#ta_text_advanced').is(':checked');
+                    $(form).data().viewerObject.setupInlineEditor('ta_text', isChecked);
+                }
             }
         };
 

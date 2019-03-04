@@ -790,6 +790,7 @@ class Display extends Base
         $this->getState()->setData([
             'display' => $display,
             'displayProfile' => $display->getDisplayProfile(),
+            'lockOptions' => json_decode($display->getDisplayProfile()->getSetting('lockOptions', '[]'), true),
             'layouts' => $layouts,
             'profiles' => $this->displayProfileFactory->query(NULL, array('type' => $display->clientType)),
             'settings' => $profile,

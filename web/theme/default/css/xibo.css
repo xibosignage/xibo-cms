@@ -941,10 +941,3 @@ ul li.active.tab-design:hover a {
 .layout-designer-right-pane .select2-container--bootstrap {
     display: inline-block;
 }
-
-/*
- * Slider width fix
- */
-.slider {
-    width: 100% !important;
-}
