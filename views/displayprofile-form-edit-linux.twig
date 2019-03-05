@@ -59,6 +59,14 @@
                     {% set helpText = "Should the application send proof of play stats to the CMS."|trans %}
                     {{ forms.checkbox("statsEnabled", title, displayProfile.getSetting("statsEnabled"), helpText) }}
 
+                    {% set title = "Aggregation level"|trans %}
+                    {% set helpText = "Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items."|trans %}
+                    {% set options = [
+                        { id: 'Individual', value: "Individual"|trans },
+                        { id: 'Hourly', value: "Hourly"|trans },
+                        { id: 'Daily', value: "Daily"|trans },
+                    ] %}
+                    {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
                 </div>
 
                 <div class="tab-pane" id="network">
