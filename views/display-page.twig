@@ -541,6 +541,11 @@
                 var value = '';
                 var text = '';
 
+                // Skip for some fields
+                if(['name', 'isDefault'].includes(over)) {
+                    return true;
+                }
+
                 if($(element).hasClass('form-group-timers')) {
                     // Get text and override name
                     over = $(element).find('.multiSelect').val();
@@ -582,7 +587,7 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block"><i class="fa fa-edit"></i> {% trans "Undefined" %}</button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
                 var overrideEl = override.find((x) => { return x.name === over; });
