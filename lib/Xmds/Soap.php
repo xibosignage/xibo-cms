@@ -1289,12 +1289,13 @@ class Soap
             if ($cat == 'error') {
                 $recordLogLevel = Log::ERROR;
                 $levelName = 'ERROR';
-            }
-            else if ($cat == 'audit') {
+            } else if ($cat == 'audit' || $cat == 'trace') {
                 $recordLogLevel = Log::DEBUG;
                 $levelName = 'DEBUG';
-            }
-            else {
+            } else if ($cat == 'debug') {
+                $recordLogLevel = Log::INFO;
+                $levelName = 'INFO';
+            } else {
                 $recordLogLevel = Log::NOTICE;
                 $levelName = 'NOTICE';
             }
