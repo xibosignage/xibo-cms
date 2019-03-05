@@ -129,7 +129,7 @@ over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
 To parse the translations:
 
 ```bash
-docker exec -it xibo-cms-tempel_web_1 /var/www/cms/bin/locale.php
+docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
 ```
 
 ```bash

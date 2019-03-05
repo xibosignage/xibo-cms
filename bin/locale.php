@@ -33,7 +33,6 @@ $twig = new Twig_Environment(new \Twig\Loader\FilesystemLoader([PROJECT_ROOT . '
     'auto_reload' => true
 ]);
 
-$twig->addExtension(new Twig_Extensions_Extension_I18n());
 $twig->addExtension(new \Slim\Views\TwigExtension());
 $twig->addExtension(new \Xibo\Twig\TransExtension());
 $twig->addExtension(new \Xibo\Twig\ByteFormatterTwigExtension());
