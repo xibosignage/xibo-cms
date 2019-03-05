@@ -1,14 +1,25 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-It is done, I mean this twig is probably fine, the 'name' in the settings at the end isn't quite right, but it's not a problem with this form.
-
 #}
-
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
@@ -22,6 +33,10 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
     {% trans "Save" %}, $("#displayEditForm").submit()
 {% endblock %}
 
+{% block callBack %}displayEditFormOpen{% endblock %}
+
+{% block extra %}{{ display.overrideConfig|json_encode|raw }}{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -30,6 +45,7 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                 <li><a href="#location" role="tab" data-toggle="tab"><span>{% trans "Location" %}</span></a></li>
                 <li><a href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                 <li><a href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
+                <li><a href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="displayEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}">
@@ -133,13 +149,25 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set helpText %}{% trans "Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field." %}{% endset %}
                         {{ forms.input("cidr", title, display.cidr, helpText) }}
                     </div>
-                    <div class="tab-pane" id="advanced">
-
+                    <div class="tab-pane" id="settings">
                         {% set title %}{% trans "Settings Profile?" %}{% endset %}
                         {% set helpText %}{% trans "What display profile should this display use? To use the default profile leave this empty." %}{% endset %}
                         {{ forms.dropdown("displayProfileId", "single", title, display.displayProfileId, [{displayProfileId: null, name: ""}]|merge(profiles), "displayProfileId", "name", helpText) }}
- 
 
+                        {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <table id="settings-from-profile" class="table table-striped">
+                            <thead>
+                                <th>{{ "Setting"|trans }}</th>
+                                <th>{{ "Profile"|trans }}</th>
+                                <th>{{ "Override"|trans }}</th>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="advanced">
                         {% set title %}{% trans "Interleave Default" %}{% endset %}
                         {% set helpText %}{% trans "Whether to always put the default layout into the cycle." %}{% endset %}
                         {% set yes %}{% trans "Yes" %}{% endset %}
@@ -166,75 +194,25 @@ It is done, I mean this twig is probably fine, the 'name' in the settings at the
                         {% set title %}{% trans "Reconfigure XMR" %}{% endset %}
                         {% set helpText %}{% trans "Remove the XMR configuration for this Player and send a rekey action." %}{% endset %}
                         {{ forms.checkbox("rekeyXmr", title, 0, helpText) }}
-
-                        {% if display.clientType != 'windows' %}
-                            {% set title %}{% trans "Player Version Override" %}{% endset %}
-                            {% set helpText %}{% trans "Select Player version file, it will be sent to all players in preference to the version assigned in display profile" %}{% endset %}
-                            {% if display.clientType == "android" %}
-                                {% set attributes = [
-                                    { name: "data-width", value: "300px" },
-                                    { name: "data-allow-clear", value: "true" },
-                                    { name: "data-placeholder--id", value: null },
-                                    { name: "data-placeholder--value", value: "" },
-                                    { name: "data-search-url", value: urlFor("playersoftware.search") },
-                                    { name: "data-search-term", value: "playerShowVersion" },
-                                    { name: "data-id-property", value: "mediaId" },
-                                    { name: "data-text-property", value: "playerShowVersion" },
-                                    { name: "data-filter-options", value: '{"playerType":"android"}' }
-                                ] %}
-                            {% endif %}
-                            {% if display.clientType == "lg" %}
-                                {% set attributes = [
-                                    { name: "data-width", value: "300px" },
-                                    { name: "data-allow-clear", value: "true" },
-                                    { name: "data-placeholder--id", value: null },
-                                    { name: "data-placeholder--value", value: "" },
-                                    { name: "data-search-url", value: urlFor("playersoftware.search") },
-                                    { name: "data-search-term", value: "playerShowVersion" },
-                                    { name: "data-id-property", value: "mediaId" },
-                                    { name: "data-text-property", value: "playerShowVersion" },
-                                    { name: "data-filter-options", value: '{"playerType":"lg"}' }
-                                ] %}
-                            {% endif %}
-                            {% if display.clientType == "sssp" %}
-                                {% set attributes = [
-                                    { name: "data-width", value: "300px" },
-                                    { name: "data-allow-clear", value: "true" },
-                                    { name: "data-placeholder--id", value: null },
-                                    { name: "data-placeholder--value", value: "" },
-                                    { name: "data-search-url", value: urlFor("playersoftware.search") },
-                                    { name: "data-search-term", value: "playerShowVersion" },
-                                    { name: "data-id-property", value: "mediaId" },
-                                    { name: "data-text-property", value: "playerShowVersion" },
-                                    { name: "data-filter-options", value: '{"playerType":"sssp"}' }
-                                ] %}
-                            {% endif %}
-                            {{ forms.dropdown("versionMediaId", "single", title, overrideVersionMediaId, [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
-                        {% endif %}
-
-                        {% set message %}{% trans "The settings for this display are shown below. They are taken from the active Display Profile for this Display, which can be changed in Display Settings. If you have altered the Settings Profile above, you will need to save and re-show the form." %}{% endset %}
-                        {{ forms.message(message) }}
-
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>{% trans "Setting" %}</th>
-                                    <th>{% trans "Value" %}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in settings %}
-                                <tr>
-                                    <td>{{item.title}}</td>
-                                    <td>{{item.valueString}}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
                     </div>
-
                 </div>    
             </form>
+
+
+            <div id="settings-from-display-profile" style="display:none">
+                {# Output the relevant form depending on the display profile player type #}
+                {% if displayProfile.getClientType() == "android" %}
+                    {% include "displayprofile-form-edit-android.twig" %}
+                {% elseif displayProfile.getClientType() == "windows" %}
+                    {% include "displayprofile-form-edit-windows.twig" %}
+                {% elseif displayProfile.getClientType() == "linux" %}
+                    {% include "displayprofile-form-edit-linux.twig" %}
+                {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
+                    {% include "displayprofile-form-edit-soc.twig" %}
+                {% endif %}
+
+                {% include "displayprofile-form-edit-javascript.twig" %}
+            </div>
         </div>
     </div>
 {% endblock %}

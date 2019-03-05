@@ -118,6 +118,18 @@ class SanitizeService implements SanitizerServiceInterface
     /**
      * @inheritdoc
      */
+    public function hasParam($param, $source = null)
+    {
+        if ($source !== null && is_array($source)) {
+            return array_key_exists($param, $source);
+        } else {
+            return $this->getParam($param, null, null, false) !== null;
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getInt($param, $default = null, $source = null)
     {
         return $this->int($this->getParam($param, $default, $source));

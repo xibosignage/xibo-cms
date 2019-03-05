@@ -109,9 +109,15 @@ class Soap4 extends Soap
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
+                    // Upper case the setting name for windows
+                    $settingName = ($clientType == 'windows') ? ucfirst($arrayItem['name']) : $arrayItem['name'];
 
-                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-                    $node->setAttribute('type', $arrayItem['type']);
+                    $node = $return->createElement($settingName, (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+
+                    if (isset($arrayItem['type'])) {
+                        $node->setAttribute('type', $arrayItem['type']);
+                    }
+
                     $displayElement->appendChild($node);
                 }
 
@@ -469,6 +475,14 @@ class Soap4 extends Soap
             } else {
                 $this->getLog()->info('Ignoring Incorrect timezone string: ' . $timeZone);
             }
+        }
+
+        // Status Dialog Logging
+        $statusDialog = $this->getSanitizer()->getString('statusDialog', $status);
+
+        if (!empty($statusDialog)) {
+            // Log
+            $this->getLog()->alert($statusDialog);
         }
 
         // Current Layout

@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -38,6 +37,8 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class DisplayProfile extends Base
 {
+    use DisplayProfileConfigFields;
+
     /** @var  PoolInterface */
     private $pool;
 
@@ -149,22 +150,18 @@ class DisplayProfile extends Base
             /* @var \Xibo\Entity\DisplayProfile $profile */
 
             // Load the config
-            if ((in_array('config', $embed) || in_array('commands', $embed)) && !in_array('configWithDefault', $embed)) {
-                $profile->load([
-                    'loadConfig' => in_array('config', $embed),
-                    'loadCommands' => in_array('commands', $embed),
-                ]);
-            } elseif (in_array('configWithDefault', $embed)) {
-                $profile->load([
-                    'loadConfig' => true,
-                    'loadConfigWithDefault' => true,
-                    'loadCommands' => in_array('commands', $embed)
-                ]);
+            $profile->load([
+                'loadConfig' => in_array('config', $embed),
+                'loadCommands' => in_array('commands', $embed),
+            ]);
+
+            if (in_array('configWithDefault', $embed)) {
                 $profile->includeProperty('configDefault');
-            } else {
-                $profile->excludeProperty('config');
             }
 
+            if (!in_array('config', $embed)) {
+                $profile->excludeProperty('config');
+            }
 
             if ($this->isApi()) {
                 continue;
@@ -257,48 +254,8 @@ class DisplayProfile extends Base
         $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
         $displayProfile->userId = $this->getUser()->userId;
 
-        $combined = [];
-
-        $displayProfile->save();
-
-        $displayProfile->load();
-
-        foreach ($displayProfile->configDefault as $setting) {
-            // Validate the parameter
-            $value = null;
-
-            switch ($setting['type']) {
-                case 'string':
-                    $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
-                    break;
-
-                case 'int':
-                    $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
-                    break;
-
-                case 'double':
-                    $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
-                    break;
-
-                case 'checkbox':
-                    $value = $this->getSanitizer()->getCheckbox($setting['name']);
-                    break;
-
-                default:
-                    $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
-            }
-
-            // Add to the combined array
-            $combined[] = [
-                'name' => $setting['name'],
-                'value' => $value,
-                'type' => $setting['type']
-            ];
-        }
-
-        // Recursively merge the arrays and update
-        $displayProfile->config = $combined;
-
+        // We do not set any config at this point, so that unless the user chooses to edit the display profile
+        // our defaults in the Display Profile Entity take effect
         $displayProfile->save();
 
         // Return
@@ -319,33 +276,24 @@ class DisplayProfile extends Base
     {
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
-        $versionId = null;
-        $playerVersions = '';
 
-        foreach ($displayProfile->config as $setting) {
-            if ($setting['name'] == 'versionMediaId') {
-                $versionId = $setting['value'];
-            }
+        // Check permissions
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
+            throw new AccessDeniedException(__('You do not have permission to edit this profile'));
         }
 
-        // Decode JSON value and save as value (timers, pictureOptions, lockOptions)
-        foreach ($displayProfile->configDefault as &$setting) {
-            if (in_array($setting['name'], ['timers', 'pictureOptions', 'lockOptions'])) {
-                $settingValues = json_decode((string )$setting['value'], true);
-                $setting['data'] = $settingValues;
-            }
-        }
+        // Player Version Setting
+        $versionId = $displayProfile->getSetting('versionMediaId');
+        $playerVersions = null;
 
         // Get the Player Version for this display profile type
-        if ($versionId != 0)
+        if ($versionId !== null) {
             try {
                 $playerVersions = $this->playerVersionFactory->getByMediaId($versionId);
             } catch (NotFoundException $e) {
-                $playerVersions = null;
+                $this->getLog()->debug('Unknown versionId set on Display Profile. ' . $displayProfile->displayProfileId);
             }
-
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
-            throw new AccessDeniedException(__('You do not have permission to edit this profile'));
+        }
 
         // Get a list of unassigned Commands
         $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
@@ -357,10 +305,9 @@ class DisplayProfile extends Base
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
-            'tabs' => $displayProfile->configTabs,
-            'config' => $displayProfile->configDefault,
             'commands' => array_merge($displayProfile->commands, $unassignedCommands),
-            'versions' => [$playerVersions]
+            'versions' => [$playerVersions],
+            'lockOptions' => json_decode($displayProfile->getSetting('lockOptions', '[]'), true)
         ]);
     }
 
@@ -420,156 +367,8 @@ class DisplayProfile extends Base
         $displayProfile->name = $this->getSanitizer()->getString('name');
         $displayProfile->isDefault = $this->getSanitizer()->getCheckbox('isDefault');
 
-        // Capture and validate the posted form parameters in accordance with the display config object.
-        $combined = array();
-
-        foreach ($displayProfile->configDefault as $setting) {
-            // Validate the parameter
-            $value = null;
-
-            if ($setting['name'] == 'timers') {
-                // Options object to be converted to a JSON string
-                $timerOptions = (object)[];
-
-                $timers = $this->getSanitizer()->getStringArray('timers');
-
-                foreach ($timers as $timer) {
-                    $timerDay = $timer['day'];
-
-                    if(sizeof($timers) == 1 && $timerDay == '') {
-                        break;
-                    } elseif($timerDay == '' || property_exists($timerOptions, $timerDay)) {
-                        // Repeated or Empty day input, throw exception
-                        throw new InvalidArgumentException(__('On/Off Timers: Please check the days selected and remove the duplicates or empty'), 'timers');
-                    } else {
-                        // Get time values
-                        $timerOn = $timer['on'];
-                        $timerOff = $timer['off'];
-
-                        // Check the on/off times are in the correct format (H:i)
-                        if (strlen($timerOn) != 5 || strlen($timerOff) != 5) {
-                            throw new InvalidArgumentException(__('On/Off Timers: Please enter a on and off date for any row with a day selected, or remove that row'), 'timers');
-                        } else {
-                            //Build object and add it to the main options object
-                            $temp = [];
-                            $temp['on'] = $timerOn;
-                            $temp['off'] = $timerOff;
-                            $timerOptions->$timerDay = $temp;
-                        }
-                    }
-                }
-                
-                // Encode option and save it as a string to the lock setting
-                $value = json_encode($timerOptions, JSON_PRETTY_PRINT);
-            } elseif ($setting['name'] == 'pictureOptions') {
-                // Options object to be converted to a JSON string
-                $pictureControlsOptions = (object)[];
-
-                // Special string properties map
-                $specialProperties = (object)[];
-                $specialProperties->dynamicContrast = ["off", "low", "medium", "high"];
-                $specialProperties->superResolution = ["off", "low", "medium", "high"];
-                $specialProperties->colorGamut = ["normal", "extended"];
-                $specialProperties->dynamicColor = ["off", "low", "medium", "high"];
-                $specialProperties->noiseReduction = ["auto", "off", "low", "medium", "high"];
-                $specialProperties->mpegNoiseReduction = ["auto", "off", "low", "medium", "high"];
-                $specialProperties->blackLevel = ["low", "high"];
-                $specialProperties->gamma = ["low", "medium", "high", "high2"];
-
-                // Get array from request
-                $pictureControls = $this->getSanitizer()->getStringArray('pictureControls');
-
-                foreach ($pictureControls as $pictureControl) {
-                    $propertyName = $pictureControl['property'];
-
-                    if(sizeof($pictureControls) == 1 && $propertyName == '') {
-                        break;
-                    } elseif($propertyName == '' || property_exists($pictureControlsOptions, $propertyName)) {
-                        // Repeated or Empty property input, throw exception
-                        throw new InvalidArgumentException(__('Picture: Please check the settings selected and remove the duplicates or empty'), 'pictureOptions');
-                    } else {
-                        // Get time values
-                        $propertyValue = $pictureControl['value'];
-
-                        // Check the on/off times are in the correct format (H:i)
-                        if (property_exists($specialProperties, $propertyName)) {
-                            $pictureControlsOptions->$propertyName = $specialProperties->$propertyName[$propertyValue];
-                        } else {
-                            //Build object and add it to the main options object
-                            $pictureControlsOptions->$propertyName = (int)$propertyValue;
-                        }
-                    }
-                }
-
-                 // Encode option and save it as a string to the lock setting
-                $value = json_encode($pictureControlsOptions, JSON_PRETTY_PRINT);
-            } elseif ($setting['name'] == 'lockOptions') {  
-                // Get values from lockOptions params
-                $usblock = $this->getSanitizer()->getString('usblock', '');
-                $osdlock = $this->getSanitizer()->getString('osdlock', '');
-                $keylockLocal = $this->getSanitizer()->getString('keylockLocal', '');
-                $keylockRemote = $this->getSanitizer()->getString('keylockRemote', '');
-
-                // Options object to be converted to a JSON string
-                $lockOptions = (object)[];
-
-                if($usblock != 'empty') {
-                    $lockOptions->usblock = $usblock === 'true'? true: false;
-                }
-
-                if($osdlock != 'empty') {
-                    $lockOptions->osdlock = $osdlock === 'true'? true: false;
-                }
-
-                if($keylockLocal != '' || $keylockRemote != '') {
-                    // Keylock sub object
-                    $lockOptions->keylock = (object)[];
-
-                    if($keylockLocal != '') {
-                        $lockOptions->keylock->local = $keylockLocal;
-                    }
-
-                    if($keylockRemote != '') {
-                        $lockOptions->keylock->remote = $keylockRemote;
-                    }
-                }
-
-                // Encode option and save it as a string to the lock setting
-                $value = json_encode($lockOptions, JSON_PRETTY_PRINT);
-            } else {
-
-                switch ($setting['type']) {
-                    case 'string':
-                        $value = $this->getSanitizer()->getString($setting['name'], $setting['default']);
-                        break;
-
-                    case 'int':
-                        $value = $this->getSanitizer()->getInt($setting['name'], $setting['default']);
-                        break;
-
-                    case 'double':
-                        $value = $this->getSanitizer()->getDouble($setting['name'], $setting['default']);
-                        break;
-
-                    case 'checkbox':
-                        $value = $this->getSanitizer()->getCheckbox($setting['name']);
-                        break;
-
-                    default:
-                        $value = $this->getSanitizer()->getParam($setting['name'], $setting['default']);
-                }
-            }
-
-            // Add to the combined array
-            $combined[] = array(
-                'name' => $setting['name'],
-                'value' => $value,
-                'type' => $setting['type']
-            );
-        }
-
-        // Recursively merge the arrays and update
-        $displayProfile->config = $combined;
+        // Different fields for each client type
+        $this->editConfigFields($displayProfile);
 
         // Capture and update commands
         foreach ($this->commandFactory->query() as $command) {

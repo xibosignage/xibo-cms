@@ -1,0 +1,248 @@
+{#
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+            <li><a href="#network" role="tab" data-toggle="tab">{% trans "Network" %}</a></li>
+            <li><a href="#location" role="tab" data-toggle="tab">{% trans "Location" %}</a></li>
+            <li><a href="#troubleshooting" role="tab" data-toggle="tab">{% trans "Troubleshooting" %}</a></li>
+            <li><a href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+            {% if commands|length > 0 %}
+                <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
+            {% endif %}
+        </ul>
+        <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
+            <div class="tab-content">
+                <div class="tab-pane active" id="general">
+                    {% include "displayprofile-form-edit-common-fields.twig" %}
+
+                    {% set title = "Email Address"|trans %}
+                    {% set helpText = "The email address will be used to license this Player. This is the email address you provided when you purchased the licence."|trans %}
+                    {{ forms.email("emailAddress", title, displayProfile.getSetting("emailAddress"), helpText) }}
+
+                    {% set title = "Password Protect Settings"|trans %}
+                    {% set helpText = "Provide a Password which will be required to access settings"|trans %}
+                    {{ forms.input("settingsPassword", title, displayProfile.getSetting("settingsPassword"), helpText) }}
+
+                    {% set title = "Collect interval"|trans %}
+                    {% set helpText = "How often should the Player check for new content."|trans %}
+                    {% set options = [
+                        { id: 60, value: "1 minute"|trans },
+                        { id: 300, value: "5 minutes"|trans },
+                        { id: 600, value: "10 minutes"|trans },
+                        { id: 1800, value: "30 minutes"|trans },
+                        { id: 3600, value: "1 hour"|trans },
+                        { id: 14400, value: "4 hours"|trans },
+                        { id: 43200, value: "12 hours"|trans },
+                        { id: 86400, value: "24 hours"|trans }
+                    ] %}
+                    {{ forms.dropdown("collectInterval", "single", title, displayProfile.getSetting("collectInterval"), options, "id", "value", helpText) }}
+
+                    {% set title = "XMR Public Address"|trans %}
+                    {% set helpText = "Please enter the public address for XMR."|trans %}
+                    {{ forms.input("xmrNetworkAddress", title, displayProfile.getSetting("xmrNetworkAddress"), helpText) }}
+
+                    {% set title = "Enable stats reporting?"|trans %}
+                    {% set helpText = "Should the application send proof of play stats to the CMS."|trans %}
+                    {{ forms.checkbox("statsEnabled", title, displayProfile.getSetting("statsEnabled"), helpText) }}
+
+                    {% set title = "Player Version"|trans %}
+                    {% set helpText = "Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here"|trans %}
+                    {% set attributes = [
+                        { name: "data-width", value: "300px" },
+                        { name: "data-allow-clear", value: "true" },
+                        { name: "data-placeholder--id", value: null },
+                        { name: "data-placeholder--value", value: "" },
+                        { name: "data-search-url", value: urlFor("playersoftware.search") },
+                        { name: "data-search-term", value: "playerShowVersion" },
+                        { name: "data-id-property", value: "mediaId" },
+                        { name: "data-text-property", value: "playerShowVersion" },
+                        { name: "data-filter-options", value: '{"playerType":"android"}' }
+                    ] %}
+                    {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{mediaId:null, playerShowVersion:""}]|merge(versions), "mediaId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+                </div>
+
+                <div class="tab-pane" id="network">
+
+                    {% set title = "Download Window Start Time"|trans %}
+                    {% set helpText = "The start of the time window to connect to the CMS and download updates."|trans %}
+                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText) }}
+
+                    {% set title = "Download Window End Time"|trans %}
+                    {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
+                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
+
+                    {% set title = "Update Window Start Time"|trans %}
+                    {% set helpText = "The start of the time window to install application updates."|trans %}
+                    {{ forms.time("updateStartWindow", title, displayProfile.getSetting("updateStartWindow"), helpText) }}
+
+                    {% set title = "Update Window End Time"|trans %}
+                    {% set helpText = "The end of the time window to install application updates."|trans %}
+                    {{ forms.time("updateEndWindow", title, displayProfile.getSetting("updateEndWindow"), helpText) }}
+
+                </div>
+
+                <div class="tab-pane" id="location">
+
+                    {% set title = "Orientation"|trans %}
+                    {% set helpText = "Set the orientation of the device (portrait mode will only work if supported by the hardware) Application Restart Required."|trans %}
+                    {% set options = [
+                        { id: 0, value: "Landscape"|trans },
+                        { id: 1, value: "Portrait"|trans },
+                        { id: 8, value: "Reverse Landscape"|trans },
+                        { id: 9, value: "Reverse Portrait"|trans }
+                    ] %}
+                    {{ forms.dropdown("orientation", "single", title, displayProfile.getSetting("orientation"), options, "id", "value", helpText) }}
+
+                    {% set title = "Screen Dimensions"|trans %}
+                    {% set helpText = "Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size."|trans %}
+                    {{ forms.input("screenDimensions", title, displayProfile.getSetting("screenDimensions"), helpText) }}
+
+                </div>
+
+                <div class="tab-pane" id="troubleshooting">
+
+                    {% set title = "Blacklist Videos?"|trans %}
+                    {% set helpText = "Should Videos we fail to play be blacklisted and no longer attempted?"|trans %}
+                    {{ forms.checkbox("blacklistVideo", title, displayProfile.getSetting("blacklistVideo"), helpText) }}
+
+                    {% set title = "Store HTML resources on the Internal Storage?"|trans %}
+                    {% set helpText = "Store all HTML resources on the Internal Storage? Should be selected if the device cannot display text, ticker, dataset media."|trans %}
+                    {{ forms.checkbox("storeHtmlOnInternal", title, displayProfile.getSetting("storeHtmlOnInternal"), helpText) }}
+
+                    {% set title = "Use a SurfaceView for Video Rendering?"|trans %}
+                    {% set helpText = "If the device is having trouble playing video, it may be useful to switch to a Surface View for Video Rendering."|trans %}
+                    {{ forms.checkbox("useSurfaceVideoView", title, displayProfile.getSetting("useSurfaceVideoView"), helpText) }}
+
+                    {% set title = "Log Level"|trans %}
+                    {% set helpText = "The logging level that should be recorded by the Player."|trans %}
+                    {% set options = [
+                        { id: 'audit', value: "Audit"|trans },
+                        { id: 'error', value: "Error"|trans },
+                        { id: 'off', value: "Off"|trans }
+                    ] %}
+                    {{ forms.dropdown("logLevel", "single", title, displayProfile.getSetting("logLevel"), options, "id", "value", helpText) }}
+
+                </div>
+
+                <div class="tab-pane" id="advanced">
+
+                    {% set title = "Start during device start up?"|trans %}
+                    {% set helpText = "When the device starts and Android finishes loading, should the client start up and come to the foreground?"|trans %}
+                    {{ forms.checkbox("startOnBoot", title, displayProfile.getSetting("startOnBoot"), helpText) }}
+
+                    {% set title = "Action Bar Mode"|trans %}
+                    {% set helpText = "How should the action bar behave?"|trans %}
+                    {% set options = [
+                        { id: 0, value: "Hide"|trans },
+                        { id: 1, value: "Timed"|trans },
+                        { id: 2, value: "Run Intent"|trans }
+                    ] %}
+                    {{ forms.dropdown("actionBarMode", "single", title, displayProfile.getSetting("actionBarMode"), options, "id", "value", helpText) }}
+
+                    {% set title = "Action Bar Display Duration"|trans %}
+                    {% set helpText = "How long should the Action Bar be shown for, in seconds?"|trans %}
+                    {{ forms.number("actionBarDisplayDuration", title, displayProfile.getSetting("actionBarDisplayDuration"), helpText) }}
+
+                    {% set title = "Action Bar Intent"|trans %}
+                    {% set helpText = "When set to Run Intent, which intent should be run. Format is: Action|ExtraKey,ExtraMsg"|trans %}
+                    {{ forms.input("actionBarIntent", title, displayProfile.getSetting("actionBarIntent"), helpText) }}
+
+                    {% set title = "Automatic Restart"|trans %}
+                    {% set helpText = "Automatically Restart the application if we detect it is not visible."|trans %}
+                    {{ forms.checkbox("autoRestart", title, displayProfile.getSetting("autoRestart"), helpText) }}
+
+                    {% set title = "Start delay for device start up"|trans %}
+                    {% set helpText = "The number of seconds to wait before starting the application after the device has started. Minimum 10."|trans %}
+                    {{ forms.number("startOnBootDelay", title, displayProfile.getSetting("startOnBootDelay"), helpText) }}
+
+                    {% if theme.getSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1 %}
+                        {% set title = "Notify current layout"|trans %}
+                        {% set helpText = "When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
+                        {{ forms.checkbox("sendCurrentLayoutAsStatusUpdate", title, displayProfile.getSetting("sendCurrentLayoutAsStatusUpdate"), helpText) }}
+                    {% endif %}
+
+                    {% set title = "Expire Modified Layouts?"|trans %}
+                    {% set helpText = "Expire Modified Layouts immediately on change. This means a layout can be cut during playback if it receives an update from the CMS"|trans %}
+                    {{ forms.checkbox("expireModifiedLayouts", title, displayProfile.getSetting("expireModifiedLayouts"), helpText) }}
+
+                    {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}
+                        {% set title = "Screen shot interval"|trans %}
+                        {% set helpText = "The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive."|trans %}
+                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText) }}
+                    {% endif %}
+
+                    {% set title = "Action for Screen Shot Intent"|trans %}
+                    {% set helpText = "The Intent Action to use for requesting a screen shot. Leave empty to natively create an image from the player screen content."|trans %}
+                    {{ forms.input("screenShotIntent", title, displayProfile.getSetting("screenShotIntent"), helpText) }}
+
+                    {% set title = "Screen Shot Size"|trans %}
+                    {% set helpText = "The size of the largest dimension. Empty or 0 means the screen size."|trans %}
+                    {{ forms.input("screenShotSize", title, displayProfile.getSetting("screenShotSize"), helpText) }}
+
+                    {% set title = "WebView Plugin State"|trans %}
+                    {% set helpText = "What plugin state should be used when starting a web view."|trans %}
+                    {% set options = [
+                        { id: 'OFF', value: "Off"|trans },
+                        { id: 'DEMAND', value: "On Demand"|trans },
+                        { id: 'ON', value: "On"|trans }
+                    ] %}
+                    {{ forms.dropdown("webViewPluginState", "single", title, displayProfile.getSetting("webViewPluginState"), options, "id", "value", helpText) }}
+
+                    {% set title = "Hardware Accelerate Web Content"|trans %}
+                    {% set helpText = "Mode for hardware acceleration of web based content."|trans %}
+                    {% set options = [
+                        { id: '0', value: "Off"|trans },
+                        { id: '2', value: "Off when transparent"|trans },
+                        { id: '1', value: "On"|trans }
+                    ] %}
+                    {{ forms.dropdown("hardwareAccelerateWebViewMode", "single", title, displayProfile.getSetting("hardwareAccelerateWebViewMode"), options, "id", "value", helpText) }}
+
+                    {% set title = "Use CMS time?"|trans %}
+                    {% set helpText = "Set the device time using the CMS. Only available on rooted devices or system signed players."|trans %}
+                    {{ forms.checkbox("timeSyncFromCms", title, displayProfile.getSetting("timeSyncFromCms"), helpText) }}
+
+                    {% set title = "Enable caching of Web Resources?"|trans %}
+                    {% set helpText = "The standard browser cache will be used - we recommend this is switched off unless specifically required. Effects Web Page and Embedded."|trans %}
+                    {{ forms.checkbox("webCacheEnabled", title, displayProfile.getSetting("webCacheEnabled"), helpText) }}
+
+                    {% set title = "Embedded Web Server Port"|trans %}
+                    {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
+                    {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText) }}
+
+                    {% set title = "Load Link Libraries for APK Update"|trans %}
+                    {% set helpText = "Should the update command include dynamic link libraries? Only change this if your updates are failing."|trans %}
+                    {{ forms.checkbox("installWithLoadedLinkLibraries", title, displayProfile.getSetting("installWithLoadedLinkLibraries"), helpText) }}
+
+                </div>
+
+                {% if commands|length > 0 %}
+                <div class="tab-pane" id="commands">
+                    {% include "displayprofile-form-edit-command-fields.twig" %}
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>

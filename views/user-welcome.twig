@@ -33,7 +33,7 @@
         no_nav_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div>";
         start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-default btn-success' data-role='next'>{% trans "Get started with the basics" %}</button><button class='btn btn-default' data-role='end'>{% trans "Skip this tutorial" %}</button>";
 
-        tour = window.tour = new Tour({ // TODO: Remove global var after development
+        tour = new Tour({
             debug: false,
             onEnd: function () {
                 hasSeenNewUserWizard = 1;
@@ -156,7 +156,7 @@
                     template: next_template
                 }, {
                     title: "",
-                    content: "{% trans "This is the <b>Layout Timeline</b>, a representation of the Layout time events." %}",
+                    content: "{% trans "This is the <b>Layout Timeline</b>, which shows the total Layout duration as well as the duration of assigned media." %}",
                     element: "#timeline-container",
                     placement: "bottom",
                     delay: 100,
