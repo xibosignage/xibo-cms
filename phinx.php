@@ -25,10 +25,6 @@ if (!defined('XIBO')) {
     DEFINE('XIBO', true);
 }
 
-// Set a constant so that we know we are loading via Phinx
-// this is important for some nginx setups which have a shared codebase across multiple instances.
-$isPhinx = true;
-
 // Return the PHINX configuration object
 // this should be based on our settings.php file
 // in the case of a Docker installation the settings.php file will contain $_SERVER vars which we can use directly
@@ -36,9 +32,6 @@ $isPhinx = true;
 // in the case of a manual installation, these will be hard-coded in the settings file - in which case we can still
 // use them.
 require('web/settings.php');
-
-// Settings are loaded, so we unset that.
-$isPhinx = false;
 
 // Our settings file exposes HOST:PORT rather that separate variables
 if (strstr($dbhost, ':')) {
