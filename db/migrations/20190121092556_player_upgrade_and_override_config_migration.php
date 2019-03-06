@@ -47,17 +47,23 @@ class PlayerUpgradeAndOverrideConfigMigration extends AbstractMigration
             ])->save();
         }
 
+        $displayTableModified = false;
+
         // remove version_instructions from display table
-        $versionInstructions = $displayTable->hasColumn('version_instructions');
-        if ($versionInstructions)
+        if ($displayTable->hasColumn('version_instructions')) {
             $displayTable->removeColumn('version_instructions');
+            $displayTableModified = true;
+        }
 
         // add overrideConfig column to display table
-        $overrideConfigColumn = $displayTable->hasColumn('overrideConfig');
-        if (!$overrideConfigColumn)
+        if (!$displayTable->hasColumn('overrideConfig')) {
             $displayTable->addColumn('overrideConfig', 'text');
+            $displayTableModified = true;
+        }
 
-        $displayTable->save();
+        if ($displayTableModified) {
+            $displayTable->save();
+        }
 
         // Get system user
         $user = $this->fetchRow("SELECT userId FROM `user` WHERE userTypeId = 1");

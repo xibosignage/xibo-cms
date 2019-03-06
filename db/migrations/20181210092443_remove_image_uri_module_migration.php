@@ -32,6 +32,8 @@ class RemoveImageUriModuleMigration extends AbstractMigration
     public function change()
     {
         $table = $this->table('module');
-        $table->removeColumn('imageUri')->update();
+        if ($table->hasColumn('imageUri')) {
+            $table->removeColumn('imageUri')->update();
+        }
     }
 }
