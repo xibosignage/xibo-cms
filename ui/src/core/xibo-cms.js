@@ -403,13 +403,18 @@ function XiboInitialise(scope) {
         makePagedSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
     });
 
+    // make a local select that search for text or tags
+    $(scope + " .localSelect select.form-control").each(function() {
+        makeLocalSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+    });
+
     // Notification dates
     $(scope + " span.notification-date").each(function() {
         $(this).html(moment($(this).html(), "X").fromNow());
     });
     
     // Initialize tags input form
-    $(scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
+    $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
 }
 
 /**
@@ -1668,7 +1673,30 @@ function makePagedSelect(element, parent) {
                     length: 10
                 };
 
-                query[element.data("searchTerm")] = params.term;
+                // Term to use for search
+                var searchTerm = params.term;
+
+                // If we search by tags
+                if(searchTerm != undefined && element.data("searchTermTags") != undefined) {
+                    // Get string 
+                    var tags = searchTerm.match(/\[([^}]+)\]/);
+                    var searchTags = '';
+
+                    // If we have match for tag search
+                    if(tags != null) {
+                        // Add tags to search
+                        searchTags = tags[1];
+
+                        // Remove tags in the query text
+                        searchTerm = searchTerm.replace(tags[0], '');
+
+                        // Add search by tags to the query
+                        query[element.data("searchTermTags")] = searchTags;
+                    }
+                }
+
+                // Search by searchTerm
+                query[element.data("searchTerm")] = searchTerm;
 
                 // Check to see if we've been given additional filter options
                 if (element.data("filterOptions") !== undefined) {
@@ -1703,6 +1731,61 @@ function makePagedSelect(element, parent) {
                     }
                 }
             }
+        }
+    });
+}
+
+/**
+ * Make a dropwdown with a search field for option's text and tag datafield (data-tags)
+ * @param element
+ * @param parent
+ */
+function makeLocalSelect(element, parent) {
+
+    element.select2({
+        dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        matcher: function(params, data) {
+
+            // If there are no search terms, return all of the data
+            if($.trim(params.term) === '') {
+                return data;
+            }
+
+            // Tags
+            var tags = params.term.match(/\[([^}]+)\]/);
+            var queryText = params.term;
+            var queryTags = '';
+
+            if(tags != null) {
+                // Add tags to search
+                queryTags = tags[1];
+
+                // Replace tags in the query text
+                queryText = params.term.replace(tags[0], '');
+            }
+
+            // Remove whitespaces and split by comma
+            queryText = queryText.replace(' ', '').split(',');
+            queryTags = queryTags.replace(' ', '').split(',');
+
+            // Find by text
+            for(let index = 0;index < queryText.length; index++) {
+                const text = queryText[index];
+                if(text != '' && data.text.indexOf(text) > -1) {
+                    return data;
+                }
+            }
+            
+            // Find by tag ( data-tag )
+            for(let index = 0;index < queryTags.length;index++) {
+                const tag = queryTags[index];
+                if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').indexOf(tag) > -1) {
+                    return data;
+                }
+            }
+
+            // Return `null` if the term should not be displayed
+            return null;
         }
     });
 }

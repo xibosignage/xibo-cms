@@ -59,7 +59,7 @@
                 }));
 
                 // Turn playlist select into  select2 instances
-                $(".subPlaylistSelect", $form).select2();
+                makeLocalSelect($(".subPlaylistSelect"), $form);
             } else {
                 // Remove this row
                 $(this).closest(".form-group").remove();
@@ -67,7 +67,7 @@
         });
 
         // Turn playlist select into  select2 instances
-        $(".subPlaylistSelect", $form).select2();
+        makeLocalSelect($(".subPlaylistSelect"), $form);
     }
 
 </script>

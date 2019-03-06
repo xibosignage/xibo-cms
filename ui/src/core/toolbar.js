@@ -811,6 +811,18 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
                     length: 10
                 };
 
+                // Tags
+                if(query.layout != undefined) {
+                    var tags = query.layout.match(/\[([^}]+)\]/);
+                    if(tags != null) {
+                        // Add tags to search
+                        query.tags = tags[1];
+
+                        // Replace tags in the query text
+                        query.layout = query.layout.replace(tags[0], '');
+                    }
+                }
+
                 // Set the start parameter based on the page number
                 if(params.page != null) {
                     query.start = (params.page - 1) * 10;
