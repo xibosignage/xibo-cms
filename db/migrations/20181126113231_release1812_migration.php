@@ -50,6 +50,8 @@ class Release1812Migration extends AbstractMigration
         $this->execute('UPDATE `module` set Name = \'DataSet View\' WHERE `Module` = \'datasetview\'');
 
         // Add M4V extension to Video module
-        $this->execute('UPDATE `module` SET validExtensions = CONCAT(validextensions, \',m4v\') WHERE `module` = \'video\' LIMIT 1;');
+        if (!$this->fetchRow('SELECT * FROM `module` WHERE `module` = \'video\' AND validExtensions LIKE \'%m4v%\'')) {
+            $this->execute('UPDATE `module` SET validExtensions = CONCAT(validextensions, \',m4v\') WHERE `module` = \'video\' LIMIT 1;');
+        }
     }
 }
