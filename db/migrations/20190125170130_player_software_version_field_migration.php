@@ -31,8 +31,11 @@ class PlayerSoftwareVersionFieldMigration extends AbstractMigration
     public function change()
     {
         $table = $this->table('player_software');
-        $table
-            ->addColumn('playerShowVersion', 'string', ['limit' => 50])
-            ->save();
+
+        if (!$table->hasColumn('playerShowVersion')) {
+            $table
+                ->addColumn('playerShowVersion', 'string', ['limit' => 50])
+                ->save();
+        }
     }
 }

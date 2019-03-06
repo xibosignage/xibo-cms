@@ -45,8 +45,11 @@ class ForgottenPasswordReminderMigration extends AbstractMigration
         }
 
         $table = $this->table('user');
-        $table
-            ->addColumn('isPasswordChangeRequired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-            ->save();
+        if (!$table->hasColumn('isPasswordChangeRequired')) {
+            $table
+                ->addColumn('isPasswordChangeRequired', 'integer',
+                    ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
+                ->save();
+        }
     }
 }
