@@ -488,14 +488,8 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('userId', 'user', 'userId')
             // Get 1 and 2 ID's reserved for Always and Custom
             ->insert([
-                [
-                    'name' => 'Always',
-                    'userId' => 1
-                ],
-                [
-                    'name' => 'Custom',
-                    'userId' => 1
-                ]
+                ['dayPartId' => 1, 'name' => 'Always', 'userId' => 1],
+                ['dayPartId' => 2, 'name' => 'Custom', 'userId' => 1]
             ])
             ->save();
 
@@ -1010,17 +1004,17 @@ class InstallMigration extends AbstractMigration
         $bandwidthType
             ->addColumn('name', 'string', ['limit' => 25])
             ->insert([
-                ['name' => 'Register'],
-                ['name' => 'Required Files'],
-                ['name' => 'Schedule'],
-                ['name' => 'Get File'],
-                ['name' => 'Get Resource'],
-                ['name' => 'Media Inventory'],
-                ['name' => 'Notify Status'],
-                ['name' => 'Submit Stats'],
-                ['name' => 'Submit Log'],
-                ['name' => 'Blacklist'],
-                ['name' => 'Screen Shot'],
+                ['bandwidthTypeId' => 1, 'name' => 'Register'],
+                ['bandwidthTypeId' => 2, 'name' => 'Required Files'],
+                ['bandwidthTypeId' => 3, 'name' => 'Schedule'],
+                ['bandwidthTypeId' => 4, 'name' => 'Get File'],
+                ['bandwidthTypeId' => 5, 'name' => 'Get Resource'],
+                ['bandwidthTypeId' => 6, 'name' => 'Media Inventory'],
+                ['bandwidthTypeId' => 7, 'name' => 'Notify Status'],
+                ['bandwidthTypeId' => 8, 'name' => 'Submit Stats'],
+                ['bandwidthTypeId' => 9, 'name' => 'Submit Log'],
+                ['bandwidthTypeId' => 10, 'name' => 'Blacklist'],
+                ['bandwidthTypeId' => 11, 'name' => 'Screen Shot'],
             ])
             ->save();
 
