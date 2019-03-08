@@ -6,6 +6,10 @@
       "step": "Fix genericfile valid extensions",
       "type": "php",
       "action": "Xibo\\Upgrade\\FixGenericfileExtensions"
+    },
+    {
+      "step": "Fix overrideConfig column in display table to allow NULL value",
+      "action": "ALTER TABLE display MODIFY `overrideConfig` text NULL;"
     }
   ]
 }
