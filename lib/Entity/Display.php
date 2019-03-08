@@ -516,7 +516,7 @@ class Display implements \JsonSerializable
 
         // Check the number of licensed displays
         if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+            $this->getLog()->debug('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
 
             if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
                 $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
