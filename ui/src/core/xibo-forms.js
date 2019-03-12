@@ -520,12 +520,12 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
 
     }).bind('fileuploadstart', function (e, data) {
 
-        if (form.fileupload("active") <= 0)
-            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
         // Show progress data
         form.find('.fileupload-progress .progress-extended').show();
         form.find('.fileupload-progress .progress-end').hide();
+        
+        if (form.fileupload("active") <= 0)
+            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
 
         return true;
 
