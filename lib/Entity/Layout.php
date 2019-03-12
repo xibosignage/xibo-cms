@@ -976,8 +976,13 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
 
                 // Set a from/to date
-                $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
-                $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
+                if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
+                    $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
+                }
+
+                if ($widget->toDt != null || $widget->fromDt === Widget::$DATE_MAX) {
+                    $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
+                }
 
                 // Create options nodes
                 $optionsNode = $document->createElement('options');
