@@ -580,7 +580,7 @@ pE.openUploadForm = function(templateOptions, buttons) {
         deleteOldRevisionsChecked: uploadFormDeleteOldDefault
     });
 
-    this.openUploadFormModelShown($(".modal-body").find("form"));
+    this.openUploadFormModelShown($(".second-dialog .modal-body").find("form"));
 };
 
 /**
@@ -637,6 +637,16 @@ pE.openUploadFormModelShown = function(form) {
         if(data.total > 0 && data.loaded == data.total) {
             form.find('.fileupload-progress .progress-extended').hide();
             form.find('.fileupload-progress .progress-end').show();
+        }
+    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
+        // Get uploaded and downloaded files and toggle Done button
+        var filesToUploadCount = form.find('tr.template-upload').length;
+        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+
+        if(filesToUploadCount == 0) {
+            $button.removeAttr('disabled');
+        } else {
+            $button.attr('disabled', 'disabled');
         }
     });
 };

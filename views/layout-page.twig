@@ -324,6 +324,16 @@
                         form.find('.fileupload-progress .progress-extended').hide();
                         form.find('.fileupload-progress .progress-end').show();
                     }
+                }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
+                    // Get uploaded and downloaded files and toggle Done button
+                    var filesToUploadCount = form.find('tr.template-upload').length;
+                    var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+
+                    if(filesToUploadCount == 0) {
+                        $button.removeAttr('disabled');
+                    } else {
+                        $button.attr('disabled', 'disabled');
+                    }
                 });
 
                 // Configure the active behaviour of the checkboxes
