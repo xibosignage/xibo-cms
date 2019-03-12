@@ -628,6 +628,16 @@ pE.openUploadFormModelShown = function(form) {
         data.formData = inputs.serializeArray().concat(form.serializeArray());
 
         inputs.filter("input").prop("disabled", true);
+    }).bind('fileuploadstart', function(e, data) {
+        // Show progress data
+        form.find('.fileupload-progress .progress-extended').show();
+        form.find('.fileupload-progress .progress-end').hide();
+    }).bind('fileuploadprogressall', function(e, data) {
+        // Hide progress data and show processing
+        if(data.total > 0 && data.loaded == data.total) {
+            form.find('.fileupload-progress .progress-extended').hide();
+            form.find('.fileupload-progress .progress-end').show();
+        }
     });
 };
 

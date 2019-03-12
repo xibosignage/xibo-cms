@@ -241,6 +241,7 @@
                         addFiles: "{% trans "Add ZIP Files" %}",
                         startUpload: "{% trans "Start upload" %}",
                         cancelUpload: "{% trans "Cancel upload" %}",
+                        processing: "{% trans "Processing..." %}",
                         replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
                         importTagsMessage: "{% trans "Import Tags?" %}",
                         useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
@@ -308,11 +309,20 @@
                 }).bind('fileuploadstart', function (e, data) {
                     if (form.fileupload("active") <= 0)
                         refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+                    // Show progress data
+                    form.find('.fileupload-progress .progress-extended').show();
+                    form.find('.fileupload-progress .progress-end').hide();
 
                     return true;
                 }).bind('fileuploaddone', function (e, data) {
                     if (refreshSessionInterval != null && form.fileupload("active") <= 0)
                         clearInterval(refreshSessionInterval);
+                }).bind('fileuploadprogressall', function(e, data) {
+                    // Hide progress data and show processing
+                    if(data.total > 0 && data.loaded == data.total) {
+                        form.find('.fileupload-progress .progress-extended').hide();
+                        form.find('.fileupload-progress .progress-end').show();
+                    }
                 });
 
                 // Configure the active behaviour of the checkboxes
@@ -414,6 +424,8 @@
                         </div>
                         <!-- The extended global progress information -->
                         <div class="progress-extended">&nbsp;</div>
+                        <!-- Processing info container -->
+                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
                     </div>
                 </div>
                 <div class="row">
