@@ -1246,11 +1246,17 @@ class Module extends Base
         $fromDt = $this->getSanitizer()->getDate('fromDt');
         $toDt = $this->getSanitizer()->getDate('toDt');
 
-        if ($fromDt !== null)
+        if ($fromDt !== null) {
             $widget->fromDt = $fromDt->format('U');
+        } else {
+            $widget->fromDt = Widget::$DATE_MIN;
+        }
 
-        if ($toDt !== null)
-            $widget->toDt = $this->getSanitizer()->getDate('toDt')->format('U');
+        if ($toDt !== null) {
+            $widget->toDt = $toDt->format('U');
+        } else {
+            $widget->toDt = Widget::$DATE_MAX;
+        }
 
         // Save
         $widget->save([
