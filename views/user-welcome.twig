@@ -131,9 +131,13 @@
                     delay: 2000,
                     template: next_template
                 }, { // 8
-                    element: '#read-only-message-container',
+                    element: '#read-only-message',
                     reflex: true,
-                    placement: "bottom",
+                    {% if horizontalNav %}
+                        placement: "top",
+                    {% else %}
+                        placement: "bottom",
+                    {% endif %}
                     title: "",
                     content: "{% trans "Open the Checkout Form by clicking on this message." %}",
                     template: no_nav_template,
@@ -188,7 +192,7 @@
                     template: next_template,
                     onShown: function (tour) {
                         // If we don't have checked  out the layout yet, got to the checkout step
-                        if ($('#read-only-message-container').is(":visible")) {
+                        if ($('#read-only-message').is(":visible")) {
                             tour.goTo(8);
                         }
                     }

@@ -433,6 +433,8 @@ lD.checkoutLayout = function() {
     const linkToAPI = urlsForApi.layout.checkout;
     let requestPath = linkToAPI.url;
 
+    lD.common.showLoadingScreen();
+
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
@@ -440,6 +442,9 @@ lD.checkoutLayout = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
+
+        lD.common.hideLoadingScreen();
+
         if(res.success) {
             toastr.success(res.message);
 
@@ -447,7 +452,7 @@ lD.checkoutLayout = function() {
             lD.readOnlyMode = false;
 
             // Hide read only message
-            lD.designerDiv.find('#read-only-message-container').hide();
+            $('#toast-container.read-only-message').remove();
             
             // Reload layout
             lD.reloadData(res.data);
@@ -464,6 +469,8 @@ lD.checkoutLayout = function() {
             }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
     });
@@ -523,12 +530,26 @@ lD.publishLayout = function() {
  */
 lD.enterReadOnlyMode = function() {
 
+    // Calculate position based on the main navbar
+    let toastPosition = (navbarPosition == 'vertical') ? 'toast-top-center' : 'toast-bottom-center';
+
     // Show edit mode message
-    lD.designerDiv.find('#read-only-message').html(layoutDesignerTrans.readOnlyModeMessage);
-    lD.designerDiv.find('#read-only-message-container').show();
-    lD.designerDiv.find('#read-only-message-container').off().on('click', function() {
-        lD.showCheckoutScreen();
-    });
+    let toastObj = toastr.info(
+        layoutDesignerTrans.readOnlyModeMessage,
+        '', 
+        {
+             'timeOut': '0',
+             'extendedTimeOut': '0',
+            'positionClass': toastPosition + ' read-only-message',
+            'closeButton': true,
+            'onclick': function () {
+                lD.showCheckoutScreen();
+            }
+        }
+    );
+
+    // Set id
+    toastObj.attr('id', 'read-only-message');
     
     // Turn on read only mode
     lD.readOnlyMode = true;
@@ -627,7 +648,7 @@ lD.showCheckoutScreen = function() {
 
                     lD.checkoutLayout();
 
-                    // Prevent the modal to close ( close only when chekout layout resolves )
+                    // Prevent the modal to close ( close only when checkout layout resolves )
                     return false;
                 }
             }

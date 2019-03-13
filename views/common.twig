@@ -14,6 +14,13 @@
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 500, 'hide': 0};
+        
+        // Save navbar position
+        var navbarPosition = 'vertical';
+        {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
+        {% if horizontalNav %}
+            navbarPosition = 'horizontal';
+        {% endif %}
 
         // MODULES LIST
         var modulesList = [];
