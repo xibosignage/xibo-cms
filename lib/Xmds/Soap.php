@@ -1,11 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Soap.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Xmds;
 
 define('BLACKLIST_ALL', "All");
@@ -852,10 +865,22 @@ class Soap
             // Layouts (pop in the default)
             $layoutIds = [$this->display->defaultLayoutId];
 
+            // Calculate sync key
+            $syncKey = [];
+
+            // Preparse events
             foreach ($events as $event) {
-                if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds))
+                if ($event['layoutId'] != null && !in_array($event['layoutId'], $layoutIds)) {
                     $layoutIds[] = $event['layoutId'];
+                }
+
+                // Are we a sync event?
+                if (intval($event['syncEvent']) == 1) {
+                    $syncKey[] = $event['eventId'];
+                }
             }
+
+            $syncKey = (count($syncKey) > 0) ? implode('-', $syncKey) : '';
 
             $SQL = '
                 SELECT DISTINCT `region`.layoutId, `media`.storedAs
@@ -916,7 +941,6 @@ class Soap
 
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
-                    $syncEvent = $this->getSanitizer()->int($row['syncEvent']);
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
@@ -940,7 +964,7 @@ class Soap
                         $layout->setAttribute("todt", $toDt);
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
-                        $layout->setAttribute("syncEvent", $syncEvent);
+                        $layout->setAttribute("syncEvent", $syncKey);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
