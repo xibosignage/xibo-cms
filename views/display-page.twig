@@ -586,6 +586,11 @@
                     value = $input.val();
                 }
 
+                // Skip empty fields
+                if(over == '' || over == undefined || over == null) {
+                    return true;
+                }
+
                 // Append new row to the table
                 var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
