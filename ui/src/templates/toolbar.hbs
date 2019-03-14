@@ -83,12 +83,12 @@
 
             <ul class="nav navbar-nav navbar-right">
 
-                {{#if customButtons}}
+                {{#if customDropdownButtons}}
                     <li class="dropdown navbar-submenu">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
                         
                         <ul class="dropdown-menu navbar-submenu-container">
-                            {{#each customButtons}}
+                            {{#each customDropdownButtons}}
                                 <li>
                                     <div id="{{id}}" class="navbar-submenu-item {{class}}" href="#">
                                         {{#if logo}}
@@ -105,6 +105,20 @@
                 <li>
                     <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="top" title="{{trans.changeLayout}}" class="navbar-btn" hidden></div>
                 </li>
+
+                {{#each customMainButtons}}
+                    <li>
+                        <a id="{{id}}" data-toggle="tooltip" data-placement="top" title="{{tooltip}}" class="navbar-peak-button active {{class}}" href="#">
+                            {{#if logo}}
+                                <i class="fa {{logo}}"></i>
+                            {{/if}}
+                            
+                            {{#if title}}
+                                <span>{{title}}</span>
+                            {{/if}}
+                        </a>
+                    </li>
+                {{/each}}
 
                 <li>
                     <a id="undoContainer" data-toggle="tooltip" data-placement="top" title="{{trans.undoActiveTitle}}" class="navbar-peak-button navbar-undo {{#if undoActive}}active{{/if}}">

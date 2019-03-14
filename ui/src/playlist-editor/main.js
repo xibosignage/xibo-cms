@@ -133,7 +133,8 @@ pE.loadEditor = function() {
                 // Initialize bottom toolbar
                 pE.toolbar = new Toolbar(
                     $('#playlist-editor').find('#playlist-editor-toolbar'),
-                    null, // Custom buttons
+                    null, // Custom main buttons
+                    null, // Custom dropdown buttons
                     {
                         deleteSelectedObjectAction: pE.deleteSelectedObject
                     }

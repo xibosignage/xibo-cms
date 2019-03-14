@@ -72,10 +72,11 @@ const defaultMenuItems = [
 /**
  * Bottom toolbar contructor
  * @param {object} container - the container to render the navigator to
- * @param {object[]} [customButtons] - customized buttons
+ * @param {object[]} [customMainButtons] - customized main bar buttons
+ * @param {object[]} [customDropdownButtons] - customized dropdown buttons
  * @param {object} [customActions] - customized actions
  */
-let Toolbar = function(container, customButtons = null, customActions = {}, jumpList = {}) {
+let Toolbar = function(container, customMainButtons = null, customDropdownButtons = null, customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
     this.previousOpenedMenu = -1;
@@ -89,8 +90,11 @@ let Toolbar = function(container, customButtons = null, customActions = {}, jump
     // Layout jumplist
     this.jumpList = jumpList;
 
-    // Custom buttons
-    this.customButtons = customButtons;
+    // Custom main buttons
+    this.customMainButtons = customMainButtons;
+
+    // Custom dropdown buttons
+    this.customDropdownButtons = customDropdownButtons;
 
     // Custom actions
     this.customActions = customActions;
@@ -304,7 +308,8 @@ Toolbar.prototype.render = function() {
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
         tabsCount: (this.menuItems.length > this.fixedTabs),
-        customButtons: this.customButtons,
+        customMainButtons: this.customMainButtons,
+        customDropdownButtons: this.customDropdownButtons,
         trashActive: trashBinActive,
         undoActive: undoActive,
         trans: newToolbarTrans
@@ -385,22 +390,46 @@ Toolbar.prototype.render = function() {
         );
     }
 
-    // Handle custom buttons
-    if(this.customButtons != null) {
-        for(let index = 0;index < this.customButtons.length;index++) {
+    const setButtonActionAndState = function(button) {
+        let buttonInactive = false;
 
-            // Bind action to button
-            this.DOMObject.find('#' + this.customButtons[index].id).click(
-                this.customButtons[index].action
-            );
+        // Bind action to button
+        self.DOMObject.find('#' + button.id).click(
+            button.action
+        );
 
-            // If there is a inactiveCheck, use that function to switch button state
-            if(this.customButtons[index].inactiveCheck != undefined) {
-                const inactiveClass = (this.customButtons[index].inactiveCheckClass != undefined) ? this.customButtons[index].inactiveCheckClass : 'disabled';
-                const toggleValue = this.customButtons[index].inactiveCheck();
-                this.DOMObject.find('#' + this.customButtons[index].id).toggleClass(inactiveClass, toggleValue);
+        // If there is a inactiveCheck, use that function to switch button state
+        if(button.inactiveCheck != undefined) {
+            const inactiveClass = (button.inactiveCheckClass != undefined) ? button.inactiveCheckClass : 'disabled';
+            const toggleValue = button.inactiveCheck();
+            self.DOMObject.find('#' + button.id).toggleClass(inactiveClass, toggleValue);
+            buttonInactive = toggleValue;
+        }
+
+        return buttonInactive;
+    };
+
+    // Handle custom main buttons
+    if(this.customMainButtons != null) {
+        for(let index = 0;index < this.customMainButtons.length;index++) {
+            setButtonActionAndState(this.customMainButtons[index]);
+        }
+    }
+
+    // Handle custom dropwdown buttons
+    if(this.customDropdownButtons != null) {
+
+        let activeDropdown = false;
+
+        for(let index = 0;index < this.customDropdownButtons.length;index++) {
+            let buttonInactive = setButtonActionAndState(this.customDropdownButtons[index]);
+
+            if(!buttonInactive) {
+                activeDropdown = true;
             }
         }
+
+        self.DOMObject.find('.dropdown.navbar-submenu').toggle(activeDropdown);
     }
 
     // Set layout jumpList if exists

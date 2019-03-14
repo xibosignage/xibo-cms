@@ -631,9 +631,7 @@ describe('Layout Designer (Populated)', function() {
 
             goToLayoutAndLoadPrefs(layoutId);
 
-            cy.get('#layout-editor-toolbar .navbar-submenu a[data-toggle="dropdown"]').click();
-
-            cy.get('#layout-editor-toolbar div#publishLayout').click();
+            cy.get('#layout-editor-toolbar a#publishLayout').click();
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 

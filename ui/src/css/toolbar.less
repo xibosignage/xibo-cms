@@ -61,28 +61,28 @@
     padding: 10px;
     line-height: 30px;
     display: none;
-}
 
-.editor-toolbar .container-toolbar .navbar-peak-button.active {
-    display: block;
-}
+    &.active {
+        display: block;
+    }
 
-.editor-toolbar .container-toolbar .navbar-peak-button.navbar-bin {
-    background: @bin-bg-color;
-    color: @bin-fg-color;
-}
+    &.navbar-bin {
+        background: @bin-bg-color;
+        color: @bin-fg-color;
+    }
 
-.editor-toolbar .container-toolbar .navbar-peak-button.navbar-bin:hover {
-    background: @bin-bg-color-hover !important;
-}
+    &.navbar-bin:hover {
+        background: @bin-bg-color-hover !important;
+    }
 
-.editor-toolbar .container-toolbar .navbar-peak-button.navbar-undo {
-    background: @undo-bg-color;
-    color: @undo-fg-color;
-}
+    &.navbar-undo {
+        background: @undo-bg-color;
+        color: @undo-fg-color;
+    }
 
-.editor-toolbar .container-toolbar .navbar-peak-button.navbar-undo:hover {
-    background: @undo-bg-color-hover !important;
+    &.navbar-undo:hover {
+        background: @undo-bg-color-hover !important;
+    }
 }
 
 .editor-toolbar .container-toolbar .navbar-right {

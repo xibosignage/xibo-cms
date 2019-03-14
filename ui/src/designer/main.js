@@ -142,7 +142,22 @@ $(document).ready(function() {
                 // Initialize bottom toolbar ( with custom buttons )
                 lD.toolbar = new Toolbar(
                     lD.designerDiv.find('#layout-editor-toolbar'),
-                    // Custom buttons
+                    // Custom main buttons
+                    [
+                        {
+                            id: 'publishLayout',
+                            title: null,
+                            tooltip: layoutDesignerTrans.publishTitle,
+                            logo: 'fa-check-square-o',
+                            class: 'btn-success',
+                            action: lD.showPublishScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        }
+                    ],
+                    // Custom dropdown buttons
                     [
                         {
                             id: 'checkoutLayout',
@@ -152,17 +167,6 @@ $(document).ready(function() {
                             action: lD.showCheckoutScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
-                            },
-                            inactiveCheckClass: 'hidden',
-                        },
-                        {
-                            id: 'publishLayout',
-                            title: layoutDesignerTrans.publishTitle,
-                            logo: 'fa-check-square-o',
-                            class: 'btn-success',
-                            action: lD.showPublishScreen,
-                            inactiveCheck: function() {
-                                return (lD.layout.editable == false);
                             },
                             inactiveCheckClass: 'hidden',
                         },
