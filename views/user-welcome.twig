@@ -133,11 +133,7 @@
                 }, { // 8
                     element: '#read-only-message',
                     reflex: true,
-                    {% if horizontalNav %}
-                        placement: "top",
-                    {% else %}
-                        placement: "bottom",
-                    {% endif %}
+                    placement: "top",
                     title: "",
                     content: "{% trans "Open the Checkout Form by clicking on this message." %}",
                     template: no_nav_template,

@@ -535,7 +535,7 @@ lD.publishLayout = function() {
 lD.enterReadOnlyMode = function() {
 
     // Calculate position based on the main navbar
-    let toastPosition = (navbarPosition == 'vertical') ? 'toast-top-center' : 'toast-bottom-center';
+    let toastPosition = 'toast-bottom-center';
 
     // Show edit mode message
     let toastObj = toastr.info(
