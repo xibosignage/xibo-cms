@@ -99,6 +99,11 @@ PropertiesPanel.prototype.save = function(element) {
             // Display message in form
             formHelpers.displayErrorMessage(form, errorMessage, 'danger');
 
+            // If Save fails and we have an inline editor opened, reshow it
+            if(app.propertiesPanel.inlineEditor) {
+                app.viewer.showInlineEditor();
+            }
+
             // Show toast message
             toastr.error(errorMessage);
         });
