@@ -1,0 +1,283 @@
+{#
+/*
+ * Spring Signage Ltd - http://www.springsignage.com
+ * Copyright (C) 2016 Spring Signage Ltd
+ * (statistics-page.twig)
+ */
+
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Report" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv" id="summaryReport">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Filter" %}{% endset %}
+                            {% set today %}{% trans "Today" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set thisweek %}{% trans "Thisweek" %}{% endset %}
+                            {% set thismonth %}{% trans "Thismonth" %}{% endset %}
+                            {% set thisyear %}{% trans "Thisyear" %}{% endset %}
+                            {% set lastweek %}{% trans "Lastweek" %}{% endset %}
+                            {% set lastmonth %}{% trans "Lastmonth" %}{% endset %}
+                            {% set lastyear %}{% trans "Lastyear" %}{% endset %}
+                            {% set options = [
+                                { filterName: "", reportFilter: null },
+                                { filterName: "today", reportFilter: today },
+                                { filterName: "yesterday", reportFilter: yesterday },
+                                { filterName: "thisweek", reportFilter: thisweek },
+                                { filterName: "thismonth", reportFilter: thismonth },
+                                { filterName: "thisyear", reportFilter: thisyear },
+                                { filterName: "lastweek", reportFilter: lastweek },
+                                { filterName: "lastmonth", reportFilter: lastmonth },
+                                { filterName: "lastyear", reportFilter: lastyear },
+                            ] %}
+                            {{ inline.dropdown("reportFilter", "single", title, "", options, "filterName", "reportFilter") }}
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Group by" %}{% endset %}
+                            {% set byday %}{% trans "Day" %}{% endset %}
+                            {% set byweek %}{% trans "Week" %}{% endset %}
+                            {% set bymonth %}{% trans "Month" %}{% endset %}
+                            {% set options = [
+                                { filterName: "byday", groupByFilter: byday },
+                                { filterName: "byweek", groupByFilter: byweek },
+                                { filterName: "bymonth", groupByFilter: bymonth },
+                            ] %}
+                            {{ inline.dropdown("groupByFilter", "single", title, "", options, "filterName", "groupByFilter", "", "group-by-filter") }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set options = [
+                                { typeid: "layout", type: layout },
+                                { typeid: "media", type: media },
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
+
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", "", "pagedSelect layout-select", "", "l", "", attributes) }}
+
+                            {% set title %}{% trans "Media" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" }
+                            ] %}
+                            {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", "", "pagedSelect media-select", "", "m", "", attributes) }}
+
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        var reportChart = null;
+
+        function setReport() {
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("stats.summaryReport.data") }}",
+                cache: false,
+                dataType: "json",
+                data: $("#summaryReport").find("form").serialize(),
+                success: function(response) {
+
+                    if (reportChart !== undefined && reportChart !== null) {
+                        reportChart.destroy();
+                    }
+
+                    if (response.extra.countData.length <= 0) {
+                        return;
+                    }
+
+                    if (response.extra.durationData.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    reportChart = new Chart($("#reportChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: 'Total duration',
+                                yAxisID: 'Duration',
+                                backgroundColor: response.extra.backgroundColor,
+                                data: response.extra.durationData,
+                            },
+                                {
+                                    label: 'Total count',
+                                    yAxisID: 'Count',
+                                    borderColor: response.extra.borderColor,
+                                    data: response.extra.countData,
+                                    type: 'line',
+                                    fill: false
+                                }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    id: 'Duration',
+                                    type: 'linear',
+                                    position: 'left',
+                                    ticks: {
+                                        beginAtZero:true
+                                    }
+                                }, {
+                                    id: 'Count',
+                                    type: 'linear',
+                                    position: 'right',
+                                    ticks: {
+                                        beginAtZero:true
+                                    }
+                                }]
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+
+            setReport();
+
+            var type = $("#type");
+            var reportFilter = $("#reportFilter");
+            var groupByFilter = $("#groupByFilter");
+            var groupByFilterCls = $(".group-by-filter");
+
+            reportFilter.change(function() {
+                var value = reportFilter.val();
+                var collectionMonth = [
+                    {id: 'byday', description: 'Day'},
+                    {id: 'byweek', description: 'Week'},
+                ];
+                var collectionYear = [
+                    {id: 'byday', description: 'Day'},
+                    {id: 'byweek', description: 'Week'},
+                    {id: 'bymonth', description: 'Month'}
+                ];
+
+                if (value === '' || value === undefined) {
+                    // show the from date and to date
+                    $(".stats-from-dt").show();
+                    $(".stats-to-dt").show();
+
+                    $("#groupByFilter option").remove();
+                    groupByFilterCls.show();
+                    $.each(collectionYear, function(index, item) {
+                        groupByFilter.append(
+                            $("<option></option>")
+                                .text(item.description)
+                                .val(item.id)
+                        );
+                    });
+
+                } else {
+                    // hide the from date and to date
+                    $(".stats-from-dt").hide();
+                    $(".stats-to-dt").hide();
+
+                    // Group by filter
+                    $("#groupByFilter option").remove();
+                    groupByFilterCls.show();
+
+                    if (value === 'thismonth' || value === 'lastmonth') {
+
+                        $.each(collectionMonth, function(index, item) {
+                            groupByFilter.append(
+                                $("<option></option>")
+                                    .text(item.description)
+                                    .val(item.id)
+                            );
+                        });
+
+                    } else if (value === 'thisyear' || value === 'lastyear') {
+                        $.each(collectionYear, function(index, item) {
+                            groupByFilter.append(
+                                $("<option></option>")
+                                    .text(item.description)
+                                    .val(item.id)
+                            );
+                        });
+                        groupByFilter.val('bymonth'); //by default
+
+                    } else {
+                        groupByFilterCls.hide();
+                    }
+                }
+
+            });
+
+            var mediaSelect =$(".media-select");
+            var layoutSelect =$(".layout-select");
+
+            mediaSelect.hide();
+
+            type.change(function() {
+                var value = type.val();
+                if (value === 'media') {
+                    // show media and clear/hide the layout
+                    $("#layoutId").val("");
+                    layoutSelect.hide();
+                    mediaSelect.show();
+
+                } else if (value === 'layout') {
+                    // show layout and clear/hide the media
+                    $("#mediaId").val("");
+                    mediaSelect.hide();
+                    layoutSelect.show();
+                }
+            });
+
+
+
+
+
+            // Bind to form change
+            $("#summaryReport input, #summaryReport select").change(function() {
+                setReport();
+            });
+        });
+
+    </script>
+{% endblock %}

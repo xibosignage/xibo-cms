@@ -325,6 +325,7 @@ $app->get('/rss/:psk', '\Xibo\Controller\DataSetRss:feed')->name('dataSet.rss.fe
  */
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
 $app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
+$app->get('/stats/summaryReport', '\Xibo\Controller\Stats:summaryReportData')->name('stats.summaryReport.data');
 $app->get('/stats/data/timeDisconnected', '\Xibo\Controller\Stats:timeDisconnectedGrid')->name('stats.timeDisconnected.search');
 $app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export');
 
