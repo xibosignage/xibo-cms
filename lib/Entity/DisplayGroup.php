@@ -202,6 +202,11 @@ class DisplayGroup implements \JsonSerializable
         $this->tagFactory = $tagFactory;
     }
 
+    public function __clone()
+    {
+        $this->displayGroupId = null;
+    }
+
     /**
      * Set child object dependencies
      * @param DisplayFactory $displayFactory

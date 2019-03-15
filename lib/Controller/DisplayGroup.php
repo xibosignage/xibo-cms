@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-13 Daniel Garner
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Entity\Display;
+use Xibo\Entity\Media;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
@@ -259,6 +260,12 @@ class DisplayGroup extends Base
                     'url' => $this->urlFor('displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
                 );
+
+                $group->buttons[] = array(
+                    'id' => 'displaygroup_button_copy',
+                    'url' => $this->urlFor('displayGroup.copy.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Copy')
+                );
             }
 
             if ($this->getUser()->checkDeleteable($group)) {
@@ -478,6 +485,9 @@ class DisplayGroup extends Base
      * Edits a Display Group
      * @param int $displayGroupId
      *
+     * @throws XiboException
+     * @throws \Xibo\Exception\NotFoundException
+     *
      * @SWG\Put(
      *  path="/displaygroup/{displayGroupId}",
      *  operationId="displayGroupEdit",
@@ -561,6 +571,8 @@ class DisplayGroup extends Base
     /**
      * Deletes a Group
      * @param int $displayGroupId
+     *
+     * @throws \Xibo\Exception\NotFoundException
      *
      * @SWG\Delete(
      *  path="/displaygroup/{displayGroupId}",
@@ -1682,6 +1694,7 @@ class DisplayGroup extends Base
     /**
      * @param $displayGroupId
      * @throws ConfigurationException
+     * @throws XiboException
      * @throws \Xibo\Exception\NotFoundException
      *
      * @SWG\Post(
@@ -1734,6 +1747,183 @@ class DisplayGroup extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
+        ]);
+    }
+
+    /**
+     * @param $displayGroupId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function copyForm($displayGroupId)
+    {
+        // Create a form out of the config object.
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayGroup->userId)
+            throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+
+        $this->getState()->template = 'displaygroup-form-copy';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup
+        ]);
+    }
+
+    /**
+     * Copy Display Group
+     * @param int $displayGroupId
+     * @throws \Xibo\Exception\XiboException
+     *
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/copy",
+     *  operationId="displayGroupCopy",
+     *  tags={"displaygroup"},
+     *  summary="Copy Display Group",
+     *  description="Copy an existing Display Group",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The Display Group ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayGroup",
+     *      in="formData",
+     *      description="The name for the copy",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The description for the copy",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyMembers",
+     *      in="formData",
+     *      description="Flag indicating whether to copy all display and display group members",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyAssignments",
+     *      in="formData",
+     *      description="Flag indicating whether to copy all layout and media assignments",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="copyTags",
+     *      in="formData",
+     *      description="Flag indicating whether to copy all tags",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    public function copy($displayGroupId)
+    {
+        // get display group object
+        /** @var \Xibo\Entity\DisplayGroup $displayGroup */
+        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+        // get an array of assigned displays
+        /** @var Display[] $membersDisplays */
+        $membersDisplays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
+
+        // get an array of assigned display groups
+        /** @var \Xibo\Entity\DisplayGroup[] $membersDisplayGroups */
+        $membersDisplayGroups = $this->displayGroupFactory->getByParentId($displayGroupId);
+
+        // get an array of assigned layouts
+        /** @var \Xibo\Entity\Layout[] $assignedLayouts */
+        $assignedLayouts = $this->layoutFactory->getByDisplayGroupId($displayGroupId);
+
+        // get an array of assigned media files
+        /** @var Media[] $assignedFiles */
+        $assignedFiles = $this->mediaFactory->getByDisplayGroupId($displayGroupId);
+
+        $copyMembers = $this->getSanitizer()->getCheckbox('copyMembers', 0);
+        $copyTags = $this->getSanitizer()->getCheckbox('copyTags', 0);
+        $copyAssignments = $this->getSanitizer()->getCheckbox('copyAssignments', 0);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $new = clone $displayGroup;
+
+        // handle display group members
+        if ($copyMembers && !$displayGroup->isDynamic) {
+
+            //copy display members
+            foreach ($membersDisplays as $display) {
+                $new->assignDisplay($display);
+            }
+
+            // copy display group members
+            foreach ($membersDisplayGroups as $dg) {
+                $new->assignDisplayGroup($dg);
+            }
+
+        }
+
+        // handle layout and file assignment
+        if ($copyAssignments) {
+
+            // copy layout assignments
+            foreach ($assignedLayouts as $layout) {
+                $new->assignLayout($layout);
+            }
+
+            // copy media assignments
+            foreach ($assignedFiles as $media) {
+                $new->assignMedia($media);
+            }
+        }
+
+        // Dynamic display group needs to have at least one criteria specified to be added, we always want to copy criteria when we copy dynamic display group
+        if ($displayGroup->isDynamic) {
+            $new->dynamicCriteria = $displayGroup->dynamicCriteria;
+            $new->dynamicCriteriaTags = $displayGroup->dynamicCriteriaTags;
+        }
+
+        // handle tags
+        if ($copyTags) {
+            $new->replaceTags($this->tagFactory->tagsFromString($displayGroup->tags));
+        }
+
+        $new->displayGroup = $this->getSanitizer()->getString('displayGroup');
+        $new->description = $this->getSanitizer()->getString('description');
+        $new->setOwner($this->getUser()->userId);
+
+        // save without managing links, we need to save for new display group to get an ID, which is then used in next save to manage links - for dynamic groups.
+        // we also don't want to call notify at this point (for file/layout assignment)
+        $new->save(['manageDisplayLinks' => false, 'allowNotify' => false]);
+
+        // load the created display group and save along with display links and notify
+        $new->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $new->load();
+        $new->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $new->displayGroup),
+            'id' => $new->displayGroupId,
+            'data' => $new
         ]);
     }
 }
