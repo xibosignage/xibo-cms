@@ -519,6 +519,8 @@ class Display extends Base
                 $display->includeProperty('overrideConfig');
             }
 
+            $display->bandwidthLimitFormatted = ByteFormatter::format($display->bandwidthLimit * 1024);
+
             // Current layout from cache
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $display->getCurrentLayoutId($this->pool);
@@ -1023,6 +1025,8 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
+        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit');
+
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config

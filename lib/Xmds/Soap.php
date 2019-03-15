@@ -292,7 +292,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
@@ -825,7 +825,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // auth this request...
@@ -1160,7 +1160,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
@@ -1245,7 +1245,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1432,7 +1432,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1565,7 +1565,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1673,7 +1673,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1846,19 +1846,24 @@ class Soap
      * Check we haven't exceeded the bandwidth limits
      *  - Note, display logging doesn't work in here, this is CMS level logging
      *
+     * @param int $displayId The Display ID
      * @return bool true if the check passes, false if it fails
+     * @throws NotFoundException
      */
-    protected function checkBandwidth()
+    protected function checkBandwidth($displayId = 0)
     {
         // Uncomment to enable auditing.
         //$this->logProcessor->setDisplay(0, true);
 
+        $display = $this->displayFactory->getById($displayId);
+
         $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $displayBandwidthLimit = $display->bandwidthLimit;
 
         try {
             $bandwidthUsage = 0;
 
-            if ($this->bandwidthFactory->isBandwidthExceeded($xmdsLimit, $bandwidthUsage)) {
+            if ($this->bandwidthFactory->isBandwidthExceeded($xmdsLimit, $bandwidthUsage) || $this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __('Bandwidth allowance exceeded');
