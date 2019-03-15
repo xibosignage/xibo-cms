@@ -670,7 +670,7 @@ class Stats extends Base
                     DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR, 
                     \'%Y-%m-%d %H:00:00\') AS start,
                 DATE_FORMAT(
-                    DATE_ADD((DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 23:00:00\') - INTERVAL 2 HOUR), INTERVAL 1 HOUR),
+                    DATE_ADD((DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR), INTERVAL 1 HOUR),
                     \'%Y-%m-%d %H:00:00\') AS end ';
 
             } elseif (($reportFilter == 'lastweek')) {
@@ -861,28 +861,37 @@ class Stats extends Base
 
             if ($reportFilter == '') {
                 $body .= ' AND stat.start < DATE_ADD(:toDt, INTERVAL 1 DAY)  AND stat.end >= :fromDt ';
-            } elseif (($reportFilter == 'today')) {
-                $body .= ' AND stat.`start` >= CURDATE() AND stat.`start` < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-			AND stat.`end` <= DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 01:00:00\') ';
-            } elseif (($reportFilter == 'yesterday')) {
-                $body .= ' AND stat.`start` >= DATE_SUB(CURDATE(), INTERVAL 1 DAY) AND stat.`start` < CURDATE()
-			AND stat.`end` <= DATE_FORMAT(CURDATE(), \'%Y-%m-%d 01:00:00\') ';
             }
+
+            // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+            // and end is greater than or equal first hour of the day
+            elseif (($reportFilter == 'today')) {
+                $body .= ' AND stat.`start` < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+            AND stat.`end` >= DATE_FORMAT(CURDATE(), \'%Y-%m-%d 00:00:00\') ';
+            }
+
+            // where start is less than last hour of the day + 1 hour (i.e., today)
+            // and end is greater than or equal first hour of the day
+            elseif (($reportFilter == 'yesterday')) {
+                $body .= ' AND stat.`start` < CURDATE()
+			AND stat.`end` >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 00:00:00\') ';
+            }
+
             // where start is less than last day of the week
-            // and end is greater than first day of the week
+            // and end is greater than or equal first day of the week
             elseif (($reportFilter == 'lastweek')) {
                 $body .= ' AND stat.`start` < DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)			
             AND stat.`end` >= DATE_SUB(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK) ';
             }
             // where start is less than last day of the week
-            // and end is greater than first day of the week
+            // and end is greater than or equal first day of the week
             elseif (($reportFilter == 'thisweek')) {
                 $body .= ' AND stat.`start` < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK)
             AND stat.`end` >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) ';
             }
 
             // where start is less than last day of the month + 1 day
-            // and end is greater than first day of the month
+            // and end is greater than or equal first day of the month
             // DATE_FORMAT(NOW() ,'%Y-%m-01') as firstdaythismonth,
             // LAST_DAY(CURDATE()) as lastdaythismonth,
             elseif (($reportFilter == 'thismonth')) {
@@ -891,7 +900,7 @@ class Stats extends Base
             }
 
             // where start is less than last day of the month + 1 day
-            // and end is greater than first day of the month
+            // and end is greater than or equal first day of the month
             // DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ,'%Y-%m-01') as firstdaylastmonth,
             // LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) as lastdaylastmonth,
             elseif (($reportFilter == 'lastmonth')) {
@@ -899,7 +908,7 @@ class Stats extends Base
             AND stat.`end` >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ,\'%Y-%m-01\') ';
             }
             // where start is less than last day of the year + 1 day
-            // and end is greater than first day of the year
+            // and end is greater than or equal first day of the year
             // MAKEDATE(YEAR(NOW()),1) as firstdaythisyear,
             // LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)) as lastdaythisyear
             elseif (($reportFilter == 'thisyear')) {
@@ -908,7 +917,7 @@ class Stats extends Base
             }
 
             // where start is less than last day of the year + 1 day
-            // and end is greater than first day of the year
+            // and end is greater than or equal first day of the year
             // MAKEDATE(YEAR(NOW() - INTERVAL 1 YEAR),1) as firstdaylastyear,
             // DATE_SUB(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 YEAR) as lastdaylastyear,
             elseif (($reportFilter == 'lastyear')) {
@@ -961,7 +970,7 @@ class Stats extends Base
                     periods.`start` >= DATE_FORMAT(NOW() ,\'%Y-%m-01\')
                     AND periods.`end` <=  DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY) ';
             }
-            // where periods start is greater than firstdaylastmonth and
+            // where periods start is greater than or equal firstdaylastmonth and
             // periods end is less than lastdaylastmonth + 1 day
             elseif (($reportFilter == 'lastmonth')) {
                 $body .= '  
@@ -977,7 +986,7 @@ class Stats extends Base
                     periods.`start` >= MAKEDATE(YEAR(NOW()),1)
                     AND periods.`end` <=  DATE_ADD(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 DAY)';
             }
-            // where periods start is greater than firstdaylastyear and
+            // where periods start is greater than or equal firstdaylastyear and
             // periods end is less than lastdaylastyear + 1 day
             elseif (($reportFilter == 'lastyear')) {
                 $body .= '  
