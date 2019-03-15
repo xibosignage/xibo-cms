@@ -19,31 +19,31 @@ const toolsList = [
     {
         name: toolbarTrans.tools.audio.name,
         type: 'audio',
-        description: toolbarTrans.tools.audio.name,
+        description: toolbarTrans.tools.audio.description,
         dropTo: 'widget'
     },
     {
         name: toolbarTrans.tools.expiry.name,
         type: 'expiry',
-        description: toolbarTrans.tools.expiry.name,
+        description: toolbarTrans.tools.expiry.description,
         dropTo: 'widget'
     },
     {
         name: toolbarTrans.tools.transitionIn.name,
         type: 'transitionIn',
-        description: toolbarTrans.tools.transitionIn.name,
+        description: toolbarTrans.tools.transitionIn.description,
         dropTo: 'widget'
     },
     {
         name: toolbarTrans.tools.transitionOut.name,
         type: 'transitionOut',
-        description: toolbarTrans.tools.transitionOut.name,
+        description: toolbarTrans.tools.transitionOut.description,
         dropTo: 'widget'
     },
     {
         name: toolbarTrans.tools.permissions.name,
         type: 'permissions',
-        description: toolbarTrans.tools.permissions.name,
+        description: toolbarTrans.tools.permissions.description,
         dropTo: 'all'
     }
 ];

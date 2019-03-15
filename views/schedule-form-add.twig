@@ -159,7 +159,7 @@
                         ] %}
                         {{ forms.dropdown("recurrenceType", "single", title, "", options, "id", "name", helpText) }}
 
-                        {% set helpText %}{% trans "Which days of the week does this event repeat?" %}{% endset %}
+                        {% set helpText %}{% trans "Use the drop-down to select which days of the week this Event should be repeated." %}{% endset %}
                         {% set monday %}{% trans "Monday" %}{% endset %}
                         {% set tuesday %}{% trans "Tuesday" %}{% endset %}
                         {% set wednesday %}{% trans "Wednesday" %}{% endset %}
@@ -178,7 +178,7 @@
                         ] %}
                         {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
 
-                        {% set helpText %}{% trans "Select if this monthly Repeat should be determined by the selected date or day in the Month." %}{% endset %}
+                        {% set helpText %}{% trans "Should this Event Repeat by Day of the month (eg. Monthly on Day 21) or by a Weekday in the month (eg. Monthly on the third Thursday)." %}{% endset %}
                         {% set attributes = [
                             { name: "data-trans-day", value: "on the [DAY] day"|trans },
                             { name: "data-trans-weekday", value: "on the [POSITION] [WEEKDAY]"|trans }

@@ -60,7 +60,7 @@
                 {{ forms.input("heading", title, dataSetColumn.heading, helpText, "", "required") }}
 
                 {% set title %}{% trans "Column Type" %}{% endset %}
-                {% set helpText %}{% trans "Whether this column is a value or a formula" %}{% endset %}
+                {% set helpText %}{% trans "Select the Column Type" %}{% endset %}
                 {{ forms.dropdown("dataSetColumnTypeId", "single", title, dataSetColumn.dataSetColumnTypeId, dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
 
                 {% set title %}{% trans "Data Type" %}{% endset %}

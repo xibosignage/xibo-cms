@@ -109,7 +109,7 @@
 
                     <div class="tab-pane" id="appearanceTab">
                         {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
+                        {% set manualUrl %}{{ helpService.address("media_module_calendar.html") }}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
@@ -252,7 +252,7 @@
                             </div>
                         </div>
 
-                        {% set title %}{% trans "Set an alternative template for events that are current?" %}{% endset %}
+                        {% set title %}{% trans "Use an alternative template for Current Events?" %}{% endset %}
                         {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
                         {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
 

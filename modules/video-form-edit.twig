@@ -30,7 +30,7 @@
                         {% set mediaDuration = media.duration %}
                         {% set durationMessage %}
                             {% trans %}
-                                This video will play for {{ mediaDuration }} seconds. To cut the video short set a lower duration below, to wait on the last frame or select to Loop set a higher duration.
+                                This video will play for {{ mediaDuration }} seconds. Cut the video short by setting a shorter duration below. Wait on the last frame or set to Loop by setting a higher duration below.
                             {% endtrans %}
                         {% endset %}
                         {{ forms.message(durationMessage, "") }}
