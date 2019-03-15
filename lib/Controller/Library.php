@@ -316,6 +316,14 @@ class Library extends Base
     }
 
     /**
+     * @return TagFactory
+     */
+    public function getTagFactory()
+    {
+        return $this->tagFactory;
+    }
+
+    /**
      * Displays the page logic
      */
     function displayPage()
