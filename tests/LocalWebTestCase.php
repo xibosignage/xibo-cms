@@ -280,6 +280,14 @@ class LocalWebTestCase extends WebTestCase
         self::$xmds = $xmds;
     }
 
+    public static function tearDownAfterClass()
+    {
+        // Remove the DB
+        self::$container->store->close();
+
+        parent::tearDownAfterClass();
+    }
+
     /**
      * Convenience function to skip a test with a reason and close output buffers nicely.
      * @param string $reason
