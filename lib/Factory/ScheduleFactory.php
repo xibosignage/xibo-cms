@@ -166,14 +166,12 @@ class ScheduleFactory extends BaseFactory
 
         // We dial the fromDt back to the top of the day, so that we include dayPart events that start on this
         // day
-        $adjustedFromDt = clone $fromDt;
-
         $params = array(
-            'fromDt' => $adjustedFromDt->startOfDay()->format('U'),
+            'fromDt' => $fromDt->copy()->startOfDay()->format('U'),
             'toDt' => $toDt->format('U')
         );
 
-        $this->getLog()->debug('Get events for XMDS - with options: ' . json_encode($options));
+        $this->getLog()->debug('Get events for XMDS: fromDt[' . $params['fromDt'] . '], toDt[' . $params['toDt'] . '], with options: ' . json_encode($options));
 
         // Add file nodes to the $fileElements
         // Firstly get all the scheduled layouts
