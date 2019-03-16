@@ -99,6 +99,19 @@ pbBhRgkIdydXoZZdjQIDAQAB
 
     /**
      * @param XiboDisplay $display
+     * @param string $timeZone
+     */
+    protected function displaySetTimezone($display, $timeZone)
+    {
+        $this->getStore()->update('UPDATE `display` SET timeZone = :timeZone WHERE displayId = :displayId', [
+            'displayId' => $display->displayId,
+            'timeZone' => $timeZone
+        ]);
+        $this->getStore()->commitIfNecessary();
+    }
+
+    /**
+     * @param XiboDisplay $display
      */
     protected function deleteDisplay($display)
     {
