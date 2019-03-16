@@ -140,7 +140,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         $xml = new \DOMDocument();
         $xml->loadXML($this->getXmdsWrapper()->Schedule($this->display->license));
-        $this->getLogger()->debug($xml->saveXML());
+        //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
         $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
@@ -289,7 +289,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         $xml = new \DOMDocument();
         $xml->loadXML($this->getXmdsWrapper()->Schedule($this->display->license));
-        $this->getLogger()->debug($xml->saveXML());
+        //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
         $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
