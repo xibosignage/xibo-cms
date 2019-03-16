@@ -29,8 +29,6 @@ use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
@@ -72,6 +70,15 @@ class Soap
      * @var Display
      */
     protected $display;
+
+    /** @var Date */
+    protected $fromFilter;
+    /** @var Date */
+    protected $toFilter;
+    /** @var Date */
+    protected $localFromFilter;
+    /** @var Date */
+    protected $localToFilter;
 
     /**
      * @var LogProcessor
@@ -261,7 +268,6 @@ class Soap
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
@@ -318,27 +324,19 @@ class Soap
         $fileElements = $requiredFilesXml->createElement("files");
         $requiredFilesXml->appendChild($fileElements);
 
-        // Hour to hour time bands for the query
-        // Start at the current hour
-        $fromFilter = $this->getDate()->parse()->setTime(0, 0, 0);
-
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On')
-            $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
-        else
-            $toFilter = $fromFilter->copy()->addHour();
-
-        $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
+        // Filter criteria
+        $this->setDateFilters();
 
         // Add the filter dates to the RF xml document
         $fileElements->setAttribute('generated', $this->getDate()->getLocalDate());
-        $fileElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
-        $fileElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
+        $fileElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($this->fromFilter));
+        $fileElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($this->toFilter));
 
+        // Get a list of all layout ids in the schedule right now
+        // including any layouts that have been associated to our Display Group
         try {
             $dbh = $this->getStore()->getConnection();
 
-            // Get a list of all layout ids in the schedule right now
-            // including any layouts that have been associated to our Display Group
             $SQL = '
                 SELECT layout.layoutID, 
                     schedule.DisplayOrder, 
@@ -400,8 +398,8 @@ class Soap
 
             $params = array(
                 'displayId' => $this->display->displayId,
-                'fromDt' => $fromFilter->format('U'),
-                'toDt' => $toFilter->format('U')
+                'fromDt' => $this->fromFilter->format('U'),
+                'toDt' => $this->toFilter->format('U')
             );
 
             if ($this->display->isAuditing())
@@ -421,8 +419,16 @@ class Soap
                 if ($row['eventId'] != 0) {
                     $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
+                    // Is this scheduled event a synchronised timezone?
+                    // if it is, then we get our events with repect to the timezone of the display
+                    $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+
                     try {
-                        $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                        if ($isSyncTimezone) {
+                            $scheduleEvents = $schedule->getEvents($this->localFromFilter, $this->localToFilter);
+                        } else {
+                            $scheduleEvents = $schedule->getEvents($this->fromFilter, $this->toFilter);
+                        }
                     } catch (XiboException $e) {
                         $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
                         continue;
@@ -814,33 +820,13 @@ class Soap
 
         $scheduleXml->appendChild($layoutElements);
 
-        // Hour to hour time bands for the query
-        // Rf lookahead is the number of seconds ahead we should consider.
-        // it may well be less than 1 hour, and if so we cannot do hour to hour time bands, we need to do
-        // now, forwards.
-        // Start with now:
-        $fromFilter = $this->getDate()->parse();
-
-        if ($rfLookAhead >= 3600) {
-            // Go from the top of this hour
-            $fromFilter
-                ->minute(0)
-                ->second(0);
-        }
-
-        // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
-        if ($this->getConfig()->GetSetting('SCHEDULE_LOOKAHEAD') == 'On') {
-            $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
-        } else {
-            $toFilter = $fromFilter->copy()->addHour();
-        }
-
-        $this->getLog()->debug(sprintf('FromDT = %s. ToDt = %s', $fromFilter->toRssString(), $toFilter->toRssString()));
+        // Filter criteria
+        $this->setDateFilters();
 
         // Add the filter dates to the RF xml document
         $layoutElements->setAttribute('generated', $this->getDate()->getLocalDate());
-        $layoutElements->setAttribute('fitlerFrom', $this->getDate()->getLocalDate($fromFilter));
-        $layoutElements->setAttribute('fitlerTo', $this->getDate()->getLocalDate($toFilter));
+        $layoutElements->setAttribute('filterFrom', $this->getDate()->getLocalDate($this->fromFilter));
+        $layoutElements->setAttribute('filterTo', $this->getDate()->getLocalDate($this->toFilter));
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -857,7 +843,7 @@ class Soap
 
             // Add file nodes to the $fileElements
             // Firstly get all the scheduled layouts
-            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $fromFilter, $toFilter, $options);
+            $events = $this->scheduleFactory->getForXmds($this->display->displayId, $this->fromFilter, $this->toFilter, $options);
 
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
@@ -913,8 +899,16 @@ class Soap
 
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
+                // Is this scheduled event a synchronised timezone?
+                // if it is, then we get our events with repect to the timezone of the display
+                $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+
                 try {
-                    $scheduleEvents = $schedule->getEvents($fromFilter, $toFilter);
+                    if ($isSyncTimezone) {
+                        $scheduleEvents = $schedule->getEvents($this->localFromFilter, $this->localToFilter);
+                    } else {
+                        $scheduleEvents = $schedule->getEvents($this->fromFilter, $this->toFilter);
+                    }
                 } catch (XiboException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
                     continue;
@@ -931,7 +925,7 @@ class Soap
                     // Handle the from/to date of the events we have been returned (they are all returned with respect to
                     // the current CMS timezone)
                     // Does the Display have a timezone?
-                    if (!empty($this->display->timeZone) && $schedule->syncTimezone == 1) {
+                    if ($isSyncTimezone) {
                         $fromDt = $this->getDate()->getLocalDate($scheduleEvent->fromDt, null, $this->display->timeZone);
                         $toDt = $this->getDate()->getLocalDate($scheduleEvent->toDt, null, $this->display->timeZone);
                     } else {
@@ -1098,7 +1092,7 @@ class Soap
 
         // Cache
         $cache->set($output);
-        $cache->expiresAt($toFilter);
+        $cache->expiresAt($this->toFilter);
         $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
@@ -1902,5 +1896,46 @@ class Soap
             // Serve a HTTP link to XMDS
             return $saveAsPath;
         }
+    }
+
+    /**
+     * Set Date Filters
+     */
+    protected function setDateFilters()
+    {
+        // Hour to hour time bands for the query
+        // Rf lookahead is the number of seconds ahead we should consider.
+        // it may well be less than 1 hour, and if so we cannot do hour to hour time bands, we need to do
+        // now, forwards.
+        // Start with now:
+        $fromFilter = $this->getDate()->parse();
+
+        // If this Display is in a different timezone, then we need to set that here for these filter criteria
+        if (!empty($this->display->timeZone)) {
+            $fromFilter->setTimezone($this->display->timeZone);
+        }
+
+        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
+        if ($rfLookAhead >= 3600) {
+            // Go from the top of this hour
+            $fromFilter
+                ->minute(0)
+                ->second(0);
+        }
+
+        // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1) {
+            $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
+        } else {
+            $toFilter = $fromFilter->copy()->addHour();
+        }
+
+        // Make sure our filters are expressed in CMS time, so that when we run the query we don't lose the timezone
+        $this->localFromFilter = $fromFilter;
+        $this->localToFilter = $toFilter;
+        $this->fromFilter = $this->getDate()->parse($fromFilter->format('Y-m-d H:i:s'));
+        $this->toFilter = $this->getDate()->parse($toFilter->format('Y-m-d H:i:s'));
+
+        $this->getLog()->debug(sprintf('FromDT = %s [%d]. ToDt = %s [%d]', $fromFilter->toRssString(), $fromFilter->format('U'), $toFilter->toRssString(), $toFilter->format('U')));
     }
 }
