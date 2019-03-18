@@ -915,7 +915,7 @@ class Chart extends ModuleWidget
             if (count($moduleColors) > 0)
                 $this->colorPallet = array_merge($moduleColors, $this->colorPallet);
 
-            $this->getLog()->debug('Colour pallet is ' . var_export($this->colorPallet, true));
+            $this->getLog()->debug('Colour palette is ' . var_export($this->colorPallet, true));
         }
 
         return $this->colorPallet;

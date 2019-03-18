@@ -18,9 +18,13 @@
     {{#each transitions}}
         <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
     {{/each}}
-    
-    {{#gt fromDt 0}}
+
+    {{#gt fromDt DATE_MIN}}
         <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
+    {{else}}
+        {{#gt DATE_MAX toDt}}
+            <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
+        {{/gt}}
     {{/gt}}
 </div>
 

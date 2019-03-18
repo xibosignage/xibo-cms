@@ -151,9 +151,7 @@ describe('Layout Designer (Empty)', function() {
             cy.server();
             cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
-            cy.get('#layout-editor-toolbar .navbar-submenu a[data-toggle="dropdown"]').click();
-
-            cy.get('#layout-editor-toolbar div#publishLayout').click();
+            cy.get('#layout-editor-toolbar a#publishLayout').click();
 
             cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
 

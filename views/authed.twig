@@ -208,6 +208,8 @@
                     </div>
                     <!-- The extended global progress information -->
                     <div class="progress-extended">&nbsp;</div>
+                    <!-- Processing info container -->
+                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
                 </div>
             </div>
             {{#if oldMediaId}}
@@ -307,6 +309,8 @@
                         </div>
                         <!-- The extended global progress information -->
                         <div class="progress-extended">&nbsp;</div>
+                        <!-- Processing info container -->
+                        <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
                     </div>
                 </div>
             </div>

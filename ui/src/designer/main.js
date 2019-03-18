@@ -142,7 +142,22 @@ $(document).ready(function() {
                 // Initialize bottom toolbar ( with custom buttons )
                 lD.toolbar = new Toolbar(
                     lD.designerDiv.find('#layout-editor-toolbar'),
-                    // Custom buttons
+                    // Custom main buttons
+                    [
+                        {
+                            id: 'publishLayout',
+                            title: null,
+                            tooltip: layoutDesignerTrans.publishTitle,
+                            logo: 'fa-check-square-o',
+                            class: 'btn-success',
+                            action: lD.showPublishScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        }
+                    ],
+                    // Custom dropdown buttons
                     [
                         {
                             id: 'checkoutLayout',
@@ -152,17 +167,6 @@ $(document).ready(function() {
                             action: lD.showCheckoutScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
-                            },
-                            inactiveCheckClass: 'hidden',
-                        },
-                        {
-                            id: 'publishLayout',
-                            title: layoutDesignerTrans.publishTitle,
-                            logo: 'fa-check-square-o',
-                            class: 'btn-success',
-                            action: lD.showPublishScreen,
-                            inactiveCheck: function() {
-                                return (lD.layout.editable == false);
                             },
                             inactiveCheckClass: 'hidden',
                         },
@@ -433,6 +437,8 @@ lD.checkoutLayout = function() {
     const linkToAPI = urlsForApi.layout.checkout;
     let requestPath = linkToAPI.url;
 
+    lD.common.showLoadingScreen();
+
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
@@ -440,6 +446,9 @@ lD.checkoutLayout = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
+
+        lD.common.hideLoadingScreen();
+
         if(res.success) {
             toastr.success(res.message);
 
@@ -447,7 +456,7 @@ lD.checkoutLayout = function() {
             lD.readOnlyMode = false;
 
             // Hide read only message
-            lD.designerDiv.find('#read-only-message-container').hide();
+            $('#toast-container.read-only-message').remove();
             
             // Reload layout
             lD.reloadData(res.data);
@@ -464,6 +473,8 @@ lD.checkoutLayout = function() {
             }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
         // Output error to console
         console.error(jqXHR, textStatus, errorThrown);
     });
@@ -523,12 +534,26 @@ lD.publishLayout = function() {
  */
 lD.enterReadOnlyMode = function() {
 
+    // Calculate position based on the main navbar
+    let toastPosition = 'toast-bottom-center';
+
     // Show edit mode message
-    lD.designerDiv.find('#read-only-message').html(layoutDesignerTrans.readOnlyModeMessage);
-    lD.designerDiv.find('#read-only-message-container').show();
-    lD.designerDiv.find('#read-only-message-container').off().on('click', function() {
-        lD.showCheckoutScreen();
-    });
+    let toastObj = toastr.info(
+        layoutDesignerTrans.readOnlyModeMessage,
+        '', 
+        {
+             'timeOut': '0',
+             'extendedTimeOut': '0',
+            'positionClass': toastPosition + ' read-only-message',
+            'closeButton': true,
+            'onclick': function () {
+                lD.showCheckoutScreen();
+            }
+        }
+    );
+
+    // Set id
+    toastObj.attr('id', 'read-only-message');
     
     // Turn on read only mode
     lD.readOnlyMode = true;
@@ -627,7 +652,7 @@ lD.showCheckoutScreen = function() {
 
                     lD.checkoutLayout();
 
-                    // Prevent the modal to close ( close only when chekout layout resolves )
+                    // Prevent the modal to close ( close only when checkout layout resolves )
                     return false;
                 }
             }
@@ -1245,7 +1270,28 @@ lD.openUploadFormModelShown = function(form) {
         data.formData = inputs.serializeArray().concat(form.serializeArray());
 
         inputs.filter("input").prop("disabled", true);
+    }).bind('fileuploadstart', function(e, data) {
+        // Show progress data
+        form.find('.fileupload-progress .progress-extended').show();
+        form.find('.fileupload-progress .progress-end').hide();
+    }).bind('fileuploadprogressall', function(e, data) {
+        // Hide progress data and show processing
+        if(data.total > 0 && data.loaded == data.total) {
+            form.find('.fileupload-progress .progress-extended').hide();
+            form.find('.fileupload-progress .progress-end').show();
+        }
+    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
+        // Get uploaded and downloaded files and toggle Done button
+        var filesToUploadCount = form.find('tr.template-upload').length;
+        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+
+        if(filesToUploadCount == 0) {
+            $button.removeAttr('disabled');
+        } else {
+            $button.attr('disabled', 'disabled');
+        }
     });
+    
 };
 
 /**

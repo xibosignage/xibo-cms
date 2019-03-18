@@ -148,7 +148,8 @@
                         trans: {
                             addFiles: "{% trans "Add CSV Files" %}",
                             startUpload: "{% trans "Start upload" %}",
-                            cancelUpload: "{% trans "Cancel upload" %}"
+                            cancelUpload: "{% trans "Cancel upload" %}",
+                            processing: "{% trans "Processing..." %}"
                         },
                         upload: {
                             maxSize: {{ libraryUpload.maxSize }},
@@ -219,13 +220,34 @@
 
                         inputs.filter("input").prop("disabled", true);
                     }).bind('fileuploadstart', function (e, data) {
+
+                        // Show progress data
+                        form.find('.fileupload-progress .progress-extended').show();
+                        form.find('.fileupload-progress .progress-end').hide();
+                        
                         if (form.fileupload("active") <= 0)
                             refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
+                        
                         return true;
                     }).bind('fileuploaddone', function (e, data) {
                         if (refreshSessionInterval != null && form.fileupload("active") <= 0)
                             clearInterval(refreshSessionInterval);
+                    }).bind('fileuploadprogressall', function (e, data) {
+                        // Hide progress data and show processing
+                        if(data.total > 0 && data.loaded == data.total) {
+                            form.find('.fileupload-progress .progress-extended').hide();
+                            form.find('.fileupload-progress .progress-end').show();
+                        }
+                    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
+                        // Get uploaded and downloaded files and toggle Done button
+                        var filesToUploadCount = form.find('tr.template-upload').length;
+                        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+
+                        if(filesToUploadCount == 0) {
+                            $button.removeAttr('disabled');
+                        } else {
+                            $button.attr('disabled', 'disabled');
+                        }
                     });
                 });
             });
@@ -329,6 +351,8 @@
                     </div>
                     <!-- The extended global progress information -->
                     <div class="progress-extended">&nbsp;</div>
+                    <!-- Processing info container -->
+                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
                 </div>
             </div>
             <div class="row">

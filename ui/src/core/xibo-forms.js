@@ -520,6 +520,10 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
 
     }).bind('fileuploadstart', function (e, data) {
 
+        // Show progress data
+        form.find('.fileupload-progress .progress-extended').show();
+        form.find('.fileupload-progress .progress-end').hide();
+        
         if (form.fileupload("active") <= 0)
             refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
 
@@ -551,6 +555,12 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
 
         // Hide the stuff we've added
         form.slideUp();
+    }).bind('fileuploadprogressall', function(e, data) {
+        // Hide progress data and show processing
+        if(data.total > 0 && data.loaded == data.total) {
+            form.find('.fileupload-progress .progress-extended').hide();
+            form.find('.fileupload-progress .progress-end').show();
+        }
     });
 
     // Click the button

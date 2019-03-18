@@ -133,7 +133,8 @@ pE.loadEditor = function() {
                 // Initialize bottom toolbar
                 pE.toolbar = new Toolbar(
                     $('#playlist-editor').find('#playlist-editor-toolbar'),
-                    null, // Custom buttons
+                    null, // Custom main buttons
+                    null, // Custom dropdown buttons
                     {
                         deleteSelectedObjectAction: pE.deleteSelectedObject
                     }
@@ -580,7 +581,7 @@ pE.openUploadForm = function(templateOptions, buttons) {
         deleteOldRevisionsChecked: uploadFormDeleteOldDefault
     });
 
-    this.openUploadFormModelShown($(".modal-body").find("form"));
+    this.openUploadFormModelShown($(".second-dialog .modal-body").find("form"));
 };
 
 /**
@@ -628,6 +629,26 @@ pE.openUploadFormModelShown = function(form) {
         data.formData = inputs.serializeArray().concat(form.serializeArray());
 
         inputs.filter("input").prop("disabled", true);
+    }).bind('fileuploadstart', function(e, data) {
+        // Show progress data
+        form.find('.fileupload-progress .progress-extended').show();
+        form.find('.fileupload-progress .progress-end').hide();
+    }).bind('fileuploadprogressall', function(e, data) {
+        // Hide progress data and show processing
+        if(data.total > 0 && data.loaded == data.total) {
+            form.find('.fileupload-progress .progress-extended').hide();
+            form.find('.fileupload-progress .progress-end').show();
+        }
+    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
+        // Get uploaded and downloaded files and toggle Done button
+        var filesToUploadCount = form.find('tr.template-upload').length;
+        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+
+        if(filesToUploadCount == 0) {
+            $button.removeAttr('disabled');
+        } else {
+            $button.attr('disabled', 'disabled');
+        }
     });
 };
 

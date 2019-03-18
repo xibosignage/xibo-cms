@@ -67,6 +67,10 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.fromDt = data.fromDt;
     this.toDt = data.toDt;
 
+    // Date limits constants
+    this.DATE_MIN = 0;
+    this.DATE_MAX = 2147483647;
+
     /**
      * Get transitions from options
      */
