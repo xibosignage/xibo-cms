@@ -563,9 +563,15 @@ class ConfigService implements ConfigServiceInterface
             sprintf(__("PHP version %s or later required."), Environment::$VERSION_REQUIRED) . ' Detected ' . phpversion()
         );
 
-        $this->testItem($rows, __('File System Permissions'),
-            Environment::checkFsPermissions(),
-            __('Write permissions are required for web/settings.php and cache/')
+        $this->testItem($rows, __('Settings File System Permissions'),
+            Environment::checkSettingsFileSystemPermissions(),
+            __('Write permissions are required for web/settings.php'),
+            false
+        );
+
+        $this->testItem($rows, __('Cache File System Permissions'),
+            Environment::checkCacheFileSystemPermissions(),
+            __('Write permissions are required for cache/')
         );
 
         $this->testItem($rows, __('MySQL database (PDO MySql)'),

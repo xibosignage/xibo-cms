@@ -181,6 +181,7 @@ class Soap5 extends Soap4
                     $dateNow->timezone($display->timeZone);
 
                     // Append Local Time
+                    $displayElement->setAttribute('localTimezone', $display->timeZone);
                     $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                 }
 

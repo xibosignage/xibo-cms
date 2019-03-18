@@ -716,7 +716,7 @@ class Schedule implements \JsonSerializable
             // Events for the month.
             $this->generateMonth($fromDt, $eventStart, $eventEnd);
 
-            $this->getLog()->debug('Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT));
+            $this->getLog()->debug('Filtering Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT) . '. fromTimeStamp: ' . $fromTimeStamp . ', toTimeStamp: ' . $toTimeStamp);
 
             foreach ($this->scheduleEvents as $scheduleEvent) {
 
@@ -736,7 +736,7 @@ class Schedule implements \JsonSerializable
             $fromDt->addMonth();
         }
 
-        $this->getLog()->debug('Filtered ' . count($this->scheduleEvents) . ' to ' . count($events));
+        $this->getLog()->debug('Filtered ' . count($this->scheduleEvents) . ' to ' . count($events) . ', events: ' . json_encode($events, JSON_PRETTY_PRINT));
 
         return $events;
     }

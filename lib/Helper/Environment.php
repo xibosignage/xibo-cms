@@ -70,9 +70,19 @@ class Environment
      * Check FileSystem Permissions
      * @return bool
      */
-    public static function checkFsPermissions()
+    public static function checkSettingsFileSystemPermissions()
     {
-        return (is_writable(PROJECT_ROOT . "/web/settings.php") && is_writable(PROJECT_ROOT . "/cache"));
+        $settingsPath = PROJECT_ROOT . '/web/settings.php';
+        return (file_exists($settingsPath)) ? is_writable($settingsPath) : is_writable(PROJECT_ROOT . '/web');
+    }
+
+    /**
+     * Check FileSystem Permissions
+     * @return bool
+     */
+    public static function checkCacheFileSystemPermissions()
+    {
+        return is_writable(PROJECT_ROOT . '/cache');
     }
 
     /**
