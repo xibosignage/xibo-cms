@@ -6,8 +6,8 @@ Copyright (C) 2006-2019 Xibo Signage Ltd and Contributors.
 
 #### Branches
 
-- develop: Work in progress toward 2.0
-- master: Currently 1.8
+- develop: Work in progress toward 2.1
+- master: Currently 2.0
 - release18: Work in progress toward the next 1.8
 - release17: Work in progress toward the next 1.7
 - release1.6.4: Archive of 1.6
@@ -111,20 +111,6 @@ When asked for a library location you should enter
 
  - /var/www/cms/library
 
-## Under the hood
-
-Vagrant has created a virtual machine, installed Docker on it and then provisioned 3 Docker containers for Xibo to use.
-There is a container for the CMS web server, a container for the mysql database and a container for XMR.
-
-Your cloned repository is mapped into the Vagrant VM under `/data/web` and the Docker container mounts this as
-`/var/www/xibo`. Changes you make to the source code on your host machine are immediately reflected in the nested VM
-and Docker container.
-
-Database data is maintained in the guest VM and is persisted when the VM is power cycled (`vagrant halt / vagrant up`). For
-convenience the Docker MySQL container exposes mysql on port 3306 to the Vagrant VM. You can therefore connect to MySQL
-over SSH using `127.0.0.1` and the port/key file shown by `vagrant ssh-config`.
-
-
 ## Translations
 To parse the translations:
 
@@ -136,6 +122,12 @@ docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
 find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
 ```
 
+## Swagger API Docs
+To generate a `swagger.json` file, with the dev containers running:
+
+```bash
+docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/swagger lib -o web/swagger.json"
+```
 
 # Application Structure
 
