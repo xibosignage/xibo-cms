@@ -293,3 +293,21 @@ Cypress.Commands.add('deletePlaylist', function(id) {
         }
     });
 });
+
+// Campaign
+Cypress.Commands.add('createCampaign', function(name) {
+
+    cy.request({
+        method: 'POST',
+        url: '/api/campaign',
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        },
+        body: {
+            name: name
+        }
+    }).then((res) => {
+        return res.body.campaignId;
+    });
+});

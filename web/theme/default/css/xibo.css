@@ -218,6 +218,14 @@ ul#LayoutAssignSortable {
     display: inline-block;
 }
 
+#LayoutAssign {
+    background-color: #a6b3cd;
+}
+
+.layoutAssignFilterOptions {
+    padding: 10px;
+}
+
 #LayoutAssignSortable .li-sortable {
     padding: 5px;
     margin: 5px;
