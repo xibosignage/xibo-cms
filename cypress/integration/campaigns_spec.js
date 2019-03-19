@@ -21,13 +21,25 @@ describe('Campaigns', function () {
         // Delete all test campaigns
         cy.visit('/campaign/view');
 
-        // Select rows
-        cy.get('#campaigns').contains('Cypress Test Campaign').click();
+        // Clear filter
+        cy.get('#Filter input[name="name"]')
+            .clear()
+            .type('Cypress Test Campaign');
 
-        // Delete all
-        cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-        cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click({force: true});
-        cy.get('button.save-button').click({force: true});
+        // Wait for the filter to make effect
+        cy.wait(2000);
+        cy.wait('@campaignGridLoad');
+
+        if(Cypress.$('#campaigns tbody tr').length > 0) {
+            cy.visit('/campaign/view');
+            // Select rows
+            cy.get('#campaigns tbody tr').click({multiple: true});
+
+            // Delete all
+            cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
+            cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click({force: true});
+            cy.get('button.save-button').click({force: true});
+        }
     });
 
     /**
@@ -162,7 +174,7 @@ describe('Campaigns', function () {
             cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(2)').contains('3');
 
             // Delete temp layouts
-            deleteTempLayouts( 3);
+            deleteTempLayouts(3);
         });
     });
 
