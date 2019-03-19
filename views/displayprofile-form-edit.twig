@@ -33,6 +33,29 @@
     {% trans "Save" %}, $("#displayProfileForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [
+        {
+        "field": "statsEnabled", "trigger": "init",
+        "operation": "is:checked", "value": false,
+        "actions": { ".aggregation-level": { "display": "none" } }
+        },{
+        "field": "statsEnabled", "trigger": "change",
+        "operation": "is:checked", "value": false,
+        "actions": { ".aggregation-level": { "display": "none" } }
+        },
+        {
+        "field": "statsEnabled", "trigger": "init",
+        "operation": "is:checked", "value": true,
+        "actions": { ".aggregation-level": { "display": "block" } }
+        },{
+        "field": "statsEnabled", "trigger": "change",
+        "operation": "is:checked", "value": true,
+        "actions": { ".aggregation-level": { "display": "block" } }
+        }
+    ]
+{% endblock %}
+
 {% block callBack %}displayProfileFormOpen{% endblock %}
 
 {% block formHtml %}
@@ -53,5 +76,4 @@
     {% endif %}
 
     {% include "displayprofile-form-edit-javascript.twig" %}
-    
 {% endblock %}

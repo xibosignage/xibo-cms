@@ -331,6 +331,84 @@ class Library extends Base
     }
 
     /**
+     * Set Enable Stats Collection of a media
+     * @param int $mediaId
+     *
+     * @SWG\Put(
+     *  path="/library/setenablestat/{mediaId}",
+     *  operationId="mediaSetEnableStat",
+     *  tags={"library"},
+     *  summary="Enable Stats Collection",
+     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a media.",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option to enable the collection of Media Proof of Play statistics,
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws XiboException
+     */
+
+    function setEnableStat($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $enableStat = $this->getSanitizer()->getString('enableStat');
+
+        $media->enableStat = $enableStat;
+        $media->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('For Media %s Enable Stats Collection is set to %s'), $media->name, __($media->enableStat))
+        ]);
+    }
+
+    /**
+     * Set Enable Stat Form
+     * @param int $mediaId
+     * @throws XiboException
+     */
+    public function setEnableStatForm($mediaId)
+    {
+
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $data = [
+            'media' => $media,
+            'help' => $this->getHelp()->link('Layout', 'EnableStat')
+        ];
+
+        $this->getState()->template = 'library-form-setenablestat';
+        $this->getState()->setData($data);
+    }
+
+    /**
      * Prints out a Table of all media items
      *
      * @SWG\Get(
@@ -515,6 +593,22 @@ class Library extends Base
                 'linkType' => '_self', 'external' => true,
                 'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
+            );
+
+            // Set Enable Stat
+            $media->buttons[] = array(
+                'id' => 'library_button_setenablestat',
+                'url' => $this->urlFor('library.setenablestat.form', ['id' => $media->mediaId]),
+                'text' => __('Enable stats collection?'),
+                'multi-select' => true,
+                'dataAttributes' => array(
+                    array('name' => 'commit-url', 'value' => $this->urlFor('library.setenablestat', ['id' => $media->mediaId])),
+                    array('name' => 'commit-method', 'value' => 'put'),
+                    array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                    array('name' => 'text', 'value' => __('Enable stats collection?')),
+                    array('name' => 'rowtitle', 'value' => $media->name),
+                    ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                )
             );
 
             $media->buttons[] = ['divider' => true];
@@ -810,6 +904,7 @@ class Library extends Base
         $media->duration = $this->getSanitizer()->getInt('duration');
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $media->enableStat = $this->getSanitizer()->getString('enableStat');
 
         // Should we update the media in all layouts?
         if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
@@ -1718,6 +1813,11 @@ class Library extends Base
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         // Set the Owner to user making the Copy
         $media->setOwner($this->getUser()->userId);
+
+        // Set from global setting
+        if ($media->enableStat == null) {
+            $media->enableStat = $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+        }
 
         // Save the new Media
         $media->save();

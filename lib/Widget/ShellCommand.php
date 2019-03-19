@@ -71,6 +71,13 @@ class ShellCommand extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="windowsCommand",
      *      in="formData",
      *      description="Enter a Windows command line compatible command",
@@ -126,6 +133,7 @@ class ShellCommand extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         // Commands
         $windows = $this->getSanitizer()->getString('windowsCommand');

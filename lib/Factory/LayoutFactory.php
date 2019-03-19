@@ -638,6 +638,9 @@ class LayoutFactory extends BaseFactory
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
+        // Get global stat setting of layout to on/off proof of play statistics
+        $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
+
         $this->getLog()->debug('Layout Loaded: ' . $layout);
 
         // Check that the resolution we have in this layout exists, and if not create it.
@@ -746,6 +749,9 @@ class LayoutFactory extends BaseFactory
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
+
+                // Get global stat setting of media to set to on/off/inherit
+                $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 $media->save();
 
                 $newMedia = true;
@@ -977,6 +983,9 @@ class LayoutFactory extends BaseFactory
         foreach ($layout->getWidgets() as $widget) {
             $module = $this->moduleFactory->createWithWidget($widget);
             $widget->calculateDuration($module);
+
+            // Get global stat setting of widget to set to on/off/inherit
+            $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
         if ($fontsAdded) {
@@ -1013,6 +1022,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        campaign.CampaignID, ";
         $select .= "        layout.status, ";
         $select .= "        layout.statusMessage, ";
+        $select .= "        layout.enableStat, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
@@ -1318,6 +1328,7 @@ class LayoutFactory extends BaseFactory
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
             $layout->statusMessage = $row['statusMessage'];
+            $layout->enableStat = $this->getSanitizer()->int($row['enableStat']);
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
 

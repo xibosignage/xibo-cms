@@ -27,6 +27,7 @@ use Slim\Helper\Set;
 use Slim\Middleware;
 use Xibo\Service\LogService;
 use Xibo\Storage\PdoStorageService;
+use Xibo\Storage\MySqlTimeSeriesStore;
 
 /**
  * Class Storage
@@ -84,6 +85,27 @@ class Storage extends Middleware
         // Register the database service
         $container->singleton('store', function($container) {
             return (new PdoStorageService($container->logService))->setConnection();
+        });
+
+        // Register the statistics database service
+        $container->singleton('timeSeriesStore', function($container) {
+            if ($container->configService->timeSeriesStore == null) {
+                return (new MySqlTimeSeriesStore())
+                    ->setDependencies($container->logService)
+                    ->setStore($container->store);
+            } else {
+                $timeSeriesStore = $container->configService->timeSeriesStore;
+                $timeSeriesStore = $timeSeriesStore();
+
+                return $timeSeriesStore->setDependencies(
+                    $container->logService,
+                    $container->mediaFactory,
+                    $container->widgetFactory,
+                    $container->layoutFactory,
+                    $container->displayFactory,
+                    $container->displayGroupFactory
+                );
+            }
         });
     }
 }

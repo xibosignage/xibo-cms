@@ -393,6 +393,18 @@
             });
         }
 
+        function setEnableStatMultiSelectFormOpen(dialog) {
+            var $input = $('<input type=checkbox id="enableStat" name="enableStat"> {% trans %} Enable Stats Collection? {% endtrans %} </input>');
+            var $helpText = $('<span class="help-block">Check to enable the collection of Proof of Play statistics for the selected items. </span>');
+
+            $input.on('change', function() {
+                dialog.data().commitData = {enableStat: $(this).val()};
+            });
+
+            $(dialog).find('.modal-body').append($input);
+            $(dialog).find('.modal-body').append($helpText);
+        }
+
     </script>
 {% endblock %}
 

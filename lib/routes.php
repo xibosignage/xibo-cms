@@ -115,6 +115,7 @@ $app->put('/layout/publish/:id', '\Xibo\Controller\Layout:publish')->name('layou
 $app->put('/layout/discard/:id', '\Xibo\Controller\Layout:discard')->name('layout.discard');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
 $app->put('/layout/unretire/:id', '\Xibo\Controller\Layout:unretire')->name('layout.unretire');
+$app->put('/layout/setenablestat/:id', '\Xibo\Controller\Layout:setEnableStat')->name('layout.setenablestat');
 $app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->name('layout.status');
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
@@ -215,6 +216,7 @@ $app->get('/library/usage/layouts/:id', '\Xibo\Controller\Library:usageLayouts')
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
+$app->put('/library/setenablestat/:id', '\Xibo\Controller\Library:setEnableStat')->name('library.setenablestat');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 $app->post('/library/copy/:id', '\Xibo\Controller\Library:copy')->name('library.copy');
@@ -323,6 +325,7 @@ $app->get('/rss/:psk', '\Xibo\Controller\DataSetRss:feed')->name('dataSet.rss.fe
  */
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
 $app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
+$app->get('/stats/summaryReport', '\Xibo\Controller\Stats:summaryReportData')->name('stats.summaryReport.data');
 $app->get('/stats/data/timeDisconnected', '\Xibo\Controller\Stats:timeDisconnectedGrid')->name('stats.timeDisconnected.search');
 $app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export');
 

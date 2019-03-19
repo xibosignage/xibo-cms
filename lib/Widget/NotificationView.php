@@ -76,6 +76,13 @@ class NotificationView extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="age",
      *      in="formData",
      *      description="The maximum notification age in minutes - 0 for all",
@@ -141,6 +148,7 @@ class NotificationView extends ModuleWidget
         $this->setOption('effect', $this->getSanitizer()->getString('effect'));
         $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
         $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
         $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null));        
         $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
