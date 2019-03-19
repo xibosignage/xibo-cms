@@ -343,6 +343,7 @@ $app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view
 $app->get('/stats/proofofplay/view', '\Xibo\Controller\Stats:displayProofOfPlayPage')->name('stats.proofofplay.view');
 $app->get('/stats/library/view', '\Xibo\Controller\Stats:displayLibraryPage')->name('stats.library.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');
+$app->get('/stats/summaryreport/view', '\Xibo\Controller\Stats:summaryReportForm')->name('stats.summaryReport.form');
 $app->get('/stats/library', '\Xibo\Controller\Stats:libraryUsageGrid')->name('stats.library.grid');
 
 //

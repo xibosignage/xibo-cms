@@ -14,8 +14,18 @@
         <li class="btn btn-primary btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("stats.export.form") }}"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Export" %}</a></li>
         <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
     </ul>
+    <div class="proof-of-play-report-div pull-right btn-group">
+        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <span class="fa fa-caret-down"></span>
+            {% trans "Reports" %}
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a href="{{ urlFor("stats.summaryReport.form") }}">{% trans "Daily summary" %}</a>
+            </li>
+        </ul>
+    </div>
 {% endblock %}
-
 
 {% block pageContent %}
 

@@ -83,7 +83,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
               display.Display,
               layout.Layout,
               IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
-              COUNT(stat.count) AS NumberPlays,
+              SUM(stat.count) AS NumberPlays,
               SUM(stat.duration) AS Duration,
               MIN(start) AS MinStart,
               MAX(end) AS MaxEnd,
