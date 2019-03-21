@@ -141,6 +141,7 @@ This is the template for the campaign page
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#campaigns_wrapper').find('.col-sm-6').eq(1));
 
         // Callback for the media form
         // Fired when the media form opens

@@ -231,6 +231,7 @@
             });
         });
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-sm-6').eq(1));
 
         function dataSetFormOpen(dialog) {
             // Bind the test button
