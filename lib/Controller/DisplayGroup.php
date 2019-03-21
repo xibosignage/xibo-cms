@@ -266,7 +266,17 @@ class DisplayGroup extends Base
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_delete',
                     'url' => $this->urlFor('displayGroup.delete.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('displayGroup.delete', ['id' => $group->displayGroupId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'displaygroup_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $group->displayGroup),
+                        ['name' => 'form-callback', 'value' => 'setDeleteMultiSelectFormOpen'],
+                        ['name' => 'form-confirm', 'value' => true]
+                    )
                 );
             }
 

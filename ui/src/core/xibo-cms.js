@@ -1108,6 +1108,9 @@ function XiboMultiSelectFormRender(button) {
             if (matches.length === 1) {
                 // this is the first button which matches, so use the form open hook if one has been provided.
                 formOpenCallback = $(this).data().formCallback;
+
+                // If form needs confirmation
+                formConfirm = $(this).data().formConfirm;
             }
         }
     });
@@ -1141,6 +1144,12 @@ function XiboMultiSelectFormRender(button) {
 
     if (matches.length > 0) {
         extrabutton = $('<button class="btn">').html(translations.save).addClass('btn-primary save-button');
+
+        // If form needs confirmation, disable save button
+        if(formConfirm) {
+            extrabutton.prop('disabled', true);
+        }
+
         extrabutton.click(function() {
 
             $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -1380,6 +1389,14 @@ function XiboSubmitResponse(response, form) {
             bootbox.hideAll();
         }
         else {
+            // If we have reset on apply
+            if($(form).data("applyCallback")) {
+                eval($(form).data("applyCallback"))(form);
+            }
+
+            // Remove form errors
+            $(form).closest(".modal-dialog").find(".form-error").remove();
+
             // Focus in the first input
             $('input[type=text]', form).eq(0).focus();
         }

@@ -311,3 +311,21 @@ Cypress.Commands.add('createCampaign', function(name) {
         return res.body.campaignId;
     });
 });
+
+// Display Group
+Cypress.Commands.add('createDisplaygroup', function(name) {
+
+    cy.request({
+        method: 'POST',
+        url: '/api/displaygroup',
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        },
+        body: {
+            displayGroup: name
+        }
+    }).then((res) => {
+        return res.body.displaygroupId;
+    });
+});

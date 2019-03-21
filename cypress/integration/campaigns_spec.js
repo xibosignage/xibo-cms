@@ -16,32 +16,6 @@ describe('Campaigns', function () {
         cy.visit('/campaign/view');
     });
 
-    after(function() {
-
-        // Delete all test campaigns
-        cy.visit('/campaign/view');
-
-        // Clear filter
-        cy.get('#Filter input[name="name"]')
-            .clear()
-            .type('Cypress Test Campaign');
-
-        // Wait for the filter to make effect
-        cy.wait(2000);
-        cy.wait('@campaignGridLoad');
-
-        if(Cypress.$('#campaigns tbody tr').length > 0) {
-            cy.visit('/campaign/view');
-            // Select rows
-            cy.get('#campaigns tbody tr').click({multiple: true});
-
-            // Delete all
-            cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-            cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click({force: true});
-            cy.get('button.save-button').click({force: true});
-        }
-    });
-
     /**
      * Create a number of layouts
      */
@@ -178,7 +152,7 @@ describe('Campaigns', function () {
         });
     });
 
-    it('search and delete existing campaign', function() {
+    it('searches and delete existing campaign', function() {
 
         // Create a new campaign and then search for it and delete it
         cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
@@ -203,8 +177,39 @@ describe('Campaigns', function () {
             cy.wait('@deleteCampaign');
 
             // Check if campaign is deleted in toast message
-            cy.get('.toast').contains('Deleted Cypress Test Campaign ' + testRun);
+            cy.contains('Deleted Cypress Test Campaign ' + testRun);
         });
     });
 
+    it('selects multiple campaigns and delete them', function() {
+
+        // Create a new campaign and then search for it and delete it
+        cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
+            // Delete all test campaigns
+            cy.visit('/campaign/view');
+
+            // Clear filter and search for text campaigns
+            cy.get('#Filter input[name="name"]')
+                .clear()
+                .type('Cypress Test Campaign');
+
+            // Wait for the filter to make effect
+            cy.wait(3000);
+
+            // Select all
+            cy.get('button[data-toggle="selectAll"]').click();
+            
+            // Delete all
+            cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
+            cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click({force: true});
+
+            // Save button must be visible
+            cy.get('button.save-button').should('be.visible');
+
+            cy.get('button.save-button').click({force: true});
+
+            // Save button should be hidden ( delete done )
+            cy.get('button.save-button').should('not.be.visible');
+        });
+    });
 });

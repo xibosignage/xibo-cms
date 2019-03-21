@@ -150,6 +150,33 @@
         let criteria;
         let criteriaTag;
 
+        function setDeleteMultiSelectFormOpen(dialog) {
+            $(dialog).find('.save-button').prop('disabled', false);
+
+            var $input = $('<input type=checkbox id="confirmDelete" name="confirmDelete"> {% trans %} Check to confirm deletion {% endtrans %} </input>');
+            $input.on('change', function() {
+                $(dialog).find('.save-button').prop('disabled', !$(this).is(':checked'));
+            });
+            $(dialog).find('.modal-body').append($input);
+        }
+
+        function displayGroupAddFormNext() {
+            // Get form
+            var $form = $("#displayGroupAddForm");
+
+            // Set apply and apply reset data
+            $form.data("apply", true);
+            $form.data("applyCallback", 'applyResetCallback');
+
+            // Submit form
+            $form.submit();
+        }
+
+        function applyResetCallback(form) {
+            // Reset form fields
+            $(form).find('#displayGroup').val("");
+        }
+
         function displayGroupFormOpen(dialog) {
             displayTable = null;
 
@@ -160,6 +187,8 @@
             $(dialog).find("input[name=dynamicCriteriaTags]").change(function() {
                 displayGroupQueryDynamicMembers(dialog);
             });
+
+            const $form = $('#displayGroupAddForm');
 
             // First time in there
             displayGroupQueryDynamicMembers(dialog);
