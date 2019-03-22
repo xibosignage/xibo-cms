@@ -18,3 +18,12 @@ import './commands'
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
+
+// Run before every test, to disable User Welcome tour
+before(function() {
+    cy.login();
+
+    cy.visit('/').then(() => {
+        cy.tutorialClose();
+    });
+});

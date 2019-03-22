@@ -55,6 +55,20 @@ Cypress.Commands.add('getAccessToken', function() {
     });
 });
 
+Cypress.Commands.add('tutorialClose', function() {
+
+    var csrf_token = Cypress.$('meta[name="token"]').attr('content');
+
+    // Make the ajax request to hide the user welcome tutorial
+    Cypress.$.ajax({
+        url: '/user/welcome',
+        type: 'PUT',
+        headers: {
+            'X-XSRF-TOKEN': csrf_token
+        }
+    });
+});
+
 Cypress.Commands.add('formRequest', (method, url, formData) => {
 
     return new Promise(function(resolve, reject) {
