@@ -661,29 +661,10 @@ lD.showCheckoutScreen = function() {
 };
 
 /**
- * Layout checkout screen
+ * Layout publish screen
  */
 lD.showPublishScreen = function() {
-
-    bootbox.dialog({
-        title: layoutDesignerTrans.publishTitle + ' ' + lD.layout.name,
-        message: layoutDesignerTrans.publishMessage,
-        buttons: {
-            done: {
-                label: layoutDesignerTrans.publishTitle,
-                className: "btn-primary btn-lg",
-                callback: function(res) {
-
-                    $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
-
-                    lD.publishLayout();
-
-                    // Prevent the modal to close ( close only when chekout layout resolves )
-                    return false;
-                }
-            }
-        }
-    }).attr('data-test', 'publishModal');
+    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')");
 };
 
 /**
@@ -703,7 +684,7 @@ lD.showSaveTemplateScreen = function() {
 /**
  * Load form from the API
  */
-lD.loadFormFromAPI = function(type, id = null) {
+lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null) {
     
     const self = this;
 
@@ -744,7 +725,7 @@ lD.loadFormFromAPI = function(type, id = null) {
                     if(button != 'Cancel') {
                         let buttonType = 'btn-default';
 
-                        if(button === 'Save') {
+                        if(button === 'Save' || button === 'Publish') {
                             buttonType = 'btn-primary';
                         }
 
@@ -780,6 +761,11 @@ lD.loadFormFromAPI = function(type, id = null) {
 
             // Call Xibo Init for this form
             XiboInitialise('#' + dialog.attr('id'));
+
+            if (apiFormCallback != null) {
+                eval(apiFormCallback);
+            }
+
         } else {
 
             // Login Form needed?

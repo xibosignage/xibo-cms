@@ -109,6 +109,14 @@ class LayoutFactory extends BaseFactory
     private $playlistFactory;
 
     /**
+     * @return DateServiceInterface
+     */
+    private function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -465,6 +473,10 @@ class LayoutFactory extends BaseFactory
                 // Widget from/to dates.
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
+
+                // convert the date string to a unix timestamp
+                $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+                $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -1035,6 +1047,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.schemaVersion, ";
         $select .= "        layout.publishedStatusId, ";
         $select .= "        `status`.status AS publishedStatus, ";
+        $select .= "        layout.publishedDate, ";
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1289,6 +1302,11 @@ class LayoutFactory extends BaseFactory
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', 0, $filterBy);
         }
 
+        // publishedDate
+        if ($this->getSanitizer()->getInt('havePublishDate', -1, $filterBy) != -1) {
+            $body .= " AND `layout`.publishedDate IS NOT NULL ";
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -1331,6 +1349,7 @@ class LayoutFactory extends BaseFactory
             $layout->enableStat = $this->getSanitizer()->int($row['enableStat']);
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
+            $layout->publishedDate = $this->getSanitizer()->string($row['publishedDate']);
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

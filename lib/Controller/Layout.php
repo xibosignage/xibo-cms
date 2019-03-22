@@ -1038,6 +1038,10 @@ class Layout extends Base
                     $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
             }
 
+            // Published status, draft with set publishedDate
+            $layout->publishedStatusFuture = __('To be published ');
+            $layout->publishedStatusFailed = __('Publish has failed ');
+
             // Add some buttons for this row
             if ($this->getUser()->checkEditable($layout)) {
                 // Design Button
@@ -2109,6 +2113,20 @@ class Layout extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="publishNow",
+     *      in="formData",
+     *      description="Flag, indicating whether to publish layout now",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="publishDate",
+     *      in="formData",
+     *      description="The date/time at which layout should be published",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -2122,27 +2140,44 @@ class Layout extends Base
     public function publish($layoutId)
     {
         $layout = $this->layoutFactory->getById($layoutId);
+        $publishDate = $this->getSanitizer()->getDate('publishDate');
+        $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
+
+        // if we have publish date update it in database
+        if (isset($publishDate) && !$publishNow) {
+            $layout->setPublishedDate($publishDate);
+        }
 
         // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
         // parent.
-        $draft = $this->layoutFactory->getByParentId($layoutId);
-        $draft->publishDraft();
-        $draft->load();
+        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  $this->getDate()->getLocalDate(null, 'U')) ) {
+            $draft = $this->layoutFactory->getByParentId($layoutId);
+            $draft->publishDraft();
+            $draft->load();
 
-        // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-        // error message
-        $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+            // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+            // error message
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Published %s'), $draft->layout),
-            'data' => $draft
-        ]);
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => sprintf(__('Published %s'), $draft->layout),
+                'data' => $draft
+            ]);
+        } else {
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => sprintf(__('Layout will be published on %s'), $publishDate),
+                'data' => $layout
+            ]);
+        }
     }
 
     /**
