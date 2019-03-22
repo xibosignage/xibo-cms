@@ -1836,32 +1836,29 @@ class DisplayGroup extends Base
     public function copy($displayGroupId)
     {
         // get display group object
-        /** @var \Xibo\Entity\DisplayGroup $displayGroup */
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
         // get an array of assigned displays
-        /** @var Display[] $membersDisplays */
         $membersDisplays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
 
         // get an array of assigned display groups
-        /** @var \Xibo\Entity\DisplayGroup[] $membersDisplayGroups */
         $membersDisplayGroups = $this->displayGroupFactory->getByParentId($displayGroupId);
 
         // get an array of assigned layouts
-        /** @var \Xibo\Entity\Layout[] $assignedLayouts */
         $assignedLayouts = $this->layoutFactory->getByDisplayGroupId($displayGroupId);
 
         // get an array of assigned media files
-        /** @var Media[] $assignedFiles */
         $assignedFiles = $this->mediaFactory->getByDisplayGroupId($displayGroupId);
 
         $copyMembers = $this->getSanitizer()->getCheckbox('copyMembers', 0);
         $copyTags = $this->getSanitizer()->getCheckbox('copyTags', 0);
         $copyAssignments = $this->getSanitizer()->getCheckbox('copyAssignments', 0);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
-            throw new AccessDeniedException();
-        }
+
 
         $new = clone $displayGroup;
 
