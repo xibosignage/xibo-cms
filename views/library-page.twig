@@ -422,7 +422,8 @@
         }
 
         function setDefaultMultiSelectFormOpen(dialog) {
-            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {% trans %} Force delete from any existing layouts, assignments, etc {% endtrans %} </input>');
+            {% set message = 'Force delete from any existing layouts, assignments, etc' %}
+            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {{ message|trans|e }} </input>');
             $input.on('change', function() {
                 dialog.data().commitData = {forceDelete: $(this).val()};
             });
