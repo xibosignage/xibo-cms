@@ -1039,8 +1039,8 @@ class Layout extends Base
             }
 
             // Published status, draft with set publishedDate
-            $layout->publishedStatusFuture = __('To be published ');
-            $layout->publishedStatusFailed = __('Publish has failed ');
+            $layout->publishedStatusFuture = __('Publishing %s');
+            $layout->publishedStatusFailed = __('Publish failed ');
 
             // Add some buttons for this row
             if ($this->getUser()->checkEditable($layout)) {

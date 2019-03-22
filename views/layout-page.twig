@@ -173,7 +173,7 @@
                                 if (differenceMinutes < -5) {
                                     return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
                                 } else {
-                                    return data.publishedStatus.concat(" - ", data.publishedStatusFuture, momentDifference);
+                                    return data.publishedStatus.concat(" - ", data.publishedStatusFuture.replace('%s', momentDifference));
                                 }
                             } else {
                                 return data.publishedStatus;
