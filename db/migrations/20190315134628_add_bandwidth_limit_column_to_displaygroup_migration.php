@@ -31,7 +31,7 @@ class AddBandwidthLimitColumnToDisplaygroupMigration extends AbstractMigration
 
         if (!$displayGroupTable->hasColumn('bandwidthLimit')) {
             $displayGroupTable
-                ->addColumn('bandwidthLimit', 'integer', ['default' => 0, 'null' => true])
+                ->addColumn('bandwidthLimit', 'integer', ['default' => 0, 'null' => false])
                 ->save();
         }
     }
