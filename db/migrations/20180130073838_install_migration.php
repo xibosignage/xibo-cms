@@ -553,11 +553,11 @@ class InstallMigration extends AbstractMigration
         $dataType
             ->addColumn('dataType', 'string', ['limit' => 100])
             ->insert([
-                ['dataType' => 'String'],
-                ['dataType' => 'Number'],
-                ['dataType' => 'Date'],
-                ['dataType' => 'External Image'],
-                ['dataType' => 'Library Image'],
+                ['dataTypeId' => 1, 'dataType' => 'String'],
+                ['dataTypeId' => 2, 'dataType' => 'Number'],
+                ['dataTypeId' => 3, 'dataType' => 'Date'],
+                ['dataTypeId' => 4, 'dataType' => 'External Image'],
+                ['dataTypeId' => 5, 'dataType' => 'Library Image'],
             ])
             ->save();
 
@@ -565,9 +565,9 @@ class InstallMigration extends AbstractMigration
         $dataSetColumnType
             ->addColumn('dataSetColumnType', 'string', ['limit' => 100])
             ->insert([
-                ['dataSetColumnType' => 'Value'],
-                ['dataSetColumnType' => 'Formula'],
-                ['dataSetColumnType' => 'Remote'],
+                ['dataSetColumnTypeId' => 1, 'dataSetColumnType' => 'Value'],
+                ['dataSetColumnTypeId' => 2, 'dataSetColumnType' => 'Formula'],
+                ['dataSetColumnTypeId' => 3, 'dataSetColumnType' => 'Remote'],
             ])
             ->save();
 
