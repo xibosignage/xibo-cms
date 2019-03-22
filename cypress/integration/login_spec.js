@@ -1,8 +1,7 @@
 describe('Login', function() {
 
     beforeEach(function() {
-        cy.logout();
-        cy.visit('/');
+        cy.visit('/logout');
     });
 
     it('should be able to login the default user', function () {

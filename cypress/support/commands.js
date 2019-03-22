@@ -40,13 +40,6 @@ Cypress.Commands.add('login', function() {
     cy.getCookie('PHPSESSID').should('exist');
 });
 
-Cypress.Commands.add('logout', function() {
-    cy.request({
-        method: 'GET',
-        url: '/logout'
-    });
-});
-
 Cypress.Commands.add('getAccessToken', function() {
     cy.request({
         method: 'POST',
