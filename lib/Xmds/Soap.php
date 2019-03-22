@@ -1850,20 +1850,20 @@ class Soap
      * @return bool true if the check passes, false if it fails
      * @throws NotFoundException
      */
-    protected function checkBandwidth($displayId = 0)
+    protected function checkBandwidth($displayId)
     {
         // Uncomment to enable auditing.
         //$this->logProcessor->setDisplay(0, true);
 
-        $display = $this->displayFactory->getById($displayId);
+        $this->display = $this->displayFactory->getById($displayId);
 
         $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
-        $displayBandwidthLimit = $display->bandwidthLimit;
+        $displayBandwidthLimit = $this->display->bandwidthLimit;
 
         try {
             $bandwidthUsage = 0;
 
-            if ($this->bandwidthFactory->isBandwidthExceeded($xmdsLimit, $bandwidthUsage) || $this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
+            if ($this->bandwidthFactory->isBandwidthExceeded($xmdsLimit, $bandwidthUsage)) {
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __('Bandwidth allowance exceeded');
@@ -1872,6 +1872,29 @@ class Soap
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
 
                     $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsage)));
+
+                    $notification = $this->notificationFactory->createSystemNotification(
+                        $subject,
+                        $body,
+                        $this->dateService->parse()
+                    );
+
+                    $notification->save();
+
+                    $this->getLog()->critical($subject);
+                }
+
+                return false;
+
+            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
+                // Bandwidth Exceeded
+                // Create a notification if we don't already have one today for this display.
+                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit ', $this->display->displayId));
+                $date = $this->dateService->parse();
+
+                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                    $body = __(sprintf('Display bandwidth limit %s exceeded. Used %s for Display Id %d', ByteFormatter::format($displayBandwidthLimit * 1024), ByteFormatter::format($bandwidthUsage), $this->display->displayId));
 
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
