@@ -24,6 +24,12 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
+    </ul>
+{% endblock %}
+
 {% block pageContent %}
 
     <div class="widget">
@@ -191,16 +197,10 @@
             });
         }
 
-        $(document).ready(function() {
-
-            setReport();
-
-            var type = $("#type");
-            var reportFilter = $("#reportFilter");
-            var groupByFilter = $("#groupByFilter");
-            var groupByFilterCls = $(".group-by-filter");
+        const checkTestAndApply = function(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect) {
 
             reportFilter.change(function() {
+
                 var value = reportFilter.val();
                 var collectionMonth = [
                     {id: 'byday', description: 'Day'},
@@ -263,33 +263,54 @@
 
             });
 
-            var mediaSelect =$(".media-select");
-            var layoutSelect =$(".layout-select");
-
-            mediaSelect.hide();
-
             type.change(function() {
+
                 var value = type.val();
                 if (value === 'media') {
                     // show media and clear/hide the layout
                     $("#layoutId").val("");
+                    $("#layoutId option").remove();
                     layoutSelect.hide();
                     mediaSelect.show();
 
                 } else if (value === 'layout') {
                     // show layout and clear/hide the media
                     $("#mediaId").val("");
+                    $("#mediaId option").remove();
                     mediaSelect.hide();
                     layoutSelect.show();
                 }
             });
 
+        };
 
+        $(document).ready(function() {
 
+            // Init
+            var type = $("#type");
+            var reportFilter = $("#reportFilter");
+            var groupByFilter = $("#groupByFilter");
+            var groupByFilterCls = $(".group-by-filter");
+            var mediaSelect =$(".media-select");
+            var layoutSelect =$(".layout-select");
 
+            type.val('layout');
+            mediaSelect.hide();
+
+            reportFilter.val('');
+            groupByFilter.val('byday');
+
+            checkTestAndApply(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect);
+            setReport();
 
             // Bind to form change
-            $("#summaryReport input, #summaryReport select").change(function() {
+            $("#summaryReport").on('change', function() {
+                checkTestAndApply(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect);
+                setReport();
+            });
+
+            $("#refreshGrid").click(function () {
+                checkTestAndApply(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect);
                 setReport();
             });
         });

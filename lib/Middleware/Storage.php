@@ -99,6 +99,7 @@ class Storage extends Middleware
 
                 return $timeSeriesStore->setDependencies(
                     $container->logService,
+                    $container->dateService,
                     $container->mediaFactory,
                     $container->widgetFactory,
                     $container->layoutFactory,
