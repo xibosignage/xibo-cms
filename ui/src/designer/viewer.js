@@ -430,6 +430,8 @@ Viewer.prototype.closeInlineEditorContent = function() {
 
     // Update state
     this.inlineEditorState = 1;
+
+    formHelpers.destroyCKEditor('viewer_' + lD.propertiesPanel.inlineEditorId);
 };
 
 /**
