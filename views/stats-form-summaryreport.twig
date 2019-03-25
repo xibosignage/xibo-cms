@@ -197,93 +197,6 @@
             });
         }
 
-        const checkTestAndApply = function(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect) {
-
-            reportFilter.change(function() {
-
-                var value = reportFilter.val();
-                var collectionMonth = [
-                    {id: 'byday', description: 'Day'},
-                    {id: 'byweek', description: 'Week'},
-                ];
-                var collectionYear = [
-                    {id: 'byday', description: 'Day'},
-                    {id: 'byweek', description: 'Week'},
-                    {id: 'bymonth', description: 'Month'}
-                ];
-
-                if (value === '' || value === undefined) {
-                    // show the from date and to date
-                    $(".stats-from-dt").show();
-                    $(".stats-to-dt").show();
-
-                    $("#groupByFilter option").remove();
-                    groupByFilterCls.show();
-                    $.each(collectionYear, function(index, item) {
-                        groupByFilter.append(
-                            $("<option></option>")
-                                .text(item.description)
-                                .val(item.id)
-                        );
-                    });
-
-                } else {
-                    // hide the from date and to date
-                    $(".stats-from-dt").hide();
-                    $(".stats-to-dt").hide();
-
-                    // Group by filter
-                    $("#groupByFilter option").remove();
-                    groupByFilterCls.show();
-
-                    if (value === 'thismonth' || value === 'lastmonth') {
-
-                        $.each(collectionMonth, function(index, item) {
-                            groupByFilter.append(
-                                $("<option></option>")
-                                    .text(item.description)
-                                    .val(item.id)
-                            );
-                        });
-
-                    } else if (value === 'thisyear' || value === 'lastyear') {
-                        $.each(collectionYear, function(index, item) {
-                            groupByFilter.append(
-                                $("<option></option>")
-                                    .text(item.description)
-                                    .val(item.id)
-                            );
-                        });
-                        groupByFilter.val('bymonth'); //by default
-
-                    } else {
-                        groupByFilterCls.hide();
-                    }
-                }
-
-            });
-
-            type.change(function() {
-
-                var value = type.val();
-                if (value === 'media') {
-                    // show media and clear/hide the layout
-                    $("#layoutId").val("");
-                    $("#layoutId option").remove();
-                    layoutSelect.hide();
-                    mediaSelect.show();
-
-                } else if (value === 'layout') {
-                    // show layout and clear/hide the media
-                    $("#mediaId").val("");
-                    $("#mediaId option").remove();
-                    mediaSelect.hide();
-                    layoutSelect.show();
-                }
-            });
-
-        };
-
         $(document).ready(function() {
 
             // Init
@@ -294,23 +207,110 @@
             var mediaSelect =$(".media-select");
             var layoutSelect =$(".layout-select");
 
+            const checkFilterAndApply = function() {
+
+                reportFilter.off('change').change( function() {
+
+                    var value = reportFilter.val();
+                    var collectionMonth = [
+                        {id: 'byday', description: 'Day'},
+                        {id: 'byweek', description: 'Week'},
+                    ];
+                    var collectionYear = [
+                        {id: 'byday', description: 'Day'},
+                        {id: 'byweek', description: 'Week'},
+                        {id: 'bymonth', description: 'Month'}
+                    ];
+
+                    if (value === '' || value === undefined) {
+                        // show the from date and to date
+                        $(".stats-from-dt").show();
+                        $(".stats-to-dt").show();
+
+                        $("#groupByFilter option").remove();
+                        groupByFilterCls.show();
+                        $.each(collectionYear, function(index, item) {
+                            groupByFilter.append(
+                                $("<option></option>")
+                                    .text(item.description)
+                                    .val(item.id)
+                            );
+                        });
+
+                    } else {
+                        // hide the from date and to date
+                        $(".stats-from-dt").hide();
+                        $(".stats-to-dt").hide();
+
+                        // Group by filter
+                        $("#groupByFilter option").remove();
+                        groupByFilterCls.show();
+
+                        if (value === 'thismonth' || value === 'lastmonth') {
+
+                            $.each(collectionMonth, function(index, item) {
+                                groupByFilter.append(
+                                    $("<option></option>")
+                                        .text(item.description)
+                                        .val(item.id)
+                                );
+                            });
+
+                        } else if (value === 'thisyear' || value === 'lastyear') {
+                            $.each(collectionYear, function(index, item) {
+                                groupByFilter.append(
+                                    $("<option></option>")
+                                        .text(item.description)
+                                        .val(item.id)
+                                );
+                            });
+                            groupByFilter.val('bymonth'); //by default
+
+                        } else {
+                            groupByFilterCls.hide();
+                        }
+                    }
+
+                });
+
+                type.off('change').change( function() {
+
+                    var value = type.val();
+                    if (value === 'media') {
+                        // show media and clear/hide the layout
+                        $("#layoutId").val("");
+                        $("#layoutId option").remove();
+                        layoutSelect.hide();
+                        mediaSelect.show();
+
+                    } else if (value === 'layout') {
+                        // show layout and clear/hide the media
+                        $("#mediaId").val("");
+                        $("#mediaId option").remove();
+                        mediaSelect.hide();
+                        layoutSelect.show();
+                    }
+                });
+
+            };
+
             type.val('layout');
             mediaSelect.hide();
 
             reportFilter.val('');
             groupByFilter.val('byday');
 
-            checkTestAndApply(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect);
+            checkFilterAndApply();
             setReport();
 
             // Bind to form change
             $("#summaryReport").on('change', function() {
-                checkTestAndApply(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect);
+                checkFilterAndApply();
                 setReport();
             });
 
             $("#refreshGrid").click(function () {
-                checkTestAndApply(reportFilter, type, groupByFilter, groupByFilterCls, mediaSelect, layoutSelect);
+                checkFilterAndApply();
                 setReport();
             });
         });

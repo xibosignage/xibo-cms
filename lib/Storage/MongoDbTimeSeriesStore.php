@@ -647,6 +647,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $period_end = $lastdaylastyear;
             }
 
+            // Type filter
+            if (($type == 'layout') && ($layoutId != '')) {
+                $matchId = [
+                    '$eq' => [ '$layoutId', $layoutId ]
+                ];
+            } elseif (($type == 'media') && ($mediaId != '')) {
+                $matchId = [
+                    '$eq' => [ '$mediaId', $mediaId ]
+                ];
+            }
+
             // GROUP BY
             if ($groupByFilter == 'byweek') {
                 $groupBy = [
@@ -849,9 +860,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                                                 // match media id is 926
                                                 // stat.start < $period_end AND stat.end > $period_start
-                                                [
-                                                    '$eq' => [ '$mediaId', $mediaId ]
-                                                ],
+                                                $matchId,
 
                                                 // display ids
                                                 [
