@@ -42,12 +42,12 @@
                             {% set title %}{% trans "Filter" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
-                            {% set thisweek %}{% trans "Thisweek" %}{% endset %}
-                            {% set thismonth %}{% trans "Thismonth" %}{% endset %}
-                            {% set thisyear %}{% trans "Thisyear" %}{% endset %}
-                            {% set lastweek %}{% trans "Lastweek" %}{% endset %}
-                            {% set lastmonth %}{% trans "Lastmonth" %}{% endset %}
-                            {% set lastyear %}{% trans "Lastyear" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
                             {% set options = [
                                 { filterName: "", reportFilter: null },
                                 { filterName: "today", reportFilter: today },
@@ -158,13 +158,13 @@
                         data: {
                             labels: response.extra.labels,
                             datasets: [{
-                                label: 'Total duration',
+                                label: "{% trans "Total duration" %}",
                                 yAxisID: 'Duration',
                                 backgroundColor: response.extra.backgroundColor,
                                 data: response.extra.durationData,
                             },
                                 {
-                                    label: 'Total count',
+                                    label: "{% trans "Total count" %}",
                                     yAxisID: 'Count',
                                     borderColor: response.extra.borderColor,
                                     data: response.extra.countData,
@@ -213,13 +213,13 @@
 
                     var value = reportFilter.val();
                     var collectionMonth = [
-                        {id: 'byday', description: 'Day'},
-                        {id: 'byweek', description: 'Week'},
+                        {id: 'byday', description: "{% trans "Day" %}"},
+                        {id: 'byweek', description: "{% trans "Week" %}"},
                     ];
                     var collectionYear = [
-                        {id: 'byday', description: 'Day'},
-                        {id: 'byweek', description: 'Week'},
-                        {id: 'bymonth', description: 'Month'}
+                        {id: 'byday', description: "{% trans "Day" %}"},
+                        {id: 'byweek', description: "{% trans "Week" %}"},
+                        {id: 'bymonth', description: "{% trans "Month" %}"}
                     ];
 
                     if (value === '' || value === undefined) {
