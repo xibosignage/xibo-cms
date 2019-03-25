@@ -211,15 +211,6 @@ class Campaign extends Base
 
                 $campaign->buttons[] = ['divider' => true];
 
-                // Assign Layouts
-                $campaign->buttons[] = array(
-                    'id' => 'campaign_button_layouts',
-                    'url' => $this->urlFor('campaign.layouts.form', ['id' => $campaign->campaignId]),
-                    'text' => __('Layouts')
-                );
-
-                $campaign->buttons[] = ['divider' => true];
-
                 // Edit the Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_edit',
@@ -270,8 +261,12 @@ class Campaign extends Base
      */
     public function addForm()
     {
+        // Load layouts
+        $layouts = [];
+
         $this->getState()->template = 'campaign-form-add';
         $this->getState()->setData([
+            'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Add')
         ]);
     }
@@ -315,6 +310,9 @@ class Campaign extends Base
             $permission->save();
         }
 
+        // Assign layouts
+        $this->assignLayout($campaign->campaignId);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -335,9 +333,26 @@ class Campaign extends Base
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
+        // Load layouts
+        $layouts = [];
+        foreach ($this->layoutFactory->getByCampaignId($campaignId, false) as $layout) {
+            if (!$this->getUser()->checkViewable($layout)) {
+                // Hide all layout details from the user
+                $emptyLayout = $this->layoutFactory->createEmpty();
+                $emptyLayout->layoutId = $layout->layoutId;
+                $emptyLayout->layout = __('Layout');
+                $emptyLayout->locked = true;
+
+                $layouts[] = $emptyLayout;
+            } else {
+                $layouts[] = $layout;
+            }
+        }
+
         $this->getState()->template = 'campaign-form-edit';
         $this->getState()->setData([
             'campaign' => $campaign,
+            'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Edit')
         ]);
     }
@@ -385,6 +400,9 @@ class Campaign extends Base
         $campaign->save([
             'saveTags' => true
         ]);
+
+        // Assign layouts
+        $this->assignLayout($campaign->campaignId);
 
         // Return
         $this->getState()->hydrate([

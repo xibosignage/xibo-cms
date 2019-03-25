@@ -50,6 +50,7 @@
                                 { name: "data-placeholder--value", value: "" },
                                 { name: "data-search-url", value: urlFor("display.search") },
                                 { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
                                 { name: "data-text-property", value: "display" }
                             ] %}
@@ -75,6 +76,7 @@
                                 { name: "data-placeholder--value", value: "" },
                                 { name: "data-search-url", value: urlFor("library.search") },
                                 { name: "data-search-term", value: "media" },
+                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "mediaId" },
                                 { name: "data-text-property", value: "name" }
                             ] %}
@@ -216,6 +218,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#stats_wrapper').find('.col-sm-6').eq(1));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();

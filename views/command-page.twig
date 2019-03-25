@@ -105,5 +105,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#commands_wrapper').find('.col-sm-6').eq(1));
     </script>
 {% endblock %}

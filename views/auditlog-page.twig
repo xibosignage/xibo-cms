@@ -183,6 +183,7 @@
                 });
             });
             table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#logs_wrapper').find('.col-sm-6').eq(1));
 
             $("#refreshLog").click(function () {
                 table.ajax.reload();

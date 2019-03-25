@@ -4,7 +4,7 @@
         <select class="form-control subPlaylistSelect" name="subPlaylistId[]">
             <option value=""></option>
             {{#each playlists}}
-                <option value="{{ playlistId }}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
+                <option value="{{ playlistId }}" data-tags="{{tags}}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
             {{/each}}
         </select>
     </div>

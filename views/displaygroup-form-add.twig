@@ -17,7 +17,8 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#displayGroupAddForm").submit()
+    {% trans "Next" %}, displayGroupAddFormNext()
+    {% trans "Save" %}, $("#displayGroupAddForm").submit();
 {% endblock %}
 
 {% block formFieldActions %}

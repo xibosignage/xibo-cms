@@ -1,4 +1,9 @@
 describe('Unauthenticated CMS access', function () {
+
+    beforeEach(function() {
+        cy.visit('/logout');
+    });
+
     it('should visit the login page and check the version', function () {
         cy.visit('/');
 

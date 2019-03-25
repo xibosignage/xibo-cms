@@ -418,7 +418,7 @@
             console.log('Multi-select form opened for default layout');
 
             // Inject a list of layouts into the form, in a drop down.
-            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ urlFor("layout.search") }}" data-search-term="layout" data-id-property="layoutId" data-text-property="layout">');
+            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ urlFor("layout.search") }}" data-search-term="layout" data-search-term-tags="tags" data-id-property="layoutId" data-text-property="layout">');
             $select.on('change', function() {
                 console.log('Setting commit data to ' + $(this).val());
                 dialog.data().commitData = {layoutId: $(this).val()};
