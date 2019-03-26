@@ -76,7 +76,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date = null, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null, $displayGroupFactory = null)
     {
         $this->log = $log;
         $this->dateService = $date;
@@ -524,13 +524,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getDailySummaryReport($displayIds, $diff_in_days, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    public function getDailySummaryReport($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
         if ( (($type == 'media') && ($mediaId != '')) ||
             (($type == 'layout') && ($layoutId != '')) ) {
 
-            $fromDt = $this->dateService->parse($fromDt)->format('Y-m-d 00:00:00');
-            $toDt = $this->dateService->parse($toDt)->addDay()->format('Y-m-d 00:00:00');// added a day
+            $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('Y-m-d H:i:s');;
+            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
 
             $yesterday = $this->dateService->parse()->startOfDay()->subDay()->format('Y-m-d H:i:s');
             $today = $this->dateService->parse()->startOfDay()->format('Y-m-d H:i:s');
@@ -557,10 +557,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if ($reportFilter == '') {
 
                 $hour = 24;
-                $input = range(0, $diff_in_days);
+                $input = range(0, $diffInDays);
 
-                $period_start = $fromDt;
-                $period_end = $toDt;
+                $periodStart = $fromDt;
+                $periodEnd = $toDt;
             }
 
             // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
@@ -570,8 +570,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 1;
                 $input = range(0, 23);
 
-                $period_start = $today;
-                $period_end = $nextday;
+                $periodStart = $today;
+                $periodEnd = $nextday;
             }
 
             // where start is less than last hour of the day + 1 hour (i.e., today)
@@ -581,8 +581,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 1;
                 $input = range(0, 23);
 
-                $period_start = $yesterday;
-                $period_end = $today;
+                $periodStart = $yesterday;
+                $periodEnd = $today;
             }
 
             // where start is less than last day of the week
@@ -592,8 +592,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 24;
                 $input = range(0, 6);
 
-                $period_start = $firstdaythisweek;
-                $period_end = $lastdaythisweek;
+                $periodStart = $firstdaythisweek;
+                $periodEnd = $lastdaythisweek;
             }
 
             // where start is less than last day of the week
@@ -603,8 +603,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 24;
                 $input = range(0, 6);
 
-                $period_start = $firstdaylastweek;
-                $period_end = $lastdaylastweek;
+                $periodStart = $firstdaylastweek;
+                $periodEnd = $lastdaylastweek;
             }
 
             // where start is less than last day of the month + 1 day
@@ -613,8 +613,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 $hour = 24;
                 $input = range(0, 30);
-                $period_start = $firstdaythismonth;
-                $period_end = $lastdaythismonth;
+                $periodStart = $firstdaythismonth;
+                $periodEnd = $lastdaythismonth;
             }
 
             // where start is less than last day of the month + 1 day
@@ -623,8 +623,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 $hour = 24;
                 $input = range(0, 30);
-                $period_start = $firstdaylastmonth;
-                $period_end = $lastdaylastmonth;
+                $periodStart = $firstdaylastmonth;
+                $periodEnd = $lastdaylastmonth;
             }
 
             // where start is less than last day of the year + 1 day
@@ -633,8 +633,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 $hour = 24;
                 $input = range(0, 365);
-                $period_start = $firstdaythisyear;
-                $period_end = $lastdaythisyear;
+                $periodStart = $firstdaythisyear;
+                $periodEnd = $lastdaythisyear;
             }
 
             // where start is less than last day of the year + 1 day
@@ -643,8 +643,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 $hour = 24;
                 $input = range(0, 365);
-                $period_start = $firstdaylastyear;
-                $period_end = $lastdaylastyear;
+                $periodStart = $firstdaylastyear;
+                $periodEnd = $lastdaylastyear;
             }
 
             // Type filter
@@ -663,7 +663,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $groupBy = [
                     'yearWeek' => '$yearWeek',
                 ];
-                $sort =  [ 'period_start_date' => 1 ];
+                $sort =  [ 'periodStartDate' => 1 ];
 
             } elseif ($groupByFilter == 'bymonth') {
 
@@ -684,7 +684,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             } else {
                 $groupBy = [
-                    'period_start' => '$period_start'
+                    'periodStart' => '$periodStart'
                 ];
                 $sort =  [ '_id' => 1 ];
             }
@@ -727,7 +727,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                         'numberId' => '$$number',
                                         'start' => [
                                             '$add' => [
-                                                ['$dateFromString' => ['dateString'=> $period_start]],
+                                                ['$dateFromString' => ['dateString'=> $periodStart]],
                                                 [
                                                     '$multiply' => [
                                                         $hour*3600000,
@@ -740,7 +740,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                             '$add' => [
                                                 [
                                                     '$add' => [
-                                                        ['$dateFromString' => ['dateString'=> $period_start]],
+                                                        ['$dateFromString' => ['dateString'=> $periodStart]],
                                                         [
                                                             '$multiply' => [
                                                                 $hour*3600000,
@@ -763,18 +763,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         '$unwind' => '$periods'
                     ],
 
-                    // merge the periods with _id
-                    [
-                        '$project' => [
-                            'periods' => [
-                                '$mergeObjects' => [
-                                    '$_id',
-                                    '$periods'
-                                ]
-                            ]
-                        ]
-                    ],
-
                     // replace the root to eliminate _id and get only periods
                     [
                         '$replaceRoot' => [
@@ -782,35 +770,35 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         ]
                     ],
 
-                    // project period_start and period_end
+                    // project periodStart and periodEnd
                     [
                         '$project' => [
-                            'period_start' => '$start',
-                            'period_end' => '$end'
+                            'periodStart' => '$start',
+                            'periodEnd' => '$end'
                         ]
                     ],
 
-                    // format period_start and period_end as string
+                    // format periodStart and periodEnd as string
                     // get month number, year and week to group by later
                     [
                         '$project' => [
-                            'period_start' => [
+                            'periodStart' => [
                                 '$dateToString' => [
                                     'format' => '%Y-%m-%d %H:%M:%S',
-                                    'date' => '$period_start'
+                                    'date' => '$periodStart'
                                 ]
                             ],
-                            'period_end' => [
+                            'periodEnd' => [
                                 '$dateToString' => [
                                     'format' => '%Y-%m-%d %H:%M:%S',
-                                    'date' => '$period_end'
+                                    'date' => '$periodEnd'
                                 ]
                             ],
 
                             // group by
-                            'monthNo' => ['$month' => '$period_start'],
-                            'yearDate' => ['$isoWeekYear' => '$period_start'],
-                            'yearWeek' => ['$isoWeek' => '$period_start']
+                            'monthNo' => ['$month' => '$periodStart'],
+                            'yearDate' => ['$isoWeekYear' => '$periodStart'],
+                            'yearWeek' => ['$isoWeek' => '$periodStart']
                         ]
                     ],
 
@@ -822,11 +810,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // for a year 366 records are generated
                     [
                         '$match' => [
-                            'period_start' =>  [
-                                '$gte' => $period_start
+                            'periodStart' =>  [
+                                '$gte' => $periodStart
                             ],
-                            'period_end' => [
-                                '$lte' => $period_end
+                            'periodEnd' => [
+                                '$lte' => $periodEnd
                             ],
                         ]
                     ],
@@ -841,14 +829,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         '$lookup' => [
                             'from' => 'stat',
                             'let' => [
-                                'period_start' => [
+                                'periodStart' => [
                                     '$dateFromString' => [
-                                        'dateString' => '$period_start'
+                                        'dateString' => '$periodStart'
                                     ]
                                 ],
-                                'period_end' => [
+                                'periodEnd' => [
                                     '$dateFromString' => [
-                                        'dateString' => '$period_end'
+                                        'dateString' => '$periodEnd'
                                     ]
                                 ]
                             ],
@@ -859,7 +847,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                             '$and' => [
 
                                                 // match media id is 926
-                                                // stat.start < $period_end AND stat.end > $period_start
+                                                // stat.start < $periodEnd AND stat.end > $periodStart
                                                 $matchId,
 
                                                 // display ids
@@ -875,14 +863,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                                         '$dateFromString' => [
                                                             'dateString' => '$start'
                                                         ]
-                                                    ], ['$dateFromString' => ['dateString'=> $period_end]] ]
+                                                    ], ['$dateFromString' => ['dateString'=> $periodEnd]] ]
                                                 ],
                                                 [
                                                     '$gt' => [ [
                                                         '$dateFromString' => [
                                                             'dateString' => '$end'
                                                         ]
-                                                    ], ['$dateFromString' => ['dateString'=> $period_start]]  ]
+                                                    ], ['$dateFromString' => ['dateString'=> $periodStart]]  ]
                                                 ],
 
                                                 // records that are matched with the period data
@@ -891,14 +879,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                                         '$dateFromString' => [
                                                             'dateString' => '$start'
                                                         ]
-                                                    ], '$$period_end' ]
+                                                    ], '$$periodEnd' ]
                                                 ],
                                                 [
                                                     '$gt' => [ [
                                                         '$dateFromString' => [
                                                             'dateString' => '$end'
                                                         ]
-                                                    ], '$$period_start' ]
+                                                    ], '$$periodStart' ]
                                                 ]
                                             ]
                                         ]
@@ -936,10 +924,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                         'stat_start' => '$start',
                                         'stat_end' => '$end',
                                         'actualStart' => [
-                                            '$max' => [ '$start', '$$period_start' ]
+                                            '$max' => [ '$start', '$$periodStart' ]
                                         ],
                                         'actualEnd' => [
-                                            '$min' => [ '$end', '$$period_end' ]
+                                            '$min' => [ '$end', '$$periodEnd' ]
                                         ],
                                         'actualDiff' => [
                                             '$min' => [
@@ -948,8 +936,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                                     '$divide' => [
                                                         [
                                                             '$subtract' => [
-                                                                ['$min' => [ '$end', '$$period_end' ]],
-                                                                ['$max' => [ '$start', '$$period_start' ]]
+                                                                ['$min' => [ '$end', '$$periodEnd' ]],
+                                                                ['$max' => [ '$start', '$$periodStart' ]]
                                                             ]
                                                         ], 1000
                                                     ]
@@ -971,8 +959,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         '$group' => [
                             '_id' => $groupBy,
 
-                            // keep period_start which is a string
-                            'start' => ['$first' => '$period_start'],
+                            // keep periodStart which is a string
+                            'start' => ['$first' => '$periodStart'],
 
                             // reason for double sum
                             // a single stage pipeline version of an aggregate
@@ -981,11 +969,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                             'NumberPlays' => ['$sum' => ['$sum' => '$statdata.count']],
                             'Duration' => ['$sum' => ['$sum' => '$statdata.actualDiff']],
 
-                            // convert period_start as date that will be used later to get month number, year and week
-                            'period_start_date' => [
+                            // convert periodStart as date that will be used later to get month number, year and week
+                            'periodStartDate' => [
                                 '$first' => [
                                     '$dateFromString' => [
-                                        'dateString' => '$period_start'
+                                        'dateString' => '$periodStart'
                                     ]
                                 ]
                             ],
@@ -1005,23 +993,23 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                             'NumberPlays' => 1,
                             'Duration' => 1,
                             'monthNo' => [
-                                '$month' =>  '$period_start_date'
+                                '$month' =>  '$periodStartDate'
                             ],
                             'yearDate' => [
-                                '$isoWeekYear' =>  '$period_start_date'
+                                '$isoWeekYear' =>  '$periodStartDate'
                             ],
-                            'week_start' => [
+                            'weekStart' => [
                                 '$dateToString' => [
                                     'format' => '%Y-%m-%d 00:00:00',
                                     'date' => [
                                         '$subtract' => [
-                                            '$period_start_date',
+                                            '$periodStartDate',
                                             [
                                                 '$multiply' => [
                                                     [
                                                         '$subtract' => [
                                                             [
-                                                                '$isoDayOfWeek' => '$period_start_date'
+                                                                '$isoDayOfWeek' => '$periodStartDate'
                                                             ], 1
 
                                                         ]
@@ -1032,20 +1020,20 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                     ],
                                 ]
                             ],
-                            'week_end' => [
+                            'weekEnd' => [
                                 '$dateToString' => [
                                     'format' => '%Y-%m-%d 00:00:00',
                                     'date' => [
                                         '$add' => [
                                             [
                                                 '$subtract' => [
-                                                    '$period_start_date',
+                                                    '$periodStartDate',
                                                     [
                                                         '$multiply' => [
                                                             [
                                                                 '$subtract' => [
                                                                     [
-                                                                        '$isoDayOfWeek' => '$period_start_date'
+                                                                        '$isoDayOfWeek' => '$periodStartDate'
                                                                     ], 1
 
                                                                 ]
@@ -1053,7 +1041,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                                         ]
                                                     ]
                                                 ]
-                                            ], 518400000 // add 6 days (86400000 * 6) to get week_end date. e.g. week_start is 2019-03-11 then week_end is 2019-03-17
+                                            ], 518400000 // add 6 days (86400000 * 6) to get weekEnd date. e.g. weekStart is 2019-03-11 then weekEnd is 2019-03-17
                                         ]
                                     ]
                                 ]

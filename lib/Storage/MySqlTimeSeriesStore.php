@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -36,6 +37,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var LogServiceInterface */
     private $log;
 
+    /** @var DateServiceInterface */
+    private $dateService;
+
     /**
      * @inheritdoc
      */
@@ -47,9 +51,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date = null, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null)
+    public function setDependencies($log, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null)
     {
         $this->log = $log;
+        $this->dateService = $date;
         return $this;
     }
 
@@ -408,10 +413,35 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getDailySummaryReport($displayIds, $diff_in_days, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    public function getDailySummaryReport($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
         if ( (($type == 'media') && ($mediaId != '')) ||
             (($type == 'layout') && ($layoutId != '')) ) {
+
+            $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('Y-m-d H:i:s');;
+            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
+
+            $yesterday = $this->dateService->parse()->startOfDay()->subDay()->format('Y-m-d H:i:s');
+            $today = $this->dateService->parse()->startOfDay()->format('Y-m-d H:i:s');
+            $nextday = $this->dateService->parse()->startOfDay()->addDay()->format('Y-m-d H:i:s');
+
+            $firstdaythisweek = $this->dateService->parse()->startOfWeek()->format('Y-m-d H:i:s');
+            $lastdaythisweek = $this->dateService->parse()->endOfWeek()->addSecond()->format('Y-m-d H:i:s'); // added a second
+
+            $firstdaylastweek = $this->dateService->parse()->startOfWeek()->subWeek()->format('Y-m-d H:i:s');
+            $lastdaylastweek = $this->dateService->parse()->endOfWeek()->addSecond()->subWeek()->format('Y-m-d H:i:s'); // added a second
+
+            $firstdaythismonth = $this->dateService->parse()->startOfMonth()->format('Y-m-d H:i:s');
+            $lastdaythismonth = $this->dateService->parse()->endOfMonth()->addSecond()->format('Y-m-d H:i:s'); // added a second
+
+            $firstdaylastmonth = $this->dateService->parse()->startOfMonth()->subMonth()->format('Y-m-d H:i:s');
+            $lastdaylastmonth = $this->dateService->parse()->endOfMonth()->addSecond()->subMonth()->format('Y-m-d H:i:s');
+
+            $firstdaythisyear = $this->dateService->parse()->startOfYear()->format('Y-m-d H:i:s');
+            $lastdaythisyear = $this->dateService->parse()->endOfYear()->addSecond()->format('Y-m-d H:i:s');
+
+            $firstdaylastyear = $this->dateService->parse()->startOfYear()->subYear()->format('Y-m-d H:i:s');
+            $lastdaylastyear = $this->dateService->parse()->endOfYear()->addSecond()->subYear()->format('Y-m-d H:i:s');
 
             // Get data for daily summary chart
             $dbh = $this->store->getConnection();
@@ -419,26 +449,26 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $select = ' 
             
             SELECT 
-                B.week_start,
-                B.week_end,
+                B.weekStart,
+                B.weekEnd,
                 DATE_FORMAT(STR_TO_DATE(MONTH(start), \'%m\'), \'%b\') AS shortMonth, 
                 MONTH(start) as monthNo, 
                 YEAR(start) as yearDate, 
                 start, 
                 SUM(count) as NumberPlays, 
-                CONVERT(SUM(B.actual_diff), SIGNED INTEGER) as Duration  
+                CONVERT(SUM(B.actualDiff), SIGNED INTEGER) as Duration  
             
             FROM (
                     
                 SELECT
                      *,
                     YEARWEEK(periods.start, 3) AS yearWeek,
-                    DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY) as week_start,
-                    DATE_SUB(DATE_ADD(DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY), INTERVAL 1 WEEK), INTERVAL 1 DAY ) as week_end,
+                    DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY) as weekStart,
+                    DATE_SUB(DATE_ADD(DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY), INTERVAL 1 WEEK), INTERVAL 1 DAY ) as weekEnd,
                     
-                    GREATEST(periods.start, stat_start) AS actual_start,
-                    LEAST(periods.end, stat_end) AS actual_end,
-                    LEAST(stat.duration, UNIX_TIMESTAMP(LEAST(periods.end, stat_end)) - UNIX_TIMESTAMP(GREATEST(periods.start, stat_start))) AS actual_diff
+                    GREATEST(periods.start, statStart) AS actualStart,
+                    LEAST(periods.end, statEnd) AS actualEnd,
+                    LEAST(stat.duration, UNIX_TIMESTAMP(LEAST(periods.end, statEnd)) - UNIX_TIMESTAMP(GREATEST(periods.start, statStart))) AS actualDiff
                 FROM
                 ( 
                     SELECT                
@@ -446,168 +476,97 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             ';
 
             if ($reportFilter == '') {
-                $range = $diff_in_days;
+                $range = $diffInDays;
 
                 // START FROM TODATE THEN DECREASE BY ONE DAY TILL FROMDATE
                 $select .= '  
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        \'' . $toDt . '\',
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
+                DATE_SUB(DATE_SUB("'.$toDt.'", INTERVAL 1 DAY), INTERVAL c.number DAY) AS start,
                     
-                DATE_FORMAT(
-                    DATE_ADD(
-                        (DATE_FORMAT(
-                            \'' . $toDt . '\',
-                            \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY),
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_ADD(
+                        DATE_SUB(DATE_SUB("'.$toDt.'", INTERVAL 1 DAY) , INTERVAL c.number DAY), 
+                        INTERVAL 1 DAY) AS end ';
 
             } elseif (($reportFilter == 'today')) {
                 $range = 23;
 
                 // START FROM LASTHOUR OF TODAY THEN DECREASE BY ONE HOUR
                 $select .= '  
-                DATE_FORMAT(
-                    DATE_FORMAT(CURDATE(), \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR, 
-                    \'%Y-%m-%d %H:00:00\') AS start,                    
-                DATE_FORMAT(
-                    DATE_ADD((DATE_FORMAT(CURDATE(), \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR), INTERVAL 1 HOUR), 
-                    \'%Y-%m-%d %H:00:00\') AS end ';
+                DATE_FORMAT("'.$today.'",
+                        \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR AS start,
+                DATE_ADD(DATE_FORMAT("'.$today.'",
+                            \'%Y-%m-%d 23:00:00\'),
+                    INTERVAL 1 HOUR) - INTERVAL c.number HOUR AS end ';
 
             } elseif (($reportFilter == 'yesterday')) {
                 $range = 23;
 
                 // START FROM LASTHOUR OF YESTERDAY THEN DECREASE BY ONE HOUR
                 $select .= '  
-                DATE_FORMAT(
-                    DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR, 
-                    \'%Y-%m-%d %H:00:00\') AS start,
-                DATE_FORMAT(
-                    DATE_ADD((DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR), INTERVAL 1 HOUR),
-                    \'%Y-%m-%d %H:00:00\') AS end ';
-
-            } elseif (($reportFilter == 'lastweek')) {
-                $range = 6;
-
-                // START FROM LASTDAY OF LASTWEEK THEN DECREASE BY ONE DAY
-                $select .= '                    
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        DATE_SUB(
-                            DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY),
-                            INTERVAL 1 DAY),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
-                    
-                DATE_FORMAT(
-                    DATE_ADD(
-                        (DATE_FORMAT(
-                            DATE_SUB(
-                                DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY),
-                                INTERVAL 1 DAY),
-                            \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY),
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_FORMAT("'.$yesterday.'",
+                        \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR AS start,
+                DATE_ADD(DATE_FORMAT("'.$yesterday.'",
+                            \'%Y-%m-%d 23:00:00\'),
+                    INTERVAL 1 HOUR) - INTERVAL c.number HOUR AS end ';
 
             } elseif (($reportFilter == 'thisweek')) {
                 $range = 6;
 
-                // START FROM LASTDAY OF THISWEEK THEN DECREASE BY ONE DAY
-                $select .= '                    
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        DATE_SUB(
-                            DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK),
-                            INTERVAL 1 DAY),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
+                // START FROM (LASTDAY OF THISWEEK - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '
+                DATE_SUB(DATE_SUB("'.$lastdaythisweek.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
                     
-                DATE_FORMAT(
-                    DATE_ADD(
-                        DATE_FORMAT(
-                            DATE_SUB( 
-                                DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK),
-                                INTERVAL 1 DAY),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_SUB("'.$lastdaythisweek.'",  INTERVAL c.number DAY) AS end ';
+
+            } elseif (($reportFilter == 'lastweek')) {
+                $range = 6;
+
+                // START FROM (LASTDAY OF LASTWEEK - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '
+                DATE_SUB(DATE_SUB("'.$lastdaylastweek.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,
+                    
+                DATE_SUB("'.$lastdaylastweek.'",  INTERVAL c.number DAY) AS end ';
 
             } elseif (($reportFilter == 'thismonth')) {
                 $range = 30;
 
-                // START FROM LASTDAY OF THISMONTH THEN DECREASE BY ONE DAY
+                // START FROM (LASTDAY OF THISMONTH - 1 DAY) THEN DECREASE BY ONE DAY
                 $select .= '                    
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        LAST_DAY(CURDATE()),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
+                DATE_SUB(DATE_SUB("'.$lastdaythismonth.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
                     
-                DATE_FORMAT(
-                    DATE_ADD(
-                        DATE_FORMAT(
-                            LAST_DAY(CURDATE()),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_SUB("'.$lastdaythismonth.'",  INTERVAL c.number DAY) AS end ';
 
             } elseif (($reportFilter == 'lastmonth')) {
                 $range = 30;
 
-                // START FROM LASTDAY OF LASTMONTH THEN DECREASE BY ONE DAY
+                // START FROM (LASTDAY OF LASTMONTH - 1 DAY) THEN DECREASE BY ONE DAY
                 $select .= '                    
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) ,
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
+                DATE_SUB(DATE_SUB("'.$lastdaylastmonth.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
                     
-                DATE_FORMAT(
-                    DATE_ADD(
-                        DATE_FORMAT(
-                            LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) ,
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_SUB("'.$lastdaylastmonth.'",  INTERVAL c.number DAY) AS end ';
 
             } elseif (($reportFilter == 'thisyear')) {
                 $range = 365;
 
-                // START FROM LASTDAY OF THISYEAR THEN DECREASE BY ONE DAY
+                // START FROM (LASTDAY OF THISYEAR - 1 DAY) THEN DECREASE BY ONE DAY
                 $select .= '                    
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
-        
-                DATE_FORMAT(
-                    DATE_ADD(
-                        DATE_FORMAT(
-                            LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_SUB(DATE_SUB("'.$lastdaythisyear.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
+                    
+                DATE_SUB("'.$lastdaythisyear.'",  INTERVAL c.number DAY) AS end ';
+
             } elseif (($reportFilter == 'lastyear')) {
                 $range = 365;
 
-                // START FROM LASTDAY OF LASTYEAR THEN DECREASE BY ONE DAY
+                // START FROM (LASTDAY OF LASTYEAR - 1 DAY) THEN DECREASE BY ONE DAY
                 $select .= '                    
-                DATE_FORMAT(
-                    DATE_FORMAT(
-                        DATE_SUB(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 YEAR),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                    \'%Y-%m-%d 00:00:00\') AS start,
+                DATE_SUB(DATE_SUB("'.$lastdaylastyear.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
                     
-                DATE_FORMAT(
-                    DATE_ADD(
-                        DATE_FORMAT(
-                            DATE_SUB(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 YEAR),
-                        \'%Y-%m-%d 00:00:00\') - INTERVAL c.number DAY,
-                        INTERVAL 1 DAY),
-                    \'%Y-%m-%d 00:00:00\') AS end ';
+                DATE_SUB("'.$lastdaylastyear.'",  INTERVAL c.number DAY) AS end ';
             }
 
             $periods = '            
@@ -635,8 +594,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     layout.Layout,
                     IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
                     stat.mediaId,
-                    stat.`start` as stat_start,
-                    stat.`end` as stat_end,
+                    stat.`start` as statStart,
+                    stat.`end` as statEnd,
                     stat.duration,
                     stat.`count`
                      
@@ -682,70 +641,62 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
             // and end is greater than or equal first hour of the day
             elseif (($reportFilter == 'today')) {
-                $body .= ' AND stat.`start` < DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-            AND stat.`end` >= DATE_FORMAT(CURDATE(), \'%Y-%m-%d 00:00:00\') ';
+                $body .= ' AND stat.`start` < "'.$nextday.'"
+            AND stat.`end` >= "'.$today.'" ';
             }
 
             // where start is less than last hour of the day + 1 hour (i.e., today)
             // and end is greater than or equal first hour of the day
             elseif (($reportFilter == 'yesterday')) {
-                $body .= ' AND stat.`start` < CURDATE()
-			AND stat.`end` >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), \'%Y-%m-%d 00:00:00\') ';
+                $body .= ' AND stat.`start` <  "'.$today.'" 
+			AND stat.`end` >= "'.$yesterday.'"  ';
             }
 
             // where start is less than last day of the week
             // and end is greater than or equal first day of the week
             elseif (($reportFilter == 'thisweek')) {
-                $body .= ' AND stat.`start` < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK)
-            AND stat.`end` >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) ';
+                $body .= ' AND stat.`start` < "'.$lastdaythisweek.'"
+            AND stat.`end` >= "'.$firstdaythisweek.'" ';
             }
 
             // where start is less than last day of the week
             // and end is greater than or equal first day of the week
             elseif (($reportFilter == 'lastweek')) {
-                $body .= ' AND stat.`start` < DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)			
-            AND stat.`end` >= DATE_SUB(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK) ';
+                $body .= ' AND stat.`start` < "'.$lastdaylastweek.'"		
+            AND stat.`end` >= "'.$firstdaylastweek.'" ';
             }
 
-            // where start is less than last day of the month + 1 day
+            // where start is less than last day of the month
             // and end is greater than or equal first day of the month
-            // DATE_FORMAT(NOW() ,'%Y-%m-01') as firstdaythismonth,
-            // LAST_DAY(CURDATE()) as lastdaythismonth,
             elseif (($reportFilter == 'thismonth')) {
-                $body .= ' AND stat.`start` < DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY)
-            AND stat.`end` >= DATE_FORMAT(NOW() ,\'%Y-%m-01\') ';
+                $body .= ' AND stat.`start` <  "'.$lastdaythismonth.'"
+            AND stat.`end` >= "'.$firstdaythismonth.'" ';
             }
 
-            // where start is less than last day of the month + 1 day
+            // where start is less than last day of the month
             // and end is greater than or equal first day of the month
-            // DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ,'%Y-%m-01') as firstdaylastmonth,
-            // LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) as lastdaylastmonth,
             elseif (($reportFilter == 'lastmonth')) {
-                $body .= ' AND stat.`start` <  DATE_ADD(LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)), INTERVAL 1 DAY )
-            AND stat.`end` >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ,\'%Y-%m-01\') ';
+                $body .= ' AND stat.`start` <  "'.$lastdaylastmonth.'"
+            AND stat.`end` >= "'.$firstdaylastmonth.'" ';
             }
 
-            // where start is less than last day of the year + 1 day
+            // where start is less than last day of the year
             // and end is greater than or equal first day of the year
-            // MAKEDATE(YEAR(NOW()),1) as firstdaythisyear,
-            // LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)) as lastdaythisyear
             elseif (($reportFilter == 'thisyear')) {
-                $body .= ' AND stat.`start` < DATE_ADD(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 DAY)
-            AND stat.`end` >= MAKEDATE(YEAR(NOW()),1) ';
+                $body .= ' AND stat.`start` < "'.$lastdaythisyear.'"
+            AND stat.`end` >= "'.$firstdaythisyear.'" ';
             }
 
-            // where start is less than last day of the year + 1 day
+            // where start is less than last day of the year
             // and end is greater than or equal first day of the year
-            // MAKEDATE(YEAR(NOW() - INTERVAL 1 YEAR),1) as firstdaylastyear,
-            // DATE_SUB(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 YEAR) as lastdaylastyear,
             elseif (($reportFilter == 'lastyear')) {
-                $body .= ' AND stat.`start` < DATE_ADD(DATE_SUB(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 YEAR), INTERVAL 1 DAY)
-            AND stat.`end` >= MAKEDATE(YEAR(NOW() - INTERVAL 1 YEAR),1) ';
+                $body .= ' AND stat.`start` < "'.$lastdaylastyear.'"
+            AND stat.`end` >= "'.$firstdaylastyear.'" ';
             }
 
             $body .= ' ) stat               
-            ON stat_start < periods.`end`
-            AND stat_end > periods.`start`
+            ON statStart < periods.`end`
+            AND statEnd > periods.`start`
             ';
 
             if ($reportFilter == '') {
@@ -755,66 +706,62 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             // where periods start is greater than or equal today and
             // periods end is less than or equal today + 1 day i.e. nextday
             elseif (($reportFilter == 'today')) {
-                $body .= ' WHERE periods.`start` >= CURDATE()
-            AND periods.`end` <= DATE_ADD(CURDATE(), INTERVAL 1 DAY) ';
+                $body .= ' WHERE periods.`start` >= "'.$today.'"
+            AND periods.`end` <= "'.$nextday.'" ';
             }
             // where periods start is greater than or equal yesterday and
             // periods end is less than or equal today
             elseif (($reportFilter == 'yesterday')) {
-                $body .= ' WHERE periods.`start` >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-	        AND periods.`end` <= CURDATE() ';
+                $body .= ' WHERE periods.`start` >= "'.$yesterday.'"
+	        AND periods.`end` <= "'.$today.'" ';
             }
-            // DATE_SUB(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK) as lastweekmonday,
-            // DATE_SUB(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 DAY) lastweeklastday,
-            // where periods start is greater than or equal lastweekmonday and
-            // periods end is less than or equal lastdaylastweek + 1 day
-            elseif (($reportFilter == 'lastweek')) {
-                $body .= ' WHERE periods.`start` >= DATE_SUB(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK)
-            AND periods.`end` <= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) '; //??
-            }
-            // DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY) as thisweekmonday,
-            // DATE_SUB(DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK), INTERVAL 1 DAY ) as thisweeklastday,
             // where periods start is greater than or equal thisweekmonday and
-            // periods end is less than or equal lastdaylastweek + 1 day
+            // periods end is less than or equal lastdaythisweek
             elseif (($reportFilter == 'thisweek')) {
-                $body .= ' WHERE periods.`start` >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
-            AND periods.`end` <= DATE_SUB(DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 1 WEEK), INTERVAL 1 DAY ) ';
+                $body .= ' WHERE periods.`start` >= "'.$firstdaythisweek.'"
+            AND periods.`end` <= "'.$lastdaythisweek.'" ';
+            }
+            // where periods start is greater than or equal lastweekmonday and
+            // periods end is less than or equal lastdaylastweek
+            elseif (($reportFilter == 'lastweek')) {
+                $body .= ' WHERE periods.`start` >= "'.$firstdaylastweek.'"
+            AND periods.`end` <=  "'.$lastdaylastweek.'" ';
             }
             // where periods start is greater than or equal firstdaythismonth and
-            // periods end is less than lastdaythismonth + 1 day
+            // periods end is less than lastdaythismonth
             elseif (($reportFilter == 'thismonth')) {
                 $body .= ' 
                 WHERE
-                    periods.`start` >= DATE_FORMAT(NOW() ,\'%Y-%m-01\')
-                    AND periods.`end` <=  DATE_ADD(LAST_DAY(CURDATE()), INTERVAL 1 DAY) ';
+                    periods.`start` >= "'.$firstdaythismonth.'"
+                    AND periods.`end` <=  "'.$lastdaythismonth.'" ';
             }
             // where periods start is greater than or equal firstdaylastmonth and
-            // periods end is less than lastdaylastmonth + 1 day
+            // periods end is less than lastdaylastmonth
             elseif (($reportFilter == 'lastmonth')) {
                 $body .= '  
                 WHERE    
-                    periods.`start` >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH) ,\'%Y-%m-01\')
-                    AND periods.`end` <= DATE_ADD(LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)), INTERVAL 1 DAY) ';
+                    periods.`start` >= "'.$firstdaylastmonth.'"
+                    AND periods.`end` <= "'.$lastdaylastmonth.'" ';
             }
             // where periods start is greater than or equal firstdaythisyear and
-            // periods end is less than lastdaythisyear + 1 day
+            // periods end is less than lastdaythisyear
             elseif (($reportFilter == 'thisyear')) {
                 $body .= ' 
                 WHERE
-                    periods.`start` >= MAKEDATE(YEAR(NOW()),1)
-                    AND periods.`end` <=  DATE_ADD(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 DAY)';
+                    periods.`start` >= "'.$firstdaythisyear.'"
+                    AND periods.`end` <= "'.$lastdaythisyear.'" ';
             }
             // where periods start is greater than or equal firstdaylastyear and
-            // periods end is less than lastdaylastyear + 1 day
+            // periods end is less than lastdaylastyear
             elseif (($reportFilter == 'lastyear')) {
                 $body .= '  
                 WHERE    
-                    periods.`start` >= MAKEDATE(YEAR(NOW() - INTERVAL 1 YEAR),1)
-                    AND periods.`end` <= DATE_ADD(DATE_SUB(LAST_DAY(DATE_ADD(NOW(), INTERVAL 12-MONTH(NOW()) MONTH)), INTERVAL 1 YEAR), INTERVAL 1 DAY) ';
+                    periods.`start` >= "'.$firstdaylastyear.'"
+                    AND periods.`end` <= "'.$lastdaylastyear.'" ';
             }
 
             $body .= '  
-            ORDER BY periods.`start`, stat_start
+            ORDER BY periods.`start`, statStart
 	        )B ';
 
 

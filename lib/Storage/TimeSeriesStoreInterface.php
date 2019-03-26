@@ -50,7 +50,7 @@ interface TimeSeriesStoreInterface
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      */
-    public function setDependencies($logger, $date = null, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null);
+    public function setDependencies($logger, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null);
 
     /**
      * Add statistics
@@ -104,7 +104,7 @@ interface TimeSeriesStoreInterface
     /**
      * Get the daily summary report
      * @param $displayIds array
-     * @param $diff_in_days int
+     * @param $diffInDays int
      * @param $type string
      * @param $layoutId int
      * @param $mediaId int
@@ -112,9 +112,9 @@ interface TimeSeriesStoreInterface
      * @param $groupByFilter string|null
      * @param $fromDt string|null
      * @param $toDt string|null
-     * @return array[string week_start, string week_end, string shortMonth, int monthNo, int yearDate, string start, int NumberPlays, int Duration]
+     * @return array[string weekStart, string weekEnd, string shortMonth, int monthNo, int yearDate, string start, int NumberPlays, int Duration]
      */
-    public function getDailySummaryReport($displayIds, $diff_in_days, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null );
+    public function getDailySummaryReport($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null );
 
 
 }

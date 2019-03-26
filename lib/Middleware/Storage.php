@@ -91,7 +91,8 @@ class Storage extends Middleware
         $container->singleton('timeSeriesStore', function($container) {
             if ($container->configService->timeSeriesStore == null) {
                 return (new MySqlTimeSeriesStore())
-                    ->setDependencies($container->logService)
+                    ->setDependencies($container->logService,
+                        $container->dateService)
                     ->setStore($container->store);
             } else {
                 $timeSeriesStore = $container->configService->timeSeriesStore;
