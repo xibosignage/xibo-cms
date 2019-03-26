@@ -1002,7 +1002,7 @@ class Module extends Base
     public function getDataSets()
     {
         $this->getState()->template = 'grid';
-        $this->getState()->setData($this->dataSetFactory->query());
+        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter()));
     }
 
     /**
