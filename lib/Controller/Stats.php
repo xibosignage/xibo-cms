@@ -612,7 +612,7 @@ class Stats extends Base
                     }
                     $tsLabel .= ' - ' . $weekEnd;
                 } elseif ($groupByFilter == 'bymonth') {
-                    $tsLabel = $row['shortMonth']. ' '.$row['yearDate'];
+                    $tsLabel = __($row['shortMonth']) . ' '. $row['yearDate'];
 
                 }
 
@@ -638,7 +638,7 @@ class Stats extends Base
                 }
 
             }  elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
-                $tsLabel = $row['shortMonth']; // Jan, Feb, etc.  by month (default)
+                $tsLabel = __($row['shortMonth']); // Jan, Feb, etc.  by month (default)
 
                 if ($groupByFilter == 'byday') {
                     $tsLabel = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('Y-m-d');
