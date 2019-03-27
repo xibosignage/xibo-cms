@@ -24,6 +24,12 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
+    </ul>
+{% endblock %}
+
 {% block pageContent %}
 
     <div class="widget">
@@ -36,12 +42,12 @@
                             {% set title %}{% trans "Filter" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
-                            {% set thisweek %}{% trans "Thisweek" %}{% endset %}
-                            {% set thismonth %}{% trans "Thismonth" %}{% endset %}
-                            {% set thisyear %}{% trans "Thisyear" %}{% endset %}
-                            {% set lastweek %}{% trans "Lastweek" %}{% endset %}
-                            {% set lastmonth %}{% trans "Lastmonth" %}{% endset %}
-                            {% set lastyear %}{% trans "Lastyear" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
                             {% set options = [
                                 { filterName: "", reportFilter: null },
                                 { filterName: "today", reportFilter: today },
@@ -152,13 +158,13 @@
                         data: {
                             labels: response.extra.labels,
                             datasets: [{
-                                label: 'Total duration',
+                                label: "{% trans "Total duration" %}",
                                 yAxisID: 'Duration',
                                 backgroundColor: response.extra.backgroundColor,
                                 data: response.extra.durationData,
                             },
                                 {
-                                    label: 'Total count',
+                                    label: "{% trans "Total count" %}",
                                     yAxisID: 'Count',
                                     borderColor: response.extra.borderColor,
                                     data: response.extra.countData,
@@ -193,60 +199,36 @@
 
         $(document).ready(function() {
 
-            setReport();
-
+            // Init
             var type = $("#type");
             var reportFilter = $("#reportFilter");
             var groupByFilter = $("#groupByFilter");
             var groupByFilterCls = $(".group-by-filter");
+            var mediaSelect =$(".media-select");
+            var layoutSelect =$(".layout-select");
 
-            reportFilter.change(function() {
-                var value = reportFilter.val();
-                var collectionMonth = [
-                    {id: 'byday', description: 'Day'},
-                    {id: 'byweek', description: 'Week'},
-                ];
-                var collectionYear = [
-                    {id: 'byday', description: 'Day'},
-                    {id: 'byweek', description: 'Week'},
-                    {id: 'bymonth', description: 'Month'}
-                ];
+            const checkFilterAndApply = function() {
 
-                if (value === '' || value === undefined) {
-                    // show the from date and to date
-                    $(".stats-from-dt").show();
-                    $(".stats-to-dt").show();
+                reportFilter.off('change').change( function() {
 
-                    $("#groupByFilter option").remove();
-                    groupByFilterCls.show();
-                    $.each(collectionYear, function(index, item) {
-                        groupByFilter.append(
-                            $("<option></option>")
-                                .text(item.description)
-                                .val(item.id)
-                        );
-                    });
+                    var value = reportFilter.val();
+                    var collectionMonth = [
+                        {id: 'byday', description: "{% trans "Day" %}"},
+                        {id: 'byweek', description: "{% trans "Week" %}"},
+                    ];
+                    var collectionYear = [
+                        {id: 'byday', description: "{% trans "Day" %}"},
+                        {id: 'byweek', description: "{% trans "Week" %}"},
+                        {id: 'bymonth', description: "{% trans "Month" %}"}
+                    ];
 
-                } else {
-                    // hide the from date and to date
-                    $(".stats-from-dt").hide();
-                    $(".stats-to-dt").hide();
+                    if (value === '' || value === undefined) {
+                        // show the from date and to date
+                        $(".stats-from-dt").show();
+                        $(".stats-to-dt").show();
 
-                    // Group by filter
-                    $("#groupByFilter option").remove();
-                    groupByFilterCls.show();
-
-                    if (value === 'thismonth' || value === 'lastmonth') {
-
-                        $.each(collectionMonth, function(index, item) {
-                            groupByFilter.append(
-                                $("<option></option>")
-                                    .text(item.description)
-                                    .val(item.id)
-                            );
-                        });
-
-                    } else if (value === 'thisyear' || value === 'lastyear') {
+                        $("#groupByFilter option").remove();
+                        groupByFilterCls.show();
                         $.each(collectionYear, function(index, item) {
                             groupByFilter.append(
                                 $("<option></option>")
@@ -254,42 +236,81 @@
                                     .val(item.id)
                             );
                         });
-                        groupByFilter.val('bymonth'); //by default
 
                     } else {
-                        groupByFilterCls.hide();
+                        // hide the from date and to date
+                        $(".stats-from-dt").hide();
+                        $(".stats-to-dt").hide();
+
+                        // Group by filter
+                        $("#groupByFilter option").remove();
+                        groupByFilterCls.show();
+
+                        if (value === 'thismonth' || value === 'lastmonth') {
+
+                            $.each(collectionMonth, function(index, item) {
+                                groupByFilter.append(
+                                    $("<option></option>")
+                                        .text(item.description)
+                                        .val(item.id)
+                                );
+                            });
+
+                        } else if (value === 'thisyear' || value === 'lastyear') {
+                            $.each(collectionYear, function(index, item) {
+                                groupByFilter.append(
+                                    $("<option></option>")
+                                        .text(item.description)
+                                        .val(item.id)
+                                );
+                            });
+                            groupByFilter.val('bymonth'); //by default
+
+                        } else {
+                            groupByFilterCls.hide();
+                        }
                     }
-                }
 
-            });
+                });
 
-            var mediaSelect =$(".media-select");
-            var layoutSelect =$(".layout-select");
+                type.off('change').change( function() {
 
+                    var value = type.val();
+                    if (value === 'media') {
+                        // show media and clear/hide the layout
+                        $("#layoutId").val("");
+                        $("#layoutId option").remove();
+                        layoutSelect.hide();
+                        mediaSelect.show();
+
+                    } else if (value === 'layout') {
+                        // show layout and clear/hide the media
+                        $("#mediaId").val("");
+                        $("#mediaId option").remove();
+                        mediaSelect.hide();
+                        layoutSelect.show();
+                    }
+                });
+
+            };
+
+            type.val('layout');
             mediaSelect.hide();
 
-            type.change(function() {
-                var value = type.val();
-                if (value === 'media') {
-                    // show media and clear/hide the layout
-                    $("#layoutId").val("");
-                    layoutSelect.hide();
-                    mediaSelect.show();
+            reportFilter.val('');
+            groupByFilter.val('byday');
 
-                } else if (value === 'layout') {
-                    // show layout and clear/hide the media
-                    $("#mediaId").val("");
-                    mediaSelect.hide();
-                    layoutSelect.show();
-                }
-            });
-
-
-
-
+            checkFilterAndApply();
+            setReport();
 
             // Bind to form change
-            $("#summaryReport input, #summaryReport select").change(function() {
+            $("#summaryReport").on('change', function() {
+                checkFilterAndApply();
+                setReport();
+            });
+
+            $("#refreshGrid").click(function () {
+                checkFilterAndApply();
                 setReport();
             });
         });

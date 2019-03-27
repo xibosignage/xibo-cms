@@ -26,6 +26,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -43,12 +44,13 @@ interface TimeSeriesStoreInterface
     /**
      * Set Time series Dependencies
      * @param LogServiceInterface $logger
+     * @param DateServiceInterface $date
      * @param MediaFactory $mediaFactory
      * @param WidgetFactory $widgetFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      */
-    public function setDependencies($logger, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null);
+    public function setDependencies($logger, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null);
 
     /**
      * Add statistics
@@ -98,5 +100,21 @@ interface TimeSeriesStoreInterface
      * @throws \Exception
      */
     public function deleteStats($toDt, $fromDt = null, $options = []);
+
+    /**
+     * Get the daily summary report
+     * @param $displayIds array
+     * @param $diffInDays int
+     * @param $type string
+     * @param $layoutId int
+     * @param $mediaId int
+     * @param $reportFilter string
+     * @param $groupByFilter string|null
+     * @param $fromDt string|null
+     * @param $toDt string|null
+     * @return array[string weekStart, string weekEnd, string shortMonth, int monthNo, int yearDate, string start, int NumberPlays, int Duration]
+     */
+    public function getDailySummaryReport($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null );
+
 
 }
