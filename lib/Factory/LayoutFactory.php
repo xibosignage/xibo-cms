@@ -474,9 +474,9 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
 
-                // convert the date string to a unix timestamp
-                $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
-                $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+                // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
+                $widget->fromDt = ($widget->fromDt === Widget::$DATE_MIN) ? Widget::$DATE_MIN : $this->getDate()->parse($widget->fromDt)->format('U');
+                $widget->toDt = ($widget->toDt === Widget::$DATE_MAX) ? Widget::$DATE_MAX : $this->getDate()->parse($widget->toDt)->format('U');
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
