@@ -2141,7 +2141,7 @@ class Layout extends Base
     {
         $layout = $this->layoutFactory->getById($layoutId);
         $publishDate = $this->getSanitizer()->getDate('publishDate');
-        $publishNow = $this->getSanitizer()->getCheckbox('publishNow', 1);
+        $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout)) {

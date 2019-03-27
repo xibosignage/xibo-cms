@@ -493,9 +493,12 @@ lD.publishLayout = function() {
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
+    const serializedData = $('#layoutPublishForm').serialize();
+
     $.ajax({
         url: requestPath,
-        type: linkToAPI.type
+        type: linkToAPI.type,
+        data: serializedData
     }).done(function(res) {
 
         lD.common.hideLoadingScreen();
@@ -664,7 +667,7 @@ lD.showCheckoutScreen = function() {
  * Layout publish screen
  */
 lD.showPublishScreen = function() {
-    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')");
+    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')", "lD.publishLayout();");
 };
 
 /**
@@ -684,7 +687,7 @@ lD.showSaveTemplateScreen = function() {
 /**
  * Load form from the API
  */
-lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null) {
+lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActionCallback = null) {
     
     const self = this;
 
@@ -736,7 +739,12 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null) {
                             className: buttonType,
                             callback: function(result) {
                                 // Call global function by the function name
-                                eval(url);
+                                if (mainActionCallback != null) {
+                                    eval(mainActionCallback);
+                                } else {
+                                    eval(url);
+                                }
+
                                 return false;
                             }
                         };
