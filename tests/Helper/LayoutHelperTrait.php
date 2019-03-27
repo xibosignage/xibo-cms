@@ -160,7 +160,7 @@ trait LayoutHelperTrait
 
         $response = $this->getEntityProvider()->put('/layout/publish/' . $layout->layoutId , [
             'publishNow' => 1
-        ]);
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // Swap the Layout object to use the one returned.
         /** @var XiboLayout $layout */
