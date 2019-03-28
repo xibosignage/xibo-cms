@@ -375,7 +375,7 @@ class PlayerSoftware extends Base
 
             $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-            $this->outputSsspXml($versionInformation->version, $media->fileSize);
+            $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
         } else {
             throw new NotFoundException(__('Installer file is not available in this CMS'), 'versionMediaId');
         }
@@ -445,7 +445,7 @@ class PlayerSoftware extends Base
 
         $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-        $this->outputSsspXml($versionInformation->version, $media->fileSize);
+        $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
         $this->setNoOutput(true);
     }
 
@@ -498,7 +498,10 @@ class PlayerSoftware extends Base
         $versionNode->appendChild($version);
         $versionNode->appendChild($size);
         $versionNode->appendChild($name);
+        $versionNode->appendChild($ssspDocument->createElement('webtype', 'tizen'));
         $ssspDocument->formatOutput = true;
+
+        $this->getApp()->response()->header('Content-Type', 'application/xml');
 
         echo $ssspDocument->saveXML();
     }
