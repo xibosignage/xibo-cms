@@ -1353,7 +1353,8 @@ class DisplayProfile implements \JsonSerializable
                         'type' => 'string',
                         'fieldType' => 'dropdown',
                         'options' => array(
-                            array('id' => 'audit', 'value' => 'Audit'),
+                            array('id' => 'trace', 'value' => 'Trace'),
+                            array('id' => 'debug', 'value' => 'Debug'),
                             array('id' => 'info', 'value' => 'Information'),
                             array('id' => 'error', 'value' => 'Error'),
                             array('id' => 'off', 'value' => 'Off')

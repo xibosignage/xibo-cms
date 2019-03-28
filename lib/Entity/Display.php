@@ -516,12 +516,12 @@ class Display implements \JsonSerializable
 
         // Check the number of licensed displays
         if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+            $this->getLog()->debug('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
 
             if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
                 $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
-                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+                $this->getLog()->debug('There are %d authorised displays and the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
                     return false;
@@ -585,7 +585,7 @@ class Display implements \JsonSerializable
             $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
             if (!$this->isDisplaySlotAvailable()) {
-                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'),
+                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of authorised displays. %d'),
                     $maxDisplays), 'maxDisplays');
             }
         }

@@ -514,6 +514,13 @@ class DataSet implements \JsonSerializable
                             // Pull out the column name and date format
                             $details = explode(',', str_replace(')', '', str_replace('$dateFormat(', '', $column->formula)));
 
+                            if (isset($details[2])) {
+                                $language = str_replace(' ', '', $details[2]);
+                            } else {
+                                $language = $this->config->getSetting('DEFAULT_LANGUAGE', 'en_GB');
+                            }
+
+                            $this->date->setLocale($language);
                             $value = $this->date->parse($item[$details[0]])->format($details[1]);
                         }
                     } catch (\Exception $e) {

@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS `display` (
   `lastCommandSuccess` tinyint(4) NOT NULL DEFAULT '2',
   `deviceName` VARCHAR(254) DEFAULT NULL,
   `timeZone` VARCHAR(254) DEFAULT NULL,
-  `overrideConfig` text NOT NULL,
+  `overrideConfig` text NULL,
   PRIMARY KEY (`displayid`),
   KEY `defaultplaylistid` (`defaultlayoutid`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;

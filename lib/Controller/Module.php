@@ -267,10 +267,6 @@ class Module extends Base
         if (!$moduleConfigLocked)
             $module->getModule()->imageUri = $this->getSanitizer()->getString('imageUri');
 
-        // Validation
-        if (strpbrk($module->getModule()->validExtensions, '*.{}[]|') !== false)
-            throw new InvalidArgumentException('Comma separated file extensions only please, without the .', 'validExtensions');
-
         // Install Files for this module
         $module->installFiles();
 
