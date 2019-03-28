@@ -50,17 +50,30 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Get some parameters
             if ($index === null) {
-                if (isset($_REQUEST['name']))
+                if (isset($_REQUEST['name'])) {
                     $name = $_REQUEST['name'];
-                else 
+                } else {
                     $name = $fileName;
                 }
-            else {
-                if (isset($_REQUEST['name'][$index]))
+
+                if (isset($_REQUEST['tags'])) {
+                    $tags = $_REQUEST['tags'];
+                } else {
+                    $tags = '';
+                }
+            } else {
+                if (isset($_REQUEST['name'][$index])) {
                     $name = $_REQUEST['name'][$index];
-                else 
+                } else {
                     $name = $fileName;
                 }
+
+                if (isset($_REQUEST['tags'][$index])) {
+                    $tags = $_REQUEST['tags'][$index];
+                } else {
+                    $tags = '';
+                }
+            }
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
@@ -96,6 +109,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // The media name might be empty here, because the user isn't forced to select it
                 $name = ($name == '') ? $oldMedia->name : $name;
+                $tags = ($tags == '') ? '' : $tags;
+
 
                 // Add the Media
                 //  the userId is either the existing user (if we are changing media type) or the currently logged in user otherwise.
@@ -105,6 +120,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $module->getModuleType(),
                     (($this->options['allowMediaTypeChange'] == 1) ? $oldMedia->getOwnerId() : $this->options['userId'])
                 );
+
+                if ($tags != '') {
+                    $concatTags = (string)$oldMedia->tags . ',' . $tags;
+                    $media->replaceTags($controller->getTagFactory()->tagsFromString($concatTags));
+                }
 
                 // Set the duration
                 if ($oldMedia->mediaType != 'video' && $media->mediaType != 'video')
@@ -249,10 +269,13 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // The media name might be empty here, because the user isn't forced to select it
                 $name = ($name == '') ? $fileName : $name;
+                $tags = ($tags == '') ? '' : $tags;
 
                 // Add the Media
                 $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
-
+                if ($tags != '') {
+                    $media->replaceTags($controller->getTagFactory()->tagsFromString($tags));
+                }
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
 

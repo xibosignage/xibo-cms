@@ -159,7 +159,7 @@ class Calendar extends ModuleWidget
             if ($noDataMessage != '') {
                 $items[] = [
                     'startDate' => 0,
-                    'endDate' => Date::now()->addYear()->format('U'),
+                    'endDate' => Date::now()->addYear()->format('c'),
                     'item' => $noDataMessage,
                     'currentEventItem' => $noDataMessage
                 ];

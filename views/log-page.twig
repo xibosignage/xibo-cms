@@ -107,6 +107,23 @@
                                     ] %}
                                     {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
+
+                                    {% set title %}{% trans "Display Name" %}{% endset %}
+                                    {{ inline.input("display", title) }}
+
+                                    {% set title %}{% trans "Display Group" %}{% endset %}
+                                    {% set attributes = [
+                                        { name: "data-width", value: "200px" },
+                                        { name: "data-allow-clear", value: "true" },
+                                        { name: "data-placeholder--id", value: null },
+                                        { name: "data-placeholder--value", value: "" },
+                                        { name: "data-search-url", value: urlFor("displayGroup.search") },
+                                        { name: "data-search-term", value: "displayGroup" },
+                                        { name: "data-id-property", value: "displayGroupId" },
+                                        { name: "data-text-property", value: "displayGroup" }
+                                    ] %}
+                                    {{ inline.dropdown("displayGroupId", "single", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+
                                     {% set title %}{% trans "Message" %}{% endset %}
                                     {{ inline.input("message", title) }}
 

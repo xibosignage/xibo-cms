@@ -53,9 +53,10 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int|null $userId
+     * @param int $bandwidthLimit
      * @return DisplayGroup
      */
-    public function create($userId = null)
+    public function create($userId = null, $bandwidthLimit = 0)
     {
         $displayGroup = $this->createEmpty();
 
@@ -64,6 +65,7 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         $displayGroup->userId = $userId;
+        $displayGroup->bandwidthLimit = $bandwidthLimit;
 
         return $displayGroup;
     }
@@ -212,6 +214,7 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
+                `displaygroup`.bandwidthLimit,
                 `displaygroup`.userId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 

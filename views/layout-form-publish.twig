@@ -33,11 +33,55 @@
     {% trans "Publish" %}, $("#layoutPublishForm").submit()
 {% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "publishNow",
+    "trigger": "init",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".publish-date-control": { "display": "none" }
+    }
+    },{
+    "field": "publishNow",
+    "trigger": "change",
+    "value": true,
+    "operation": "is:checked",
+    "actions": {
+    ".publish-date-control": { "display": "none" }
+    }
+    },{
+    "field": "publishNow",
+    "trigger": "init",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".publish-date-control": { "display": "block" }
+    }
+    },{
+    "field": "publishNow",
+    "trigger": "change",
+    "value": false,
+    "operation": "is:checked",
+    "actions": {
+    ".publish-date-control": { "display": "block" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <form id="layoutPublishForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.publish", {id: layout.layoutId}) }}">
 				{{ forms.message("Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed.") }}
+
+                {% set title %}{% trans "Publish Now?" %}{% endset %}
+                {% set helpText %}{% trans "When selected, layout will be published immediately, if it should be published at a specific time, uncheck this checkbox and pick a date in the field below" %}{% endset %}
+                {{ forms.checkbox("publishNow", title, 1, helpText) }}
+
+                {% set title %}{% trans "Publish Date" %}{% endset %}
+                {% set helpText %}{% trans "Select the date and time to publish the layout" %}{% endset %}
+                {{ forms.dateTime("publishDate", title, layout.publishedDate, helpText, "publish-date-control", "") }}
             </form>
         </div>
     </div>

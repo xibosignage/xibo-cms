@@ -105,6 +105,12 @@ class DisplayGroup implements \JsonSerializable
     public $tags = [];
 
     /**
+     * @SWG\Property(description="The display bandwidth limit")
+     * @var int
+     */
+    public $bandwidthLimit;
+
+    /**
      * Minimum save options
      * @var array
      */
@@ -194,6 +200,11 @@ class DisplayGroup implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
+    }
+
+    public function __clone()
+    {
+        $this->displayGroupId = null;
     }
 
     /**
@@ -759,6 +770,7 @@ class DisplayGroup implements \JsonSerializable
               `isDynamic` = :isDynamic,
               `dynamicCriteria` = :dynamicCriteria,
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
+              `bandwidthLimit` = :bandwidthLimit,
               `userId` = :userId
            WHERE DisplayGroupID = :displayGroupId
           ', [
@@ -768,6 +780,7 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
+            'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId
         ]);
     }

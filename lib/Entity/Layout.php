@@ -99,6 +99,14 @@ class Layout implements \JsonSerializable
     public $publishedStatus;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The Published Date"
+     * )
+     */
+    public $publishedDate;
+
+    /**
      * @var int
      * @SWG\Property(
      *  description="The id of the image media set as the background"
@@ -1438,6 +1446,11 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->parentId
         ]);
 
+        // clear publishedDate
+        $this->getStore()->update('UPDATE `layout` SET publishedDate = null WHERE layoutId = :layoutId', [
+            'layoutId' => $this->layoutId
+        ]);
+
         // Update any campaign links
         $this->getStore()->update('
           UPDATE `lkcampaignlayout` 
@@ -1496,6 +1509,16 @@ class Layout implements \JsonSerializable
 
         // Nullify my parentId (I no longer have a parent)
         $this->parentId = null;
+    }
+
+    public function setPublishedDate($publishedDate)
+    {
+        $this->publishedDate = $publishedDate;
+
+        $this->getStore()->update('UPDATE `layout` SET publishedDate = :publishedDate WHERE layoutId = :layoutId', [
+            'layoutId' => $this->layoutId,
+            'publishedDate' => $this->publishedDate
+        ]);
     }
 
     /**

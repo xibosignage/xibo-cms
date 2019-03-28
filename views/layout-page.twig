@@ -22,6 +22,9 @@
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter">
+                                    {% set title %}{% trans "ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title) }}
+
                                     {% set title %}{% trans "Name" %}{% endset %}
                                     {{ inline.input("layout", title) }}
 
@@ -158,7 +161,26 @@
                         "data": "layout",
                         "render": dataTableSpacingPreformatted
                     },
-                    {"data": "publishedStatus"},
+                    {
+                        "name": "publishedStatus",
+                        "data": function (data, type) {
+                            if (data.publishedDate != null) {
+                                let now = moment();
+                                let published = moment(data.publishedDate);
+                                let differenceMinutes = published.diff(now, 'minutes');
+                                let momentDifference = moment(now).to(published);
+
+                                if (differenceMinutes < -5) {
+                                    return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
+                                } else {
+                                    return data.publishedStatus.concat(" - ", data.publishedStatusFuture.replace('%s', momentDifference));
+                                }
+                            } else {
+                                return data.publishedStatus;
+                            }
+
+                        }
+                    },
                     {
                         "name": "description",
                         "data": null,

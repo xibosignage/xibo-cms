@@ -317,6 +317,12 @@ class Display implements \JsonSerializable
      */
     public $overrideConfig = [];
 
+    /**
+     * @SWG\Property(description="The display bandwidth limit")
+     * @var int
+     */
+    public $bandwidthLimit;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -540,6 +546,10 @@ class Display implements \JsonSerializable
 
         if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
             throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
+
+        if ($this->bandwidthLimit !== null && !v::intType()->validate($this->bandwidthLimit)) {
+            throw new InvalidArgumentException(__('Bandwidth limit must be a whole number.'), 'bandwidthLimit');
+        }
     }
 
     /**
@@ -552,12 +562,12 @@ class Display implements \JsonSerializable
 
         // Check the number of licensed displays
         if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing licensed displays against %d maximum. Currently Licenced = %d, Licenced = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+            $this->getLog()->debug('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
 
             if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
                 $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
-                $this->getLog()->debug('There are %d licenced displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+                $this->getLog()->debug('There are %d authorised displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
                     return false;
@@ -621,7 +631,7 @@ class Display implements \JsonSerializable
             $maxDisplays = $this->config->GetSetting('MAX_LICENSED_DISPLAYS');
 
             if (!$this->isDisplaySlotAvailable()) {
-                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of licensed displays. %d'),
+                throw new InvalidArgumentException(sprintf(__('You have exceeded your maximum number of authorised displays. %d'),
                     $maxDisplays), 'maxDisplays');
             }
         }
@@ -792,13 +802,14 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags')) {
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit')) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
             $displayGroup->replaceTags($this->tags);
+            $displayGroup->bandwidthLimit = $this->bandwidthLimit;
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         }
     }

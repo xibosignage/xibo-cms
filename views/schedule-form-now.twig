@@ -55,7 +55,8 @@
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
                 {% set attributes = [
                     { name: "data-live-search", value: "true" },
-                    { name: "data-selected-text-format", value: "count > 4" }
+                    { name: "data-selected-text-format", value: "count > 4" },
+                    { name: "data-width", value: "100%" },
                 ] %}
                 {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", attributes, optionGroups) }}
 
@@ -81,8 +82,9 @@
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                 {% set attributes = [
-                { name: "data-live-search", value: "true" },
-                { name: "data-selected-text-format", value: "count > 4" }
+                    { name: "data-live-search", value: "true" },
+                    { name: "data-selected-text-format", value: "count > 4" },
+                    { name: "data-width", value: "100%" },
                 ] %}
                 {% set transGroups %}{% trans "Groups" %}{% endset %}
                 {% set transDisplays %}{% trans "Display" %}{% endset %}

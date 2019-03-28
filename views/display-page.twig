@@ -29,6 +29,9 @@
                         <form class="form-inline">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="filter-general">
+                                    {% set title %}{% trans "ID" %}{% endset %}
+                                    {{ inline.number("displayId", title) }}
+
                                     {% set title %}{% trans "Name" %}{% endset %}
                                     {{ inline.input("display", title) }}
 
@@ -95,12 +98,14 @@
                                     {% set windows %}{% trans "Windows" %}{% endset %}
                                     {% set webos %}{% trans "webOS" %}{% endset %}
                                     {% set sssp %}{% trans "Tizen" %}{% endset %}
+                                    {% set linux %}{% trans "Linux" %}{% endset %}
                                     {% set options = [
                                         { optionid: "", option: "" },
                                         { optionid: "android", option: android},
                                         { optionid: "windows", option: windows},
                                         { optionid: "lg", option: webos},
-                                        { optionid: "sssp", option: sssp}
+                                        { optionid: "sssp", option: sssp},
+                                        { optionId: "linux", option: linux},
                                     ] %}
                                     {{ inline.dropdown("clientType", "single", title, "", options, "optionid", "option") }}
 
@@ -144,6 +149,7 @@
                                 <th>{% trans "Timezone" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "Bandwidth Limit" %}</th>
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
                                 <th></th>
@@ -335,6 +341,12 @@
                                 return "";
                             }
                         },
+                        "visible": false
+                    },
+                    {
+                        "name": "bandwidthLimit",
+                        "data": null,
+                        "render": {"_": "bandwidthLimit", "display": "bandwidthLimitFormatted", "sort": "bandwidthLimit"},
                         "visible": false
                     },
                     {
@@ -617,6 +629,26 @@
             // Call XiboInitialise on table
             XiboInitialise('#settings-from-profile');
         }
+
+        function displayEditFormSubmit() {
+            let form = $(".DisplayForm");
+            // Grab and alter the value in the bandwidth limit field
+            let bandwidthLimitField = $(form).find("input[name=bandwidthLimit]");
+            let bandwidthLimitUnitsField = $(form).find("select[name=bandwidthLimitUnits]");
+            let bandwidthLimit = bandwidthLimitField.val();
+
+            if (bandwidthLimitUnitsField.val() == 'mb') {
+                bandwidthLimit = bandwidthLimit * 1024;
+            } else if (bandwidthLimitUnitsField.val() == 'gb') {
+                bandwidthLimit = bandwidthLimit * 1024 * 1024;
+            }
+
+            // Set the field
+            bandwidthLimitField.prop('value', bandwidthLimit);
+
+            $('#displayEditForm').submit();
+        }
+
     </script>
 
     <style>

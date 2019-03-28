@@ -153,13 +153,13 @@ describe('Layout Designer (Empty)', function() {
 
             cy.get('#layout-editor-toolbar a#publishLayout').click();
 
-            cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
+            cy.get('button[data-bb-handler="Publish"]').click();
 
             cy.get('.toast-error').contains('Empty Region');
 
             cy.wait('@layoutPublish');
 
-            cy.get('[data-test="publishModal"] button#publishLayout').should('not.be.visible');
+            cy.get('#layoutPublishForm').should('not.be.visible');
         });
 
         it('creates a new tab in the toolbar and searches for items', () => {
