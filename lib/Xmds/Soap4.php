@@ -141,7 +141,7 @@ class Soap4 extends Soap
                         $cache->expiresAfter(86400);
                         $this->getPool()->saveDeferred($cache);
 
-                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code, 'url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
                     }
                 }
 
@@ -490,6 +490,13 @@ class Soap4 extends Soap
 
         if ($currentLayoutId !== null) {
             $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
+        }
+
+        // Status Dialog
+        $statusDialog = $this->getSanitizer()->getString('statusDialog', null, $status);
+
+        if ($statusDialog !== null) {
+            $this->getLog()->alert($statusDialog);
         }
 
         // Touch the display record
