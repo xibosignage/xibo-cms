@@ -135,7 +135,7 @@ class Soap5 extends Soap4
                         $cache->expiresAfter(86400);
                         $this->getPool()->saveDeferred($cache);
 
-                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code, 'url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
                     }
                 }
 
