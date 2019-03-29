@@ -341,10 +341,11 @@ class Notification implements \JsonSerializable
         if ($this->isSystem) {
             $this->getStore()->insert('
             INSERT INTO `lknotificationuser` (`notificationId`, `userId`, `read`, `readDt`, `emailDt`)
-              VALUES (:notificationId, 0, 0, 0, 0)
+              VALUES (:notificationId, :userId, 0, 0, 0)
               ON DUPLICATE KEY UPDATE userId = `lknotificationuser`.userId
             ', [
-                'notificationId' => $this->notificationId
+                'notificationId' => $this->notificationId,
+                'userId' => $this->userId
             ]);
         }
     }
