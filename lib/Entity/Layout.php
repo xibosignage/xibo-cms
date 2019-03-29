@@ -1357,6 +1357,12 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->layoutId
         ]);
 
+        // Swap any display group links
+        $this->getStore()->update('UPDATE `lklayoutdisplaygroup` SET layoutId = :layoutId WHERE layoutId = :parentId', [
+            'layoutId' => $this->layoutId,
+            'parentId' => $parent->layoutId
+        ]);
+
         // If this is the global default layout, then add some special handling to make sure we swap the default over
         // to the incoming draft
         if ($this->parentId == $this->config->getSetting('DEFAULT_LAYOUT')) {
