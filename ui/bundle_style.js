@@ -1,4 +1,5 @@
 //--- NPM packages style ---
+import './public_path';
 
 // bootstrap
 require('bootstrap/dist/css/bootstrap.min.css');

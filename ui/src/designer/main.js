@@ -18,6 +18,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Include public path for webpack
+require('../../public_path');
+
 // Include handlebars templates
 const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
