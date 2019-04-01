@@ -65,6 +65,8 @@ class NotificationFactory extends BaseFactory
      */
     public function createSystemNotification($subject, $body, $date, $isEmail = true, $addGroups = true)
     {
+        $userId = $this->getUser()->userId;
+
         $notification = $this->createEmpty();
         $notification->subject = $subject;
         $notification->body = $body;
@@ -72,7 +74,7 @@ class NotificationFactory extends BaseFactory
         $notification->releaseDt = $date->format('U');
         $notification->isEmail = ($isEmail) ? 1 : 0;
         $notification->isInterrupt = 0;
-        $notification->userId = 0;
+        $notification->userId = $userId;
         $notification->isSystem = 1;
 
         if ($addGroups) {
