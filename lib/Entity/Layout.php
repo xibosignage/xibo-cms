@@ -702,7 +702,7 @@ class Layout implements \JsonSerializable
         if ($this->parentId === null) {
 
             // Delete layout history
-            $this->getStore()->update('DELETE FROM `lklayouthistory` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
+            $this->getStore()->update('DELETE FROM `layouthistory` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
 
             // Unassign from all Campaigns
             foreach ($this->campaigns as $campaign) {
@@ -817,8 +817,8 @@ class Layout implements \JsonSerializable
     public function addLayoutHistory()
     {
         // Add a record in layout history when a layout is added or published
-        $this->lklayouthistoryId = $this->getStore()->insert('
-          INSERT INTO `lklayouthistory` (campaignId, layoutId, publishedDate)
+        $this->getStore()->insert('
+          INSERT INTO `layouthistory` (campaignId, layoutId, publishedDate)
             VALUES (:campaignId, :layoutId, :publishedDate)
         ', [
             'campaignId' => $this->campaignId,

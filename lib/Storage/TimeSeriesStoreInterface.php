@@ -50,7 +50,7 @@ interface TimeSeriesStoreInterface
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      */
-    public function setDependencies($logger, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null);
+    public function setDependencies($logger, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
 
     /**
      * Add statistics

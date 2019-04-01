@@ -1517,6 +1517,9 @@ class Soap
                 $duration = $end->diffInSeconds($start);
             }
 
+            // Get the layout campaignId
+            $campaignId = $this->layoutFactory->getCampaignId($layoutId);
+
             $stats[] = [
                 'type' => $type,
                 'statDate' => $now,
@@ -1524,6 +1527,7 @@ class Soap
                 'toDt' => $todt,
                 'scheduleId' => $scheduleId,
                 'displayId' => $this->display->displayId,
+                'campaignId' => (int) $campaignId,
                 'layoutId' => (int) $layoutId,
                 'mediaId' => $mediaId,
                 'tag' => $tag,

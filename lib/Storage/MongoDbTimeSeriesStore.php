@@ -23,6 +23,7 @@
 namespace Xibo\Storage;
 
 use MongoDB\Client;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
@@ -76,7 +77,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
     {
         $this->log = $log;
         $this->dateService = $date;
@@ -117,6 +118,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             unset($statData[$k]['statDate']);
 
             // Media name
+            $mediaName = null;
             if ($stat['mediaId'] != null) {
                 $media = $this->mediaFactory->getById($stat['mediaId']);
                 $mediaName = $media->name; //dont remove used later
@@ -134,12 +136,53 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 }
             }
 
-            // Layout name
-            $layout = $this->layoutFactory->getById($stat['layoutId']);
-            $statData[$k]['layoutName'] = $layout->layout;
+            // Layout data
+            $layoutName = null;
+            $layoutTags = null;
+
+            try {
+                $layout = $this->layoutFactory->getById($stat['layoutId']);
+
+                $this->log->debug('Found layout : '. $stat['layoutId']);
+
+                $campaignId = $layout->campaignId;
+                $layoutName = $layout->layout;
+                $layoutTags = $layout->tags;
+
+            } catch (NotFoundException $error) {
+
+                $this->log->debug('Layout not Found. Search in layout history for latest layout.');
+
+                // an old layout which has been deleted still plays on the player
+                // so we will get layout not found
+                // Hence, get the latest layout
+
+                $campaignId = $this->layoutFactory->getCampaignId($stat['layoutId']);
+
+                if ($campaignId !== null) {
+
+//                    $this->log->debug('CampaignId is not NULL.');
+
+                    $latestLayoutId = $this->layoutFactory->getLatestLayoutId($campaignId);
+
+                    $this->log->debug('Latest layoutId: '.$latestLayoutId);
+
+                    // Latest layout
+                    $layout = $this->layoutFactory->getById($latestLayoutId);
+                    $layoutName = $layout->layout;
+                    $layoutTags = $layout->tags;
+
+                }
+
+            }
+
+            $statData[$k]['layoutName'] = $layoutName;
+
+            // Get layout Campaign ID
+            $statData[$k]['campaignId'] = (int) $campaignId;
 
             // Layout tags
-            $tagFilter['layout'] = explode(',', $layout->tags);
+            $tagFilter['layout'] = explode(',', $layoutTags);
 
             // Display name
             $display = $this->displayFactory->getById($stat['displayId']);
@@ -221,10 +264,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $temp = [
             '_id.type' => 'type',
             '_id.display' => 'display',
-            '_id.layout' => 'layout',
-            '_id.media' => 'media',
-            '_id.layoutId' => 'layoutId',
-            '_id.widgetId' => 'widgetId',
+            'layout' => 'layout',
+            'media' => 'media',
+            'layoutId' => 'layoutId',
+            'widgetId' => 'widgetId',
             '_id.displayId' => 'displayId',
             'numberPlays' => 'numberPlays',
             'minStart' => 'minStart',
@@ -269,8 +312,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $project = [
             '$project' => [
+                'campaignId' =>  1,
                 'mediaId' =>  1,
                 'mediaName'=> 1,
+                'media'=> [ '$ifNull' => [ '$mediaName', '$widgetName' ] ],
                 'widgetId' =>  1,
                 'widgetName' =>  1,
                 'layoutId' =>  1,
@@ -290,15 +335,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             '$group' => [
                 '_id' => [
                     'type' => '$type',
-                    'mediaId'=> [ '$ifNull' => [ '$mediaId', 'Null' ] ],
-                    'widgetId'=> [ '$ifNull' => [ '$widgetId', 'Null' ] ],
-                    'layoutId'=> [ '$ifNull' => [ '$layoutId', 'Null' ] ],
-                    'displayId'=> [ '$ifNull' => [ '$displayId', 'Null' ] ],
+                    'campaignId'=> [ '$ifNull' => [ '$campaignId', '$layoutId' ] ],
+                    'mediaorwidget'=> [ '$ifNull' => [ '$mediaId', '$widgetId' ] ],
+                    'displayId'=> [ '$ifNull' => [ '$displayId', null ] ],
                     'display'=> '$displayName',
-                    'layout'=> '$layoutName',
-                    'media'=> [ '$ifNull' => [ '$mediaName', '$widgetName' ] ],
+                    // we don't need to group by media name and widget name
 
                 ],
+
+                'media'=> [ '$first' => '$media'],
+                'mediaId' => ['$first' => '$mediaId'],
+                'widgetId' => ['$first' => '$widgetId' ],
+
+                'layout' => ['$first' => '$layoutName'],
+                'layoutId' => ['$first' => '$layoutId'],
+
                 'minStart' => ['$min' => '$start'],
                 'maxEnd' => ['$max' => '$end'],
                 'numberPlays' => ['$sum' => '$count'],
@@ -363,15 +414,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['type'] = $row['_id']['type'];
             $entry['displayId'] = $row['_id']['displayId'];
             $entry['display'] = isset($row['_id']['display']) ? $row['_id']['display']: 'No display';
-            $entry['layout'] = isset($row['_id']['layout']) ? $row['_id']['layout']: 'No layout';
-            $entry['media'] = isset($row['_id']['media']) ? $row['_id']['media'] : 'No media' ;
+            $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
+            $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
             $entry['numberPlays'] = $row['numberPlays'];
             $entry['duration'] = $row['duration'];
             $entry['minStart'] = $row['minStart'];
             $entry['maxEnd'] = $row['maxEnd'];
-            $entry['layoutId'] = $row['_id']['layoutId'];
-            $entry['widgetId'] = $row['_id']['widgetId'];
-            $entry['mediaId'] = $row['_id']['mediaId'];
+            $entry['layoutId'] = $row['layoutId'];
+            $entry['widgetId'] = $row['widgetId'];
+            $entry['mediaId'] = $row['mediaId'];
 
             $rows[] = $entry;
         }
@@ -649,10 +700,20 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
+
+                // Get the campaign ID
+                $campaignId = $this->layoutFactory->getCampaignId($layoutId);
+
+                $matchType = [
+                    '$eq' => [ '$type', 'layout' ]
+                ];
                 $matchId = [
-                    '$eq' => [ '$layoutId', $layoutId ]
+                    '$eq' => [ '$campaignId', $campaignId ]
                 ];
             } elseif (($type == 'media') && ($mediaId != '')) {
+                $matchType = [
+                    '$eq' => [ '$type', 'media' ]
+                ];
                 $matchId = [
                     '$eq' => [ '$mediaId', $mediaId ]
                 ];
@@ -703,7 +764,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // period end for each record of the collection (which we want to avoid)
                     [
                         '$addFields' => [
-                            'tempField' => 'null'
+                            'tempField' => null
                         ]
                     ],
 
@@ -848,6 +909,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                                                 // match media id is 926
                                                 // stat.start < $periodEnd AND stat.end > $periodStart
+                                                $matchType,
                                                 $matchId,
 
                                                 // display ids

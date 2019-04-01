@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
@@ -40,6 +41,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var DateServiceInterface */
     private $dateService;
 
+    /** @var  LayoutFactory */
+    protected $layoutFactory;
+
     /**
      * @inheritdoc
      */
@@ -51,18 +55,19 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null)
+    public function setDependencies($log, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
     {
         $this->log = $log;
         $this->dateService = $date;
+        $this->layoutFactory = $layoutFactory;
         return $this;
     }
 
     /** @inheritdoc */
     public function addStat($statData)
     {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
 
@@ -86,13 +91,15 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $select = '
           SELECT stat.type,
               display.Display,
-              layout.Layout,
+              IFNULL(layout.Layout, 
+              (SELECT `layout` FROM `layout` WHERE layoutId = (SELECT  MAX(layoutId) FROM  layouthistory  WHERE
+                            campaignId = stat.campaignId))) AS Layout,
               IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
               SUM(stat.count) AS NumberPlays,
               SUM(stat.duration) AS Duration,
               MIN(start) AS MinStart,
               MAX(end) AS MaxEnd,
-              layout.layoutId,
+              stat.layoutId,
               stat.mediaId,
               stat.widgetId,
               stat.displayId
@@ -102,8 +109,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             FROM stat
               LEFT OUTER JOIN display
               ON stat.DisplayID = display.DisplayID
+              LEFT OUTER JOIN layouthistory 
+              ON layouthistory.LayoutID = stat.LayoutID              
               LEFT OUTER JOIN layout
-              ON layout.LayoutID = stat.LayoutID
+              ON layout.LayoutID = layouthistory.layoutId
               LEFT OUTER JOIN `widget`
               ON `widget`.widgetId = stat.widgetId
               LEFT OUTER JOIN `widgetoption`
@@ -126,7 +135,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         $body .= ' WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
-                AND stat.start <= :toDt
+                AND stat.start <= DATE_ADD(:toDt, INTERVAL 1 DAY)
         ';
 
         // Filter by display
@@ -232,7 +241,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.layoutId IN (' . trim($layoutSql, ',') . ')';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . '))';
         }
 
         // Media Filter
@@ -249,8 +258,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
-        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
-
+        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, stat.campaignId, IFNULL(stat.mediaId, stat.widgetId), 
+        IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         $order = '';
         if ($columns != null)
@@ -622,7 +631,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
                 $body .= ' AND `stat`.type = \'layout\' 
-                       AND `stat`.layoutId = ' . $layoutId;
+                       AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = ' . $layoutId. ') ';
             } elseif (($type == 'media') && ($mediaId != '')) {
                 $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
                        AND `stat`.mediaId = ' . $mediaId;
