@@ -124,23 +124,6 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             this.DOMObject.find('.viewer-element').css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
         }
 
-        // Set background color as a darken version of the complementary color
-        const darkerValue = 50;
-        const complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
-
-        if(complementaryColorRGB.R === undefined || complementaryColorRGB.G === undefined || complementaryColorRGB.B === undefined) {
-            this.DOMObject.css('background', layout.backgroundColor);
-        } else {
-
-            // Darken color
-            complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue; 
-            complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue; 
-            complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue; 
-
-            // Use a complentary colour for the navigator background
-            this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
-        } 
-
         // Handle play button
         this.DOMObject.find('#play-btn').click(function() {
             this.playPreview(requestPath, this.containerElementDimensions);
@@ -203,10 +186,6 @@ Viewer.prototype.render = function(element, layout, page = 1) {
                 // Show inline editor controls
                 this.showInlineEditor();
             }
-
-            // Set complementary colour to the preview content
-            const complementaryColor = $c.complement(layout.backgroundColor);
-            this.DOMObject.find('#viewer-preview').css('color', complementaryColor);
 
             // Handle fullscreen button
             this.DOMObject.find('#fs-btn').click(function() {
@@ -422,6 +401,10 @@ Viewer.prototype.openInlineEditorContent = function() {
  * Unload Inline Editor content ( reenable on properties panel )
  */
 Viewer.prototype.closeInlineEditorContent = function() {
+    if(CKEDITOR.instances['viewer_' + lD.propertiesPanel.inlineEditorId] == undefined) {
+        return;
+    }
+
     // Update inline editor text area
     let data = CKEDITOR.instances['viewer_' + lD.propertiesPanel.inlineEditorId].getData();
 
@@ -430,6 +413,8 @@ Viewer.prototype.closeInlineEditorContent = function() {
 
     // Update state
     this.inlineEditorState = 1;
+
+    formHelpers.destroyCKEditor('viewer_' + lD.propertiesPanel.inlineEditorId);
 };
 
 /**
@@ -450,8 +435,6 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
         height: layout.height * dimensions.scale
     };
 
-    const complementaryBackground = $c.complement(layout.backgroundColor);
-
     // Add background ( or color ) to the viewer
     if(layout.backgroundImage === null) {
         this.DOMObject.css('background-color', layout.backgroundColor);
@@ -462,7 +445,7 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
         linkToAPI = linkToAPI.replace(':id', layout.layoutId);
 
         this.DOMObject.css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * dimensions.scale) + "&height=" + (layout.height * dimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
-        this.DOMObject.css('background-color', complementaryBackground);
+        this.DOMObject.css('background-color', '#111');
 
         // Adjust background position
         this.DOMObject.css('background-position-x', -elementScaledDimensions.left + 'px');

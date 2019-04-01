@@ -5,9 +5,9 @@
  * @param {number} id - region id
  * @param {object} data - data from the API request
  * @param {object=} [options] - Region options
- * @param {string} [options.backgroundColor="#555555"] - Color for the background
+ * @param {string} [options.backgroundColor="#aaa"] - Color for the background
  */
-let Region = function(id, data, {backgroundColor = '#555555'} = {}) {
+let Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
     this.id = 'region_' + id;
     this.regionId = id;
     this.type = 'region';

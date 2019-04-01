@@ -43,8 +43,7 @@ module.exports = {
     ],
     output: {
         path: path.resolve(__dirname, 'web/dist'),
-        filename: '[name].bundle.min.js',
-        publicPath: '/dist/'
+        filename: '[name].bundle.min.js'
     },
     module: {
         rules: [
@@ -74,8 +73,7 @@ module.exports = {
                 use: [{
                     loader: 'file-loader',
                     options: {
-                        name: '[hash].[ext]',
-                        useRelativePath: true
+                        name: '[name].[ext]'
                     }
                 }]
             },
@@ -84,8 +82,7 @@ module.exports = {
                 use: [{
                     loader: 'file-loader',
                     options: {
-                        name: '[hash].[ext]',
-                        useRelativePath: true
+                        name: '[name].[ext]'
                     }
                 }]
             },

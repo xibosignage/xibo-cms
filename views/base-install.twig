@@ -6,6 +6,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="token" content="{{ csrfToken }}"/>
+        <meta name="public-path" content="{{ theme.rootUri() }}"/>
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
         {# Import CSS bundle from dist #}
@@ -50,6 +51,6 @@
         </div>
 
         <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
-        <script src="{{ theme.rootUri() }}dist/js/install.js"></script>
+        <script src="{{ theme.rootUri() }}dist/core/install.js"></script>
     </body>
 </html>
