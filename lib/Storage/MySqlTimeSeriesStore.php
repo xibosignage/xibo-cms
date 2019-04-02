@@ -87,6 +87,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
 
+        $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
+
         // Media on Layouts Ran
         $select = '
           SELECT stat.type,
@@ -136,7 +138,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         $body .= ' WHERE stat.type <> \'displaydown\'
                 AND stat.end > :fromDt
-                AND stat.start <= DATE_ADD(:toDt, INTERVAL 1 DAY)
+                AND stat.start <= :toDt
         ';
 
         // Filter by display
@@ -160,12 +162,22 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                         )
                         ';
                 }
+
+                // old layout and latest layout have same tags
+                // old layoutId replaced with latest layoutId in the lktaglayout table and
+                // join with layout history to get campaignId then we can show old layouts that have no tag
                 if ($tagsType === 'layout') {
-                    $body .= ' AND `layout`.layoutId NOT IN (
-                    SELECT `lktaglayout`.layoutId
-                     FROM tag
-                        INNER JOIN `lktaglayout`
-                        ON `lktaglayout`.tagId = tag.tagId
+                    $body .= ' AND `stat`.campaignId NOT IN (
+                        SELECT 
+                            `layouthistory`.campaignId
+                        FROM
+                        (
+                            SELECT `lktaglayout`.layoutId
+                            FROM tag
+                            INNER JOIN `lktaglayout`
+                            ON `lktaglayout`.tagId = tag.tagId ) B
+                        LEFT OUTER JOIN
+                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId 
                         )
                         ';
                 }
@@ -188,13 +200,20 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                             ON `lktagdisplaygroup`.tagId = tag.tagId
                         ";
                 }
+                // old layout and latest layout have same tags
+                // old layoutId replaced with latest layoutId in the lktaglayout table and
+                // join with layout history to get campaignId then we can show old layouts that have given tag
                 if ($tagsType === 'layout') {
-                    $body .= " AND `layout`.layoutId IN (
-                        SELECT `lktaglayout`.layoutId
-                          FROM tag
+                    $body .= " AND `stat`.campaignId IN (
+                        SELECT 
+                            `layouthistory`.campaignId
+                        FROM
+                        (
+                            SELECT `lktaglayout`.layoutId
+                            FROM tag
                             INNER JOIN `lktaglayout`
                             ON `lktaglayout`.tagId = tag.tagId
-                    ";
+                        ";
                 }
                 if ($tagsType === 'media') {
                     $body .= " AND `media`.mediaId IN (
@@ -216,7 +235,14 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     else
                         $params['tags' . $i] = '%' . $tag . '%';
                 }
-                $body .= " ) ";
+                if ($tagsType === 'layout') {
+                    $body .= " ) B
+                        LEFT OUTER JOIN
+                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ";
+                }
+                else {
+                    $body .= " ) ";
+                }
             }
         }
 
@@ -242,7 +268,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . '))';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
