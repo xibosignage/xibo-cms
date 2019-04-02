@@ -305,7 +305,7 @@ class LayoutFactory extends BaseFactory
         try {
             $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
             if(count($row) > 0) {
-                $campaignId = $row[0]['campaignId'];
+                $campaignId = (int) $row[0]['campaignId'];
             } else {
                 // layouthistory is not added on upgrade for a deleted layout but there is
                 // still stats exist in the player

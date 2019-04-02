@@ -250,7 +250,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // Layout Filter
         if (count($layoutIds) != 0) {
             $this->log->debug($layoutIds, JSON_PRETTY_PRINT);
-            $match['$match']['layoutId'] = [ '$in' => $layoutIds ];
+            // Get campaignIds for selected layoutIds
+            $campaignIds = [];
+            foreach ($layoutIds as $layoutId) {
+                $campaignIds[] = $this->layoutFactory->getCampaignId($layoutId);
+            }
+            $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
         }
 
         // Media Filter
@@ -348,7 +353,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 'widgetId' => ['$first' => '$widgetId' ],
 
                 'layout' => ['$first' => '$layoutName'],
-                'layoutId' => ['$first' => '$layoutId'],
+
+                // use the last layoutId to say that is the latest layoutId
+                'layoutId' => ['$last' => '$layoutId'],
 
                 'minStart' => ['$min' => '$start'],
                 'maxEnd' => ['$max' => '$end'],

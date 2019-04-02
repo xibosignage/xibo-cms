@@ -1500,6 +1500,7 @@ class Soap
                 if (count($media) <= 0) {
                     // Non-media widget
                     $mediaId = null;
+                    $type = 'widget';
                 } else {
                     $mediaId = $media[0]->mediaId;
                 }
