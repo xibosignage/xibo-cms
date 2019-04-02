@@ -295,12 +295,13 @@ class LayoutFactory extends BaseFactory
      * @return int campaignId|null
      * @throws NotFoundException
      */
-    public function getCampaignId($layoutId)
+    public function getCampaignIdFromLayoutHistory($layoutId)
     {
         $campaignId = null;
 
-        if ($layoutId == 0)
+        if ($layoutId == 0) {
             throw new NotFoundException();
+        }
 
         try {
             $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
@@ -326,14 +327,14 @@ class LayoutFactory extends BaseFactory
      * @return int layoutId
      * @throws NotFoundException
      */
-    public function getLatestLayoutId($campaignId)
+    public function getLatestLayoutIdFromLayoutHistory($campaignId)
     {
 
         if ($campaignId == null)
             throw new NotFoundException();
 
         try {
-            $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId LIMIT 1', ['campaignId' => $campaignId]);
+            $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
             if(count($row) > 0) {
                 $layoutId = $row[0]['layoutId'];
             } else {

@@ -157,13 +157,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 // so we will get layout not found
                 // Hence, get the latest layout
 
-                $campaignId = $this->layoutFactory->getCampaignId($stat['layoutId']);
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($stat['layoutId']);
 
                 if ($campaignId !== null) {
 
 //                    $this->log->debug('CampaignId is not NULL.');
 
-                    $latestLayoutId = $this->layoutFactory->getLatestLayoutId($campaignId);
+                    $latestLayoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
 
                     $this->log->debug('Latest layoutId: '.$latestLayoutId);
 
@@ -253,7 +253,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // Get campaignIds for selected layoutIds
             $campaignIds = [];
             foreach ($layoutIds as $layoutId) {
-                $campaignIds[] = $this->layoutFactory->getCampaignId($layoutId);
+                $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
             }
             $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
         }
@@ -713,7 +713,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if (($type == 'layout') && ($layoutId != '')) {
 
                 // Get the campaign ID
-                $campaignId = $this->layoutFactory->getCampaignId($layoutId);
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
 
                 $matchType = [
                     '$eq' => [ '$type', 'layout' ]

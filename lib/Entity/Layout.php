@@ -680,7 +680,9 @@ class Layout implements \JsonSerializable
             } catch (NotFoundException $notFoundException) {
                 $this->getLog()->info('No draft to delete for a Layout in the Draft state, odd!');
             }
-        }// Delete Permissions
+        }
+
+        // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->deleteAll();

@@ -37,6 +37,7 @@ class CreateLayoutHistoryTableMigration extends AbstractMigration
             ->addForeignKey('campaignId', 'campaign', 'campaignId')
             ->create();
 
+        // insert all published layoutIds and their corresponding campaignId in the layouthistory
         $this->execute('INSERT INTO `layouthistory` (campaignId, layoutId, publishedDate)  
                             SELECT T.campaignId, L.layoutId, L.modifiedDt
                             FROM layout L

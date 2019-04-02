@@ -1519,7 +1519,7 @@ class Soap
             }
 
             // Get the layout campaignId
-            $campaignId = $this->layoutFactory->getCampaignId($layoutId);
+            $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
 
             $stats[] = [
                 'type' => $type,
