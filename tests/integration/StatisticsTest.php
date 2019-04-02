@@ -320,8 +320,9 @@ class StatisticsTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         // $this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get([$layout->layoutId]);
-        //print_r($stats);
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $layout->layoutId]);
+        // print_r($stats);
+        $this->assertNotEquals(0, count($stats));
     }
 
     /**
