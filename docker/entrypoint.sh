@@ -4,9 +4,10 @@ if [ "$CMS_DEV_MODE" == "true" ]
 then
   # Print MySQL connection details
   echo "MySQL Connection Details:"
-  echo "Username: cms"
+  echo "Username: $MYSQL_USER"
   echo "Password: $MYSQL_PASSWORD"
-  echo "Host: mysql"
+  echo "DB: $MYSQL_DATABASE"
+  echo "Host: $MYSQL_HOST"
   echo ""
   echo "XMR Connection Details:"
   echo "Host: $XMR_HOST"
