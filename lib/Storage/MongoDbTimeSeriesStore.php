@@ -271,6 +271,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             '_id.display' => 'display',
             'layout' => 'layout',
             'media' => 'media',
+            'eventName' => 'eventName',
             'layoutId' => 'layoutId',
             'widgetId' => 'widgetId',
             '_id.displayId' => 'displayId',
@@ -321,6 +322,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 'mediaId' =>  1,
                 'mediaName'=> 1,
                 'media'=> [ '$ifNull' => [ '$mediaName', '$widgetName' ] ],
+                'eventName' => 1,
                 'widgetId' =>  1,
                 'widgetName' =>  1,
                 'layoutId' =>  1,
@@ -349,6 +351,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ],
 
                 'media'=> [ '$first' => '$media'],
+                'eventName'=> [ '$first' => '$eventName'],
                 'mediaId' => ['$first' => '$mediaId'],
                 'widgetId' => ['$first' => '$widgetId' ],
 
@@ -430,6 +433,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
+            $entry['tag'] = $row['eventName'];
 
             $rows[] = $entry;
         }

@@ -342,6 +342,7 @@ class Stats extends Base
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
+            $entry['tag'] = $this->getSanitizer()->string($row['tag']);
 
             $rows[] = $entry;
         }

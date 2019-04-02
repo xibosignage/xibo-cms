@@ -99,6 +99,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
               SUM(stat.duration) AS Duration,
               MIN(start) AS MinStart,
               MAX(end) AS MaxEnd,
+              stat.tag,
               stat.layoutId,
               stat.mediaId,
               stat.widgetId,
@@ -288,6 +289,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
+            $entry['tag'] = $row['tag'];
 
             $rows[] = $entry;
         }
