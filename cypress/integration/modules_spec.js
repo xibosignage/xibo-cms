@@ -12,6 +12,6 @@ describe('Modules Page', function () {
         cy.get('.pagination > :nth-child(2) > a').click();
 
         // TODO: How many modules are we expecting by default?
-        cy.contains('Showing 1 to 10 of');
+        cy.contains('Showing 1 to');
     });
 });
