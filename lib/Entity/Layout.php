@@ -1374,6 +1374,7 @@ class Layout implements \JsonSerializable
         // campaign
         $parent->parentId = $this->layoutId;
         $parent->tags = []; // Clear the tags so we don't attempt a delete.
+        $parent->permissions = []; // Clear the permissions so we don't attempt a delete
         $parent->delete();
 
         // Set my statusId to published
