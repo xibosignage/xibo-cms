@@ -65,6 +65,7 @@ $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('sche
 $app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
+$app->get('/schedulenow/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedulenow.now.form');
 // Special routes for searching inside the schedule page
 $app->get('/schedule/search/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('schedule.displayGroup.search');
 $app->get('/schedule/search/campaign', '\Xibo\Controller\Campaign:grid')->name('schedule.campaign.search');

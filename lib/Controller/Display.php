@@ -642,10 +642,10 @@ class Display extends Base
             }
 
             // Schedule Now
-            if ($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) {
+            if (($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor('schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }
