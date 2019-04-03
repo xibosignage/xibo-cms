@@ -269,6 +269,13 @@ class Soap5 extends Soap4
         //$display->operatingSystem = $operatingSystem;
         $display->save(Display::$saveOptionsMinimum);
 
+        // cache checks
+        $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
+        $displayElement->setAttribute('checkSchedule', $cacheSchedule->isHit() == true ? "false" : "true");
+
+        $cacheRF = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
+        $displayElement->setAttribute('checkRf', $cacheRF->isHit() == true ? "false" : "true");
+
         // Log Bandwidth
         $returnXml = $return->saveXML();
         $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
