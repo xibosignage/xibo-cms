@@ -194,7 +194,31 @@
                             if (type != "display")
                                 return "";
 
-                            return moment().startOf("day").seconds(data).format("H:mm:ss")
+                            let durationData = moment.duration(data, "seconds");
+                            let dataM = '';
+
+                            let months = durationData.months();
+                            if (months > 0) {
+                                durationData.subtract(moment.duration(months,'months'));
+                                dataM += months + 'months ';
+                            }
+
+                            let days = durationData.days();
+                            durationData.subtract(moment.duration(days,'days'));
+                            dataM += days + 'day ';
+
+                            let hours = durationData.hours();
+                            durationData.subtract(moment.duration(hours,'hours'));
+                            dataM += hours + 'hr ';
+
+                            let minutes = durationData.minutes();
+                            durationData.subtract(moment.duration(minutes,'minutes'));
+                            dataM += minutes + 'min ';
+
+                            let seconds = durationData.seconds();
+                            dataM += seconds + 's ';
+
+                            return  dataM;
                         }
                     },
                     {"data": "duration"},
