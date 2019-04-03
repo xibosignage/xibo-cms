@@ -89,6 +89,17 @@ This command also mounts the Composer `/tmp` folder into your home directory so 
 docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:latest sh -c "npm install webpack -g; npm install; npm run build;"
 ```
 
+### Mapped Volumes
+
+The development version of Xibo expects the code base to be mapped into the container such that changes on the host
+are reflected in the container.
+
+However, the container itself creates some files, such as the twig cache and library uploads. These locations will need
+to be created and the container given access to them.
+
+The easiest way to do this is to make the `cache` and `library` folders and `chmod 777` them. Obviously this is not
+suitable for production, but you shouldn't be using these files for production (we have containers for that).
+
 
 ## Bring up the Containers
 
@@ -98,18 +109,12 @@ Use Docker Compose to bring up the containers.
 docker-compose up --build -d
 ```
 
-## Installation Wizard
+## Login
+After the containers have come up you should be able to login with the details:
 
-Visit Xibo in the browser and follow the installation instructions. The CMS will be accessible at `localhost`. When
-asked for a database you should select to create a new database and enter these details:
+U: `xibo_admin`
+P: `password`
 
- - Host: `mysql`
- - Admin User: `root`
- - Admin Password: `root`
-
-When asked for a library location you should enter
-
- - /var/www/cms/library
 
 ## Translations
 To parse the translations:
@@ -131,7 +136,8 @@ docker-compose exec web sh -c "cd /var/www/cms; vendor/bin/swagger lib -o web/sw
 
 # Application Structure
 
-To find out more about the application code and how everything fits together, please refer to the [advanced section of the manual](https://xibo.org.uk/manual/en/advanced.html).
+To find out more about the application code and how everything fits together, please refer to 
+the [developer docs](https://xibo.org.uk/docs/developer).
 
 
 
@@ -140,7 +146,8 @@ To find out more about the application code and how everything fits together, pl
 The standard licence for Xibo is the [AGPLv3](LICENSE). For more information please see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 
-
 # Reporting Problems
 
-Support requests can be reported on the [Xibo Community Forum](https://community.xibo.org.uk/c/dev). Verified, re-producable bugs with this repository can be reported in the [Xibo parent repository](https://github.com/xibosignage/xibo/issues).
+Support requests can be reported on the [Xibo Community Forum](https://community.xibo.org.uk/c/dev). Verified, 
+re-producable bugs with this repository can be reported in 
+the [Xibo parent repository](https://github.com/xibosignage/xibo/issues).
