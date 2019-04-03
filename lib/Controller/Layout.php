@@ -1042,6 +1042,9 @@ class Layout extends Base
             $layout->publishedStatusFuture = __('Publishing %s');
             $layout->publishedStatusFailed = __('Publish failed ');
 
+            // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
+            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
+
             // Add some buttons for this row
             if ($this->getUser()->checkEditable($layout)) {
                 // Design Button
@@ -1096,12 +1099,13 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Schedule Now
-            $layout->buttons[] = array(
-                'id' => 'layout_button_schedulenow',
-                'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
-                'text' => __('Schedule Now')
-            );
-
+            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_schedulenow',
+                    'url' => $this->urlFor('schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'text' => __('Schedule Now')
+                );
+            }
             // Assign to Campaign
             if ($this->getUser()->routeViewable('/campaign')) {
                 $layout->buttons[] = array(

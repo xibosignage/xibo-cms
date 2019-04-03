@@ -177,7 +177,7 @@ $(document).ready(function() {
                             class: 'btn-info',
                             action: lD.showScheduleScreen,
                             inactiveCheck: function() {
-                                return (lD.layout.editable == true);
+                                return (lD.layout.editable == true || lD.layout.scheduleNowPermission == false);
                             },
                             inactiveCheckClass: 'hidden',
                         },
