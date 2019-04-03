@@ -65,6 +65,7 @@ $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('sche
 $app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
+$app->get('/schedulenow/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedulenow.now.form');
 // Special routes for searching inside the schedule page
 $app->get('/schedule/search/displaygroup', '\Xibo\Controller\DisplayGroup:grid')->name('schedule.displayGroup.search');
 $app->get('/schedule/search/campaign', '\Xibo\Controller\Campaign:grid')->name('schedule.campaign.search');
@@ -99,6 +100,7 @@ $app->get('/layout/form/publish/:id', '\Xibo\Controller\Layout:publishForm')->na
 $app->get('/layout/form/discard/:id', '\Xibo\Controller\Layout:discardForm')->name('layout.discard.form');
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/unretire/:id', '\Xibo\Controller\Layout:unretireForm')->name('layout.unretire.form');
+$app->get('/layout/form/setenablestat/:id', '\Xibo\Controller\Layout:setEnableStatForm')->name('layout.setenablestat.form');
 $app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
 $app->get('/layout/form/export/:id', '\Xibo\Controller\Layout:exportForm')->name('layout.export.form');
 $app->get('/layout/form/campaign/assign/:id', '\Xibo\Controller\Layout:assignToCampaignForm')->name('layout.assignTo.campaign.form');
@@ -146,6 +148,7 @@ $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 $app->get('/library/fontlist', '\Xibo\Controller\Library:fontList')->name('library.font.list');
 $app->get('/library/form/copy/:id', '\Xibo\Controller\Library:copyForm')->name('library.copy.form');
+$app->get('/library/form/setenablestat/:id', '\Xibo\Controller\Library:setEnableStatForm')->name('library.setenablestat.form');
 
 //
 // display
@@ -246,6 +249,7 @@ $app->get('/displaygroup/form/media/:id', '\Xibo\Controller\DisplayGroup:mediaFo
 $app->get('/displaygroup/form/layout/:id', '\Xibo\Controller\DisplayGroup:layoutsForm')->name('displayGroup.layout.form');
 $app->get('/displaygroup/form/command/:id', '\Xibo\Controller\DisplayGroup:commandForm')->name('displayGroup.command.form');
 $app->get('/displaygroup/form/collect/:id', '\Xibo\Controller\DisplayGroup:collectNowForm')->name('displayGroup.collectNow.form');
+$app->get('/displaygroup/form/copy/:id', '\Xibo\Controller\DisplayGroup:copyForm')->name('displayGroup.copy.form');
 
 //
 // displayprofile
@@ -341,6 +345,7 @@ $app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view
 $app->get('/stats/proofofplay/view', '\Xibo\Controller\Stats:displayProofOfPlayPage')->name('stats.proofofplay.view');
 $app->get('/stats/library/view', '\Xibo\Controller\Stats:displayLibraryPage')->name('stats.library.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');
+$app->get('/stats/summaryreport/view', '\Xibo\Controller\Stats:summaryReportForm')->name('stats.summaryReport.form');
 $app->get('/stats/library', '\Xibo\Controller\Stats:libraryUsageGrid')->name('stats.library.grid');
 
 //

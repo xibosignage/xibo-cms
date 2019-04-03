@@ -127,7 +127,9 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Pre-Display Status isnt as expected');
 
         // Publish (which builds)
-        $response = $this->client->put('/layout/publish/' . $this->layout->layoutId);
+        $response = $this->client->put('/layout/publish/' . $this->layout->layoutId, [
+            'publishNow' => 1
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         $response = json_decode($response, true);
 
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->status() . $this->client->response->body());

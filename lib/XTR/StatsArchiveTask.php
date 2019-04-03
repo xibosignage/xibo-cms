@@ -51,7 +51,7 @@ class StatsArchiveTask implements TaskInterface
         $this->runMessage = '# ' . __('Stats Archive') . PHP_EOL . PHP_EOL;
 
         // Get the earliest
-        $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
+        $earliestDate = $this->timeSeriesStore->getEarliestDate();
 
         if (count($earliestDate) <= 0) {
             $this->runMessage = __('Nothing to archive');
@@ -91,25 +91,14 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->runMessage .= ' - ' . $fromDt . ' / ' . $toDt . PHP_EOL;
 
-        $sql = '
-            SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
-              FROM stat
-                INNER JOIN display
-                ON stat.DisplayID = display.DisplayID
-                LEFT OUTER JOIN layout
-                ON layout.LayoutID = stat.LayoutID
-                LEFT OUTER JOIN media
-                ON media.mediaID = stat.mediaID
-             WHERE 1 = 1
-              AND stat.statDate >= :fromDt
-              AND stat.statDate < :toDt
-             ORDER BY stat.statDate
-        ';
+        /*Format param dates*/
+        $fromDt = $this->date->getLocalDate($fromDt);
+        $toDt = $this->date->getLocalDate($toDt);
 
-        $params = [
-            'fromDt' => $this->date->getLocalDate($fromDt),
-            'toDt' => $this->date->getLocalDate($toDt)
-        ];
+        $resultSet = $this->timeSeriesStore->getStats($fromDt, $toDt);
+
+        // Get results as array
+        $result = $resultSet->getArray();
 
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
@@ -117,27 +106,21 @@ class StatsArchiveTask implements TaskInterface
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        // Get records using a cursor so we don't load everything into memory
-        $statement = $this->store->getConnection()->prepare($sql);
+        foreach ($result['statData'] as $row) {
 
-        // Exec
-        $statement->execute($params);
-
-        // Do some post processing
-        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
             // Read the columns
             fputcsv($out, [
-                $this->sanitizer->string($row['Type']),
+                $this->sanitizer->string($row['type']),
                 $this->sanitizer->string($row['start']),
                 $this->sanitizer->string($row['end']),
-                $this->sanitizer->string($row['Layout']),
-                $this->sanitizer->string($row['Display']),
-                $this->sanitizer->string($row['MediaName']),
-                $this->sanitizer->string($row['Tag']),
-                $this->sanitizer->int($row['displayID']),
-                $this->sanitizer->int($row['layoutID']),
+                $this->sanitizer->string($row['layout']),
+                $this->sanitizer->string($row['display']),
+                $this->sanitizer->string($row['media']),
+                $this->sanitizer->string($row['tag']),
+                $this->sanitizer->int($row['displayId']),
+                $this->sanitizer->int($row['layoutId']),
                 $this->sanitizer->int($row['widgetId']),
-                $this->sanitizer->int($row['mediaID'])
+                $this->sanitizer->int($row['mediaId'])
             ]);
         }
 
@@ -157,27 +140,17 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(__('Stats Export %s to %s - '.bin2hex(random_bytes(5)), $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
+        $options = [
+            'maxAttempts' => 10,
+            'statsDeleteSleep' => 1,
+            'limit' => 1000
+        ];
         // Delete the stats, incrementally
-        $rowsModified = 1;
+        $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
 
-        // Prepare a SQL statement
-        $delete = $this->store->getConnection()->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT 1000');
-
-        while ($rowsModified > 0) {
-            // Run the delete
-            $delete->execute($params);
-
-            // Find out how many rows we've deleted
-            $rowsModified = $delete->rowCount();
-
-            // We shouldn't be in a transaction, but commit anyway just in case
-            $this->store->commitIfNecessary();
-
-            sleep(1);
-        }
     }
 
     /**

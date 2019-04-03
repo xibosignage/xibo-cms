@@ -48,6 +48,19 @@
                 {% set helpText %}{% trans "Should the video expand over the top of existing content and show in full screen?" %}{% endset %}
                 {{ forms.checkbox("showFullScreen", title, module.getOption("showFullScreen", 0), helpText) }}
 
+                {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                {% set offOption %}{% trans "Off" %}{% endset %}
+                {% set onOption %}{% trans "On" %}{% endset %}
+                {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                {% set options = [
+                    { id: "Off", value: offOption },
+                    { id: "On", value: onOption },
+                    { id: "Inherit", value: inheritOption }
+                ] %}
+                {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
+
                 <div class="alert alert-info">
                     {% set message %}{% trans "Please note that video scaling and video streaming via RTSP is only supported by Android and webOS players at the current time. The HLS streaming Widget can be used to show compatible video streams on Windows." %}{% endset %}
                     {{ forms.message(message) }}

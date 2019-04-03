@@ -54,6 +54,10 @@
                         {% set title %}{% trans "Retired" %}{% endset %}
                         {% set helpText %}{% trans "Retire this layout or not? It will no longer be visible in lists" %}{% endset %}
                         {{ forms.checkbox("retired", title, layout.retired, helpText) }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Layout. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+                        {{ forms.checkbox("enableStat", title, layout.enableStat, helpText) }}
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}

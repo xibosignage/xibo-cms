@@ -50,17 +50,30 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Get some parameters
             if ($index === null) {
-                if (isset($_REQUEST['name']))
+                if (isset($_REQUEST['name'])) {
                     $name = $_REQUEST['name'];
-                else 
+                } else {
                     $name = $fileName;
                 }
-            else {
-                if (isset($_REQUEST['name'][$index]))
+
+                if (isset($_REQUEST['tags'])) {
+                    $tags = $_REQUEST['tags'];
+                } else {
+                    $tags = '';
+                }
+            } else {
+                if (isset($_REQUEST['name'][$index])) {
                     $name = $_REQUEST['name'][$index];
-                else 
+                } else {
                     $name = $fileName;
                 }
+
+                if (isset($_REQUEST['tags'][$index])) {
+                    $tags = $_REQUEST['tags'][$index];
+                } else {
+                    $tags = '';
+                }
+            }
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
@@ -91,10 +104,13 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set the old record to edited
                 $oldMedia->isEdited = 1;
+
                 $oldMedia->save(['validate' => false]);
 
                 // The media name might be empty here, because the user isn't forced to select it
                 $name = ($name == '') ? $oldMedia->name : $name;
+                $tags = ($tags == '') ? '' : $tags;
+
 
                 // Add the Media
                 //  the userId is either the existing user (if we are changing media type) or the currently logged in user otherwise.
@@ -104,6 +120,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $module->getModuleType(),
                     (($this->options['allowMediaTypeChange'] == 1) ? $oldMedia->getOwnerId() : $this->options['userId'])
                 );
+
+                if ($tags != '') {
+                    $concatTags = (string)$oldMedia->tags . ',' . $tags;
+                    $media->replaceTags($controller->getTagFactory()->tagsFromString($concatTags));
+                }
 
                 // Set the duration
                 if ($oldMedia->mediaType != 'video' && $media->mediaType != 'video')
@@ -116,6 +137,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Raise an event for this media item
                 $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
+
+                $media->enableStat = $oldMedia->enableStat;
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -246,15 +269,22 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // The media name might be empty here, because the user isn't forced to select it
                 $name = ($name == '') ? $fileName : $name;
+                $tags = ($tags == '') ? '' : $tags;
 
                 // Add the Media
                 $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
-
+                if ($tags != '') {
+                    $media->replaceTags($controller->getTagFactory()->tagsFromString($tags));
+                }
                 // Set the duration
                 $media->duration = $module->determineDuration($filePath);
 
                 // Pre-process
                 $module->preProcess($media, $filePath);
+
+                if ($media->enableStat == null) {
+                    $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+                }
 
                 // Save
                 $media->save();
@@ -277,6 +307,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->retired = $media->retired;
             $file->fileSize = $media->fileSize;
             $file->md5 = $media->md5;
+            $file->enableStat = $media->enableStat;
 
             // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->fileSize != $file->size)

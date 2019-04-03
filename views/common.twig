@@ -73,11 +73,15 @@
                     url: "{{ urlFor("layout.designer") }}"
                 },
                 schedule: {
-                    url: "{{ urlFor("schedule.now.form", {from: 'Campaign'}) }}",
+                    url: "{{ urlFor("schedulenow.now.form", {from: 'Campaign'}) }}",
                     type: 'GET'
                 },
                 saveTemplate: {
                     url: "{{ urlFor("template.from.layout.form") }}",
+                    type: 'GET'
+                },
+                publishForm: {
+                    url: "{{ urlFor("layout.publish.form") }}",
                     type: 'GET'
                 }
             },

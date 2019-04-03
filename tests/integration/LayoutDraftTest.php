@@ -113,7 +113,9 @@ class LayoutDraftTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // Do nothing and try to publish
-        $this->client->put('/layout/publish/' . $this->layout->layoutId);
+        $this->client->put('/layout/publish/' . $this->layout->layoutId, [
+            'publishNow' => 1
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // Expected invalid argument
         $this->assertSame(500, $this->client->response->status(), $this->client->response->getBody());

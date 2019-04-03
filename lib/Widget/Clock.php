@@ -77,6 +77,13 @@ class Clock extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="themeId",
      *      in="formData",
      *      description="Flag (0 , 1) for Analogue clock the light and dark theme",
@@ -146,6 +153,7 @@ class Clock extends ModuleWidget
         $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
         $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
         $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
 

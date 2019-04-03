@@ -12,6 +12,9 @@ let Layout = function(id, data) {
     // Is it editable? ( checkif status is draft )
     this.editable = (data.publishedStatusId == 2);
 
+    // Does user have permission to schedule now page?
+    this.scheduleNowPermission = (data.scheduleNowPermission);
+
     // Parent Id
     this.parentLayoutId = data.parentId;
 

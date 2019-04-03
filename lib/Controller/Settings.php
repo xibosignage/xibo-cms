@@ -259,8 +259,24 @@ class Settings extends Base
             $this->getConfig()->changeSetting('MAX_LICENSED_DISPLAYS', $this->getSanitizer()->getInt('MAX_LICENSED_DISPLAYS'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT')) {
+            $this->getConfig()->changeSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT', $this->getSanitizer()->getString('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_STATS_DEFAULT')) {
             $this->getConfig()->changeSetting('DISPLAY_PROFILE_STATS_DEFAULT', $this->getSanitizer()->getCheckbox('DISPLAY_PROFILE_STATS_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('LAYOUT_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('LAYOUT_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getCheckbox('LAYOUT_STATS_ENABLED_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('MEDIA_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('MEDIA_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getString('MEDIA_STATS_ENABLED_DEFAULT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('WIDGET_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getString('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
         if ($this->getConfig()->isSettingEditable('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED')) {

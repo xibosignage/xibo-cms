@@ -34,6 +34,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\TimeSeriesStoreInterface;
 
 /**
  * Class Stats
@@ -47,6 +48,11 @@ class Stats extends Base
     private $store;
 
     /**
+     * @var TimeSeriesStoreInterface
+     */
+    private $timeSeriesStore;
+
+    /**
      * @var DisplayFactory
      */
     private $displayFactory;
@@ -55,6 +61,7 @@ class Stats extends Base
      * @var DisplayGroupFactory
      */
     private $displayGroupFactory;
+
     /**
      * @var MediaFactory
      */
@@ -79,6 +86,7 @@ class Stats extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
+     * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
@@ -86,11 +94,12 @@ class Stats extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
+        $this->timeSeriesStore = $timeSeriesStore;
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
@@ -249,6 +258,7 @@ class Stats extends Base
         $type = strtolower($this->getSanitizer()->getString('type'));
         $tags = $this->getSanitizer()->getString('tags');
         $tagsType = $this->getSanitizer()->getString('tagsType');
+        $exactTags = $this->getSanitizer()->getCheckbox('exactTags');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -256,227 +266,79 @@ class Stats extends Base
             $toDt->addDay(1);
         }
 
+        // Format param dates
+        $fromDt = $this->getDate()->getLocalDate($fromDt);
+        $toDt = $this->getDate()->getLocalDate($toDt);
+
         $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
 
-        // Get an array of display id this user has access to.
-        $display_ids = array();
-
-        foreach ($this->displayFactory->query() as $display) {
-            $display_ids[] = $display->displayId;
-        }
-
-        if (count($display_ids) <= 0)
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-
-        // Media on Layouts Ran
-        $select = '
-          SELECT stat.type,
-              display.Display,
-              layout.Layout,
-              IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
-              COUNT(StatID) AS NumberPlays,
-              SUM(TIME_TO_SEC(TIMEDIFF(end, start))) AS Duration,
-              MIN(start) AS MinStart,
-              MAX(end) AS MaxEnd,
-              layout.layoutId,
-              stat.mediaId,
-              stat.widgetId,
-              stat.displayId
-        ';
-
-        $body = '
-            FROM stat
-              INNER JOIN display
-              ON stat.DisplayID = display.DisplayID
-              INNER JOIN layout
-              ON layout.LayoutID = stat.LayoutID
-              LEFT OUTER JOIN `widget`
-              ON `widget`.widgetId = stat.widgetId
-              LEFT OUTER JOIN `widgetoption`
-              ON `widgetoption`.widgetId = `widget`.widgetId
-                AND `widgetoption`.type = \'attrib\'
-                AND `widgetoption`.option = \'name\'
-              LEFT OUTER JOIN `media`
-              ON `media`.mediaId = `stat`.mediaId 
-              ';
-        if ($tags != '' ) {
-            if ($tagsType === 'dg') {
-                $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = display.displayid
-                     INNER JOIN `displaygroup`
-                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
-                         AND `displaygroup`.isDisplaySpecific = 1 ';
-            }
-        }
-
-        $body .= ' WHERE stat.type <> \'displaydown\'
-                AND stat.end > :fromDt
-                AND stat.start <= :toDt
-                AND stat.displayID IN (' . implode(',', $display_ids) . ')
-        ';
-
-        $params = [
-            'fromDt' => $this->getDate()->getLocalDate($fromDt),
-            'toDt' => $this->getDate()->getLocalDate($toDt)
-        ];
-
-        if ($tags != '') {
-            if (trim($tags) === '--no-tag') {
-                if ($tagsType === 'dg') {
-                    $body .= ' AND `displaygroup`.displaygroupId NOT IN (
-                    SELECT `lktagdisplaygroup`.displaygroupId
-                     FROM tag
-                        INNER JOIN `lktagdisplaygroup`
-                        ON `lktagdisplaygroup`.tagId = tag.tagId
-                        )
-                        ';
-                }
-
-                if ($tagsType === 'layout') {
-                    $body .= ' AND `layout`.layoutId NOT IN (
-                    SELECT `lktaglayout`.layoutId
-                     FROM tag
-                        INNER JOIN `lktaglayout`
-                        ON `lktaglayout`.tagId = tag.tagId
-                        )
-                        ';
-                }
-
-                if ($tagsType === 'media') {
-                    $body .= ' AND `media`.mediaId NOT IN (
-                    SELECT `lktagmedia`.mediaId
-                     FROM tag
-                        INNER JOIN `lktagmedia`
-                        ON `lktagmedia`.tagId = tag.tagId
-                        )
-                        ';
-                }
-            } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-                if ($tagsType === 'dg') {
-                    $body .= " AND `displaygroup`.displaygroupId IN (
-                        SELECT `lktagdisplaygroup`.displaygroupId
-                          FROM tag
-                            INNER JOIN `lktagdisplaygroup`
-                            ON `lktagdisplaygroup`.tagId = tag.tagId
-                        ";
-                }
-                if ($tagsType === 'layout') {
-                    $body .= " AND `layout`.layoutId IN (
-                        SELECT `lktaglayout`.layoutId
-                          FROM tag
-                            INNER JOIN `lktaglayout`
-                            ON `lktaglayout`.tagId = tag.tagId
-                    ";
-                }
-
-                if ($tagsType === 'media') {
-                    $body .= " AND `media`.mediaId IN (
-                        SELECT `lktagmedia`.mediaId
-                          FROM tag
-                            INNER JOIN `lktagmedia`
-                            ON `lktagmedia`.tagId = tag.tagId
-                    ";
-                }
-
-                $i = 0;
-
-                foreach (explode(',', $tags) as $tag) {
-                    $i++;
-
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
-            }
-        }
-
-        // Type filter
-        if ($type == 'layout') {
-            $body .= ' AND `stat`.type = \'layout\' ';
-        } else if ($type == 'media') {
-            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
-        } else if ($type == 'widget') {
-            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
-        }
-
-        // Layout Filter
-        if (count($layoutIds) != 0) {
-
-            $layoutSql = '';
-            $i = 0;
-            foreach ($layoutIds as $layoutId) {
-                $i++;
-                $layoutSql .= ':layoutId_' . $i . ',';
-                $params['layoutId_' . $i] = $layoutId;
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
+        $displayIds = [];
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
             }
 
-            $body .= '  AND `stat`.layoutId IN (' . trim($layoutSql, ',') . ')';
-        }
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
 
-        // Media Filter
-        if (count($mediaIds) != 0) {
-
-            $mediaSql = '';
-            $i = 0;
-            foreach ($mediaIds as $mediaId) {
-                $i++;
-                $mediaSql .= ':mediaId_' . $i . ',';
-                $params['mediaId_' . $i] = $mediaId;
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
             }
-
-            $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
+        } else {
+            if ($displayId != 0) {
+                $displayIds = [$displayId];
+            }
         }
-
-        if ($displayId != 0) {
-            $body .= '  AND stat.displayID = :displayId ';
-            $params['displayId'] = $displayId;
-        }
-
-        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         // Sorting?
         $filterBy = $this->gridRenderFilter();
         $sortOrder = $this->gridRenderSort();
 
-        $order = '';
+        $columns = [];
         if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $columns = $sortOrder;
 
-        $limit = '';
         // Paging
+        $start = 0;
+        $length = 0;
         if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+
+            $start = intval($this->getSanitizer()->getInt('start', $filterBy), 0);
+            $length = $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
-        $sql = $select . $body . $order . $limit;
-        $rows = array();
+        // Call the time series interface getStatsReport
+        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
 
-        foreach ($this->store->select($sql, $params) as $row) {
+        // Sanitize results
+        $rows = [];
+        foreach ($result['statData'] as $row) {
             $entry = [];
 
             $widgetId = $this->getSanitizer()->int($row['widgetId']);
-            $widgetName = $this->getSanitizer()->string($row['Media']);
+            $widgetName = $this->getSanitizer()->string($row['media']);
             // If the media name is empty, and the widgetid is not, then we can assume it has been deleted.
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
+            $displayName = $this->getSanitizer()->string($row['display']);
+            $layoutName = $this->getSanitizer()->string($row['layout']);
 
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
-            $entry['display'] = $this->getSanitizer()->string($row['Display']);
-            $entry['layout'] = $this->getSanitizer()->string($row['Layout']);
+            $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
+            $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
-            $entry['numberPlays'] = $this->getSanitizer()->int($row['NumberPlays']);
-            $entry['duration'] = $this->getSanitizer()->int($row['Duration']);
-            $entry['minStart'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MinStart']));
-            $entry['maxEnd'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['MaxEnd']));
+            $entry['numberPlays'] = $this->getSanitizer()->int($row['numberPlays']);
+            $entry['duration'] = $this->getSanitizer()->int($row['duration']);
+            $entry['minStart'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['minStart']));
+            $entry['maxEnd'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['maxEnd']));
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
@@ -485,15 +347,13 @@ class Stats extends Base
         }
 
         // Paging
-        if ($limit != '' && count($rows) > 0) {
-            $results = $this->store->select('
-              SELECT COUNT(*) AS total FROM (SELECT stat.type, display.Display, layout.Layout, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ' . $body . ') total
-            ', $params);
-            $this->getState()->recordsTotal = intval($results[0]['total']);
+        if ($result['count'] > 0) {
+            $this->getState()->recordsTotal = intval($result['totalStats']);
         }
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+
     }
 
     /**
@@ -552,8 +412,6 @@ class Stats extends Base
             $SQL .= ' , bandwidthtype.name ';
 
         $SQL .= 'ORDER BY display.display';
-
-
 
         $sth = $dbh->prepare($SQL);
 
@@ -615,63 +473,55 @@ class Stats extends Base
         $toDt = $this->getSanitizer()->getDate('toDt');
         $displayId = $this->getSanitizer()->getInt('displayId');
 
-        // Get an array of display id this user has access to.
-        $displayIds = array();
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
+        $displayIds = [];
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
 
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
+                $displayIds = [$displayId];
+            }
         }
 
-        if (count($displayIds) <= 0)
-            throw new AccessDeniedException();
+        // Format param dates
+        $fromDt = $this->getDate()->getLocalDate($fromDt);
+        $toDt = $this->getDate()->getLocalDate($toDt);
 
-        $sql = '
-        SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
-          FROM stat
-            INNER JOIN display
-            ON stat.DisplayID = display.DisplayID
-            LEFT OUTER JOIN layout
-            ON layout.LayoutID = stat.LayoutID
-            LEFT OUTER JOIN media
-            ON media.mediaID = stat.mediaID
-         WHERE 1 = 1
-          AND stat.end > :fromDt
-          AND stat.start <= :toDt
-          AND stat.displayID IN (' . implode(',', $displayIds) . ')
-        ';
-
-        $params = [
-            'fromDt' => $this->getDate()->getLocalDate($fromDt),
-            'toDt' => $this->getDate()->getLocalDate($toDt)
-        ];
-
-        if ($displayId != 0) {
-            $sql .= '  AND stat.displayID = :displayId ';
-            $params['displayId'] = $displayId;
-        }
-
-        $sql .= " ORDER BY stat.start ";
+        // Get result set
+        $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
 
-        // Run our query using a connection object (to save memory)
-        $connection = $this->store->getConnection();
-        $statement = $connection->prepare($sql);
+        while ($row = $resultSet->getNextRow() ) {
 
-        // Execute
-        $statement->execute($params);
+            $displayName = $this->getSanitizer()->string($row['display']);
+            $layoutName = $this->getSanitizer()->string($row['layout']);
 
-        // Do some post processing
-        while ($row = $statement->fetch(\PDO::FETCH_ASSOC)) {
             // Read the columns
-            $type = $this->getSanitizer()->string($row['Type']);
+            $type = $this->getSanitizer()->string($row['type']);
             $fromDt = $this->getSanitizer()->string($row['start']);
             $toDt = $this->getSanitizer()->string($row['end']);
-            $layout = $this->getSanitizer()->string($row['Layout']);
-            $display = $this->getSanitizer()->string($row['Display']);
-            $media = $this->getSanitizer()->string($row['MediaName']);
-            $tag = $this->getSanitizer()->string($row['Tag']);
+            $layout = ($layoutName != '') ? $layoutName :  __('Not Found');;
+            $display = ($displayName != '') ? $displayName : __('Not Found');
+            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
+            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
 
             fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
         }
@@ -685,6 +535,151 @@ class Stats extends Base
         $app->response()->header('Content-Transfer-Encoding', 'binary"');
         $app->response()->header('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
+    }
+
+    /**
+     * Summary Report Form
+     */
+    public function summaryReportForm()
+    {
+        $data = [
+            'defaults' => [
+                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
+                'toDate' => $this->getDate()->getLocalDate()
+            ]
+        ];
+
+        $this->getState()->template = 'stats-form-summaryreport';
+        $this->getState()->setData($data);
+    }
+
+    /**
+     * Summary Report
+     */
+    public function summaryReportData()
+    {
+        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
+        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
+        $type = strtolower($this->getSanitizer()->getString('type'));
+        $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $mediaId = $this->getSanitizer()->getInt('mediaId');
+        $reportFilter = $this->getSanitizer()->getString('reportFilter');
+        $groupByFilter = $this->getSanitizer()->getString('groupByFilter');
+        
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
+            $toDt->addDay(1);
+        }
+
+        $diffInDays = $toDt->diffInDays($fromDt);
+
+        // Format param dates
+        $fromDt = $this->getDate()->getLocalDate($fromDt);
+        $toDt = $this->getDate()->getLocalDate($toDt);
+
+        // Get an array of display id this user has access to.
+        $displayIds = [];
+
+        foreach ($this->displayFactory->query() as $display) {
+            $displayIds[] = $display->displayId;
+        }
+
+        if (count($displayIds) <= 0)
+            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+        $labels = [];
+        $countData = [];
+        $durationData = [];
+        $backgroundColor = [];
+        $borderColor = [];
+
+        // Call the time series interface get daily summary report
+        $result =  $this->timeSeriesStore->getDailySummaryReport($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter, $fromDt, $toDt);
+
+        foreach ($result as $row) {
+            // Label
+            $tsLabel = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s');
+
+            if ($reportFilter == '') {
+                $tsLabel = $tsLabel->format('Y-m-d'); // as dates. by day (default)
+
+                if ($groupByFilter == 'byweek') {
+                    $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y-m-d');
+                    if ($weekEnd >= $toDt){
+                        $weekEnd = $this->getDate()->parse($toDt, 'Y-m-d H:i:s')->format('Y-m-d');
+                    }
+                    $tsLabel .= ' - ' . $weekEnd;
+                } elseif ($groupByFilter == 'bymonth') {
+                    $tsLabel = __($row['shortMonth']) . ' '. $row['yearDate'];
+
+                }
+
+            } elseif (($reportFilter == 'today') || ($reportFilter == 'yesterday')) {
+                $tsLabel = $tsLabel->format('g:i A'); // hourly format (default)
+
+            } elseif(($reportFilter == 'lastweek') || ($reportFilter == 'thisweek') ) {
+                $tsLabel = $tsLabel->format('D'); // Mon, Tues, etc.  by day (default)
+
+            } elseif (($reportFilter == 'thismonth') || ($reportFilter == 'lastmonth')) {
+                $tsLabel = $tsLabel->format('Y-m-d'); // as dates. by day (default)
+
+                if ($groupByFilter == 'byweek') {
+                    $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y-m-d');
+
+                    $startInMonth = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('M');
+                    $weekEndInMonth = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('M');
+
+                    if ($weekEndInMonth != $startInMonth){
+                        $weekEnd = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->endOfMonth()->format('Y-m-d');
+                    }
+                    $tsLabel .= ' - ' . $weekEnd;
+                }
+
+            }  elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
+                $tsLabel = __($row['shortMonth']); // Jan, Feb, etc.  by month (default)
+
+                if ($groupByFilter == 'byday') {
+                    $tsLabel = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('Y-m-d');
+
+                } elseif ($groupByFilter == 'byweek') {
+                    $weekStart = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('M d');
+                    $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('M d');
+
+                    $weekStartInYear = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('Y');
+                    $weekEndInYear = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y');
+
+                    if ($weekEndInYear != $weekStartInYear){
+                        $weekEnd = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->endOfYear()->format('M-d');
+                    }
+                    $tsLabel = $weekStart .' - ' . $weekEnd;
+                }
+
+            }
+
+            // Chart labels in xaxis
+            $labels[] = $tsLabel;
+
+            $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
+            $borderColor[] = 'rgb(240,93,41, 0.8)';
+
+            $count = $this->getSanitizer()->int($row['NumberPlays']);
+            $countData[] = ($count == '') ? 0 : $count;
+
+            $duration = $this->getSanitizer()->int($row['Duration']);
+            $durationData[] = ($duration == '') ? 0 : $duration;
+        }
+
+        // Return data to build chart
+        $this->getState()->extra = [
+            'labels' => $labels,
+            'countData' => $countData,
+            'durationData' => $durationData,
+            'backgroundColor' => $backgroundColor,
+            'borderColor' => $borderColor,
+        ];
+
     }
 
     /**

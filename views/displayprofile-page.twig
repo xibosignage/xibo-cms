@@ -20,9 +20,27 @@
         <div class="widget-title">{% trans "Display Setting Profiles" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("displayProfile", title) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set android %}{% trans "Android" %}{% endset %}
+                            {% set windows %}{% trans "Windows" %}{% endset %}
+                            {% set webos %}{% trans "webOS" %}{% endset %}
+                            {% set sssp %}{% trans "Tizen" %}{% endset %}
+                            {% set linux %}{% trans "Linux" %}{% endset %}
+                            {% set options = [
+                                { optionid: "", option: "" },
+                                { optionid: "android", option: android},
+                                { optionid: "windows", option: windows},
+                                { optionid: "lg", option: webos},
+                                { optionid: "sssp", option: sssp},
+                                { optionid: "linux", option: linux},
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "optionid", "option") }}
 
                         </form>
                     </div>
@@ -104,5 +122,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#displayProfiles_wrapper').find('.col-sm-6').eq(1));
     </script>
 {% endblock %}

@@ -499,6 +499,7 @@ class MediaFactory extends BaseFactory
                `media`.apiRef,
                `media`.createdDt,
                `media`.modifiedDt,
+               `media`.enableStat,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";

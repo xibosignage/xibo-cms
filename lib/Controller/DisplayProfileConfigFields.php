@@ -72,6 +72,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
+                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('orientation')) {
                     $displayProfile->setSetting('orientation', $this->getSanitizer()->getInt('orientation'), $ownConfig, $config);
                 }
@@ -199,6 +203,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
+                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('powerpointEnabled')) {
                     $displayProfile->setSetting('powerpointEnabled', $this->getSanitizer()->getCheckbox('powerpointEnabled'), $ownConfig, $config);
                 }
@@ -318,6 +326,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
+                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('sizeX')) {
                     $displayProfile->setSetting('sizeX', $this->getSanitizer()->getDouble('sizeX'), $ownConfig, $config);
                 }
@@ -405,6 +417,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('statsEnabled')) {
                     $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
+                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('orientation')) {

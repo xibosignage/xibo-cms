@@ -190,6 +190,14 @@ class Media implements \JsonSerializable
      */
     public $modifiedDt;
 
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The option to enable the collection of Media Proof of Play statistics"
+     * )
+     */
+    public $enableStat;
+
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
@@ -700,8 +708,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `enableStat`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :enableStat)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -713,8 +721,10 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'apiRef' => $this->apiRef,
             'valid' => 0,
-            'createdDt' => date('Y-m-d H:i:s')
+            'createdDt' => date('Y-m-d H:i:s'),
+            'enableStat' => $this->enableStat
         ]);
+
     }
 
     /**
@@ -733,7 +743,8 @@ class Media implements \JsonSerializable
                 userId = :userId,
                 released = :released,
                 apiRef = :apiRef,
-                modifiedDt = :modifiedDt
+                modifiedDt = :modifiedDt,
+                `enableStat` = :enableStat
            WHERE mediaId = :mediaId
         ';
 
@@ -748,7 +759,8 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId,
-            'modifiedDt' => date('Y-m-d H:i:s')
+            'modifiedDt' => date('Y-m-d H:i:s'),
+            'enableStat' => $this->enableStat
         ];
 
         $this->getStore()->update($sql, $params);

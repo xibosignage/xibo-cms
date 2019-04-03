@@ -61,8 +61,14 @@ class LogFactory extends BaseFactory
               FROM `log`
                   LEFT OUTER JOIN display
                   ON display.displayid = log.displayid
-             WHERE 1 = 1
-        ';
+                  ';
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+            $body .= 'INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayID = log.displayid ';
+        }
+
+        $body .= ' WHERE 1 = 1 ';
+
 
         if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null) {
             $body .= ' AND logdate > :fromDt ';
@@ -117,6 +123,17 @@ class LogFactory extends BaseFactory
         if ($this->getSanitizer()->getCheckbox('excludeLog', $filterBy) == 1) {
             $body .= ' AND (log.page NOT LIKE \'/log%\' OR log.page = \'/login\') ';
             $body .= ' AND log.page <> \'/user/pref\' AND log.page <> \'/clock\' AND log.page <> \'/library/fontcss\' ';
+        }
+
+        // Filter by Display Name?
+        if ($this->getSanitizer()->getString('display', $filterBy) != null) {
+            $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
+            $this->nameFilter('display', 'display', $terms, $body, $params);
+        }
+
+        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+            $body .= ' AND lkdisplaydg.displaygroupid = :displayGroupId ';
+            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
         }
 
         // Sorting?

@@ -99,6 +99,14 @@ class Layout implements \JsonSerializable
     public $publishedStatus;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The Published Date"
+     * )
+     */
+    public $publishedDate;
+
+    /**
      * @var int
      * @SWG\Property(
      *  description="The id of the image media set as the background"
@@ -215,6 +223,14 @@ class Layout implements \JsonSerializable
      * @SWG\Property(description="A status message detailing any errors with the layout")
      */
     public $statusMessage;
+
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating whether the Layout stat is enabled"
+     * )
+     */
+    public $enableStat;
 
     // Child items
     /** @var Region[]  */
@@ -867,6 +883,15 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
 
+        // Layout stat collection flag
+        if (is_null($this->enableStat)) {
+            $layoutEnableStat =  $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
+            $this->getLog()->debug('Layout enableStat is empty. Get the default setting.');
+        } else {
+            $layoutEnableStat = $this->enableStat;
+        }
+        $layoutNode->setAttribute('enableStat', $layoutEnableStat);
+
         // Only set the z-index if present
         if ($this->backgroundzIndex != 0)
             $layoutNode->setAttribute('zindex', $this->backgroundzIndex);
@@ -984,6 +1009,93 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
                 }
 
+//                Logic Table
+//
+//                Widget With Media
+//                LAYOUT	MEDIA	WIDGET	Media stats collected?
+//                    ON	ON	    ON	    YES     Widget takes precedence     // Match - 1
+//                    ON	OFF	    ON	    YES     Widget takes precedence     // Match - 1
+//                    ON	INHERIT	ON	    YES     Widget takes precedence     // Match - 1
+//
+//                    OFF	ON	    ON	    YES     Widget takes precedence     // Match - 1
+//                    OFF	OFF	    ON	    YES     Widget takes precedence     // Match - 1
+//                    OFF	INHERIT	ON	    YES     Widget takes precedence     // Match - 1
+//
+//                    ON	ON	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    ON	OFF	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    ON	INHERIT	OFF	    NO      Widget takes precedence     // Match - 2
+//
+//                    OFF	ON	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    OFF	OFF	    OFF	    NO      Widget takes precedence     // Match - 2
+//                    OFF	INHERIT	OFF	    NO      Widget takes precedence     // Match - 2
+//
+//                    ON	ON	    INHERIT	YES     Media takes precedence      // Match - 3
+//                    ON	OFF	    INHERIT	NO      Media takes precedence      // Match - 4
+//                    ON	INHERIT	INHERIT	YES     Media takes precedence and Inherited from Layout        // Match - 5
+//
+//                    OFF	ON	    INHERIT	YES     Media takes precedence      // Match - 3
+//                    OFF	OFF	    INHERIT	NO      Media takes precedence      // Match - 4
+//                    OFF	INHERIT	INHERIT	NO      Media takes precedence and Inherited from Layout        // Match - 6
+//
+//                Widget Without Media
+//                LAYOUT	WIDGET		Widget stats collected?
+//                    ON	ON		    YES	    Widget takes precedence     // Match - 1
+//                    ON	OFF		    NO	    Widget takes precedence     // Match - 2
+//                    ON	INHERIT		YES	    Inherited from Layout       // Match - 7
+//                    OFF	ON		    YES	    Widget takes precedence     // Match - 1
+//                    OFF	OFF		    NO	    Widget takes precedence     // Match - 2
+//                    OFF	INHERIT		NO	    Inherited from Layout       // Match - 8
+
+
+                // Widget stat collection flag
+                $widgetEnableStat = $widget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+
+                if(($widgetEnableStat === null) || ($widgetEnableStat === "")) {
+                    $widgetEnableStat = $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT');
+                }
+
+                $enableStat = 0; // Match - 0
+
+                if ($widgetEnableStat == 'On') {
+                    $enableStat = 1; // Match - 1
+                    $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                } else if ($widgetEnableStat == 'Off') {
+                    $enableStat = 0; // Match - 2
+                    $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                } else if ($widgetEnableStat == 'Inherit') {
+
+                    try {
+                        // Media enable stat flag - WIDGET WITH MEDIA
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+
+                        if (($media->enableStat === null) || ($media->enableStat === "")) {
+                            $mediaEnableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+                            $this->getLog()->debug('Media enableStat is empty. Get the default setting.');
+                        } else {
+                            $mediaEnableStat = $media->enableStat;
+                        }
+
+                        if ($mediaEnableStat == 'On') {
+                            $enableStat = 1; // Match - 3
+                        } else if ($mediaEnableStat == 'Off') {
+                            $enableStat = 0; // Match - 4
+                        } else if ($mediaEnableStat == 'Inherit') {
+                            $enableStat = $layoutEnableStat;  // Match - 5 and 6
+                        }
+
+                        $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ((isset($mediaEnableStat)) ? (' Media '.$mediaEnableStat) : '') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+
+                    } catch (\Exception $e) { //  - WIDGET WITHOUT MEDIA
+                        $this->getLog()->debug($widget->widgetId. ' is not a library media and does not have a media id.');
+                        $enableStat = $layoutEnableStat;  // Match - 7 and 8
+
+                        $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                    }
+                }
+
+                // Set enable stat collection flag
+                $mediaNode->setAttribute('enableStat', $enableStat);
+
                 // Create options nodes
                 $optionsNode = $document->createElement('options');
                 $rawNode = $document->createElement('raw');
@@ -1002,8 +1114,14 @@ class Layout implements \JsonSerializable
                     // Add the fileId attribute to the media element
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
+                //$this->getLog()->error($widget->widgetOptions, JSON_PRETTY_PRINT);
+
 
                 foreach ($widget->widgetOptions as $option) {
+
+                    //$this->getLog()->error($option->type);
+
+
                     /* @var WidgetOption $option */
                     if (trim($option->value) === '')
                         continue;
@@ -1328,6 +1446,11 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->parentId
         ]);
 
+        // clear publishedDate
+        $this->getStore()->update('UPDATE `layout` SET publishedDate = null WHERE layoutId = :layoutId', [
+            'layoutId' => $this->layoutId
+        ]);
+
         // Update any campaign links
         $this->getStore()->update('
           UPDATE `lkcampaignlayout` 
@@ -1344,6 +1467,7 @@ class Layout implements \JsonSerializable
         $this->layout = $parent->layout;
         $this->description = $parent->description;
         $this->retired = $parent->retired;
+        $this->enableStat = $parent->enableStat;
 
         // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
         $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
@@ -1394,6 +1518,16 @@ class Layout implements \JsonSerializable
         $this->parentId = null;
     }
 
+    public function setPublishedDate($publishedDate)
+    {
+        $this->publishedDate = $publishedDate;
+
+        $this->getStore()->update('UPDATE `layout` SET publishedDate = :publishedDate WHERE layoutId = :layoutId', [
+            'layoutId' => $this->layoutId,
+            'publishedDate' => $this->publishedDate
+        ]);
+    }
+
     /**
      * Discard the Draft
      * @throws XiboException
@@ -1427,10 +1561,10 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        $this->getLog()->debug('Adding Layout ' . $this->layout);
+        $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat)';
 
         $time = $this->date->getLocalDate();
 
@@ -1447,7 +1581,8 @@ class Layout implements \JsonSerializable
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
-            'parentId' => ($this->parentId == null) ? null : $this->parentId
+            'parentId' => ($this->parentId == null) ? null : $this->parentId,
+            'enableStat' => $this->enableStat
         ));
 
         // Add a Campaign
@@ -1512,7 +1647,8 @@ class Layout implements \JsonSerializable
               publishedStatusId = :publishedStatusId,
               `userId` = :userId,
               `schemaVersion` = :schemaVersion,
-              `statusMessage` = :statusMessage
+              `statusMessage` = :statusMessage,
+              enableStat = :enableStat
          WHERE layoutID = :layoutid
         ';
 
@@ -1534,7 +1670,8 @@ class Layout implements \JsonSerializable
             'publishedStatusId' => $this->publishedStatusId,
             'userId' => $this->ownerId,
             'schemaVersion' => $this->schemaVersion,
-            'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage)
+            'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
+            'enableStat' => $this->enableStat
         ));
 
         // Update the Campaign

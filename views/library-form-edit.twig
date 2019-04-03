@@ -44,6 +44,19 @@
                     {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
                     {{ forms.checkbox("retired", title, media.retired, helpText) }}
 
+                    {% set title %}{% trans "Enable Media Stats Collection?" %}{% endset %}
+                    {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Media Item. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                    {% set offOption %}{% trans "Off" %}{% endset %}
+                    {% set onOption %}{% trans "On" %}{% endset %}
+                    {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                    {% set options = [
+                        { id: "Off", value: offOption },
+                        { id: "On", value: onOption },
+                        { id: "Inherit", value: inheritOption }
+                    ] %}
+                    {{ forms.dropdown("enableStat", "single", title, media.enableStat, options, "id", "value", helpText) }}
+
                     {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
                     {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
                     {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}

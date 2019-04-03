@@ -97,6 +97,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#applications_wrapper').find('.col-sm-6').eq(1));
         
         function copyFromSecretInput() {
             // Initialize the tooltip.

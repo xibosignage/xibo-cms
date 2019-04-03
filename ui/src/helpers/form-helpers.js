@@ -325,14 +325,37 @@ let formHelpers = function() {
      * @param {function} callback - A function to run after setting the select2 instance 
      */
     this.setupMediaSelector = function(selector, callback) {
+
         selector.select2({
             ajax: {
                 url: selector.data().searchUrl,
                 dataType: "json",
                 data: function(params) {
+                    var queryText = params.term;
+                    var queryTags = '';
+
+                    // Tags
+                    if(params.term != undefined) {
+                        var tags = params.term.match(/\[([^}]+)\]/);
+                        if(tags != null) {
+                            // Add tags to search
+                            queryTags = tags[1];
+
+                            // Replace tags in the query text
+                            queryText = params.term.replace(tags[0], '');
+                        }
+
+                        // Remove whitespaces and split by comma
+                        queryText = queryText.replace(' ', '');
+                        queryTags = queryTags.replace(' ', '');
+                    }
+
                     var query = {
-                        media: params.term,
+                        media: queryText,
+                        tags: queryTags,
                         type: "image",
+                        retired: 0,
+                        assignable: 1,
                         start: 0,
                         length: 10
                     };

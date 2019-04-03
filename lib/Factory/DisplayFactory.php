@@ -210,6 +210,7 @@ class DisplayFactory extends BaseFactory
                   display.storageTotalSpace,
                   displaygroup.displayGroupId,
                   displaygroup.description,
+                  displaygroup.bandwidthLimit,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -460,7 +461,8 @@ class DisplayFactory extends BaseFactory
                     'mediaInventoryStatus',
                     'clientCode',
                     'screenShotRequested',
-                    'lastCommandSuccess'
+                    'lastCommandSuccess',
+                    'bandwidthLimit'
                 ]
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);

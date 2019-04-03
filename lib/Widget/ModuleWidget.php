@@ -1315,6 +1315,7 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->getLog()->debug('Default Widget Options: Setting use duration to 0');
         $this->setUseDuration(0);
+        $this->setOption('enableStat', $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
 
         $this->setDuration($this->module->defaultDuration);
     }
