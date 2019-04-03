@@ -1549,6 +1549,18 @@ class User extends Base
      *      required=true,
      *      type="string"
      *   ),
+     *     @SWG\Parameter(
+     *      name="useLibraryDuration",
+     *      in="formData",
+     *      required=false,
+     *      type="integer"
+     *   ),
+     *     @SWG\Parameter(
+     *      name="showThumbnailColumn",
+     *      in="formData",
+     *      required=false,
+     *      type="integer"
+     *   ),
      *   @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -1559,6 +1571,7 @@ class User extends Base
     {
         $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
         $this->getUser()->setOptionValue('useLibraryDuration', $this->getSanitizer()->getCheckbox('useLibraryDuration'));
+        $this->getUser()->setOptionValue('showThumbnailColumn', $this->getSanitizer()->getCheckbox('showThumbnailColumn'));
         $this->getUser()->save();
 
         // Return

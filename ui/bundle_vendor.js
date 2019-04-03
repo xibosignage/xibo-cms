@@ -1,4 +1,5 @@
 //--- Add NPM Packages - JS ----
+import './public_path';
 
 // jquery-ui
 window.jQuery = window.$ = require('jquery');

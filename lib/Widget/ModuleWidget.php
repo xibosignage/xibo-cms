@@ -1088,7 +1088,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Return File
      */
-    protected function download()
+    protected function download($attachment = null)
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
 
@@ -1113,7 +1113,7 @@ abstract class ModuleWidget implements ModuleInterface
         } else {
             // This widget is expected to output a file - usually this is for file based media
             // Get the name with library
-            $attachmentName = $this->getSanitizer()->getString('attachment', $media->storedAs);
+            $attachmentName = $this->getSanitizer()->getString('attachment', (($attachment == null) ? $media->storedAs : $attachment));
 
             // Issue some headers
             $this->getApp()->etag($media->md5);

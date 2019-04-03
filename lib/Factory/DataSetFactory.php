@@ -338,7 +338,7 @@ class DataSetFactory extends BaseFactory
                     break;
 
                 case 'bearer':
-                    $requestParams['headers'] = ['Authorization' => 'Bearer ' . $dataSet->authentication];
+                    $requestParams['headers'] = ['Authorization' => 'Bearer ' . $dataSet->password];
                     break;
 
                 case 'none':

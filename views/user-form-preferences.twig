@@ -54,6 +54,10 @@
                 {% set title %}{% trans "Use Library duration?" %}{% endset %}
                 {% set helpText %}{% trans "Assign all Media items based on their Library duration. Leave this option unticked to use the Default Module duration." %}{% endset %}
                 {{ forms.checkbox("useLibraryDuration", title, currentUser.getOptionValue("useLibraryDuration", 0), helpText) }}
+
+                {% set title %}{% trans "Auto show thumbnail column?" %}{% endset %}
+                {% set helpText %}{% trans "When requesting a screenshot from a display should the Thumbnail column be automatically shown if it's not visible?" %}{% endset %}
+                {{ forms.checkbox("showThumbnailColumn", title, currentUser.getOptionValue("showThumbnailColumn", 1), helpText) }}
             </form>
         </div>
     </div>

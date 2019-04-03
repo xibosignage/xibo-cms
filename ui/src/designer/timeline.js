@@ -10,11 +10,6 @@ const timelineTemplate = require('../templates/timeline.hbs');
 let Timeline = function(container) {
     this.DOMObject = container;
 
-    this.scrollPercent = {
-        left: 0,
-        right: 0
-    };
-
     // Boolean to represent if a sort is happening
     this.beingSorted = false;
 
@@ -28,6 +23,7 @@ let Timeline = function(container) {
         zoomInDisable: '',
         zoomOutDisable: '',
         scrollPosition: 0, // scroll position
+        scrollVerticalPosition: 0, // scroll vertical position
         scrollWidth: 0, // To fix the double scroll reseting to 0 bug
         widgetMinimumVisibleRatio: 10, // Minimum % value so that the region details are shown
         widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
@@ -356,6 +352,7 @@ Timeline.prototype.render = function(layout) {
 
     // Maintain the previous scroll position
     regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
+    regionsContainer.scrollTop(this.properties.scrollVerticalPosition);
 
     // Update timeline labels
     this.updateLabels();
@@ -501,6 +498,9 @@ Timeline.prototype.render = function(layout) {
         if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
         }
+
+        // Save vertical scroll position
+        self.properties.scrollVerticalPosition = $(this).scrollTop();
 
         // Get new scroll position ( percentage )
         const newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();

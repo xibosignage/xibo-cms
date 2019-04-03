@@ -286,7 +286,8 @@ let formHelpers = function() {
         if($('#' + textAreaId, dialog).val() == "") {
 
             // Background color from the mainObject
-            var backgroundColor = (typeof this.mainObject.backgroundColor != 'undefined') ? this.mainObject.backgroundColor : this.defaultBackgroundColor;
+            var backgroundColor = (typeof this.mainObject.backgroundColor != 'undefined' && this.mainObject.backgroundColor != null) ? this.mainObject.backgroundColor : this.defaultBackgroundColor;
+
             // Choose a complementary color
             var color = $c.complement(backgroundColor);
             
@@ -513,10 +514,14 @@ let formHelpers = function() {
 
         // COLORS
         // Background color for the editor
-        var backgroundColor = (typeof this.mainObject.backgroundColor != 'undefined') ? this.mainObject.backgroundColor : this.defaultBackgroundColor;
+        var backgroundColor = (typeof this.mainObject.backgroundColor != 'undefined' && this.mainObject.backgroundColor != null) ? this.mainObject.backgroundColor : this.defaultBackgroundColor;
+        
         // Choose a complementary color
         var color = $c.complement(backgroundColor);
         
+        // Calculate if inline BG colour should be shown
+        var inlineHideBGColour = (inline && this.mainObject.backgroundImage != undefined && this.mainObject.backgroundImage != null);
+
         // DIMENSIONS
         var region = {};
 
@@ -590,6 +595,12 @@ let formHelpers = function() {
                 // Inline editor div tweaks to make them behave like the iframe rendered content
                 $(".cke_textarea_inline").css('width', regionDimensions.width);
                 $(".cke_textarea_inline").css('height', regionDimensions.height);
+                
+                // Show background colour if there's no background image on the layout
+                if(!inlineHideBGColour) {
+                    $(".cke_textarea_inline").css('background', backgroundColor);
+                }
+                
                 $(".cke_textarea_inline").css('transform', 'scale(' + scale + ')');
                 $(".cke_textarea_inline").css('transform-origin', '0 0');
                 $(".cke_textarea_inline").css('word-wrap', 'inherit');

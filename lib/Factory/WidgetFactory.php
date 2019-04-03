@@ -259,10 +259,10 @@ class WidgetFactory extends BaseFactory
             $body .= ' AND widget.widgetId IN (
                 SELECT widgetId
                   FROM `widget`
-                    INNER JOIN `lkregionplaylist`
-                    ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                    INNER JOIN `playlist`
+                    ON `widget`.playlistId = `playlist`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                     INNER JOIN `layout`
                     ON `layout`.layoutId = `region`.layoutId
                  WHERE layout.layout LIKE :layout
@@ -274,10 +274,10 @@ class WidgetFactory extends BaseFactory
             $body .= ' AND widget.widgetId IN (
                 SELECT widgetId
                   FROM `widget`
-                    INNER JOIN `lkregionplaylist`
-                    ON `widget`.playlistId = `lkregionplaylist`.playlistId
+                    INNER JOIN `playlist`
+                    ON `widget`.playlistId = `playlist`.playlistId
                     INNER JOIN `region`
-                    ON `region`.regionId = `lkregionplaylist`.regionId
+                    ON `region`.regionId = `playlist`.regionId
                  WHERE region.name LIKE :region
             )';
             $params['region'] = '%' . $this->getSanitizer()->getString('region', $filterBy) . '%';

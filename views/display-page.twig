@@ -416,15 +416,20 @@
             });
         });
 
+        {% set showThumbnailColumn = currentUser.getOptionValue("showThumbnailColumn", 1) %}
+
         function displayRequestScreenshotFormSubmit() {
             $("#displayRequestScreenshotForm").submit();
             XiboDialogClose();
-            var table = $('#displays').DataTable();
 
-            if (!table.column(["thumbnail:name"]).visible()) {
-                table.columns(["screenShotRequested:name", "thumbnail:name"]).visible(true);
-            }
+            {% if showThumbnailColumn == 1 %}
+                var table = $('#displays').DataTable();
+                if (!table.column(["thumbnail:name"]).visible()) {
+                    table.columns(["screenShotRequested:name", "thumbnail:name"]).visible(true);
+                }
+            {% endif %}
         }
+
 
         function setDefaultMultiSelectFormOpen(dialog) {
             console.log('Multi-select form opened for default layout');
