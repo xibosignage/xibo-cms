@@ -141,6 +141,7 @@ This is the template for the campaign page
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#campaigns_wrapper').find('.col-sm-6').eq(1));
 
         // Callback for the media form
         // Fired when the media form opens
@@ -160,6 +161,8 @@ This is the template for the campaign page
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
+                pageLength: 5,
+                lengthMenu: [5, 10, 25, 50],
                 stateLoadCallback: function (settings, callback) {
                     var data = {};
                     $.ajax({
@@ -273,7 +276,16 @@ This is the template for the campaign page
             });
         }
 
-        function layoutAssignSubmit() {
+        function campaignFormSubmit($form) {
+
+            // Process layouts to add
+            layoutAssignSubmit($form);
+
+            // Submit form
+            $form.submit();
+        }
+        
+        function layoutAssignSubmit($form) {
             
             // Collect our media
             var container = $("#LayoutAssign");
@@ -328,21 +340,34 @@ This is the template for the campaign page
                     unassign.push({layoutId: elem, displayOrder: i+1});
                 }
             }
-            
-            assignLayoutsToCampaign(container.data().url, assign, unassign);
-        }
 
-        function assignLayoutsToCampaign(url, layout, unassign) {
-            toastr.info(layout, "Assign Layouts to Campaign");
-            
-            $.ajax({
-                type: "post",
-                url: url,
-                cache: false,
-                dataType: "json",
-                data: {layoutId: layout, unassignLayoutId: unassign},
-                success: XiboSubmitResponse
-            });
+            // Append assigned layout values to the form as an input            
+            $form.find('#assignLayouts').empty();
+            for (i = 0; i < assign.length; i++) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'layoutId[' + i + '][layoutId]'
+                }).val(assign[i].layoutId).appendTo($form.find('#assignLayouts'));
+
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'layoutId[' + i + '][displayOrder]'
+                }).val(assign[i].displayOrder).appendTo($form.find('#assignLayouts'));
+            }
+
+            // Append unassigned layout values to the form as an input
+            $form.find('#unassignLayouts').empty();
+            for (i = 0; i < unassign.length; i++) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'unassignLayoutId[' + i + '][layoutId]'
+                }).val(unassign[i].layoutId).appendTo($form.find('#unassignLayouts'));
+
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'unassignLayoutIdy[' + i + '][displayOrder]'
+                }).val(unassign[i].displayOrder).appendTo($form.find('#unassignLayouts'));
+            }
         }
     </script>
 {% endblock %}

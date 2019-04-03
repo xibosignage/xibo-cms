@@ -14,8 +14,18 @@
         <li class="btn btn-primary btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("stats.export.form") }}"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Export" %}</a></li>
         <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
     </ul>
+    <div class="proof-of-play-report-div pull-right btn-group">
+        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <span class="fa fa-caret-down"></span>
+            {% trans "Reports" %}
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a href="{{ urlFor("stats.summaryReport.form") }}">{% trans "Daily summary" %}</a>
+            </li>
+        </ul>
+    </div>
 {% endblock %}
-
 
 {% block pageContent %}
 
@@ -40,6 +50,7 @@
                                 { name: "data-placeholder--value", value: "" },
                                 { name: "data-search-url", value: urlFor("display.search") },
                                 { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
                                 { name: "data-text-property", value: "display" }
                             ] %}
@@ -51,6 +62,8 @@
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
                                 { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "layoutId" },
                                 { name: "data-text-property", value: "layout" }
                             ] %}
@@ -65,6 +78,7 @@
                                 { name: "data-placeholder--value", value: "" },
                                 { name: "data-search-url", value: urlFor("library.search") },
                                 { name: "data-search-term", value: "media" },
+                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "mediaId" },
                                 { name: "data-text-property", value: "name" }
                             ] %}
@@ -75,11 +89,13 @@
                             {% set layout %}{% trans "Layout" %}{% endset %}
                             {% set media %}{% trans "Media" %}{% endset %}
                             {% set widget %}{% trans "Widget" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
                             {% set options = [
                                 { typeid: "", type: null },
                                 { typeid: "layout", type: layout },
                                 { typeid: "media", type: media },
-                                { typeid: "widget", type: widget }
+                                { typeid: "widget", type: widget },
+                                { typeid: "event", type: event }
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
 
@@ -204,6 +220,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#stats_wrapper').find('.col-sm-6').eq(1));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();

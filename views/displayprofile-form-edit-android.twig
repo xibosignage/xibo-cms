@@ -67,6 +67,15 @@
                     {% set helpText = "Should the application send proof of play stats to the CMS."|trans %}
                     {{ forms.checkbox("statsEnabled", title, displayProfile.getSetting("statsEnabled"), helpText) }}
 
+                    {% set title = "Aggregation level"|trans %}
+                    {% set helpText = "Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items."|trans %}
+                    {% set options = [
+                        { id: 'Individual', value: "Individual"|trans },
+                        { id: 'Hourly', value: "Hourly"|trans },
+                        { id: 'Daily', value: "Daily"|trans },
+                    ] %}
+                    {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
+
                     {% set title = "Player Version"|trans %}
                     {% set helpText = "Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here"|trans %}
                     {% set attributes = [

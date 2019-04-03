@@ -23,6 +23,9 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "ID" %}{% endset %}
+                            {{ inline.input("displayGroupId", title) }}
+
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("displayGroup", title) }}
 
@@ -34,6 +37,7 @@
                                 { name: "data-placeholder--value", value: "" },
                                 { name: "data-search-url", value: urlFor("display.search") },
                                 { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
                                 { name: "data-text-property", value: "display" }
                             ] %}
@@ -149,6 +153,33 @@
         let criteria;
         let criteriaTag;
 
+        function setDeleteMultiSelectFormOpen(dialog) {
+            $(dialog).find('.save-button').prop('disabled', false);
+
+            var $input = $('<input type=checkbox id="confirmDelete" name="confirmDelete"> {% trans %} Check to confirm deletion {% endtrans %} </input>');
+            $input.on('change', function() {
+                $(dialog).find('.save-button').prop('disabled', !$(this).is(':checked'));
+            });
+            $(dialog).find('.modal-body').append($input);
+        }
+
+        function displayGroupAddFormNext() {
+            // Get form
+            var $form = $("#displayGroupAddForm");
+
+            // Set apply and apply reset data
+            $form.data("apply", true);
+            $form.data("applyCallback", 'applyResetCallback');
+
+            // Submit form
+            $form.submit();
+        }
+
+        function applyResetCallback(form) {
+            // Reset form fields
+            $(form).find('#displayGroup').val("");
+        }
+
         function displayGroupFormOpen(dialog) {
             displayTable = null;
 
@@ -159,6 +190,8 @@
             $(dialog).find("input[name=dynamicCriteriaTags]").change(function() {
                 displayGroupQueryDynamicMembers(dialog);
             });
+
+            const $form = $('#displayGroupAddForm');
 
             // First time in there
             displayGroupQueryDynamicMembers(dialog);
@@ -275,11 +308,8 @@
                     },
                     { "data": "loggedIn", "render": dataTableTickCrossColumn},
                     {
-                        "name": "clientVersion",
-                        "data": function (data, type) {
-                            if (type != "display")
-                                return data.clientVersion;
-
+                        "name": "clientSort",
+                        "data": function (data) {
                             return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                         },
                         "visible": false

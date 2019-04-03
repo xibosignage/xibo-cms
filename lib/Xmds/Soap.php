@@ -60,6 +60,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\TimeSeriesStoreInterface;
 
 /**
  * Class Soap
@@ -91,6 +92,9 @@ class Soap
 
     /** @var  StorageServiceInterface */
     private $store;
+
+    /** @var  TimeSeriesStoreInterface */
+    private $timeSeriesStore;
 
     /** @var  LogServiceInterface */
     private $logService;
@@ -154,6 +158,7 @@ class Soap
      * @param LogProcessor $logProcessor
      * @param PoolInterface $pool
      * @param StorageServiceInterface $store
+     * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
@@ -174,11 +179,14 @@ class Soap
      * @param DayPartFactory $dayPartFactory
      * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($logProcessor, $pool, $store, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
+
+    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
+
     {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
         $this->store = $store;
+        $this->timeSeriesStore = $timeSeriesStore;
         $this->logService = $log;
         $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
@@ -216,6 +224,15 @@ class Soap
     protected function getStore()
     {
         return $this->store;
+    }
+
+    /**
+     * Get Time Series Store
+     * @return TimeSeriesStoreInterface
+     */
+    protected function getTimeSeriesStore()
+    {
+        return $this->timeSeriesStore;
     }
 
     /**
@@ -275,7 +292,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
@@ -808,7 +825,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // auth this request...
@@ -1143,7 +1160,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
@@ -1228,7 +1245,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1415,7 +1432,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1429,7 +1446,6 @@ class Soap
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
         // Store an array of parsed stat data for insert
-        $stats = [];
         $now = $this->getDate()->getLocalDate();
 
         // Load the XML into a DOMDocument
@@ -1446,6 +1462,8 @@ class Soap
             $fromdt = $node->getAttribute('fromdt');
             $todt = $node->getAttribute('todt');
             $type = $node->getAttribute('type');
+            $duration = $node->getAttribute('duration');
+            $count = $node->getAttribute('count');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
                 $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
@@ -1458,12 +1476,12 @@ class Soap
                 $scheduleId = 0;
 
             $layoutId = $node->getAttribute('layoutid');
-            
-            // Slightly confusing behaviour here to support old players without introducting a different call in 
+
+            // Slightly confusing behaviour here to support old players without introducting a different call in
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
             $widgetId = $node->getAttribute('mediaid');
-            $mediaId = 0;
+            $mediaId = null;
 
             // Ignore old "background" stat records.
             if ($widgetId === 'background') {
@@ -1481,7 +1499,7 @@ class Soap
 
                 if (count($media) <= 0) {
                     // Non-media widget
-                    $mediaId = 0;
+                    $mediaId = null;
                 } else {
                     $mediaId = $media[0]->mediaId;
                 }
@@ -1492,7 +1510,13 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            // Add this information to an array for batch insert
+            if ($duration == '') {
+                $start = $this->getDate()->parse($fromdt);
+                $end = $this->getDate()->parse($todt);
+
+                $duration = $end->diffInSeconds($start);
+            }
+
             $stats[] = [
                 'type' => $type,
                 'statDate' => $now,
@@ -1500,30 +1524,18 @@ class Soap
                 'toDt' => $todt,
                 'scheduleId' => $scheduleId,
                 'displayId' => $this->display->displayId,
-                'layoutId' => $layoutId,
+                'layoutId' => (int) $layoutId,
                 'mediaId' => $mediaId,
                 'tag' => $tag,
-                'widgetId' => $widgetId,
+                'widgetId' => (int) $widgetId,
+                'duration' => $duration,
+                'count' => ($count != '') ? $count : 1,
             ];
         }
 
+        /*Insert stats*/
         if (count($stats) > 0) {
-            // Insert
-            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`) VALUES ';
-            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-
-            $sql = $sql . implode(', ', array_fill(1, count($stats), $placeHolders));
-
-            // Flatten the array
-            $data = [];
-            foreach ($stats as $stat) {
-                foreach ($stat as $field) {
-                    $data[] = $field;
-                }
-            }
-
-            // Insert
-            $this->getStore()->isolated($sql, $data);
+            $this->getTimeSeriesStore()->addStat($stats);
         } else {
             $this->getLog()->info('0 stats resolved from data package');
         }
@@ -1553,7 +1565,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1661,7 +1673,7 @@ class Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -1834,14 +1846,19 @@ class Soap
      * Check we haven't exceeded the bandwidth limits
      *  - Note, display logging doesn't work in here, this is CMS level logging
      *
+     * @param int $displayId The Display ID
      * @return bool true if the check passes, false if it fails
+     * @throws NotFoundException
      */
-    protected function checkBandwidth()
+    protected function checkBandwidth($displayId)
     {
         // Uncomment to enable auditing.
         //$this->logProcessor->setDisplay(0, true);
 
+        $this->display = $this->displayFactory->getById($displayId);
+
         $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
+        $displayBandwidthLimit = $this->display->bandwidthLimit;
 
         try {
             $bandwidthUsage = 0;
@@ -1855,6 +1872,29 @@ class Soap
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
 
                     $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsage)));
+
+                    $notification = $this->notificationFactory->createSystemNotification(
+                        $subject,
+                        $body,
+                        $this->dateService->parse()
+                    );
+
+                    $notification->save();
+
+                    $this->getLog()->critical($subject);
+                }
+
+                return false;
+
+            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
+                // Bandwidth Exceeded
+                // Create a notification if we don't already have one today for this display.
+                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit ', $this->display->displayId));
+                $date = $this->dateService->parse();
+
+                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                    $body = __(sprintf('Display bandwidth limit %s exceeded. Used %s for Display Id %d', ByteFormatter::format($displayBandwidthLimit * 1024), ByteFormatter::format($bandwidthUsage), $this->display->displayId));
 
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,

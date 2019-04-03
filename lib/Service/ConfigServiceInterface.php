@@ -145,6 +145,12 @@ interface ConfigServiceInterface
     public function getCacheDrivers();
 
     /**
+     * Get time series store settings
+     * @return array
+     */
+    public function getTimeSeriesStore();
+
+    /**
      * Get the cache namespace
      * @return string
      */

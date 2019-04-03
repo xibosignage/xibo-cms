@@ -218,6 +218,14 @@ ul#LayoutAssignSortable {
     display: inline-block;
 }
 
+#LayoutAssign {
+    background-color: #a6b3cd;
+}
+
+.layoutAssignFilterOptions {
+    padding: 10px;
+}
+
 #LayoutAssignSortable .li-sortable {
     padding: 5px;
     margin: 5px;
@@ -940,4 +948,15 @@ ul li.active.tab-design:hover a {
 
 .layout-designer-right-pane .select2-container--bootstrap {
     display: inline-block;
+}
+
+/*
+ * Prrof of play report dropdown
+ */
+.proof-of-play-report-div {
+    padding-right: 2px;
+}
+
+.proof-of-play-report-btn {
+    height: 43px;
 }

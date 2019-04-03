@@ -633,7 +633,7 @@ describe('Layout Designer (Populated)', function() {
 
             cy.get('#layout-editor-toolbar a#publishLayout').click();
 
-            cy.get('[data-test="publishModal"] button[data-bb-handler="done"]').click();
+            cy.get('button[data-bb-handler="Publish"]').click();
 
             // Get the id from the published layout and check if the designer reloaded to the Read Only Mode of that layout
             cy.wait('@layoutPublish').then((res) => {

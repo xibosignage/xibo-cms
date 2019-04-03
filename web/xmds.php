@@ -236,6 +236,7 @@ try {
         $logProcessor,
         $app->pool,
         $app->store,
+        $app->timeSeriesStore,
         $app->logService,
         $app->dateService,
         $app->sanitizerService,

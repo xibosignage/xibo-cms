@@ -114,6 +114,13 @@ class Image extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -137,6 +144,7 @@ class Image extends ModuleWidget
         $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'center'));
         $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
         $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();

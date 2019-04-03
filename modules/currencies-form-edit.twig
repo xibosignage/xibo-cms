@@ -59,6 +59,19 @@
                         {% set title %}{% trans "Duration is per page" %}{% endset %}
                         {% set helpText %}{% trans "The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items." %}{% endset %}
                         {{ forms.checkbox("durationIsPerPage", title, module.getOption("durationIsPerPage"), helpText) }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
                     </div>
                     
                     <div class="tab-pane" id="configurationTab">

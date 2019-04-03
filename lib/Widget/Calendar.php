@@ -124,6 +124,7 @@ class Calendar extends ModuleWidget
         $this->setOption('useEventTimezone', $this->getSanitizer()->getCheckbox('useEventTimezone'));
         $this->setOption('useCalendarTimezone', $this->getSanitizer()->getCheckbox('useCalendarTimezone'));
         $this->setOption('windowsFormatCalendar', $this->getSanitizer()->getCheckbox('windowsFormatCalendar'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();
@@ -158,7 +159,7 @@ class Calendar extends ModuleWidget
             if ($noDataMessage != '') {
                 $items[] = [
                     'startDate' => 0,
-                    'endDate' => Date::now()->addYear()->format('U'),
+                    'endDate' => Date::now()->addYear()->format('c'),
                     'item' => $noDataMessage,
                     'currentEventItem' => $noDataMessage
                 ];
