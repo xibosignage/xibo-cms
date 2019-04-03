@@ -21,7 +21,7 @@
         </button>
         <ul class="dropdown-menu">
             <li>
-                <a href="{{ urlFor("stats.summaryReport.form") }}">{% trans "Daily summary" %}</a>
+                <a href="{{ urlFor("stats.summaryReport.form") }}">{% trans "Chart: Summary by Layout or Media" %}</a>
             </li>
         </ul>
     </div>
@@ -130,6 +130,7 @@
                             <th>{% trans "Layout" %}</th>
                             <th>{% trans "Widget ID" %}</th>
                             <th>{% trans "Media" %}</th>
+                            <th>{% trans "Tag" %}</th>
                             <th>{% trans "Number of Plays" %}</th>
                             <th>{% trans "Total Duration" %}</th>
                             <th>{% trans "Total Duration (s)" %}</th>
@@ -202,6 +203,7 @@
                     {"data": "layout"},
                     {"data": "widgetId"},
                     {"data": "media"},
+                    {"data": "tag"},
                     {"data": "numberPlays"},
                     {
                         "data": "duration",

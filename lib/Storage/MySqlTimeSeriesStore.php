@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
@@ -40,6 +41,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var DateServiceInterface */
     private $dateService;
 
+    /** @var  LayoutFactory */
+    protected $layoutFactory;
+
     /**
      * @inheritdoc
      */
@@ -51,18 +55,19 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $mediaFactory = null, $widgetFactory = null, $layoutFactory = null, $displayFactory = null)
+    public function setDependencies($log, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
     {
         $this->log = $log;
         $this->dateService = $date;
+        $this->layoutFactory = $layoutFactory;
         return $this;
     }
 
     /** @inheritdoc */
     public function addStat($statData)
     {
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
 
@@ -82,17 +87,22 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
 
+        $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
+
         // Media on Layouts Ran
         $select = '
           SELECT stat.type,
               display.Display,
-              layout.Layout,
+              IFNULL(layout.Layout, 
+              (SELECT `layout` FROM `layout` WHERE layoutId = (SELECT  MAX(layoutId) FROM  layouthistory  WHERE
+                            campaignId = stat.campaignId))) AS Layout,
               IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
               SUM(stat.count) AS NumberPlays,
               SUM(stat.duration) AS Duration,
               MIN(start) AS MinStart,
               MAX(end) AS MaxEnd,
-              layout.layoutId,
+              stat.tag,
+              stat.layoutId,
               stat.mediaId,
               stat.widgetId,
               stat.displayId
@@ -102,8 +112,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             FROM stat
               LEFT OUTER JOIN display
               ON stat.DisplayID = display.DisplayID
+              LEFT OUTER JOIN layouthistory 
+              ON layouthistory.LayoutID = stat.LayoutID              
               LEFT OUTER JOIN layout
-              ON layout.LayoutID = stat.LayoutID
+              ON layout.LayoutID = layouthistory.layoutId
               LEFT OUTER JOIN `widget`
               ON `widget`.widgetId = stat.widgetId
               LEFT OUTER JOIN `widgetoption`
@@ -150,12 +162,22 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                         )
                         ';
                 }
+
+                // old layout and latest layout have same tags
+                // old layoutId replaced with latest layoutId in the lktaglayout table and
+                // join with layout history to get campaignId then we can show old layouts that have no tag
                 if ($tagsType === 'layout') {
-                    $body .= ' AND `layout`.layoutId NOT IN (
-                    SELECT `lktaglayout`.layoutId
-                     FROM tag
-                        INNER JOIN `lktaglayout`
-                        ON `lktaglayout`.tagId = tag.tagId
+                    $body .= ' AND `stat`.campaignId NOT IN (
+                        SELECT 
+                            `layouthistory`.campaignId
+                        FROM
+                        (
+                            SELECT `lktaglayout`.layoutId
+                            FROM tag
+                            INNER JOIN `lktaglayout`
+                            ON `lktaglayout`.tagId = tag.tagId ) B
+                        LEFT OUTER JOIN
+                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId 
                         )
                         ';
                 }
@@ -178,13 +200,20 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                             ON `lktagdisplaygroup`.tagId = tag.tagId
                         ";
                 }
+                // old layout and latest layout have same tags
+                // old layoutId replaced with latest layoutId in the lktaglayout table and
+                // join with layout history to get campaignId then we can show old layouts that have given tag
                 if ($tagsType === 'layout') {
-                    $body .= " AND `layout`.layoutId IN (
-                        SELECT `lktaglayout`.layoutId
-                          FROM tag
+                    $body .= " AND `stat`.campaignId IN (
+                        SELECT 
+                            `layouthistory`.campaignId
+                        FROM
+                        (
+                            SELECT `lktaglayout`.layoutId
+                            FROM tag
                             INNER JOIN `lktaglayout`
                             ON `lktaglayout`.tagId = tag.tagId
-                    ";
+                        ";
                 }
                 if ($tagsType === 'media') {
                     $body .= " AND `media`.mediaId IN (
@@ -206,7 +235,14 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     else
                         $params['tags' . $i] = '%' . $tag . '%';
                 }
-                $body .= " ) ";
+                if ($tagsType === 'layout') {
+                    $body .= " ) B
+                        LEFT OUTER JOIN
+                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ";
+                }
+                else {
+                    $body .= " ) ";
+                }
             }
         }
 
@@ -232,7 +268,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.layoutId IN (' . trim($layoutSql, ',') . ')';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
@@ -249,8 +285,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
-        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, layout.Layout, layout.layoutId, stat.mediaId, stat.widgetId, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
-
+        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, stat.campaignId, IFNULL(stat.mediaId, stat.widgetId), 
+        IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         $order = '';
         if ($columns != null)
@@ -279,6 +315,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
+            $entry['tag'] = $row['tag'];
 
             $rows[] = $entry;
         }
@@ -622,7 +659,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
                 $body .= ' AND `stat`.type = \'layout\' 
-                       AND `stat`.layoutId = ' . $layoutId;
+                       AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = ' . $layoutId. ') ';
             } elseif (($type == 'media') && ($mediaId != '')) {
                 $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
                        AND `stat`.mediaId = ' . $mediaId;

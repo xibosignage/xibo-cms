@@ -710,6 +710,10 @@ class Layout implements \JsonSerializable
         }
 
         if ($this->parentId === null) {
+
+            // Delete layout history
+            $this->getStore()->update('DELETE FROM `layouthistory` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
+
             // Unassign from all Campaigns
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
@@ -815,6 +819,22 @@ class Layout implements \JsonSerializable
             $this->tags[] = $tag;
 
         return $this;
+    }
+
+    /**
+     * Add layout history
+     */
+    public function addLayoutHistory()
+    {
+        // Add a record in layout history when a layout is added or published
+        $this->getStore()->insert('
+          INSERT INTO `layouthistory` (campaignId, layoutId, publishedDate)
+            VALUES (:campaignId, :layoutId, :publishedDate)
+        ', [
+            'campaignId' => $this->campaignId,
+            'layoutId' => $this->layoutId,
+            'publishedDate' => $this->date->parse()->format('Y-m-d H:i:s')
+        ]);
     }
 
     /**
@@ -1509,6 +1529,10 @@ class Layout implements \JsonSerializable
 
         // Nullify my parentId (I no longer have a parent)
         $this->parentId = null;
+
+        // Add a layout history
+        $this->addLayoutHistory();
+
     }
 
     public function setPublishedDate($publishedDate)
@@ -1581,6 +1605,7 @@ class Layout implements \JsonSerializable
         // Add a Campaign
         // we do not add a campaign record for draft layouts.
         if ($this->parentId === null) {
+
             $campaign = $this->campaignFactory->createEmpty();
             $campaign->campaign = $this->layout;
             $campaign->isLayoutSpecific = 1;
@@ -1597,9 +1622,13 @@ class Layout implements \JsonSerializable
             // Assign the new campaignId to this layout
             $this->campaignId = $campaign->campaignId;
 
+            // Add a layout history
+            $this->addLayoutHistory();
+
         } else if ($this->campaignId == null) {
             throw new InvalidArgumentException(__('Draft Layouts must have a parent'), 'campaignId');
         } else {
+
             // Add this draft layout as a link to the campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->setChildObjectDependencies($this->layoutFactory);

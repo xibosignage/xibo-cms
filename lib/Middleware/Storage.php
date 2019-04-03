@@ -92,7 +92,8 @@ class Storage extends Middleware
             if ($container->configService->timeSeriesStore == null) {
                 return (new MySqlTimeSeriesStore())
                     ->setDependencies($container->logService,
-                        $container->dateService)
+                        $container->dateService,
+                        $container->layoutFactory)
                     ->setStore($container->store);
             } else {
                 $timeSeriesStore = $container->configService->timeSeriesStore;
@@ -101,9 +102,9 @@ class Storage extends Middleware
                 return $timeSeriesStore->setDependencies(
                     $container->logService,
                     $container->dateService,
+                    $container->layoutFactory,
                     $container->mediaFactory,
                     $container->widgetFactory,
-                    $container->layoutFactory,
                     $container->displayFactory,
                     $container->displayGroupFactory
                 );

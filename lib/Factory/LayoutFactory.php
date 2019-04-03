@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 
+use http\Exception\RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
@@ -294,6 +295,66 @@ class LayoutFactory extends BaseFactory
 
         // Set our layout
         return $layouts[0];
+    }
+
+    /**
+     * Get CampaignId from layout history
+     * @param int $layoutId
+     * @return int campaignId|null
+     * @throws NotFoundException
+     */
+    public function getCampaignIdFromLayoutHistory($layoutId)
+    {
+        $campaignId = null;
+
+        if ($layoutId == 0) {
+            throw new NotFoundException();
+        }
+
+        try {
+            $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
+            if(count($row) > 0) {
+                $campaignId = (int) $row[0]['campaignId'];
+            } else {
+                // layouthistory is not added on upgrade for a deleted layout but there is
+                // still stats exist in the player
+                $campaignId = null;
+                $this->getLog()->debug('Campaign ID not found for layoutId: '.$layoutId);
+            }
+        } catch (\RuntimeException $error) {
+            $this->getLog()->error($error);
+        }
+
+        // Set our Campaign ID
+        return $campaignId;
+    }
+
+    /**
+     * Get latest layoutId by CampaignId from layout history
+     * @param int campaignId
+     * @return int layoutId
+     * @throws NotFoundException
+     */
+    public function getLatestLayoutIdFromLayoutHistory($campaignId)
+    {
+
+        if ($campaignId == null)
+            throw new NotFoundException();
+
+        try {
+            $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
+            if(count($row) > 0) {
+                $layoutId = $row[0]['layoutId'];
+            } else {
+                $layoutId = 0;
+                $this->getLog()->debug('Layout ID not found for campaignId: '.$campaignId);
+            }
+        } catch (\RuntimeException $error) {
+            $this->getLog()->error($error);
+        }
+
+        // Set our Layout ID
+        return $layoutId;
     }
 
     /**
