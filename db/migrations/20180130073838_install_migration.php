@@ -83,7 +83,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('value', 'string', ['limit' => 1000])
             ->addColumn('default', 'string', ['limit' => 1000])
             ->addColumn('fieldType', 'string', ['limit' => 24])
-            ->addColumn('helpText', 'text')
+            ->addColumn('helpText', 'text', ['default' => null, 'null' => true])
             ->addColumn('options', 'string', ['limit' => 254, 'null' => true, 'default' => null])
             ->addColumn('cat', 'string', ['limit' => 24, 'default' => 'General'])
             ->addColumn('validation', 'string', ['limit' => 50])
@@ -140,7 +140,7 @@ class InstallMigration extends AbstractMigration
         $userOption
             ->addColumn('userId', 'integer')
             ->addColumn('option', 'string', ['limit' => 50])
-            ->addColumn('value', 'text')
+            ->addColumn('value', 'text', ['default' => null, 'null' => true])
             ->save();
 
         // User Group
@@ -180,7 +180,7 @@ class InstallMigration extends AbstractMigration
         $displayProfile
             ->addColumn('name', 'string', ['limit' => 50])
             ->addColumn('type', 'string', ['limit' => 15])
-            ->addColumn('config', 'text')
+            ->addColumn('config', 'text', ['default' => null, 'null' => true])
             ->addColumn('isDefault', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('userId', 'integer')
             ->addForeignKey('userId', 'user', 'userId')
@@ -225,7 +225,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('storageAvailableSpace', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'null' => true])
             ->addColumn('storageTotalSpace', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'null' => true])
             ->addColumn('xmrChannel', 'string', ['limit' => 254, 'default' => null, 'null' => true])
-            ->addColumn('xmrPubKey', 'text')
+            ->addColumn('xmrPubKey', 'text', ['default' => null, 'null' => true])
             ->addColumn('lastCommandSuccess', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 2])
             ->addColumn('deviceName', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('timeZone', 'string', ['limit' => 254, 'default' => null, 'null' => true])
@@ -484,7 +484,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('userId', 'integer')
             ->addColumn('startTime', 'string', ['limit' => 8, 'default' => '00:00:00'])
             ->addColumn('endTime', 'string', ['limit' => 8, 'default' => '00:00:00'])
-            ->addColumn('exceptions', 'text')
+            ->addColumn('exceptions', 'text', ['default' => null, 'null' => true])
             ->addForeignKey('userId', 'user', 'userId')
             // Get 1 and 2 ID's reserved for Always and Custom
             ->insert([
@@ -846,7 +846,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('class', 'string', ['limit' => 254])
             ->addColumn('status', 'integer', ['default' => 2, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('pid', 'integer', ['null' => true])
-            ->addColumn('options', 'text')
+            ->addColumn('options', 'text', ['default' => null, 'null' => true])
             ->addColumn('schedule', 'string', ['limit' => 254])
             ->addColumn('lastRunDt', 'integer', ['default' => 0])
             ->addColumn('lastRunStartDt', 'integer', ['null' => true])
@@ -996,7 +996,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('message', 'string', ['limit' => 255])
             ->addColumn('entity', 'string', ['limit' => 50])
             ->addColumn('entityId', 'integer')
-            ->addColumn('objectAfter', 'text')
+            ->addColumn('objectAfter', 'text', ['default' => null, 'null' => true])
             ->save();
 
         // Bandwidth Tracking
