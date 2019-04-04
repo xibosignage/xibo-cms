@@ -56,10 +56,11 @@ This is the template for the campaign page
 {% endblock %}
 
 {% block javaScript %}
-    <script src="{{ theme.uri("libraries/jquery/jquery-1.11.1.min.js") }}"></script>
-    <script src="{{ theme.uri("libraries/html5preloader/html5Preloader.js") }}"></script>
-    <script src="{{ theme.rootUri() }}dist/js/html-preview.js"></script>
+    <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js"></script>
+    <script src="{{ theme.rootUri() }}dist/preview/html-preview.js"></script>
     <script type="text/javascript">
+        var emptyRegionMessage = "{% trans "Empty Region" %}"; 
+
         (function($){
           $(document).ready(function(){
             {% for extendedLayout in extendedLayouts %}
@@ -71,5 +72,6 @@ This is the template for the campaign page
 {% endblock %}
 
 {% block headContent %}
+        <link rel="stylesheet" type="text/css" href="{{ theme.rootUri() }}dist/preview/html-preview.css" />
         <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
 {% endblock %}

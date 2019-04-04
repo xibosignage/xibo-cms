@@ -6,9 +6,10 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="token" content="{{ csrfToken }}"/>
+        <meta name="public-path" content="{{ theme.rootUri() }}"/>
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
         <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
-
+        
         {# Import CSS bundle from dist #}
         <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
 
@@ -145,6 +146,10 @@
                 "aria": {
                     "sortAscending":  "{{ ": activate to sort column ascending"|trans }}",
                     "sortDescending": "{{ ": activate to sort column descending"|trans }}"
+                },
+                "buttons": {
+                    "colvis":  "{{ "Column visibility"|trans }}",
+                    "print": "{{ "Print"|trans }}"
                 }
             };
             {% endautoescape %}

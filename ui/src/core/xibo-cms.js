@@ -683,10 +683,16 @@ function dataTableAddButtons(table, filter) {
     var colVis = new $.fn.dataTable.Buttons(table, {
         buttons: [
             {
-                extend: 'colvis'
+                extend: 'colvis',
+                text: function ( dt, button, config ) {
+                    return dt.i18n( 'buttons.colvis' );
+                }
             },
             {
                 extend: 'print',
+                text: function ( dt, button, config ) {
+                    return dt.i18n( 'buttons.print' );
+                },
                 exportOptions: {
                     orthogonal: 'export',
                     format: {

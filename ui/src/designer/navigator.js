@@ -103,22 +103,6 @@ Navigator.prototype.render = function(layout) {
     // Get layout container
     const layoutContainer = this.DOMObject.find('#' + layout.id);
 
-    // Set background color as a darken version of the complementary color
-    const darkerValue = 50;
-    let complementaryColorRGB = $c.hex2rgb($c.complement(layout.backgroundColor));
-
-    if(complementaryColorRGB.R === undefined || complementaryColorRGB.G === undefined || complementaryColorRGB.B === undefined) {
-        this.DOMObject.css('background', layout.backgroundColor);
-    } else {
-        // Darken color
-        complementaryColorRGB.R = (complementaryColorRGB.R - darkerValue < 0) ? 0 : complementaryColorRGB.R - darkerValue;
-        complementaryColorRGB.G = (complementaryColorRGB.G - darkerValue < 0) ? 0 : complementaryColorRGB.G - darkerValue;
-        complementaryColorRGB.B = (complementaryColorRGB.B - darkerValue < 0) ? 0 : complementaryColorRGB.B - darkerValue;
-
-        // Use a complentary colour for the navigator background
-        this.DOMObject.css('background', $c.rgb2hex(complementaryColorRGB.R, complementaryColorRGB.G, complementaryColorRGB.B));
-    }
-
     // Find all the regions and enable drag and resize
     if(this.editMode) {
         this.DOMObject.find('#regions .designer-region.editable').resizable({
