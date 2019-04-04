@@ -695,7 +695,7 @@ class Display implements \JsonSerializable
             'email_alert' => 0,
             'alert_timeout' => 0,
             'xmrChannel' => $this->xmrChannel,
-            'xmrPubKey' => $this->xmrPubKey,
+            'xmrPubKey' => ($this->xmrPubKey === null) ? '' : $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'macAddress' => $this->macAddress
         ]);
@@ -783,7 +783,7 @@ class Display implements \JsonSerializable
             'storageAvailableSpace' => $this->storageAvailableSpace,
             'storageTotalSpace' => $this->storageTotalSpace,
             'xmrChannel' => $this->xmrChannel,
-            'xmrPubKey' => $this->xmrPubKey,
+            'xmrPubKey' => ($this->xmrPubKey === null) ? '' : $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'deviceName' => $this->deviceName,
             'timeZone' => $this->timeZone,
