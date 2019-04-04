@@ -201,8 +201,9 @@ class UserFactory extends BaseFactory
         $entries = array();
 
         // Default sort order
-        if (count($sortOrder) <= 0)
+        if (!$sortOrder || (count($sortOrder) <= 0)) {
             $sortOrder = array('userName');
+        }
 
         $params = array();
         $select = '
@@ -325,7 +326,7 @@ class UserFactory extends BaseFactory
         // Groups Provided
         $groups = $this->getSanitizer()->getParam('groupIds', $filterBy);
 
-        if (count($groups) > 0) {
+        if ($groups && (count($groups) > 0)) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
