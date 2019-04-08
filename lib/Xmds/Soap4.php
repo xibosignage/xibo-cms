@@ -171,9 +171,6 @@ class Soap4 extends Soap
                     // Append Local Time
                     $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                 }
-
-                // Send Notification if required
-                $this->alertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
@@ -206,6 +203,8 @@ class Soap4 extends Soap
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
         }
 
+        // Send Notification if required
+        $this->alertDisplayUp();
 
         $display->lastAccessed = time();
         $display->loggedIn = 1;
