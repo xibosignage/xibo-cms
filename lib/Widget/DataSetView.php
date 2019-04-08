@@ -653,7 +653,7 @@ class DataSetView extends ModuleWidget
                         break;
 
                     default:
-                        continue;
+                        continue 2;
                 }
 
                 if ($i > 1)
