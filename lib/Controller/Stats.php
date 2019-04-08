@@ -879,10 +879,16 @@ class Stats extends Base
         $tags = $this->getSanitizer()->getString('tags');
         $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
 
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
-            $toDt->addDay(1);
+        $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
+
+        // fromDt is always start of selected day
+        $fromDt = $this->getDate()->parse($fromDt)->startOfDay();
+
+        // If toDt is current date then make it current datetime
+        if ($this->getDate()->parse($toDt)->startOfDay()->format('Y-m-d') == $currentDate) {
+            $toDt = $this->getDate()->parse();
+        } else {
+            $toDt = $this->getDate()->parse()->startOfDay();
         }
 
         // Get an array of display id this user has access to.
