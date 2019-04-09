@@ -200,23 +200,23 @@
                             let months = durationData.months();
                             if (months > 0) {
                                 durationData.subtract(moment.duration(months,'months'));
-                                dataM += months + 'months ';
+                                dataM += months + '{% trans "month" %} ';
                             }
 
                             let days = durationData.days();
                             durationData.subtract(moment.duration(days,'days'));
-                            dataM += days + 'day ';
+                            dataM += days + '{% trans "day" %} ';
 
                             let hours = durationData.hours();
                             durationData.subtract(moment.duration(hours,'hours'));
-                            dataM += hours + 'hr ';
+                            dataM += hours + '{% trans "hr" %} ';
 
                             let minutes = durationData.minutes();
                             durationData.subtract(moment.duration(minutes,'minutes'));
-                            dataM += minutes + 'min ';
+                            dataM += minutes + '{% trans "min" %} ';
 
                             let seconds = durationData.seconds();
-                            dataM += seconds + 's ';
+                            dataM += seconds + '{% trans "sec" %} ';
 
                             return  dataM;
                         }
