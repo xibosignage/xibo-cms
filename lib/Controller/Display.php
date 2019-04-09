@@ -1430,11 +1430,6 @@ class Display extends Base
                     $display->loggedIn = 0;
                     $display->save(\Xibo\Entity\Display::$saveOptionsMinimum);
 
-                    // We put it back again (in memory only)
-                    // this is then used to indicate whether or not this is the first time this display has gone
-                    // offline (for anything that uses the timedOutDisplays return
-                    $display->loggedIn = 1;
-
                     // Log the down event
                     $event = $this->displayEventFactory->createEmpty();
                     $event->displayId = $display->displayId;
