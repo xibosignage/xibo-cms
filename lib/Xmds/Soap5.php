@@ -202,9 +202,6 @@ class Soap5 extends Soap4
                 // Update the PUB Key only if it has been cleared
                 if ($display->xmrPubKey == '')
                     $display->xmrPubKey = $xmrPubKey;
-
-                // Send Notification if required
-                $this->alertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
@@ -239,6 +236,8 @@ class Soap5 extends Soap4
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
         }
 
+        // Send Notification if required
+        $this->alertDisplayUp();
 
         $display->lastAccessed = time();
         $display->loggedIn = 1;
