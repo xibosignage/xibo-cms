@@ -635,11 +635,12 @@
             XiboInitialise('#settings-from-profile');
         }
 
+        // Custom submit for display form
         function displayEditFormSubmit() {
-            let form = $(".DisplayForm");
+            let $form = $('#displayEditForm');
             // Grab and alter the value in the bandwidth limit field
-            let bandwidthLimitField = $(form).find("input[name=bandwidthLimit]");
-            let bandwidthLimitUnitsField = $(form).find("select[name=bandwidthLimitUnits]");
+            let bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
+            let bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
             let bandwidthLimit = bandwidthLimitField.val();
 
             if (bandwidthLimitUnitsField.val() == 'mb') {
@@ -651,7 +652,24 @@
             // Set the field
             bandwidthLimitField.prop('value', bandwidthLimit);
 
-            $('#displayEditForm').submit();
+            // Replace all checkboxes with hidden input fields
+            $form.find('input[type="checkbox"]').each(function () {
+                // Get checkbox values
+                let value = $(this).is(':checked') ? 'on' : 'off';
+                let id = $(this).attr('id');
+       
+                // Create hidden input
+                $('<input type="hidden">')
+                    .attr('id', id)
+                    .attr('name', id)
+                    .val(value)
+                    .appendTo($(this).parent());
+                
+                // Disable checkbox so it won't be submitted
+                $(this).attr('disabled', true);
+            });
+
+            $form.submit();
         }
 
     </script>
