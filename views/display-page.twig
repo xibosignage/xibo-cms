@@ -622,10 +622,24 @@
             // Call XiboInitialise on table
             XiboInitialise('#settings-from-profile');
         }
+        
         // Custom submit for display form
+        function displayEditFormSubmit() {
             let $form = $('#displayEditForm');
+            // Grab and alter the value in the bandwidth limit field
             let bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
             let bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
+            let bandwidthLimit = bandwidthLimitField.val();
+
+            if (bandwidthLimitUnitsField.val() == 'mb') {
+                bandwidthLimit = bandwidthLimit * 1024;
+            } else if (bandwidthLimitUnitsField.val() == 'gb') {
+                bandwidthLimit = bandwidthLimit * 1024 * 1024;
+            }
+
+            // Set the field
+            bandwidthLimitField.prop('value', bandwidthLimit);
+
             // Replace all checkboxes with hidden input fields
             $form.find('input[type="checkbox"]').each(function () {
                 // Get checkbox values
@@ -644,6 +658,7 @@
             });
 
             $form.submit();
+        }
     </script>
 
     <style>
