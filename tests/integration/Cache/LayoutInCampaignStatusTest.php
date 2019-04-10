@@ -79,7 +79,7 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         // Schedule the Campaign "always" onto our display
         //  deleting the layout will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
+            date('Y-m-d H:i:s', time()),
             date('Y-m-d H:i:s', time()+7200),
             $this->campaign->campaignId,
             [$this->display->displayGroupId],
