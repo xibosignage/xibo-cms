@@ -654,9 +654,9 @@ class Soap
 
             // Load the layout XML and work out if we have any ticker / text / dataset media items
             foreach ($layout->regions as $region) {
-                /* @var Region $region */
+                /* @var \Xibo\Entity\Region $region */
                 foreach ($region->playlists as $playlist) {
-                    /* @var Playlist $playlist */
+                    /* @var \Xibo\Entity\Playlist $playlist */
                     foreach ($playlist->widgets as $widget) {
                         /* @var Widget $widget */
                         if ($widget->type == 'ticker' ||
@@ -786,7 +786,6 @@ class Soap
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->GetSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->GetSetting('SERVER_KEY'))
