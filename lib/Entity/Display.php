@@ -640,7 +640,7 @@ class Display implements \JsonSerializable
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
 
         // Trigger an update of all dynamic DisplayGroups
-        if ($this->hasPropertyChanged('display')) {
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
