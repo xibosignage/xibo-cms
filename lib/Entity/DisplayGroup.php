@@ -780,17 +780,36 @@ class DisplayGroup implements \JsonSerializable
 
             $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 
-            $difference = array_udiff($originalDisplays, $this->displays, function ($a, $b) {
-                /**
-                 * @var Display $a
-                 * @var Display $b
-                 */
-                return $a->getId() - $b->getId();
-            });
+            // Map our arrays to simple displayId lists
+            $displayIds = array_map(function ($element) { return $element->displayId; }, $this->displays);
+            $originalDisplayIds = array_map(function ($element) { return $element->displayId; }, $originalDisplays);
 
-            $this->notifyRequired = (count($difference) >= 0);
+            $difference = array_merge(array_diff($displayIds, $originalDisplayIds), array_diff($originalDisplayIds, $displayIds));
+
+            // This is a dynamic display group
+            // only manage the links that have changed
+            if (count($difference) > 0) {
+                $this->getLog()->debug(count($difference) . ' changes in dynamic Displays, will notify individually');
+
+                // These could be removals or additions, notify all the same.
+                $notify = $this->displayFactory->getDisplayNotifyService();
+
+                if ($this->collectRequired) {
+                    $notify->collectNow();
+                }
+
+                foreach ($difference as $displayId) {
+                    $notify->notifyByDisplayId($displayId);
+                }
+            } else {
+                $this->getLog()->debug('No changes in dynamic Displays, wont notify');
+            }
+
+            // We've done our notifications for all our new/current and departing members.
+            $this->notifyRequired = false;
         }
 
+        // Manage the links we've made either way
         // Link
         $this->linkDisplays();
 
@@ -798,13 +817,13 @@ class DisplayGroup implements \JsonSerializable
         if ($this->notifyRequired) {
             // We must notify before we unlink
             $this->notify();
-
-            // Don't do it again
-            $this->notifyRequired = false;
         }
 
         // Unlink
         $this->unlinkDisplays();
+
+        // Don't do it again
+        $this->notifyRequired = false;
     }
 
     /**
