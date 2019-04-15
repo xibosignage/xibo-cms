@@ -199,9 +199,6 @@ class Fault extends Base
 
     public function debugOn()
     {
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
         $this->getConfig()->ChangeSetting('audit', 'DEBUG');
         $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
 
@@ -213,9 +210,6 @@ class Fault extends Base
 
     public function debugOff()
     {
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
         $this->getConfig()->ChangeSetting('audit', $this->getConfig()->GetSetting('RESTING_LOG_LEVEL'));
         $this->getConfig()->ChangeSetting('ELEVATE_LOG_UNTIL', '');
 
