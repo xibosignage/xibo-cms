@@ -644,8 +644,8 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, client_type, client_version, client_code)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :clientType, :clientVersion, :clientCode)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -658,7 +658,10 @@ class Display implements \JsonSerializable
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
-            'macAddress' => $this->macAddress
+            'macAddress' => $this->macAddress,
+            'clientType' => $this->clientType,
+            'clientVersion' => $this->clientVersion,
+            'clientCode' => $this->clientCode,
         ]);
 
         $displayGroup = $this->displayGroupFactory->createEmpty();
