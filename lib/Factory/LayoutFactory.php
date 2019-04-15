@@ -109,6 +109,14 @@ class LayoutFactory extends BaseFactory
     private $playlistFactory;
 
     /**
+     * @return DateServiceInterface
+     */
+    private function getDate()
+    {
+        return $this->date;
+    }
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
