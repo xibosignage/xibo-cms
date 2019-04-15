@@ -309,7 +309,7 @@ class ScheduleTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
         # Create new event
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
+            date('Y-m-d H:i:s', time()),
             date('Y-m-d H:i:s', time()+7200),
             $campaign->campaignId,
             [$displayGroup->displayGroupId],
@@ -357,7 +357,7 @@ class ScheduleTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
         # Create event
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
+            date('Y-m-d H:i:s', time()),
             date('Y-m-d H:i:s', time()+7200),
             $campaign->campaignId,
             [$displayGroup->displayGroupId],

@@ -135,7 +135,7 @@ class Soap5 extends Soap4
                         $cache->expiresAfter(86400);
                         $this->getPool()->saveDeferred($cache);
 
-                        $version = json_encode(['url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
+                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code, 'url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
                     }
                 }
 
@@ -163,6 +163,7 @@ class Soap5 extends Soap4
                     $dateNow->timezone($display->timeZone);
 
                     // Append Local Time
+                    $displayElement->setAttribute('localTimezone', $display->timeZone);
                     $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
                 }
 
