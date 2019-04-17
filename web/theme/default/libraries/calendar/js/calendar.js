@@ -1343,8 +1343,8 @@ if(!String.prototype.formatNum) {
 			}
 			// Convert to a local date, without the timezone
 			// Grab the date from the scheduled event (which has already been adjusted appropriately by the CMS)
-			let event_start = moment(this.scheduleEvent.fromDt, "YYYY-MM-DD HH:mm:ss");
-			let event_end = (this.end != null) ? moment(this.scheduleEvent.toDt, "YYYY-MM-DD HH:mm:ss") : event_start;
+			var event_start = moment(this.scheduleEvent.fromDt, "YYYY-MM-DD HH:mm:ss");
+			var event_end = (this.end != null) ? moment(this.scheduleEvent.toDt, "YYYY-MM-DD HH:mm:ss") : event_start;
 
 			if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
 				//console.log("X. ES: " + event_start.format() + "(" + this.scheduleEvent.fromDt + "), EE: " + event_end.format() + " (" + this.scheduleEvent.toDt + ")");
