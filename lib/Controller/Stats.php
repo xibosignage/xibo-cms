@@ -608,10 +608,12 @@ class Stats extends Base
 
                 if ($groupByFilter == 'byweek') {
                     $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y-m-d');
+                    $weekNo = $row['weekNo'];
+
                     if ($weekEnd >= $toDt){
                         $weekEnd = $this->getDate()->parse($toDt, 'Y-m-d H:i:s')->format('Y-m-d');
                     }
-                    $tsLabel .= ' - ' . $weekEnd;
+                    $tsLabel .= ' - ' . $weekEnd. ' (w'.$weekNo.')';
                 } elseif ($groupByFilter == 'bymonth') {
                     $tsLabel = __($row['shortMonth']) . ' '. $row['yearDate'];
 
@@ -628,6 +630,7 @@ class Stats extends Base
 
                 if ($groupByFilter == 'byweek') {
                     $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y-m-d');
+                    $weekNo = $row['weekNo'];
 
                     $startInMonth = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('M');
                     $weekEndInMonth = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('M');
@@ -635,7 +638,8 @@ class Stats extends Base
                     if ($weekEndInMonth != $startInMonth){
                         $weekEnd = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->endOfMonth()->format('Y-m-d');
                     }
-                    $tsLabel .= ' - ' . $weekEnd;
+
+                    $tsLabel = [ $tsLabel . ' - ' . $weekEnd, ' (w'.$weekNo.')'];
                 }
 
             }  elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
@@ -647,6 +651,7 @@ class Stats extends Base
                 } elseif ($groupByFilter == 'byweek') {
                     $weekStart = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('M d');
                     $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('M d');
+                    $weekNo = $row['weekNo'];
 
                     $weekStartInYear = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('Y');
                     $weekEndInYear = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y');
@@ -654,7 +659,7 @@ class Stats extends Base
                     if ($weekEndInYear != $weekStartInYear){
                         $weekEnd = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->endOfYear()->format('M-d');
                     }
-                    $tsLabel = $weekStart .' - ' . $weekEnd;
+                    $tsLabel = $weekStart . ' - ' . $weekEnd. ' (w'.$weekNo.')';
                 }
 
             }

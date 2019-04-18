@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayGroupFactory;
@@ -49,6 +50,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     private $client;
 
     private $table = 'stat';
+
+    private $periodTable = 'period';
 
     /** @var  MediaFactory */
     protected $mediaFactory;
@@ -105,10 +108,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     {
         foreach ($statData as $k => $stat) {
 
-            $statData[$k]['start'] = $statData[$k]['fromDt'];
+            $statData[$k]['start'] = new UTCDateTime($this->dateService->parse($statData[$k]['fromDt'])->format('U')*1000);
             unset($statData[$k]['fromDt']);
 
-            $statData[$k]['end'] = $statData[$k]['toDt'];
+            $statData[$k]['end'] = new UTCDateTime($this->dateService->parse($statData[$k]['toDt'])->format('U')*1000);
             unset($statData[$k]['toDt']);
 
             $statData[$k]['eventName'] = $statData[$k]['tag'];
@@ -199,6 +202,25 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
         try {
             $collection->insertMany($statData);
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+
+        // Create a period collection if it doesnot exist
+        $collectionPeriod = $this->client->selectCollection($this->config['database'], $this->periodTable);
+
+        try {
+            $cursor = $collectionPeriod->findOne(['name' => 'period']);
+
+            if (count($cursor) <= 0 ) {
+                $this->log->error('Period collection does not exist in Mongo DB.');
+                // Period collection created
+                $collectionPeriod->insertOne(['name' => 'period']);
+                $this->log->debug('Period collection created.');
+
+            }
+
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
@@ -207,8 +229,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
-        $fromDt = date(DATE_ISO8601, strtotime($fromDt));
-        $toDt = date(DATE_ISO8601, strtotime($toDt));
+
+        $fromDt = new UTCDateTime($this->dateService->parse($fromDt)->format('U')*1000);
+        $toDt = new UTCDateTime($this->dateService->parse($toDt)->addDay()->format('U')*1000);
 
         // Filters the documents to pass only the documents that
         // match the specified condition(s) to the next pipeline stage.
@@ -305,17 +328,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $order = $array;
         }
 
-        $addFields = [
-            '$addFields' => [
-                'startDate' => [
-                    '$dateFromString' => ['dateString' =>'$start']
-                ],
-                'endDate' => [
-                    '$dateFromString' => ['dateString' =>'$end']
-                ]
-            ]
-        ];
-
         $project = [
             '$project' => [
                 'campaignId' =>  1,
@@ -374,7 +386,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 // Filters the documents to pass only the documents that
                 // match the specified condition(s) to the next pipeline stage.
                 $match,
-                $addFields,
                 $project,
                 $group,
                 ['$skip' => $start],
@@ -428,8 +439,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
             $entry['numberPlays'] = $row['numberPlays'];
             $entry['duration'] = $row['duration'];
-            $entry['minStart'] = $row['minStart'];
-            $entry['maxEnd'] = $row['maxEnd'];
+            $entry['minStart'] = $row['minStart']->toDateTime()->format('Y-m-d H:i:s');
+            $entry['maxEnd'] = $row['maxEnd']->toDateTime()->format('Y-m-d H:i:s');
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
@@ -470,8 +481,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getStats($fromDt, $toDt, $displayIds = null)
     {
-        $fromDt = date(DATE_ISO8601, strtotime($fromDt));
-        $toDt = date(DATE_ISO8601, strtotime($toDt));
+        $fromDt = new UTCDateTime($this->dateService->parse($fromDt)->format('U')*1000);
+        $toDt = new UTCDateTime($this->dateService->parse($toDt)->addDay()->format('U')*1000);
 
         $match =  [
             '$match' => [
@@ -492,8 +503,18 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 [
                     '$project' => [
                         'type'=> 1,
-                        'start'=> 1,
-                        'end'=> 1,
+                        'start'=> [
+                            '$dateToString' => [
+                                'format' => '%Y-%m-%d %H:%M:%S',
+                                'date' => '$start'
+                            ]
+                        ],
+                        'end'=> [
+                            '$dateToString' => [
+                                'format' => '%Y-%m-%d %H:%M:%S',
+                                'date' => '$end'
+                            ]
+                        ],
                         'layout'=> '$layoutName',
                         'display'=> '$displayName',
                         'media'=> '$mediaName',
@@ -539,18 +560,60 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $i++;
 
             if ($fromDt != null) {
-                $query = [
-                    'end' => ['$gt' => $fromDt],
-                    'start' => ['$lte' => $toDt]
+                $match =  [
+                    '$match' => [
+                        '$expr' => [
+                            '$and' => [
+                                [
+                                    '$lte' => [
+                                        '$start', [
+                                            '$dateFromString' => [
+                                                'dateString' => $toDt
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                                [
+                                    '$gt' => [
+                                        '$end', [
+                                            '$dateFromString' => [
+                                                'dateString' => $fromDt
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                            ]
+                        ]
+                    ]
                 ];
             } else {
-                $query = [
-                    'start' => ['$lte' => $toDt]
+                $match =  [
+                    '$match' => [
+                        '$expr' => [
+                            '$and' => [
+                                [
+                                    '$lte' => [
+                                        '$start', [
+                                            '$dateFromString' => [
+                                                'dateString' => $toDt
+                                            ]
+                                        ]
+                                    ]
+                                ],
+                            ]
+                        ]
+                    ]
                 ];
             }
 
             try{
-                $findResult = $collection->find($query, ['limit' => $options['limit']])->toArray();
+                $findResult = $collection->aggregate(
+                    [
+                        $match
+                    ],
+                    ['limit' => $options['limit']]
+                )->toArray();
+
             } catch (\MongoDB\Exception\RuntimeException $e) {
                 $this->log->error($e->getMessage());
             }
@@ -591,38 +654,46 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         if ( (($type == 'media') && ($mediaId != '')) ||
             (($type == 'layout') && ($layoutId != '')) ) {
 
-            $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('Y-m-d H:i:s');;
-            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
+            $fromDt = $this->dateService->parse($fromDt)->startOfDay();
+            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay();
 
-            $yesterday = $this->dateService->parse()->startOfDay()->subDay()->format('Y-m-d H:i:s');
-            $today = $this->dateService->parse()->startOfDay()->format('Y-m-d H:i:s');
-            $nextday = $this->dateService->parse()->startOfDay()->addDay()->format('Y-m-d H:i:s');
+            $yesterday = $this->dateService->parse()->startOfDay()->subDay();
+            $today = $this->dateService->parse()->startOfDay();
+            $nextday = $this->dateService->parse()->startOfDay()->addDay();
 
-            $firstdaythisweek = $this->dateService->parse()->startOfWeek()->format('Y-m-d H:i:s');
-            $lastdaythisweek = $this->dateService->parse()->endOfWeek()->addSecond()->format('Y-m-d H:i:s'); // added a second
+            $firstdaythisweek = $this->dateService->parse()->startOfWeek();
+            $lastdaythisweek = $this->dateService->parse()->endOfWeek()->addSecond();
 
-            $firstdaylastweek = $this->dateService->parse()->startOfWeek()->subWeek()->format('Y-m-d H:i:s');
-            $lastdaylastweek = $this->dateService->parse()->endOfWeek()->addSecond()->subWeek()->format('Y-m-d H:i:s'); // added a second
+            $firstdaylastweek = $this->dateService->parse()->startOfWeek()->subWeek();
+            $lastdaylastweek = $this->dateService->parse()->endOfWeek()->subWeek()->addSecond();
 
-            $firstdaythismonth = $this->dateService->parse()->startOfMonth()->format('Y-m-d H:i:s');
-            $lastdaythismonth = $this->dateService->parse()->endOfMonth()->addSecond()->format('Y-m-d H:i:s'); // added a second
+            $firstdaythismonth = $this->dateService->parse()->startOfMonth();
+            $lastdaythismonth = $this->dateService->parse()->endOfMonth()->addSecond();
 
-            $firstdaylastmonth = $this->dateService->parse()->startOfMonth()->subMonth()->format('Y-m-d H:i:s');
-            $lastdaylastmonth = $this->dateService->parse()->endOfMonth()->addSecond()->subMonth()->format('Y-m-d H:i:s');
+            $firstdaylastmonth = $this->dateService->parse()->startOfMonth()->subMonth();
+            $lastdaylastmonth = $this->dateService->parse()->endOfMonth()->subMonth()->addSecond();
 
-            $firstdaythisyear = $this->dateService->parse()->startOfYear()->format('Y-m-d H:i:s');
-            $lastdaythisyear = $this->dateService->parse()->endOfYear()->addSecond()->format('Y-m-d H:i:s');
+            $firstdaythisyear = $this->dateService->parse()->startOfYear();
+            $lastdaythisyear = $this->dateService->parse()->endOfYear()->addSecond();
 
-            $firstdaylastyear = $this->dateService->parse()->startOfYear()->subYear()->format('Y-m-d H:i:s');
-            $lastdaylastyear = $this->dateService->parse()->endOfYear()->addSecond()->subYear()->format('Y-m-d H:i:s');
+            $firstdaylastyear = $this->dateService->parse()->startOfYear()->subYear();
+            $lastdaylastyear = $this->dateService->parse()->endOfYear()->subYear()->addSecond();
 
             if ($reportFilter == '') {
 
                 $hour = 24;
-                $input = range(0, $diffInDays);
 
-                $periodStart = $fromDt;
-                $periodEnd = $toDt;
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0,  ceil($diffInDays / 7 ) );
+                } elseif ($groupByFilter == 'bymonth') {
+                    $startOfMonthFromDt = new UTCDateTime($this->dateService->parse($fromDt)->startOfMonth()->format('U')*1000);
+                    $input = range(0, ceil($diffInDays / 30));
+                } else {
+                    $input = range(0, $diffInDays);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($fromDt)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($toDt)->format('U')*1000);
             }
 
             // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
@@ -632,8 +703,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 1;
                 $input = range(0, 23);
 
-                $periodStart = $today;
-                $periodEnd = $nextday;
+                $periodStart = new UTCDateTime($this->dateService->parse($today)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($nextday)->format('U')*1000);
             }
 
             // where start is less than last hour of the day + 1 hour (i.e., today)
@@ -643,8 +714,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 1;
                 $input = range(0, 23);
 
-                $periodStart = $yesterday;
-                $periodEnd = $today;
+                $periodStart = new UTCDateTime($this->dateService->parse($yesterday)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($today)->format('U')*1000);
             }
 
             // where start is less than last day of the week
@@ -654,8 +725,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 24;
                 $input = range(0, 6);
 
-                $periodStart = $firstdaythisweek;
-                $periodEnd = $lastdaythisweek;
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaythisweek)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaythisweek)->format('U')*1000);
             }
 
             // where start is less than last day of the week
@@ -665,8 +736,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $hour = 24;
                 $input = range(0, 6);
 
-                $periodStart = $firstdaylastweek;
-                $periodEnd = $lastdaylastweek;
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastweek)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastweek)->format('U')*1000);
             }
 
             // where start is less than last day of the month + 1 day
@@ -674,9 +745,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             elseif (($reportFilter == 'thismonth')) {
 
                 $hour = 24;
-                $input = range(0, 30);
-                $periodStart = $firstdaythismonth;
-                $periodEnd = $lastdaythismonth;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 5);
+                } else {
+                    $input = range(0, 30);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaythismonth)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaythismonth)->format('U')*1000);
             }
 
             // where start is less than last day of the month + 1 day
@@ -684,9 +761,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             elseif (($reportFilter == 'lastmonth')) {
 
                 $hour = 24;
-                $input = range(0, 30);
-                $periodStart = $firstdaylastmonth;
-                $periodEnd = $lastdaylastmonth;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 5);
+                } else {
+                    $input = range(0, 30);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastmonth)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastmonth)->format('U')*1000);
             }
 
             // where start is less than last day of the year + 1 day
@@ -694,9 +777,18 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             elseif (($reportFilter == 'thisyear')) {
 
                 $hour = 24;
-                $input = range(0, 365);
-                $periodStart = $firstdaythisyear;
-                $periodEnd = $lastdaythisyear;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 53);
+                } elseif ($groupByFilter == 'bymonth') {
+                    $input = range(0, 11);
+                } else {
+                    $input = range(0, 365);
+                }
+
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaythisyear)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaythisyear)->format('U')*1000);
             }
 
             // where start is less than last day of the year + 1 day
@@ -704,9 +796,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             elseif (($reportFilter == 'lastyear')) {
 
                 $hour = 24;
-                $input = range(0, 365);
-                $periodStart = $firstdaylastyear;
-                $periodEnd = $lastdaylastyear;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 53);
+                } elseif ($groupByFilter == 'bymonth') {
+                    $input = range(0, 11);
+                } else {
+                    $input = range(0, 365);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastyear)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastyear)->format('U')*1000);
             }
 
             // Type filter
@@ -730,105 +830,246 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ];
             }
 
-            // GROUP BY
+
             if ($groupByFilter == 'byweek') {
-                $groupBy = [
-                    'yearWeek' => '$yearWeek',
-                ];
-                $sort =  [ 'periodStartDate' => 1 ];
 
-            } elseif ($groupByFilter == 'bymonth') {
-
-                if (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
-                    $groupBy = [
-                        'monthNo' => '$monthNo'
-                    ];
-                    $sort =  [ '_id' => 1 ];
-
-                } else {
-                    $groupBy = [
-                        'yearDate' => '$yearDate',
-                        'monthNo' => '$monthNo'
-                    ];
-                    $sort =  [ '_id' => 1 ];
-
-                }
-
-            } else {
-                $groupBy = [
-                    'periodStart' => '$periodStart'
-                ];
-                $sort =  [ '_id' => 1 ];
-            }
-
-            // AGGREGATION QUERY
-            $collection = $this->client->selectCollection($this->config['database'], $this->table);
-
-            try {
-                $cursor = $collection->aggregate([
-
-                    // STEP 1: GENERATE PERIOD START AND END
-                    // we add a temporary field (i.e., tempField) then we perform group by to get only one matched result.
-                    // we add a range of periods with this only result
-
-                    // reason to add tempField: if we start with project then we would end up adding period start and
-                    // period end for each record of the collection (which we want to avoid)
-                    [
-                        '$addFields' => [
-                            'tempField' => null
-                        ]
-                    ],
-
-                    // then group by the temp field
-                    [
-                        '$group' => [
-                            '_id' => [
-                                'tempField'=> '$tempField',
-                            ],
-                        ],
-                    ],
-
-                    // here we generate the periods for a given range (i.e. $input)
-                    [
-                        '$project' => [
-                            'periods' =>  [
-                                '$map' => [
-                                    'input' => $input, // this is an array that we will use to map and generate period dates
-                                    'as' => 'number',
-                                    'in' => [
-                                        'numberId' => '$$number',
-                                        'start' => [
-                                            '$add' => [
-                                                ['$dateFromString' => ['dateString'=> $periodStart]],
-                                                [
-                                                    '$multiply' => [
-                                                        $hour*3600000,
-                                                        '$$number'
+                // PERIOD GENERATION
+                $projectMap = [
+                    '$project' => [
+                        'periods' =>  [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$max' => [
+                                            $periodStart,
+                                            [
+                                                '$add' => [
+                                                    [
+                                                        '$subtract' => [
+                                                            $periodStart,
+                                                            [
+                                                                '$multiply' => [
+                                                                    [
+                                                                        '$subtract' => [
+                                                                            [
+                                                                                '$isoDayOfWeek' => $periodStart
+                                                                            ],
+                                                                            1
+                                                                        ]
+                                                                    ] ,
+                                                                    86400000
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        '$multiply' => [
+                                                            '$$number',
+                                                            604800000
+                                                        ]
                                                     ]
                                                 ]
                                             ]
-                                        ],
-                                        'end' => [
-                                            '$add' => [
-                                                [
-                                                    '$add' => [
-                                                        ['$dateFromString' => ['dateString'=> $periodStart]],
-                                                        [
-                                                            '$multiply' => [
-                                                                $hour*3600000,
-                                                                '$$number'
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$min' => [
+                                            $periodEnd,
+                                            [
+                                                '$add' => [
+                                                    [
+                                                        '$add' => [
+                                                            [
+                                                                '$subtract' => [
+                                                                    $periodStart,
+                                                                    [
+                                                                        '$multiply' => [
+                                                                            [
+                                                                                '$subtract' => [
+                                                                                    [
+                                                                                        '$isoDayOfWeek' => $periodStart
+                                                                                    ],
+                                                                                    1
+                                                                                ]
+                                                                            ] ,
+                                                                            86400000
+                                                                        ]
+                                                                    ]
+                                                                ]
+                                                            ],
+                                                            604800000
+                                                        ]
+                                                    ],
+                                                    [
+                                                        '$multiply' => [
+                                                            '$$number',
+                                                            604800000
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ]
+                ];
+
+                // GROUP BY
+                $groupBy = [
+                    'weekNo' => '$weekNo',
+                ];
+
+            } elseif ($groupByFilter == 'bymonth') {
+
+                // period start becomes start of the month of the selected from date in the case of date range selection
+                if ($reportFilter != '') {
+                    $startOfMonthFromDt = $periodStart;
+                }
+
+                $projectMap = [
+                    '$project' => [
+                        'periods' => [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$dateFromParts' => [
+                                            'year' => [
+                                                '$year' => $startOfMonthFromDt
+                                            ],
+                                            'month' => [
+                                                '$add' => [
+                                                    '$$number',
+                                                    [
+                                                        '$month' => [
+                                                            '$add' => [
+                                                                $startOfMonthFromDt,
+                                                                [
+                                                                    '$multiply' => [
+                                                                        $hour * 3600000,
+                                                                        '$$number'
+                                                                    ]
+                                                                ]
                                                             ]
                                                         ]
                                                     ]
                                                 ]
-                                                , $hour*3600000
+                                            ],
+                                            'day' => [
+                                                '$dayOfMonth' => $startOfMonthFromDt
                                             ]
-                                        ],
-                                    ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$dateFromParts' => [
+                                            'year' => [
+                                                '$year' => $startOfMonthFromDt
+                                            ],
+                                            'month' => [
+                                                '$add' => [
+                                                    1,
+                                                    [
+                                                        '$add' => [
+                                                            '$$number',
+                                                            [
+                                                                '$month' => [
+                                                                    '$add' => [
+                                                                        $startOfMonthFromDt,
+                                                                        [
+                                                                            '$multiply' => [
+                                                                                $hour * 3600000,
+                                                                                '$$number'
+                                                                            ]
+                                                                        ]
+                                                                    ]
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ],
+                                            'day' => [
+                                                '$dayOfMonth' => $startOfMonthFromDt
+                                            ]
+                                        ]
+                                    ],
                                 ]
                             ]
                         ]
-                    ],
+                    ]
+                ];
+
+                // GROUP BY
+                $groupBy = [
+                    'monthNo' => '$monthNo'
+                ];
+
+            } else {
+
+                // PERIOD GENERATION
+                $projectMap = [
+                    '$project' => [
+                        'periods' =>  [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$add' => [
+                                            $periodStart,
+                                            [
+                                                '$multiply' => [
+                                                    $hour*3600000,
+                                                    '$$number'
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$add' => [
+                                            [
+                                                '$add' => [
+                                                    $periodStart,
+                                                    [
+                                                        '$multiply' => [
+                                                            $hour*3600000,
+                                                            '$$number'
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                            , $hour*3600000
+                                        ]
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ]
+                ];
+
+                // GROUP BY
+                $groupBy = [
+                    'period_start' => '$period_start'
+                ];
+            }
+
+            // PERIODS QUERY
+            $collectionPeriod = $this->client->selectCollection($this->config['database'], 'period');
+
+            // STAT AGGREGATION QUERY
+            $collection = $this->client->selectCollection($this->config['database'], $this->table);
+
+            try {
+
+                // Periods
+                $cursorPeriod = $collectionPeriod->aggregate([
+
+                    $projectMap,
 
                     // periods needs to be unwind to merge next
                     [
@@ -842,283 +1083,187 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         ]
                     ],
 
-                    // project periodStart and periodEnd
                     [
                         '$project' => [
-                            'periodStart' => '$start',
-                            'periodEnd' => '$end'
+                            'start' => 1,
+                            'end' => 1,
+                            'monthNo' => [
+                                '$month' =>  '$start'
+                            ],
+                            'yearDate' => [
+                                '$isoWeekYear' =>  '$start'
+                            ],
+                            'weekNo' => [
+                                '$isoWeek' =>  '$start'
+                            ],
                         ]
                     ],
 
-                    // format periodStart and periodEnd as string
-                    // get month number, year and week to group by later
                     [
-                        '$project' => [
-                            'periodStart' => [
-                                '$dateToString' => [
-                                    'format' => '%Y-%m-%d %H:%M:%S',
-                                    'date' => '$periodStart'
+                        '$addFields' => [
+                            'shortMonth' => [
+                                '$let' => [
+                                    'vars' => [
+                                        'monthString' => ['NA', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                    ],
+                                    'in' => [
+                                        '$arrayElemAt' => [
+                                            '$$monthString', '$monthNo'
+                                        ]
+                                    ]
                                 ]
-                            ],
-                            'periodEnd' => [
-                                '$dateToString' => [
-                                    'format' => '%Y-%m-%d %H:%M:%S',
-                                    'date' => '$periodEnd'
-                                ]
-                            ],
-
-                            // group by
-                            'monthNo' => ['$month' => '$periodStart'],
-                            'yearDate' => ['$isoWeekYear' => '$periodStart'],
-                            'yearWeek' => ['$isoWeek' => '$periodStart']
+                            ]
                         ]
                     ],
 
-                    // where periods start is greater than or equal given start period and
-                    // periods end is less than or equal given end period
-
-                    // to prevent any exceeding period
-                    // for a month 31 records are generated if a month has 28 days we eliminate the rest
-                    // for a year 366 records are generated
                     [
                         '$match' => [
-                            'periodStart' =>  [
-                                '$gte' => $periodStart
+                            'start' => [
+                                '$lt' => $periodEnd
                             ],
-                            'periodEnd' => [
-                                '$lte' => $periodEnd
+                            'end' => [
+                                '$gt' => $periodStart
+                            ]
+                        ]
+                    ],
+
+                ]);
+                $periods = $cursorPeriod->toArray();
+
+                // Stats
+                $cursor = $collection->aggregate([
+                    [
+                        '$match' => [
+                            'start' =>  [
+                                '$lt' => $periodEnd
+                            ],
+                            'end' => [
+                                '$gt' => $periodStart
                             ],
                         ]
                     ],
 
-                    // upto this point we have generated all our required periods
-
-                    // STEP 2: ADD STATDATA ARRAY WITH GENERATED PERIOD START AND END
-
-                    // match stat records that lies within each period with $lookup pipeline
-                    // "statdata" array holds matched stat records
                     [
                         '$lookup' => [
-                            'from' => 'stat',
+                            'from' => 'period',
                             'let' => [
-                                'periodStart' => [
-                                    '$dateFromString' => [
-                                        'dateString' => '$periodStart'
-                                    ]
-                                ],
-                                'periodEnd' => [
-                                    '$dateFromString' => [
-                                        'dateString' => '$periodEnd'
-                                    ]
-                                ]
+                                'stat_start' => '$start',
+                                'stat_end' => '$end',
+                                'stat_duration' => '$duration',
+                                'stat_count' => '$count',
                             ],
                             'pipeline' => [
+                                $projectMap,
                                 [
-                                    '$match' => [
-                                        '$expr' => [
-                                            '$and' => [
-
-                                                // match media id is 926
-                                                // stat.start < $periodEnd AND stat.end > $periodStart
-                                                $matchType,
-                                                $matchId,
-
-                                                // display ids
-                                                [
-                                                    '$in' => [ '$displayId', $displayIds ]
-                                                ],
-
-                                                // for example, when report filter 'today' is selected
-                                                // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
-                                                // and end is greater than or equal first hour of the day
-                                                [
-                                                    '$lt' => [ [
-                                                        '$dateFromString' => [
-                                                            'dateString' => '$start'
-                                                        ]
-                                                    ], ['$dateFromString' => ['dateString'=> $periodEnd]] ]
-                                                ],
-                                                [
-                                                    '$gt' => [ [
-                                                        '$dateFromString' => [
-                                                            'dateString' => '$end'
-                                                        ]
-                                                    ], ['$dateFromString' => ['dateString'=> $periodStart]]  ]
-                                                ],
-
-                                                // records that are matched with the period data
-                                                [
-                                                    '$lt' => [ [
-                                                        '$dateFromString' => [
-                                                            'dateString' => '$start'
-                                                        ]
-                                                    ], '$$periodEnd' ]
-                                                ],
-                                                [
-                                                    '$gt' => [ [
-                                                        '$dateFromString' => [
-                                                            'dateString' => '$end'
-                                                        ]
-                                                    ], '$$periodStart' ]
-                                                ]
-                                            ]
-                                        ]
-                                    ]
-
+                                    '$unwind' => '$periods'
                                 ],
-
-                                // convert stat collection start and end as date
-                                [
-                                    '$project' => [
-                                        'count' => '$count',
-                                        'duration' => '$duration',
-                                        'start' => [
-                                            '$dateFromString' => [
-                                                'dateString' => '$start'
-                                            ]
-                                        ],
-                                        'end' => [
-                                            '$dateFromString' => [
-                                                'dateString' => '$end'
-                                            ]
-                                        ]
-                                    ]
-
-                                ],
-
-                                // we need this project so that we can use:
-                                // $start to find actualStart using $max
-                                // $end to find actualEnd using $min
-                                [
-                                    '$project' => [
-                                        '_id' => 1,
-                                        'count' => 1,
-                                        'duration' => 1,
-                                        'stat_start' => '$start',
-                                        'stat_end' => '$end',
-                                        'actualStart' => [
-                                            '$max' => [ '$start', '$$periodStart' ]
-                                        ],
-                                        'actualEnd' => [
-                                            '$min' => [ '$end', '$$periodEnd' ]
-                                        ],
-                                        'actualDiff' => [
-                                            '$min' => [
-                                                '$duration',
-                                                [
-                                                    '$divide' => [
-                                                        [
-                                                            '$subtract' => [
-                                                                ['$min' => [ '$end', '$$periodEnd' ]],
-                                                                ['$max' => [ '$start', '$$periodStart' ]]
-                                                            ]
-                                                        ], 1000
-                                                    ]
-                                                ]
-                                            ]
-                                        ],
-
-                                    ]
-
-                                ]
 
                             ],
                             'as' => 'statdata'
                         ]
                     ],
 
-                    // STEP 3: GROUP BY
                     [
-                        '$group' => [
-                            '_id' => $groupBy,
+                        '$unwind' => '$statdata'
+                    ],
 
-                            // keep periodStart which is a string
-                            'start' => ['$first' => '$periodStart'],
+                    [
+                        '$match' => [
+                            '$expr' => [
+                                '$and' => [
 
-                            // reason for double sum
-                            // a single stage pipeline version of an aggregate
-                            // operation with an extra field that holds the sum expression before the group pipeline then
-                            // calling that field as the $sum operator in the group.
-                            'NumberPlays' => ['$sum' => ['$sum' => '$statdata.count']],
-                            'Duration' => ['$sum' => ['$sum' => '$statdata.actualDiff']],
+                                    // match media id / layout id
+                                    $matchType,
+                                    $matchId,
 
-                            // convert periodStart as date that will be used later to get month number, year and week
-                            'periodStartDate' => [
-                                '$first' => [
-                                    '$dateFromString' => [
-                                        'dateString' => '$periodStart'
+                                    // display ids
+                                    [
+                                        '$in' => [ '$displayId', $displayIds ]
+                                    ],
+
+                                    // stat.start < period end AND stat.end > period start
+                                    // for example, when report filter 'today' is selected
+                                    // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+                                    // and end is greater than or equal first hour of the day
+                                    [
+                                        '$lt' => [ '$start', '$statdata.periods.end' ]
+                                    ],
+                                    [
+                                        '$gt' => [ '$end', '$statdata.periods.start' ]
+                                    ],
+                                ]
+                            ]
+                        ]
+
+                    ],
+
+                    [
+                        '$project' => [
+                            '_id' => 1,
+                            'count' => 1,
+                            'duration' => 1,
+                            'start' => 1,
+                            'end' => 1,
+                            'period_start' => '$statdata.periods.start',
+                            'period_end' => '$statdata.periods.end',
+                            'monthNo' => [
+                                '$month' =>  '$statdata.periods.start'
+                            ],
+                            'yearDate' => [
+                                '$isoWeekYear' =>  '$statdata.periods.start'
+                            ],
+                            'weekNo' => [
+                                '$isoWeek' =>  '$statdata.periods.start'
+                            ],
+                            'actualStart' => [
+                                '$max' => [ '$start', '$statdata.periods.start' ]
+                            ],
+                            'actualEnd' => [
+                                '$min' => [ '$end', '$statdata.periods.end' ]
+                            ],
+                            'actualDiff' => [
+                                '$min' => [
+                                    '$duration',
+                                    [
+                                        '$divide' => [
+                                            [
+                                                '$subtract' => [
+                                                    ['$min' => [ '$end', '$statdata.periods.end' ]],
+                                                    ['$max' => [ '$start', '$statdata.periods.start' ]]
+                                                ]
+                                            ], 1000
+                                        ]
                                     ]
                                 ]
                             ],
 
                         ]
+
                     ],
 
-                    // STEP 4: SORT BY
                     [
-                        '$sort' => $sort
+                        '$group' => [
+                            '_id' => $groupBy,
+                            'period_start' => ['$first' => '$period_start'],
+                            'monthNo' => ['$first' => '$monthNo'],
+                            'yearDate' => ['$first' => '$yearDate'],
+                            'weekNo' => ['$first' => '$weekNo'],
+                            'NumberPlays' => ['$sum' => '$count'],
+                            'Duration' => ['$sum' => '$actualDiff'],
+                            'end' => ['$first' => '$end'],
+                        ]
                     ],
 
-                    // STEP 5: FINAL PROJECT
                     [
                         '$project' => [
-                            'start' => 1,
+                            'start' => '$_id.period_start',
+                            'end' => '$end',
+                            'period_start' => 1,
                             'NumberPlays' => 1,
                             'Duration' => 1,
-                            'monthNo' => [
-                                '$month' =>  '$periodStartDate'
-                            ],
-                            'yearDate' => [
-                                '$isoWeekYear' =>  '$periodStartDate'
-                            ],
-                            'weekStart' => [
-                                '$dateToString' => [
-                                    'format' => '%Y-%m-%d 00:00:00',
-                                    'date' => [
-                                        '$subtract' => [
-                                            '$periodStartDate',
-                                            [
-                                                '$multiply' => [
-                                                    [
-                                                        '$subtract' => [
-                                                            [
-                                                                '$isoDayOfWeek' => '$periodStartDate'
-                                                            ], 1
-
-                                                        ]
-                                                    ], 86400000
-                                                ]
-                                            ]
-                                        ]
-                                    ],
-                                ]
-                            ],
-                            'weekEnd' => [
-                                '$dateToString' => [
-                                    'format' => '%Y-%m-%d 00:00:00',
-                                    'date' => [
-                                        '$add' => [
-                                            [
-                                                '$subtract' => [
-                                                    '$periodStartDate',
-                                                    [
-                                                        '$multiply' => [
-                                                            [
-                                                                '$subtract' => [
-                                                                    [
-                                                                        '$isoDayOfWeek' => '$periodStartDate'
-                                                                    ], 1
-
-                                                                ]
-                                                            ], 86400000
-                                                        ]
-                                                    ]
-                                                ]
-                                            ], 518400000 // add 6 days (86400000 * 6) to get weekEnd date. e.g. weekStart is 2019-03-11 then weekEnd is 2019-03-17
-                                        ]
-                                    ]
-                                ]
-                            ]
+                            'monthNo' => 1,
+                            'yearDate' => 1,
+                            'weekNo' => 1,
                         ]
                     ],
 
@@ -1140,18 +1285,72 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                             ]
                         ]
                     ],
-                ]);
+
+                ], ['allowDiskUse'=> true]);
 
                 // log query
                 $this->log->debug($cursor);
 
-                $result = $cursor->toArray();
+                $results = $cursor->toArray();
+
+                // Run period loop and map the stat result for each period
+                $resultArray = [];
+                foreach ($periods as $key => $period) {
+
+                    // Format to datetime string
+                    $start = $period['start']->toDateTime()->format('Y-m-d H:i:s');
+
+                    // end is weekEnd in byweek filter
+                    $end = $period['end']->toDateTime()->format('Y-m-d H:i:s');
+
+                    $matched = false;
+                    foreach ($results as $k => $result) {
+
+                        if( $result['period_start'] == $period['start'] ) {
+
+                            $NumberPlays = $result['NumberPlays'];
+                            $Duration = $result['Duration'];
+                            $monthNo = $result['monthNo'];
+                            $yearDate = $result['yearDate'];
+                            $weekNo = $result['weekNo'];
+                            $shortMonth = $result['shortMonth'];
+
+                            $matched = true;
+                            break;
+                        }
+                    }
+
+                    $resultArray[$key]['start'] = $start;
+
+                    // end is weekEnd in byweek filter
+                    if ($groupByFilter == 'byweek') {
+                        $resultArray[$key]['weekEnd'] = $end;
+                    }
+
+                    if($matched == true) {
+                        $resultArray[$key]['NumberPlays'] = $NumberPlays;
+                        $resultArray[$key]['Duration'] = $Duration;
+                        $resultArray[$key]['monthNo'] = $monthNo;
+                        $resultArray[$key]['yearDate'] = $yearDate;
+                        $resultArray[$key]['weekNo'] = $weekNo;
+                        $resultArray[$key]['shortMonth'] = $shortMonth;
+
+                    } else {
+                        $resultArray[$key]['NumberPlays'] = 0;
+                        $resultArray[$key]['Duration'] = 0;
+                        $resultArray[$key]['monthNo'] = $period['monthNo'];
+                        $resultArray[$key]['yearDate'] = $period['yearDate'];
+                        $resultArray[$key]['weekNo'] = $period['weekNo'];
+                        $resultArray[$key]['shortMonth'] = $period['shortMonth'];
+
+                    }
+                }
 
             } catch (\MongoDB\Exception\RuntimeException $e) {
                 $this->log->error($e->getMessage());
             }
 
-            return $result;
+            return $resultArray;
 
         } else {
             return [];
