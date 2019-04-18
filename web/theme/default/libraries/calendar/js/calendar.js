@@ -544,8 +544,8 @@ if(!String.prototype.formatNum) {
 			var s = new Date(parseInt(e.start));
 			var f = new Date(parseInt(e.end));
 
-			e.start_hour = moment($self._format_time(s), "HH:mm").format(jsTimeFormat);
-			e.end_hour = moment($self._format_time(f), "HH:mm").format(jsTimeFormat);
+			e.start_hour = moment(s).format(jsTimeFormat);
+			e.end_hour = moment(f).format(jsTimeFormat);
 
 			if(e.start < start.getTime()) {
 				warn(1);
@@ -1336,18 +1336,22 @@ if(!String.prototype.formatNum) {
 	Calendar.prototype.getEventsBetween = function(start, end) {
 		var events = [];
 		var period_start = moment(start, "x");
-		var period_end = moment(end, "x")
+		var period_end = moment(end, "x");
 		$.each(this.options.events, function() {
 			if(this.start == null) {
 				return true;
 			}
 			// Convert to a local date, without the timezone
-			var event_start = moment(moment(this.start, "x").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
-			var event_end = this.end || this.start;
-			event_end = moment(moment(event_end, "x").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
+			// Grab the date from the scheduled event (which has already been adjusted appropriately by the CMS)
+			var event_start = moment(this.scheduleEvent.fromDt, "YYYY-MM-DD HH:mm:ss");
+			var event_end = (this.end != null) ? moment(this.scheduleEvent.toDt, "YYYY-MM-DD HH:mm:ss") : event_start;
 
 			if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
-				//console.log("X. PS: " + period_start.format() + ", PE:" + period_end.format() + ". ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
+				//console.log("X. ES: " + event_start.format() + "(" + this.scheduleEvent.fromDt + "), EE: " + event_end.format() + " (" + this.scheduleEvent.toDt + ")");
+				// Override the dates with our timezone neutral ones.
+				this.start = event_start.valueOf();
+				this.end = event_end.valueOf();
+
 				events.push(this);
 			}
 		});
