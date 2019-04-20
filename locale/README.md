@@ -14,3 +14,9 @@ Translations can be done using the Launchpad Web User Interface.
  4. Open the PO file you downloaded in POEdit
  5. Make the translations
  6. Upload the file to Launchpad (making sure you are on the same language translation page)
+ 
+Alternatively get the PO files from the translation export branch: 
+
+```bash
+bzr pull lp:~dangarner/xibo/tempel-translations
+```
