@@ -707,10 +707,6 @@ lD.showSaveTemplateScreen = function() {
  * Load form from the API
  */
 lD.loadFormFromAPI = function(type, id = null) {
-    
-    const self = this;
-
-    const app = getXiboApp();
 
     // Load form the API
     const linkToAPI = urlsForApi.layout[type];
@@ -732,7 +728,6 @@ lD.loadFormFromAPI = function(type, id = null) {
     }).done(function(res) {
 
         if(res.success) {
-
             // Create buttons
             let generatedButtons = {
                 cancel: {
@@ -778,7 +773,7 @@ lD.loadFormFromAPI = function(type, id = null) {
 
             // Form open callback
             if(res.callBack != undefined && typeof window[res.callBack] === 'function') {
-                window[res.callBack]();
+                window[res.callBack](dialog);
             }
 
             // Call Xibo Init for this form

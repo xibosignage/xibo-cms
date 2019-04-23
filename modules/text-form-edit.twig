@@ -46,6 +46,11 @@
                     </div>
 
                     <div class="tab-pane" id="effectTab">
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "If you want to use a background colour for the Widget, select one here." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "") }}
+
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
                         {% set noneOption %}{% trans "None" %}{% endset %}
@@ -84,10 +89,6 @@
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
                         
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "effect-controls") }}
-
                         {% set title %}{% trans "Marquee Selector" %}{% endset %}
                         {% set helpText %}{% trans "The selector to use for stacking marquee items in a line when scrolling Left/Right." %}{% endset %}
                         {{ forms.input("marqueeInlineSelector", title, module.getOption("marqueeInlineSelector"), helpText, "effect-controls") }}

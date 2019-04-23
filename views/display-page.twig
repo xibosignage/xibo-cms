@@ -640,6 +640,21 @@
             // Set the field
             bandwidthLimitField.prop('value', bandwidthLimit);
 
+            // Remove temp fields and enable checkbox after submit
+            $form.submit(function(event) {
+                event.preventDefault();
+                // Re-enable checkboxes
+                $form.find('input[type="checkbox"]').each(function () {
+                    // Enable checkbox
+                    $(this).attr('disabled', false);
+                });
+
+                // Remove temp input fields
+                $form.find('input.temp-input').each(function () {
+                    $(this).remove();
+                });
+            });
+
             // Replace all checkboxes with hidden input fields
             $form.find('input[type="checkbox"]').each(function () {
                 // Get checkbox values
@@ -647,7 +662,7 @@
                 let id = $(this).attr('id');
        
                 // Create hidden input
-                $('<input type="hidden">')
+                $('<input type="hidden" class="temp-input">')
                     .attr('id', id)
                     .attr('name', id)
                     .val(value)
@@ -657,6 +672,7 @@
                 $(this).attr('disabled', true);
             });
 
+            // Submit form
             $form.submit();
         }
     </script>
