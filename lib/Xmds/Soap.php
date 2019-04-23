@@ -367,7 +367,7 @@ class Soap
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row) {
-                $layouts[] = $this->getSanitizer()->int($row['layoutID']);
+                $layouts[] = $this->getSanitizer()->int($row['layoutId']);
             }
 
             // Also look at the schedule
@@ -466,21 +466,22 @@ class Soap
                  )
             ";
 
+            $params = ['displayId' => $this->display->displayId];
+
             if ($playerVersionMediaId != null) {
                 $SQL .= " UNION ALL 
                           SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
                             FROM `media`
                             WHERE `media`.type = 'playersoftware' 
-                            AND `media`.mediaId = %d
+                            AND `media`.mediaId = :playerVersionMediaId
                 ";
+                $params['playerVersionMediaId'] = $playerVersionMediaId;
             }
 
             $SQL .= " ORDER BY DownloadOrder ";
 
-            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList, $playerVersionMediaId));
-            $sth->execute(array(
-                'displayId' => $this->display->displayId
-            ));
+            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList));
+            $sth->execute($params);
 
             // Prepare a SQL statement in case we need to update the MD5 and FileSize on media nodes.
             $mediaSth = $dbh->prepare('UPDATE media SET `MD5` = :md5, FileSize = :size WHERE MediaID = :mediaid');
