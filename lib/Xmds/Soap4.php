@@ -21,6 +21,7 @@
 namespace Xibo\Xmds;
 
 use Intervention\Image\ImageManagerStatic as Img;
+use Jenssegers\Date\Date;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
@@ -109,6 +110,23 @@ class Soap4 extends Soap
 
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
+
+                    // Patch download and update windows to make sure they are unix time stamps
+                    // XMDS schema 4 sent down unix time
+                    // https://github.com/xibosignage/xibo/issues/1791
+                    if (strtolower($arrayItem['name']) == 'downloadstartwindow'
+                        || strtolower($arrayItem['name']) == 'downloadendwindow'
+                        || strtolower($arrayItem['name']) == 'updatestartwindow'
+                        || strtolower($arrayItem['name']) == 'updateendwindow'
+                    ) {
+                        // Split by :
+                        $timeParts = explode(':', $arrayItem['value']);
+                        if ($timeParts[0] == '00' && $timeParts[1] == '00') {
+                            $arrayItem['value'] = 0;
+                        } else {
+                            $arrayItem['value'] = Date::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
+                        }
+                    }
 
                     $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
                     $node->setAttribute('type', $arrayItem['type']);
