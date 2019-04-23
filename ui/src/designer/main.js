@@ -541,7 +541,7 @@ lD.enterReadOnlyMode = function() {
     let toastPosition = 'toast-bottom-center';
 
     // Show edit mode message
-    let toastObj = toastr.info(
+    let toastObj = toastr.error(
         layoutDesignerTrans.readOnlyModeMessage,
         '', 
         {
