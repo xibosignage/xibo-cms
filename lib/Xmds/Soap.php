@@ -394,10 +394,9 @@ class Soap
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
-                $eventTypeId = $row['eventTypeId'];
-
-                if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$OVERLAY_EVENT) {
-                    $layouts[] = $this->getSanitizer()->int($row['layoutId']);
+                $layoutId = $this->getSanitizer()->int($row['layoutId']);
+                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT)) {
+                    $layouts[] = $layoutId;
                 }
             }
 
