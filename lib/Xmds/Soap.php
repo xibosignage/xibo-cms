@@ -398,7 +398,7 @@ class Soap
                 $eventTypeId = $row['eventTypeId'];
 
                 if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$OVERLAY_EVENT) {
-                    $layouts[] = $row['layoutId'];
+                    $layouts[] = $this->getSanitizer()->int($row['layoutId']);
                 }
             }
 
@@ -480,7 +480,14 @@ class Soap
 
             $SQL .= " ORDER BY DownloadOrder ";
 
-            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList));
+            // Sub layoutId list
+            $SQL = sprintf($SQL, $layoutIdList, $layoutIdList);
+
+            if ($this->display->isAuditing()) {
+                $this->getLog()->sql($SQL, $params);
+            }
+
+            $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
             // Prepare a SQL statement in case we need to update the MD5 and FileSize on media nodes.
