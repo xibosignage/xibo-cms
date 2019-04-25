@@ -869,7 +869,7 @@ let formHelpers = function() {
             );
         });
 
-        footer.find('#save').before(replaceButton);
+        footer.prepend(replaceButton);
     };
 
     /**

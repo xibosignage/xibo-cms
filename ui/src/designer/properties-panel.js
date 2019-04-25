@@ -193,7 +193,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             for(let button in res.buttons) {
                 
                 // If button is not a cancel or save button, add it to the button object
-                if(!['Save', 'Cancel'].includes(button)) {
+                if(!(res.buttons[button].includes('XiboDialogClose') || res.buttons[button].includes('.submit()'))) {
                     buttons[button] = {
                         name: button,
                         type: 'btn-default',
