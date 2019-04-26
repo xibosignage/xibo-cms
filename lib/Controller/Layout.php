@@ -415,7 +415,7 @@ class Layout extends Base
      * @param int $layoutId
      *
      * @SWG\Put(
-     *  path="/layout/{layoutId}",
+     *  path="/layout/background/{layoutId}",
      *  operationId="layoutEditBackground",
      *  summary="Edit Layout Background",
      *  description="Edit a Layout Background",

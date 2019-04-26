@@ -1537,7 +1537,7 @@ class User extends Base
     }
 
     /**
-     * @SWG\Pust(
+     * @SWG\Put(
      *     path="/user/pref",
      *     operationId="userPrefEditFromForm",
      *     tags={"user"},

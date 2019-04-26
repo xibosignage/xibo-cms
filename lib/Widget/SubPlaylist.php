@@ -62,7 +62,7 @@ class SubPlaylist extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?subPlaylist",
      *  operationId="WidgetSubPlaylistEdit",
      *  tags={"widget"},
      *  summary="Edit a Sub-Playlist Widget",
