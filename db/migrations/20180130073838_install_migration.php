@@ -486,11 +486,6 @@ class InstallMigration extends AbstractMigration
             ->addColumn('endTime', 'string', ['limit' => 8, 'default' => '00:00:00'])
             ->addColumn('exceptions', 'text', ['default' => null, 'null' => true])
             ->addForeignKey('userId', 'user', 'userId')
-            // Get 1 and 2 ID's reserved for Always and Custom
-            ->insert([
-                ['dayPartId' => 1, 'name' => 'Always', 'userId' => 1],
-                ['dayPartId' => 2, 'name' => 'Custom', 'userId' => 1]
-            ])
             ->save();
 
         // Schedule
