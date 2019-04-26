@@ -426,6 +426,10 @@
 
 #layout-editor #layout-viewer {
     min-height: 47vh;
+
+    #inline-editor-save {
+        display: none;
+}
 }
 
 #layout-editor .layout-viewer-border {
@@ -433,7 +437,7 @@
     position: absolute;
 }
 
-#layout-editor #layout-viewer.fullscreen {
+#layout-editor #layout-viewer-container.fullscreen #layout-viewer {
     position: fixed; /* Stay in place */
     z-index: @designer-overlay-z-index; /* Sit on top */
     left: 0;
@@ -441,6 +445,15 @@
     width: 100%; /* Full width */
     height: 100%; /* Full height */
     .set-transparent-color(background-color; #000; 90%);
+
+    .top-right-btn {
+        position: fixed;
+        z-index: 2000;
+}
+
+    #inline-editor-save {
+        right: 50px
+    }
 }
 
 #layout-editor #layout-viewer .viewer-element {
@@ -502,6 +515,19 @@
     padding: 4px;
     overflow: auto;
     .border-radius(0 0 2px 2px);
+}
+
+#layout-editor #layout-viewer-container.fullscreen #layout-viewer-navbar.fs-edit {
+    position: fixed;
+    z-index: 2000;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+    opacity: 0.4;
+
+    &:hover {
+        opacity: 0.9;
+    }
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar .row > div {
