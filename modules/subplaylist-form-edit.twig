@@ -56,7 +56,7 @@
                         {{ forms.dropdown("remainder", "single", title, module.getOption("remainder"), options, "id", "value", helpText) }}
 
                         {% set title %}{% trans "Spots" %}{% endset %}
-                        {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used after ordering to expand or shrink the list to the specified size. Leave as 0 to use the combined length after arrangement has occured." %}{% endset %}
+                        {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used after ordering to expand or shrink the list to the specified size. Leave as 0 to use the combined length after ordering has occured." %}{% endset %}
                         {{ forms.number("spots", title, module.getOption("spots", 0), helpText) }}
 
                         {% set title %}{% trans "Spot Length" %}{% endset %}
