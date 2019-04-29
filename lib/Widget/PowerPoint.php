@@ -26,7 +26,10 @@ class PowerPoint extends ModuleWidget
     /** @inheritdoc */
     public function edit()
     {
-        // Non-editable
+        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->saveWidget();
     }
 
     /**
