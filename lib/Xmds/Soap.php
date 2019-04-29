@@ -1890,7 +1890,7 @@ class Soap
         }
 
         // If we're set to look ahead, then do so - otherwise grab only a 1 hour slice
-        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 1) {
+        if ($this->getConfig()->getSetting('SCHEDULE_LOOKAHEAD') == 'On') {
             $toFilter = $fromFilter->copy()->addSeconds($rfLookAhead);
         } else {
             $toFilter = $fromFilter->copy()->addHour();
