@@ -648,7 +648,7 @@ class InstallMigration extends AbstractMigration
         $pages = $this->table('pages', ['id' => 'pageId']);
         $pages
             ->addColumn('name', 'string', ['limit' => 50])
-            ->addColumn('title', 'string', ['limit' => 50])
+            ->addColumn('title', 'string', ['limit' => 100])
             ->addColumn('asHome', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->insert([
                 ['pageId' => 1, 'name' => 'dashboard', 'title' => 'Dashboard', 'asHome' => 1],
