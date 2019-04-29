@@ -51,7 +51,7 @@ class Embedded extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?embedded",
      *  operationId="widgetEmbeddedEdit",
      *  tags={"widget"},
      *  summary="Edit a Embedded Widget",

@@ -123,7 +123,7 @@ class Currencies extends AlphaVantageBase
      * Edit Media
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?currencies",
      *  operationId="widgetCurrenciesEdit",
      *  tags={"widget"},
      *  summary="Edit a Currencies Widget",

@@ -773,7 +773,7 @@ class DataSet extends Base
      *      name="copyRows",
      *      in="formData",
      *      description="Flag whether to copy all the row data from the original dataSet",
-     *      type="int",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Response(

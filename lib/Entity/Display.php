@@ -313,7 +313,7 @@ class Display implements \JsonSerializable
 
     /**
      * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")
-     * @var array
+     * @var string|array
      */
     public $overrideConfig = [];
 

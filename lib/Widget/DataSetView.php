@@ -168,7 +168,7 @@ class DataSetView extends ModuleWidget
 
     /**
      * * @SWG\Post(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?dataSetView",
      *  operationId="widgetDataSetViewEdit",
      *  tags={"widget"},
      *  summary="Edit a dataSetView Widget",

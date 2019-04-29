@@ -55,7 +55,7 @@ class Text extends ModuleWidget
      * Edit Media
      *
      * @SWG\Post(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?text",
      *  operationId="WidgetTextEdit",
      *  tags={"widget"},
      *  summary="Edit a Text Widget",
