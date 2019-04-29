@@ -43,7 +43,7 @@
                         ] %}
                         {{ forms.dropdown("arrangement", "single", title, module.getOption("arrangement"), options, "id", "value", helpText) }}
 
-                        {% set title %}{% trans "Remainder" %}{% endset %}
+                        {% set title %}{% trans "Remaining Widgets" %}{% endset %}
                         {% set helpText %}{% trans "If there are Widgets left unordered at the end, what should be done with these Widgets?" %}{% endset %}
                         {% set noneOption %}{% trans "Add - After ordering any remaining Widgets are to be added to the end" %}{% endset %}
                         {% set dropOption %}{% trans "Discard - Uses the Playlist with the least Widgets and ignores remaining Widgets on the longer Playlists" %}{% endset %}
