@@ -98,6 +98,9 @@ class SubPlaylist extends ModuleWidget
         // Options
         $this->setOption('arrangement', $this->getSanitizer()->getString('arrangement'));
         $this->setOption('remainder', $this->getSanitizer()->getString('remainder'));
+        $this->setOption('spotLength', $this->getSanitizer()->getInt('spotLength'));
+        $this->setOption('spots', $this->getSanitizer()->getInt('spots'));
+        $this->setOption('spotFill', $this->getSanitizer()->getString('spotFill'));
 
         // Get the list of playlists
         $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
@@ -223,12 +226,16 @@ class SubPlaylist extends ModuleWidget
     {
         $arrangement = $this->getOption('arrangement', 'none');
         $remainder = $this->getOption('remainder', 'none');
+        $spotLength = $this->getOption('spotLength', 0);
+        $spots = $this->getOption('spots', 0);
+        $spotFill = $this->getOption('spotFill', 'repeat');
 
         $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId() . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
 
         // As a first step, get all of our playlists widgets loaded into an array
         $resolvedWidgets = [];
         $widgets = [];
+        $firstListId = 0;
         $firstListCount = 0;
         $largestListCount = 0;
         $smallestListCount = 0;
@@ -240,8 +247,10 @@ class SubPlaylist extends ModuleWidget
             $countExpanded = count($expanded);
 
             // first watermark
-            if ($firstListCount === 0)
+            if ($firstListCount === 0) {
+                $firstListId = $playlistId;
                 $firstListCount = $countExpanded;
+            }
 
             // high watermark
             if ($countExpanded > $largestListCount)
@@ -250,6 +259,15 @@ class SubPlaylist extends ModuleWidget
             // low watermark
             if ($countExpanded < $smallestListCount || $smallestListCount === 0)
                 $smallestListCount = $countExpanded;
+
+            // Adjust the widget duration if necessary
+            if ($spotLength > 0) {
+                foreach ($expanded as $widget) {
+                    $widget->useDuration = 1;
+                    $widget->duration = $spotLength;
+                    $widget->calculatedDuration = $spotLength;
+                }
+            }
 
             $widgets[$playlistId] = $expanded;
         }
@@ -356,6 +374,24 @@ class SubPlaylist extends ModuleWidget
                 }
 
                 $resolvedWidgets = array_merge($resolvedWidgets, $items);
+            }
+        }
+
+        // We have interleaved our Widgets according to the rules presented, now expand out (or trim down) the
+        // resulting list if we have been provided a spots size
+        if ($spots > 0) {
+            while (count($resolvedWidgets) < $spots) {
+                if ($spotFill == 'repeat') {
+                    $resolvedWidgets = array_merge($resolvedWidgets, $resolvedWidgets);
+                } else if ($spotFill == 'fill') {
+                    // Get Playlist 1 and use it to fill
+                    $resolvedWidgets = array_merge($resolvedWidgets, $widgets[$firstListId]);
+                }
+            }
+
+            // Trim down to the desired length because we might have overshot
+            if (count($resolvedWidgets) > $spots) {
+                $resolvedWidgets = array_slice($resolvedWidgets, 0, $spots);
             }
         }
 
