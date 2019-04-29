@@ -54,7 +54,7 @@ class ScheduleDisplayDeleteTest extends LocalWebTestCase
 
         // 1 Schedule
         $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
+            date('Y-m-d H:i:s', time()),
             date('Y-m-d H:i:s', time()+7200),
             $this->layout->campaignId,
             [$this->display->displayGroupId, $this->display2->displayGroupId],

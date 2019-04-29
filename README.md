@@ -127,6 +127,20 @@ docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
 find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
 ```
 
+To import translations:
+
+```bash
+bzr pull lp:~dangarner/xibo/swift-translations
+```
+
+Convert to `mo` format:
+
+```bash
+for i in *.po; do msgfmt "$i" -o $(echo $i | sed s/po/mo/); done
+```
+
+Move the resulting `mo` files into your `locale` folder.
+
 ## Swagger API Docs
 To generate a `swagger.json` file, with the dev containers running:
 

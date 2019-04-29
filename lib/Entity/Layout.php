@@ -1587,8 +1587,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0)';
 
         $time = $this->date->getLocalDate();
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ translate.jsShortLocale }}">
     <head>
         <title>{{ theme.getThemeConfig("theme_title") }}</title>
         <meta charset="utf-8">
@@ -146,6 +146,10 @@
                 "aria": {
                     "sortAscending":  "{{ ": activate to sort column ascending"|trans }}",
                     "sortDescending": "{{ ": activate to sort column descending"|trans }}"
+                },
+                "buttons": {
+                    "colvis":  "{{ "Column visibility"|trans }}",
+                    "print": "{{ "Print"|trans }}"
                 }
             };
             {% endautoescape %}
