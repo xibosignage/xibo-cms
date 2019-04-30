@@ -64,7 +64,7 @@
                         {{ forms.number("spotLength", title, module.getOption("spotLength", 0), helpText) }}
 
                         {% set title %}{% trans "Spot Fill" %}{% endset %}
-                        {% set helpText %}{% trans "If there are Widgets left unordered at the end, what should be done with these Widgets?" %}{% endset %}
+                        {% set helpText %}{% trans "If there are not enough Widgets after ordering to fill all spots, how should the remaining spots be filled?" %}{% endset %}
                         {% set fillOption %}{% trans "Fill - use the first Playlist to fill any remaining spots after ordering" %}{% endset %}
                         {% set repeatOption %}{% trans "Repeat - repeat the resolved list after ordering" %}{% endset %}
                         {% set options = [
