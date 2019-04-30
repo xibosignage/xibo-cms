@@ -245,8 +245,8 @@ PropertiesPanel.prototype.render = function(element, step) {
             self.DOMObject.data('elementOptions', element.getOptions());
 
             window[element.subType + '_form_edit_open'].bind(self.DOMObject)();
-        } else if(element.type === 'region' && typeof window.region_form_edit_open === 'function') {
-            window.region_form_edit_open.bind(self.DOMObject)();
+        } else if(element.type === 'region' && typeof window.regionFormEditOpen === 'function') {
+            window.regionFormEditOpen.bind(self.DOMObject)();
         }
 
         // Save form data

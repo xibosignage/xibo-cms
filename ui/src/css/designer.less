@@ -429,7 +429,7 @@
 
     #inline-editor-save {
         display: none;
-}
+    }
 }
 
 #layout-editor .layout-viewer-border {
@@ -449,7 +449,7 @@
     .top-right-btn {
         position: fixed;
         z-index: 2000;
-}
+    }
 
     #inline-editor-save {
         right: 50px
@@ -726,11 +726,11 @@
     border: 2px solid @designer-module-border-color;
 }
 
-#layout-editor #layout-navigator .layout{
+#layout-editor #layout-navigator .layout {
     .box-shadow(inset 0 0 4px 0px @navigator-shadow-colour);
 }
 
-#layout-editor #layout-navigator .designer-region{
+#layout-editor #layout-navigator .designer-region {
     .box-shadow(inset 0 0 4px 1px @navigator-shadow-colour);
 }
 
@@ -738,7 +738,7 @@
     .box-shadow(inset 0 0 4px 2px @navigator-non-editable-shadow-colour);
 }
 
-#layout-editor #layout-navigator-edit .layout{
+#layout-editor #layout-navigator-edit .layout {
     .box-shadow(inset 0 0 5px 0px @navigator-shadow-colour);
 }
 
@@ -751,38 +751,91 @@
 }
 
 #layout-editor #layout-navigator-edit {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: @designer-overlay-z-index; /* Sit on top */
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    /* Stay in place */
+    z-index: @designer-overlay-z-index;
+    /* Sit on top */
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    .set-transparent-color(background-color; #000; 90%);
+    width: 100vw;
+    /* Full width */
+    height: 100vh;
+    /* Full height */
+    overflow: auto;
+    /* Enable scroll if needed */
+    .set-transparent-color(background-color;
+    #000;
+    90%);
+}
+
+#layout-editor .layout-navigator-edit-element {
+    float: left;
 }
 
 #layout-editor #layout-navigator-edit-content {
-    width: 90%;
     background: black;
-    height: 85%;
-    top: 3%;
-    left: 5%;
-    position: relative;
-    .border-radius(4px 4px 0 0);
+    width: 94vw;
+    height: 87vh;
+    margin-left: 3vw;
+    margin-top: 3vh;
+
+    .top-right-btn {
+        right: 25px;
+        top: 5px;
+    }
+}
+
+#layout-editor #layout-navigator-properties-panel {
+    background: grey;
+    width: 30vw;
+    height: 87vh;
+    margin-top: 3vh;
+    display: none;
+
+    #properties-panel-container {
+        height: 100%;
+    }
+    
+    .form-container form {
+        max-height: inherit;
+    }
+
+    .loading-container {
+        position: relative;
+    }
+
+    .button-container {
+        display: none;
+    }
+
+    #setFullScreenButton {
+        white-space: normal;
+    }
 }
 
 #layout-editor #layout-navigator-edit #layout-navigator-edit-navbar {
-    top: 20px;
-    position: relative;
+    width: 100vw;
+
+    .navbar {
+        padding: 7px;
+        background: @designer-secondary-color;
+        .border-radius(0 0 4px 4px);
+        left: 3vw;
+        width: 94vw;
+    }
 }
 
-#layout-editor #layout-navigator-edit #layout-navigator-edit-navbar .navbar {
-    padding: 7px;
-    background: @designer-secondary-color;
-    width: 90%;
-    left: 5%;
-    .border-radius(0 0 4px 4px);
+#layout-editor #layout-navigator-edit.region-selected {
+
+    #layout-navigator-edit-content {
+        width: 64vw;
+    }
+
+    #layout-navigator-properties-panel {
+        display: block;
+    }
 }
 
 /* Layout object selection */
