@@ -1038,6 +1038,16 @@ class Layout extends Base
                     $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
             }
 
+            switch ($layout->enableStat) {
+
+                case 1:
+                    $layout->enableStatDescription = __('This Layout has enable stat collection set to ON');
+                    break;
+
+                default:
+                    $layout->enableStatDescription = __('This Layout has enable stat collection set to OFF');
+            }
+
             // Published status, draft with set publishedDate
             $layout->publishedStatusFuture = __('Publishing %s');
             $layout->publishedStatusFailed = __('Publish failed ');
