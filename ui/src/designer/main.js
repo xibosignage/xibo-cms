@@ -100,7 +100,7 @@ $(document).ready(function() {
     lD.designerDiv.html(loadingTemplate());
 
     // Change toastr positioning
-    toastr.options.positionClass = 'toast-top-right';
+    toastr.options.positionClass = 'toast-top-center';
 
     // Load layout through an ajax request
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
@@ -369,7 +369,12 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.manager);
 
     // Render selected object in the following containers
-    this.renderContainer(this.propertiesPanel, this.selectedObject);
+    if(this.selectedObject.type == 'region') {
+        this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
+    } else {
+        this.renderContainer(this.propertiesPanel, this.selectedObject);
+    }
+    
     this.renderContainer(this.viewer, this.selectedObject);
 };
 
@@ -544,7 +549,7 @@ lD.enterReadOnlyMode = function() {
     let toastPosition = 'toast-bottom-center';
 
     // Show edit mode message
-    let toastObj = toastr.info(
+    let toastObj = toastr.error(
         layoutDesignerTrans.readOnlyModeMessage,
         '', 
         {

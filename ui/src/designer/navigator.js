@@ -3,6 +3,7 @@
 // Load templates
 const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
 const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-edit-navbar.hbs');
+const PropertiesPanel = require('../designer/properties-panel.js');
 
 const regionDefaultValues = {
     width: 250,
@@ -20,6 +21,11 @@ let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
     this.editMode = edit;
     this.DOMObject = container;
     this.navbarContainer = editNavbar;
+    this.regionPropertiesPanel = this.regionPropertiesPanel = new PropertiesPanel(
+        this.DOMObject.parent().find('#layout-navigator-properties-panel')
+    );
+
+    this.layoutRenderScale = 1;
 };
 
 /**
@@ -87,11 +93,24 @@ Navigator.prototype.scaleLayout = function(layout, container) {
  */
 Navigator.prototype.render = function(layout) {
 
+    const self = this;
+
+    if(this.editMode) {
+        if(lD.selectedObject.type == 'region') {
+            this.openRegionPropertiesPanel();
+        } else {
+            this.closeRegionPropertiesPanel();
+        }
+    }
+
     // Apply navigator scale to the layout
     const scaledLayout = this.scaleLayout(layout, this.DOMObject);
 
     // Add edit flag
     scaledLayout.edit = this.editMode;
+
+    // Save render scale
+    this.layoutRenderScale = scaledLayout.scaledDimensions.scale;
 
     // Compile layout template with data
     const html = navigatorLayoutTemplate(scaledLayout);
@@ -105,33 +124,50 @@ Navigator.prototype.render = function(layout) {
 
     // Find all the regions and enable drag and resize
     if(this.editMode) {
-        this.DOMObject.find('#regions .designer-region.editable').resizable({
-                containment: layoutContainer
-        }).draggable({
-                containment: layoutContainer
-        }).on("resizestop dragstop",
-            function(event, ui) {
+        this.DOMObject.find('#regions .designer-region.editable').each(function() {
 
-                const scale = scaledLayout.scaledDimensions.scale;
-                
-                layout.regions[$(this).attr('id')].transform(
-                    {
+            let editDisabled = (lD.selectedObject.id != $(this).attr('id'));
+
+            $(this).resizable({
+                containment: layoutContainer,
+                disabled: editDisabled
+            }).draggable({
+                containment: layoutContainer,
+                disabled: editDisabled
+            }).on("resizestop dragstop",
+                function(event, ui) {
+
+                    const scale = lD.navigatorEdit.layoutRenderScale;
+                    const transform = {
                         'width': parseFloat(($(this).width() / scale).toFixed(2)),
                         'height': parseFloat(($(this).height() / scale).toFixed(2)),
                         'top': parseFloat(($(this).position().top / scale).toFixed(2)),
                         'left': parseFloat(($(this).position().left / scale).toFixed(2))
-                    }
-                );
+                    };
 
-                // Render navbar to calculate changes and refresh buttons
-                lD.navigatorEdit.renderNavbar();
-            }
-        );
+                    if($(this).attr('id') == lD.selectedObject.id) {
+
+                        layout.regions[$(this).attr('id')].transform(transform, false);
+
+                        if(typeof window.regionChangesForm === 'function') {
+                            window.regionChangesForm.bind(self.DOMObject)(transform);
+                        }
+                    }
+                }
+            );
+        });
     }
 
     // Enable select for each layout/region
     this.DOMObject.find('.selectable').click(function(e) {
         e.stopPropagation();
+
+        // If there was a region select in edit mode, save properties panel
+        if(lD.selectedObject.type == 'region' && self.editMode) {
+            self.saveRegionPropertiesPanel();
+        }
+
+        // Select object
         lD.selectObject($(this));
     });
 
@@ -139,9 +175,6 @@ Navigator.prototype.render = function(layout) {
         this.DOMObject.find('[data-type="layout"]').droppable({
             accept: '[drop-to="layout"]',
             drop: function(event, ui) {
-
-
-
                 // Calculate ratio
                 let ratio = lD.layout.width / $(event.target).width();
 
@@ -193,6 +226,10 @@ Navigator.prototype.render = function(layout) {
             lD.toggleNavigatorEditing(true);
         }.bind(this));
 
+        this.DOMObject.find('#close-btn').click(function() {
+            lD.toggleNavigatorEditing(false);
+        }.bind(this));
+
         // Handle right click context menu
         let editMode = this.editMode;
         this.DOMObject.find('.designer-region').contextmenu(function(ev) {
@@ -217,6 +254,10 @@ Navigator.prototype.render = function(layout) {
     // Handle click on viewer to select layout
     this.DOMObject.off().click(function(e) {
         if(lD.selectedObject.type != 'layout' && !this.editMode && !this.DOMObject.hasClass('selectable') && !['edit-btn'].includes(e.target.id)) {
+            if(lD.selectedObject.type == 'region' && self.editMode) {
+                self.saveRegionPropertiesPanel();
+            }
+
             lD.selectObject();
         }
     }.bind(this));
@@ -230,33 +271,56 @@ Navigator.prototype.render = function(layout) {
  */
 Navigator.prototype.renderNavbar = function() {
 
+    const self = this;
+
     // Return if navbar does not exist
     if(this.navbarContainer === null) {
         return;
     }
 
+    // Get navigator trans
+    let newNavigatorEditTrans = navigatorEditTrans;
+
+    // Check if trash bin is active
+    let trashBinActive = lD.selectedObject.isDeletable && (lD.readOnlyMode === undefined || lD.readOnlyMode === false);
+
+    // Get text for bin tooltip
+    if(trashBinActive) {
+        newNavigatorEditTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', lD.selectedObject.type);
+    }
+
+    // Check if there are some changes
+    let undoActive = lD.manager.changeHistory.length > 0;
+
+    // Get last action text for popup
+    if(undoActive) {
+        let lastAction = lD.manager.changeHistory[lD.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
+            newNavigatorEditTrans.undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            newNavigatorEditTrans.undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
+
     this.navbarContainer.html(navigatorLayoutNavbarTemplate(
         {
             selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
-            undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled')
+            undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled'),
+            trans: navigatorEditTrans
         }
     ));
 
     // Navbar buttons
-    this.navbarContainer.find('#close-btn').click(function() {
-        lD.common.showLoadingScreen();
+    this.navbarContainer.find('#save-btn').click(function() {
 
-        lD.manager.saveAllChanges().then((res) => {   
-            lD.common.hideLoadingScreen(); 
+        // If form is opened, save it, otherwise, close navigator edit
+        if(lD.selectedObject.type == 'region') {
+            self.saveRegionPropertiesPanel();
+            self.closeRegionPropertiesPanel();
+            lD.selectObject();
+        } else {
             lD.toggleNavigatorEditing(false);
-        }).catch((err) => {
-            lD.common.hideLoadingScreen();
-            if(err) {
-                toastr.error(errorMessagesTrans.saveAllChangesFailed + ' ' + err);
-            } else {
-                toastr.error(errorMessagesTrans.saveAllChangesFailed);
-            }
-        });
+        }
     });
 
     this.navbarContainer.find('#undo-btn').click(function() {
@@ -293,34 +357,36 @@ Navigator.prototype.renderNavbar = function() {
 
     this.navbarContainer.find('#add-btn').click(function() {
         lD.common.showLoadingScreen();
-        
-        lD.manager.saveAllChanges().then((res) => {
 
-            lD.layout.addElement('region').then((res) => { // Success
+        if(lD.selectedObject.type == 'region') {
+            self.saveRegionPropertiesPanel();
+            self.closeRegionPropertiesPanel();
+            lD.selectObject();
+        }
 
-                lD.common.hideLoadingScreen(); 
-
-                // Behavior if successful 
-                toastr.success(res.message);
-                lD.reloadData(lD.layout);
-            }).catch((error) => { // Fail/error
-
-                lD.common.hideLoadingScreen(); 
-                // Show error returned or custom message to the user
-                let errorMessage = '';
-
-                if(typeof error == 'string') {
-                    errorMessage = error;
-                } else {
-                    errorMessage = error.errorThrown;
-                }
-
-                toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
-            });
-        }).catch((err) => {
+        lD.layout.addElement('region').then((res) => { // Success
 
             lD.common.hideLoadingScreen(); 
-            toastr.error(errorMessagesTrans.saveAllChangesFailed);
+
+            // Behavior if successful 
+            toastr.success(res.message);
+
+            // Reload with the new added element
+            lD.selectedObject.id = 'region_' + res.data.regionId;
+            lD.reloadData(lD.layout, true);
+        }).catch((error) => { // Fail/error
+
+            lD.common.hideLoadingScreen(); 
+            // Show error returned or custom message to the user
+            let errorMessage = '';
+
+            if(typeof error == 'string') {
+                errorMessage = error;
+            } else {
+                errorMessage = error.errorThrown;
+            }
+
+            toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
         });
     });
 
@@ -374,6 +440,69 @@ Navigator.prototype.renderNavbar = function() {
             }).attr('data-test', 'deleteRegionModal');
         }
     });
+};
+
+
+
+Navigator.prototype.openRegionPropertiesPanel = function() {
+    $('#layout-navigator-edit').addClass('region-selected');
+};
+
+Navigator.prototype.closeRegionPropertiesPanel = function() {
+    $('#layout-navigator-edit').removeClass('region-selected');
+};
+
+Navigator.prototype.saveRegionPropertiesPanel = function() {
+    const app = getXiboApp();
+    const form = $(this.regionPropertiesPanel.DOMObject).find('form');
+    const element = app.selectedObject;
+
+    // If form is valid, submit it ( add change )
+    if(form.valid()) {
+
+        const formNewData = form.serialize();
+
+        app.common.showLoadingScreen();
+
+        // Add a save form change to the history array, with previous form state and the new state
+        lD.manager.addChange(
+            "saveForm",
+            element.type, // targetType
+            element[element.type + 'Id'], // targetId
+            this.regionPropertiesPanel.formSerializedLoadData, // oldValues
+            formNewData, // newValues
+            {
+                customRequestPath: {
+                    url: form.attr('action'),
+                    type: form.attr('method')
+                },
+                upload: true // options.upload
+            }
+        ).then((res) => { // Success
+            app.common.hideLoadingScreen();
+            toastr.success(res.message);
+        }).catch((error) => { // Fail/error
+
+            app.common.hideLoadingScreen();
+
+            // Show error returned or custom message to the user
+            let errorMessage = '';
+
+            if(typeof error == 'string') {
+                errorMessage += error;
+            } else {
+                errorMessage += error.errorThrown;
+            }
+            // Remove added change from the history manager
+            app.manager.removeLastChange();
+
+            // Display message in form
+            formHelpers.displayErrorMessage(form, errorMessage, 'danger');
+
+            // Show toast message
+            toastr.error(errorMessage);
+        });
+    }
 };
 
 module.exports = Navigator;

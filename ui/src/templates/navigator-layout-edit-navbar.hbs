@@ -1,15 +1,19 @@
 
 <nav class="navbar">
-    <button type="button" id="close-btn" class="btn btn-secondary">
-        <i class="fa fa-times"></i>
-    </button>
-    <button type="button" id="undo-btn" {{undo}} class="btn btn-warning">
-        Undo
-    </button>
-    <button type="button" id="delete-btn" {{selected}} class="btn btn-danger">
-        Delete
-    </button>
-    <button type="button" id="add-btn" class="btn btn-success">
-        Add
-    </button>
+    <div class="pull-left">
+        <button type="button" id="add-btn" class="btn btn-secondary">
+            <i class="fa fa-plus"></i>&nbsp;{{trans.addRegion}}
+        </button>
+        <button type="button" id="delete-btn" {{selected}} class="btn btn-danger" data-toggle="tooltip" data-placement="top" title="{{trans.trashBinActiveTitle}}">
+            <i class="fa fa-trash"></i>&nbsp;{{trans.deleteRegion}}
+        </button>
+    </div>
+    <div class="pull-right">
+        <button type="button" id="undo-btn" {{undo}} class="btn btn-warning" data-toggle="tooltip" data-placement="top" title="{{trans.undoActiveTitle}}">
+            <i class="fa fa-undo"></i>&nbsp;{{trans.undo}}
+        </button>
+        <button type="button" id="save-btn" class="btn btn-success">
+            <i class="fa fa-check-square-o"></i>&nbsp;{{trans.save}}
+        </button>
+    </div>
 </nav>
