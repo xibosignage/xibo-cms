@@ -143,11 +143,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $display = $this->displayFactory->getById($stat['displayId']);
             $statData[$k]['displayName'] = $display->display;
 
-            if ($stat['type'] != 'event') {
+            // Layout data
+            $layoutName = null;
+            $layoutTags = null;
 
-                // Layout data
-                $layoutName = null;
-                $layoutTags = null;
+            if ($stat['type'] != 'event') {
 
                 try {
                     $layout = $this->layoutFactory->getById($stat['layoutId']);
@@ -185,8 +185,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 }
 
-                $statData[$k]['layoutName'] = $layoutName;
-
                 // Get layout Campaign ID
                 $statData[$k]['campaignId'] = (int) $campaignId;
 
@@ -200,6 +198,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $statData[$k]['tagFilter'] = $tagFilter;
 
             }
+
+            $statData[$k]['layoutName'] = $layoutName;
         }
 
         // Insert statistics
