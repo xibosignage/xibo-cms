@@ -226,7 +226,7 @@ Navigator.prototype.render = function(layout) {
             lD.toggleNavigatorEditing(true);
         }.bind(this));
 
-        this.DOMObject.find('#close-btn').click(function() {
+        this.DOMObject.find('#close-btn-top').click(function() {
             lD.toggleNavigatorEditing(false);
         }.bind(this));
 
@@ -306,21 +306,24 @@ Navigator.prototype.renderNavbar = function() {
         {
             selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
             undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled'),
-            trans: navigatorEditTrans
+            trans: navigatorEditTrans,
+            regionSelected: (lD.selectedObject.type == 'region')
         }
     ));
 
     // Navbar buttons
     this.navbarContainer.find('#save-btn').click(function() {
 
-        // If form is opened, save it, otherwise, close navigator edit
+        // If form is opened, save it
         if(lD.selectedObject.type == 'region') {
             self.saveRegionPropertiesPanel();
             self.closeRegionPropertiesPanel();
             lD.selectObject();
-        } else {
-            lD.toggleNavigatorEditing(false);
         }
+    });
+
+    this.navbarContainer.find('#close-btn').click(function() {
+            lD.toggleNavigatorEditing(false);
     });
 
     this.navbarContainer.find('#undo-btn').click(function() {
@@ -456,11 +459,10 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
     const app = getXiboApp();
     const form = $(this.regionPropertiesPanel.DOMObject).find('form');
     const element = app.selectedObject;
+    const formNewData = form.serialize();
 
-    // If form is valid, submit it ( add change )
-    if(form.valid()) {
-
-        const formNewData = form.serialize();
+    // If form is valid, and it changed, submit it ( add change )
+    if(form.valid() && this.regionPropertiesPanel.formSerializedLoadData != formNewData) {
 
         app.common.showLoadingScreen();
 
