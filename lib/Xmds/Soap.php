@@ -1484,8 +1484,12 @@ class Soap
                 $duration = $end->diffInSeconds($start);
             }
 
-            // Get the layout campaignId
-            $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+            if ($type == 'event') {
+                $campaignId = 0;
+            } else {
+                // Get the layout campaignId
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+            }
 
             $stats[] = [
                 'type' => $type,

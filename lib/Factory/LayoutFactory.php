@@ -285,7 +285,7 @@ class LayoutFactory extends BaseFactory
     public function getById($layoutId)
     {
         if ($layoutId == 0)
-            throw new NotFoundException();
+            throw new NotFoundException(\__('LayoutId is 0'));
 
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
@@ -308,7 +308,7 @@ class LayoutFactory extends BaseFactory
         $campaignId = null;
 
         if ($layoutId == 0) {
-            throw new NotFoundException();
+            throw new NotFoundException(\__('LayoutId is 0'));
         }
 
         try {
@@ -339,7 +339,7 @@ class LayoutFactory extends BaseFactory
     {
 
         if ($campaignId == null)
-            throw new NotFoundException();
+            throw new NotFoundException(\__('CampaignId is null'));
 
         try {
             $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);

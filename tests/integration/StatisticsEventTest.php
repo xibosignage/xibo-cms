@@ -105,7 +105,7 @@ class StatisticsEventTest extends LocalWebTestCase
                         todt="2018-02-15 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" 
+                        layoutid="0" 
                         tag="'.$eventName.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -117,7 +117,7 @@ class StatisticsEventTest extends LocalWebTestCase
                         todt="2018-02-16 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="0"
                         tag="'.$eventName.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -129,7 +129,7 @@ class StatisticsEventTest extends LocalWebTestCase
                         todt="2018-02-17 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="0"
                         tag="'.$eventName.'"/>
                     </stats>');
         $this->assertSame(true, $response);

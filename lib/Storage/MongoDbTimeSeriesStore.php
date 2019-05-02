@@ -139,63 +139,67 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 }
             }
 
-            // Layout data
-            $layoutName = null;
-            $layoutTags = null;
-
-            try {
-                $layout = $this->layoutFactory->getById($stat['layoutId']);
-
-                $this->log->debug('Found layout : '. $stat['layoutId']);
-
-                $campaignId = $layout->campaignId;
-                $layoutName = $layout->layout;
-                $layoutTags = $layout->tags;
-
-            } catch (NotFoundException $error) {
-
-                $this->log->debug('Layout not Found. Search in layout history for latest layout.');
-
-                // an old layout which has been deleted still plays on the player
-                // so we will get layout not found
-                // Hence, get the latest layout
-
-                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($stat['layoutId']);
-
-                if ($campaignId !== null) {
-
-//                    $this->log->debug('CampaignId is not NULL.');
-
-                    $latestLayoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
-
-                    $this->log->debug('Latest layoutId: '.$latestLayoutId);
-
-                    // Latest layout
-                    $layout = $this->layoutFactory->getById($latestLayoutId);
-                    $layoutName = $layout->layout;
-                    $layoutTags = $layout->tags;
-
-                }
-
-            }
-
-            $statData[$k]['layoutName'] = $layoutName;
-
-            // Get layout Campaign ID
-            $statData[$k]['campaignId'] = (int) $campaignId;
-
-            // Layout tags
-            $tagFilter['layout'] = explode(',', $layoutTags);
-
             // Display name
             $display = $this->displayFactory->getById($stat['displayId']);
             $statData[$k]['displayName'] = $display->display;
 
-            // Display tags
-            $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
+            // Layout data
+            $layoutName = null;
+            $layoutTags = null;
 
-            // TagFilter array
-            $statData[$k]['tagFilter'] = $tagFilter;
+            if ($stat['type'] != 'event') {
+
+                try {
+                    $layout = $this->layoutFactory->getById($stat['layoutId']);
+
+                    $this->log->debug('Found layout : '. $stat['layoutId']);
+
+                    $campaignId = $layout->campaignId;
+                    $layoutName = $layout->layout;
+                    $layoutTags = $layout->tags;
+
+                } catch (NotFoundException $error) {
+
+                    $this->log->debug('Layout not Found. Search in layout history for latest layout.');
+
+                    // an old layout which has been deleted still plays on the player
+                    // so we will get layout not found
+                    // Hence, get the latest layout
+
+                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($stat['layoutId']);
+
+                    if ($campaignId !== null) {
+
+                        $this->log->debug('CampaignId is: '.$campaignId);
+
+                        $latestLayoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
+
+                        $this->log->debug('Latest layoutId: '.$latestLayoutId);
+
+                        // Latest layout
+                        $layout = $this->layoutFactory->getById($latestLayoutId);
+                        $layoutName = $layout->layout;
+                        $layoutTags = $layout->tags;
+
+                    }
+
+                }
+
+                // Get layout Campaign ID
+                $statData[$k]['campaignId'] = (int) $campaignId;
+
+                // Layout tags
+                $tagFilter['layout'] = explode(',', $layoutTags);
+
+                // Display tags
+                $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
+
+                // TagFilter array
+                $statData[$k]['tagFilter'] = $tagFilter;
+
+            }
+
+            $statData[$k]['layoutName'] = $layoutName;
         }
 
         // Insert statistics
