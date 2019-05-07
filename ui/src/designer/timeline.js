@@ -338,7 +338,8 @@ Timeline.prototype.render = function(layout) {
     // Render timeline template using layout object
     const html = timelineTemplate({
         layout: layout, 
-        properties: this.properties
+        properties: this.properties,
+        trans: layoutDesignerTrans
     });
 
     // Append layout html to the main div

@@ -302,10 +302,9 @@ lD.selectObject = function(obj = null, forceSelect = false) {
         
         // Get object properties from the DOM ( or set to layout if not defined )
         const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
-        const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+        let newSelectedType = (obj === null) ? 'layout' : obj.data('type');
 
         const oldSelectedId = this.selectedObject.id;
-        const oldSelectedType = this.selectedObject.type;
         
         // Unselect the previous selectedObject object if still selected
         if( this.selectedObject.selected ) {
@@ -338,8 +337,26 @@ lD.selectObject = function(obj = null, forceSelect = false) {
 
             // Save the new selected object
             if(newSelectedType === 'region') {
+
+                // If we're not in the navigator edit and the region has widgets, select the first one
+                if($.isEmptyObject(this.navigatorEdit) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
+                    let widgets = this.layout.regions[newSelectedId].widgets;
+
+                    // Select first widget
+                    for(var widget in widgets) {
+                        if(widgets.hasOwnProperty(widget)) {
+                            if(widgets[widget].index == 1) {
+                                widgets[widget].selected = true;
+                                this.selectedObject = widgets[widget];
+                                newSelectedType = 'widget';
+                                break;
+                            }
+                        }
+                    }
+                } else {
                 this.layout.regions[newSelectedId].selected = true;
                 this.selectedObject = this.layout.regions[newSelectedId];
+                }
             } else if(newSelectedType === 'widget') {
                 this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
                 this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
@@ -371,6 +388,7 @@ lD.refreshDesigner = function() {
     // Render selected object in the following containers
     if(this.selectedObject.type == 'region') {
         this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
+        this.renderContainer(this.propertiesPanel, {});
     } else {
         this.renderContainer(this.propertiesPanel, this.selectedObject);
     }
@@ -578,7 +596,7 @@ lD.renderContainer = function(container, element = {}) {
 
         // Render element if defined, layout otherwise
         if(!jQuery.isEmptyObject(element)) {
-            container.render(element, this.layout);
+            container.render(element);
         } else {
             container.render(this.layout);
         }

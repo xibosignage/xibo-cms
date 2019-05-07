@@ -33,7 +33,7 @@
     <div id="regions-container">
         <div id="regions" style="width:{{properties.zoom}}%;" data-zoom="{{properties.zoom}}">
             {{#each layout.regions}}
-                {{> timeline-region}}
+                {{> timeline-region trans=../trans}}
             {{/each}}
         </div>
     </div>

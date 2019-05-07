@@ -416,4 +416,30 @@ Widget.prototype.editPermissions = function() {
     this.editPropertyForm('Permissions');
 };
 
+/**
+ * Get next widget in line
+ */
+Widget.prototype.getNextWidget = function(reverse = false) {
+    // Get main app
+    const app = getXiboApp();
+    
+    // Get region widgets
+    let region = app.getElementByTypeAndId('region', this.regionId);
+    let widgets = region.widgets;
+
+    // Calculate new index
+    let index = this.index + ((reverse) ? -1 : 1);
+
+    // Select first widget
+    for(var widget in widgets) {
+        if(widgets.hasOwnProperty(widget)) {
+            if(widgets[widget].index == index) {
+                return widgets[widget];
+            }
+        }
+    }
+
+    return false;
+};
+
 module.exports = Widget;
