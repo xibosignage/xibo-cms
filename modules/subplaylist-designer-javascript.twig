@@ -1,8 +1,23 @@
 {#
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016-2018 Spring Signage Ltd
- * (subplaylist-designer-javascript.twig)
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -13,6 +28,11 @@
 
         // Get form object
         const $form = $(this);
+
+        // Translations
+        let fillTitle = "{% trans "Fill - use the first Playlist to fill any remaining Spots" %}";
+        let padTitle = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
+        let repeatTitle = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
         
         // Order Clause
         var subPlaylistFields = $(".sub-playlists", $form);
@@ -29,7 +49,13 @@
                 playlists: $form.data().extra.playlists,
                 title: "1",
                 subPlaylistId: "",
-                buttonGlyph: "fa-plus"
+                subPlaylistIdSpots: "",
+                subPlaylistIdSpotLength: "",
+                subPlaylistIdSpotFill: "",
+                buttonGlyph: "fa-plus",
+                fillTitle: fillTitle,
+                padTitle: padTitle,
+                repeatTitle: repeatTitle
             }));
         } else {
             // For each of the existing codes, create form components
@@ -40,7 +66,13 @@
                     playlists: $form.data().extra.playlists,
                     title: i,
                     subPlaylistId: field,
-                    buttonGlyph: ((i === 1) ? "fa-plus" : "fa-minus")
+                    subPlaylistIdSpots: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpots,
+                    subPlaylistIdSpotLength: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpotLength,
+                    subPlaylistIdSpotFill: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpotFill,
+                    buttonGlyph: ((i === 1) ? "fa-plus" : "fa-minus"),
+                    fillTitle: fillTitle,
+                    padTitle: padTitle,
+                    repeatTitle: repeatTitle
                 }));
             });
         }
@@ -55,7 +87,13 @@
                     playlists: $form.data().extra.playlists,
                     title: subPlaylistFields.find('.form-group').length + 1,
                     subPlaylistId: "",
-                    buttonGlyph: "fa-minus"
+                    subPlaylistIdSpots: "",
+                    subPlaylistIdSpotLength: "",
+                    subPlaylistIdSpotFill: "",
+                    buttonGlyph: "fa-minus",
+                    fillTitle: fillTitle,
+                    padTitle: padTitle,
+                    repeatTitle: repeatTitle
                 }));
 
                 // Turn playlist select into  select2 instances

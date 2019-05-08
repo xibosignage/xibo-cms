@@ -1,8 +1,23 @@
 {#
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
- * (subplaylist-form-add.twig)
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 {% extends "form-base.twig" %}
@@ -26,6 +41,30 @@
                     <div class="tab-pane active" id="general">
                         {% set helpText %}{% trans "Please select one or more Playlists to embed. If selecting more than one use the Configuration tab to adjust how each Playlist is combined." %}{% endset %}
                         {{ forms.message(helpText) }}
+
+                        {% set helpText %}{% trans "Optionally set Spot options to expand or shrink each Playlist to a particular size or duration." %}{% endset %}
+                        {{ forms.message(helpText) }}
+
+                        <div class="form-group">
+                            <div class="col-sm-1" for="subPlaylistId[]">#</div>
+                            <div class="col-sm-3">
+                                {{ "Playlists"|trans }}
+                            </div>
+                            {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used before ordering to expand or shrink the list to the specified size. Leave empty to use the count of Widgets." %}{% endset %}
+                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                                {{ "Spots"|trans }}
+                            </div>
+                            {% set helpText %}{% trans "Set the duration of all Widgets in the Playlist to a specific value in seconds. Leave empty to use each Widget duration." %}{% endset %}
+                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                                {{ "Spot Length"|trans }}
+                            </div>
+                            {% set helpText %}{% trans "If there are not enough Widgets fill all spots, how should the remaining spots be filled?" %}{% endset %}
+                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                                {{ "Spot Fill"|trans }}
+                            </div>
+                            <div class="col-sm-1" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                            </div>
+                        </div>
 
                         <div class="sub-playlists"></div>
                     </div>
@@ -54,24 +93,6 @@
                             { id: "repeat", value: repeatOption }
                         ] %}
                         {{ forms.dropdown("remainder", "single", title, module.getOption("remainder"), options, "id", "value", helpText) }}
-
-                        {% set title %}{% trans "Spots" %}{% endset %}
-                        {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used after ordering to expand or shrink the list to the specified size. Leave as 0 to use the combined length after ordering has occured." %}{% endset %}
-                        {{ forms.number("spots", title, module.getOption("spots", 0), helpText) }}
-
-                        {% set title %}{% trans "Spot Length" %}{% endset %}
-                        {% set helpText %}{% trans "Set the length of all Widgets in each Playlist to a specific value in seconds. Leave as 0 to use the Widget duration." %}{% endset %}
-                        {{ forms.number("spotLength", title, module.getOption("spotLength", 0), helpText) }}
-
-                        {% set title %}{% trans "Spot Fill" %}{% endset %}
-                        {% set helpText %}{% trans "If there are not enough Widgets after ordering to fill all spots, how should the remaining spots be filled?" %}{% endset %}
-                        {% set fillOption %}{% trans "Fill - use the first Playlist to fill any remaining spots after ordering" %}{% endset %}
-                        {% set repeatOption %}{% trans "Repeat - repeat the resolved list after ordering" %}{% endset %}
-                        {% set options = [
-                            { id: "fill", value: fillOption },
-                            { id: "repeat", value: repeatOption }
-                        ] %}
-                        {{ forms.dropdown("spotFill", "single", title, module.getOption("spotFill", "repeat"), options, "id", "value", helpText) }}
                     </div>
                 </div>
             </form>
