@@ -117,11 +117,7 @@ class Soap5 extends Soap4
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
-                    $node = $return->createElement($settingName, (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-
-                    if (isset($arrayItem['type'])) {
-                        $node->setAttribute('type', $arrayItem['type']);
-                    }
+                    $value = (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']);
 
                     // Patch download and update windows to make sure they are only 00:00
                     // https://github.com/xibosignage/xibo/issues/1791
@@ -132,11 +128,15 @@ class Soap5 extends Soap4
                     ) {
                         // Split by :
                         $timeParts = explode(':', $arrayItem['value']);
-                        $arrayItem['value'] = $timeParts[0] . ':' . $timeParts[1];
+                        $value = $timeParts[0] . ':' . $timeParts[1];
                     }
 
-                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-                    $node->setAttribute('type', $arrayItem['type']);
+                    $node = $return->createElement($settingName, $value);
+
+                    if (isset($arrayItem['type'])) {
+                        $node->setAttribute('type', $arrayItem['type']);
+                    }
+
                     $displayElement->appendChild($node);
                 }
 

@@ -956,7 +956,7 @@
 
                                 {% if theme.isSettingVisible("USER_PASSWORD_ERROR") %}
                                     {% set title %}{% trans "Description of Password Policy" %}{% endset %}
-                                    {% set helpText %}{% trans "A text description of this password policy. Will be show to users when their password does not meet the required policy" %}{% endset %}
+                                    {% set helpText %}{% trans "A text description of this password policy will be shown to users if they enter a password that does not meet the policy requirements set above." %}{% endset %}
 
                                     {% if theme.isSettingEditable("USER_PASSWORD_ERROR") %}
                                         {{ forms.input("USER_PASSWORD_ERROR", title, theme.getSetting("USER_PASSWORD_ERROR"), helpText) }}
