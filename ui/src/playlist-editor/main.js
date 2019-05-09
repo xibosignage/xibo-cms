@@ -410,6 +410,11 @@ pE.refreshDesigner = function() {
 
         this.editorDiv.find('#editing-container').hide();
         this.editorDiv.find('#dropzone-container').show();
+        
+        // If playlist is empty, open the widget tab
+        if(this.toolbar.openedMenu == -1) {
+            this.toolbar.openTab(1);
+        }
     }
 };
 
