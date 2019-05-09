@@ -48,7 +48,7 @@ class Theme extends Middleware
         /* @var \Twig_Loader_Filesystem $twig */
 
         // Append the module view paths
-        $twig->setPaths(array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']));
+        $twig->setPaths(array_merge([PROJECT_ROOT . '/reports'], $app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views']));
 
         // Does this theme provide an alternative view path?
         if ($app->configService->getThemeConfig('view_path') != '') {
