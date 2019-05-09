@@ -216,10 +216,11 @@ class SubPlaylist extends ModuleWidget
     }
 
     /**
+     * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[] $widgets
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function getSubPlaylistResolvedWidgets()
+    public function getSubPlaylistResolvedWidgets($parentWidgetId = 0)
     {
         $arrangement = $this->getOption('arrangement', 'none');
         $remainder = $this->getOption('remainder', 'none');
@@ -236,7 +237,7 @@ class SubPlaylist extends ModuleWidget
         // Expand all widgets from sub-playlists
         foreach ($this->getAssignedPlaylistIds() as $playlistId) {
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
-            $expanded = $playlist->expandWidgets();
+            $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
 
             // first watermark
