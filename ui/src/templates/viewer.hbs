@@ -1,9 +1,33 @@
-<p class="top-right-btn inline-editor-hide">
-    <i id="fs-btn" class="fa fa-arrows-alt"></i>
-</p>
+{{#if smallPreview}}
+    <div class="preview-paging text-right">
+        <i class="fa fa-arrow-circle-o-left widget-arrow widget-left"></i>
+        <span class="preview-paging-message"></span>
+        <i class="fa fa-arrow-circle-o-right widget-arrow widget-right"></i>
+    </div>
+    <div class="preview-select"></div>
+{{else}}
+    <p class="top-btn top-right-btn" title="{{ trans.toggleFullscreen }}">
+        <i id="fs-btn" class="fa fa-arrows-alt"></i>
+    </p>
 
-<div id="border-before" class="layout-viewer-border"></div>
-<div id="border-after" class="layout-viewer-border"></div>
+    {{#if renderLayout}}
+        <p class="top-btn top-left-btn" title="{{ trans.playPreviewLayout }}">
+            <i id="play-btn" class="fa fa-play-circle"></i>
+        </p>
+    {{else}}
+        <p class="top-btn top-left-btn" title="{{ trans.backToLayout }}">
+            <i id="back-btn" class="fa fa-arrow-left"></i>
+        </p>
+
+        <p id="inline-editor-save" class="top-btn top-right-btn second" title="{{ trans.saveEditorChanges }}">
+            <i id="fs-btn-save" class="fa fa-save"></i>
+        </p>
+    {{/if}}
+
+    <div id="border-before" class="layout-viewer-border"></div>
+    <div id="border-after" class="layout-viewer-border"></div>
+
+{{/if}}
 
 <div class="viewer-element {{containerStyle}}"
     style="width: {{dimensions.width}}px;
@@ -14,21 +38,26 @@
 
     {{#if renderLayout}}
         {{!-- Render Layout --}}
-        <p class="play-btn-container">
-            <i id="play-btn" class="fa fa-play-circle"></i>
-        </p>
-    {{else}}
-
-        {{!-- Render Layout --}}
-        <div id="inline-editor" class="inline-editor-opened"></div>
-
-        <div id="inline-editor-overlay" class="inline-editor-closed" title="{{ trans.inlineEditor }}">
-            <div class="edit-btn-container">
-                <i id="edit-btn" class="fa fa-edit"></i>
+        <div class="layout-live-preview">
+            <div id="regions">
+                {{#each layout.regions}}
+                    {{> viewer-region}}
+                {{/each}}
             </div>
         </div>
+    {{else}}
 
-        {{!-- Render Widget or Region --}}
+        {{#unless smallPreview }}
+            {{!-- Render Widget or Region --}}
+            <div id="inline-editor" class="inline-editor-opened"></div>
+
+            <div id="inline-editor-overlay" class="inline-editor-closed" title="{{ trans.inlineEditor }}">
+                <div class="edit-btn-container">
+                    <i id="edit-btn" class="fa fa-edit"></i>
+                </div>
+            </div>
+        {{/unless}}
+        
         {{#if res.extra.empty}}
             <p class="center-msg">
                 {{res.extra.text}}
