@@ -32,6 +32,7 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Service\ReportServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -51,6 +52,11 @@ class Stats extends Base
      * @var TimeSeriesStoreInterface
      */
     private $timeSeriesStore;
+
+    /**
+     * @var ReportServiceInterface
+     */
+    private $reportService;
 
     /**
      * @var DisplayFactory
@@ -87,6 +93,7 @@ class Stats extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
+     * @param ReportServiceInterface $reportService
      * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
@@ -94,12 +101,13 @@ class Stats extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
+        $this->reportService = $reportService;
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
@@ -136,7 +144,8 @@ class Stats extends Base
             'defaults' => [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'toDate' => $this->getDate()->getLocalDate(),
+                'availableReports' => $this->reportService->listReports()
             ]
         ];
 
