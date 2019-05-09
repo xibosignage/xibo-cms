@@ -18,7 +18,7 @@ FROM composer:1.6 as composer
 COPY ./composer.json /app
 COPY ./composer.lock /app
 
-RUN composer install --no-interaction --no-dev --optimize-autoloader --ignore-platform-reqs
+RUN composer install --no-interaction --no-dev --optimize-autoloader
 
 # Tidy up
 # remove non-required vendor files

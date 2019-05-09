@@ -193,7 +193,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             for(let button in res.buttons) {
                 
                 // If button is not a cancel or save button, add it to the button object
-                if(!['Save', 'Cancel'].includes(button)) {
+                if(!(res.buttons[button].includes('XiboDialogClose') || res.buttons[button].includes('.submit()'))) {
                     buttons[button] = {
                         name: button,
                         type: 'btn-default',
@@ -245,8 +245,8 @@ PropertiesPanel.prototype.render = function(element, step) {
             self.DOMObject.data('elementOptions', element.getOptions());
 
             window[element.subType + '_form_edit_open'].bind(self.DOMObject)();
-        } else if(element.type === 'region' && typeof window.region_form_edit_open === 'function') {
-            window.region_form_edit_open.bind(self.DOMObject)();
+        } else if(element.type === 'region' && typeof window.regionFormEditOpen === 'function') {
+            window.regionFormEditOpen.bind(self.DOMObject)();
         }
 
         // Save form data

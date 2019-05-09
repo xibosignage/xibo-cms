@@ -679,7 +679,7 @@ class DataSetView extends ModuleWidget
                         break;
 
                     default:
-                        continue;
+                        continue 2;
                 }
 
                 if ($i > 1)
@@ -745,11 +745,14 @@ class DataSetView extends ModuleWidget
             $dataSetResults = $dataSet->getData($filter);
 
             if (count($dataSetResults) <= 0) {
-
-                if ($this->getRawNode('noDataMessage') == '')
+                if ($this->getRawNode('noDataMessage') == '') {
                     throw new NotFoundException(__('Empty Result Set with filter criteria.'));
-                else
-                    return $this->getRawNode('noDataMessage');
+                } else {
+                    return [
+                        'html' => $this->getRawNode('noDataMessage'),
+                        'countPages' => 1
+                    ];
+                }
             }
 
             $rowCount = 1;

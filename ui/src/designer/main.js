@@ -100,7 +100,7 @@ $(document).ready(function() {
     lD.designerDiv.html(loadingTemplate());
 
     // Change toastr positioning
-    toastr.options.positionClass = 'toast-top-right';
+    toastr.options.positionClass = 'toast-top-center';
 
     // Load layout through an ajax request
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
@@ -369,7 +369,12 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.manager);
 
     // Render selected object in the following containers
-    this.renderContainer(this.propertiesPanel, this.selectedObject);
+    if(this.selectedObject.type == 'region') {
+        this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
+    } else {
+        this.renderContainer(this.propertiesPanel, this.selectedObject);
+    }
+    
     this.renderContainer(this.viewer, this.selectedObject);
 };
 
@@ -544,7 +549,7 @@ lD.enterReadOnlyMode = function() {
     let toastPosition = 'toast-bottom-center';
 
     // Show edit mode message
-    let toastObj = toastr.info(
+    let toastObj = toastr.error(
         layoutDesignerTrans.readOnlyModeMessage,
         '', 
         {
@@ -694,8 +699,6 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
     
     const self = this;
 
-    const app = getXiboApp();
-
     // Load form the API
     const linkToAPI = urlsForApi.layout[type];
 
@@ -716,7 +719,6 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
     }).done(function(res) {
 
         if(res.success) {
-
             // Create buttons
             let generatedButtons = {
                 cancel: {
@@ -767,7 +769,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
 
             // Form open callback
             if(res.callBack != undefined && typeof window[res.callBack] === 'function') {
-                window[res.callBack]();
+                window[res.callBack](dialog);
             }
 
             // Call Xibo Init for this form

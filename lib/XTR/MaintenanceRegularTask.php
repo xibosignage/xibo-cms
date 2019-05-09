@@ -127,6 +127,8 @@ class MaintenanceRegularTask implements TaskInterface
                     // We need to un-licence some displays
                     $difference = count($displays) - $maxDisplays;
 
+                    $this->log->alert('Max %d authorised displays exceeded, we need to un-authorise %d of %d displays', $maxDisplays, $difference, count($displays));
+
                     $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
 
                     foreach ($displays as $display) {
@@ -135,8 +137,10 @@ class MaintenanceRegularTask implements TaskInterface
                         if ($difference == 0)
                             break;
 
-                        echo sprintf(__('Disabling %s'), $this->sanitizer->string($display['display'])) . '<br/>' . PHP_EOL;
+                        $this->appendRunMessage(sprintf(__('Disabling %s'), $this->sanitizer->string($display['display'])));
                         $update->execute(['displayId' => $display['displayId']]);
+
+                        $this->log->audit('Display', $display['displayId'], 'Regular Maintenance unauthorised display due to max number of slots exceeded.', ['display' => $display['display']]);
 
                         $difference--;
                     }

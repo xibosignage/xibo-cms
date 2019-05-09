@@ -708,8 +708,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `enableStat`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :enableStat)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -722,6 +722,7 @@ class Media implements \JsonSerializable
             'apiRef' => $this->apiRef,
             'valid' => 0,
             'createdDt' => date('Y-m-d H:i:s'),
+            'modifiedDt' => date('Y-m-d H:i:s'),
             'enableStat' => $this->enableStat
         ]);
 

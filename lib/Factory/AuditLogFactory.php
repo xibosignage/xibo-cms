@@ -83,7 +83,7 @@ class AuditLogFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
-            $body .= ' AND `auditlog`.userName LIKE :userName ';
+            $body .= ' AND `user`.userName LIKE :userName ';
             $params['userName'] = '%' . $this->getSanitizer()->getString('userName', $filterBy) . '%';
         }
 
