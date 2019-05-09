@@ -166,7 +166,7 @@ class Widget implements \JsonSerializable
     private $mediaHash = null;
 
     /**
-     * Temporary Id used during import/upgrade
+     * Temporary Id used during import/upgrade/sub-playlist ordering
      * @var string read only string
      */
     public $tempId = null;

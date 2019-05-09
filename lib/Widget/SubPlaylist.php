@@ -277,10 +277,11 @@ class SubPlaylist extends ModuleWidget
     }
 
     /**
+     * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[] $widgets
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function getSubPlaylistResolvedWidgets()
+    public function getSubPlaylistResolvedWidgets($parentWidgetId = 0)
     {
         // This is expensive, so cache it if we can.
         if ($this->_resolvedWidgets != null) {
@@ -305,7 +306,7 @@ class SubPlaylist extends ModuleWidget
         foreach ($this->getAssignedPlaylistIds() as $playlistId) {
             // Get the Playlist and expand its widgets
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
-            $expanded = $playlist->expandWidgets();
+            $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
 
             // Do we have a number of spots set?
