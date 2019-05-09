@@ -1,17 +1,33 @@
 <?php
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\XTR;
-use Xibo\Controller\Library;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
+use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Entity\User;
-use Xibo\Exception\TaskRunException;
-use Xibo\Exception\NotFoundException;
 
 /**
  * Class ReportScheduleTask
@@ -24,14 +40,17 @@ class ReportScheduleTask implements TaskInterface
     /** @var DateServiceInterface */
     private $date;
 
-    /** @var  User */
-    private $archiveOwner;
-
     /** @var MediaFactory */
     private $mediaFactory;
 
+    /** @var SavedReportFactory */
+    private $savedReportFactory;
+
     /** @var UserFactory */
     private $userFactory;
+
+    /** @var LayoutFactory */
+    private $layoutFactory;
 
     /** @var ReportScheduleFactory */
     private $reportScheduleFactory;
@@ -44,7 +63,9 @@ class ReportScheduleTask implements TaskInterface
     {
         $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->savedReportFactory = $container->get('savedReportFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->reportService = $container->get('reportService');
         return $this;
@@ -54,8 +75,6 @@ class ReportScheduleTask implements TaskInterface
     public function run()
     {
         $this->runMessage = '# ' . __('Report schedule') . PHP_EOL . PHP_EOL;
-
-        $this->setArchiveOwner();
 
         // Long running task
         set_time_limit(0);
@@ -79,12 +98,17 @@ class ReportScheduleTask implements TaskInterface
 
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
 
-            //if ($nextRunDt <= time())
+            if ($nextRunDt <= time())
             {
 
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
                 $rs->lastRunDt = time();
                 $rs->save();
+
+                // Get the generated saved as report name
+                $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
+
+                $this->log->debug('Last run date is updated.');
 
                 // Run the report to get results
                 $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria);
@@ -111,37 +135,15 @@ class ReportScheduleTask implements TaskInterface
                 $runDateTimestamp = $this->date->parse()->addDay()->startOfDay()->format('U');
 
                 // Upload to the library
-                $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'xibosavedreport', $this->archiveOwner->getId());
+                $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
                 $media->save();
 
+                // Save Saved report
+                $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
+                $savedReport->save();
             }
 
 
-        }
-    }
-
-    /**
-     * Set the archive owner
-     * @throws TaskRunException
-     */
-    private function setArchiveOwner()
-    {
-        $archiveOwner = $this->getOption('archiveOwner', null);
-
-        if ($archiveOwner == null) {
-            $admins = $this->userFactory->getSuperAdmins();
-
-            if (count($admins) <= 0)
-                throw new TaskRunException(__('No super admins to use as the archive owner, please set one in the configuration.'));
-
-            $this->archiveOwner = $admins[0];
-
-        } else {
-            try {
-                $this->archiveOwner = $this->userFactory->getByName($archiveOwner);
-            } catch (NotFoundException $e) {
-                throw new TaskRunException(__('Archive Owner not found'));
-            }
         }
     }
 }
