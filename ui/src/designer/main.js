@@ -339,7 +339,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             if(newSelectedType === 'region') {
 
                 // If we're not in the navigator edit and the region has widgets, select the first one
-                if($.isEmptyObject(this.navigatorEdit) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
+                if(!forceSelect && $.isEmptyObject(this.navigatorEdit) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
                     let widgets = this.layout.regions[newSelectedId].widgets;
 
                     // Select first widget
