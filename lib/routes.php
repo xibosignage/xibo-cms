@@ -326,7 +326,6 @@ $app->get('/rss/:psk', '\Xibo\Controller\DataSetRss:feed')->name('dataSet.rss.fe
  */
 $app->get('/stats', '\Xibo\Controller\Stats:grid')->name('stats.search');
 $app->get('/stats/data/bandwidth', '\Xibo\Controller\Stats:bandwidthData')->name('stats.bandwidth.data');
-$app->get('/stats/summaryReport', '\Xibo\Controller\Stats:summaryReportData')->name('stats.summaryReport.data');
 $app->get('/stats/data/timeDisconnected', '\Xibo\Controller\Stats:timeDisconnectedGrid')->name('stats.timeDisconnected.search');
 $app->get('/stats/export', '\Xibo\Controller\Stats:export')->name('stats.export');
 
@@ -482,6 +481,30 @@ $app->post('/task', '\Xibo\Controller\Task:add')->name('task.add');
 $app->put('/task/:id', '\Xibo\Controller\Task:edit')->name('task.edit');
 $app->delete('/task/:id', '\Xibo\Controller\Task:delete')->name('task.delete');
 $app->post('/task/:id/run', '\Xibo\Controller\Task:runNow')->name('task.runNow');
+
+/**
+ * Report schedule
+ * @SWG\Tag(
+ *  name="report",
+ *  description="Report schedule"
+ * )
+ */
+
+$app->get('/report/reportschedule', '\Xibo\Controller\Report:reportScheduleGrid')->name('reportschedule.search');
+$app->post('/report/reportschedule', '\Xibo\Controller\Report:reportScheduleAdd')->name('reportschedule.add');
+$app->put('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleEdit')->name('reportschedule.edit');
+$app->delete('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleDelete')->name('reportschedule.delete');
+
+//
+// Saved reports
+//
+$app->get('/report/savedreport', '\Xibo\Controller\Report:savedReportGrid')->name('savedreport.search');
+$app->delete('/report/savedreport/:id', '\Xibo\Controller\Report:savedReportDelete')->name('savedreport.delete');
+
+//
+// Ad hoc report
+//
+$app->get('/report/data/:name', '\Xibo\Controller\Report:getReportData')->name('report.data');
 
 /**
  * Player Versions
