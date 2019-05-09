@@ -42,7 +42,10 @@
                         {% set helpText %}{% trans "Please select one or more Playlists to embed. If selecting more than one use the Configuration tab to adjust how each Playlist is combined." %}{% endset %}
                         {{ forms.message(helpText) }}
 
-                        {% set helpText %}{% trans "Optionally set Spot options to expand or shrink each Playlist to a particular size or duration." %}{% endset %}
+                        {% set helpText %}{% trans "Optionally set Spot options to expand or shrink each Playlist to a particular size or duration. Leave the Spot options empty to use the count of Widgets in each Playlist." %}{% endset %}
+                        {{ forms.message(helpText) }}
+
+                        {% set helpText %}{% trans "Setting Spots to 0 will omit the first Playlist from the play order, and will be used as a Spot Fill option." %}{% endset %}
                         {{ forms.message(helpText) }}
 
                         <div class="form-group">

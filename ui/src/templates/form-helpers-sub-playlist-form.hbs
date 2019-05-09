@@ -20,9 +20,9 @@
     </div>
     <div class="col-sm-2">
         <select class="form-control" name="subPlaylistIdSpotFill[]">
-            <option value="repeat" {{#eq "repeat" subPlaylistIdSpotFill}}selected{{/eq}}>{{ repeatTitle }}</option>
-            <option value="fill" {{#eq "fill" subPlaylistIdSpotFill}}selected{{/eq}}>{{ fillTitle }}</option>
-            <option value="pad" {{#eq "pad" subPlaylistIdSpotFill}}selected{{/eq}}>{{ padTitle }}</option>
+            <option value="repeat" {{#eq "repeat" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ repeatHelpText }}">{{ repeatTitle }}</option>
+            <option value="fill" {{#eq "fill" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ fillHelpText }}">{{ fillTitle }}</option>
+            <option value="pad" {{#eq "pad" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ padHelpText }}">{{ padTitle }}</option>
         </select>
     </div>
     <div class="col-sm-1">

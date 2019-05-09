@@ -29,10 +29,16 @@
         // Get form object
         const $form = $(this);
 
+        // Bind our tooltips
+        $form.find('[data-toggle="tooltip"]').tooltip();
+
         // Translations
-        let fillTitle = "{% trans "Fill - use the first Playlist to fill any remaining Spots" %}";
-        let padTitle = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
-        let repeatTitle = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
+        let fillTitle = "{% trans "Fill" %}";
+        let fillHelpText = "{% trans "Fill - use the first Playlist to fill any remaining Spots" %}";
+        let padTitle = "{% trans "Pad" %}";
+        let padHelpText = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
+        let repeatTitle = "{% trans "Repeat" %}";
+        let repeatHelpText = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
         
         // Order Clause
         var subPlaylistFields = $(".sub-playlists", $form);
@@ -55,7 +61,10 @@
                 buttonGlyph: "fa-plus",
                 fillTitle: fillTitle,
                 padTitle: padTitle,
-                repeatTitle: repeatTitle
+                repeatTitle: repeatTitle,
+                fillHelpText: fillHelpText,
+                padHelpText: padHelpText,
+                repeatHelpText: repeatHelpText
             }));
         } else {
             // For each of the existing codes, create form components
@@ -72,7 +81,10 @@
                     buttonGlyph: ((i === 1) ? "fa-plus" : "fa-minus"),
                     fillTitle: fillTitle,
                     padTitle: padTitle,
-                    repeatTitle: repeatTitle
+                    repeatTitle: repeatTitle,
+                    fillHelpText: fillHelpText,
+                    padHelpText: padHelpText,
+                    repeatHelpText: repeatHelpText
                 }));
             });
         }
@@ -93,19 +105,36 @@
                     buttonGlyph: "fa-minus",
                     fillTitle: fillTitle,
                     padTitle: padTitle,
-                    repeatTitle: repeatTitle
+                    repeatTitle: repeatTitle,
+                    fillHelpText: fillHelpText,
+                    padHelpText: padHelpText,
+                    repeatHelpText: repeatHelpText
                 }));
 
-                // Turn playlist select into  select2 instances
-                $(".subPlaylistSelect", $form).select2();
+                subplaylist_init_row($form);
             } else {
                 // Remove this row
                 $(this).closest(".form-group").remove();
             }
         });
 
-        // Turn playlist select into  select2 instances
-        $(".subPlaylistSelect", $form).select2();
+        subplaylist_init_row($form);
+    }
+
+    function subplaylist_init_row($row) {
+        $row.find('.subPlaylistSelect').select2({
+            dropdownAutoWidth: true
+        });
+        $row.find('select[name="subPlaylistIdSpotFill[]"]').select2({
+            templateResult: function(state) {
+                if (!state.id) {
+                    return state.text;
+                }
+                return $(state.element).data().templateResult;
+            },
+            dropdownAutoWidth: true,
+            minimumResultsForSearch: -1
+        });
     }
 
 </script>
