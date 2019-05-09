@@ -582,6 +582,10 @@ class ModuleFactory extends BaseFactory
             $body .= ' AND module <> \'playersoftware\' ';
         }
 
+        if ($this->getSanitizer()->getInt('notSavedReport', $filterBy) == 1) {
+            $body .= ' AND module <> \'savedreport\' ';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
