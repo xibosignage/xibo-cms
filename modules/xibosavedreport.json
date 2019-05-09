@@ -1,7 +1,0 @@
-{
-  "title": "Xibo Saved Reports",
-  "author": "Xibo Signage Ltd",
-  "description": "A saved report to be stored in the library",
-  "name": "xibosavedreport",
-  "class": "Xibo\\Widget\\XiboSavedReport"
-}

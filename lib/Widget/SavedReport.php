@@ -5,10 +5,10 @@ namespace Xibo\Widget;
 use Xibo\Factory\ModuleFactory;
 
 /**
- * Class XiboSavedReport
+ * Class SavedReport
  * @package Xibo\Widget
  */
-class XiboSavedReport extends ModuleWidget
+class SavedReport extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 
@@ -21,9 +21,9 @@ class XiboSavedReport extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'Xibo Saved Reports';
-            $module->type = 'xibosavedreport';
-            $module->class = 'Xibo\Widget\XiboSavedReport';
+            $module->name = 'Saved Reports';
+            $module->type = 'savedreport';
+            $module->class = 'Xibo\Widget\SavedReport';
             $module->description = 'A saved report to be stored in the library';
             $module->enabled = 1;
             $module->previewEnabled = 0;
@@ -34,7 +34,7 @@ class XiboSavedReport extends ModuleWidget
             $module->defaultDuration = 10;
             $module->validExtensions = 'json';
             $module->settings = [];
-            $module->installName = 'xibosavedreport';
+            $module->installName = 'savedreport';
 
             $this->setModule($module);
             $this->installModule();
