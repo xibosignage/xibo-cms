@@ -37,6 +37,7 @@ use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\HelpService;
 use Xibo\Service\ModuleService;
+use Xibo\Service\ReportService;
 use Xibo\Service\SanitizeService;
 
 /**
@@ -154,6 +155,23 @@ class State extends Middleware
         // Register the event dispatcher
         $app->container->singleton('dispatcher', function($container) {
             return new EventDispatcher();
+        });
+
+        // Register the report service
+        $app->container->singleton('reportService', function($container) {
+            return new ReportService(
+                $container->state,
+                $container->store,
+                $container->timeSeriesStore,
+                $container->logService,
+                $container->configService,
+                $container->dateService,
+                $container->sanitizerService,
+                $container->displayFactory,
+                $container->mediaFactory,
+                $container->layoutFactory,
+                $container->savedReportFactory
+            );
         });
 
         // Register Controllers with DI
@@ -869,6 +887,25 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\Report', function($container) {
+            return new \Xibo\Controller\Report(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->timeSeriesStore,
+                $container->reportService,
+                $container->reportScheduleFactory,
+                $container->savedReportFactory,
+                $container->mediaFactory,
+                $container->layoutFactory
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Resolution', function($container) {
             return new \Xibo\Controller\Resolution(
                 $container->logService,
@@ -943,6 +980,7 @@ class State extends Middleware
                 $container->configService,
                 $container->store,
                 $container->timeSeriesStore,
+                $container->reportService,
                 $container->displayFactory,
                 $container->layoutFactory,
                 $container->mediaFactory,
@@ -1403,11 +1441,34 @@ class State extends Middleware
             );
         });
 
+        $container->singleton('reportScheduleFactory', function($container) {
+            return new \Xibo\Factory\ReportScheduleFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->configService,
+                $container->pool,
+                $container->dateService
+            );
+        });
+
         $container->singleton('resolutionFactory', function($container) {
             return new \Xibo\Factory\ResolutionFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService
+            );
+        });
+
+        $container->singleton('savedReportFactory', function($container) {
+            return new \Xibo\Factory\SavedReportFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->configService,
+                $container->mediaFactory
             );
         });
 
