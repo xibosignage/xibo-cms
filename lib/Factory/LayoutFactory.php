@@ -1148,9 +1148,9 @@ class LayoutFactory extends BaseFactory
         } else if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
             // Exclude templates by default
             if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
-                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout INNER JOIN tag on lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
+                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
             } else {
-                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout INNER JOIN tag on lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
+                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
             }
         }
 
