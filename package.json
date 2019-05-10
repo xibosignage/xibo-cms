@@ -44,7 +44,7 @@
     "bootstrap-datetime-picker": "~2.4.4",
     "bootstrap-select": "~1.12.4",
     "bootstrap-slider": "~10.0.0",
-    "bootstrap-switch": "^3.4.0",
+    "bootstrap-switch": "3.3.4",
     "bootstrap-tagsinput": "~0.7.1",
     "bootstrap-tour": "^0.12.0",
     "chart.js": "^2.8.0",
