@@ -17,7 +17,7 @@
         formHelpers.setupObjectValueInputFields($(this), '#clockTypeId', ['.analogue-control-group', '.digital-control-group', '.flip-control-group'], [1, 2, 3]);
 
         // Setup editors
-        formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
+        formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'), '[' + jsTimeFormat + ']');
 
         // For the clock type, we need to check if it's not digital, and destroy the inline editor for that specific case
         const self = this;
