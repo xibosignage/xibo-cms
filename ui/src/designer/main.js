@@ -631,7 +631,7 @@ lD.toggleNavigatorEditing = function(enable) {
     } else {
 
         // Refresh designer
-        this.refreshDesigner();
+        this.reloadData(lD.layout);
 
         // Clean variable
         this.navigatorEdit = {};

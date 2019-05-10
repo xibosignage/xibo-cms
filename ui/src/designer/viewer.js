@@ -193,11 +193,18 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
     // Get element to render index
     const elementIndex = (element.type === 'widget') ? element.index : widgetIndex;
+    const totalItems = targetElement.numWidgets;
 
     // Get request path
     let requestPath = urlsForApi.region.preview.url;
     requestPath = requestPath.replace(':id', targetElement[targetElement.type + 'Id']);
-    requestPath += '?seq=' + elementIndex;
+
+    if(smallPreview || (element.type === 'region')) {
+        requestPath += '?seq=' + elementIndex;
+    } else {
+        requestPath += '?widgetId=' + element[element.type + 'Id'];
+    }
+
     requestPath += '&width=' + containerElementDimensions.width + '&height=' + containerElementDimensions.height;
 
     // Get HTML for the given element from the API
@@ -221,7 +228,8 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             dimensions: containerElementDimensions,
             type: elementType,
             trans: layoutDesignerTrans,
-            smallPreview: smallPreview
+            smallPreview: smallPreview,
+            isEmpty: (totalItems <= 0)
         });
 
         // Append layout html to the container div
@@ -255,13 +263,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
                 if(res.extra.number_items > 1) {
                     // Select paged widget
-                    for(var widget in targetElement.widgets) {
-                        if(targetElement.widgets.hasOwnProperty(widget)) {
-                            if(targetElement.widgets[widget].index == res.extra.current_item) {
-                                lD.selectObject($('#' + targetElement.widgets[widget].id));
-                            }
-                        }
-                    }
+                    lD.selectObject($('#widget_' + targetElement.regionId + '_' + res.extra.tempId));
                 } else {
                     // Select region
                     lD.selectObject($('#' + targetElement.id));
@@ -315,23 +317,30 @@ Viewer.prototype.renderNavbar = function(element, data) {
     }
 
     if(element.type == 'widget') {
+
+        const currentItem = element.index;
+        const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
+        const totalItems = parentRegion.numWidgets;
+
         // Render widget toolbar
         this.navbarContainer.html(viewerNavbarTemplate(
             {
+                currentItem: currentItem,
+                totalItems: totalItems,
                 extra: data.extra,
                 type: element.type,
-                pagingEnable: (data.extra.number_items > 1),
+                pagingEnable: (totalItems > 1),
                 trans: layoutDesignerTrans
             }
         ));
 
         // Paging controls
-        if(data.extra && data.extra.number_items > 1) {
-            this.navbarContainer.find('#left-btn').prop('disabled', (data.extra.current_item <= 1)).click(function() {
+        if(data.extra && totalItems > 1) {
+            this.navbarContainer.find('#left-btn').prop('disabled', (currentItem <= 1)).click(function() {
                 lD.selectObject($('#' + element.getNextWidget(true).id));
             }.bind(this));
 
-            this.navbarContainer.find('#right-btn').prop('disabled', (data.extra.current_item >= data.extra.number_items)).click(function() {
+            this.navbarContainer.find('#right-btn').prop('disabled', (currentItem >= totalItems)).click(function() {
                 lD.selectObject($('#' + element.getNextWidget().id));
             }.bind(this));
         }
@@ -466,6 +475,7 @@ Viewer.prototype.editInlineEditorToggle = function(show = true) {
     
     // Toggle rendered preview
     this.DOMObject.find('#viewer-preview').toggle(!show);
+    this.DOMObject.find('#inline-editor-overlay').toggle(!show);
 };
 
 /**
