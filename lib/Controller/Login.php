@@ -33,6 +33,8 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
+use RobThree\Auth\TwoFactorAuth;
 
 /**
  * Class Login
@@ -44,6 +46,9 @@ class Login extends Base
      * @var Session
      */
     private $session;
+
+    /** @var StorageServiceInterface  */
+    private $store;
 
     /**
      * @var UserFactory
@@ -66,13 +71,14 @@ class Login extends Base
      * @param UserFactory $userFactory
      * @param \Stash\Interfaces\PoolInterface $pool
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->pool = $pool;
+        $this->store = $store;
     }
 
     /**
@@ -185,6 +191,12 @@ class Login extends Base
 
                 // Check password
                 $user->checkPassword($password);
+
+                // check if 2FA is enabled
+                if ($user->twoFactorTypeId != 0) {
+                    $_SESSION['tfaUsername'] = $user->userName;
+                    $this->app->redirect('tfa');
+                }
 
                 $user->touch();
 
@@ -406,5 +418,158 @@ class Login extends Base
         ob_end_clean();
 
         return $body;
+    }
+
+    /**
+     * 2FA Auth required
+     * @throws \Xibo\Exception\XiboException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws \PHPMailer\PHPMailer\Exception
+     */
+    public function twoFactorAuthForm()
+    {
+        if (!isset($_SESSION['tfaUsername'])) {
+            $this->getApp()->flash('login_message', __('Session has expired, please log in again'));
+            $this->getApp()->redirectTo('login');
+        }
+
+        $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
+
+        // if our user has email two factor enabled, we need to send the email with code now
+        if ($user->twoFactorTypeId === 1) {
+
+            if ($user->email == '') {
+                throw new NotFoundException('No email');
+            }
+
+            $mailFrom = $this->getConfig()->getSetting('mail_from');
+            $tfa = new TwoFactorAuth('Xibo Signage');
+
+            // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
+            $action = 'user-tfa-email-auth' . Random::generateString(10);
+            $nonce = Random::generateString(20);
+
+            // Create a nonce for this user and store it somewhere
+            $cache = $this->pool->getItem('/nonce/' . $action);
+
+            $cache->set([
+                'action' => $action,
+                'hash' => password_hash($nonce, PASSWORD_DEFAULT),
+                'userId' => $user->userId
+            ]);
+            $cache->expiresAfter(1800); // 30 minutes?
+
+            // Save cache
+            $this->pool->save($cache);
+
+            // Make a link
+            $code = $tfa->getCode($user->twoFactorSecret);
+
+            // Send the mail
+            $mail = new \PHPMailer\PHPMailer\PHPMailer();
+            $mail->CharSet = 'UTF-8';
+            $mail->Encoding = 'base64';
+            $mail->From = $mailFrom;
+            $msgFromName = $this->getConfig()->getSetting('mail_from_name');
+
+            if ($msgFromName != null) {
+                $mail->FromName = $msgFromName;
+            }
+
+            $mail->Subject = __('Two Factor Authentication');
+            $mail->addAddress($user->email);
+
+            // Body
+            $mail->isHTML(true);
+            $mail->Body = $this->generateEmailBody($mail->Subject,
+                '<p>' . __('You are receiving this email because two factor email authorisation is enabled in your CMS user account. If you did not make this request, please report this email to your administrator immediately.') . '</p>' . '<p>' . $code . '</p>');
+
+            if (!$mail->send()) {
+                throw new ConfigurationException('Unable to send two factor code to ' . $user->email);
+            } else {
+                $this->getApp()->flash('login_message',
+                    __('Two factor code email has been sent to your email address'));
+            }
+
+            // Audit Log
+            $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
+                'IPAddress' => $this->getApp()->request()->getIp(),
+                'UserAgent' => $this->getApp()->request()->getUserAgent()
+            ]);
+
+        }
+
+        // Template
+        $this->getState()->template = 'tfa';
+    }
+
+    /**
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     */
+    public function twoFactorAuthValidate()
+    {
+        $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
+        $result = false;
+        $updatedCodes = [];
+
+        if (isset($_POST['code'])) {
+            $tfa = new TwoFactorAuth('Xibo Signage');
+            $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->string($_POST['code']));
+        } elseif (isset($_POST['recoveryCode'])) {
+            // get the array of recovery codes, go through them and try to match provided code
+            $codes = $user->twoFactorRecoveryCodes;
+
+            foreach (json_decode($codes) as $code) {
+
+                // if the provided recovery code matches one stored in the database, we want to log in the user
+                if ($this->getSanitizer()->string($code) === $this->getSanitizer()->string($_POST['recoveryCode'])) {
+                    $result = true;
+                }
+
+                if ($this->getSanitizer()->string($code) !== $this->getSanitizer()->string($_POST['recoveryCode'])) {
+                    $updatedCodes[] = $this->getSanitizer()->string($code);
+                }
+
+            }
+            // recovery codes are one time use, as such we want to update user recovery codes and remove the one that was just used.
+            $user->updateRecoveryCodes(json_encode($updatedCodes));
+        }
+
+        if ($result) {
+            $user->touch();
+
+            $this->getLog()->info('%s user logged in.', $user->userName);
+
+            // Set the userId on the log object
+            $this->getLog()->setUserId($user->userId);
+
+            // Overwrite our stored user with this new object.
+            $this->getApp()->user = $user;
+
+            // Switch Session ID's
+            $session = $this->session;
+            $session->setIsExpired(0);
+            $session->regenerateSessionId();
+            $session->setUser($user->userId);
+
+            // Audit Log
+            $this->getLog()->audit('User', $user->userId, 'Login Granted', [
+                'IPAddress' => $this->getApp()->request()->getIp(),
+                'UserAgent' => $this->getApp()->request()->getUserAgent()
+            ]);
+
+            $this->setNoOutput(true);
+
+            //unset the session tfaUsername
+            unset($_SESSION['tfaUsername']);
+
+            $this->getApp()->redirectTo('home');
+        } else {
+            $this->getLog()->error('Authentication code incorrect, redirecting to login page');
+            $this->getApp()->flash('login_message', __('Authentication code incorrect'));
+            $this->getApp()->redirectTo('login');
+        }
     }
 }

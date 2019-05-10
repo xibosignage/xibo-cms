@@ -1,0 +1,195 @@
+{#
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit User Profile" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.editProfile }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#userEditProfileForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userEditProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit.profile", {id: user.userId}) }}">
+                {% set title %}{% trans "User Name" %}{% endset %}
+                {{ forms.disabled("userName", title, currentUser.userName) }}
+
+                {% set title %}{% trans "Password" %}{% endset %}
+                {% set helpText %}{% trans "Please enter your current password" %}{% endset %}
+                {{ forms.password("password", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "New Password" %}{% endset %}
+                {% set helpText %}{% trans "Please enter your new password" %}{% endset %}
+                {{ forms.password("newPassword", title, "", helpText) }}
+
+                {% set title %}{% trans "Retype New Password" %}{% endset %}
+                {% set helpText %}{% trans "Please repeat the new Password." %}{% endset %}
+                {{ forms.password("retypeNewPassword", title, "", helptext) }}
+
+                {% set title %}{% trans "Email" %}{% endset %}
+                {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
+                {{ forms.email("email", title, currentUser.email, helpText) }}
+
+                {% set title %}{% trans "Two Factor Authentication" %}{% endset %}
+                {% set helpText %}{% trans "With this option enabled, user will be required to provide 2FA authentication code to log in to the CMS" %}{% endset %}
+                {% set values = [{id: 0, value: "Off"}, {id: 1, value: "Email"}, {id: 2, value: "Google Authenticator"}] %}
+                {{ forms.dropdown("twoFactorTypeId", "single", title, currentUser.twoFactorTypeId, values, "id", "value", helpText) }}
+
+                {{ forms.hidden("twoFactorRecoveryCodes", currentUser.twoFactorRecoveryCodes) }}
+                <div id="qRCode">
+                    <p>{% trans "Please scan the following image with your app:" %}</p>
+                    <p id="qr"><img id="qrImage" src=""></p>
+                    <div>
+                        {% set title %}{% trans "Access Code" %}{% endset %}
+                        {{ forms.input("code", title) }}
+                    </div>
+                </div>
+
+                <div id="recoveryButtons">
+                    <p>{% trans "Please use the buttons below to generate or show your two factor recovery codes." %}</p>
+
+                    <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
+                        <li class="btn btn-success btn-xs recBtn"><a class="btns generateCodes" id="generateCodesBtn" style="padding: 7px 7px;" title="{% trans "Generate Recovery codes, this action will invalidate all existing recovery codes." %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Generate" %}</a></li>
+                    </ul>
+
+                    <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
+                        <li class="btn btn-info btn-xs recBtn"><a class="btns showCodes" id="showCodesBtn" style="padding: 7px 7px;" title="{% trans "Show existing recovery codes" %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Show" %}</a></li>
+                    </ul>
+                </div>
+
+                <div id="recoveryCodes" style="float: left; width: 100%;">
+                    <p>{% trans "Here are your recovery codes, please make sure to store them in a safe place, like password manager." %}</p>
+                    <p>{% trans "Recovery codes will become active only after this form is successfully saved" %}</p>
+                    <p id="codesList" class=""></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            $("#qRCode").addClass("hidden");
+            $("#recoveryButtons").addClass("hidden");
+            $("#recoveryCodes").addClass("hidden");
+
+            $("#twoFactorTypeId").on("change", function (e) {
+                e.preventDefault();
+                if ($("#twoFactorTypeId").val() == 2 && '{{ currentUser.twoFactorTypeId }}' != 2) {
+                            $.ajax({
+                                url: "{{ urlFor("user.setup.profile") }}",
+                                type: "GET",
+                                beforeSend: function () {
+                                    $("#qr").addClass('fa fa-spinner fa-spin loading-icon')
+                                },
+                                success: function (response) {
+                                    let qRCode = response.data.qRUrl;
+                                    $("#qrImage").attr("src", qRCode);
+                                },
+                                complete: function () {
+                                    $("#qr").removeClass('fa fa-spinner fa-spin loading-icon')
+                                }
+                            });
+                        $("#qRCode").removeClass("hidden");
+                } else {
+                    $("#qRCode").addClass("hidden");
+                }
+
+                if ($("#twoFactorTypeId").val() == 0) {
+                    $("#recoveryButtons").addClass("hidden");
+                    $("#recoveryCodes").addClass("hidden");
+                }
+
+                if ('{{ currentUser.twoFactorTypeId }}' != 0 && '{{ currentUser.twoFactorSecret }}' != null && $("#twoFactorTypeId").val() != 0) {
+                    $("#recoveryButtons").removeClass("hidden");
+                }
+            });
+
+            if ('{{ currentUser.twoFactorTypeId }}' != 0 && '{{ currentUser.twoFactorSecret }}' != null) {
+                $("#recoveryButtons").removeClass("hidden");
+            }
+            let generatedCodes = '';
+
+            $('#generateCodesBtn').on("click", function(e) {
+                $("#codesList").html("");
+                $("#recoveryCodes").removeClass('hidden');
+                $(".recBtn").attr("disabled", true).addClass("disabled");
+                generatedCodes = '';
+
+                $.ajax({
+                    url: "{{ urlFor("user.recovery.generate.profile") }}",
+                    async: false,
+                    type: "GET",
+                    beforeSend: function () {
+                        $("#codesList").removeClass('well').addClass('fa fa-spinner fa-spin loading-icon');
+                    },
+                    success: function (response) {
+                        generatedCodes = JSON.parse(response.data.codes);
+                        $("#recoveryCodes").addClass('hidden');
+                        $(".recBtn").attr("disabled", false).removeClass("disabled");
+                        $('#showCodesBtn').click();
+                    },
+                    complete: function () {
+                        $("#codesList").removeClass('fa fa-spinner fa-spin loading-icon');
+                    }
+                });
+            });
+
+            $('#showCodesBtn').on("click", function(e) {
+                $(".recBtn").attr("disabled", true).addClass("disabled");
+                $("#codesList").html("");
+                $("#recoveryCodes").toggleClass('hidden');
+                let codesList = [];
+
+                $.ajax({
+                    url: "{{ urlFor("user.recovery.show.profile") }}",
+                    type: "GET",
+                    data: {
+                        generatedCodes: generatedCodes,
+                    },
+                    success: function (response) {
+                        if (generatedCodes != '') {
+                            codesList = generatedCodes;
+                        } else {
+                            codesList = response.data.codes;
+                        }
+
+                        $('#twoFactorRecoveryCodes').val(JSON.stringify(codesList));
+                        $.each(codesList, function (index, value) {
+                            $("#codesList").append(value + "<br/>");
+                        });
+                        $("#codesList").addClass('well');
+                        $(".recBtn").attr("disabled", false).removeClass("disabled");
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
