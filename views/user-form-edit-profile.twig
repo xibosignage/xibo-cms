@@ -28,6 +28,8 @@
     {% trans "Edit User Profile" %}
 {% endblock %}
 
+{% block callBack %}userProfileEditFormOpen{% endblock %}
+
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help.editProfile }}")
     {% trans "Cancel" %}, XiboDialogClose()
@@ -37,7 +39,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userEditProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit.profile", {id: user.userId}) }}">
+            <form id="userEditProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit.profile", {id: user.userId}) }}" data-setup="{{ data.setup }}" data-generate="{{ data.generate }}" data-show="{{ data.show }}" data-currentuser="{{  currentUser.twoFactorTypeId }}">
                 {% set title %}{% trans "User Name" %}{% endset %}
                 {{ forms.disabled("userName", title, currentUser.userName) }}
 
@@ -92,104 +94,4 @@
             </form>
         </div>
     </div>
-
-    <script type="text/javascript">
-        $(document).ready(function() {
-
-            $("#qRCode").addClass("hidden");
-            $("#recoveryButtons").addClass("hidden");
-            $("#recoveryCodes").addClass("hidden");
-
-            $("#twoFactorTypeId").on("change", function (e) {
-                e.preventDefault();
-                if ($("#twoFactorTypeId").val() == 2 && '{{ currentUser.twoFactorTypeId }}' != 2) {
-                            $.ajax({
-                                url: "{{ urlFor("user.setup.profile") }}",
-                                type: "GET",
-                                beforeSend: function () {
-                                    $("#qr").addClass('fa fa-spinner fa-spin loading-icon')
-                                },
-                                success: function (response) {
-                                    let qRCode = response.data.qRUrl;
-                                    $("#qrImage").attr("src", qRCode);
-                                },
-                                complete: function () {
-                                    $("#qr").removeClass('fa fa-spinner fa-spin loading-icon')
-                                }
-                            });
-                        $("#qRCode").removeClass("hidden");
-                } else {
-                    $("#qRCode").addClass("hidden");
-                }
-
-                if ($("#twoFactorTypeId").val() == 0) {
-                    $("#recoveryButtons").addClass("hidden");
-                    $("#recoveryCodes").addClass("hidden");
-                }
-
-                if ('{{ currentUser.twoFactorTypeId }}' != 0 && '{{ currentUser.twoFactorSecret }}' != null && $("#twoFactorTypeId").val() != 0) {
-                    $("#recoveryButtons").removeClass("hidden");
-                }
-            });
-
-            if ('{{ currentUser.twoFactorTypeId }}' != 0 && '{{ currentUser.twoFactorSecret }}' != null) {
-                $("#recoveryButtons").removeClass("hidden");
-            }
-            let generatedCodes = '';
-
-            $('#generateCodesBtn').on("click", function(e) {
-                $("#codesList").html("");
-                $("#recoveryCodes").removeClass('hidden');
-                $(".recBtn").attr("disabled", true).addClass("disabled");
-                generatedCodes = '';
-
-                $.ajax({
-                    url: "{{ urlFor("user.recovery.generate.profile") }}",
-                    async: false,
-                    type: "GET",
-                    beforeSend: function () {
-                        $("#codesList").removeClass('well').addClass('fa fa-spinner fa-spin loading-icon');
-                    },
-                    success: function (response) {
-                        generatedCodes = JSON.parse(response.data.codes);
-                        $("#recoveryCodes").addClass('hidden');
-                        $(".recBtn").attr("disabled", false).removeClass("disabled");
-                        $('#showCodesBtn').click();
-                    },
-                    complete: function () {
-                        $("#codesList").removeClass('fa fa-spinner fa-spin loading-icon');
-                    }
-                });
-            });
-
-            $('#showCodesBtn').on("click", function(e) {
-                $(".recBtn").attr("disabled", true).addClass("disabled");
-                $("#codesList").html("");
-                $("#recoveryCodes").toggleClass('hidden');
-                let codesList = [];
-
-                $.ajax({
-                    url: "{{ urlFor("user.recovery.show.profile") }}",
-                    type: "GET",
-                    data: {
-                        generatedCodes: generatedCodes,
-                    },
-                    success: function (response) {
-                        if (generatedCodes != '') {
-                            codesList = generatedCodes;
-                        } else {
-                            codesList = response.data.codes;
-                        }
-
-                        $('#twoFactorRecoveryCodes').val(JSON.stringify(codesList));
-                        $.each(codesList, function (index, value) {
-                            $("#codesList").append(value + "<br/>");
-                        });
-                        $("#codesList").addClass('well');
-                        $(".recBtn").attr("disabled", false).removeClass("disabled");
-                    }
-                });
-            });
-        });
-    </script>
 {% endblock %}
