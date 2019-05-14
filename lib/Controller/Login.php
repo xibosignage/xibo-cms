@@ -443,7 +443,16 @@ class Login extends Base
             }
 
             $mailFrom = $this->getConfig()->getSetting('mail_from');
-            $tfa = new TwoFactorAuth('Xibo Signage');
+            $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+            $appName = $this->getConfig()->getThemeConfig('app_name');
+
+            if ($issuerSettings !== '') {
+                $issuer = $issuerSettings;
+            } else {
+                $issuer = $appName;
+            }
+
+            $tfa = new TwoFactorAuth($issuer);
 
             // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
             $action = 'user-tfa-email-auth' . Random::generateString(10);
@@ -515,20 +524,29 @@ class Login extends Base
         $updatedCodes = [];
 
         if (isset($_POST['code'])) {
-            $tfa = new TwoFactorAuth('Xibo Signage');
-            $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->string($_POST['code']));
+            $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+            $appName = $this->getConfig()->getThemeConfig('app_name');
+
+            if ($issuerSettings !== '') {
+                $issuer = $issuerSettings;
+            } else {
+                $issuer = $appName;
+            }
+
+            $tfa = new TwoFactorAuth($issuer);
+
+            $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'));
         } elseif (isset($_POST['recoveryCode'])) {
             // get the array of recovery codes, go through them and try to match provided code
             $codes = $user->twoFactorRecoveryCodes;
 
             foreach (json_decode($codes) as $code) {
-
                 // if the provided recovery code matches one stored in the database, we want to log in the user
-                if ($this->getSanitizer()->string($code) === $this->getSanitizer()->string($_POST['recoveryCode'])) {
+                if ($this->getSanitizer()->string($code) === $this->getSanitizer()->getString('recoveryCode')) {
                     $result = true;
                 }
 
-                if ($this->getSanitizer()->string($code) !== $this->getSanitizer()->string($_POST['recoveryCode'])) {
+                if ($this->getSanitizer()->string($code) !== $this->getSanitizer()->getString('recoveryCode')) {
                     $updatedCodes[] = $this->getSanitizer()->string($code);
                 }
 

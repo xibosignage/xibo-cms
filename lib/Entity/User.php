@@ -368,6 +368,7 @@ class User implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
+        $this->excludeProperty('twoFactorSecret');
     }
 
     /**
@@ -1418,12 +1419,12 @@ class User implements \JsonSerializable
                   twoFactorRecoveryCodes =:twoFactorRecoveryCodes
                WHERE userId = :userId';
 
-        $params = array(
+        $params = [
             'userId' => $this->userId,
             'twoFactorSecret' => $this->twoFactorSecret,
             'twoFactorTypeId' => $this->twoFactorTypeId,
             'twoFactorRecoveryCodes' => $this->twoFactorRecoveryCodes
-        );
+        ];
 
         $this->getStore()->update($sql, $params);
     }

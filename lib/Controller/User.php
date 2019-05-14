@@ -948,6 +948,11 @@ class User extends Base
             'user' => $user,
             'help' => [
                 'editProfile' => $this->getHelp()->link('User', 'EditProfile')
+            ],
+            'data' => [
+                'setup' => $this->urlFor('user.setup.profile'),
+                'generate' => $this->urlFor('user.recovery.generate.profile'),
+                'show' => $this->urlFor('user.recovery.show.profile'),
             ]
         ]);
     }
