@@ -45,7 +45,7 @@
                         {{ forms.email("email", title, user.email, helpText) }}
 
                         {% if currentUser.userTypeId == 1 %}
-                            {# This is an admin user and can therefore change the users password #}
+                            {# This is an admin user and can therefore change the users password and two factor setting#}
                             {% set title %}{% trans "New Password" %}{% endset %}
                             {% set helpText %}{% trans "The new Password for this user." %}{% endset %}
                             {{ forms.password("newPassword", title, "", helpText) }}
@@ -53,6 +53,10 @@
                             {% set title %}{% trans "Retype New Password" %}{% endset %}
                             {% set helpText %}{% trans "Repeat the new Password for this user." %}{% endset %}
                             {{ forms.password("retypeNewPassword", title, "", helpText) }}
+
+                            {% set title %}{% trans "Disable Two Factor Authentication?" %}{% endset %}
+                            {% set helpText %}{% trans "With this option enabled, existing Two Factor Authentication for this user will be disabled and stored secret cleared. User will need to set up Two Factor Authentication again by editing their user profile" %}{% endset %}
+                            {{ forms.checkbox("disableTwoFactor", title, 0, helpText) }}
                         {% endif %}
 
                         {% set title %}{% trans "Homepage" %}{% endset %}

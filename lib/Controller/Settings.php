@@ -552,6 +552,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('PASSWORD_REMINDER_ENABLED', $this->getSanitizer()->getString('PASSWORD_REMINDER_ENABLED'));
         }
 
+        if ($this->getConfig()->isSettingEditable('TWOFACTOR_ISSUER')) {
+            $this->getConfig()->changeSetting('TWOFACTOR_ISSUER', $this->getSanitizer()->getString('TWOFACTOR_ISSUER'));
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => __('Settings Updated')

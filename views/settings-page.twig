@@ -1048,6 +1048,17 @@
                                         {{ forms.disabled("PASSWORD_REMINDER_ENABLED", title, theme.getSetting("PASSWORD_REMINDER_ENABLED", "Off"), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("TWOFACTOR_ISSUER") %}
+                                    {% set title %}{% trans "Two Factor Issuer" %}{% endset %}
+                                    {% set helpText %}{% trans "Name that should appear as Issuer when two factor authorisation is enabled" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("TWOFACTOR_ISSUER") %}
+                                        {{ forms.input("TWOFACTOR_ISSUER", title, theme.getSetting("TWOFACTOR_ISSUER"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("TWOFACTOR_ISSUER", title, theme.getSetting("TWOFACTOR_ISSUER"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                         </div>
                         <button class="btn btn-save btn-block btn-success" href="#"><span>{% trans "Save" %}</span></button>

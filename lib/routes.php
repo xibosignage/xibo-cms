@@ -71,6 +71,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  */
 $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
+$app->post('/tfa', '\Xibo\Controller\Login:twoFactorAuthValidate')->name('tfa.auth.validate');
 
 /**
  * Schedule
@@ -355,7 +356,11 @@ $app->put('/user/pref', '\Xibo\Controller\User:prefEditFromForm');
 $app->get('/user/me', '\Xibo\Controller\User:myDetails')->name('user.me');
 $app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
 $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
-$app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
+$app->put('/user/profile/edit', '\Xibo\Controller\User:editProfile')->name('user.edit.profile');
+$app->get('/user/profile/setup', '\Xibo\Controller\User:tfaSetup')->name('user.setup.profile');
+$app->post('/user/profile/validate', '\Xibo\Controller\User:tfaValidate')->name('user.validate.profile');
+$app->get('/user/profile/recoveryGenerate', '\Xibo\Controller\User:tfaRecoveryGenerate')->name('user.recovery.generate.profile');
+$app->get('/user/profile/recoveryShow', '\Xibo\Controller\User:tfaRecoveryShow')->name('user.recovery.show.profile');
 $app->put('/user/password/forceChange', '\Xibo\Controller\User:forceChangePassword')->name('user.force.change.password');
 $app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
 $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');

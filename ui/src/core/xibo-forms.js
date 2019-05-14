@@ -1017,3 +1017,101 @@ function regionEditFormSubmit() {
             window.location.reload();
     });
 }
+
+function userProfileEditFormOpen() {
+
+    $("#qRCode").addClass("hidden");
+    $("#recoveryButtons").addClass("hidden");
+    $("#recoveryCodes").addClass("hidden");
+
+    $("#twoFactorTypeId").on("change", function (e) {
+        e.preventDefault();
+        if ($("#twoFactorTypeId").val() == 2 && $('#userEditProfileForm').data().currentuser != 2) {
+            $.ajax({
+                url: $('#userEditProfileForm').data().setup,
+                type: "GET",
+                beforeSend: function () {
+                    $("#qr").addClass('fa fa-spinner fa-spin loading-icon')
+                },
+                success: function (response) {
+                    let qRCode = response.data.qRUrl;
+                    $("#qrImage").attr("src", qRCode);
+                },
+                complete: function () {
+                    $("#qr").removeClass('fa fa-spinner fa-spin loading-icon')
+                }
+            });
+            $("#qRCode").removeClass("hidden");
+        } else {
+            $("#qRCode").addClass("hidden");
+        }
+
+        if ($("#twoFactorTypeId").val() == 0) {
+            $("#recoveryButtons").addClass("hidden");
+            $("#recoveryCodes").addClass("hidden");
+        }
+
+        if ($('#userEditProfileForm').data().currentuser != 0 && $("#twoFactorTypeId").val() != 0) {
+            $("#recoveryButtons").removeClass("hidden");
+        }
+    });
+
+    if ($('#userEditProfileForm').data().currentuser != 0) {
+        $("#recoveryButtons").removeClass("hidden");
+    }
+    let generatedCodes = '';
+
+    $('#generateCodesBtn').on("click", function (e) {
+        $("#codesList").html("");
+        $("#recoveryCodes").removeClass('hidden');
+        $(".recBtn").attr("disabled", true).addClass("disabled");
+        generatedCodes = '';
+
+        $.ajax({
+            url: $('#userEditProfileForm').data().generate,
+            async: false,
+            type: "GET",
+            beforeSend: function () {
+                $("#codesList").removeClass('well').addClass('fa fa-spinner fa-spin loading-icon');
+            },
+            success: function (response) {
+                generatedCodes = JSON.parse(response.data.codes);
+                $("#recoveryCodes").addClass('hidden');
+                $(".recBtn").attr("disabled", false).removeClass("disabled");
+                $('#showCodesBtn').click();
+            },
+            complete: function () {
+                $("#codesList").removeClass('fa fa-spinner fa-spin loading-icon');
+            }
+        });
+    });
+
+    $('#showCodesBtn').on("click", function (e) {
+        $(".recBtn").attr("disabled", true).addClass("disabled");
+        $("#codesList").html("");
+        $("#recoveryCodes").toggleClass('hidden');
+        let codesList = [];
+
+        $.ajax({
+            url: $('#userEditProfileForm').data().show,
+            type: "GET",
+            data: {
+                generatedCodes: generatedCodes,
+            },
+            success: function (response) {
+                if (generatedCodes != '') {
+                    codesList = generatedCodes;
+                } else {
+                    codesList = response.data.codes;
+                }
+
+                $('#twoFactorRecoveryCodes').val(JSON.stringify(codesList));
+                $.each(codesList, function (index, value) {
+                    $("#codesList").append(value + "<br/>");
+                });
+                $("#codesList").addClass('well');
+                $(".recBtn").attr("disabled", false).removeClass("disabled");
+            }
+        });
+    });
+}
