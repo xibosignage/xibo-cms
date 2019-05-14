@@ -549,6 +549,21 @@ class Library extends Base
                 break;
 
             $media->includeProperty('buttons');
+
+            switch ($media->enableStat) {
+
+                case 'On':
+                    $media->enableStatDescription = __('This Media has enable stat collection set to ON');
+                    break;
+
+                case 'Off':
+                    $media->enableStatDescription = __('This Media has enable stat collection set to OFF');
+                    break;
+
+                default:
+                    $media->enableStatDescription = __('This Media has enable stat collection set to INHERIT');
+            }
+
             $media->buttons = array();
 
             // Buttons
@@ -915,7 +930,7 @@ class Library extends Base
         $media->enableStat = $this->getSanitizer()->getString('enableStat');
 
         // Should we update the media in all layouts?
-        if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
+        if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;

@@ -123,6 +123,20 @@ class Soap5 extends Soap4
                         $node->setAttribute('type', $arrayItem['type']);
                     }
 
+                    // Patch download and update windows to make sure they are only 00:00
+                    // https://github.com/xibosignage/xibo/issues/1791
+                    if (strtolower($arrayItem['name']) == 'downloadstartwindow'
+                        || strtolower($arrayItem['name']) == 'downloadendwindow'
+                        || strtolower($arrayItem['name']) == 'updatestartwindow'
+                        || strtolower($arrayItem['name']) == 'updateendwindow'
+                    ) {
+                        // Split by :
+                        $timeParts = explode(':', $arrayItem['value']);
+                        $arrayItem['value'] = $timeParts[0] . ':' . $timeParts[1];
+                    }
+
+                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                    $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }
 
@@ -221,9 +235,6 @@ class Soap5 extends Soap4
                 // Update the PUB Key only if it has been cleared
                 if ($display->xmrPubKey == '')
                     $display->xmrPubKey = $xmrPubKey;
-
-                // Send Notification if required
-                $this->alertDisplayUp();
             }
 
         } catch (NotFoundException $e) {
@@ -258,6 +269,8 @@ class Soap5 extends Soap4
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
         }
 
+        // Send Notification if required
+        $this->alertDisplayUp();
 
         $display->lastAccessed = time();
         $display->loggedIn = 1;

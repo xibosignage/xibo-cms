@@ -10,11 +10,9 @@
         {{{form}}}
     </div>
 
-    <div class="row button-container text-right">
-        <div class="col-sm-12">
-            {{#each buttons}}
-                <button type="button" id="{{@key}}" data-action="{{action}}" data-sub-action="{{subAction}}" onclick="{{click}}" class="properties-panel-btn btn {{type}}">{{name}}</button>
-            {{/each}}
-        </div>
+    <div class="button-container text-right">
+        {{#each buttons}}
+            <button type="button" id="{{@key}}" data-action="{{action}}" data-sub-action="{{subAction}}" onclick="{{click}}" class="properties-panel-btn btn {{type}}">{{name}}</button>
+        {{/each}}
     </div>
 </div>

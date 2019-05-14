@@ -8,7 +8,8 @@
 <script type="text/javascript">
 
     // Runs after form opens
-    function region_form_edit_open() {
+    function regionFormEditOpen() {
+        
         // Transition type affects the transition-group visibility
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#transitionType', ['.transition-group'], null, true);
 
@@ -30,8 +31,48 @@
             // Set dimensions values to be the same as the layout's
             form.find('#width').val(layout.width);
             form.find('#height').val(layout.height);
+
+            formChangesRegion({
+                'width': layout.width,
+                'height': layout.height,
+                'top': 0,
+                'left': 0 
+            });
         });
         
+        form.find('#top, #left, #width, #height').on('change', function(){
+            formChangesRegion();
+        });
+
+        regionChangesForm();
     }
 
+    function formChangesRegion(transform) {
+        const app = getXiboApp();
+        const layout = app.layout;
+        const regionId = app.selectedObject.id;
+        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form');
+
+        layout.regions[regionId].transform({
+            'width': form.find('#width').val(),
+            'height': form.find('#height').val(),
+            'top': form.find('#top').val(),
+            'left': form.find('#left').val()
+        }, false);
+
+        app.renderContainer(app.navigatorEdit);
+    }
+
+    function regionChangesForm() {
+        const app = getXiboApp();
+        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form');
+        const regionDimensions = app.layout.regions[app.selectedObject.id].dimensions;
+
+        form.find('#top').val(regionDimensions.top);
+        form.find('#left').val(regionDimensions.left);
+
+        // Set dimensions values to be the same as the layout's
+        form.find('#width').val(regionDimensions.width);
+        form.find('#height').val(regionDimensions.height);
+    }
 </script>

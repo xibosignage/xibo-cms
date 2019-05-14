@@ -77,6 +77,7 @@
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Revised" %}</th>
                                 <th>{% trans "File Name" %}</th>
+                                <th>{% trans "Stats?" %}</th>
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Modified" %}</th>
                                 <th></th>
@@ -176,6 +177,21 @@
                     },
                     {"data": "revised", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "fileName"},
+                    {
+                        "name": "enableStat",
+                        "data": function (data) {
+
+                            var icon = "";
+                            if (data.enableStat == 'On')
+                                icon = "fa-check";
+                            else if (data.enableStat == 'Off')
+                                icon = "fa-times";
+                            else
+                                icon = "fa-level-down";
+
+                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
+                        }
+                    },
                     {
                         "data": "createdDt",
                         "render": dataTableDateFromIso,
@@ -445,7 +461,9 @@
         }
 
         function setDefaultMultiSelectFormOpen(dialog) {
-            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {% trans %} Force delete from any existing layouts, assignments, etc {% endtrans %} </input>');
+            {% set message = 'Force delete from any existing layouts, assignments, etc' %}
+
+            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {{ message|trans|e }} </input>');
             $input.on('change', function() {
                 dialog.data().commitData = {forceDelete: $(this).val()};
             });

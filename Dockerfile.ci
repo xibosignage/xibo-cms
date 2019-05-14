@@ -21,7 +21,7 @@ FROM composer:1.6 as composer
 COPY ./composer.json /app
 COPY ./composer.lock /app
 
-RUN composer install --no-interaction --ignore-platform-reqs
+RUN composer install --no-interaction
 
 # Stage 2
 # Run webpack

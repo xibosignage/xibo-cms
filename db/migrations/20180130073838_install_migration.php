@@ -79,7 +79,7 @@ class InstallMigration extends AbstractMigration
         $settings
             ->addColumn('setting', 'string', ['limit' => 50])
             ->addColumn('type', 'string', ['limit' => 50])
-            ->addColumn('title', 'string', ['limit' => 50])
+            ->addColumn('title', 'string', ['limit' => 254])
             ->addColumn('value', 'string', ['limit' => 1000])
             ->addColumn('default', 'string', ['limit' => 1000])
             ->addColumn('fieldType', 'string', ['limit' => 24])
@@ -282,7 +282,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('viewPath', 'string', ['limit' => 254, 'default' => '../modules'])
             ->addColumn('class', 'string', ['limit' => 254])
             ->addColumn('defaultDuration', 'integer')
-            ->addColumn('installName', 'string', ['limit' => 254])
+            ->addColumn('installName', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->save();
 
         // Media Table

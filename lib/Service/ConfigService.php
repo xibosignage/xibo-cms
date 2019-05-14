@@ -438,14 +438,14 @@ class ConfigService implements ConfigServiceInterface
             // Update in database
             $this->getStore()->update('UPDATE `setting` SET `value` = :value WHERE `setting` = :setting', [
                 'setting' => $setting,
-                'value' => $value
+                'value' => ($value === null) ? '' : $value
             ]);
         } else {
             // A new setting we've not seen before.
             // record it in the settings table.
             $this->getStore()->insert('INSERT INTO `setting` (`value`, setting) VALUES (:value, :setting);', [
                 'setting' => $setting,
-                'value' => $value
+                'value' => ($value === null) ? '' : $value
             ]);
         }
 

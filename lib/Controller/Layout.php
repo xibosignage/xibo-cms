@@ -913,6 +913,7 @@ class Layout extends Base
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
+            'parentId' => $this->getSanitizer()->getInt('parentId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStateId' => $this->getSanitizer()->getInt('publishedStateId'),
@@ -1036,6 +1037,16 @@ class Layout extends Base
 
                 default:
                     $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
+            }
+
+            switch ($layout->enableStat) {
+
+                case 1:
+                    $layout->enableStatDescription = __('This Layout has enable stat collection set to ON');
+                    break;
+
+                default:
+                    $layout->enableStatDescription = __('This Layout has enable stat collection set to OFF');
             }
 
             // Published status, draft with set publishedDate

@@ -87,6 +87,7 @@ Viewer.prototype.render = function(element, layout, page = 1) {
 
     // Reset Navbar if exists
     if(this.navbarContainer != null && this.navbarContainer != undefined) {
+        this.navbarContainer.removeClass();
         this.navbarContainer.html('');
     }
     
@@ -256,7 +257,7 @@ Viewer.prototype.playPreview = function(url, dimensions) {
  * Toggle fullscreen
  */
 Viewer.prototype.toggleFullscreen = function() {
-    this.DOMObject.toggleClass('fullscreen');
+    this.DOMObject.parent().toggleClass('fullscreen');
     this.render(lD.selectedObject, lD.layout);
 };
 
@@ -385,7 +386,16 @@ Viewer.prototype.openInlineEditorContent = function() {
 
     // Show controls
     controlClones.show();
-    
+
+    // Show fullscreen editor save button
+    const $saveEditorButton = this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#inline-editor-save').show();
+    this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#fs-btn').removeClass('fa-arrows-alt').addClass('fa-close');
+    this.navbarContainer.addClass('fs-edit');
+
+    $saveEditorButton.off().click(function() {
+        lD.propertiesPanel.DOMObject.find('button[data-action="save"]').trigger('click');
+    });
+
     // Append controls to navbar
     this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
 
@@ -410,6 +420,8 @@ Viewer.prototype.closeInlineEditorContent = function() {
 
     // Copy data back to properties panel text area
     lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).val(data);
+
+    this.navbarContainer.removeClass('fs-edit');
 
     // Update state
     this.inlineEditorState = 1;

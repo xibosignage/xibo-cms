@@ -29,7 +29,8 @@
   "config": {
       "platform": {
           "php": "7",
-          "ext-zmq": "1"
+          "ext-zmq": "1",
+          "ext-mongodb": "1.5.0"
       }
   },
 	"minimum-stability": "dev",

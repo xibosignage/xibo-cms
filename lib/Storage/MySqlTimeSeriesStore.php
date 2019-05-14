@@ -488,6 +488,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             SELECT 
                 B.weekStart,
                 B.weekEnd,
+                B.weekNo,
                 DATE_FORMAT(STR_TO_DATE(MONTH(start), \'%m\'), \'%b\') AS shortMonth, 
                 MONTH(start) as monthNo, 
                 YEAR(start) as yearDate, 
@@ -499,6 +500,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     
                 SELECT
                      *,
+                    WEEK(periods.start, 3) AS weekNo,
                     YEARWEEK(periods.start, 3) AS yearWeek,
                     DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY) as weekStart,
                     DATE_SUB(DATE_ADD(DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY), INTERVAL 1 WEEK), INTERVAL 1 DAY ) as weekEnd,

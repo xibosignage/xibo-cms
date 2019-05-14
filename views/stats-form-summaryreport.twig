@@ -119,7 +119,8 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
+                    <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                 </div>
             </div>
         </div>
@@ -133,6 +134,8 @@
         var reportChart = null;
 
         function setReport() {
+
+            $("#imageLoader").show();
             $.ajax({
                 type: "get",
                 url: "{{ urlFor("stats.summaryReport.data") }}",
@@ -141,6 +144,7 @@
                 data: $("#summaryReport").find("form").serialize(),
                 success: function(response) {
 
+                    $("#imageLoader").hide();
                     if (reportChart !== undefined && reportChart !== null) {
                         reportChart.destroy();
                     }
@@ -179,6 +183,11 @@
                                     id: 'Duration',
                                     type: 'linear',
                                     position: 'left',
+                                    display: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Duration(s)'
+                                    },
                                     ticks: {
                                         beginAtZero:true
                                     }
@@ -186,12 +195,17 @@
                                     id: 'Count',
                                     type: 'linear',
                                     position: 'right',
+                                    display: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Count'
+                                    },
                                     ticks: {
                                         beginAtZero:true
                                     }
                                 }]
                             },
-                            maintainAspectRatio: false,
+                            maintainAspectRatio: true,
                         }
                     });
                 }

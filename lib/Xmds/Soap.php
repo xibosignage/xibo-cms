@@ -356,54 +356,7 @@ class Soap
             $dbh = $this->getStore()->getConnection();
 
             $SQL = '
-                SELECT layout.layoutID, 
-                    schedule.DisplayOrder, 
-                    lkcampaignlayout.DisplayOrder AS LayoutDisplayOrder, 
-                    schedule.eventId, 
-                    schedule.fromDt, 
-                    schedule.toDt, 
-                    schedule.recurrence_type AS recurrenceType,
-                    schedule.recurrence_detail AS recurrenceDetail,
-                    schedule.recurrence_range AS recurrenceRange,
-                    schedule.recurrenceRepeatsOn,
-                    schedule.lastRecurrenceWatermark,
-                    schedule.dayPartId
-                  FROM `campaign`
-                    INNER JOIN `schedule`
-                    ON `schedule`.CampaignID = campaign.CampaignID
-                    INNER JOIN `lkscheduledisplaygroup`
-                    ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-                    INNER JOIN `lkcampaignlayout`
-                    ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                    INNER JOIN `layout`
-                    ON lkcampaignlayout.LayoutID = layout.LayoutID
-                    AND layout.parentId IS NULL
-                    INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
-                    INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                 WHERE lkdisplaydg.DisplayID = :displayId
-                    AND (
-                      (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
-                      OR `schedule`.recurrence_range >= :fromDt 
-                      OR (
-                        IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
-                      )
-                    )
-                    AND layout.retired = 0
-                UNION
-                SELECT `lklayoutdisplaygroup`.layoutId, 
-                    0 AS DisplayOrder, 
-                    0 AS LayoutDisplayOrder, 
-                    0 AS eventId, 
-                    0 AS fromDt, 
-                    0 AS toDt, 
-                    NULL AS recurrenceType, 
-                    NULL AS recurrenceDetail,
-                    NULL AS recurrenceRange,
-                    NULL AS recurrenceRepeatsOn,
-                    NULL AS lastRecurrenceWatermark,
-                    NULL AS dayPartId
+                SELECT DISTINCT `lklayoutdisplaygroup`.layoutId
                   FROM `lklayoutdisplaygroup`
                     INNER JOIN `lkdgdg`
                     ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
@@ -412,13 +365,11 @@ class Soap
                     INNER JOIN `layout`
                     ON `layout`.layoutID = `lklayoutdisplaygroup`.layoutId
                  WHERE lkdisplaydg.DisplayID = :displayId
-                ORDER BY DisplayOrder, LayoutDisplayOrder, eventId
+                ORDER BY layoutId
             ';
 
             $params = array(
-                'displayId' => $this->display->displayId,
-                'fromDt' => $this->fromFilter->format('U'),
-                'toDt' => $this->toFilter->format('U')
+                'displayId' => $this->display->displayId
             );
 
             if ($this->display->isAuditing())
@@ -433,31 +384,38 @@ class Soap
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row) {
-                $layoutId = $this->getSanitizer()->int($row['layoutID']);
+                $layouts[] = $this->getSanitizer()->int($row['layoutId']);
+            }
 
-                if ($row['eventId'] != 0) {
-                    $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
+            // Also look at the schedule
+            foreach ($this->scheduleFactory->getForXmds($this->display->displayId, $this->fromFilter, $this->toFilter) as $row) {
 
-                    // Is this scheduled event a synchronised timezone?
-                    // if it is, then we get our events with repect to the timezone of the display
-                    $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+                $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
-                    try {
-                        if ($isSyncTimezone) {
-                            $scheduleEvents = $schedule->getEvents($this->localFromFilter, $this->localToFilter);
-                        } else {
-                            $scheduleEvents = $schedule->getEvents($this->fromFilter, $this->toFilter);
-                        }
-                    } catch (XiboException $e) {
-                        $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
-                        continue;
+                // Is this scheduled event a synchronised timezone?
+                // if it is, then we get our events with respect to the timezone of the display
+                $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
+
+                try {
+                    if ($isSyncTimezone) {
+                        $scheduleEvents = $schedule->getEvents($this->localFromFilter, $this->localToFilter);
+                    } else {
+                        $scheduleEvents = $schedule->getEvents($this->fromFilter, $this->toFilter);
                     }
-
-                    if (count($scheduleEvents) <= 0)
-                        continue;
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
+                    continue;
                 }
 
-                $layouts[] = $layoutId;
+                if (count($scheduleEvents) <= 0)
+                    continue;
+
+                $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
+
+                $layoutId = $this->getSanitizer()->int($row['layoutId']);
+                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT)) {
+                    $layouts[] = $layoutId;
+                }
             }
 
         } catch (\Exception $e) {
@@ -524,21 +482,29 @@ class Soap
                  )
             ";
 
+            $params = ['displayId' => $this->display->displayId];
+
             if ($playerVersionMediaId != null) {
                 $SQL .= " UNION ALL 
                           SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
                             FROM `media`
                             WHERE `media`.type = 'playersoftware' 
-                            AND `media`.mediaId = %d
+                            AND `media`.mediaId = :playerVersionMediaId
                 ";
+                $params['playerVersionMediaId'] = $playerVersionMediaId;
             }
 
             $SQL .= " ORDER BY DownloadOrder ";
 
-            $sth = $dbh->prepare(sprintf($SQL, $layoutIdList, $layoutIdList, $playerVersionMediaId));
-            $sth->execute(array(
-                'displayId' => $this->display->displayId
-            ));
+            // Sub layoutId list
+            $SQL = sprintf($SQL, $layoutIdList, $layoutIdList);
+
+            if ($this->display->isAuditing()) {
+                $this->getLog()->sql($SQL, $params);
+            }
+
+            $sth = $dbh->prepare($SQL);
+            $sth->execute($params);
 
             // Prepare a SQL statement in case we need to update the MD5 and FileSize on media nodes.
             $mediaSth = $dbh->prepare('UPDATE media SET `MD5` = :md5, FileSize = :size WHERE MediaID = :mediaid');
@@ -934,7 +900,7 @@ class Soap
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
                 // Is this scheduled event a synchronised timezone?
-                // if it is, then we get our events with repect to the timezone of the display
+                // if it is, then we get our events with respect to the timezone of the display
                 $isSyncTimezone = ($schedule->syncTimezone == 1 && !empty($this->display->timeZone));
 
                 try {
@@ -1518,8 +1484,12 @@ class Soap
                 $duration = $end->diffInSeconds($start);
             }
 
-            // Get the layout campaignId
-            $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+            if ($type == 'event') {
+                $campaignId = 0;
+            } else {
+                // Get the layout campaignId
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+            }
 
             $stats[] = [
                 'type' => $type,

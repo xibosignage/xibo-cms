@@ -608,10 +608,12 @@ class Stats extends Base
 
                 if ($groupByFilter == 'byweek') {
                     $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y-m-d');
+                    $weekNo = $row['weekNo'];
+
                     if ($weekEnd >= $toDt){
                         $weekEnd = $this->getDate()->parse($toDt, 'Y-m-d H:i:s')->format('Y-m-d');
                     }
-                    $tsLabel .= ' - ' . $weekEnd;
+                    $tsLabel .= ' - ' . $weekEnd. ' (w'.$weekNo.')';
                 } elseif ($groupByFilter == 'bymonth') {
                     $tsLabel = __($row['shortMonth']) . ' '. $row['yearDate'];
 
@@ -628,6 +630,7 @@ class Stats extends Base
 
                 if ($groupByFilter == 'byweek') {
                     $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y-m-d');
+                    $weekNo = $row['weekNo'];
 
                     $startInMonth = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('M');
                     $weekEndInMonth = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('M');
@@ -635,7 +638,8 @@ class Stats extends Base
                     if ($weekEndInMonth != $startInMonth){
                         $weekEnd = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->endOfMonth()->format('Y-m-d');
                     }
-                    $tsLabel .= ' - ' . $weekEnd;
+
+                    $tsLabel = [ $tsLabel . ' - ' . $weekEnd, ' (w'.$weekNo.')'];
                 }
 
             }  elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
@@ -647,6 +651,7 @@ class Stats extends Base
                 } elseif ($groupByFilter == 'byweek') {
                     $weekStart = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('M d');
                     $weekEnd = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('M d');
+                    $weekNo = $row['weekNo'];
 
                     $weekStartInYear = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->format('Y');
                     $weekEndInYear = $this->getDate()->parse($row['weekEnd'], 'Y-m-d H:i:s')->format('Y');
@@ -654,7 +659,7 @@ class Stats extends Base
                     if ($weekEndInYear != $weekStartInYear){
                         $weekEnd = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s')->endOfYear()->format('M-d');
                     }
-                    $tsLabel = $weekStart .' - ' . $weekEnd;
+                    $tsLabel = $weekStart . ' - ' . $weekEnd. ' (w'.$weekNo.')';
                 }
 
             }
@@ -879,10 +884,16 @@ class Stats extends Base
         $tags = $this->getSanitizer()->getString('tags');
         $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
 
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
-            $toDt->addDay(1);
+        $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
+
+        // fromDt is always start of selected day
+        $fromDt = $this->getDate()->parse($fromDt)->startOfDay();
+
+        // If toDt is current date then make it current datetime
+        if ($this->getDate()->parse($toDt)->startOfDay()->format('Y-m-d') == $currentDate) {
+            $toDt = $this->getDate()->parse();
+        } else {
+            $toDt = $this->getDate()->parse()->startOfDay();
         }
 
         // Get an array of display id this user has access to.

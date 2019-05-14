@@ -20,7 +20,7 @@
         formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
 
         // Set up the colour selectors
-        $(this).find("#backgroundColor").colorpicker({format: "hex"}).attr('autocomplete', 'off');
+        $(this).find("#backgroundColor").colorpicker().attr('autocomplete', 'off');
     }
 
     // Runs before form submit
