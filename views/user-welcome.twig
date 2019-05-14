@@ -439,6 +439,9 @@
             ]
         });
 
+        // Save tour layout designer step in the global tour variable
+        tour.layoutStep = 7;
+
         if (hasSeenNewUserWizard === 0) {
             tour.init();
             tour.restart();
@@ -455,6 +458,8 @@
             tour.init();
             tour.restart();
         });
+
+        // Save tour
     });
 
 </script>

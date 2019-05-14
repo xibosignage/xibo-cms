@@ -394,6 +394,9 @@ lD.refreshDesigner = function() {
     }
     
     this.renderContainer(this.viewer, this.selectedObject);
+
+    // Reload tooltips
+    this.common.reloadTooltips(this.designerDiv);
 };
 
 
@@ -1416,7 +1419,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     lD.designerDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
     // Initialize tooltips
-    lD.designerDiv.find('.context-menu').find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
+    lD.common.reloadTooltips(lD.designerDiv.find('.context-menu'));
 
     // Click overlay to close menu
     lD.designerDiv.find('.context-menu-overlay').click((ev)=> {
@@ -1484,4 +1487,13 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
         console.error(jqXHR, textStatus, errorThrown);
         toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
     });
+};
+
+/**
+ * Reset tour
+ */
+lD.resetTour = function() {
+    tour.restart();
+    tour.goTo(tour.layoutStep);
+    toastr.info(editorsTrans.resetTourNotification);
 };

@@ -221,7 +221,8 @@ PropertiesPanel.prototype.render = function(element, step) {
             header: res.dialogTitle,
             style: element.type,
             form: htmlTemplate(element),
-            buttons: buttons
+            buttons: buttons,
+            trans: propertiesPanelTrans
         });
 
         // Append layout html to the main div

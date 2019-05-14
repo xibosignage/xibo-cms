@@ -339,7 +339,7 @@ Timeline.prototype.render = function(layout) {
     const html = timelineTemplate({
         layout: layout, 
         properties: this.properties,
-        trans: layoutDesignerTrans
+        trans: timelineTrans
     });
 
     // Append layout html to the main div

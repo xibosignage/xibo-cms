@@ -416,6 +416,9 @@ pE.refreshDesigner = function() {
             this.toolbar.openTab(1);
         }
     }
+
+    // Reload tooltips
+    this.common.reloadTooltips(this.editorDiv);
 };
 
 /**
@@ -686,7 +689,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     pE.editorDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
     // Initialize tooltips
-    pE.editorDiv.find('.context-menu').find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
+    pE.common.reloadTooltips(pE.editorDiv.find('.context-menu'));
 
     // Click overlay to close menu
     pE.editorDiv.find('.context-menu-overlay').click((ev) => {

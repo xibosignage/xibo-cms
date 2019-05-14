@@ -194,7 +194,7 @@ let formHelpers = function() {
         const $advancedEditorOption = $('#' + textAreaID + '_advanced', dialog);
         
         const setupDualEditor = function(dialog, textAreaID) {
-            
+
             // Inline editor
             if(inlineEditor) {
                 
@@ -206,7 +206,7 @@ let formHelpers = function() {
                 }
             } else { // Form editor
                 if($advancedEditorOption !== undefined && !$advancedEditorOption.is(":checked")) {
-                    
+
                     // Toggle elements visibility
                     dialog.find('.' + textAreaID + '-advanced-editor-show').hide();
                     dialog.find('.' + textAreaID + '-advanced-editor-hide').show();
@@ -224,7 +224,7 @@ let formHelpers = function() {
                     dialog.find('.' + textAreaID + '-advanced-editor-show').show();
                     dialog.find('.' + textAreaID + '-advanced-editor-hide').hide();
 
-                    self.setupCKEditor(dialog, null, textAreaID, customNoDataMessage);
+                    self.setupCKEditor(dialog, null, textAreaID, false, customNoDataMessage);
                 }
             }
         };
@@ -1013,7 +1013,7 @@ let formHelpers = function() {
      * @param {string} instanceToDestroy - Name of the instance marked to be destroyed
      */
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
-        
+
         if(toggleFlag) {
             // Display controls
             $(dialog).find('.form-editor-controls').show();
