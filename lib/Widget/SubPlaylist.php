@@ -64,7 +64,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @return int[]
      */
-    protected function getAssignedPlaylistIds()
+    public function getAssignedPlaylistIds()
     {
         return json_decode($this->getOption('subPlaylistIds', '[]'), true);
     }
@@ -84,7 +84,7 @@ class SubPlaylist extends ModuleWidget
      * @param null $playlistId
      * @return array|mixed
      */
-    protected function getSubPlaylistOptions($playlistId = null)
+    public function getSubPlaylistOptions($playlistId = null)
     {
         $subPlaylistOptions = json_decode($this->getOption('subPlaylistOptions', '[]'), true);
 
