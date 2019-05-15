@@ -312,7 +312,7 @@ class SubPlaylist extends ModuleWidget
             // Do we have a number of spots set?
             $options = $this->getSubPlaylistOptions($playlistId);
             $spots = isset($options['subPlaylistIdSpots']) ? $options['subPlaylistIdSpots'] : null;
-            $spotLength = isset($options['subPlaylistIdSpotLength']) ? $options['subPlaylistIdSpotLength'] : null;
+            $spotLength = isset($options['subPlaylistIdSpotLength']) ? intval($options['subPlaylistIdSpotLength']) : null;
             $spotFill = isset($options['subPlaylistIdSpotFill']) ? $options['subPlaylistIdSpotFill'] : null;
 
             $this->getLog()->debug($spots . ' spots for playlistId ' . $playlistId);
