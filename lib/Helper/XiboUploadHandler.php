@@ -277,6 +277,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->retired = $media->retired;
             $file->fileSize = $media->fileSize;
             $file->md5 = $media->md5;
+            $file->type = $module->getModuleType();
 
             // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->fileSize != $file->size)
