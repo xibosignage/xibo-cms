@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -1250,6 +1251,13 @@ class User extends Base
             $object->load(['loadPlaylists' => true]);
 
             $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
+        } else if ($object->permissionsClass() == 'Xibo\Entity\Playlist' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
+            $object->load();
+
+            // Push the permissions down to each Widget
+            foreach ($object->widgets as $widget) {
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
+            }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */

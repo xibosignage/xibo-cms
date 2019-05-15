@@ -751,6 +751,7 @@ class Widget implements \JsonSerializable
         $options = array_merge([
             'notify' => true,
             'notifyPlaylists' => true,
+            'forceNotifyPlaylists' => true,
             'notifyDisplays' => false
         ], $options);
 
@@ -800,11 +801,19 @@ class Widget implements \JsonSerializable
      */
     private function notify($options)
     {
+        // By default we do nothing in here, options have to be explicitly enabled.
+        $options = array_merge([
+            'notify' => false,
+            'notifyPlaylists' => false,
+            'forceNotifyPlaylists' => false,
+            'notifyDisplays' => false
+        ], $options);
+
         $this->getLog()->debug('Notifying upstream playlist. Notify Layout: ' . $options['notify'] . ' Notify Displays: ' . $options['notifyDisplays']);
 
         // Should we notify the Playlist
         // we do this if the duration has changed on this widget.
-        if ($options['notifyPlaylists'] && $this->hasPropertyChanged('calculatedDuration')) {
+        if ($options['forceNotifyPlaylists'] || ($options['notifyPlaylists'] && $this->hasPropertyChanged('calculatedDuration'))) {
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,
