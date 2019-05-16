@@ -1,10 +1,11 @@
 <div id="{{ id }}" data-type="widget" class="designer-widget designer-widget-ghost" style="
 width: {{ durationPercentage }}%;">
     <span class="widgetSubType">
-        [{{ subType }}]
+        <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="body"
+            title="{{moduleName}}"></i>
     </span>
     
-    <span class="widgetName">
+    <span class="widgetName tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{widgetName}}">
         {{widgetName}}
     </span>
 </div>

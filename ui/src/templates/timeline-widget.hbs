@@ -11,19 +11,20 @@ width: {{ durationPercentage }}%;">
         </div>
     {{/each}}
     
-    <div class="widgetItem widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
-        {{ duration }}
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
+        <div class="widgetSubType">
+            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{moduleName}}"></i>
+        </div>
+        <div class="widgetDuration">
+            {{ duration }}
+        </div>
     </div>
 
-    <span class="widgetItem widgetSubType">
-        [{{ subType }}]
-    </span>
-
-    <span class="widgetItem widgetName tooltip-always-on" data-toggle="tooltip" title="{{widgetName}}">
+    <div class="widgetName tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{widgetName}}">
         {{widgetName}}
-    </span>
+    </div>
 
-    <div class="widgetItem widgetProperties">
+    <div class="widgetProperties">
         {{#if audio}}
             <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
         {{/if}}

@@ -856,6 +856,9 @@ class Layout extends Base
                     // Augment with tags
                     $widget->tags = $module->getMediaTags();
 
+                    // Add widget module type name
+                    $widget->moduleName = $module->getModuleName();
+
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
                         $widget->isEditable = $this->getUser()->checkEditable($widget);

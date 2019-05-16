@@ -34,12 +34,7 @@
 
 .editor-modal-dialog {
     margin-top: 20px;
-}
-
-@media (min-width: 1200px) {
-    .editor-modal-dialog {
-        width: 1050px;
-    }
+    width: 85vw;
 }
 
 .editor-modal-content {
@@ -66,12 +61,17 @@
     background: #f3f3f3;
     .border-radius(4px);
     border: 2px solid @playlist-editor-timeline-fg-color;
+    margin-bottom: 10px;
 }
 
 #playlist-editor #playlist-timeline #timeline-container{
     padding: 5px;
     height: @playlist-editor-max-content-height;
     overflow: auto;
+
+    @media (max-width: 992px) {
+        height: auto;
+    }
 }
 
 #playlist-editor #playlist-properties-panel  {
@@ -174,7 +174,7 @@
     background: @playlist-editor-widget-bg-color;
     color: @playlist-editor-widget-fg-color;
     font-weight: bold;
-    height: 40px;
+    height: 42px;
     width: 100%;
     .border-radius(4px);
     border: 1px solid @playlist-editor-widget-border-color;
@@ -236,14 +236,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 50%;
-    float: left;
+    max-width: 90%;
+    padding-left: 4px;
 }
 
-.playlist-widget .widgetSubType {
-    color: @playlist-editor-widget-fg-color2;
-    padding: 0 2px;
-    float: left;
+.playlist-widget .widgetProperties {
+    float: right;
 }
 
 .playlist-widget i.editProperty:hover {
