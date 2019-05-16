@@ -1493,7 +1493,7 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
  * Reset tour
  */
 lD.resetTour = function() {
-    tour.restart();
-    tour.goTo(tour.layoutStep);
+    layoutDesignerTour.restart();
+    layoutDesignerTour.goTo(0);
     toastr.info(editorsTrans.resetTourNotification);
 };
