@@ -167,13 +167,13 @@ class BaseFactory
                 SELECT `permission`.objectId
                   FROM `permission`
                     INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = `permission`.entityId
+                        ON `permissionentity`.entityId = `permission`.entityId
                     INNER JOIN `group`
-                    ON `group`.groupId = `permission`.groupId
-                    LEFT OUTER JOIN `lkusergroup`
-                    ON `lkusergroup`.groupId = `group`.groupId
-                    LEFT OUTER JOIN `user`
-                    ON lkusergroup.UserID = `user`.UserID
+                        ON `group`.groupId = `permission`.groupId
+                    INNER JOIN `lkusergroup`
+                        ON `lkusergroup`.groupId = `group`.groupId
+                    INNER JOIN `user`
+                        ON lkusergroup.UserID = `user`.UserID
                  WHERE `permissionentity`.entity = :permissionEntity
                     AND `user`.userId = :currentUserId
                     AND `permission`.view = 1
