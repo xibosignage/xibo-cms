@@ -36,18 +36,44 @@
                     checkoutTitle: "{% trans "Checkout" %}",
                     scheduleTitle: "{% trans "Schedule Now" %}",
                     saveTemplateTitle: "{% trans "Save Template" %}",
-                    readOnlyModeTitle: "{% trans "Read Only Mode" %}",
                     readOnlyModeMessage: "{% trans "Read Only Mode - Checkout layout to enable editing!" %}",
-                    checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
-                    inlineEditor: "{% trans "Inline Editor" %}"
+                    checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}"
                 };
 
-                var navigatorEditTrans = {
-                    addRegion: "{% trans "Add Region" %}",
-                    deleteRegion: "{% trans "Delete Region" %}",
+                var viewerTrans = {
+                    inlineEditor: "{% trans "Inline Editor" %}",
+                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
+                    backToLayout: "{% trans "Go back to Layout" %}",
+                    saveEditorChanges: "{% trans "Save editor changes" %}",
+                    playPreviewLayout: "{% trans "Play Layout preview" %}",
+                    stopPreviewLayout: "{% trans "Stop Layout preview" %}",
+                    nextWidget: "{% trans "Next widget" %}",
+                    previousWidget: "{% trans "Previous widget" %}"
+                };
+
+                var timelineTrans = {
+                    zoomIn: "{% trans "Zoom in" %}",
+                    zoomOut: "{% trans "Zoom out" %}",
+                    resetZoom: "{% trans "Reset zoom" %}",
+                    startTime: "{% trans "Visible area start time" %}",
+                    endTime: "{% trans "Visible area end time" %}",
+                    layoutName: "{% trans "Layout name" %}",
+                    layoutDuration: "{% trans "Layout duration" %}",
+                    layoutDimensions: "{% trans "Layout dimensions" %}",
+                    emptyRegion: "{% trans "Empty Region" %}"
+                };
+
+                var navigatorTrans = {
+                    edit: "{% trans "Edit layout regions" %}",
+                    addRegion: "{% trans "Add" %}",
+                    addRegionDesc: "{% trans "Add a new region" %}",
+                    deleteRegion: "{% trans "Delete" %}",
                     undo: "{% trans "Undo" %}",
+                    undoDesc: "{% trans "Revert last change" %}",
                     close: "{% trans "Close" %}",
-                    save: "{% trans "Save" %}"
+                    closeDesc: "{% trans "Go back to the main editor" %}",
+                    save: "{% trans "Save" %}",
+                    saveDesc: "{% trans "Save changes" %}"
                 };
             {% endautoescape %}
         </script>

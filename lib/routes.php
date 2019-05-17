@@ -38,7 +38,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  * @SWG\Info(
  *  title="Xibo API",
  *  description="Xibo CMS API",
- *  version="1.8.0",
+ *  version="2.0",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",

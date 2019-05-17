@@ -245,7 +245,7 @@ class Chart extends ModuleWidget
      * Edit the Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?chart",
      *  operationId="widgetChartEdit",
      *  tags={"widget"},
      *  summary="Edit a Chart Widget",

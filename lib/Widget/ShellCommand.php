@@ -37,7 +37,7 @@ class ShellCommand extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?shellCommand",
      *  operationId="WidgetShellCommandEdit",
      *  tags={"widget"},
      *  summary="Edit a Shell Command Widget",

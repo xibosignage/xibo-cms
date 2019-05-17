@@ -9,7 +9,7 @@
                         <i class="fa fa-arrow-left"></i>
                     </button>
                     <button class="btn btn-sm btn-default" disabled>
-                        {{extra.current_item}} / {{extra.number_items}}
+                        {{currentItem}} / {{totalItems}}
                     </button>
                     <button type="button" id="right-btn" class="btn btn-sm btn-primary">
                         <i class="fa fa-arrow-right"></i>
@@ -23,15 +23,23 @@
             <div class="inline-editor-templates inline-editor-opened container-fluid"></div>
 
             {{! Element Info}}
-            <div class="info inline-editor-hide">
-                <span class="label">
-                    "{{extra.moduleName}}" ({{extra.type}})
-                </span>
-        
-                <span class="label label-default">
-                    {{extra.duration}} / {{extra.regionDuration}}
-                </span>
-            </div>
+            {{#if extra}}
+                <div class="info inline-editor-hide">
+                    <span class="label">
+                        "{{extra.moduleName}}" ({{extra.type}})
+                    </span>
+            
+                    <span class="label label-default">
+                        {{extra.duration}} / {{extra.regionDuration}}
+                    </span>
+                </div>
+            {{else}}
+                <div class="info inline-editor-hide">
+                    <span class="label">
+                        "{{name}}" ({{type}})
+                    </span>
+                </div>
+            {{/if}}
         </div>
     </div>
 </div>

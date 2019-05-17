@@ -140,7 +140,7 @@ class DataSetTicker extends ModuleWidget
      * Edit
      *
      * @SWG\Post(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?dataSetTicker",
      *  operationId="WidgetTickerEdit",
      *  tags={"widget"},
      *  summary="Edit a ticker Widget",

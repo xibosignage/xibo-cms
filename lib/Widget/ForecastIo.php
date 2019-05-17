@@ -142,7 +142,7 @@ class ForecastIo extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?weather",
      *  operationId="WidgetWeatherEdit",
      *  tags={"widget"},
      *  summary="Edit Weather Widget",

@@ -290,12 +290,16 @@ describe('Layout Designer (Empty)', function() {
 
             // Close the navigator edit
             cy.get('#layout-navigator-edit #close-btn').click({force: true});
+            
 
             // Check if there are 2 regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('be.visible').should('have.length', 2);
 
+            // Wait for the layout to reload
+            cy.wait('@reloadLayout');
+
             // Click the revert button
-            cy.get('#layout-editor-toolbar #undoContainer').click();
+            cy.get('#layout-editor-toolbar #undoContainer').click({force: true});
 
             // Wait for the layout to reload
             cy.wait('@reloadLayout').then(() => {

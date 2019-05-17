@@ -34,7 +34,7 @@ Installing an official release is [described in the manual](http://xibo.org.uk/m
 
 **Please only install a Development environment if you intend make code changes to Xibo. Installing from the repository is not suitable for a production installation.**
 
-Xibo uses Docker to ensure all contributers have a repeatable development environment which is easy to get up and running.
+Xibo uses Docker to ensure all contributors have a repeatable development environment which is easy to get up and running.
 
 The very same Docker containers are used in our recommended end user installation to promote consistency from development to deployment.
 

@@ -265,9 +265,9 @@ class CampaignFactory extends BaseFactory
         // Exclude templates by default
         if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
             if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
-                $body .= " AND `campaign`.campaignId NOT IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1)) ";
+                $body .= " AND `campaign`.campaignId NOT IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template')) ";
             } else {
-                $body .= " AND `campaign`.campaignId IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1)) ";
+                $body .= " AND `campaign`.campaignId IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template')) ";
             }
         }
 

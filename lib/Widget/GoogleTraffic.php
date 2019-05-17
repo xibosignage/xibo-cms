@@ -135,7 +135,7 @@ class GoogleTraffic extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?traffic",
      *  operationId="widgetGoogleTrafficEdit",
      *  tags={"widget"},
      *  summary="Edit a Google Traffic Widget",

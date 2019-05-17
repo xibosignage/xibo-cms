@@ -171,7 +171,7 @@ class TwitterMetro extends TwitterBase
      * Edit Media
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?twitterMetro",
      *  operationId="WidgetTwitterMetroEdit",
      *  tags={"widget"},
      *  summary="Edit a Twitter Metro Widget",

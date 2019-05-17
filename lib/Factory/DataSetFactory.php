@@ -610,7 +610,7 @@ class DataSetFactory extends BaseFactory
                 $this->getLog()->debug('Resolved value: ' . var_export($value, true));
 
                 // Only add it to the result if we where able to process the field
-                if (($value != null) && ($value[1] != null)) {
+                if (($value != null) && ($value[1] !== null)) {
                     switch ($column->dataTypeId) {
                         case 2:
                             $result[$column->heading] = $this->getSanitizer()->double($value[1]);
