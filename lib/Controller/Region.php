@@ -660,6 +660,7 @@ class Region extends Base
             $this->getState()->extra['regionDuration'] = $region->duration;
             $this->getState()->extra['useDuration'] = $widget->useDuration;
             $this->getState()->extra['zIndex'] = $region->zIndex;
+            $this->getState()->extra['tempId'] = $widget->tempId;
 
         } catch (NotFoundException $e) {
             // No media to preview

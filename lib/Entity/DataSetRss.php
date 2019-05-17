@@ -28,6 +28,12 @@ use Xibo\Helper\Random;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Class DataSetRss
+ * @package Xibo\Entity
+ *
+ * @SWG\Definition()
+ */
 class DataSetRss implements \JsonSerializable
 {
     use EntityTrait;

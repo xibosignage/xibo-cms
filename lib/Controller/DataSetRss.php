@@ -125,7 +125,7 @@ class DataSetRss extends Base
      *      description="successful operation",
      *      @SWG\Schema(
      *          type="array",
-     *          @SWG\Items(ref="#/definitions/DataSetFeed")
+     *          @SWG\Items(ref="#/definitions/DataSetRss")
      *      )
      *  )
      * )

@@ -123,7 +123,7 @@ class Stocks extends AlphaVantageBase
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?stocks",
      *  operationId="WidgetStocksEdit",
      *  tags={"widget"},
      *  summary="Edit a Stocks Widget",

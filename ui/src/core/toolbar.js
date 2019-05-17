@@ -51,7 +51,8 @@ const toolsList = [
 const defaultMenuItems = [
     {
         name: 'tools',
-        title: toolbarTrans.menuItems.tools,
+        itemName: toolbarTrans.menuItems.toolsName,
+        itemTitle: toolbarTrans.menuItems.toolsTitle,
         tool: true,
         pagination: false,
         page: 0,
@@ -60,7 +61,8 @@ const defaultMenuItems = [
     },
     {
         name: 'widgets',
-        title: toolbarTrans.menuItems.widgets,
+        itemName: toolbarTrans.menuItems.widgetsName,
+        itemTitle: toolbarTrans.menuItems.widgetsTitle,
         pagination: false,
         page: 0,
         content: [],
@@ -126,6 +128,8 @@ Toolbar.prototype.loadPrefs = function() {
     // Load using the API
     const linkToAPI = urlsForApi.user.getPref;
 
+    const app = getXiboApp();
+
     // Request elements based on filters
     let self = this;
     $.ajax({
@@ -141,6 +145,9 @@ Toolbar.prototype.loadPrefs = function() {
             self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
             self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
             self.previousOpenedMenu = (loadedData.previousOpenedMenu != undefined) ? loadedData.openedMenu : -1;
+
+            // Tooltip options
+            app.common.displayTooltips = (loadedData.displayTooltips == 1);
 
             // Set menu index
             if(loadedData.menuIndex != undefined) {
@@ -190,15 +197,19 @@ Toolbar.prototype.loadPrefs = function() {
  */
 Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     
+    const app = getXiboApp();
+
     // Save only some of the tab menu data
     let menuItemsToSave = [];
     let openedMenu = this.openedMenu;
     let previousOpenedMenu = this.previousOpenedMenu;
+    let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
 
     if(clearPrefs) {
         menuItemsToSave = {};
         openedMenu = -1;
         previousOpenedMenu = -1;
+        displayTooltips = 1;
     } else {
         for(let index = this.fixedTabs;index < this.menuItems.length;index++) {
 
@@ -221,7 +232,8 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
                     menuItems: menuItemsToSave,
                     openedMenu: openedMenu,
                     previousOpenedMenu: previousOpenedMenu,
-                    menuIndex: this.menuIndex
+                    menuIndex: this.menuIndex,
+                    displayTooltips: displayTooltips
                 })
             }
         ]
@@ -310,6 +322,7 @@ Toolbar.prototype.render = function() {
         tabsCount: (this.menuItems.length > this.fixedTabs),
         customMainButtons: this.customMainButtons,
         customDropdownButtons: this.customDropdownButtons,
+        displayTooltips: app.common.displayTooltips,
         trashActive: trashBinActive,
         undoActive: undoActive,
         trans: newToolbarTrans
@@ -429,12 +442,38 @@ Toolbar.prototype.render = function() {
             }
         }
 
-        self.DOMObject.find('.dropdown.navbar-submenu').toggle(activeDropdown);
+        self.DOMObject.find('.dropdown.navbar-submenu:not(.navbar-submenu-options)').toggle(activeDropdown);
     }
 
     // Set layout jumpList if exists
     if(!$.isEmptyObject(this.jumpList) && $('#layoutJumpList').length == 0) {
         this.setupJumpList($("#layoutJumpListContainer"));
+    }
+
+    // Options menu
+    self.DOMObject.find('.navbar-submenu-options-container').off().click(function (e){
+        e.stopPropagation();
+    });
+
+    // Toggle tooltips
+    self.DOMObject.find('#displayTooltips').off().click(function() {
+
+        app.common.displayTooltips = $('#displayTooltips').prop('checked');
+
+        if(app.common.displayTooltips) {
+            toastr.success(editorsTrans.tooltipsEnabled);
+        } else {
+            toastr.error(editorsTrans.tooltipsDisabled);
+        }
+
+        app.refreshDesigner();
+    });
+
+    // Reset tour
+    if(typeof app.resetTour === 'function') {
+        self.DOMObject.find('#resetTour').removeClass('hidden').off().click(function() {
+            app.resetTour();
+        });
     }
 
     // If in edit mode
@@ -473,7 +512,7 @@ Toolbar.prototype.render = function() {
         });
 
         // Initialize tooltips
-        this.DOMObject.find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
+        app.common.reloadTooltips(this.DOMObject);
 
         // Initialize tagsinput
         this.DOMObject.find('input[data-role="tagsinput"]').tagsinput();
@@ -570,18 +609,18 @@ Toolbar.prototype.loadContent = function(menu = -1) {
 
         // Change tab name to reflect the search query
         if(customFilter.media != '' && customFilter.media != undefined) {
-            this.menuItems[menu].title = '"' + customFilter.media + '"';
+            this.menuItems[menu].itemName = '"' + customFilter.media + '"';
         } else {
             this.menuIndex += 1;
-            this.menuItems[menu].title = toolbarTrans.tabName.replace('%tagId%', this.menuIndex);
+            this.menuItems[menu].itemName = toolbarTrans.tabName.replace('%tagId%', this.menuIndex);
         }
 
         if(customFilter.tags != '' && customFilter.tags != undefined) {
-            this.menuItems[menu].title += ' {' + customFilter.tags + '} ';
+            this.menuItems[menu].itemName += ' {' + customFilter.tags + '} ';
         }
 
         if(customFilter.type != '' && customFilter.type != undefined) {
-            this.menuItems[menu].title += ' [' + customFilter.type + '] ';
+            this.menuItems[menu].itemName += ' [' + customFilter.type + '] ';
         }
 
         // Request elements based on filters
@@ -703,7 +742,7 @@ Toolbar.prototype.createNewTab = function() {
 
     this.menuItems.push({
         name: 'search',
-        title: toolbarTrans.tabName.replace('%tagId%', this.menuIndex),
+        itemName: toolbarTrans.tabName.replace('%tagId%', this.menuIndex),
         search: true,
         page: 0,
         query: '',
@@ -973,7 +1012,6 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
     // Deselect card
     this.selectedCard = {};
 };
-
 
 /**
  * Opens a new tab and search for the given media type

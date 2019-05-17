@@ -4,28 +4,28 @@
             <span id="layout-info-status" class="label label-default" data-status-code="" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-html="true" >
                 <i class="fa fa-spinner fa-spin"></i>
             </span>
-            <span class="layout-info-name hidden-xs hidden-sm hidden-md">"{{layout.name}}"</span>
-            <span class="hidden-lg"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>
+            <span class="layout-info-name hidden-xs hidden-sm hidden-md" data-toggle="tooltip" title="{{trans.layoutName}}">"{{layout.name}}"</span>
+            <span class="hidden-lg" data-toggle="tooltip" title="{{trans.layoutDuration}}"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>
         </span>
 
         <span class="layout-info right">
-            <span class="hidden-xs hidden-sm hidden-md"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>&nbsp;
-            <span><i class="fa fa-arrows"></i>&nbsp;{{layout.width}}x{{layout.height}}</span>
+            <span data-toggle="tooltip" title="{{trans.layoutDuration}}" class="hidden-xs hidden-sm hidden-md"><i class="fa fa-clock-o"></i>&nbsp;{{layout.duration}}s</span>&nbsp;
+            <span data-toggle="tooltip" title="{{trans.layoutDimensions}}"><i class="fa fa-arrows"></i>&nbsp;{{layout.width}}x{{layout.height}}</span>
         </span>
 
-        <div id="minTime" class="label label-custom label-time pull-left">
+        <div id="minTime" class="label label-custom label-time pull-left" data-toggle="tooltip" title="{{trans.startTime}}">
             {{properties.minTime}}s
         </div>
-        <button id="zoomOut"  {{properties.zoomOutDisable}} class="btn label label-custom label-control">
+        <button id="zoomOut" {{properties.zoomOutDisable}} class="btn label label-custom label-control" data-toggle="tooltip" title="{{trans.zoomOut}}">
             <i class="fa fa-search-minus"></i>
         </button>
-        <button id="zoom" class="btn label label-custom label-control">
+        <button id="zoom" class="btn label label-custom label-control" data-toggle="tooltip" title="{{trans.resetZoom}}">
             {{properties.deltaTime}}s
         </button>
-        <button id="zoomIn" {{properties.zoomInDisable}} class="btn label label-custom label-control">
+        <button id="zoomIn" {{properties.zoomInDisable}} class="btn label label-custom label-control" data-toggle="tooltip" title="{{trans.zoomIn}}">
             <i class="fa fa-search-plus"></i>
         </button>
-        <div id="maxTime" class="label label-custom label-time pull-right">
+        <div id="maxTime" class="label label-custom label-time pull-right" data-toggle="tooltip" title="{{trans.endTime}}">
             {{properties.maxTime}}s
         </div>
     </div>
@@ -33,7 +33,7 @@
     <div id="regions-container">
         <div id="regions" style="width:{{properties.zoom}}%;" data-zoom="{{properties.zoom}}">
             {{#each layout.regions}}
-                {{> timeline-region}}
+                {{> timeline-region trans=../trans}}
             {{/each}}
         </div>
     </div>

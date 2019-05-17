@@ -80,7 +80,7 @@ class Hls extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?hls",
      *  operationId="WidgetHlsEdit",
      *  tags={"widget"},
      *  summary="Edit a HLS Widget",

@@ -50,7 +50,7 @@ class Clock extends ModuleWidget
      * Edit Clock
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?clock",
      *  operationId="widgetClockEdit",
      *  tags={"widget"},
      *  summary="Clock Widget",

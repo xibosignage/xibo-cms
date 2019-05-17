@@ -1,11 +1,28 @@
 <div class="form-group">
     <label class="col-sm-1 control-label" for="subPlaylistId[]">{{ title }}</label>
-    <div class="col-sm-7">
+    <div class="col-sm-3">
         <select class="form-control subPlaylistSelect" name="subPlaylistId[]">
             <option value=""></option>
             {{#each playlists}}
                 <option value="{{ playlistId }}" data-tags="{{tags}}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
             {{/each}}
+        </select>
+    </div>
+    <div class="col-sm-2">
+        <label for="subPlaylistIdSpots[]">
+            <input class="form-control" name="subPlaylistIdSpots[]" type="number" value="{{ subPlaylistIdSpots }}" />
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <label for="subPlaylistIdSpotLength[]">
+            <input class="form-control" name="subPlaylistIdSpotLength[]" type="number" value="{{ subPlaylistIdSpotLength }}" />
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <select class="form-control" name="subPlaylistIdSpotFill[]">
+            <option value="repeat" {{#eq "repeat" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ repeatHelpText }}">{{ repeatTitle }}</option>
+            <option value="fill" {{#eq "fill" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ fillHelpText }}">{{ fillTitle }}</option>
+            <option value="pad" {{#eq "pad" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ padHelpText }}">{{ padTitle }}</option>
         </select>
     </div>
     <div class="col-sm-1">
