@@ -24,6 +24,7 @@ namespace Xibo\Factory;
 
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ReportSchedule;
+use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -53,13 +54,17 @@ class ReportScheduleFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
+     * @param User $user
+     * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $date)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $date)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
+
         $this->config = $config;
         $this->pool = $pool;
         $this->dateService = $date;
@@ -131,7 +136,9 @@ class ReportScheduleFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // View Permissions
-        //$this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
+        if ($this->getUser()->userTypeId != 1) {
+            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
+        }
 
         // Like
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
@@ -142,6 +149,12 @@ class ReportScheduleFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('reportScheduleId', 0, $filterBy) != 0) {
             $params['reportScheduleId'] = $this->getSanitizer()->getInt('reportScheduleId', 0,  $filterBy);
             $body .= " AND reportschedule.reportScheduleId = :reportScheduleId ";
+        }
+
+        // Owner filter
+        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
+            $body .= " AND reportschedule.userid = :userId ";
+            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
         // Sorting?

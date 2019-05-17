@@ -84,9 +84,11 @@
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set layout %}{% trans "Layout" %}{% endset %}
                             {% set media %}{% trans "Media" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
                             {% set options = [
                                 { typeid: "layout", type: layout },
                                 { typeid: "media", type: media },
+                                { typeid: "event", type: event },
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
 
@@ -118,6 +120,9 @@
                             ] %}
                             {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", "", "pagedSelect media-select", "", "m", "", attributes) }}
 
+                            {% set title %}{% trans "Tag" %}{% endset %}
+                            {{ inline.input("eventTag", title, "", "", "tag-text") }}
+
                         </form>
                     </div>
                 </div>
@@ -140,11 +145,20 @@
 
             var mediaVal = $("#mediaId").val();
             var layoutVal = $("#layoutId").val();
+            var eventTagVal = $("#eventTag").val();
             var anchorReportAddBtn = $("a#reportAddBtn");
 
             var typeVal = $("#type").val();
 
-            if ( typeVal === 'media') {
+            if ( typeVal === 'layout') {
+                if (layoutVal == null) {
+                    anchorReportAddBtn.parent().addClass('disabled');
+                    anchorReportAddBtn.removeAttr('href');
+                } else {
+                    anchorReportAddBtn.parent().removeClass('disabled');
+                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                }
+            } else if ( typeVal === 'media') {
                 if (mediaVal == null) {
                     anchorReportAddBtn.parent().addClass('disabled');
                     anchorReportAddBtn.removeAttr('href');
@@ -152,13 +166,13 @@
                     anchorReportAddBtn.parent().removeClass('disabled');
                     anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
                 }
-            } else {
-                if (layoutVal == null) {
+            } else if ( typeVal === 'event') {
+                if (eventTagVal == null) {
                     anchorReportAddBtn.parent().addClass('disabled');
                     anchorReportAddBtn.removeAttr('href');
                 } else {
                     anchorReportAddBtn.parent().removeClass('disabled');
-                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
                 }
             }
 
@@ -248,6 +262,7 @@
             var groupByFilterCls = $(".group-by-filter");
             var mediaSelect =$(".media-select");
             var layoutSelect =$(".layout-select");
+            var eventTagCls =$(".tag-text");
 
             const checkFilterAndApply = function() {
 
@@ -323,6 +338,10 @@
                         $("#layoutId").val("");
                         $("#layoutId option").remove();
                         layoutSelect.hide();
+
+                        $("#eventTag").val("");
+                        eventTagCls.hide();
+
                         mediaSelect.show();
 
 
@@ -331,7 +350,23 @@
                         $("#mediaId").val("");
                         $("#mediaId option").remove();
                         mediaSelect.hide();
+
+                        $("#eventTag").val("");
+                        eventTagCls.hide();
+
                         layoutSelect.show();
+
+                    } else if (value === 'event') {
+                        // clear/hide the media and layout
+                        $("#mediaId").val("");
+                        $("#mediaId option").remove();
+                        $("#layoutId").val("");
+                        $("#layoutId option").remove();
+                        mediaSelect.hide();
+                        layoutSelect.hide();
+
+                        // show tag
+                        eventTagCls.show();
 
                     }
                 });
@@ -340,6 +375,7 @@
 
             type.val('layout');
             mediaSelect.hide();
+            eventTagCls.hide();
 
             reportFilter.val('');
             groupByFilter.val('byday');

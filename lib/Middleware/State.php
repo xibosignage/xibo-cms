@@ -900,7 +900,8 @@ class State extends Middleware
                 $container->reportScheduleFactory,
                 $container->savedReportFactory,
                 $container->mediaFactory,
-                $container->layoutFactory
+                $container->layoutFactory,
+                $container->userFactory
             );
         });
 
@@ -1444,6 +1445,8 @@ class State extends Middleware
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
                 $container->configService,
                 $container->pool,
                 $container->dateService

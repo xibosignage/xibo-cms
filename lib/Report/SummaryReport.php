@@ -79,7 +79,14 @@ class SummaryReport implements ReportInterface
     /** @inheritdoc */
     public function getReportForm()
     {
-        return 'summary-report-form';
+        return [
+            'template' => 'summary-report-form',
+            'data' =>  [
+                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
+                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
+                'toDate' => $this->getDate()->getLocalDate()
+            ]
+        ];
     }
 
     /** @inheritdoc */
@@ -89,17 +96,27 @@ class SummaryReport implements ReportInterface
 
         if ($type == 'layout') {
             $selectedId = $this->getSanitizer()->getParam('layoutId', null);
-            $selectedName = $this->layoutFactory->getById($selectedId)->layout;
-        } else {
+            $title = __('Save report for '). $type. __('Id ') . $selectedId. ' - '.
+                    $this->layoutFactory->getById($selectedId)->layout;
+
+        } else if ($type == 'media') {
             $selectedId = $this->getSanitizer()->getParam('mediaId', null);
-            $selectedName = $this->mediaFactory->getById($selectedId)->name;
+            $title = __('Save report for '). $type. __('Id ') . $selectedId. ' - '.
+                    $this->mediaFactory->getById($selectedId)->name;
+
+        } else if ($type == 'event') {
+            $selectedId = 0; // we only need tag
+            $tag = $this->getSanitizer()->getParam('eventTag', null);
+            $title = __('Save report for '). $type. ' - '. $tag;
+
         }
 
         return [
-            'title' => __('Save report for '). $type. __('Id ') . $selectedId. ' - '. $selectedName,
+            'title' => $title,
             'hiddenFields' => [
                 'type' => $type,
-                'selectedId' => (int) $selectedId
+                'selectedId' => (int) $selectedId,
+                'tag' => isset($tag) ? $tag : null
             ]
         ];
     }
@@ -112,12 +129,15 @@ class SummaryReport implements ReportInterface
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
+        $tag = $hiddenFields['tag'];
 
         $filterCriteria['type'] = $type;
         if ($type == 'layout') {
             $filterCriteria['layoutId'] = $selectedId;
-        } else {
+        } else if ($type == 'media') {
             $filterCriteria['mediaId'] = $selectedId;
+        } else if ($type == 'event') {
+            $filterCriteria['tag'] = $tag;
         }
 
         $filterCriteria['filter'] = $filter;
@@ -158,9 +178,12 @@ class SummaryReport implements ReportInterface
             $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
             $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
 
-        } else {
+        } else if ($filterCriteria['type'] == 'media') {
             $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
             $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+
+        } else if ($filterCriteria['type'] == 'event') {
+            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['tag'];
         }
 
         return $saveAs;
@@ -194,6 +217,7 @@ class SummaryReport implements ReportInterface
         $type = strtolower($this->getSanitizer()->getString('type', $filterCriteria));
         $layoutId = $this->getSanitizer()->getInt('layoutId', $filterCriteria);
         $mediaId = $this->getSanitizer()->getInt('mediaId', $filterCriteria);
+        $eventTag = $this->getSanitizer()->getString('tag', $filterCriteria);
         $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
         $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
 
@@ -229,9 +253,9 @@ class SummaryReport implements ReportInterface
         $timeSeriesStore = $this->getTimeSeriesStore()->getStatisticStore();
 
         if ($timeSeriesStore == 'mongodb') {
-            $result =  $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result =  $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
         } else {
-            $result =  $this->getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result =  $this->getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
         }
 
         // Summary report result in chart
@@ -324,10 +348,11 @@ class SummaryReport implements ReportInterface
 
     }
 
-    function getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    function getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
         if ( (($type == 'media') && ($mediaId != '')) ||
-            (($type == 'layout') && ($layoutId != '')) ) {
+            (($type == 'layout') && ($layoutId != '')) ||
+            (($type == 'event') && ($eventTag != '')) ) {
 
             $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('Y-m-d H:i:s');;
             $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
@@ -536,6 +561,9 @@ class SummaryReport implements ReportInterface
             } elseif (($type == 'media') && ($mediaId != '')) {
                 $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
                        AND `stat`.mediaId = ' . $mediaId;
+            } elseif (($type == 'event') && ($eventTag != '')) {
+                $body .= ' AND `stat`.type = \'event\'  
+                       AND `stat`.tag = ' . $eventTag;
             }
 
             $params = [
@@ -711,10 +739,11 @@ class SummaryReport implements ReportInterface
         }
     }
 
-    function getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    function getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
         if ( (($type == 'media') && ($mediaId != '')) ||
-            (($type == 'layout') && ($layoutId != '')) ) {
+            (($type == 'layout') && ($layoutId != '')) ||
+            (($type == 'event') && ($eventTag != '')) ) {
 
             $fromDt = $this->dateService->parse($fromDt)->startOfDay();
             $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay();
@@ -889,6 +918,13 @@ class SummaryReport implements ReportInterface
                 ];
                 $matchId = [
                     '$eq' => [ '$mediaId', $mediaId ]
+                ];
+            } elseif (($type == 'event') && ($eventTag != '')) {
+                $matchType = [
+                    '$eq' => [ '$type', 'event' ]
+                ];
+                $matchId = [
+                    '$eq' => [ '$eventName', $eventTag ]
                 ];
             }
 
@@ -1406,7 +1442,5 @@ class SummaryReport implements ReportInterface
             return [];
         }
     }
-
-
 
 }

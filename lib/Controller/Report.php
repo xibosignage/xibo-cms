@@ -31,6 +31,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -81,6 +82,11 @@ class Report extends Base
     private $layoutFactory;
 
     /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -96,8 +102,9 @@ class Report extends Base
      * @param SavedReportFactory $savedReportFactory
      * @param MediaFactory $mediaFactory
      * @param LayoutFactory $layoutFactory
+     * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $layoutFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $layoutFactory, $userFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -108,6 +115,7 @@ class Report extends Base
         $this->savedReportFactory = $savedReportFactory;
         $this->mediaFactory = $mediaFactory;
         $this->layoutFactory = $layoutFactory;
+        $this->userFactory = $userFactory;
     }
 
     /// //<editor-fold desc="Report Schedules">
@@ -119,6 +127,7 @@ class Report extends Base
     {
         $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'name' => $this->getSanitizer()->getString('name'),
+            'userId' => $this->getSanitizer()->getInt('userId'),
         ]));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
@@ -258,6 +267,9 @@ class Report extends Base
     {
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+        ]);
     }
 
     /**
@@ -449,13 +461,14 @@ class Report extends Base
         // Create the report object
         $object = $this->reportService->createReportObject($className);
 
-        // Get the twig file name of the report form
-        $template =  $object->getReportForm();
+        // Get the twig file and required data of the report form
+        $form =  $object->getReportForm();
 
         // Show the twig
-        $this->getState()->template = $template;
+        $this->getState()->template = $form['template'];
         $this->getState()->setData([
-            'reportName' => $reportName
+            'reportName' => $reportName,
+            'defaults' => $form['data']
         ]);
     }
 
