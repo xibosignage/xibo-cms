@@ -390,6 +390,7 @@ class SubPlaylist extends ModuleWidget
 
             if ($firstListCount === 0) {
                 $firstListCount = $countExpanded;
+            }
 
             // high watermark
             if ($countExpanded > $largestListCount) {
