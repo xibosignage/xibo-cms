@@ -37,6 +37,9 @@ class CreateSavedReportTableMigration extends AbstractMigration
             ->addColumn('reportScheduleId', 'integer')
             ->addColumn('generatedOn', 'integer')
             ->addColumn('userId', 'integer')
-            ->create();
+            ->addForeignKey('userId', 'user', 'userId')
+            ->addForeignKey('mediaId', 'media', 'mediaId')
+            ->addForeignKey('reportScheduleId', 'reportschedule', 'reportScheduleId')
+            ->save();
     }
 }

@@ -38,7 +38,8 @@ class CreateReportScheduleTableMigration extends AbstractMigration
             ->addColumn('lastRunDt', 'integer', ['default' => 0])
             ->addColumn('userId', 'integer')
             ->addColumn('createdDt', 'integer')
-            ->create();
+            ->addForeignKey('userId', 'user', 'userId')
+            ->save();
     }
 }
 
