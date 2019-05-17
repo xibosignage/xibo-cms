@@ -79,11 +79,11 @@ describe('Layout Designer (Populated)', function() {
 
         it('should prevent a layout edit action, and show a toast message', function() {
 
-            // Choose the first region in the navigator and select it
-            cy.get('#layout-navigator .designer-region:first-child').click({force: true});
+            // Choose the first widget in the timeline and select it
+            cy.get('#layout-timeline .designer-region:first-child .designer-widget:first-child').click({force: true});
 
-            // Should contain region options form
-            cy.get('#properties-panel-container').contains('Region Options');
+            // Should contain widget options form
+            cy.get('#properties-panel-container').contains('Edit Image');
 
             // The save button should not be visible
             cy.get('#properties-panel-container [data-action="save"]').should('not.exist');
@@ -114,13 +114,6 @@ describe('Layout Designer (Populated)', function() {
         });
 
         // Properties Panel
-        it('shows region properties in the properties panel when clicking on a region in the navigator ', function() {
-            cy.get('#layout-navigator [data-type="region"]:first-child').click();
-
-            // Check if the properties panel title is Region Options
-            cy.get('#properties-panel').contains('Region Options');
-        });
-
         it('shows widget properties in the properties panel when clicking on a widget in the timeline', function() {
             // Select the first widget from the first region on timeline ( image )
             cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
@@ -208,21 +201,27 @@ describe('Layout Designer (Populated)', function() {
             cy.server();
             cy.route('/region/form/edit/*').as('reloadRegion');
 
+            // Open navigator edit
+            cy.get('#layout-navigator #edit-btn').click();
+
             // Select the first region on navigator
-            cy.get('#layout-navigator [data-type="region"]:first-child').click();
+            cy.get('#layout-navigator-edit [data-type="region"]:first-child').click();
 
             // Type the new name in the input
-            cy.get('#properties-panel input[name="name"]').clear().type('newName');
+            cy.get('#layout-navigator-properties-panel input[name="name"]').clear().type('newName');
 
             // Save form
-            cy.get('#properties-panel button[data-action="save"]').click();
+            cy.get('#layout-navigator-edit-navbar button#save-btn').click();
 
             // Should show a notification for the name change
             cy.get('.toast-success').contains('newName');
 
             // Check if the values are the same entered after reload
             cy.wait('@reloadRegion').then(() => {
-                cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
+                // Select the first region on navigator
+                cy.get('#layout-navigator-edit [data-type="region"]:first-child').click();
+
+                cy.get('#layout-navigator-properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
             });
         });
 
@@ -387,14 +386,17 @@ describe('Layout Designer (Populated)', function() {
 
             // Create and alias for position save and reload layout
             cy.server();
-            cy.route('PUT', '/region/position/all/*').as('savePosition');
             cy.route('/layout?layoutId=*').as('reloadLayout');
+            cy.route('/region/form/edit/*').as('reloadRegion');
 
             cy.get('#layout-navigator [data-type="region"]').then(($originalRegion) => {
                 const regionId = $originalRegion.attr('id');
 
                 // Open navigator edit
                 cy.get('#layout-navigator #edit-btn').click();
+
+                // Select region
+                cy.get('#layout-navigator-edit-content #' + regionId).click();
 
                 // Move region 50px for each dimension
                 cy.get('#layout-navigator-edit-content #' + regionId).then(($movedRegion) => {
@@ -419,10 +421,10 @@ describe('Layout Designer (Populated)', function() {
                         .trigger('mouseup');
 
                     // Close the navigator edit
-                    cy.get('#layout-navigator-edit #close-btn').click();
+                    cy.get('#layout-navigator-edit #save-btn').click();
 
                     // Wait for the layout to reload
-                    cy.wait('@savePosition');
+                    cy.wait('@reloadRegion');
                     cy.reload();
                     cy.wait('@reloadLayout');
 
@@ -443,22 +445,28 @@ describe('Layout Designer (Populated)', function() {
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
 
+            // Open navigator edit
+            cy.get('#layout-navigator #edit-btn').click();
+
             // Select a region from the navigator
-            cy.get('#layout-navigator [data-type="region"]:first-child').click().then(($el) => {
+            cy.get('#layout-navigator-edit-content [data-type="region"]:first-child').click().then(($el) => {
 
                 const regionId = $el.attr('id');
 
                 // Click trash container
-                cy.get('#layout-editor-toolbar a#trashContainer').click();
+                cy.get('#layout-navigator-edit-navbar button#delete-btn').click();
 
                 // Confirm delete on modal
-                cy.get('[data-test="deleteObjectModal"] button[data-bb-handler="confirm"]').click();
+                cy.get('[data-test="deleteRegionModal"] button[data-bb-handler="confirm"]').click();
 
                 // Check toast message
                 cy.get('.toast-success').contains('Deleted');
 
                 // Wait for the layout to reload
                 cy.wait('@reloadLayout');
+
+                // Close navigator edit
+                cy.get('#layout-navigator-edit #close-btn').click();
 
                 // Check that region is not on timeline
                 cy.get('#layout-timeline [data-type="region"]#' + regionId).should('not.exist');
@@ -585,11 +593,11 @@ describe('Layout Designer (Populated)', function() {
             cy.get('#layout-viewer #fs-btn').click();
 
             // Viewer should have a fullscreen class, and click play
-            cy.get('#layout-viewer.fullscreen #play-btn').click();
+            cy.get('#layout-viewer-container.fullscreen #layout-viewer #play-btn').click();
 
 
             // Check if the fullscreen iframe has a scr for preview layout
-            cy.get('#layout-viewer.fullscreen iframe').should('have.attr', 'src').and('include', '/layout/preview/');
+            cy.get('#layout-viewer-container.fullscreen #layout-viewer iframe').should('have.attr', 'src').and('include', '/layout/preview/');
         });
 
         it('loops through widgets in the viewer', () => {

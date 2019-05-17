@@ -230,6 +230,9 @@
                 back: "{% trans "Back" %}",
                 loadPropertyForObject: "{% trans "Load %prop% for %obj%" %}",
                 loading: "{% trans "Loading" %}",
+                resetTourNotification: "{% trans "Layout Designer Tour enabled!" %}",
+                tooltipsDisabled: "{% trans "Tooltips disabled!" %}",
+                tooltipsEnabled: "{% trans "Tooltips enabled!" %}"
             };
 
             var uploadTrans = {
@@ -254,10 +257,21 @@
                 delete: "{% trans "Delete" %}"
             };
 
+            var propertiesPanelTrans = {
+                width: "{% trans "Width" %}",
+                height: "{% trans "Height" %}",
+                scale: "{% trans "Scale" %}"
+            };
+
             var toolbarTrans = {
                 toolbarTagsMessage: "{% trans "%tagCount% tags" %}",
                 deleteObject: "{% trans "Delete selected %object%" %}",
                 changeLayout: "{% trans "Change Layout" %}",
+                layoutOptions: "{% trans "Layout Designer options" %}",
+                displayTooltipsName: "{% trans "Tooltips?" %}",
+                displayTooltipsTitle: "{% trans "Show/Hide Tooltips" %}",
+                resetTour: "{% trans "Show tour!" %}",
+                resetTourTitle: "{% trans "Show Layout Designer tour" %}",
                 createNewTab: "{% trans "Library Media Search" %}",
                 closeAllTabs: "{% trans "Close all tabs" %}",
                 actions: "{% trans "Actions" %}",
@@ -270,10 +284,12 @@
                     tag: "{% trans "Tag" %}",
                     type: "{% trans "Type" %}"
                 },
-                tabName: "{% trans "Library %tagId%" %}",
+                tabName: "{% trans "Library Search %tagId%" %}",
                 menuItems: {
-                    tools: "{% trans "Tools" %}",
-                    widgets: "{% trans "Widgets" %}"
+                    toolsName: "{% trans "Tools" %}",
+                    toolsTitle: "{% trans "Layout Designer tools" %}",
+                    widgetsName: "{% trans "Widgets" %}",
+                    widgetsTitle: "{% trans "Layout Designer widgets" %}"
                 },
                 tools: {
                     region: {

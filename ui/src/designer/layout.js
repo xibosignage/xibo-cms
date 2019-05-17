@@ -63,6 +63,8 @@ Layout.prototype.createDataStructure = function(data) {
     // layout duration calculated based on the longest region duration
     let layoutDuration = 0;
 
+    this.numRegions = data.regions.length;
+
     // Create regions and add them to the layout
     for(let region in data.regions) {
         let regionDuration = 0;
@@ -72,8 +74,13 @@ Layout.prototype.createDataStructure = function(data) {
             data.regions[region]
         );
 
+        // Save index
+        newRegion.index = parseInt(region) + 1;
+
         // Widgets
         const widgets = newRegion.playlists.widgets;
+
+        newRegion.numWidgets = widgets.length;
 
         // Create widgets for this region
         for(let widget in widgets) {
@@ -84,6 +91,9 @@ Layout.prototype.createDataStructure = function(data) {
                 data.regions[region].regionId,
                 this
             );
+
+            // Save index
+            newWidget.index = parseInt(widget) + 1;
 
             // Mark the widget as sortable if region can be sorted/edited
             newWidget.isSortable = newRegion.isEditable;
@@ -155,7 +165,6 @@ Layout.prototype.calculateTimeValues = function() {
         }
     }
 };
-
 
 /**
  * Add a new empty element to the layout
@@ -293,6 +302,65 @@ Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages)
 
     // Update timeline
     lD.timeline.updateLayoutStatus();
+};
+
+
+/**
+ * Calculate layout values for the layout based on the scale of this container
+ * @returns {object} Clone Object containing dimensions for the object
+ */
+Layout.prototype.scale = function(container) {
+
+    let layoutClone = Object.assign({}, this);
+
+    // Get container dimensions
+    const containerDimensions = {
+        width: container.width(),
+        height: container.height()
+    };
+
+    // Calculate ratio
+    const elementRatio = layoutClone.width / layoutClone.height;
+    const containerRatio = containerDimensions.width / containerDimensions.height;
+
+    // Create container properties object
+    layoutClone.scaledDimensions = {};
+
+    // Calculate scale factor
+    if(elementRatio > containerRatio) { // element is more "landscapish" than the container
+        // Scale is calculated using width
+        layoutClone.scaledDimensions.scale = containerDimensions.width / layoutClone.width;
+    } else { // Same ratio or the container is the most "landscapish"
+        // Scale is calculated using height
+        layoutClone.scaledDimensions.scale = containerDimensions.height / layoutClone.height;
+    }
+
+    // Calculate new values for the element using the scale factor
+    layoutClone.scaledDimensions.width = layoutClone.width * layoutClone.scaledDimensions.scale;
+    layoutClone.scaledDimensions.height = layoutClone.height * layoutClone.scaledDimensions.scale;
+
+    // Calculate top and left values to centre the element in the container
+    layoutClone.scaledDimensions.top = containerDimensions.height / 2 - layoutClone.scaledDimensions.height / 2;
+    layoutClone.scaledDimensions.left = containerDimensions.width / 2 - layoutClone.scaledDimensions.width / 2;
+
+    // Get scaled background
+    layoutClone.calculatedBackground = layoutClone.backgroundCss(layoutClone.scaledDimensions.width, layoutClone.scaledDimensions.height);
+
+    // Regions Scalling
+    for(let region in layoutClone.regions) {
+
+        layoutClone.regions[region].scaledDimensions = {};
+
+        // Loop through the container properties and scale them according to the layout scale from the original
+        for(let property in layoutClone.regions[region].dimensions) {
+            if(layoutClone.regions[region].dimensions.hasOwnProperty(property)) {
+                layoutClone.regions[region].scaledDimensions[property] = layoutClone.regions[region].dimensions[property] * layoutClone.scaledDimensions.scale;
+            }
+        }
+
+    }
+
+    return layoutClone;
 };
 
 module.exports = Layout;

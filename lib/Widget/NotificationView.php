@@ -42,7 +42,7 @@ class NotificationView extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?notificationView",
      *  operationId="WidgetNotificationEdit",
      *  tags={"widget"},
      *  summary="Edit a Notification Widget",

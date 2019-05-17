@@ -409,7 +409,7 @@ function XiboInitialise(scope) {
     });
     
     // Initialize tags input form
-    $(scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
+    $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
 }
 
 /**

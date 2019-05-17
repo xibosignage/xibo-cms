@@ -232,7 +232,7 @@ $(document).ready(function() {
                         $.getJSON(url, params)
                             .done(function(data) {
                                 
-                                if(!jQuery.isEmptyObject(data.data) && data.data.events.length > 0){
+                                if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
                                     events['results'][String(selectedDisplayGroup)] = data.data;
                                     events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
                                 } else {
@@ -276,6 +276,7 @@ $(document).ready(function() {
                     $('.cal-event-time-bar').show();
                     
                     $('#timePicker').slider({
+                        value: (moment().hour() * 60) + moment().minute(),
                         tooltip: 'always',
                         step: 5,
                         formatter: function(value) {

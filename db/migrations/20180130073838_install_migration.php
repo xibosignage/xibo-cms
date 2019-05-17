@@ -79,7 +79,7 @@ class InstallMigration extends AbstractMigration
         $settings
             ->addColumn('setting', 'string', ['limit' => 50])
             ->addColumn('type', 'string', ['limit' => 50])
-            ->addColumn('title', 'string', ['limit' => 50])
+            ->addColumn('title', 'string', ['limit' => 254])
             ->addColumn('value', 'string', ['limit' => 1000])
             ->addColumn('default', 'string', ['limit' => 1000])
             ->addColumn('fieldType', 'string', ['limit' => 24])
@@ -282,7 +282,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('viewPath', 'string', ['limit' => 254, 'default' => '../modules'])
             ->addColumn('class', 'string', ['limit' => 254])
             ->addColumn('defaultDuration', 'integer')
-            ->addColumn('installName', 'string', ['limit' => 254])
+            ->addColumn('installName', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->save();
 
         // Media Table
@@ -486,11 +486,6 @@ class InstallMigration extends AbstractMigration
             ->addColumn('endTime', 'string', ['limit' => 8, 'default' => '00:00:00'])
             ->addColumn('exceptions', 'text', ['default' => null, 'null' => true])
             ->addForeignKey('userId', 'user', 'userId')
-            // Get 1 and 2 ID's reserved for Always and Custom
-            ->insert([
-                ['dayPartId' => 1, 'name' => 'Always', 'userId' => 1],
-                ['dayPartId' => 2, 'name' => 'Custom', 'userId' => 1]
-            ])
             ->save();
 
         // Schedule
@@ -653,7 +648,7 @@ class InstallMigration extends AbstractMigration
         $pages = $this->table('pages', ['id' => 'pageId']);
         $pages
             ->addColumn('name', 'string', ['limit' => 50])
-            ->addColumn('title', 'string', ['limit' => 50])
+            ->addColumn('title', 'string', ['limit' => 100])
             ->addColumn('asHome', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->insert([
                 ['pageId' => 1, 'name' => 'dashboard', 'title' => 'Dashboard', 'asHome' => 1],

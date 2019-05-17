@@ -40,7 +40,8 @@
 }
 
 @media (max-width: 768px) {
-    .editor-toolbar nav {
+    .editor-toolbar nav,
+    #page-wrapper .editor-toolbar nav {
         margin-left: 0;
     }
 }
@@ -325,10 +326,23 @@
     color: #444;    
 }
 
+.editor-toolbar .navbar-submenu a:hover {
+    color: @toolbar-card-color;
+}
+
 .editor-toolbar .navbar-submenu-item {
     color: @toolbar-tab-fg-color;    
     padding: 4px;
     cursor: pointer;
+}
+
+.editor-toolbar .navbar-submenu-item-options {
+    width: 100%;
+    background-color: @toolbar-tab-bg-color;
+
+    &:hover {
+        background-color: darken(@toolbar-tab-bg-color, 10%);
+    }
 }
 
 .editor-toolbar .btn-menu-tool {
@@ -341,6 +355,7 @@
 
 .editor-toolbar .btn-menu-tool:hover {
     color: white;
+    background: transparent;
 }
 
 .editor-toolbar .btn-menu-tool-delete {
@@ -377,4 +392,21 @@
 
 .editor-toolbar .bootstrap-tagsinput .label {
     font-size: 95%;
+}
+
+
+.editor-toolbar .navbar-submenu-options {
+    #optionsContainer {
+        padding: 10px 15px;
+    }
+
+    .navbar-submenu-options-container {
+        label {
+            margin: 0;
+        }
+
+        .slider:not(.scaled-slider) {
+            width: 100% !important;
+        }
+    }
 }

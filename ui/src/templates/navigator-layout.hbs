@@ -1,6 +1,10 @@
 {{#unless edit}}
-    <p class="top-right-btn">
-        <i id="edit-btn" class="fa fa-edit"></i>
+    <p class="top-btn top-right-btn" data-toggle="tooltip" data-placement="left" title="{{ trans.edit }}">
+        <i id="edit-btn" class="fa fa-edit" ></i>
+    </p>
+{{else}}
+    <p class="top-btn top-right-btn" data-toggle="tooltip" data-placement="left" title="{{ trans.closeDesc }}">
+        <i id="close-btn-top" class="fa fa-close"></i>
     </p>
 {{/unless}}
 

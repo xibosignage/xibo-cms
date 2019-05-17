@@ -40,7 +40,7 @@ class Pdf extends ModuleWidget
      * Edit PDF Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?pdf",
      *  operationId="WidgetPdfEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing pdf on a layout",

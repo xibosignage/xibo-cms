@@ -110,9 +110,15 @@ class Fault extends Base
         if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile)
             throw new \InvalidArgumentException(__('Please select at least one option'));
 
+        $environmentVariables = [
+            'app_ver' => Environment::$WEBSITE_VERSION_NAME,
+            'XmdsVersion' => Environment::$XMDS_VERSION,
+            'XlfVersion' => Environment::$XLF_VERSION
+        ];
+
         // Should we output the version?
         if ($outputVersion) {
-            $zip->addFromString('version.json', json_encode($this->store->select('SELECT * FROM `version`', []), JSON_PRETTY_PRINT));
+            $zip->addFromString('version.json', json_encode($environmentVariables, JSON_PRETTY_PRINT));
         }
 
         // Should we output a log?
@@ -199,9 +205,6 @@ class Fault extends Base
 
     public function debugOn()
     {
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
         $this->getConfig()->changeSetting('audit', 'DEBUG');
         $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
 
@@ -213,9 +216,6 @@ class Fault extends Base
 
     public function debugOff()
     {
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
         $this->getConfig()->changeSetting('audit', $this->getConfig()->getSetting('RESTING_LOG_LEVEL'));
         $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', '');
 

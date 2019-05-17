@@ -100,7 +100,7 @@ $(document).ready(function() {
     lD.designerDiv.html(loadingTemplate());
 
     // Change toastr positioning
-    toastr.options.positionClass = 'toast-top-right';
+    toastr.options.positionClass = 'toast-top-center';
 
     // Load layout through an ajax request
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
@@ -302,10 +302,9 @@ lD.selectObject = function(obj = null, forceSelect = false) {
         
         // Get object properties from the DOM ( or set to layout if not defined )
         const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
-        const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+        let newSelectedType = (obj === null) ? 'layout' : obj.data('type');
 
         const oldSelectedId = this.selectedObject.id;
-        const oldSelectedType = this.selectedObject.type;
         
         // Unselect the previous selectedObject object if still selected
         if( this.selectedObject.selected ) {
@@ -338,8 +337,26 @@ lD.selectObject = function(obj = null, forceSelect = false) {
 
             // Save the new selected object
             if(newSelectedType === 'region') {
+
+                // If we're not in the navigator edit and the region has widgets, select the first one
+                if(!forceSelect && $.isEmptyObject(this.navigatorEdit) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
+                    let widgets = this.layout.regions[newSelectedId].widgets;
+
+                    // Select first widget
+                    for(var widget in widgets) {
+                        if(widgets.hasOwnProperty(widget)) {
+                            if(widgets[widget].index == 1) {
+                                widgets[widget].selected = true;
+                                this.selectedObject = widgets[widget];
+                                newSelectedType = 'widget';
+                                break;
+                            }
+                        }
+                    }
+                } else {
                 this.layout.regions[newSelectedId].selected = true;
                 this.selectedObject = this.layout.regions[newSelectedId];
+                }
             } else if(newSelectedType === 'widget') {
                 this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
                 this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
@@ -369,8 +386,17 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.manager);
 
     // Render selected object in the following containers
-    this.renderContainer(this.propertiesPanel, this.selectedObject);
+    if(this.selectedObject.type == 'region') {
+        this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
+        this.renderContainer(this.propertiesPanel, {});
+    } else {
+        this.renderContainer(this.propertiesPanel, this.selectedObject);
+    }
+    
     this.renderContainer(this.viewer, this.selectedObject);
+
+    // Reload tooltips
+    this.common.reloadTooltips(this.designerDiv);
 };
 
 
@@ -541,7 +567,7 @@ lD.enterReadOnlyMode = function() {
     let toastPosition = 'toast-bottom-center';
 
     // Show edit mode message
-    let toastObj = toastr.info(
+    let toastObj = toastr.error(
         layoutDesignerTrans.readOnlyModeMessage,
         '', 
         {
@@ -573,7 +599,7 @@ lD.renderContainer = function(container, element = {}) {
 
         // Render element if defined, layout otherwise
         if(!jQuery.isEmptyObject(element)) {
-            container.render(element, this.layout);
+            container.render(element);
         } else {
             container.render(this.layout);
         }
@@ -608,7 +634,7 @@ lD.toggleNavigatorEditing = function(enable) {
     } else {
 
         // Refresh designer
-        this.refreshDesigner();
+        this.reloadData(lD.layout);
 
         // Clean variable
         this.navigatorEdit = {};
@@ -707,10 +733,6 @@ lD.showSaveTemplateScreen = function() {
  * Load form from the API
  */
 lD.loadFormFromAPI = function(type, id = null) {
-    
-    const self = this;
-
-    const app = getXiboApp();
 
     // Load form the API
     const linkToAPI = urlsForApi.layout[type];
@@ -732,7 +754,6 @@ lD.loadFormFromAPI = function(type, id = null) {
     }).done(function(res) {
 
         if(res.success) {
-
             // Create buttons
             let generatedButtons = {
                 cancel: {
@@ -778,7 +799,7 @@ lD.loadFormFromAPI = function(type, id = null) {
 
             // Form open callback
             if(res.callBack != undefined && typeof window[res.callBack] === 'function') {
-                window[res.callBack]();
+                window[res.callBack](dialog);
             }
 
             // Call Xibo Init for this form
@@ -1398,7 +1419,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     lD.designerDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
     // Initialize tooltips
-    lD.designerDiv.find('.context-menu').find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
+    lD.common.reloadTooltips(lD.designerDiv.find('.context-menu'));
 
     // Click overlay to close menu
     lD.designerDiv.find('.context-menu-overlay').click((ev)=> {
@@ -1466,4 +1487,13 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
         console.error(jqXHR, textStatus, errorThrown);
         toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
     });
+};
+
+/**
+ * Reset tour
+ */
+lD.resetTour = function() {
+    layoutDesignerTour.restart();
+    layoutDesignerTour.goTo(0);
+    toastr.info(editorsTrans.resetTourNotification);
 };

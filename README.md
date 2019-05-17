@@ -34,7 +34,7 @@ Installing an official release is [described in the manual](http://xibo.org.uk/m
 
 **Please only install a Development environment if you intend make code changes to Xibo. Installing from the repository is not suitable for a production installation.**
 
-Xibo uses Docker to ensure all contributers have a repeatable development environment which is easy to get up and running.
+Xibo uses Docker to ensure all contributors have a repeatable development environment which is easy to get up and running.
 
 The very same Docker containers are used in our recommended end user installation to promote consistency from development to deployment.
 
@@ -126,6 +126,20 @@ docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
 ```bash
 find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --from-code=UTF-8 -k_e -k_x -k__ -o locale/default.pot
 ```
+
+To import translations:
+
+```bash
+bzr pull lp:~dangarner/xibo/swift-translations
+```
+
+Convert to `mo` format:
+
+```bash
+for i in *.po; do msgfmt "$i" -o $(echo $i | sed s/po/mo/); done
+```
+
+Move the resulting `mo` files into your `locale` folder.
 
 ## Swagger API Docs
 To generate a `swagger.json` file, with the dev containers running:

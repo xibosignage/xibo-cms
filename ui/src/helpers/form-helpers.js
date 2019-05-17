@@ -194,7 +194,7 @@ let formHelpers = function() {
         const $advancedEditorOption = $('#' + textAreaID + '_advanced', dialog);
         
         const setupDualEditor = function(dialog, textAreaID) {
-            
+
             // Inline editor
             if(inlineEditor) {
                 
@@ -202,11 +202,11 @@ let formHelpers = function() {
 
                 if(!$advancedEditorOption.is(":checked")) {
                     // Setup text area snippets
-                    self.setupTextArea(dialog, textAreaID);
+                    self.setupTextArea(dialog, textAreaID, customNoDataMessage);
                 }
             } else { // Form editor
                 if($advancedEditorOption !== undefined && !$advancedEditorOption.is(":checked")) {
-                    
+
                     // Toggle elements visibility
                     dialog.find('.' + textAreaID + '-advanced-editor-show').hide();
                     dialog.find('.' + textAreaID + '-advanced-editor-hide').show();
@@ -218,13 +218,13 @@ let formHelpers = function() {
                     self.setupFormDimensionControls(dialog, false, textAreaID);
 
                     // Setup text area snippets
-                    self.setupTextArea(dialog, textAreaID);
+                    self.setupTextArea(dialog, textAreaID, customNoDataMessage);
                 } else {
                     // Toggle elements visibility
                     dialog.find('.' + textAreaID + '-advanced-editor-show').show();
                     dialog.find('.' + textAreaID + '-advanced-editor-hide').hide();
 
-                    self.setupCKEditor(dialog, null, textAreaID, customNoDataMessage);
+                    self.setupCKEditor(dialog, null, textAreaID, false, customNoDataMessage);
                 }
             }
         };
@@ -240,8 +240,9 @@ let formHelpers = function() {
     * Setup form textarea with text/library snippets and no data message
     * @param {object} dialog - Dialog object ( the object that contains the replaceable fields )
     * @param {string} textAreaId - text area ID - Snippets selector
+    * @param {string=} customNoDataMessage - Custom message to appear when the field is empty
     */
-    this.setupTextArea = function(dialog, textAreaId) {
+    this.setupTextArea = function(dialog, textAreaId, customNoDataMessage = null) {
         
         // Get select elements
         const $snippets = $('.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]', dialog);
@@ -295,6 +296,8 @@ let formHelpers = function() {
 
             if(textAreaId === 'noDataMessage') {
                 dataMessage = translations.noDataMessage;
+            } else if(customNoDataMessage !== null) {
+                dataMessage = customNoDataMessage;
             } else {
                 dataMessage = translations.enterText;
             }
@@ -562,8 +565,8 @@ let formHelpers = function() {
             // If region dimensions are defined, use them as base for the editor
             regionDimensions = region.dimensions;
 
-        // Calculate scale based on the region previewed in the viewer
-            scale = this.namespace.viewer.containerElementDimensions.width / regionDimensions.width;
+            // Calculate scale based on the region previewed in the viewer
+            scale = this.namespace.viewer.DOMObject.find('.viewer-element').width() / regionDimensions.width;
         }
 
         var applyContentsToIframe = function(field) {
@@ -869,7 +872,7 @@ let formHelpers = function() {
             );
         });
 
-        footer.find('#save').before(replaceButton);
+        footer.prepend(replaceButton);
     };
 
     /**
@@ -1010,7 +1013,7 @@ let formHelpers = function() {
      * @param {string} instanceToDestroy - Name of the instance marked to be destroyed
      */
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
-        
+
         if(toggleFlag) {
             // Display controls
             $(dialog).find('.form-editor-controls').show();

@@ -1204,7 +1204,7 @@ class Layout implements \JsonSerializable
 
         foreach ($this->getWidgets() as $widget) {
             /** @var Widget $widget */
-            if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
+            if ($widget->type == 'datasetview' || $widget->type == 'datasetticker') {
                 $dataSetId = $widget->getOptionValue('dataSetId', 0);
 
                 if ($dataSetId != 0) {
@@ -1429,8 +1429,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout ' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, duration)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, 0)';
 
         $time = $this->date->getLocalDate();
 

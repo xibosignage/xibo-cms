@@ -20,6 +20,9 @@ let Viewer = function(container, navbarContainer) {
 
     // State of the inline editor (  0: off, 1: on, 2: edit )
     this.inlineEditorState = 0;
+
+    // If the viewer is currently playing the preview
+    this.previewPlaying = false;
 };
 
 /**
@@ -74,12 +77,14 @@ Viewer.prototype.scaleElement = function(element, container) {
 /**
  * Render Viewer
  * @param {Object} element - the object to be rendered
- * @param {number=} page - page to render on the viewer, default to 1
  */
-Viewer.prototype.render = function(element, layout, page = 1) {
+Viewer.prototype.render = function(element) {
 
     // Show loading template
     this.DOMObject.html(loadingTemplate());
+
+    // Set preview play as false
+    this.previewPlaying = false;
 
     // Reset container properties
     this.DOMObject.css('background', '#111');
@@ -87,99 +92,196 @@ Viewer.prototype.render = function(element, layout, page = 1) {
 
     // Reset Navbar if exists
     if(this.navbarContainer != null && this.navbarContainer != undefined) {
+        this.navbarContainer.removeClass();
         this.navbarContainer.html('');
     }
     
-    let requestPath = urlsForApi[element.type]['preview'].url;
+    // Render layout or region
+    if(element.type === 'layout') {
+        this.renderLayout(element, this.DOMObject);
+    } else { // Render Widgets or empty region
+        this.renderRegion(element, this.DOMObject);
+    }
+};
+
+/**
+ * Render region/widget in container
+ */
+Viewer.prototype.renderLayout = function(layout, container) {
+
+    const app = getXiboApp();
+
+    let requestPath = urlsForApi.layout.preview.url;
+    requestPath = requestPath.replace(':id', layout[layout.type + 'Id']);
+
+    // Apply viewer scale to the layout
+    this.containerElementDimensions = this.scaleElement(layout, container);
+
+    // Apply navigator scale to the layout
+    const scaledLayout = layout.scale(container);
+
+    const html = viewerTemplate({
+        renderLayout: true,
+        containerStyle: 'layout-player',
+        dimensions: this.containerElementDimensions,
+        layout: scaledLayout,
+        trans: viewerTrans
+    });
+
+    // Replace container html
+    container.html(html);
+
+    // Render navbar
+    this.renderNavbar(layout);
+
+    // Render background image or color to the preview
+    if(layout.backgroundImage === null) {
+        container.find('.viewer-element').css('background', layout.backgroundColor);
+    } else {
+        // Get API link
+        let linkToAPI = urlsForApi.layout.downloadBackground.url;
+        // Replace ID in the link
+        linkToAPI = linkToAPI.replace(':id', layout.layoutId);
+
+        container.find('.viewer-element').css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
+    }
+
+    // Render preview regions/widgets
+    for(var regionIndex in layout.regions) {
+        if(layout.regions.hasOwnProperty(regionIndex)) {
+            const region = layout.regions[regionIndex];
+            // Render region on the first widget
+            this.renderRegion(region, this.DOMObject.find('#' + region.id), true, 1);
+        }
+    }
+
+    // Handle play button ( play or pause )
+    container.find('#play-btn').click(function() {
+        if(this.previewPlaying) {
+            lD.renderContainer(lD.viewer, lD.layout);
+        } else {
+            this.playPreview(requestPath, this.containerElementDimensions);
+            container.find('#play-btn').removeClass('fa-play-circle').addClass('fa-stop-circle').attr('title', layoutDesignerTrans.stopPreviewLayout);
+            this.previewPlaying = true;
+        }
+    }.bind(this));
+
+    // Handle fullscreen button
+    container.find('#fs-btn').click(function() {
+        this.toggleFullscreen();
+    }.bind(this));
+
+    // Initialize tooltips
+    app.common.reloadTooltips(container);
+};
+
+/**
+ * Render region/widget in container
+ */
+Viewer.prototype.renderRegion = function(element, container, smallPreview = false, widgetIndex = 1) {
+
+    const self = this;
+    const app = getXiboApp();
+    
+    // If there was still a render request, abort it
+    if(this.renderRequest != undefined && !smallPreview) {
+        this.renderRequest.abort('requestAborted');
+    }
+
+    // Show loading
+    container.html(loadingTemplate());
 
     // Get target element( get region if element is a Widget type )
     const targetElement = (element.type === 'widget') ? lD.layout.regions[element.regionId] : element;
 
-    // Apply viewer scale to the layout
-    this.containerElementDimensions = this.scaleElement(targetElement, this.DOMObject);
+    // Apply scaling
+    let containerElementDimensions = this.scaleElement(targetElement, container);
 
+    // Get element to render index
+    const elementIndex = (element.type === 'widget') ? element.index : widgetIndex;
+    const totalItems = targetElement.numWidgets;
+
+    // Get request path
+    let requestPath = urlsForApi.region.preview.url;
     requestPath = requestPath.replace(':id', targetElement[targetElement.type + 'Id']);
-    
-    // Render layout
-    if(element.type === 'layout') {
 
-        const html = viewerTemplate({
-            renderLayout: true,
-            containerStyle: 'layout-player',
-            dimensions: this.containerElementDimensions
-        });
+    if(smallPreview || (element.type === 'region')) {
+        requestPath += '?seq=' + elementIndex;
+    } else {
+        requestPath += '?widgetId=' + element[element.type + 'Id'];
+    }
+
+    requestPath += '&width=' + containerElementDimensions.width + '&height=' + containerElementDimensions.height;
+
+    // Get HTML for the given element from the API
+    this.renderRequest = $.get(requestPath).done(function(res) {
+
+        // Clear request var after response
+        self.renderRequest = undefined;
+
+        // Prevent rendering null html
+        if(!res.success) {
+            toastr.error(res.message);
+            container.html(res.message);
+            return;
+        }
+
+        let elementType = (element.type === 'widget') ? (element.type + '_' + element.subType) : element.type;
 
         // Replace container html
-        this.DOMObject.html(html);
+        const html = viewerTemplate({
+            res: res,
+            dimensions: containerElementDimensions,
+            type: elementType,
+            smallPreview: smallPreview,
+            isEmpty: (totalItems <= 0),
+            trans: viewerTrans
+        });
 
-        // Render background image or color to the preview
-        if(layout.backgroundImage === null) {
-            this.DOMObject.find('.viewer-element').css('background', targetElement.backgroundColor);
-        } else {
-            // Get API link
-            let linkToAPI = urlsForApi['layout']['downloadBackground'].url;
-            // Replace ID in the link
-            linkToAPI = linkToAPI.replace(':id', element.layoutId);
+        // Append layout html to the container div
+        container.html(html);
 
-            this.DOMObject.find('.viewer-element').css('background', "url('" + linkToAPI + "?preview=1&width=" + (layout.width * this.containerElementDimensions.scale) + "&height=" + (layout.height * this.containerElementDimensions.scale) + "&proportional=0&layoutBackgroundId=" + layout.backgroundImage + "') top center no-repeat");
-        }
+        if(smallPreview) {
+            // Paging controls
+            if(res.extra.number_items > 1) {
 
-        // Handle play button
-        this.DOMObject.find('#play-btn').click(function() {
-            this.playPreview(requestPath, this.containerElementDimensions);
-        }.bind(this));
+                // Set preview paging as active
+                container.find('.preview-paging').addClass('active');
 
-        // Handle fullscreen button
-        this.DOMObject.find('#fs-btn').click(function() {            
-            this.toggleFullscreen();
-        }.bind(this));
+                // Show paging info
+                container.find('.preview-paging-message').html(res.extra.current_item + '/' + res.extra.number_items);
+                
+                if(res.extra.current_item > 1) {
+                    container.find('.preview-paging .widget-left').show().off().on('click', function() {
+                        self.renderRegion(targetElement, container, true, res.extra.current_item - 1);
+                    });
+                }
 
-    } else { // Render Widget or Region
-
-        // Id the element is a region or widget, increase request information
-        if(element.type === 'region') {
-            requestPath += '?seq=' + page;
-        } else if(element.type === 'widget'){
-            requestPath += '?widgetId=' + element[element.type + 'Id'];
-        }
-
-        requestPath += '&width=' + this.containerElementDimensions.width + '&height=' + this.containerElementDimensions.height;
-
-        // If there was still a render request, abort it
-        if(this.renderRequest != undefined) {
-            this.renderRequest.abort('requestAborted');
-        }
-
-        // Get HTML for the given element from the API
-        this.renderRequest = $.get(requestPath).done(function(res) {
-            
-            // Clear request var after response
-            self.renderRequest = undefined;
-            
-            // Prevent rendering null html
-            if(!res.success) {
-                toastr.error(res.message);
-                this.DOMObject.html(res.message);
-                return;
+                if(res.extra.current_item < res.extra.number_items) {
+                    container.find('.preview-paging .widget-right').show().off().on('click', function() {
+                        self.renderRegion(targetElement, container, true, res.extra.current_item + 1);
+                    });
+                }
             }
 
-            let elementType = (element.type === 'widget') ? (element.type + '_' + element.subType) : element.type;
-            
-            // Replace container html
-            const html = viewerTemplate({
-                res: res,
-                dimensions: lD.viewer.containerElementDimensions,
-                type: elementType
-            });
+            // Click element to select it
+            container.find('.preview-select').off().on('click', function() {
 
-            // Append layout html to the container div
-            this.DOMObject.html(html);
+                if(res.extra.number_items > 1) {
+                    // Select paged widget
+                    lD.selectObject($('#widget_' + targetElement.regionId + '_' + res.extra.tempId));
+                } else {
+                    // Select region
+                    lD.selectObject($('#' + targetElement.id));
+                }
+            });
+        } else {
 
             // Render navbar
-            this.renderNavbar(res, element);
+            this.renderNavbar(element, res);
 
             // Calculate and render background image or color to the preview
-            this.calculateBackground(lD.viewer.containerElementDimensions, targetElement, layout);
+            this.calculateBackground(containerElementDimensions, targetElement, lD.layout);
 
             // If inline editor is on, show the controls for it ( fixing asyc load problem )
             if(lD.propertiesPanel.inlineEditor) {
@@ -188,53 +290,84 @@ Viewer.prototype.render = function(element, layout, page = 1) {
             }
 
             // Handle fullscreen button
-            this.DOMObject.find('#fs-btn').click(function() {
+            container.find('#fs-btn').click(function() {
                 this.toggleFullscreen();
             }.bind(this));
 
-        }.bind(this)).fail(function(res) {
-            // Clear request var after response
-            self.renderRequest = undefined;
+            // Handle back button
+            container.find('#back-btn').click(function() {
+                lD.selectObject();
+            }.bind(this));
+        }
 
-            if(res.statusText != 'requestAborted') {
-                toastr.error(errorMessagesTrans.previewFailed);
-                this.DOMObject.html(errorMessagesTrans.previewFailed);
-            }
+        // Initialize tooltips
+        app.common.reloadTooltips(container);
 
-        }.bind(this));
-    }
+    }.bind(this)).fail(function(res) {
+        // Clear request var after response
+        self.renderRequest = undefined;
 
+        if(res.statusText != 'requestAborted') {
+            toastr.error(errorMessagesTrans.previewFailed);
+            container.html(errorMessagesTrans.previewFailed);
+        }
+
+    }.bind(this));
 };
 
 /**
  * Render Navbar
  */
-Viewer.prototype.renderNavbar = function(data, element) {
+Viewer.prototype.renderNavbar = function(element, data) {
 
+    const app = getXiboApp();
+    
     // Stop if navbar container does not exist
-    if(this.navbarContainer === null || this.navbarContainer === undefined || data.extra.empty) {
+    if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
         return;
     }
 
-    this.navbarContainer.html(viewerNavbarTemplate(
-        {
-            extra: data.extra,
-            type: element.type,
-            pagingEnable: (data.extra.number_items > 1),
-            trans: layoutDesignerTrans
+    if(element.type == 'widget') {
+
+        const currentItem = element.index;
+        const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
+        const totalItems = parentRegion.numWidgets;
+
+        // Render widget toolbar
+        this.navbarContainer.html(viewerNavbarTemplate(
+            {
+                currentItem: currentItem,
+                totalItems: totalItems,
+                extra: data.extra,
+                type: element.type,
+                pagingEnable: (totalItems > 1),
+                trans: viewerTrans
+            }
+        ));
+
+        // Paging controls
+        if(data.extra && totalItems > 1) {
+            this.navbarContainer.find('#left-btn').prop('disabled', (currentItem <= 1)).click(function() {
+                lD.selectObject($('#' + element.getNextWidget(true).id));
+            }.bind(this));
+
+            this.navbarContainer.find('#right-btn').prop('disabled', (currentItem >= totalItems)).click(function() {
+                lD.selectObject($('#' + element.getNextWidget().id));
+            }.bind(this));
         }
-    ));
-
-    // Paging controls
-    if(data.extra && data.extra.number_items > 1) {
-        this.navbarContainer.find('#left-btn').prop('disabled', (data.extra.current_item <= 1)).click(function() {
-            this.render(lD.selectedObject, lD.layout, data.extra.current_item - 1);
-        }.bind(this));
-
-        this.navbarContainer.find('#right-btn').prop('disabled', (data.extra.current_item >= data.extra.number_items)).click(function() {
-            this.render(lD.selectedObject, lD.layout, data.extra.current_item + 1);
-        }.bind(this));
+    } else {
+        // Render layout or region toolbar
+        this.navbarContainer.html(viewerNavbarTemplate(
+            {
+                type: element.type,
+                name: element.name,
+                trans: viewerTrans
+            }
+        ));
     }
+
+    // Initialize tooltips
+    app.common.reloadTooltips(this.navbarContainer);
 };
 
 /**
@@ -256,7 +389,7 @@ Viewer.prototype.playPreview = function(url, dimensions) {
  * Toggle fullscreen
  */
 Viewer.prototype.toggleFullscreen = function() {
-    this.DOMObject.toggleClass('fullscreen');
+    this.DOMObject.parent().toggleClass('fullscreen');
     this.render(lD.selectedObject, lD.layout);
 };
 
@@ -356,6 +489,7 @@ Viewer.prototype.editInlineEditorToggle = function(show = true) {
     
     // Toggle rendered preview
     this.DOMObject.find('#viewer-preview').toggle(!show);
+    this.DOMObject.find('#inline-editor-overlay').toggle(!show);
 };
 
 /**
@@ -385,7 +519,16 @@ Viewer.prototype.openInlineEditorContent = function() {
 
     // Show controls
     controlClones.show();
-    
+
+    // Show fullscreen editor save button
+    const $saveEditorButton = this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#inline-editor-save').show();
+    this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#fs-btn').removeClass('fa-arrows-alt').addClass('fa-close');
+    this.navbarContainer.addClass('fs-edit');
+
+    $saveEditorButton.off().click(function() {
+        lD.propertiesPanel.DOMObject.find('button[data-action="save"]').trigger('click');
+    });
+
     // Append controls to navbar
     this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
 
@@ -410,6 +553,8 @@ Viewer.prototype.closeInlineEditorContent = function() {
 
     // Copy data back to properties panel text area
     lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).val(data);
+
+    this.navbarContainer.removeClass('fs-edit');
 
     // Update state
     this.inlineEditorState = 1;
@@ -521,7 +666,6 @@ Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
     if(Math.abs(layoutBottomBorder - elementBottomBorder) < dimensions.top) {
 
         const calculatedBottom = (elementScaledDimensions.height + (layoutBottomBorder - elementBottomBorder));
-
 
         this.DOMObject.find('#border-after').css({
             'width': dimensions.width,

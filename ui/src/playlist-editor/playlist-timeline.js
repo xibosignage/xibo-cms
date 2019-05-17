@@ -44,7 +44,8 @@ PlaylistTimeline.prototype.render = function(layout) {
     // Handle widget attached audio click
     this.DOMObject.find('.playlist-widget.editable .editProperty').click(function(e) {
         e.stopPropagation();
-        const widget = pE.getElementByTypeAndId($(this).parent().data('type'), $(this).parent().attr('id'), $(this).parent().data('widgetRegion'));
+
+        const widget = pE.getElementByTypeAndId($(this).parents('.playlist-widget').data('type'), $(this).parents('.playlist-widget').attr('id'), $(this).parents('.playlist-widget').data('widgetRegion'));
 
         widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
     });

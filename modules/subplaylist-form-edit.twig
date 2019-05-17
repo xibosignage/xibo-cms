@@ -1,8 +1,23 @@
 {#
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
- * (subplaylist-form-add.twig)
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 {% extends "form-base.twig" %}
@@ -27,15 +42,42 @@
                         {% set helpText %}{% trans "Please select one or more Playlists to embed. If selecting more than one use the Configuration tab to adjust how each Playlist is combined." %}{% endset %}
                         {{ forms.message(helpText) }}
 
+                        {% set helpText %}{% trans "Optionally set Spot options to expand or shrink each Playlist to a particular size or duration. Leave the Spot options empty to use the count of Widgets in each Playlist." %}{% endset %}
+                        {{ forms.message(helpText) }}
+
+                        {% set helpText %}{% trans "Setting Spots to 0 will omit the first Playlist from the play order, and will be used as a Spot Fill option." %}{% endset %}
+                        {{ forms.message(helpText) }}
+
+                        <div class="form-group">
+                            <div class="col-sm-1" for="subPlaylistId[]">#</div>
+                            <div class="col-sm-3">
+                                {{ "Playlists"|trans }}
+                            </div>
+                            {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used before ordering to expand or shrink the list to the specified size. Leave empty to use the count of Widgets." %}{% endset %}
+                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                                {{ "Spots"|trans }}
+                            </div>
+                            {% set helpText %}{% trans "Set the duration of all Widgets in the Playlist to a specific value in seconds. Leave empty to use each Widget duration." %}{% endset %}
+                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                                {{ "Spot Length"|trans }}
+                            </div>
+                            {% set helpText %}{% trans "If there are not enough Widgets fill all spots, how should the remaining spots be filled?" %}{% endset %}
+                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                                {{ "Spot Fill"|trans }}
+                            </div>
+                            <div class="col-sm-1" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                            </div>
+                        </div>
+
                         <div class="sub-playlists"></div>
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        {% set title %}{% trans "Arrangement" %}{% endset %}
-                        {% set helpText %}{% trans "How would you like the Widgets on these Playlists to be mixed?" %}{% endset %}
-                        {% set noneOption %}{% trans "Sequentially - put the playlists one after the other in order" %}{% endset %}
-                        {% set robinOption %}{% trans "Round Robin - take one from each list and then repeat" %}{% endset %}
-                        {% set evenOption %}{% trans "Evenly - automatically decide how often to take from each list so that there are no items left" %}{% endset %}
+                        {% set title %}{% trans "Playlist Ordering" %}{% endset %}
+                        {% set helpText %}{% trans "How would you like the Widgets on these Playlists to be ordered?" %}{% endset %}
+                        {% set noneOption %}{% trans "Play all - Playlists will play in their entirety one after the other in the order they appear on the General tab" %}{% endset %}
+                        {% set robinOption %}{% trans "Round Robin - take one Widget from each Playlist in the order they appear on the General tab and repeat" %}{% endset %}
+                        {% set evenOption %}{% trans "Auto - ensure Widgets are played evenly from each Playlist using the total count of Widgets on all Playlists" %}{% endset %}
                         {% set options = [
                             { id: "none", value: noneOption },
                             { id: "roundrobin", value: robinOption },
@@ -43,11 +85,11 @@
                         ] %}
                         {{ forms.dropdown("arrangement", "single", title, module.getOption("arrangement"), options, "id", "value", helpText) }}
 
-                        {% set title %}{% trans "Remainder" %}{% endset %}
-                        {% set helpText %}{% trans "If there are Widgets left unarranged at the end, what should be done with these Widgets?" %}{% endset %}
-                        {% set noneOption %}{% trans "Append - add left over Widgets to the end of the list" %}{% endset %}
-                        {% set dropOption %}{% trans "Drop - use the smallest list as the total length and drop the rest" %}{% endset %}
-                        {% set repeatOption %}{% trans "Repeat - use the largest list as the total length and repeat the rest" %}{% endset %}
+                        {% set title %}{% trans "Remaining Widgets" %}{% endset %}
+                        {% set helpText %}{% trans "If there are Widgets left unordered at the end, what should be done with these Widgets?" %}{% endset %}
+                        {% set noneOption %}{% trans "Add - After ordering any remaining Widgets are to be added to the end" %}{% endset %}
+                        {% set dropOption %}{% trans "Discard - Uses the Playlist with the least Widgets and ignores remaining Widgets on the longer Playlists" %}{% endset %}
+                        {% set repeatOption %}{% trans "Repeat - Uses the Playlist with the most Widgets and repeats remaining Widgets on the shorter Playlists" %}{% endset %}
                         {% set options = [
                             { id: "none", value: noneOption },
                             { id: "drop", value: dropOption },

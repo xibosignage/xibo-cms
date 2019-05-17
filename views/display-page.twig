@@ -622,6 +622,59 @@
             // Call XiboInitialise on table
             XiboInitialise('#settings-from-profile');
         }
+        
+        // Custom submit for display form
+        function displayEditFormSubmit() {
+            let $form = $('#displayEditForm');
+            // Grab and alter the value in the bandwidth limit field
+            let bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
+            let bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
+            let bandwidthLimit = bandwidthLimitField.val();
+
+            if (bandwidthLimitUnitsField.val() == 'mb') {
+                bandwidthLimit = bandwidthLimit * 1024;
+            } else if (bandwidthLimitUnitsField.val() == 'gb') {
+                bandwidthLimit = bandwidthLimit * 1024 * 1024;
+            }
+
+            // Set the field
+            bandwidthLimitField.prop('value', bandwidthLimit);
+
+            // Remove temp fields and enable checkbox after submit
+            $form.submit(function(event) {
+                event.preventDefault();
+                // Re-enable checkboxes
+                $form.find('input[type="checkbox"]').each(function () {
+                    // Enable checkbox
+                    $(this).attr('disabled', false);
+                });
+
+                // Remove temp input fields
+                $form.find('input.temp-input').each(function () {
+                    $(this).remove();
+                });
+            });
+
+            // Replace all checkboxes with hidden input fields
+            $form.find('input[type="checkbox"]').each(function () {
+                // Get checkbox values
+                let value = $(this).is(':checked') ? 'on' : 'off';
+                let id = $(this).attr('id');
+       
+                // Create hidden input
+                $('<input type="hidden" class="temp-input">')
+                    .attr('id', id)
+                    .attr('name', id)
+                    .val(value)
+                    .appendTo($(this).parent());
+                
+                // Disable checkbox so it won't be submitted
+                $(this).attr('disabled', true);
+            });
+
+            // Submit form
+            $form.submit();
+        }
     </script>
 
     <style>

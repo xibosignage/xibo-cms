@@ -29,7 +29,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '2.0.1';
+    public static $WEBSITE_VERSION_NAME = '2.0.2';
     public static $XMDS_VERSION = '5';
     public static $XLF_VERSION = '2';
     public static $VERSION_REQUIRED = '5.5';
@@ -39,9 +39,7 @@ class Environment
     private static $_migration_status = null;
 
     /**
-     * Is there a migration pending
-     * this function only returns true if we are in DEV mode, otherwise it assumes migrations have been run by an
-     * outside process.
+     * Is there a migration pending?
      * @return bool
      */
     public static function migrationPending()

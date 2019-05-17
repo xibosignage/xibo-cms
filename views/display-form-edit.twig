@@ -30,7 +30,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#displayEditForm").submit()
+    {% trans "Save" %}, displayEditFormSubmit()
 {% endblock %}
 
 {% block callBack %}displayEditFormOpen{% endblock %}
