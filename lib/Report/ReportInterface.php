@@ -30,10 +30,29 @@ namespace Xibo\Report;
 interface ReportInterface
 {
     /**
+     * Set factories
+     * @param $container
+     * @return $this
+     */
+    public function setFactories($container);
+
+    /**
      * Return the twig file name of the report form
      * @return string
      */
     public function getReportForm();
+
+    /**
+     * Populate form title and hidden fields
+     * @return array
+     */
+    public function getReportScheduleFormData();
+
+    /**
+     * Set Report Schedule form data
+     * @return array
+     */
+    public function setReportScheduleFormData();
 
     /**
      * Generate saved report name
@@ -43,9 +62,11 @@ interface ReportInterface
 
     /**
      * Return data to build chart
+     * @param array $json
+     * @param string $reportName
      * @return array
      */
-    public function getSavedReportResults($savedreportId);
+    public function getSavedReportResults($json, $reportName);
 
     /**
      * Return results

@@ -135,21 +135,21 @@ class Report extends Base
             switch ($reportSchedule->schedule) {
 
                 case ReportSchedule::$SCHEDULE_DAILY:
-                    $reportSchedule->schedule = 'Run once a day, midnight';
+                    $reportSchedule->schedule = __('Run once a day, midnight');
                     break;
 
                 case ReportSchedule::$SCHEDULE_WEEKLY:
-                    $reportSchedule->schedule = 'Run once a week, midnight on Monday';
+                    $reportSchedule->schedule = __('Run once a week, midnight on Monday');
 
                     break;
 
                 case ReportSchedule::$SCHEDULE_MONTHLY:
-                    $reportSchedule->schedule = 'Run once a month, midnight, first of month';
+                    $reportSchedule->schedule = __('Run once a month, midnight, first of month');
 
                     break;
 
                 case ReportSchedule::$SCHEDULE_YEARLY:
-                    $reportSchedule->schedule = 'Run once a year, midnight, Jan. 1';
+                    $reportSchedule->schedule = __('Run once a year, midnight, Jan. 1');
 
                     break;
             }
@@ -180,49 +180,21 @@ class Report extends Base
     public function reportScheduleAdd()
     {
 
-        $this->getLog()->debug('Add Report Schedule');
-
-        $type = $this->getSanitizer()->getParam('type', 'layout');
-        $selectedId = $this->getSanitizer()->getParam('selectedId', null);
+        $name = $this->getSanitizer()->getString('name');
         $reportName = $this->getSanitizer()->getParam('reportName', null);
 
-        $filterCriteria['type'] = $type;
-        if ($type == 'layout') {
-            $filterCriteria['layoutId'] = $selectedId;
-        } else {
-            $filterCriteria['mediaId'] = $selectedId;
-        }
+        $this->getLog()->debug('Add Report Schedule: '. $name);
+
+        // Set Report Schedule form data
+        $result = $this->reportService->setReportScheduleFormData($reportName);
 
         $reportSchedule = $this->reportScheduleFactory->createEmpty();
-
-        $filter = $this->getSanitizer()->getString('filter');
-        $filterCriteria['filter'] = $filter;
-
-        if ($filter == 'daily') {
-            $reportSchedule->schedule = ReportSchedule::$SCHEDULE_DAILY;
-            $filterCriteria['reportFilter'] = 'yesterday';
-
-        } else if ($filter == 'weekly') {
-            $reportSchedule->schedule = ReportSchedule::$SCHEDULE_WEEKLY;
-            $filterCriteria['reportFilter'] = 'lastweek';
-            $filterCriteria['groupFilter'] = 'byweek';
-
-        } else if ($filter == 'monthly') {
-            $reportSchedule->schedule = ReportSchedule::$SCHEDULE_MONTHLY;
-            $filterCriteria['reportFilter'] = 'lastmonth';
-            $filterCriteria['groupFilter'] = 'bymonth';
-
-        } else if ($filter == 'yearly') {
-            $reportSchedule->schedule = ReportSchedule::$SCHEDULE_YEARLY;
-            $filterCriteria['reportFilter'] = 'lastyear';
-            $filterCriteria['groupFilter'] = 'bymonth';
-        }
-
-        $reportSchedule->name = $this->getSanitizer()->getString('name');
+        $reportSchedule->name = $name;
         $reportSchedule->reportName = $reportName;
+        $reportSchedule->filterCriteria = $result['filterCriteria'];
+        $reportSchedule->schedule = $result['schedule'];
         $reportSchedule->lastRunDt = 0;
         $reportSchedule->userId = $this->getUser()->userId;
-        $reportSchedule->filterCriteria = json_encode($filterCriteria);
         $reportSchedule->createdDt = $this->getDate()->getLocalDate(null, 'U');
 
         $reportSchedule->save();
@@ -286,9 +258,6 @@ class Report extends Base
     {
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
-        $this->getState()->setData([
-            'reportSchedules' => $this->reportScheduleFactory->query(),
-        ]);
     }
 
     /**
@@ -297,8 +266,10 @@ class Report extends Base
     public function addReportScheduleForm()
     {
 
-        $type = $this->getSanitizer()->getParam('type', 'layout');
         $reportName = $this->getSanitizer()->getParam('reportName', null);
+
+        // Populate form title and hidden fields
+        $formData = $this->reportService->getReportScheduleFormData($reportName);
 
         $data = ['filters' => []];
 
@@ -306,16 +277,10 @@ class Report extends Base
         $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
         $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
         $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
-        $data['type'] = $type;
-        $data['reportName'] = $reportName;
 
-        if ($type == 'layout') {
-            $data['selectedId'] = $this->getSanitizer()->getParam('layoutId', null);
-            $data['selectedName'] = $this->layoutFactory->getById($data['selectedId'])->layout;
-        } else {
-            $data['selectedId'] = $this->getSanitizer()->getParam('mediaId', null);
-            $data['selectedName'] = $this->mediaFactory->getById($data['selectedId'])->name;
-        }
+        $data['formTitle'] = $formData['title'];
+        $data['hiddenFields'] = (count($formData['hiddenFields']) > 0 ) ? json_encode($formData['hiddenFields']) : '';
+        $data['reportName'] = $reportName;
 
         $this->getState()->template = 'report-schedule-form-add';
         $this->getState()->setData($data);
@@ -345,9 +310,6 @@ class Report extends Base
         if (!$this->getUser()->checkDeleteable($reportSchedule))
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
 
-//         var_dump($reportSchedule->name);
-//         die();
-
         $data = [
             'reportSchedule' => $reportSchedule
         ];
@@ -366,7 +328,10 @@ class Report extends Base
      */
     public function savedReportGrid()
     {
-        $reportName = 'summaryReport';
+        /*
+         * //TODO:
+         *
+         */
 
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'saveAs' => $this->getSanitizer()->getString('saveAs'),
@@ -380,7 +345,7 @@ class Report extends Base
             $savedReport->buttons[] = [
                 'id' => 'button_show_report.now',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('savedreport.preview', ['id' => $savedReport->savedReportId, 'name' => $reportName] ),
+                'url' => $this->urlFor('savedreport.preview', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
                 'text' => __('Preview report')
             ];
 
@@ -403,9 +368,6 @@ class Report extends Base
     {
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
-        $this->getState()->setData([
-            'savedReports' => $this->savedReportFactory->query()
-        ]);
     }
 
     /**
@@ -462,12 +424,11 @@ class Report extends Base
      */
     public function savedReportPreview($savedreportId, $reportName)
     {
-        // Get the report Class from the Json File
+        // Retrieve the saved report result in array
         $results = $this->reportService->getSavedReportResults($savedreportId, $reportName);
 
         $this->getState()->template = $results['template'];
-        $this->getState()->setData($results);
-
+        $this->getState()->setData($results['chartData']);
     }
 
     //</editor-fold>
@@ -496,11 +457,10 @@ class Report extends Base
         $this->getState()->setData([
             'reportName' => $reportName
         ]);
-
     }
 
     /**
-     * Displays a Ad Hoc Report data
+     * Displays Ad Hoc Report data in charts
      */
     public function getReportData($reportName)
     {
@@ -513,7 +473,6 @@ class Report extends Base
         // Return data to build chart
         $results =  $object->getResults(null);
         $this->getState()->extra = $results;
-
     }
 
     //</editor-fold>

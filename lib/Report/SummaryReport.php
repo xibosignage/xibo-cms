@@ -2,6 +2,8 @@
 
 namespace Xibo\Report;
 
+use MongoDB\BSON\UTCDateTime;
+use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
@@ -20,7 +22,32 @@ use Xibo\Storage\TimeSeriesStoreInterface;
  */
 class SummaryReport implements ReportInterface
 {
+
     use ReportTrait;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
+    /**
+     * @var MediaFactory
+     */
+    private $mediaFactory;
+
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+
+    /**
+     * @var SavedReportFactory
+     */
+    private $savedReportFactory;
+
+    private $table = 'stat';
+
+    private $periodTable = 'period';
 
     /**
      * Report Constructor.
@@ -31,20 +58,96 @@ class SummaryReport implements ReportInterface
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
-     * @param DisplayFactory displayFactory
-     * @param MediaFactory mediaFactory
-     * @param LayoutFactory layoutFactory
-     * @param SavedReportFactory savedReportFactory
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $displayFactory, $mediaFactory, $layoutFactory, $savedReportFactory)
+    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
     {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $displayFactory, $mediaFactory, $layoutFactory, $savedReportFactory);
+
+        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
+    }
+
+    /** @inheritdoc */
+    public function setFactories($container)
+    {
+
+        $this->displayFactory = $container->get('displayFactory');
+        $this->mediaFactory = $container->get('mediaFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
+        $this->savedReportFactory = $container->get('savedReportFactory');
+        return $this;
     }
 
     /** @inheritdoc */
     public function getReportForm()
     {
         return 'summary-report-form';
+    }
+
+    /** @inheritdoc */
+    public function getReportScheduleFormData()
+    {
+        $type = $this->getSanitizer()->getParam('type', 'layout');
+
+        if ($type == 'layout') {
+            $selectedId = $this->getSanitizer()->getParam('layoutId', null);
+            $selectedName = $this->layoutFactory->getById($selectedId)->layout;
+        } else {
+            $selectedId = $this->getSanitizer()->getParam('mediaId', null);
+            $selectedName = $this->mediaFactory->getById($selectedId)->name;
+        }
+
+        return [
+            'title' => __('Save report for '). $type. __('Id ') . $selectedId. ' - '. $selectedName,
+            'hiddenFields' => [
+                'type' => $type,
+                'selectedId' => (int) $selectedId
+            ]
+        ];
+    }
+
+    /** @inheritdoc */
+    public function setReportScheduleFormData()
+    {
+        $filter = $this->getSanitizer()->getString('filter');
+        $hiddenFields = json_decode($this->getSanitizer()->getParam('hiddenFields', null), true);
+
+        $type = $hiddenFields['type'];
+        $selectedId = $hiddenFields['selectedId'];
+
+        $filterCriteria['type'] = $type;
+        if ($type == 'layout') {
+            $filterCriteria['layoutId'] = $selectedId;
+        } else {
+            $filterCriteria['mediaId'] = $selectedId;
+        }
+
+        $filterCriteria['filter'] = $filter;
+
+        $schedule = '';
+        if ($filter == 'daily') {
+            $schedule = ReportSchedule::$SCHEDULE_DAILY;
+            $filterCriteria['reportFilter'] = 'yesterday';
+
+        } else if ($filter == 'weekly') {
+            $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
+            $filterCriteria['reportFilter'] = 'lastweek';
+            $filterCriteria['groupFilter'] = 'byweek';
+
+        } else if ($filter == 'monthly') {
+            $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
+            $filterCriteria['reportFilter'] = 'lastmonth';
+            $filterCriteria['groupFilter'] = 'bymonth';
+
+        } else if ($filter == 'yearly') {
+            $schedule = ReportSchedule::$SCHEDULE_YEARLY;
+            $filterCriteria['reportFilter'] = 'lastyear';
+            $filterCriteria['groupFilter'] = 'bymonth';
+        }
+
+        // Return
+        return [
+            'filterCriteria' => json_encode($filterCriteria),
+            'schedule' => $schedule
+        ];
     }
 
     /** @inheritdoc */
@@ -64,35 +167,20 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($savedreportId)
+    public function getSavedReportResults($json, $reportName)
     {
-
-        $savedReport = $this->savedReportFactory->getById($savedreportId);
-
-        // Open a zipfile and read the json
-        $zipFile = $this->getConfig()->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
-
-        // Do some pre-checks on the arguments we have been provided
-        if (!file_exists($zipFile))
-            throw new \InvalidArgumentException(__('File does not exist'));
-
-        // Open the Zip file
-        $zip = new \ZipArchive();
-        if (!$zip->open($zipFile))
-            throw new \InvalidArgumentException(__('Unable to open ZIP'));
-
-        // Get the reportscheduledetails
-        $results = json_decode($zip->getFromName('reportschedule.json'), true);
 
         // Return data to build chart
         return [
             'template' => 'summary-report-preview',
-            'saveAs' => $savedReport->saveAs,
-            'labels' => json_encode($results['labels']),
-            'countData' => json_encode($results['countData']),
-            'durationData' => json_encode($results['durationData']),
-            'backgroundColor' => json_encode($results['backgroundColor']),
-            'borderColor' => json_encode($results['borderColor']),
+            'chartData' => [
+                'reportName' => $reportName,
+                'labels' => json_encode($json['labels']),
+                'countData' => json_encode($json['countData']),
+                'durationData' => json_encode($json['durationData']),
+                'backgroundColor' => json_encode($json['backgroundColor']),
+                'borderColor' => json_encode($json['borderColor']),
+            ]
         ];
     }
 
@@ -137,9 +225,16 @@ class SummaryReport implements ReportInterface
         $backgroundColor = [];
         $borderColor = [];
 
-        // Call the time series interface get daily summary report
-        $result =  $this->getTimeSeriesStore()->getDailySummaryReport($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter, $fromDt, $toDt);
+        // Get store
+        $timeSeriesStore = $this->getTimeSeriesStore()->getStatisticStore();
 
+        if ($timeSeriesStore == 'mongodb') {
+            $result =  $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter, $fromDt, $toDt);
+        } else {
+            $result =  $this->getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter, $fromDt, $toDt);
+        }
+
+        // Summary report result in chart
         foreach ($result as $row) {
             // Label
             $tsLabel = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s');
@@ -228,5 +323,1090 @@ class SummaryReport implements ReportInterface
         ];
 
     }
+
+    function getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    {
+        if ( (($type == 'media') && ($mediaId != '')) ||
+            (($type == 'layout') && ($layoutId != '')) ) {
+
+            $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('Y-m-d H:i:s');;
+            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
+
+            $yesterday = $this->dateService->parse()->startOfDay()->subDay()->format('Y-m-d H:i:s');
+            $today = $this->dateService->parse()->startOfDay()->format('Y-m-d H:i:s');
+            $nextday = $this->dateService->parse()->startOfDay()->addDay()->format('Y-m-d H:i:s');
+
+            $firstdaythisweek = $this->dateService->parse()->startOfWeek()->format('Y-m-d H:i:s');
+            $lastdaythisweek = $this->dateService->parse()->endOfWeek()->addSecond()->format('Y-m-d H:i:s'); // added a second
+
+            $firstdaylastweek = $this->dateService->parse()->startOfWeek()->subWeek()->format('Y-m-d H:i:s');
+            $lastdaylastweek = $this->dateService->parse()->endOfWeek()->addSecond()->subWeek()->format('Y-m-d H:i:s'); // added a second
+
+            $firstdaythismonth = $this->dateService->parse()->startOfMonth()->format('Y-m-d H:i:s');
+            $lastdaythismonth = $this->dateService->parse()->endOfMonth()->addSecond()->format('Y-m-d H:i:s'); // added a second
+
+            $firstdaylastmonth = $this->dateService->parse()->startOfMonth()->subMonth()->format('Y-m-d H:i:s');
+            $lastdaylastmonth = $this->dateService->parse()->endOfMonth()->addSecond()->subMonth()->format('Y-m-d H:i:s');
+
+            $firstdaythisyear = $this->dateService->parse()->startOfYear()->format('Y-m-d H:i:s');
+            $lastdaythisyear = $this->dateService->parse()->endOfYear()->addSecond()->format('Y-m-d H:i:s');
+
+            $firstdaylastyear = $this->dateService->parse()->startOfYear()->subYear()->format('Y-m-d H:i:s');
+            $lastdaylastyear = $this->dateService->parse()->endOfYear()->addSecond()->subYear()->format('Y-m-d H:i:s');
+
+            $select = ' 
+            
+            SELECT 
+                B.weekStart,
+                B.weekEnd,
+                B.weekNo,
+                DATE_FORMAT(STR_TO_DATE(MONTH(start), \'%m\'), \'%b\') AS shortMonth, 
+                MONTH(start) as monthNo, 
+                YEAR(start) as yearDate, 
+                start, 
+                SUM(count) as NumberPlays, 
+                CONVERT(SUM(B.actualDiff), SIGNED INTEGER) as Duration  
+            
+            FROM (
+                    
+                SELECT
+                     *,
+                    WEEK(periods.start, 3) AS weekNo,
+                    YEARWEEK(periods.start, 3) AS yearWeek,
+                    DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY) as weekStart,
+                    DATE_SUB(DATE_ADD(DATE_SUB(periods.start, INTERVAL WEEKDAY(periods.start) DAY), INTERVAL 1 WEEK), INTERVAL 1 DAY ) as weekEnd,
+                    
+                    GREATEST(periods.start, statStart) AS actualStart,
+                    LEAST(periods.end, statEnd) AS actualEnd,
+                    LEAST(stat.duration, UNIX_TIMESTAMP(LEAST(periods.end, statEnd)) - UNIX_TIMESTAMP(GREATEST(periods.start, statStart))) AS actualDiff
+                FROM
+                ( 
+                    SELECT                
+                        
+            ';
+
+            if ($reportFilter == '') {
+                $range = $diffInDays;
+
+                // START FROM TODATE THEN DECREASE BY ONE DAY TILL FROMDATE
+                $select .= '  
+                DATE_SUB(DATE_SUB("'.$toDt.'", INTERVAL 1 DAY), INTERVAL c.number DAY) AS start,
+                    
+                DATE_ADD(
+                        DATE_SUB(DATE_SUB("'.$toDt.'", INTERVAL 1 DAY) , INTERVAL c.number DAY), 
+                        INTERVAL 1 DAY) AS end ';
+
+            } elseif (($reportFilter == 'today')) {
+                $range = 23;
+
+                // START FROM LASTHOUR OF TODAY THEN DECREASE BY ONE HOUR
+                $select .= '  
+                DATE_FORMAT("'.$today.'",
+                        \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR AS start,
+                DATE_ADD(DATE_FORMAT("'.$today.'",
+                            \'%Y-%m-%d 23:00:00\'),
+                    INTERVAL 1 HOUR) - INTERVAL c.number HOUR AS end ';
+
+            } elseif (($reportFilter == 'yesterday')) {
+                $range = 23;
+
+                // START FROM LASTHOUR OF YESTERDAY THEN DECREASE BY ONE HOUR
+                $select .= '  
+                DATE_FORMAT("'.$yesterday.'",
+                        \'%Y-%m-%d 23:00:00\') - INTERVAL c.number HOUR AS start,
+                DATE_ADD(DATE_FORMAT("'.$yesterday.'",
+                            \'%Y-%m-%d 23:00:00\'),
+                    INTERVAL 1 HOUR) - INTERVAL c.number HOUR AS end ';
+
+            } elseif (($reportFilter == 'thisweek')) {
+                $range = 6;
+
+                // START FROM (LASTDAY OF THISWEEK - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '
+                DATE_SUB(DATE_SUB("'.$lastdaythisweek.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
+                    
+                DATE_SUB("'.$lastdaythisweek.'",  INTERVAL c.number DAY) AS end ';
+
+            } elseif (($reportFilter == 'lastweek')) {
+                $range = 6;
+
+                // START FROM (LASTDAY OF LASTWEEK - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '
+                DATE_SUB(DATE_SUB("'.$lastdaylastweek.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,
+                    
+                DATE_SUB("'.$lastdaylastweek.'",  INTERVAL c.number DAY) AS end ';
+
+            } elseif (($reportFilter == 'thismonth')) {
+                $range = 30;
+
+                // START FROM (LASTDAY OF THISMONTH - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '                    
+                DATE_SUB(DATE_SUB("'.$lastdaythismonth.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
+                    
+                DATE_SUB("'.$lastdaythismonth.'",  INTERVAL c.number DAY) AS end ';
+
+            } elseif (($reportFilter == 'lastmonth')) {
+                $range = 30;
+
+                // START FROM (LASTDAY OF LASTMONTH - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '                    
+                DATE_SUB(DATE_SUB("'.$lastdaylastmonth.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
+                    
+                DATE_SUB("'.$lastdaylastmonth.'",  INTERVAL c.number DAY) AS end ';
+
+            } elseif (($reportFilter == 'thisyear')) {
+                $range = 365;
+
+                // START FROM (LASTDAY OF THISYEAR - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '                    
+                DATE_SUB(DATE_SUB("'.$lastdaythisyear.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
+                    
+                DATE_SUB("'.$lastdaythisyear.'",  INTERVAL c.number DAY) AS end ';
+
+            } elseif (($reportFilter == 'lastyear')) {
+                $range = 365;
+
+                // START FROM (LASTDAY OF LASTYEAR - 1 DAY) THEN DECREASE BY ONE DAY
+                $select .= '                    
+                DATE_SUB(DATE_SUB("'.$lastdaylastyear.'",  INTERVAL 1 DAY), 
+                    INTERVAL c.number DAY) AS start,       
+                    
+                DATE_SUB("'.$lastdaylastyear.'",  INTERVAL c.number DAY) AS end ';
+            }
+
+            $periods = '            
+                FROM               
+                (SELECT 
+                    singles + tens + hundreds number
+                FROM
+                    (SELECT 0 singles UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 
+                    UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) singles
+                    JOIN (SELECT 0 tens UNION ALL SELECT 10 UNION ALL SELECT 20 UNION ALL SELECT 30 UNION ALL SELECT 40 UNION ALL SELECT 50 
+                    UNION ALL SELECT 60 UNION ALL SELECT 70 UNION ALL SELECT 80 UNION ALL SELECT 90) tens
+                    JOIN (SELECT 0 hundreds UNION ALL SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300 UNION ALL SELECT 400 UNION ALL SELECT 500 
+                    UNION ALL SELECT 600 UNION ALL SELECT 700 UNION ALL SELECT 800 UNION ALL SELECT 900) hundreds
+                    ORDER BY number DESC) c
+                    WHERE
+                    c.number BETWEEN 0 AND ' . $range . '
+                ) periods        
+            ';
+
+
+            $body = '
+                LEFT OUTER JOIN
+                
+                (SELECT 
+                    layout.Layout,
+                    IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
+                    stat.mediaId,
+                    stat.`start` as statStart,
+                    stat.`end` as statEnd,
+                    stat.duration,
+                    stat.`count`
+                     
+                    FROM stat
+                    
+                    LEFT OUTER JOIN layout
+                        ON layout.layoutID = stat.layoutID
+                    LEFT OUTER JOIN `widget`
+                        ON `widget`.widgetId = stat.widgetId
+                    LEFT OUTER JOIN `widgetoption`
+                        ON `widgetoption`.widgetId = `widget`.widgetId
+                        AND `widgetoption`.type = \'attrib\'
+                        AND `widgetoption`.option = \'name\'
+                    LEFT OUTER JOIN `media`
+                        ON `media`.mediaId = `stat`.mediaId
+                    WHERE stat.type <> \'displaydown\' 
+            ';
+
+            // Displays
+            if (count($displayIds) > 0) {
+                $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ') ';
+            }
+
+            // Type filter
+            if (($type == 'layout') && ($layoutId != '')) {
+                $body .= ' AND `stat`.type = \'layout\' 
+                       AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = ' . $layoutId. ') ';
+            } elseif (($type == 'media') && ($mediaId != '')) {
+                $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
+                       AND `stat`.mediaId = ' . $mediaId;
+            }
+
+            $params = [
+                'fromDt' => $fromDt,
+                'toDt' => $toDt
+            ];
+
+            if ($reportFilter == '') {
+                $body .= ' AND stat.start < DATE_ADD(:toDt, INTERVAL 1 DAY)  
+            AND stat.end >= :fromDt ';
+            }
+
+            // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+            // and end is greater than or equal first hour of the day
+            elseif (($reportFilter == 'today')) {
+                $body .= ' AND stat.`start` < "'.$nextday.'"
+            AND stat.`end` >= "'.$today.'" ';
+            }
+
+            // where start is less than last hour of the day + 1 hour (i.e., today)
+            // and end is greater than or equal first hour of the day
+            elseif (($reportFilter == 'yesterday')) {
+                $body .= ' AND stat.`start` <  "'.$today.'" 
+			AND stat.`end` >= "'.$yesterday.'"  ';
+            }
+
+            // where start is less than last day of the week
+            // and end is greater than or equal first day of the week
+            elseif (($reportFilter == 'thisweek')) {
+                $body .= ' AND stat.`start` < "'.$lastdaythisweek.'"
+            AND stat.`end` >= "'.$firstdaythisweek.'" ';
+            }
+
+            // where start is less than last day of the week
+            // and end is greater than or equal first day of the week
+            elseif (($reportFilter == 'lastweek')) {
+                $body .= ' AND stat.`start` < "'.$lastdaylastweek.'"		
+            AND stat.`end` >= "'.$firstdaylastweek.'" ';
+            }
+
+            // where start is less than last day of the month
+            // and end is greater than or equal first day of the month
+            elseif (($reportFilter == 'thismonth')) {
+                $body .= ' AND stat.`start` <  "'.$lastdaythismonth.'"
+            AND stat.`end` >= "'.$firstdaythismonth.'" ';
+            }
+
+            // where start is less than last day of the month
+            // and end is greater than or equal first day of the month
+            elseif (($reportFilter == 'lastmonth')) {
+                $body .= ' AND stat.`start` <  "'.$lastdaylastmonth.'"
+            AND stat.`end` >= "'.$firstdaylastmonth.'" ';
+            }
+
+            // where start is less than last day of the year
+            // and end is greater than or equal first day of the year
+            elseif (($reportFilter == 'thisyear')) {
+                $body .= ' AND stat.`start` < "'.$lastdaythisyear.'"
+            AND stat.`end` >= "'.$firstdaythisyear.'" ';
+            }
+
+            // where start is less than last day of the year
+            // and end is greater than or equal first day of the year
+            elseif (($reportFilter == 'lastyear')) {
+                $body .= ' AND stat.`start` < "'.$lastdaylastyear.'"
+            AND stat.`end` >= "'.$firstdaylastyear.'" ';
+            }
+
+            $body .= ' ) stat               
+            ON statStart < periods.`end`
+            AND statEnd > periods.`start`
+            ';
+
+            if ($reportFilter == '') {
+                $body .= ' WHERE periods.`start` >= :fromDt
+            AND periods.`end` <= DATE_ADD(:toDt, INTERVAL 1 DAY) ';
+            }
+            // where periods start is greater than or equal today and
+            // periods end is less than or equal today + 1 day i.e. nextday
+            elseif (($reportFilter == 'today')) {
+                $body .= ' WHERE periods.`start` >= "'.$today.'"
+            AND periods.`end` <= "'.$nextday.'" ';
+            }
+            // where periods start is greater than or equal yesterday and
+            // periods end is less than or equal today
+            elseif (($reportFilter == 'yesterday')) {
+                $body .= ' WHERE periods.`start` >= "'.$yesterday.'"
+	        AND periods.`end` <= "'.$today.'" ';
+            }
+            // where periods start is greater than or equal thisweekmonday and
+            // periods end is less than or equal lastdaythisweek
+            elseif (($reportFilter == 'thisweek')) {
+                $body .= ' WHERE periods.`start` >= "'.$firstdaythisweek.'"
+            AND periods.`end` <= "'.$lastdaythisweek.'" ';
+            }
+            // where periods start is greater than or equal lastweekmonday and
+            // periods end is less than or equal lastdaylastweek
+            elseif (($reportFilter == 'lastweek')) {
+                $body .= ' WHERE periods.`start` >= "'.$firstdaylastweek.'"
+            AND periods.`end` <=  "'.$lastdaylastweek.'" ';
+            }
+            // where periods start is greater than or equal firstdaythismonth and
+            // periods end is less than lastdaythismonth
+            elseif (($reportFilter == 'thismonth')) {
+                $body .= ' 
+                WHERE
+                    periods.`start` >= "'.$firstdaythismonth.'"
+                    AND periods.`end` <=  "'.$lastdaythismonth.'" ';
+            }
+            // where periods start is greater than or equal firstdaylastmonth and
+            // periods end is less than lastdaylastmonth
+            elseif (($reportFilter == 'lastmonth')) {
+                $body .= '  
+                WHERE    
+                    periods.`start` >= "'.$firstdaylastmonth.'"
+                    AND periods.`end` <= "'.$lastdaylastmonth.'" ';
+            }
+            // where periods start is greater than or equal firstdaythisyear and
+            // periods end is less than lastdaythisyear
+            elseif (($reportFilter == 'thisyear')) {
+                $body .= ' 
+                WHERE
+                    periods.`start` >= "'.$firstdaythisyear.'"
+                    AND periods.`end` <= "'.$lastdaythisyear.'" ';
+            }
+            // where periods start is greater than or equal firstdaylastyear and
+            // periods end is less than lastdaylastyear
+            elseif (($reportFilter == 'lastyear')) {
+                $body .= '  
+                WHERE    
+                    periods.`start` >= "'.$firstdaylastyear.'"
+                    AND periods.`end` <= "'.$lastdaylastyear.'" ';
+            }
+
+            $body .= '  
+            ORDER BY periods.`start`, statStart
+	        )B ';
+
+
+            if ($groupByFilter == 'byweek') {
+                $body .= '  
+                    GROUP BY yearWeek ';
+            } elseif ($groupByFilter == 'bymonth') {
+
+                if (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
+                    $body .= '  
+                        GROUP BY monthNo
+                        ORDER BY monthNo ';
+                } else {
+                    $body .= '  
+                        GROUP BY yearDate, monthNo ';
+                }
+
+            } else {
+                $body .= '  
+                    GROUP BY B.start ';
+            }
+
+
+            /*Execute sql statement*/
+            $query = $select . $periods . $body;
+            $this->getLog()->debug($query);
+
+            $options['query'] = $query;
+            $options['params'] = $params;
+
+            $results = $this->getTimeSeriesStore()->executeQuery($options);
+
+            return $results;
+
+        } else {
+            return [];
+        }
+    }
+
+    function getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    {
+        if ( (($type == 'media') && ($mediaId != '')) ||
+            (($type == 'layout') && ($layoutId != '')) ) {
+
+            $fromDt = $this->dateService->parse($fromDt)->startOfDay();
+            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay();
+
+            $yesterday = $this->dateService->parse()->startOfDay()->subDay();
+            $today = $this->dateService->parse()->startOfDay();
+            $nextday = $this->dateService->parse()->startOfDay()->addDay();
+
+            $firstdaythisweek = $this->dateService->parse()->startOfWeek();
+            $lastdaythisweek = $this->dateService->parse()->endOfWeek()->addSecond();
+
+            $firstdaylastweek = $this->dateService->parse()->startOfWeek()->subWeek();
+            $lastdaylastweek = $this->dateService->parse()->endOfWeek()->subWeek()->addSecond();
+
+            $firstdaythismonth = $this->dateService->parse()->startOfMonth();
+            $lastdaythismonth = $this->dateService->parse()->endOfMonth()->addSecond();
+
+            $firstdaylastmonth = $this->dateService->parse()->startOfMonth()->subMonth();
+            $lastdaylastmonth = $this->dateService->parse()->endOfMonth()->subMonth()->addSecond();
+
+            $firstdaythisyear = $this->dateService->parse()->startOfYear();
+            $lastdaythisyear = $this->dateService->parse()->endOfYear()->addSecond();
+
+            $firstdaylastyear = $this->dateService->parse()->startOfYear()->subYear();
+            $lastdaylastyear = $this->dateService->parse()->endOfYear()->subYear()->addSecond();
+
+            if ($reportFilter == '') {
+
+                $hour = 24;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0,  ceil($diffInDays / 7 ) );
+                } elseif ($groupByFilter == 'bymonth') {
+                    $startOfMonthFromDt = new UTCDateTime($this->dateService->parse($fromDt)->startOfMonth()->format('U')*1000);
+                    $input = range(0, ceil($diffInDays / 30));
+                } else {
+                    $input = range(0, $diffInDays);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($fromDt)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($toDt)->format('U')*1000);
+            }
+
+            // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+            // and end is greater than or equal first hour of the day
+            elseif (($reportFilter == 'today')) {
+
+                $hour = 1;
+                $input = range(0, 23);
+
+                $periodStart = new UTCDateTime($this->dateService->parse($today)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($nextday)->format('U')*1000);
+            }
+
+            // where start is less than last hour of the day + 1 hour (i.e., today)
+            // and end is greater than or equal first hour of the day
+            elseif (($reportFilter == 'yesterday')) {
+
+                $hour = 1;
+                $input = range(0, 23);
+
+                $periodStart = new UTCDateTime($this->dateService->parse($yesterday)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($today)->format('U')*1000);
+            }
+
+            // where start is less than last day of the week
+            // and end is greater than or equal first day of the week
+            elseif (($reportFilter == 'thisweek')) {
+
+                $hour = 24;
+                $input = range(0, 6);
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaythisweek)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaythisweek)->format('U')*1000);
+            }
+
+            // where start is less than last day of the week
+            // and end is greater than or equal first day of the week
+            elseif (($reportFilter == 'lastweek')) {
+
+                $hour = 24;
+                $input = range(0, 6);
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastweek)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastweek)->format('U')*1000);
+            }
+
+            // where start is less than last day of the month + 1 day
+            // and end is greater than or equal first day of the month
+            elseif (($reportFilter == 'thismonth')) {
+
+                $hour = 24;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 5);
+                } else {
+                    $input = range(0, 30);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaythismonth)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaythismonth)->format('U')*1000);
+            }
+
+            // where start is less than last day of the month + 1 day
+            // and end is greater than or equal first day of the month
+            elseif (($reportFilter == 'lastmonth')) {
+
+                $hour = 24;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 5);
+                } else {
+                    $input = range(0, 30);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastmonth)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastmonth)->format('U')*1000);
+            }
+
+            // where start is less than last day of the year + 1 day
+            // and end is greater than or equal first day of the year
+            elseif (($reportFilter == 'thisyear')) {
+
+                $hour = 24;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 53);
+                } elseif ($groupByFilter == 'bymonth') {
+                    $input = range(0, 11);
+                } else {
+                    $input = range(0, 365);
+                }
+
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaythisyear)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaythisyear)->format('U')*1000);
+            }
+
+            // where start is less than last day of the year + 1 day
+            // and end is greater than or equal first day of the year
+            elseif (($reportFilter == 'lastyear')) {
+
+                $hour = 24;
+
+                if ($groupByFilter == 'byweek') {
+                    $input = range(0, 53);
+                } elseif ($groupByFilter == 'bymonth') {
+                    $input = range(0, 11);
+                } else {
+                    $input = range(0, 365);
+                }
+
+                $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastyear)->format('U')*1000);
+                $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastyear)->format('U')*1000);
+            }
+
+            // Type filter
+            if (($type == 'layout') && ($layoutId != '')) {
+
+                // Get the campaign ID
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+
+                $matchType = [
+                    '$eq' => [ '$type', 'layout' ]
+                ];
+                $matchId = [
+                    '$eq' => [ '$campaignId', $campaignId ]
+                ];
+            } elseif (($type == 'media') && ($mediaId != '')) {
+                $matchType = [
+                    '$eq' => [ '$type', 'media' ]
+                ];
+                $matchId = [
+                    '$eq' => [ '$mediaId', $mediaId ]
+                ];
+            }
+
+
+            if ($groupByFilter == 'byweek') {
+
+                // PERIOD GENERATION
+                $projectMap = [
+                    '$project' => [
+                        'periods' =>  [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$max' => [
+                                            $periodStart,
+                                            [
+                                                '$add' => [
+                                                    [
+                                                        '$subtract' => [
+                                                            $periodStart,
+                                                            [
+                                                                '$multiply' => [
+                                                                    [
+                                                                        '$subtract' => [
+                                                                            [
+                                                                                '$isoDayOfWeek' => $periodStart
+                                                                            ],
+                                                                            1
+                                                                        ]
+                                                                    ] ,
+                                                                    86400000
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    [
+                                                        '$multiply' => [
+                                                            '$$number',
+                                                            604800000
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$min' => [
+                                            $periodEnd,
+                                            [
+                                                '$add' => [
+                                                    [
+                                                        '$add' => [
+                                                            [
+                                                                '$subtract' => [
+                                                                    $periodStart,
+                                                                    [
+                                                                        '$multiply' => [
+                                                                            [
+                                                                                '$subtract' => [
+                                                                                    [
+                                                                                        '$isoDayOfWeek' => $periodStart
+                                                                                    ],
+                                                                                    1
+                                                                                ]
+                                                                            ] ,
+                                                                            86400000
+                                                                        ]
+                                                                    ]
+                                                                ]
+                                                            ],
+                                                            604800000
+                                                        ]
+                                                    ],
+                                                    [
+                                                        '$multiply' => [
+                                                            '$$number',
+                                                            604800000
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ]
+                ];
+
+                // GROUP BY
+                $groupBy = [
+                    'weekNo' => '$weekNo',
+                ];
+
+            } elseif ($groupByFilter == 'bymonth') {
+
+                // period start becomes start of the month of the selected from date in the case of date range selection
+                if ($reportFilter != '') {
+                    $startOfMonthFromDt = $periodStart;
+                }
+
+                $projectMap = [
+                    '$project' => [
+                        'periods' => [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$dateFromParts' => [
+                                            'year' => [
+                                                '$year' => $startOfMonthFromDt
+                                            ],
+                                            'month' => [
+                                                '$add' => [
+                                                    '$$number',
+                                                    [
+                                                        '$month' => [
+                                                            '$add' => [
+                                                                $startOfMonthFromDt,
+                                                                [
+                                                                    '$multiply' => [
+                                                                        $hour * 3600000,
+                                                                        '$$number'
+                                                                    ]
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ],
+                                            'day' => [
+                                                '$dayOfMonth' => $startOfMonthFromDt
+                                            ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$dateFromParts' => [
+                                            'year' => [
+                                                '$year' => $startOfMonthFromDt
+                                            ],
+                                            'month' => [
+                                                '$add' => [
+                                                    1,
+                                                    [
+                                                        '$add' => [
+                                                            '$$number',
+                                                            [
+                                                                '$month' => [
+                                                                    '$add' => [
+                                                                        $startOfMonthFromDt,
+                                                                        [
+                                                                            '$multiply' => [
+                                                                                $hour * 3600000,
+                                                                                '$$number'
+                                                                            ]
+                                                                        ]
+                                                                    ]
+                                                                ]
+                                                            ]
+                                                        ]
+                                                    ]
+                                                ]
+                                            ],
+                                            'day' => [
+                                                '$dayOfMonth' => $startOfMonthFromDt
+                                            ]
+                                        ]
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ]
+                ];
+
+                // GROUP BY
+                $groupBy = [
+                    'monthNo' => '$monthNo'
+                ];
+
+            } else {
+
+                // PERIOD GENERATION
+                $projectMap = [
+                    '$project' => [
+                        'periods' =>  [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$add' => [
+                                            $periodStart,
+                                            [
+                                                '$multiply' => [
+                                                    $hour*3600000,
+                                                    '$$number'
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$add' => [
+                                            [
+                                                '$add' => [
+                                                    $periodStart,
+                                                    [
+                                                        '$multiply' => [
+                                                            $hour*3600000,
+                                                            '$$number'
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                            , $hour*3600000
+                                        ]
+                                    ],
+                                ]
+                            ]
+                        ]
+                    ]
+                ];
+
+                // GROUP BY
+                $groupBy = [
+                    'period_start' => '$period_start'
+                ];
+            }
+
+            // PERIODS QUERY
+            $cursorPeriodQuery = [
+
+                    $projectMap,
+
+                    // periods needs to be unwind to merge next
+                    [
+                        '$unwind' => '$periods'
+                    ],
+
+                    // replace the root to eliminate _id and get only periods
+                    [
+                        '$replaceRoot' => [
+                            'newRoot' => '$periods'
+                        ]
+                    ],
+
+                    [
+                        '$project' => [
+                            'start' => 1,
+                            'end' => 1,
+                            'monthNo' => [
+                                '$month' =>  '$start'
+                            ],
+                            'yearDate' => [
+                                '$isoWeekYear' =>  '$start'
+                            ],
+                            'weekNo' => [
+                                '$isoWeek' =>  '$start'
+                            ],
+                        ]
+                    ],
+
+                    [
+                        '$addFields' => [
+                            'shortMonth' => [
+                                '$let' => [
+                                    'vars' => [
+                                        'monthString' => ['NA', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                    ],
+                                    'in' => [
+                                        '$arrayElemAt' => [
+                                            '$$monthString', '$monthNo'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+
+                    [
+                        '$match' => [
+                            'start' => [
+                                '$lt' => $periodEnd
+                            ],
+                            'end' => [
+                                '$gt' => $periodStart
+                            ]
+                        ]
+                    ],
+
+                ];
+
+            // Periods result
+            $periods = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->periodTable, 'query' => $cursorPeriodQuery]);
+
+            // STAT AGGREGATION QUERY
+            $statQuery = [
+                [
+                    '$match' => [
+                        'start' =>  [
+                            '$lt' => $periodEnd
+                        ],
+                        'end' => [
+                            '$gt' => $periodStart
+                        ],
+                    ]
+                ],
+
+                [
+                    '$lookup' => [
+                        'from' => 'period',
+                        'let' => [
+                            'stat_start' => '$start',
+                            'stat_end' => '$end',
+                            'stat_duration' => '$duration',
+                            'stat_count' => '$count',
+                        ],
+                        'pipeline' => [
+                            $projectMap,
+                            [
+                                '$unwind' => '$periods'
+                            ],
+
+                        ],
+                        'as' => 'statdata'
+                    ]
+                ],
+
+                [
+                    '$unwind' => '$statdata'
+                ],
+
+                [
+                    '$match' => [
+                        '$expr' => [
+                            '$and' => [
+
+                                // match media id / layout id
+                                $matchType,
+                                $matchId,
+
+                                // display ids
+                                [
+                                    '$in' => [ '$displayId', $displayIds ]
+                                ],
+
+                                // stat.start < period end AND stat.end > period start
+                                // for example, when report filter 'today' is selected
+                                // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
+                                // and end is greater than or equal first hour of the day
+                                [
+                                    '$lt' => [ '$start', '$statdata.periods.end' ]
+                                ],
+                                [
+                                    '$gt' => [ '$end', '$statdata.periods.start' ]
+                                ],
+                            ]
+                        ]
+                    ]
+
+                ],
+
+                [
+                    '$project' => [
+                        '_id' => 1,
+                        'count' => 1,
+                        'duration' => 1,
+                        'start' => 1,
+                        'end' => 1,
+                        'period_start' => '$statdata.periods.start',
+                        'period_end' => '$statdata.periods.end',
+                        'monthNo' => [
+                            '$month' =>  '$statdata.periods.start'
+                        ],
+                        'yearDate' => [
+                            '$isoWeekYear' =>  '$statdata.periods.start'
+                        ],
+                        'weekNo' => [
+                            '$isoWeek' =>  '$statdata.periods.start'
+                        ],
+                        'actualStart' => [
+                            '$max' => [ '$start', '$statdata.periods.start' ]
+                        ],
+                        'actualEnd' => [
+                            '$min' => [ '$end', '$statdata.periods.end' ]
+                        ],
+                        'actualDiff' => [
+                            '$min' => [
+                                '$duration',
+                                [
+                                    '$divide' => [
+                                        [
+                                            '$subtract' => [
+                                                ['$min' => [ '$end', '$statdata.periods.end' ]],
+                                                ['$max' => [ '$start', '$statdata.periods.start' ]]
+                                            ]
+                                        ], 1000
+                                    ]
+                                ]
+                            ]
+                        ],
+
+                    ]
+
+                ],
+
+                [
+                    '$group' => [
+                        '_id' => $groupBy,
+                        'period_start' => ['$first' => '$period_start'],
+                        'monthNo' => ['$first' => '$monthNo'],
+                        'yearDate' => ['$first' => '$yearDate'],
+                        'weekNo' => ['$first' => '$weekNo'],
+                        'NumberPlays' => ['$sum' => '$count'],
+                        'Duration' => ['$sum' => '$actualDiff'],
+                        'end' => ['$first' => '$end'],
+                    ]
+                ],
+
+                [
+                    '$project' => [
+                        'start' => '$_id.period_start',
+                        'end' => '$end',
+                        'period_start' => 1,
+                        'NumberPlays' => 1,
+                        'Duration' => 1,
+                        'monthNo' => 1,
+                        'yearDate' => 1,
+                        'weekNo' => 1,
+                    ]
+                ],
+
+                // mongodb doesnot have monthname
+                // so we use addFields to add month name (shortMonth) in a $let aggregation (map monthNo with monthString)
+                [
+                    '$addFields' => [
+                        'shortMonth' => [
+                            '$let' => [
+                                'vars' => [
+                                    'monthString' => ['NA', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                                ],
+                                'in' => [
+                                    '$arrayElemAt' => [
+                                        '$$monthString', '$monthNo'
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+
+            ];
+
+            // Stats result
+            $results = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->table, 'query' => $statQuery]);
+
+            // Run period loop and map the stat result for each period
+            $resultArray = [];
+            foreach ($periods as $key => $period) {
+
+                // Format to datetime string
+                $start = $period['start']->toDateTime()->format('Y-m-d H:i:s');
+
+                // end is weekEnd in byweek filter
+                $end = $period['end']->toDateTime()->format('Y-m-d H:i:s');
+
+                $matched = false;
+                foreach ($results as $k => $result) {
+
+                    if( $result['period_start'] == $period['start'] ) {
+
+                        $NumberPlays = $result['NumberPlays'];
+                        $Duration = $result['Duration'];
+                        $monthNo = $result['monthNo'];
+                        $yearDate = $result['yearDate'];
+                        $weekNo = $result['weekNo'];
+                        $shortMonth = $result['shortMonth'];
+
+                        $matched = true;
+                        break;
+                    }
+                }
+
+                $resultArray[$key]['start'] = $start;
+
+                // end is weekEnd in byweek filter
+                if ($groupByFilter == 'byweek') {
+                    $resultArray[$key]['weekEnd'] = $end;
+                }
+
+                if($matched == true) {
+                    $resultArray[$key]['NumberPlays'] = $NumberPlays;
+                    $resultArray[$key]['Duration'] = $Duration;
+                    $resultArray[$key]['monthNo'] = $monthNo;
+                    $resultArray[$key]['yearDate'] = $yearDate;
+                    $resultArray[$key]['weekNo'] = $weekNo;
+                    $resultArray[$key]['shortMonth'] = $shortMonth;
+
+                } else {
+                    $resultArray[$key]['NumberPlays'] = 0;
+                    $resultArray[$key]['Duration'] = 0;
+                    $resultArray[$key]['monthNo'] = $period['monthNo'];
+                    $resultArray[$key]['yearDate'] = $period['yearDate'];
+                    $resultArray[$key]['weekNo'] = $period['weekNo'];
+                    $resultArray[$key]['shortMonth'] = $period['shortMonth'];
+
+                }
+            }
+
+            return $resultArray;
+
+        } else {
+            return [];
+        }
+    }
+
+
 
 }

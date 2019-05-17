@@ -2,10 +2,6 @@
 
 namespace Xibo\Report;
 
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\SavedReportFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -53,26 +49,6 @@ trait ReportTrait
     private $sanitizerService;
 
     /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
      * @var Request
      */
     private $request;
@@ -86,12 +62,9 @@ trait ReportTrait
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
-     * @param DisplayFactory $displayFactory
-     * @param MediaFactory $mediaFactory
-     * @param LayoutFactory $layoutFactory
-     * @param SavedReportFactory $savedReportFactory
+     * @return $this
      */
-    public function setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $displayFactory, $mediaFactory, $layoutFactory, $savedReportFactory)
+    public function setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
     {
         $this->state = $state;
         $this->store = $store;
@@ -100,10 +73,6 @@ trait ReportTrait
         $this->configService = $config;
         $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
-        $this->displayFactory = $displayFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->savedReportFactory = $savedReportFactory;
         return $this;
     }
 
