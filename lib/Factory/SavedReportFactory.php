@@ -147,12 +147,13 @@ class SavedReportFactory extends BaseFactory
                saved_report.savedReportId,
                saved_report.saveAs,
                reportschedule.name AS reportScheduleName,
+               reportschedule.reportName,
                saved_report.generatedOn,
                media.mediaId,
                media.originalFileName,
                media.storedAs,
                `user`.UserName AS owner
-        ';
+            ';
 
         $body = ' FROM saved_report 
                     INNER JOIN media
@@ -169,7 +170,7 @@ class SavedReportFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
 
-        // Layout Like
+        // Like
         if ($this->getSanitizer()->getString('saveAs', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('saveAs', $filterBy));
             $this->nameFilter('saved_report', 'saveAs', $terms, $body, $params);

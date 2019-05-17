@@ -21,10 +21,8 @@
  */
 
 namespace Xibo\Service;
-use phpDocumentor\Reflection\Types\Array_;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
+
+use Slim\Slim;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Report\ReportInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -38,6 +36,7 @@ interface ReportServiceInterface
 {
     /**
      * ReportServiceInterface constructor.
+     * @param Slim $app
      * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -45,12 +44,9 @@ interface ReportServiceInterface
      * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
-     * @param DisplayFactory $displayFactory
-     * @param MediaFactory $mediaFactory
-     * @param LayoutFactory $layoutFactory
      * @param SavedReportFactory $savedReportFactory
  */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $displayFactory, $mediaFactory, $layoutFactory, $savedReportFactory);
+    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory);
 
     // List all reports that are available
     public function listReports();
@@ -69,18 +65,24 @@ interface ReportServiceInterface
 
     /**
      * Create the report object by report classname
-     * @param string $reportName
+     * @param string $className
      * @return ReportInterface
      */
     public function createReportObject($className);
 
     /**
-     * Run the report
+     * Populate form title and hidden fields
      * @param string $reportName
-     * @param string $filterCriteria
      * @return array
      */
-    public function runReport($reportName, $filterCriteria);
+    public function getReportScheduleFormData($reportName);
+
+    /**
+     * Set Report Schedule form data
+     * @param string $reportName
+     * @return array
+     */
+    public function setReportScheduleFormData($reportName);
 
     /**
      * Generate saved report name
@@ -97,4 +99,12 @@ interface ReportServiceInterface
      * @return array
      */
     public function getSavedReportResults($savedreportId, $reportName);
+
+    /**
+     * Run the report
+     * @param string $reportName
+     * @param string $filterCriteria
+     * @return array
+     */
+    public function runReport($reportName, $filterCriteria);
 }

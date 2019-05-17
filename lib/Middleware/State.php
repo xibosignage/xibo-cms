@@ -158,8 +158,9 @@ class State extends Middleware
         });
 
         // Register the report service
-        $app->container->singleton('reportService', function($container) {
+        $app->container->singleton('reportService', function($container) use($app){
             return new ReportService(
+                $app,
                 $container->state,
                 $container->store,
                 $container->timeSeriesStore,
@@ -167,9 +168,6 @@ class State extends Middleware
                 $container->configService,
                 $container->dateService,
                 $container->sanitizerService,
-                $container->displayFactory,
-                $container->mediaFactory,
-                $container->layoutFactory,
                 $container->savedReportFactory
             );
         });

@@ -99,6 +99,11 @@ class ReportScheduleFactory extends BaseFactory
         return $reportSchedules[0];
     }
 
+    /**
+     * @param null $sortOrder
+     * @param array $filterBy
+     * @return ReportSchedule[]
+     */
     public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null)
@@ -106,39 +111,66 @@ class ReportScheduleFactory extends BaseFactory
 
         $entries = [];
         $params = [];
-        $sql = 'SELECT reportScheduleId, name, reportName, filterCriteria, schedule, lastRunDt, createdDt, `reportschedule`.userId,
-               `user`.UserName AS owner FROM `reportschedule` ';
+        $select = '
+            SELECT 
+                reportschedule.reportScheduleId, 
+                reportschedule.name, 
+                reportschedule.reportName, 
+                reportschedule.filterCriteria, 
+                reportschedule.schedule, 
+                reportschedule.lastRunDt, 
+                reportschedule.createdDt, 
+                reportschedule.userId,
+               `user`.UserName AS owner 
+           ';
 
-        $sql .= "   LEFT OUTER JOIN `user` ON `user`.userId = `reportschedule`.userId ";
+        $body = ' FROM `reportschedule` ';
 
-        $sql .= " WHERE 1 = 1 ";
+        $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `reportschedule`.userId ";
 
-        if ($this->getSanitizer()->getInt('reportScheduleId', $filterBy) != null) {
-            $params['reportScheduleId'] = $this->getSanitizer()->getInt('reportScheduleId', $filterBy);
-            $sql .= ' AND `reportScheduleId` = :reportScheduleId ';
+        $body .= " WHERE 1 = 1 ";
+
+        // View Permissions
+        //$this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
+
+        // Like
+        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
+            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+            $this->nameFilter('reportschedule', 'name', $terms, $body, $params);
         }
-        if ($this->getSanitizer()->getString('reportName', $filterBy) != null) {
-            $params['reportName'] = $this->getSanitizer()->getString('reportName', $filterBy);
-            $sql .= ' AND `reportName` = :reportName ';
-        }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
-            $sql .= ' AND `name` = :name ';
-        }
-
-        if ($this->getSanitizer()->getInt('userId', $filterBy) != null) {
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
-            $sql .= ' AND `userId` = :userId ';
+        if ($this->getSanitizer()->getInt('reportScheduleId', 0, $filterBy) != 0) {
+            $params['reportScheduleId'] = $this->getSanitizer()->getInt('reportScheduleId', 0,  $filterBy);
+            $body .= " AND reportschedule.reportScheduleId = :reportScheduleId ";
         }
 
         // Sorting?
-        $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
 
-        foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
+        $sql = $select . $body . $order . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'reportScheduleId, lastRunDt'
+                ]
+            ]);
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+        
         return $entries;
     }
 }

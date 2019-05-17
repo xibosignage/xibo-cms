@@ -25,7 +25,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Save report for " %} {{ type }}{% trans "Id " %} {{ selectedId }} - {{ selectedName }}
+    {{ formTitle }}
 {% endblock %}
 
 {% block formButtons %}
@@ -38,8 +38,7 @@
         <div class="col-md-12">
             <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.add") }}">
 
-                {{ forms.hidden("selectedId", selectedId) }}
-                {{ forms.hidden("type", type) }}
+                {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}
 
                 {% set title %}{% trans "Filter" %}{% endset %}

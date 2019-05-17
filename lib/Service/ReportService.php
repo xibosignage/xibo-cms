@@ -23,9 +23,6 @@
 namespace Xibo\Service;
 
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -36,6 +33,10 @@ use Xibo\Storage\TimeSeriesStoreInterface;
  */
 class ReportService implements ReportServiceInterface
 {
+    /**
+     * @var \Slim\Slim
+     */
+    public $app;
 
     /**
      * @var \Xibo\Helper\ApplicationState
@@ -77,25 +78,11 @@ class ReportService implements ReportServiceInterface
     private $savedReportFactory;
 
     /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
      * @inheritdoc
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $displayFactory, $mediaFactory, $layoutFactory, $savedReportFactory)
+    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
     {
+        $this->app = $app;
         $this->state = $state;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -103,9 +90,6 @@ class ReportService implements ReportServiceInterface
         $this->config = $config;
         $this->date = $date;
         $this->sanitizer = $sanitizer;
-        $this->displayFactory = $displayFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->layoutFactory = $layoutFactory;
         $this->savedReportFactory = $savedReportFactory;
     }
 
@@ -172,33 +156,45 @@ class ReportService implements ReportServiceInterface
         if (!\class_exists($className))
             throw new NotFoundException(__('Class %s not found', $className));
 
-        return $object = new $className(
+        $object = new $className(
             $this->state,
             $this->store,
             $this->timeSeriesStore,
             $this->log,
             $this->config,
             $this->date,
-            $this->sanitizer,
-            $this->displayFactory,
-            $this->mediaFactory,
-            $this->layoutFactory,
-            $this->savedReportFactory);
+            $this->sanitizer);
+
+        $object->setFactories($this->app->container);
+
+        return $object;
+
     }
 
     /**
      * @inheritdoc
      */
-    public function runReport($reportName, $filterCriteria)
+    public function getReportScheduleFormData($reportName)
     {
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);
 
-        $filterCriteria = json_decode($filterCriteria, true);
+        // Populate form title and hidden fields
+        return $object->getReportScheduleFormData();
+    }
 
-        // Retrieve the result array
-        return $object->getResults($filterCriteria);
+    /**
+     * @inheritdoc
+     */
+    public function setReportScheduleFormData($reportName)
+    {
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        // Set Report Schedule form data
+        return $object->setReportScheduleFormData();
     }
 
     /**
@@ -224,7 +220,46 @@ class ReportService implements ReportServiceInterface
 
         $object = $this->createReportObject($className);
 
+        $savedReport = $this->savedReportFactory->getById($savedreportId);
+
+        // Open a zipfile and read the json
+        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
+
+        // Do some pre-checks on the arguments we have been provided
+        if (!file_exists($zipFile))
+            throw new \InvalidArgumentException(__('File does not exist'));
+
+        // Open the Zip file
+        $zip = new \ZipArchive();
+        if (!$zip->open($zipFile))
+            throw new \InvalidArgumentException(__('Unable to open ZIP'));
+
+        // Get the reportscheduledetails
+        $json = json_decode($zip->getFromName('reportschedule.json'), true);
+
         // Retrieve the saved report result array
-        return $object->getSavedReportResults($savedreportId);
+        $results = $object->getSavedReportResults($json, $savedReport->saveAs);
+
+        // Return data to build chart
+        return [
+            'template' => $results['template'],
+            'chartData' => $results['chartData']
+        ];
+
      }
+
+    /**
+     * @inheritdoc
+     */
+    public function runReport($reportName, $filterCriteria)
+    {
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        $filterCriteria = json_decode($filterCriteria, true);
+
+        // Retrieve the result array
+        return $object->getResults($filterCriteria);
+    }
 }

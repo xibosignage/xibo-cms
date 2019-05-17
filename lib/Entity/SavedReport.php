@@ -45,6 +45,12 @@ class SavedReport implements \JsonSerializable
     public $reportScheduleName;
 
     /**
+     * @SWG\Property(description="Report name")
+     * @var string
+     */
+    public $reportName;
+
+    /**
      * @SWG\Property(description="Saved report generated on")
      * @var string
      */
