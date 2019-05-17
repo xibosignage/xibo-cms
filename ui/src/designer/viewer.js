@@ -109,6 +109,8 @@ Viewer.prototype.render = function(element) {
  */
 Viewer.prototype.renderLayout = function(layout, container) {
 
+    const app = getXiboApp();
+
     let requestPath = urlsForApi.layout.preview.url;
     requestPath = requestPath.replace(':id', layout[layout.type + 'Id']);
 
@@ -123,7 +125,7 @@ Viewer.prototype.renderLayout = function(layout, container) {
         containerStyle: 'layout-player',
         dimensions: this.containerElementDimensions,
         layout: scaledLayout,
-        trans: layoutDesignerTrans
+        trans: viewerTrans
     });
 
     // Replace container html
@@ -168,6 +170,9 @@ Viewer.prototype.renderLayout = function(layout, container) {
     container.find('#fs-btn').click(function() {
         this.toggleFullscreen();
     }.bind(this));
+
+    // Initialize tooltips
+    app.common.reloadTooltips(container);
 };
 
 /**
@@ -176,7 +181,8 @@ Viewer.prototype.renderLayout = function(layout, container) {
 Viewer.prototype.renderRegion = function(element, container, smallPreview = false, widgetIndex = 1) {
 
     const self = this;
-
+    const app = getXiboApp();
+    
     // If there was still a render request, abort it
     if(this.renderRequest != undefined && !smallPreview) {
         this.renderRequest.abort('requestAborted');
@@ -227,9 +233,9 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             res: res,
             dimensions: containerElementDimensions,
             type: elementType,
-            trans: layoutDesignerTrans,
             smallPreview: smallPreview,
-            isEmpty: (totalItems <= 0)
+            isEmpty: (totalItems <= 0),
+            trans: viewerTrans
         });
 
         // Append layout html to the container div
@@ -294,6 +300,9 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             }.bind(this));
         }
 
+        // Initialize tooltips
+        app.common.reloadTooltips(container);
+
     }.bind(this)).fail(function(res) {
         // Clear request var after response
         self.renderRequest = undefined;
@@ -311,6 +320,8 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
  */
 Viewer.prototype.renderNavbar = function(element, data) {
 
+    const app = getXiboApp();
+    
     // Stop if navbar container does not exist
     if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
         return;
@@ -330,7 +341,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 extra: data.extra,
                 type: element.type,
                 pagingEnable: (totalItems > 1),
-                trans: layoutDesignerTrans
+                trans: viewerTrans
             }
         ));
 
@@ -350,10 +361,13 @@ Viewer.prototype.renderNavbar = function(element, data) {
             {
                 type: element.type,
                 name: element.name,
-                trans: layoutDesignerTrans
+                trans: viewerTrans
             }
         ));
     }
+
+    // Initialize tooltips
+    app.common.reloadTooltips(this.navbarContainer);
 };
 
 /**

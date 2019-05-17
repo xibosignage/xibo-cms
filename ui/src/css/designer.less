@@ -40,8 +40,8 @@
 @timeline-transition-in-fg-color: #64e01c;
 @timeline-transition-out-fg-color: #ec3737;
 
-@top-btn-fg-colour: #ccc;
-@top-btn-hover-fg-colour: #f0f0f0;
+@top-btn-fg-colour: #c4e3fe;
+@top-btn-hover-fg-colour: #f3f9fe;
 
 @viewer-player-bg-colour: #111;
 @viewer-preview-text-colour: #bbb;
@@ -69,7 +69,7 @@
 // CSS
 #layout-editor  {
     min-height: 85vh;
-    padding-bottom: 10vh;
+    padding-bottom: 110px;
     overflow: hidden;
 }
 
@@ -241,7 +241,7 @@
 
 #layout-editor #layout-timeline .designer-region {
     background: @region-main-bg-color;
-    height: 40px;
+    height: 48px;
     padding: 3px;
     margin: 4px 0;
     .border-radius(4px);
@@ -254,7 +254,7 @@
 #layout-editor #layout-timeline .designer-region .message {
     color: white;
     font-weight: bold;
-    padding: 7px;
+    padding: 10px;
 }
 
 #layout-editor #layout-timeline #timeline-container {
@@ -286,22 +286,10 @@
     .border-radius(4px);
 }
 
-#layout-editor #layout-timeline .designer-widget .widgetItem {
+#layout-editor #layout-timeline .designer-widget .widgetLabel {
     float: left;
     height: inherit;
-}
-
-#layout-editor #layout-timeline .designer-widget .widgetProperties {
-    right: 0;
-    z-index: 2;
-    position: absolute;
-}
-
-#layout-editor #layout-timeline .designer-widget .widgetInfo {
-    padding: 2px 4px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widgetLabel {
+    color: @designer-module-bg-color;
     min-width: 20px;
     height: 100%;
     text-align: center;
@@ -315,15 +303,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    max-width: 50%;
-    float: left;
-    padding: 0 2px;
+    max-width: 90%;
+    padding-left: 4px;
 }
 
-#layout-editor #layout-timeline .designer-widget .widgetSubType {
-    color: @timeline-widget-fg-color2;
-    padding: 0 2px;
-    float: left;
+#layout-editor #layout-timeline .designer-widget .widgetProperties {
+     float: right;
 }
 
 #layout-editor #layout-timeline .designer-widget .widget-transition-container {
@@ -514,6 +499,10 @@
 }
 
 #layout-editor #layout-viewer .designer-region {
+
+    .module-preview-icon {
+        font-size: 2em;
+    }
 
     .set-transparent-color(background; white; 30%);
     .box-shadow(0 0 4px 0px #444);

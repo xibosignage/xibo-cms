@@ -188,6 +188,9 @@ class Playlist extends Base
                         $widget->tags = $widget->module->getMediaTags();
                     }
 
+                    // Add widget module type name
+                    $widget->moduleName = $widget->module->getModuleName();
+
                     // Permissions?
                     if ($loadPermissions) {
                         // Augment with editable flag

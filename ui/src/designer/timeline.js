@@ -318,6 +318,8 @@ Timeline.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
  */
 Timeline.prototype.render = function(layout) {
 
+    const app = getXiboApp();
+
     // If starting zoom is not defined, calculate its value based on minimum widget duration
     if(this.properties.zoom === -1) {
         this.calculateStartingZoom(layout.regions);
@@ -339,7 +341,7 @@ Timeline.prototype.render = function(layout) {
     const html = timelineTemplate({
         layout: layout, 
         properties: this.properties,
-        trans: layoutDesignerTrans
+        trans: timelineTrans
     });
 
     // Append layout html to the main div
@@ -515,6 +517,9 @@ Timeline.prototype.render = function(layout) {
             self.render(layout);
         }
     }, 500));
+
+    // Initialize tooltips
+    app.common.reloadTooltips(this.DOMObject);
 
     // Update layout status
     this.updateLayoutStatus();

@@ -5,7 +5,7 @@ describe('Layout View', function() {
         cy.visit('/layout/view');
     });
 
-    it('create a new layout', function() {
+    it('should create a new layout and be redirected to the layout designer', function() {
 
         cy.get('a[href="/layout/form/add"]').click();
 
@@ -21,35 +21,42 @@ describe('Layout View', function() {
         cy.get('.modal-dialog').contains('Save').click();
 
         cy.get('#layout-editor');
-        
     });
 
-    it('search and delete existing layout', function() {
+    it('searches and delete existing layout', function() {
         
         cy.server();
         cy.route('/layout?draw=*').as('layoutGridLoad');
         cy.route('DELETE', '/layout/*').as('deleteLayout');
 
-        // Filter for the created layout
-        cy.get('#Filter input[name="layout"]')
-            .type(this.layout_view_test_layout);
+        // Create random name
+        const uuid = Cypress._.random(0, 1e9);
 
-        // Wait for the filter to make effect
-        cy.wait(2000);
-        cy.wait('@layoutGridLoad');
+        // Create a new layout and go to the layout's designer page, then load toolbar prefs
+        cy.createLayout(uuid).as('testLayoutId').then((res) => {
 
-        // Click on the first row element to open the designer
-        cy.get('#layouts tr:first-child .dropdown-toggle').click();
+            // Filter for the created layout
+            cy.get('#Filter input[name="layout"]')
+                .type(uuid);
 
-        cy.get('#layouts tr:first-child .layout_button_delete').click();
+            // Wait for the filter to make effect
+            cy.wait(2000);
+            cy.wait('@layoutGridLoad');
 
-        // Delete test layout
-        cy.get('.bootbox .save-button').click();
+            // Click on the first row element to open the designer
+            cy.get('#layouts tr:first-child .dropdown-toggle').click();
 
-        // Wait for the widget to save
-        cy.wait('@deleteLayout');
+            cy.get('#layouts tr:first-child .layout_button_delete').click();
 
-        // Check if layout is deleted in toast message
-        cy.get('.toast').contains('Deleted ' + this.layout_view_test_layout);
+            // Delete test layout
+            cy.get('.bootbox .save-button').click();
+
+            // Wait for the widget to save
+            cy.wait('@deleteLayout');
+
+            // Check if layout is deleted in toast message
+            cy.get('.toast').contains('Deleted ' + uuid);
+        });
+
     });
 });

@@ -26,6 +26,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     // widget type
     this.type = 'widget';
     this.subType = data.type;
+    this.moduleName = data.moduleName;
 
     // Permissions
     this.isEditable = data.isEditable;

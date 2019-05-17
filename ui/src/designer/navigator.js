@@ -35,6 +35,7 @@ let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
 Navigator.prototype.render = function(layout) {
 
     const self = this;
+    const app = getXiboApp();
 
     if(this.editMode) {
         if(lD.selectedObject.type == 'region') {
@@ -53,11 +54,14 @@ Navigator.prototype.render = function(layout) {
     // Save render scale
     this.layoutRenderScale = scaledLayout.scaledDimensions.scale;
 
-    // Compile layout template with data
-    const html = navigatorLayoutTemplate(scaledLayout);
-
     // Append layout html to the main div
-    this.DOMObject.html(html);
+    this.DOMObject.html(navigatorLayoutTemplate(Object.assign(
+        {},
+        scaledLayout, 
+        {
+            trans: navigatorTrans
+        }
+    )));
 
     // Make regions draggable and resizable if navigator's on edit mode
     // Get layout container
@@ -203,6 +207,9 @@ Navigator.prototype.render = function(layout) {
         }
     }.bind(this));
 
+    // Initialize tooltips
+    app.common.reloadTooltips(this.DOMObject);
+
     // Render navbar
     this.renderNavbar();
 };
@@ -213,6 +220,7 @@ Navigator.prototype.render = function(layout) {
 Navigator.prototype.renderNavbar = function() {
 
     const self = this;
+    const app = getXiboApp();
 
     // Return if navbar does not exist
     if(this.navbarContainer === null) {
@@ -220,7 +228,7 @@ Navigator.prototype.renderNavbar = function() {
     }
 
     // Get navigator trans
-    let newNavigatorEditTrans = navigatorEditTrans;
+    let newNavigatorEditTrans = navigatorTrans;
 
     // Check if trash bin is active
     let trashBinActive = lD.selectedObject.isDeletable && (lD.readOnlyMode === undefined || lD.readOnlyMode === false);
@@ -247,7 +255,7 @@ Navigator.prototype.renderNavbar = function() {
         {
             selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
             undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled'),
-            trans: navigatorEditTrans,
+            trans: newNavigatorEditTrans,
             regionSelected: (lD.selectedObject.type == 'region')
         }
     ));
@@ -384,6 +392,10 @@ Navigator.prototype.renderNavbar = function() {
             }).attr('data-test', 'deleteRegionModal');
         }
     });
+
+    // Initialize tooltips
+    app.common.reloadTooltips(this.navbarContainer);
+    
 };
 
 

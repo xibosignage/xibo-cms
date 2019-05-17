@@ -1,31 +1,36 @@
 <div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}"
     class="playlist-widget selectable {{#eq isValid 0}}invalid-widget{{/eq}} {{#if selected}}selected{{/if}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
     
-    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">{{ duration }}</div>
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
+        <div class="widgetSubType">
+            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" title="{{moduleName}}"></i>
+        </div>
+        <div class="widgetDuration">
+            {{ duration }}
+        </div>
+    </div>
 
-    <span class="widgetSubType">
-        [{{ subType }}]
-    </span>
-
-    <span class="widgetName" title="{{widgetName}}">
+    <div class="widgetName tooltip-always-on" data-toggle="tooltip" title="{{widgetName}}">
         {{widgetName}}
-    </span>
+    </div>
 
-    {{#if audio}}
-        <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
-    {{/if}}
+    <div class="widgetProperties">
+        {{#if audio}}
+            <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
+        {{/if}}
 
-    {{#each transitions}}
-        <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
-    {{/each}}
+        {{#each transitions}}
+            <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
+        {{/each}}
 
-    {{#gt fromDt DATE_MIN}}
-        <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
-    {{else}}
-        {{#gt DATE_MAX toDt}}
+        {{#gt fromDt DATE_MIN}}
             <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
+        {{else}}
+            {{#gt DATE_MAX toDt}}
+                <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
+            {{/gt}}
         {{/gt}}
-    {{/gt}}
+    </div>
 </div>
 
 
