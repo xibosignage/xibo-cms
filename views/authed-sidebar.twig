@@ -123,6 +123,17 @@
             {% endif %}
         {% endif %}
 
+
+        {% if currentUser.routeViewable("/report") %}
+            {% if currentUser.routeViewable("/report") %}
+                <li class="sidebar-list"><a href="{{ urlFor("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/report") %}
+                <li class="sidebar-list"><a href="{{ urlFor("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
+            {% endif %}
+        {% endif %}
+
         {% if currentUser.routeViewable("/log") or currentUser.routeViewable("/sessions") or currentUser.routeViewable("/auditlog") or currentUser.routeViewable("/fault") or currentUser.routeViewable("/help") %}
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
             {% if currentUser.routeViewable("/log") %}

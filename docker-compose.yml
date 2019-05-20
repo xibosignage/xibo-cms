@@ -4,9 +4,9 @@ services:
   db:
     image: mysql:5.6
     ports:
-      - 3315:3306
+    - 3315:3306
     volumes:
-     - ./containers/db:/var/lib/mysql
+    - ./containers/db:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: "root"
       MYSQL_DATABASE: "cms"
@@ -14,7 +14,7 @@ services:
   xmr:
     image: xibosignage/xibo-xmr:release-0.7
     ports:
-     - "9505:9505"
+    - "9505:9505"
     environment:
       XMR_DEBUG: "true"
       IPV6RESPSUPPORT: "false"
@@ -25,19 +25,19 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
-     - ./:/var/www/cms
+    - ./:/var/www/cms
     ports:
-     - "80:80"
+    - "80:80"
     environment:
       CMS_DEV_MODE: "true"
       MYSQL_DATABASE: "cms"
 
   swagger:
-      image: swaggerapi/swagger-ui:latest
-      ports:
-       - "8080:8080"
-      environment:
-        - API_URL=http://localhost/swagger.json
+    image: swaggerapi/swagger-ui:latest
+    ports:
+    - "8080:8080"
+    environment:
+    - API_URL=http://localhost/swagger.json
 
 networks:
   default:

@@ -541,6 +541,10 @@ class MediaFactory extends BaseFactory
             $body .= ' AND media.type <> \'playersoftware\' ';
         }
 
+        if ($this->getSanitizer()->getInt('notSavedReport', $filterBy) == 1) {
+            $body .= ' AND media.type <> \'savedreport\' ';
+        }
+
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
@@ -552,6 +556,7 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND media.type <> \'genericfile\'
                 AND media.type <> \'playersoftware\'
+                AND media.type <> \'savedreport\'
                 AND media.type <> \'font\'
             ';
         }
@@ -560,6 +565,7 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND (media.type = \'genericfile\'
                 OR media.type = \'playersoftware\'
+                OR media.type = \'savedreport\'
                 OR media.type = \'font\')
             ';
         }
@@ -574,6 +580,7 @@ class MediaFactory extends BaseFactory
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
                 AND media.type <> \'playersoftware\'
+                AND media.type <> \'savedreport\'
             ';
 
             // DataSets with library images
