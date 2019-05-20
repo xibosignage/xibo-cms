@@ -558,6 +558,13 @@ class Playlist implements \JsonSerializable
         // Delete my closure table records
         $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);
 
+        // Unassign tags
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tag->unassignPlaylist($this->playlistId);
+            $tag->save();
+        }
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */

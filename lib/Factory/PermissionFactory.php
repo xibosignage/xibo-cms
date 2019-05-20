@@ -152,6 +152,12 @@ class PermissionFactory extends BaseFactory
                 }
                 break;
 
+            case 'group delete':
+                foreach ($user->groups as $group) {
+                    $this->create($group->groupId, $entity, $objectId, 1, 1, 1)->save();
+                }
+                break;
+
             case 'private':
                 break;
 
