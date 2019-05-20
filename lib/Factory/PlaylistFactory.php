@@ -345,8 +345,11 @@ class PlaylistFactory extends BaseFactory
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        } else {
+            $order .= 'ORDER BY `playlist`.name ';
+        }
 
         $limit = '';
         // Paging

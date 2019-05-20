@@ -103,7 +103,7 @@ class Ticker extends ModuleWidget
      * Edit Ticker
      *
      * @SWG\Post(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?ticker",
      *  operationId="WidgetTickerEdit",
      *  tags={"widget"},
      *  summary="Edit a ticker Widget",

@@ -50,6 +50,7 @@ $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
 // Login Requests
 $app->post('/login', '\Xibo\Controller\Login:login');
 $app->post('/login/forgotten', '\Xibo\Controller\Login:forgottenPassword')->name('login.forgotten');
+$app->get('/tfa', '\Xibo\Controller\Login:twoFactorAuthForm')->name('tfa');
 
 // Logout Request
 $app->get('/logout', '\Xibo\Controller\Login:logout')->name('logout');
@@ -170,7 +171,7 @@ $app->get('/user/view', '\Xibo\Controller\User:displayPage')->name('user.view');
 $app->post('/user/welcome', '\Xibo\Controller\User:userWelcomeSetUnseen')->name('welcome.wizard.unseen');
 $app->put('/user/welcome', '\Xibo\Controller\User:userWelcomeSetSeen')->name('welcome.wizard.seen');
 $app->get('/user/apps', '\Xibo\Controller\User:myApplications')->name('user.applications');
-$app->get('/user/form/password', '\Xibo\Controller\User:changePasswordForm')->name('user.change.password.form');
+$app->get('/user/form/profile', '\Xibo\Controller\User:editProfileForm')->name('user.edit.profile.form');
 $app->get('/user/page/password', '\Xibo\Controller\User:forceChangePasswordPage')->name('user.force.change.password.page');
 $app->get('/user/form/add', '\Xibo\Controller\User:addForm')->name('user.add.form');
 $app->get('/user/form/edit/:id', '\Xibo\Controller\User:editForm')->name('user.edit.form');

@@ -168,7 +168,7 @@ class Twitter extends TwitterBase
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?twitter",
      *  operationId="WidgetTwitterEdit",
      *  tags={"widget"},
      *  summary="Edit a Twitter Widget",

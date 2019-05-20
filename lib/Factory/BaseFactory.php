@@ -167,17 +167,26 @@ class BaseFactory
                 SELECT `permission`.objectId
                   FROM `permission`
                     INNER JOIN `permissionentity`
-                    ON `permissionentity`.entityId = `permission`.entityId
+                        ON `permissionentity`.entityId = `permission`.entityId
                     INNER JOIN `group`
-                    ON `group`.groupId = `permission`.groupId
-                    LEFT OUTER JOIN `lkusergroup`
-                    ON `lkusergroup`.groupId = `group`.groupId
-                    LEFT OUTER JOIN `user`
-                    ON lkusergroup.UserID = `user`.UserID
-                      AND `user`.userId = :currentUserId
+                        ON `group`.groupId = `permission`.groupId
+                    INNER JOIN `lkusergroup`
+                        ON `lkusergroup`.groupId = `group`.groupId
+                    INNER JOIN `user`
+                        ON lkusergroup.UserID = `user`.UserID
                  WHERE `permissionentity`.entity = :permissionEntity
+                    AND `user`.userId = :currentUserId
                     AND `permission`.view = 1
-                    AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
+                 UNION ALL   
+                 SELECT `permission`.objectId
+                    FROM `permission`
+                        INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = `permission`.entityId
+                        INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                    WHERE `permissionentity`.entity = :permissionEntity
+                        AND `group`.isEveryone = 1
+                        AND `permission`.view = 1
               )
             ';
 

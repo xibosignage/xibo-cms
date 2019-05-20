@@ -48,7 +48,7 @@ class WebPage extends ModuleWidget
      * Edit a Webpage Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?webpage",
      *  operationId="WidgetWebpageEdit",
      *  tags={"widget"},
      *  summary="Edit a Web page Widget",

@@ -198,7 +198,8 @@ class State extends Middleware
             '/sssp_config.xml',
             '/sssp_dl.wgt',
             '/playersoftware/:nonce/sssp_dl.wgt',
-            '/playersoftware/:nonce/sssp_config.xml'
+            '/playersoftware/:nonce/sssp_config.xml',
+            '/tfa'
         ];
 
         // The state of the application response
@@ -723,7 +724,8 @@ class State extends Middleware
                 $container->configService,
                 $container->session,
                 $container->userFactory,
-                $container->pool
+                $container->pool,
+                $container->store
             );
         });
 

@@ -237,6 +237,25 @@ class User implements \JsonSerializable
     public $isDisplayNotification = 0;
 
     /**
+     * @SWG\Property(description="The two factor type id")
+     * @var int
+     */
+    public $twoFactorTypeId;
+
+    /**
+     * @SWG\Property(description="Two Factor authorisation shared secret for this user")
+     * @var string
+     */
+    public $twoFactorSecret;
+
+    /**
+     * @SWG\Property(description="Two Factor authorisation recovery codes")
+     * @var array
+     */
+    public $twoFactorRecoveryCodes = [];
+
+
+    /**
      * @var UserOption[]
      */
     private $userOptions = [];
@@ -349,6 +368,7 @@ class User implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
+        $this->excludeProperty('twoFactorSecret');
     }
 
     /**
@@ -882,7 +902,7 @@ class User implements \JsonSerializable
      */
     private function update()
     {
-        $this->getLog()->debug('Update user. %d. homePageId', $this->userId);
+        $this->getLog()->debug('Update userId %d.', $this->userId);
 
         $sql = 'UPDATE `user` SET UserName = :userName,
                   homePageId = :homePageId,
@@ -893,6 +913,9 @@ class User implements \JsonSerializable
                   CSPRNG = :CSPRNG,
                   `UserPassword` = :password,
                   `isPasswordChangeRequired` = :isPasswordChangeRequired,
+                  `twoFactorTypeId` = :twoFactorTypeId,
+                  `twoFactorSecret` = :twoFactorSecret,
+                  `twoFactorRecoveryCodes` = :twoFactorRecoveryCodes,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -913,6 +936,9 @@ class User implements \JsonSerializable
             'CSPRNG' => $this->CSPRNG,
             'password' => $this->password,
             'isPasswordChangeRequired' => $this->isPasswordChangeRequired,
+            'twoFactorTypeId' => $this->twoFactorTypeId,
+            'twoFactorSecret' => $this->twoFactorSecret,
+            'twoFactorRecoveryCodes' => ($this->twoFactorRecoveryCodes == '') ? null : json_encode($this->twoFactorRecoveryCodes),
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,
@@ -1377,5 +1403,41 @@ class User implements \JsonSerializable
         return array_filter($this->userOptions, function($element) {
             return !(stripos($element->option, 'Grid'));
         });
+    }
+
+    /**
+     * Clear the two factor stored secret and recovery codes
+     */
+    public function clearTwoFactor()
+    {
+        $this->twoFactorTypeId = 0;
+        $this->twoFactorSecret = NULL;
+        $this->twoFactorRecoveryCodes = NULL;
+
+        $sql = 'UPDATE `user` SET twoFactorSecret = :twoFactorSecret,
+                  twoFactorTypeId = :twoFactorTypeId,
+                  twoFactorRecoveryCodes =:twoFactorRecoveryCodes
+               WHERE userId = :userId';
+
+        $params = [
+            'userId' => $this->userId,
+            'twoFactorSecret' => $this->twoFactorSecret,
+            'twoFactorTypeId' => $this->twoFactorTypeId,
+            'twoFactorRecoveryCodes' => $this->twoFactorRecoveryCodes
+        ];
+
+        $this->getStore()->update($sql, $params);
+    }
+
+    public function updateRecoveryCodes($recoveryCodes)
+    {
+        $sql = 'UPDATE `user` SET twoFactorRecoveryCodes = :twoFactorRecoveryCodes WHERE userId = :userId';
+
+        $params = [
+            'userId' => $this->userId,
+            'twoFactorRecoveryCodes' => $recoveryCodes
+        ];
+
+        $this->getStore()->update($sql, $params);
     }
 }

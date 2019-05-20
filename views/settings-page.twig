@@ -1021,7 +1021,7 @@
 
                                 {% if theme.isSettingVisible("USER_PASSWORD_ERROR") %}
                                     {% set title %}{% trans "Description of Password Policy" %}{% endset %}
-                                    {% set helpText %}{% trans "A text description of this password policy. Will be show to users when their password does not meet the required policy" %}{% endset %}
+                                    {% set helpText %}{% trans "A text description of this password policy will be shown to users if they enter a password that does not meet the policy requirements set above." %}{% endset %}
 
                                     {% if theme.isSettingEditable("USER_PASSWORD_ERROR") %}
                                         {{ forms.input("USER_PASSWORD_ERROR", title, theme.getSetting("USER_PASSWORD_ERROR"), helpText) }}
@@ -1046,6 +1046,17 @@
                                         {{ forms.dropdown("PASSWORD_REMINDER_ENABLED", "single", title, theme.getSetting("PASSWORD_REMINDER_ENABLED", "Off"), options, "id", "value", helpText) }}
                                     {% else %}
                                         {{ forms.disabled("PASSWORD_REMINDER_ENABLED", title, theme.getSetting("PASSWORD_REMINDER_ENABLED", "Off"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("TWOFACTOR_ISSUER") %}
+                                    {% set title %}{% trans "Two Factor Issuer" %}{% endset %}
+                                    {% set helpText %}{% trans "Name that should appear as Issuer when two factor authorisation is enabled" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("TWOFACTOR_ISSUER") %}
+                                        {{ forms.input("TWOFACTOR_ISSUER", title, theme.getSetting("TWOFACTOR_ISSUER"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("TWOFACTOR_ISSUER", title, theme.getSetting("TWOFACTOR_ISSUER"), helpText) }}
                                     {% endif %}
                                 {% endif %}
                             </div>

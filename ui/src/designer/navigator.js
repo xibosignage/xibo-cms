@@ -29,71 +29,13 @@ let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
 };
 
 /**
- * Calculate layout values for the layout based on the scale of this container
- * @param {object} layout - object to use as base to scale to
- * @returns {object} Object containing dimensions for the object
- */
-Navigator.prototype.scaleLayout = function(layout, container) {
-
-    let layoutClone = Object.assign({}, layout);
-
-    // Get container dimensions
-    const containerDimensions = {
-        width: container.width(),
-        height: container.height()
-    };
-
-    // Calculate ratio
-    const elementRatio = layoutClone.width / layoutClone.height;
-    const containerRatio = containerDimensions.width / containerDimensions.height;
-
-    // Create container properties object
-    layoutClone.scaledDimensions = {};
-
-    // Calculate scale factor
-    if(elementRatio > containerRatio) { // element is more "landscapish" than the container
-        // Scale is calculated using width
-        layoutClone.scaledDimensions.scale = containerDimensions.width / layoutClone.width;
-    } else { // Same ratio or the container is the most "landscapish"
-        // Scale is calculated using height
-        layoutClone.scaledDimensions.scale = containerDimensions.height / layoutClone.height;
-    }
-
-    // Calculate new values for the element using the scale factor
-    layoutClone.scaledDimensions.width = layoutClone.width * layoutClone.scaledDimensions.scale;
-    layoutClone.scaledDimensions.height = layoutClone.height * layoutClone.scaledDimensions.scale;
-
-    // Calculate top and left values to centre the element in the container
-    layoutClone.scaledDimensions.top = containerDimensions.height / 2 - layoutClone.scaledDimensions.height / 2;
-    layoutClone.scaledDimensions.left = containerDimensions.width / 2 - layoutClone.scaledDimensions.width / 2;
-   
-    // Get scaled background
-    layoutClone.calculatedBackground = layoutClone.backgroundCss(layoutClone.scaledDimensions.width, layoutClone.scaledDimensions.height);
-
-    // Regions Scalling
-    for(let region in layoutClone.regions) {
-        
-        layoutClone.regions[region].scaledDimensions = {};
-
-        // Loop through the container properties and scale them according to the layout scale from the original
-        for(let property in layoutClone.regions[region].dimensions) {
-            if(layoutClone.regions[region].dimensions.hasOwnProperty(property)) {
-                layoutClone.regions[region].scaledDimensions[property] = layoutClone.regions[region].dimensions[property] * layoutClone.scaledDimensions.scale;
-            }
-        }
-
-    }
-
-    return layoutClone;
-};
-
-/**
  * Render Navigator and the layout
  * @param {Object} layout - the layout object to be rendered
  */
 Navigator.prototype.render = function(layout) {
 
     const self = this;
+    const app = getXiboApp();
 
     if(this.editMode) {
         if(lD.selectedObject.type == 'region') {
@@ -104,7 +46,7 @@ Navigator.prototype.render = function(layout) {
     }
 
     // Apply navigator scale to the layout
-    const scaledLayout = this.scaleLayout(layout, this.DOMObject);
+    const scaledLayout = layout.scale(this.DOMObject);
 
     // Add edit flag
     scaledLayout.edit = this.editMode;
@@ -112,11 +54,14 @@ Navigator.prototype.render = function(layout) {
     // Save render scale
     this.layoutRenderScale = scaledLayout.scaledDimensions.scale;
 
-    // Compile layout template with data
-    const html = navigatorLayoutTemplate(scaledLayout);
-
     // Append layout html to the main div
-    this.DOMObject.html(html);
+    this.DOMObject.html(navigatorLayoutTemplate(Object.assign(
+        {},
+        scaledLayout, 
+        {
+            trans: navigatorTrans
+        }
+    )));
 
     // Make regions draggable and resizable if navigator's on edit mode
     // Get layout container
@@ -234,7 +179,7 @@ Navigator.prototype.render = function(layout) {
         let editMode = this.editMode;
         this.DOMObject.find('.designer-region').contextmenu(function(ev) {
 
-            if(!editMode && $(ev.currentTarget).is('.deletable, .permissionsModifiable')) {
+            if($(ev.currentTarget).is('.deletable, .permissionsModifiable')) {
 
                 // Open context menu
                 lD.openContextMenu(ev.currentTarget, {
@@ -262,6 +207,9 @@ Navigator.prototype.render = function(layout) {
         }
     }.bind(this));
 
+    // Initialize tooltips
+    app.common.reloadTooltips(this.DOMObject);
+
     // Render navbar
     this.renderNavbar();
 };
@@ -272,6 +220,7 @@ Navigator.prototype.render = function(layout) {
 Navigator.prototype.renderNavbar = function() {
 
     const self = this;
+    const app = getXiboApp();
 
     // Return if navbar does not exist
     if(this.navbarContainer === null) {
@@ -279,7 +228,7 @@ Navigator.prototype.renderNavbar = function() {
     }
 
     // Get navigator trans
-    let newNavigatorEditTrans = navigatorEditTrans;
+    let newNavigatorEditTrans = navigatorTrans;
 
     // Check if trash bin is active
     let trashBinActive = lD.selectedObject.isDeletable && (lD.readOnlyMode === undefined || lD.readOnlyMode === false);
@@ -306,7 +255,7 @@ Navigator.prototype.renderNavbar = function() {
         {
             selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
             undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled'),
-            trans: navigatorEditTrans,
+            trans: newNavigatorEditTrans,
             regionSelected: (lD.selectedObject.type == 'region')
         }
     ));
@@ -323,7 +272,7 @@ Navigator.prototype.renderNavbar = function() {
     });
 
     this.navbarContainer.find('#close-btn').click(function() {
-            lD.toggleNavigatorEditing(false);
+        lD.toggleNavigatorEditing(false);
     });
 
     this.navbarContainer.find('#undo-btn').click(function() {
@@ -443,6 +392,10 @@ Navigator.prototype.renderNavbar = function() {
             }).attr('data-test', 'deleteRegionModal');
         }
     });
+
+    // Initialize tooltips
+    app.common.reloadTooltips(this.navbarContainer);
+    
 };
 
 

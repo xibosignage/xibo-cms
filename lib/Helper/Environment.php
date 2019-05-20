@@ -39,9 +39,7 @@ class Environment
     private static $_migration_status = null;
 
     /**
-     * Is there a migration pending
-     * this function only returns true if we are in DEV mode, otherwise it assumes migrations have been run by an
-     * outside process.
+     * Is there a migration pending?
      * @return bool
      */
     public static function migrationPending()

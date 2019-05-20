@@ -674,10 +674,11 @@ class Playlist implements \JsonSerializable
 
     /**
      * Expand this Playlists widgets according to any sub-playlists that are present
+     * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[]
      * @throws NotFoundException
      */
-    public function expandWidgets()
+    public function expandWidgets($parentWidgetId = 0)
     {
         $this->load();
 
@@ -691,13 +692,17 @@ class Playlist implements \JsonSerializable
             if ($widget->isExpired())
                 continue;
 
+            // Persist the parentWidgetId in a temporary variable
+            // if we have a parentWidgetId of 0, then we are top-level and we should use our widgetId
+            $widget->tempId = $parentWidgetId == 0 ? $widget->widgetId : $parentWidgetId;
+
             // If we're a standard widget, add right away
             if ($widget->type !== 'subplaylist') {
                 $widgets[] = $widget;
             } else {
                 /** @var SubPlaylist $module */
                 $module = $this->moduleFactory->createWithWidget($widget);
-                $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets());
+                $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
             }
         }
 

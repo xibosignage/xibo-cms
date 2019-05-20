@@ -70,7 +70,7 @@ class VideoIn extends ModuleWidget
      * Edit
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
+     *  path="/playlist/widget/{widgetId}?videoIn",
      *  operationId="WidgetVideoInEdit",
      *  tags={"widget"},
      *  summary="Edit a Video In Widget",

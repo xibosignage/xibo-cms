@@ -427,7 +427,7 @@ class Layout extends Base
      * @param int $layoutId
      *
      * @SWG\Put(
-     *  path="/layout/{layoutId}",
+     *  path="/layout/background/{layoutId}",
      *  operationId="layoutEditBackground",
      *  summary="Edit Layout Background",
      *  description="Edit a Layout Background",
@@ -945,6 +945,9 @@ class Layout extends Base
 
                     // Augment with tags
                     $widget->tags = $module->getMediaTags();
+
+                    // Add widget module type name
+                    $widget->moduleName = $module->getModuleName();
 
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
