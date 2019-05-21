@@ -1503,8 +1503,8 @@ class Soap
                 'mediaId' => $mediaId,
                 'tag' => $tag,
                 'widgetId' => (int) $widgetId,
-                'duration' => $duration,
-                'count' => ($count != '') ? $count : 1,
+                'duration' => (int) $duration,
+                'count' => ($count != '') ? (int) $count : 1,
             ];
         }
 

@@ -26,6 +26,9 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
         <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
     </ul>
 {% endblock %}
@@ -33,7 +36,7 @@
 {% block pageContent %}
 
     <div class="widget">
-        <div class="widget-title">{% trans "Report" %}</div>
+        <div class="widget-title">{% trans "Summary Report" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
@@ -81,9 +84,11 @@
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set layout %}{% trans "Layout" %}{% endset %}
                             {% set media %}{% trans "Media" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
                             {% set options = [
                                 { typeid: "layout", type: layout },
                                 { typeid: "media", type: media },
+                                { typeid: "event", type: event },
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
 
@@ -115,6 +120,9 @@
                             ] %}
                             {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", "", "pagedSelect media-select", "", "m", "", attributes) }}
 
+                            {% set title %}{% trans "Tag" %}{% endset %}
+                            {{ inline.input("eventTag", title, "", "", "tag-text") }}
+
                         </form>
                     </div>
                 </div>
@@ -135,10 +143,49 @@
 
         function setReport() {
 
+            var mediaVal = $("#mediaId").val();
+            var layoutVal = $("#layoutId").val();
+            var eventTagVal = $("#eventTag").val();
+            var anchorReportAddBtn = $("a#reportAddBtn");
+
+            var typeVal = $("#type").val();
+
+            if ( typeVal === 'layout') {
+                if (layoutVal == null) {
+                    anchorReportAddBtn.parent().addClass('disabled');
+                    anchorReportAddBtn.removeAttr('href');
+                } else {
+                    anchorReportAddBtn.parent().removeClass('disabled');
+                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.removeAttr('title');
+
+                }
+            } else if ( typeVal === 'media') {
+                if (mediaVal == null) {
+                    anchorReportAddBtn.parent().addClass('disabled');
+                    anchorReportAddBtn.removeAttr('href');
+                } else {
+                    anchorReportAddBtn.parent().removeClass('disabled');
+                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.removeAttr('title');
+
+                }
+            } else if ( typeVal === 'event') {
+                if (eventTagVal == null) {
+                    anchorReportAddBtn.parent().addClass('disabled');
+                    anchorReportAddBtn.removeAttr('href');
+                } else {
+                    anchorReportAddBtn.parent().removeClass('disabled');
+                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.removeAttr('title');
+
+                }
+            }
+
             $("#imageLoader").show();
             $.ajax({
                 type: "get",
-                url: "{{ urlFor("stats.summaryReport.data") }}",
+                url: "{{ urlFor("report.data", {name: reportName}) }}",
                 cache: false,
                 dataType: "json",
                 data: $("#summaryReport").find("form").serialize(),
@@ -221,6 +268,7 @@
             var groupByFilterCls = $(".group-by-filter");
             var mediaSelect =$(".media-select");
             var layoutSelect =$(".layout-select");
+            var eventTagCls =$(".tag-text");
 
             const checkFilterAndApply = function() {
 
@@ -296,14 +344,36 @@
                         $("#layoutId").val("");
                         $("#layoutId option").remove();
                         layoutSelect.hide();
+
+                        $("#eventTag").val("");
+                        eventTagCls.hide();
+
                         mediaSelect.show();
+
 
                     } else if (value === 'layout') {
                         // show layout and clear/hide the media
                         $("#mediaId").val("");
                         $("#mediaId option").remove();
                         mediaSelect.hide();
+
+                        $("#eventTag").val("");
+                        eventTagCls.hide();
+
                         layoutSelect.show();
+
+                    } else if (value === 'event') {
+                        // clear/hide the media and layout
+                        $("#mediaId").val("");
+                        $("#mediaId option").remove();
+                        $("#layoutId").val("");
+                        $("#layoutId option").remove();
+                        mediaSelect.hide();
+                        layoutSelect.hide();
+
+                        // show tag
+                        eventTagCls.show();
+
                     }
                 });
 
@@ -311,6 +381,7 @@
 
             type.val('layout');
             mediaSelect.hide();
+            eventTagCls.hide();
 
             reportFilter.val('');
             groupByFilter.val('byday');

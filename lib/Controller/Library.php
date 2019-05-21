@@ -332,9 +332,9 @@ class Library extends Base
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1]),
+            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
             'groups' => $this->userGroupFactory->query(),
-            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1]))
+            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
         ]);
     }
 
@@ -523,7 +523,8 @@ class Library extends Base
             'fileSize' => $this->getSanitizer()->getString('fileSize'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'assignable' => $this->getSanitizer()->getInt('assignable'),
-            'notPlayerSoftware' => 1
+            'notPlayerSoftware' => 1,
+            'notSavedReport' => 1
         ]));
 
         // Add some additional row content

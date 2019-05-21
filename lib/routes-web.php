@@ -346,7 +346,6 @@ $app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view
 $app->get('/stats/proofofplay/view', '\Xibo\Controller\Stats:displayProofOfPlayPage')->name('stats.proofofplay.view');
 $app->get('/stats/library/view', '\Xibo\Controller\Stats:displayLibraryPage')->name('stats.library.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');
-$app->get('/stats/summaryreport/view', '\Xibo\Controller\Stats:summaryReportForm')->name('stats.summaryReport.form');
 $app->get('/stats/library', '\Xibo\Controller\Stats:libraryUsageGrid')->name('stats.library.grid');
 
 //
@@ -379,6 +378,28 @@ $app->get('/task/form/add', '\Xibo\Controller\Task:addForm')->name('task.add.for
 $app->get('/task/form/edit/:id', '\Xibo\Controller\Task:editForm')->name('task.edit.form');
 $app->get('/task/form/delete/:id', '\Xibo\Controller\Task:deleteForm')->name('task.delete.form');
 $app->get('/task/form/runNow/:id', '\Xibo\Controller\Task:runNowForm')->name('task.runNow.form');
+
+//
+// Report Schedule
+//
+$app->get('/report/reportschedule/view', '\Xibo\Controller\Report:displayReportSchedulePage')->name('reportschedule.view');
+$app->get('/report/reportschedule/form/add', '\Xibo\Controller\Report:addReportScheduleForm')->name('reportschedule.add.form');
+$app->get('/report/reportschedule/form/edit/:id', '\Xibo\Controller\Report:editReportScheduleForm')->name('reportschedule.edit.form');
+$app->get('/report/reportschedule/form/delete/:id', '\Xibo\Controller\Report:deleteReportScheduleForm')->name('reportschedule.delete.form');
+$app->get('/report/reportschedule/form/reset/:id', '\Xibo\Controller\Report:resetReportScheduleForm')->name('reportschedule.reset.form');
+
+//
+// Saved reports
+//
+$app->get('/report/savedreport/view', '\Xibo\Controller\Report:displaySavedReportPage')->name('savedreport.view');
+$app->get('/report/savedreport/:id/report/:name/open', '\Xibo\Controller\Report:savedReportOpen')->name('savedreport.open');
+$app->get('/report/savedreport/form/delete/:id', '\Xibo\Controller\Report:deleteSavedReportForm')->name('savedreport.delete.form');
+
+//
+// Ad hoc report
+//
+$app->get('/report/form/:name', '\Xibo\Controller\Report:getReportForm')->name('report.form');
+
 
 // Player Software
 $app->get('/playersoftware/view', '\Xibo\Controller\PlayerSoftware:displayPage')->name('playersoftware.view');
