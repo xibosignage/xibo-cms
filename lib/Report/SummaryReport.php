@@ -96,18 +96,18 @@ class SummaryReport implements ReportInterface
 
         if ($type == 'layout') {
             $selectedId = $this->getSanitizer()->getParam('layoutId', null);
-            $title = __('Save report for '). $type. __('Id ') . $selectedId. ' - '.
+            $title = __('Add Report Schedule for '). $type. ' - '.
                     $this->layoutFactory->getById($selectedId)->layout;
 
         } else if ($type == 'media') {
             $selectedId = $this->getSanitizer()->getParam('mediaId', null);
-            $title = __('Save report for '). $type. __('Id ') . $selectedId. ' - '.
+            $title = __('Add Report Schedule for '). $type. ' - '.
                     $this->mediaFactory->getById($selectedId)->name;
 
         } else if ($type == 'event') {
             $selectedId = 0; // we only need tag
             $tag = $this->getSanitizer()->getParam('eventTag', null);
-            $title = __('Save report for '). $type. ' - '. $tag;
+            $title = __('Add Report Schedule for '). $type. ' - '. $tag;
 
         }
 
@@ -190,14 +190,15 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getSavedReportResults($json, $reportName)
+    public function getSavedReportResults($json, $savedReport)
     {
 
         // Return data to build chart
         return [
             'template' => 'summary-report-preview',
             'chartData' => [
-                'reportName' => $reportName,
+                'savedReport' => $savedReport,
+                'generatedOn' => $this->dateService->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
                 'labels' => json_encode($json['labels']),
                 'countData' => json_encode($json['countData']),
                 'durationData' => json_encode($json['durationData']),
@@ -210,6 +211,8 @@ class SummaryReport implements ReportInterface
     /** @inheritdoc */
     public function getResults($filterCriteria)
     {
+
+        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
@@ -250,7 +253,8 @@ class SummaryReport implements ReportInterface
         $borderColor = [];
 
         // Get store
-        $timeSeriesStore = $this->getTimeSeriesStore()->getStatisticStore();
+        $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
+        $this->getLog()->debug('Timeseries store is '. $timeSeriesStore);
 
         if ($timeSeriesStore == 'mongodb') {
             $result =  $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
@@ -899,6 +903,8 @@ class SummaryReport implements ReportInterface
                 $periodStart = new UTCDateTime($this->dateService->parse($firstdaylastyear)->format('U')*1000);
                 $periodEnd = new UTCDateTime($this->dateService->parse($lastdaylastyear)->format('U')*1000);
             }
+
+            $this->getLog()->debug('Period start: '.$periodStart->toDateTime()->format('Y-m-d H:i:s'). ' Period end: '. $periodEnd->toDateTime()->format('Y-m-d H:i:s'));
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {

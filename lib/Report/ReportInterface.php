@@ -61,12 +61,12 @@ interface ReportInterface
     public function generateSavedReportName($filterCriteria);
 
     /**
-     * Return data to build chart
+     * Return data to build chart of saved report
      * @param array $json
-     * @param string $reportName
+     * @param object savedReport
      * @return array
      */
-    public function getSavedReportResults($json, $reportName);
+    public function getSavedReportResults($json, $savedReport);
 
     /**
      * Return results

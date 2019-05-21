@@ -102,16 +102,18 @@ class ReportScheduleTask implements TaskInterface
             {
 
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
+                $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
                 $rs->save();
 
                 // Get the generated saved as report name
                 $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
 
-                $this->log->debug('Last run date is updated.');
+                $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
                 // Run the report to get results
                 $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria);
+                $this->log->debug('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT));
 
                 //  Save the result in a json file
                 $fileName = tempnam(sys_get_temp_dir(), 'reportschedule');
@@ -132,7 +134,7 @@ class ReportScheduleTask implements TaskInterface
                 // Remove the JSON file
                 unlink($fileName);
 
-                $runDateTimestamp = $this->date->parse()->addDay()->startOfDay()->format('U');
+                $runDateTimestamp = $this->date->parse()->format('U');
 
                 // Upload to the library
                 $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
@@ -141,8 +143,14 @@ class ReportScheduleTask implements TaskInterface
                 // Save Saved report
                 $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
                 $savedReport->save();
+
+                // Add the last savedreport in Report Schedule
+                $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
+                $rs->lastSavedReportId = $savedReport->savedReportId;
+                $rs->save();
             }
 
+//            var_dump($nextRunDt<=time());
 
         }
     }

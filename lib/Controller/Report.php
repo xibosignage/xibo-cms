@@ -139,6 +139,10 @@ class Report extends Base
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
             $reportSchedule->nextRunDt = $nextRunDt;
 
+            // Ad hoc report name
+            $adhocReportName = $reportSchedule->reportName;
+
+            // We get the report description
             $reportSchedule->reportName = $this->reportService->getReportByName($reportSchedule->reportName)->description;
 
             switch ($reportSchedule->schedule) {
@@ -170,17 +174,60 @@ class Report extends Base
                 'text' => __('Edit')
             ];
 
+            // Go to report
+            $reportSchedule->buttons[] = [
+                'id' => 'reportSchedule_goto_report_button',
+                'class' => 'XiboRedirectButton',
+                'url' => $this->urlFor('report.form', ['name' => $adhocReportName] ),
+                'text' => __('Go to report')
+            ];
+
+            if ($reportSchedule->getLastSavedReportId() > 0) {
+
+                $lastSavedReport = $this->savedReportFactory->getById($reportSchedule->getLastSavedReportId());
+
+                // Open Last Saved Report
+                $reportSchedule->buttons[] = [
+                    'id' => 'reportSchedule_lastsaved_report_button',
+                    'class' => 'XiboRedirectButton',
+                    'url' => $this->urlFor('savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
+                    'text' => __('Open last saved report')
+                ];
+            }
+
             // Delete
             $reportSchedule->buttons[] = [
                 'id' => 'reportSchedule_delete_button',
                 'url' => $this->urlFor('reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
                 'text' => __('Delete')
             ];
+
+            // Reset to previous run
+            $reportSchedule->buttons[] = [
+                'id' => 'reportSchedule_reset_button',
+                'url' => $this->urlFor('reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
+                'text' => __('Reset to previous run')
+            ];
         }
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->reportScheduleFactory->countLast();
         $this->getState()->setData($reportSchedules);
+    }
+
+    /**
+     * Report Schedule Reset
+     */
+    public function reportScheduleReset($reportScheduleId)
+    {
+        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+
+        $this->getLog()->debug('Reset Report Schedule: '.$reportSchedule->name);
+
+        // Go back to previous run date
+        $reportSchedule->lastSavedReportId = 0;
+        $reportSchedule->lastRunDt = $reportSchedule->previousRunDt;
+        $reportSchedule->save();
     }
 
     /**
@@ -199,10 +246,12 @@ class Report extends Base
 
         $reportSchedule = $this->reportScheduleFactory->createEmpty();
         $reportSchedule->name = $name;
+        $reportSchedule->lastSavedReportId = 0;
         $reportSchedule->reportName = $reportName;
         $reportSchedule->filterCriteria = $result['filterCriteria'];
         $reportSchedule->schedule = $result['schedule'];
         $reportSchedule->lastRunDt = 0;
+        $reportSchedule->previousRunDt = 0;
         $reportSchedule->userId = $this->getUser()->userId;
         $reportSchedule->createdDt = $this->getDate()->getLocalDate(null, 'U');
 
@@ -313,6 +362,25 @@ class Report extends Base
     }
 
     /**
+     * Report Schedule Reset Form
+     */
+    public function resetReportScheduleForm($reportScheduleId)
+    {
+        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+
+        // Only admin can reset it
+        if ($this->getUser()->userTypeId != 1)
+            throw new AccessDeniedException(__('You do not have permissions to reset this report schedule'));
+
+        $data = [
+            'reportSchedule' => $reportSchedule
+        ];
+
+        $this->getState()->template = 'reportschedule-form-reset';
+        $this->getState()->setData($data);
+    }
+
+    /**
      * Report Schedule Delete Form
      */
     public function deleteReportScheduleForm($reportScheduleId)
@@ -340,11 +408,6 @@ class Report extends Base
      */
     public function savedReportGrid()
     {
-        /*
-         * //TODO:
-         *
-         */
-
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'saveAs' => $this->getSanitizer()->getString('saveAs'),
         ]));
@@ -357,8 +420,15 @@ class Report extends Base
             $savedReport->buttons[] = [
                 'id' => 'button_show_report.now',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('savedreport.preview', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
-                'text' => __('Preview report')
+                'url' => $this->urlFor('savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                'text' => __('Open')
+            ];
+
+            $savedReport->buttons[] = [
+                'id' => 'button_goto_report',
+                'class' => 'XiboRedirectButton',
+                'url' => $this->urlFor('report.form', ['name' => $savedReport->reportName] ),
+                'text' => __('Go to report')
             ];
 
             // Delete
@@ -434,7 +504,7 @@ class Report extends Base
      * @param int $savedreportId
      * @throws XiboException
      */
-    public function savedReportPreview($savedreportId, $reportName)
+    public function savedReportOpen($savedreportId, $reportName)
     {
         // Retrieve the saved report result in array
         $results = $this->reportService->getSavedReportResults($savedreportId, $reportName);
@@ -477,6 +547,8 @@ class Report extends Base
      */
     public function getReportData($reportName)
     {
+        $this->getLog()->debug('Get report name: '.$reportName);
+
         // Get the report Class from the Json File
         $className = $this->reportService->getReportClass($reportName);
 
