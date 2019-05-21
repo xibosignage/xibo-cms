@@ -40,11 +40,13 @@ class ReportSchedule implements \JsonSerializable
     public static $SCHEDULE_YEARLY  = '0 0 1 1 *';
 
     public $reportScheduleId;
+    public $lastSavedReportId;
     public $name;
     public $reportName;
     public $filterCriteria;
     public $schedule;
     public $lastRunDt = 0;
+    public $previousRunDt;
     public $createdDt;
 
     /**
@@ -82,12 +84,15 @@ class ReportSchedule implements \JsonSerializable
         if ($options['validate'])
             $this->validate();
 
-        $this->getLog()->debug('Save report schedule');
-
-        if ($this->reportScheduleId == null)
+        if ($this->reportScheduleId == null) {
             $this->add();
+            $this->getLog()->debug('Adding report schedule');
+        }
         else
+        {
             $this->edit();
+            $this->getLog()->debug('Editing a report schedule');
+        }
     }
 
     /**
@@ -111,13 +116,15 @@ class ReportSchedule implements \JsonSerializable
     private function add()
     {
         $this->reportScheduleId = $this->getStore()->insert('
-            INSERT INTO `reportschedule` (`name`, `reportName`, `schedule`, `lastRunDt`, `filterCriteria`, `userId`, `createdDt`) VALUES
-                                         (:name,  :reportName,  :schedule,  :lastRunDt,  :filterCriteria,  :userId,  :createdDt)
+            INSERT INTO `reportschedule` (`name`, `lastSavedReportId`, `reportName`, `schedule`, `lastRunDt`, `previousRunDt`, `filterCriteria`, `userId`, `createdDt`) VALUES
+                                         (:name,  :lastSavedReportId,  :reportName,  :schedule,  :lastRunDt,  :previousRunDt,  :filterCriteria,  :userId,  :createdDt)
         ', [
             'name' => $this->name,
+            'lastSavedReportId' => $this->lastSavedReportId,
             'reportName' => $this->reportName,
             'schedule' => $this->schedule,
             'lastRunDt' => $this->lastRunDt,
+            'previousRunDt' => $this->previousRunDt,
             'filterCriteria' => $this->filterCriteria,
             'userId' => $this->userId,
             'createdDt' => $this->createdDt,
@@ -132,23 +139,25 @@ class ReportSchedule implements \JsonSerializable
         $this->getStore()->update('
           UPDATE `reportschedule`
             SET `name` = :name,
+            `lastSavedReportId` = :lastSavedReportId,
             `reportName` = :reportName,
             `schedule` = :schedule,
             `lastRunDt` = :lastRunDt,
+            `previousRunDt` = :previousRunDt,
             `filterCriteria` = :filterCriteria,
             `userId` = :userId,
-            `createdDt` = :createdDt
-            
+            `createdDt` = :createdDt            
            WHERE reportScheduleId = :reportScheduleId', [
             'reportScheduleId' => $this->reportScheduleId,
+            'lastSavedReportId' => $this->lastSavedReportId,
             'name' => $this->name,
             'reportName' => $this->reportName,
             'schedule' => $this->schedule,
             'lastRunDt' => $this->lastRunDt,
+            'previousRunDt' => $this->previousRunDt,
             'filterCriteria' => $this->filterCriteria,
             'userId' => $this->userId,
             'createdDt' => $this->createdDt
-
         ]);
     }
 
@@ -168,5 +177,14 @@ class ReportSchedule implements \JsonSerializable
     public function getOwnerId()
     {
         return $this->userId;
+    }
+
+    /**
+     * Returns the last saved report id
+     * @return integer
+     */
+    public function getLastSavedReportId()
+    {
+        return $this->lastSavedReportId;
     }
 }

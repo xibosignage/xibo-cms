@@ -112,6 +112,6 @@ interface TimeSeriesStoreInterface
      * Get the statistic store
      * @return string
      */
-    public function getStatisticStore();
+    public function getEngine();
 
 }

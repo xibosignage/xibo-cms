@@ -98,22 +98,6 @@ class SavedReportFactory extends BaseFactory
     }
 
     /**
-     * Get by Media Id
-     * @param int $mediaId
-     * @return SavedReport
-     * @throws NotFoundException
-     */
-    public function getByMediaId($mediaId)
-    {
-        $savedReports = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
-
-        if (count($savedReports) <= 0)
-            throw new NotFoundException(__('Cannot find media'));
-
-        return $savedReports[0];
-    }
-
-    /**
      * Get by Version Id
      * @param int $savedReportId
      * @return SavedReport
@@ -144,6 +128,7 @@ class SavedReportFactory extends BaseFactory
 
         $select = '
             SELECT  
+               saved_report.reportScheduleId,
                saved_report.savedReportId,
                saved_report.saveAs,
                reportschedule.name AS reportScheduleName,

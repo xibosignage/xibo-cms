@@ -24,6 +24,12 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+{% endblock %}
+
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Saved reports" %}</div>

@@ -24,6 +24,12 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+    </ul>
+{% endblock %}
+
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Report Schedule" %}</div>
@@ -51,6 +57,7 @@
                             <th>{% trans "Owner" %}</th>
                             <th>{% trans "Last Run" %}</th>
                             <th>{% trans "Next Run" %}</th>
+                            <th>{% trans "Previous Run" %}</th>
                             <th>{% trans "Created" %}</th>
                             <th></th>
                         </tr>
@@ -119,8 +126,14 @@
                     "render": dataTableDateFromUnix
                 },
                 {
+                    "orderable": false,
                     "data": "nextRunDt",
                     "render": dataTableDateFromUnix
+                },
+                {
+                    "data": "previousRunDt",
+                    "render": dataTableDateFromUnix,
+                    "visible": false
                 },
                 {
                     "data": "createdDt",

@@ -26,7 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
         <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
@@ -157,6 +157,8 @@
                 } else {
                     anchorReportAddBtn.parent().removeClass('disabled');
                     anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.removeAttr('title');
+
                 }
             } else if ( typeVal === 'media') {
                 if (mediaVal == null) {
@@ -165,6 +167,8 @@
                 } else {
                     anchorReportAddBtn.parent().removeClass('disabled');
                     anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.removeAttr('title');
+
                 }
             } else if ( typeVal === 'event') {
                 if (eventTagVal == null) {
@@ -173,6 +177,8 @@
                 } else {
                     anchorReportAddBtn.parent().removeClass('disabled');
                     anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
+                    anchorReportAddBtn.removeAttr('title');
+
                 }
             }
 

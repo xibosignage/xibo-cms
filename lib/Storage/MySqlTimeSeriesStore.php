@@ -452,6 +452,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function executeQuery($options = [])
     {
+        $this->log->debug('Execute MySQL query.');
+
         $query = $options['query'];
         $params = $options['params'];
 
@@ -477,7 +479,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStatisticStore()
+    public function getEngine()
     {
         return 'mysql';
     }
