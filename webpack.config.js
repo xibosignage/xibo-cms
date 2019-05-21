@@ -7,6 +7,7 @@ module.exports = {
     entry: {
         vendor: './ui/bundle_vendor.js',
         style: './ui/bundle_style.js',
+        systemTools: './ui/bundle_tools.js',
         layoutDesigner: './ui/src/designer/main.js',
         playlistEditor: './ui/src/playlist-editor/main.js'
     },

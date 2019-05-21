@@ -4,9 +4,6 @@
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarLayoutJumpList = require('../templates/toolbar-layout-jump-list.hbs');
 
-// Add global helpers
-window.formHelpers = require('../helpers/form-helpers.js');
-
 const toolsList = [
     {
         name: toolbarTrans.tools.region.name,
