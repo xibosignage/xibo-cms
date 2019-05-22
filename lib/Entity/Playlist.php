@@ -605,7 +605,7 @@ class Playlist implements \JsonSerializable
             'filterMediaTags' => $this->filterMediaTags,
             'createdDt' => $time,
             'modifiedDt' => $time,
-            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : 1
+            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate
         ));
 
         // Insert my self link
@@ -735,10 +735,37 @@ class Playlist implements \JsonSerializable
 
         $duration = 0;
 
+        // What is the next time we need to update this Playlist (0 is never)
+        $nextUpdate = 0;
+
         foreach ($this->widgets as $widget) {
+            // Is this widget expired?
+            if ($widget->isExpired()) {
+
+                // Remove this widget.
+                if ($widget->getOptionValue('deleteOnExpiry', 0) == 1) {
+                    // Don't notify at all because we're going to do that when we finish updating our duration.
+                    $widget->delete([
+                        'notify' => false,
+                        'notifyPlaylists' => false,
+                        'forceNotifyPlaylists' => false,
+                        'notifyDisplays' => false
+                    ]);
+                }
+
+                // Do not assess it
+                continue;
+            }
+
             // If we're a standard widget, add right away
             if ($widget->type !== 'subplaylist') {
                 $duration += $widget->calculatedDuration;
+
+                // Does this expire?
+                // Log this as the new next update
+                if ($widget->hasExpiry() && ($nextUpdate == 0 || $nextUpdate > $widget->toDt)) {
+                    $nextUpdate = $widget->toDt;
+                }
             } else {
                 // Add the sub playlist duration
                 /** @var SubPlaylist $module */
@@ -753,7 +780,7 @@ class Playlist implements \JsonSerializable
         $this->getLog()->debug('Delta duration after updateDuration ' . $delta);
 
         $this->duration = $duration;
-        $this->requiresDurationUpdate = 0;
+        $this->requiresDurationUpdate = $nextUpdate;
 
         $this->save(['saveTags' => false, 'saveWidgets' => false]);
 
