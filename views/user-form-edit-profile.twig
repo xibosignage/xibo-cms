@@ -60,7 +60,7 @@
                 {{ forms.email("email", title, currentUser.email, helpText) }}
 
                 {% set title %}{% trans "Two Factor Authentication" %}{% endset %}
-                {% set helpText %}{% trans "With this option enabled, user will be required to provide 2FA authentication code to log in to the CMS" %}{% endset %}
+                {% set helpText %}{% trans "Enable an option to provide a two factor authentication code to log into the CMS for added security." %}{% endset %}
                 {% set values = [{id: 0, value: "Off"}, {id: 1, value: "Email"}, {id: 2, value: "Google Authenticator"}] %}
                 {{ forms.dropdown("twoFactorTypeId", "single", title, currentUser.twoFactorTypeId, values, "id", "value", helpText) }}
 
