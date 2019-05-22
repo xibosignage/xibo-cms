@@ -205,3 +205,21 @@
     </div>
 {% endmacro %}
 
+{% macro switch(name, title, value, labelWidth, switchSize, onText, offText, groupClass, accessKey, disabled) %}
+    <div class="form-group {{ groupClass }}">
+        <div class="">
+            <div class="checkbox">
+                <input type="checkbox" class="bootstrap-switch-target" id="{{ name }}" name="{{ name }}" accesskey="{{ accessKey }}"
+                    {% if value == 1 %}checked{% endif %} 
+                    {% if disabled == 1 %}disabled{% endif %}
+                    data-label-text="{{ title }}"
+                    {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}
+                    {% if offText not in [null, undefined, ""] %} data-off-text="{{ offText }}"{% endif %}
+                    {% if switchSize not in [null, undefined, ""] %}data-size="{{ switchSize }}"{% else %}data-size="small"{% endif %}
+                    {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
+                    >
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
