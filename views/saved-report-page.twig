@@ -40,6 +40,9 @@
                         <form class="form-inline">
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("saveAs", title) }}
+
+                            {% set title %}{% trans "Only my reports?" %}{% endset %}
+                            {{ inline.checkbox("onlyMyReport", title, 1) }}
                         </form>
                     </div>
                 </div>

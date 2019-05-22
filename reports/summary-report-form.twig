@@ -43,6 +43,7 @@
                     <div class="FilterDiv" id="summaryReport">
                         <form class="form-inline">
                             {% set title %}{% trans "Filter" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
                             {% set thisweek %}{% trans "This Week" %}{% endset %}
@@ -52,7 +53,7 @@
                             {% set lastmonth %}{% trans "Last Month" %}{% endset %}
                             {% set lastyear %}{% trans "Last Year" %}{% endset %}
                             {% set options = [
-                                { filterName: "", reportFilter: null },
+                                { filterName: "", reportFilter: range },
                                 { filterName: "today", reportFilter: today },
                                 { filterName: "yesterday", reportFilter: yesterday },
                                 { filterName: "thisweek", reportFilter: thisweek },

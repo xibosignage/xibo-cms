@@ -21,7 +21,6 @@
  */
 
 namespace Xibo\XTR;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
@@ -49,9 +48,6 @@ class ReportScheduleTask implements TaskInterface
     /** @var UserFactory */
     private $userFactory;
 
-    /** @var LayoutFactory */
-    private $layoutFactory;
-
     /** @var ReportScheduleFactory */
     private $reportScheduleFactory;
 
@@ -63,7 +59,6 @@ class ReportScheduleTask implements TaskInterface
     {
         $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
@@ -149,9 +144,6 @@ class ReportScheduleTask implements TaskInterface
                 $rs->lastSavedReportId = $savedReport->savedReportId;
                 $rs->save();
             }
-
-//            var_dump($nextRunDt<=time());
-
         }
     }
 }

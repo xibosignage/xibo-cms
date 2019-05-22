@@ -121,7 +121,7 @@ class SavedReportFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
-            $sortOrder = ['saveAs DESC'];
+            $sortOrder = ['generatedOn DESC'];
 
         $params = [];
         $entries = [];
@@ -191,6 +191,11 @@ class SavedReportFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        }
+
+        if ( $this->getSanitizer()->getCheckbox('onlyMyReport') == 1) {
+            $body .= ' AND `saved_report`.userId = :currentUserId ';
+            $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Sorting?

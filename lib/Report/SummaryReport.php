@@ -199,6 +199,8 @@ class SummaryReport implements ReportInterface
             'chartData' => [
                 'savedReport' => $savedReport,
                 'generatedOn' => $this->dateService->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
+                'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'labels' => json_encode($json['labels']),
                 'countData' => json_encode($json['countData']),
                 'durationData' => json_encode($json['durationData']),
@@ -263,7 +265,7 @@ class SummaryReport implements ReportInterface
         }
 
         // Summary report result in chart
-        foreach ($result as $row) {
+        foreach ($result['result'] as $row) {
             // Label
             $tsLabel = $this->getDate()->parse($row['start'], 'Y-m-d H:i:s');
 
@@ -343,6 +345,8 @@ class SummaryReport implements ReportInterface
 
         // Return data to build chart
         return [
+            'periodStart' => $result['periodStart'],
+            'periodEnd' => $result['periodEnd'],
             'labels' => $labels,
             'countData' => $countData,
             'durationData' => $durationData,
@@ -576,135 +580,62 @@ class SummaryReport implements ReportInterface
             ];
 
             if ($reportFilter == '') {
-                $body .= ' AND stat.start < DATE_ADD(:toDt, INTERVAL 1 DAY)  
-            AND stat.end >= :fromDt ';
+                $periodStart = $fromDt;
+                $periodEnd = $toDt;
+
+            } elseif (($reportFilter == 'today')) {
+                $periodStart = $today;
+                $periodEnd = $nextday;
+
+            } elseif (($reportFilter == 'yesterday')) {
+                $periodStart = $yesterday;
+                $periodEnd = $today;
+
+            } elseif (($reportFilter == 'thisweek')) {
+                $periodStart = $firstdaythisweek;
+                $periodEnd = $lastdaythisweek;
+
+            } elseif (($reportFilter == 'lastweek')) {
+                $periodStart = $firstdaylastweek;
+                $periodEnd = $lastdaylastweek;
+
+            } elseif (($reportFilter == 'thismonth')) {
+                $periodStart = $firstdaythismonth;
+                $periodEnd = $lastdaythismonth;
+
+            } elseif (($reportFilter == 'lastmonth')) {
+                $periodStart = $firstdaylastmonth;
+                $periodEnd = $lastdaylastmonth;
+
+            } elseif (($reportFilter == 'thisyear')) {
+                $periodStart = $firstdaythisyear;
+                $periodEnd = $lastdaythisyear;
+
+            } elseif (($reportFilter == 'lastyear')) {
+                $periodStart = $firstdaylastyear;
+                $periodEnd = $lastdaylastyear;
             }
 
-            // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
-            // and end is greater than or equal first hour of the day
-            elseif (($reportFilter == 'today')) {
-                $body .= ' AND stat.`start` < "'.$nextday.'"
-            AND stat.`end` >= "'.$today.'" ';
-            }
-
-            // where start is less than last hour of the day + 1 hour (i.e., today)
-            // and end is greater than or equal first hour of the day
-            elseif (($reportFilter == 'yesterday')) {
-                $body .= ' AND stat.`start` <  "'.$today.'" 
-			AND stat.`end` >= "'.$yesterday.'"  ';
-            }
-
-            // where start is less than last day of the week
-            // and end is greater than or equal first day of the week
-            elseif (($reportFilter == 'thisweek')) {
-                $body .= ' AND stat.`start` < "'.$lastdaythisweek.'"
-            AND stat.`end` >= "'.$firstdaythisweek.'" ';
-            }
-
-            // where start is less than last day of the week
-            // and end is greater than or equal first day of the week
-            elseif (($reportFilter == 'lastweek')) {
-                $body .= ' AND stat.`start` < "'.$lastdaylastweek.'"		
-            AND stat.`end` >= "'.$firstdaylastweek.'" ';
-            }
-
-            // where start is less than last day of the month
-            // and end is greater than or equal first day of the month
-            elseif (($reportFilter == 'thismonth')) {
-                $body .= ' AND stat.`start` <  "'.$lastdaythismonth.'"
-            AND stat.`end` >= "'.$firstdaythismonth.'" ';
-            }
-
-            // where start is less than last day of the month
-            // and end is greater than or equal first day of the month
-            elseif (($reportFilter == 'lastmonth')) {
-                $body .= ' AND stat.`start` <  "'.$lastdaylastmonth.'"
-            AND stat.`end` >= "'.$firstdaylastmonth.'" ';
-            }
-
-            // where start is less than last day of the year
-            // and end is greater than or equal first day of the year
-            elseif (($reportFilter == 'thisyear')) {
-                $body .= ' AND stat.`start` < "'.$lastdaythisyear.'"
-            AND stat.`end` >= "'.$firstdaythisyear.'" ';
-            }
-
-            // where start is less than last day of the year
-            // and end is greater than or equal first day of the year
-            elseif (($reportFilter == 'lastyear')) {
-                $body .= ' AND stat.`start` < "'.$lastdaylastyear.'"
-            AND stat.`end` >= "'.$firstdaylastyear.'" ';
-            }
+            // where start is less than last day/hour of the period
+            // and end is greater than or equal first day/hour of the period
+			$body .= ' AND stat.`start` <  "'.$periodEnd.'"
+            AND stat.`end` >= "'.$periodStart.'" ';
 
             $body .= ' ) stat               
             ON statStart < periods.`end`
             AND statEnd > periods.`start`
             ';
 
-            if ($reportFilter == '') {
-                $body .= ' WHERE periods.`start` >= :fromDt
-            AND periods.`end` <= DATE_ADD(:toDt, INTERVAL 1 DAY) ';
-            }
+            // e.g.,
             // where periods start is greater than or equal today and
             // periods end is less than or equal today + 1 day i.e. nextday
-            elseif (($reportFilter == 'today')) {
-                $body .= ' WHERE periods.`start` >= "'.$today.'"
-            AND periods.`end` <= "'.$nextday.'" ';
-            }
-            // where periods start is greater than or equal yesterday and
-            // periods end is less than or equal today
-            elseif (($reportFilter == 'yesterday')) {
-                $body .= ' WHERE periods.`start` >= "'.$yesterday.'"
-	        AND periods.`end` <= "'.$today.'" ';
-            }
-            // where periods start is greater than or equal thisweekmonday and
-            // periods end is less than or equal lastdaythisweek
-            elseif (($reportFilter == 'thisweek')) {
-                $body .= ' WHERE periods.`start` >= "'.$firstdaythisweek.'"
-            AND periods.`end` <= "'.$lastdaythisweek.'" ';
-            }
-            // where periods start is greater than or equal lastweekmonday and
-            // periods end is less than or equal lastdaylastweek
-            elseif (($reportFilter == 'lastweek')) {
-                $body .= ' WHERE periods.`start` >= "'.$firstdaylastweek.'"
-            AND periods.`end` <=  "'.$lastdaylastweek.'" ';
-            }
-            // where periods start is greater than or equal firstdaythismonth and
-            // periods end is less than lastdaythismonth
-            elseif (($reportFilter == 'thismonth')) {
-                $body .= ' 
-                WHERE
-                    periods.`start` >= "'.$firstdaythismonth.'"
-                    AND periods.`end` <=  "'.$lastdaythismonth.'" ';
-            }
-            // where periods start is greater than or equal firstdaylastmonth and
-            // periods end is less than lastdaylastmonth
-            elseif (($reportFilter == 'lastmonth')) {
-                $body .= '  
-                WHERE    
-                    periods.`start` >= "'.$firstdaylastmonth.'"
-                    AND periods.`end` <= "'.$lastdaylastmonth.'" ';
-            }
-            // where periods start is greater than or equal firstdaythisyear and
-            // periods end is less than lastdaythisyear
-            elseif (($reportFilter == 'thisyear')) {
-                $body .= ' 
-                WHERE
-                    periods.`start` >= "'.$firstdaythisyear.'"
-                    AND periods.`end` <= "'.$lastdaythisyear.'" ';
-            }
-            // where periods start is greater than or equal firstdaylastyear and
-            // periods end is less than lastdaylastyear
-            elseif (($reportFilter == 'lastyear')) {
-                $body .= '  
-                WHERE    
-                    periods.`start` >= "'.$firstdaylastyear.'"
-                    AND periods.`end` <= "'.$lastdaylastyear.'" ';
-            }
+            $body .= ' WHERE periods.`start` >= "'.$periodStart.'"
+            AND periods.`end` <= "'.$periodEnd.'" ';
 
+            // ORDER BY
             $body .= '  
             ORDER BY periods.`start`, statStart
-	        )B ';
+	        ) B ';
 
 
             if ($groupByFilter == 'byweek') {
@@ -736,7 +667,11 @@ class SummaryReport implements ReportInterface
 
             $results = $this->getTimeSeriesStore()->executeQuery($options);
 
-            return $results;
+            return [
+                'result' => $results,
+                'periodStart' => $periodStart,
+                'periodEnd' => $periodEnd
+            ];
 
         } else {
             return [];
@@ -1442,11 +1377,14 @@ class SummaryReport implements ReportInterface
                 }
             }
 
-            return $resultArray;
+            return [
+                'result' => $resultArray,
+                'periodStart' => $periodStart->toDateTime()->format('Y-m-d H:i:s'),
+                'periodEnd' => $periodEnd->toDateTime()->format('Y-m-d H:i:s')
+            ];
 
         } else {
             return [];
         }
     }
-
 }
