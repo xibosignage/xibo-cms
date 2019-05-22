@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (index.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -71,6 +72,11 @@ $app->view($twig);
 
 // Config
 $app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+// Check for upgrade after we've loaded settings to make sure the main app gets any custom settings it needs.
+if (\Xibo\Helper\Environment::migrationPending()) {
+    die('Upgrade pending');
+}
 
 \Xibo\Middleware\Storage::setStorage($app->container);
 \Xibo\Middleware\State::setState($app);
