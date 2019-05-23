@@ -801,4 +801,22 @@ class Playlist implements \JsonSerializable
 
         return $this;
     }
+
+    /**
+     * Clone the closure table for a new PlaylistId
+     *  usually this is used on Draft creation
+     * @param int $newParentId
+     */
+    public function cloneClosureTable($newParentId)
+    {
+        $this->getStore()->update('
+            INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                SELECT :newParentId, childId, depth 
+                  FROM lkplaylistplaylist
+                 WHERE parentId = :parentId AND depth > 0
+        ', [
+            'newParentId' => $newParentId,
+            'parentId' => $this->playlistId
+        ]);
+    }
 }

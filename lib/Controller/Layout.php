@@ -2054,12 +2054,15 @@ class Layout extends Base
             'notify' => false
         ]);
 
-        // Permissions
+        // Permissions && Sub-Playlists
         // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
         // Regions/Widgets need to copy down our layout permissions
         foreach ($draft->regions as $region) {
             // Match our original region id to the id in the parent layout
             $original = $layout->getRegion($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
 
             // Copy over original permissions
             foreach ($original->permissions as $permission) {
