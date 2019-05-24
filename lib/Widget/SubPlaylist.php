@@ -336,6 +336,7 @@ class SubPlaylist extends ModuleWidget
                 }
 
                 // Expand the list out, using the fill options.
+                $spotFillIndex = 0;
                 while (count($expanded) < $spots) {
                     $spotsToFill = $spots - count($expanded);
 
@@ -359,14 +360,13 @@ class SubPlaylist extends ModuleWidget
                             $new[] = $expanded[$i];
 
                             // Take $loops from the filler playlist (the first one)
-                            $k = 0;
                             for ($j = 0; $j < $loops; $j++) {
-                                $new[] = $firstList[$k];
-                                $k++;
+                                $new[] = $firstList[$spotFillIndex];
+                                $spotFillIndex++;
 
                                 // if we've gone around too far, then start from the beginning.
-                                if ($k >= count($firstList)) {
-                                    $k = 0;
+                                if ($spotFillIndex >= count($firstList)) {
+                                    $spotFillIndex = 0;
                                 }
                             }
                         }
