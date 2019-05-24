@@ -298,6 +298,7 @@ class SubPlaylist extends ModuleWidget
         $widgets = [];
         $firstList = null;
         $firstListCount = 0;
+        $largestListId = 0;
         $largestListCount = 0;
         $smallestListCount = 0;
 
@@ -395,6 +396,7 @@ class SubPlaylist extends ModuleWidget
             // high watermark
             if ($countExpanded > $largestListCount) {
                 $largestListCount = $countExpanded;
+                $largestListId = $playlistId;
             }
 
             // low watermark
@@ -423,6 +425,8 @@ class SubPlaylist extends ModuleWidget
 
         // Enable for debugging only - large log
         //$this->getLog()->debug(json_encode($widgets));
+        $takeIndices = [];
+        $lastTakeIndices = [];
 
         // Arrangement first
         if ($arrangement === 'even') {
@@ -430,73 +434,71 @@ class SubPlaylist extends ModuleWidget
             $arrangement = 'roundrobin';
 
             // We need to decide how frequently we take from the respective lists.
-            $takeEvery = intval(floor(($firstListCount < $largestListCount) ? 1 : ($largestListCount / $smallestListCount)));
-
-            $this->getLog()->debug('Even arrangement, take items every ' . $takeEvery);
+            // this is different for each list.
+            foreach (array_keys($widgets) as $playlistId) {
+                $takeIndices[$playlistId] = intval(floor(count($widgets[$playlistId]) / $smallestListCount));
+                $lastTakeIndices[$playlistId] = -1;
+            }
         } else {
             // On a standard round robin, we take every 1 item (i.e. one from each).
-            $takeEvery = 1;
+            foreach (array_keys($widgets) as $playlistId) {
+                $takeIndices[$playlistId] = 1;
+                $lastTakeIndices[$playlistId] = -1;
+            }
         }
 
-        // Track the index we are taking items for the second or later lists.
-        $lastTakeIndex = -1;
+        $this->getLog()->debug('Take Indices: ' . json_encode($takeIndices));
 
         // Round robin or sequentially
         if ($arrangement === 'roundrobin') {
             // Round Robin
             // Take 1 from each until we have run out, use the smallest list as the "key"
-            for ($i = 0; $i < $largestListCount; $i++) {
-                $first = true;
+            $loopCount = $largestListCount / $takeIndices[$largestListId];
+
+            $this->getLog()->debug('Round-Robin: We will loop a maximum of ' . $loopCount . ' times');
+
+            for ($i = 0; $i < $loopCount; $i++) {
+                $this->getLog()->debug('Loop number ' . $i);
+
                 foreach (array_keys($widgets) as $playlistId) {
-                    // Start the index as the current loop ($i) in the largest list
-                    // first time around this will be 0, subsequently 1,2,3,4 etc
-                    $index = $i;
+                    // How many items should we take from this list each time we go around?
+                    $takeEvery = $takeIndices[$playlistId];
                     $countInList = count($widgets[$playlistId]);
 
-                    $this->getLog()->debug('Assessing index ' . $i . ' for playlistId ' . $playlistId . ' which has ' . $countInList . ' widgets.' . (($first) ? ' first list' : ''));
+                    $this->getLog()->debug('Assessing playlistId ' . $playlistId . ' which has ' . $countInList . ' widgets.');
 
-                    // We might skip the second or later list if we're only taking from that list every N items.
-                    if (!$first) {
-                        // We are on the second or later list - should we take?
-                        if ($takeEvery !== 1 && $index - $lastTakeIndex !== $takeEvery) {
-                            $this->getLog()->debug('Skipping over ' . $index . ' because we last took index ' . $lastTakeIndex . ' and we should only take every ' . $takeEvery);
-                            $first = false;
-                            continue;
-                        }
+                    for ($count = 1; $count <= $takeEvery; $count++) {
+                        // Increment the last index we consumed from this list by the count
+                        $index = $lastTakeIndices[$playlistId] + $count;
 
-                        $this->getLog()->debug('Not on the first list but we have assessed that we should take an item');
-
-                        $lastTakeIndex = $index;
-                    }
-
-                    // Not the first list
-                    $first = false;
-
-                    // Does this key actually have this many items?
-                    if ($index >= $countInList) {
-                        // it does not :o
-                        $this->getLog()->debug('Index ' . $index . ' is higher than the count of widgets in the list ' . $countInList);
-                        // what we do depends on our remainder setting
-                        // if we drop, we stop, otherwise we skip
-                        if ($remainder === 'drop') {
-                            // force the whole shebang to stop
-                            $i = $largestListCount;
-                            break;
-                        } else if ($remainder === 'repeat') {
-                            // start this list again from the beginning.
-                            while ($index >= $countInList) {
-                                $index = $index - $countInList;
+                        // Does this key actually have this many items?
+                        if ($index >= $countInList) {
+                            // it does not :o
+                            $this->getLog()->debug('Index ' . $index . ' is higher than the count of widgets in the list ' . $countInList);
+                            // what we do depends on our remainder setting
+                            // if we drop, we stop, otherwise we skip
+                            if ($remainder === 'drop') {
+                                // Stop everything, we've got enough
+                                break 3;
+                            } else if ($remainder === 'repeat') {
+                                // start this list again from the beginning.
+                                $index = 0;
+                            } else {
+                                // Just skip this key
+                                continue 2;
                             }
-                        } else {
-                            // Just skip this key
-                            continue;
                         }
+
+                        $this->getLog()->debug('Selecting widget at position ' . $index . ' from playlistId ' . $playlistId);
+
+                        // Append the key at the position
+                        $resolvedWidgets[] = $widgets[$playlistId][$index];
+
+                        // Update our last take index for this list.
+                        $lastTakeIndices[$playlistId] = $index;
+
+                        //$this->getLog()->debug('There are ' . count($resolvedWidgets) . ' resolved Widgets');
                     }
-
-                    $this->getLog()->debug('Selecting widget at position '. $index);
-
-                    // Append the key at the position
-                    $resolvedWidgets[] = $widgets[$playlistId][$index];
                 }
             }
         } else {
