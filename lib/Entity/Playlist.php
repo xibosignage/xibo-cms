@@ -295,7 +295,7 @@ class Playlist implements \JsonSerializable
         ]);
 
         if (count($duplicates) > 0) {
-            throw new DuplicateEntityException(sprintf(__("You already own a playlist called '%s'. Please choose another name."), $this->name));
+            throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
         }
     }
 

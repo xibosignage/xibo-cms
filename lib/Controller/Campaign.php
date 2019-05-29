@@ -635,8 +635,7 @@ class Campaign extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign),
-            'id' => $campaign->campaignId
+            'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
         ]);
     }
 
@@ -714,8 +713,7 @@ class Campaign extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign),
-            'id' => $campaign->campaignId
+            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
         ]);
     }
 
