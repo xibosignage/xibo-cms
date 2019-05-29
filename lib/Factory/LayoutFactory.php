@@ -1229,8 +1229,8 @@ class LayoutFactory extends BaseFactory
             $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
         }
 
-        // Retired options (default to 0 - provide -1 to return all
-        if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
+        // Retired options (provide -1 to return all)
+        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
             $params['retired'] = $this->getSanitizer()->getInt('retired', 0, $filterBy);
         }
