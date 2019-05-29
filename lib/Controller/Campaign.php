@@ -587,6 +587,16 @@ class Campaign extends Base
             if ($layout->isChild())
                 throw new InvalidArgumentException('Cannot assign a Draft Layout to a Campaign', 'layoutId');
 
+            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
+            $tags = $layout->tags;
+            $tagsArray = explode(',', $tags);
+
+            foreach ($tagsArray as $tag) {
+                if ($tag === 'template') {
+                    throw new InvalidArgumentException('Cannot assign a Template to a Campaign', 'layoutId');
+                }
+            }
+
             // Set the Display Order
             $layout->displayOrder = $this->getSanitizer()->getInt('displayOrder', $object);
 
@@ -625,7 +635,8 @@ class Campaign extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
+            'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign),
+            'id' => $campaign->campaignId
         ]);
     }
 
@@ -703,7 +714,8 @@ class Campaign extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
+            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign),
+            'id' => $campaign->campaignId
         ]);
     }
 
