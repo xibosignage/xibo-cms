@@ -290,7 +290,8 @@ class Playlist implements \JsonSerializable
             'userId' => $this->ownerId,
             'playlistExact' => $this->name,
             'regionSpecific' => 0,
-            'disableUserCheck' => 1
+            'disableUserCheck' => 1,
+            'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
         ]);
 
         if (count($duplicates) > 0) {

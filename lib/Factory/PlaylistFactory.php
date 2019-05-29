@@ -276,6 +276,12 @@ class PlaylistFactory extends BaseFactory
             $params['exact'] = $this->getSanitizer()->getString('playlistExact', $filterBy);
         }
 
+        // Not PlaylistId
+        if ($this->getSanitizer()->getInt('notPlaylistId', 0, $filterBy) != 0) {
+            $body .= " AND playlist.playlistId <> :notPlaylistId ";
+            $params['notPlaylistId'] = $this->getSanitizer()->getInt('notPlaylistId', 0, $filterBy);
+        }
+
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
 
