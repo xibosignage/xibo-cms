@@ -270,6 +270,12 @@ class PlaylistFactory extends BaseFactory
             $this->nameFilter('playlist', 'name', $terms, $body, $params);
         }
 
+        // Playlist exact name
+        if ($this->getSanitizer()->getString('playlistExact', $filterBy) != '') {
+            $body.= " AND playlist.name = :exact ";
+            $params['exact'] = $this->getSanitizer()->getString('playlistExact', $filterBy);
+        }
+
         // Tags
         if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
 
