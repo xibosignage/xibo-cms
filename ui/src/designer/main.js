@@ -106,7 +106,7 @@ $(document).ready(function() {
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
         .done(function(res) {
 
-            if(res.data.length > 0) {
+            if(res.data != null && res.data.length > 0) {
 
                 lD.common.hideLoadingScreen();
 
@@ -235,7 +235,13 @@ $(document).ready(function() {
                 // Default selected object is the layout
                 lD.selectObject();
             } else {
-                lD.showErrorMessage();
+                // Login Form needed?
+                if(res.login) {
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+                    lD.showErrorMessage();
+                }
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
 
@@ -415,7 +421,7 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
             
             lD.common.hideLoadingScreen();
             
-            if(res.data.length > 0) {
+            if(res.data != null && res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
 
                 // Update main object id
@@ -444,7 +450,13 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 lD.checkLayoutStatus();
                 
             } else {
-                lD.showErrorMessage();
+                // Login Form needed?
+                if(res.login) {
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+                    lD.showErrorMessage();
+                }
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
 
@@ -494,7 +506,6 @@ lD.checkoutLayout = function() {
         } else {
             // Login Form needed?
             if(res.login) {
-
                 window.location.href = window.location.href;
                 location.reload(false);
             } else {
@@ -539,7 +550,6 @@ lD.publishLayout = function() {
 
             // Login Form needed?
             if(res.login) {
-
                 window.location.href = window.location.href;
                 location.reload(false);
             } else {
@@ -1367,7 +1377,6 @@ lD.checkLayoutStatus = function() {
         if(!res.success) {
             // Login Form needed?
             if(res.login) {
-
                 window.location.href = window.location.href;
                 location.reload(false);
             } else {

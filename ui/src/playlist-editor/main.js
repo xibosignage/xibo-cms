@@ -102,7 +102,7 @@ pE.loadEditor = function() {
     $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
         .done(function(res) {
 
-            if(res.data.length > 0) {
+            if(res.data != null && res.data.length > 0) {
 
                 // Append layout html to the main div
                 pE.editorDiv.html(playlistEditorTemplate());
@@ -180,7 +180,13 @@ pE.loadEditor = function() {
                 pE.common.hideLoadingScreen();
 
             } else {
-                pE.showErrorMessage();
+                // Login Form needed?
+                if(res.login) {
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+                    pE.showErrorMessage();
+                }
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
 
@@ -448,15 +454,19 @@ pE.reloadData = function() {
 
     $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
         .done(function(res) {
-
             pE.common.hideLoadingScreen();
 
-            if(res.data.length > 0) {
+            if(res.data != null && res.data.length > 0) {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
                 pE.refreshDesigner();
             } else {
-                pE.showErrorMessage();
+                if(res.login) {
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+                    pE.showErrorMessage();
+                }
             }
 
             // Reload the form helper connection
@@ -736,10 +746,8 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
                 pE[prefToLoad] = defaultValue;
             }
         } else {
-
             // Login Form needed?
             if(res.login) {
-
                 window.location.href = window.location.href;
                 location.reload(false);
             } else {
