@@ -3,6 +3,7 @@
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarLayoutJumpList = require('../templates/toolbar-layout-jump-list.hbs');
+const ToolbarMediaSearchTemplate = require('../templates/toolbar-media-search.hbs');
 
 const toolsList = [
     {
@@ -51,7 +52,6 @@ const defaultMenuItems = [
         itemName: toolbarTrans.menuItems.toolsName,
         itemTitle: toolbarTrans.menuItems.toolsTitle,
         tool: true,
-        pagination: false,
         page: 0,
         content: [],
         state: ''
@@ -60,7 +60,6 @@ const defaultMenuItems = [
         name: 'widgets',
         itemName: toolbarTrans.menuItems.widgetsName,
         itemTitle: toolbarTrans.menuItems.widgetsTitle,
-        pagination: false,
         page: 0,
         content: [],
         state: '',
@@ -78,11 +77,8 @@ const defaultMenuItems = [
 let Toolbar = function(container, customMainButtons = null, customDropdownButtons = null, customActions = {}, jumpList = {}) {
     this.DOMObject = container;
     this.openedMenu = -1;
-    this.previousOpenedMenu = -1;
 
     this.menuItems = defaultMenuItems;
-    this.menuIndex = 0;
-
     // Number of tabs that are fixed ( not removable and always defaulted )
     this.fixedTabs = defaultMenuItems.length;
 
@@ -98,9 +94,6 @@ let Toolbar = function(container, customMainButtons = null, customDropdownButton
     // Custom actions
     this.customActions = customActions;
 
-    // Lock search buttons
-    this.searchButtonsLock = false;
-
     this.contentDimentions = {
         width: 90 // In percentage
     };
@@ -113,8 +106,8 @@ let Toolbar = function(container, customMainButtons = null, customDropdownButton
 
     this.selectedCard = {};
 
-    // Load user preferences
-    this.loadPrefs();
+    // Flag to mark if the toolbar has been rendered at least one time
+    this.firstRun = true;
 };
 
 /**
@@ -141,24 +134,16 @@ Toolbar.prototype.loadPrefs = function() {
             // Populate the toolbar with the returned data
             self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
             self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
-            self.previousOpenedMenu = (loadedData.previousOpenedMenu != undefined) ? loadedData.openedMenu : -1;
 
             // Tooltip options
             app.common.displayTooltips = (loadedData.displayTooltips == 1);
 
-            // Set menu index
-            if(loadedData.menuIndex != undefined) {
-                self.menuIndex = loadedData.menuIndex;
-            } else {
-                self.menuIndex = self.menuItems.length;
-            }
-
-            // Render to reflect the loaded toolbar
-            self.render();
-
             // If there was a opened menu, load content for that one
             if(self.openedMenu != -1) {
-                self.openTab(self.openedMenu);
+                self.openTab(self.openedMenu, true);
+            } else {
+                // Render to reflect the loaded toolbar
+                self.render();
             }
         } else {
 
@@ -193,32 +178,30 @@ Toolbar.prototype.loadPrefs = function() {
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
 Toolbar.prototype.savePrefs = function(clearPrefs = false) {
-    
+
     const app = getXiboApp();
 
     // Save only some of the tab menu data
     let menuItemsToSave = [];
     let openedMenu = this.openedMenu;
-    let previousOpenedMenu = this.previousOpenedMenu;
     let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
 
     if(clearPrefs) {
         menuItemsToSave = {};
         openedMenu = -1;
-        previousOpenedMenu = -1;
         displayTooltips = 1;
     } else {
         for(let index = this.fixedTabs;index < this.menuItems.length;index++) {
 
-        // Make a copy of the current element
-        let elementCopy = Object.assign({}, this.menuItems[index]);
+            // Make a copy of the current element
+            let elementCopy = Object.assign({}, this.menuItems[index]);
 
-        // Remove content and set page to 0
-        elementCopy.content = [];
-        elementCopy.page = 0;
-        
-        menuItemsToSave.push(elementCopy);
-    }
+            // Remove content and set page to 0
+            elementCopy.content = [];
+            elementCopy.page = 0;
+
+            menuItemsToSave.push(elementCopy);
+        }
     }
 
     let dataToSave = {
@@ -228,8 +211,6 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
                 value: JSON.stringify({
                     menuItems: menuItemsToSave,
                     openedMenu: openedMenu,
-                    previousOpenedMenu: previousOpenedMenu,
-                    menuIndex: this.menuIndex,
                     displayTooltips: displayTooltips
                 })
             }
@@ -282,6 +263,15 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
  */
 Toolbar.prototype.render = function() {
 
+    // Load preferences when the toolbar is rendered for the first time
+    if(this.firstRun) {
+        // Mark toolbar as loaded
+        this.firstRun = false;
+
+        // Load user preferences
+        this.loadPrefs();
+    }
+
     let self = this;
     const app = getXiboApp();
 
@@ -293,7 +283,7 @@ Toolbar.prototype.render = function() {
 
     // Check if trash bin is active
     let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
-    
+
     // Get text for bin tooltip
     if(trashBinActive) {
         newToolbarTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
@@ -303,9 +293,9 @@ Toolbar.prototype.render = function() {
     let undoActive = app.manager.changeHistory.length > 0;
 
     // Get last action text for popup
-    if(undoActive) { 
+    if(undoActive) {
         let lastAction = app.manager.changeHistory[app.manager.changeHistory.length - 1];
-        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined ) {
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
             newToolbarTrans.undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
         } else {
             newToolbarTrans.undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
@@ -348,45 +338,25 @@ Toolbar.prototype.render = function() {
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
-                if(!toolbar.searchButtonsLock) {
-                    toolbar.menuItems[index].page -= 1;
-                    toolbar.loadContent(index); 
-                }
+                toolbar.menuItems[index].page -= 1;
+                toolbar.loadContent(index);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-right-' + index).click(function() {
-                if(!toolbar.searchButtonsLock) {
-                    toolbar.menuItems[index].page += 1;
-                    toolbar.loadContent(index);
-                }
+                toolbar.menuItems[index].page += 1;
+                toolbar.loadContent(index);
             });
 
         }
 
-        // Toggle button
-        this.DOMObject.find('#btn-menu-toggle').click(function() {
-            self.openTab();
-        });
-
         // Create new tab
-        this.DOMObject.find('#btn-menu-new-tab').click(function(){
+        this.DOMObject.find('#btn-menu-new-tab').click(function() {
             self.createNewTab();
         });
 
         // Close all tabs
         this.DOMObject.find('#deleteAllTabs').click(function() {
             self.deleteAllTabs();
-        });
-
-        // Search button
-        this.DOMObject.find('.search-btn').click(function() {
-            if(!self.searchButtonsLock) {
-                // Reset page
-                self.menuItems[$(this).attr("data-search-id")].page = 0;
-
-                // Load content for the search tab
-                self.loadContent($(this).attr("data-search-id"));
-            }
         });
 
         // Delete object
@@ -448,7 +418,7 @@ Toolbar.prototype.render = function() {
     }
 
     // Options menu
-    self.DOMObject.find('.navbar-submenu-options-container').off().click(function (e){
+    self.DOMObject.find('.navbar-submenu-options-container').off().click(function(e) {
         e.stopPropagation();
     });
 
@@ -496,7 +466,7 @@ Toolbar.prototype.render = function() {
                 self.deselectCardsAndDropZones();
 
                 $('.custom-overlay').show();
-            }, 
+            },
             stop: function() {
                 // Hide designer overlay
                 $('.custom-overlay').hide();
@@ -505,7 +475,7 @@ Toolbar.prototype.render = function() {
 
         // Select card clicking in the Add button
         this.DOMObject.find('.toolbar-card:not(.card-selected) .add-area').click((e) => {
-            self.selectCard($(e.currentTarget).parent()); 
+            self.selectCard($(e.currentTarget).parent());
         });
 
         // Initialize tooltips
@@ -522,7 +492,16 @@ Toolbar.prototype.render = function() {
             // Add text to form
             self.DOMObject.find('.toolbar-pane.active .input-tag').tagsinput('add', tagText, {allowDuplicates: false});
         });
+
+        // Load media content
+        if(this.openedMenu >= this.fixedTabs) {
+            // Load tab search media content
+            this.mediaContentCreate(this.openedMenu);
+        }
     }
+
+    // Update tab name
+    this.updateTabNames();
 };
 
 /**
@@ -531,18 +510,16 @@ Toolbar.prototype.render = function() {
  */
 Toolbar.prototype.loadContent = function(menu = -1) {
 
-    // Calculate pagination
-    const pagination = this.calculatePagination(menu);
-
     const app = getXiboApp();
-
-    // Enable/Disable page down pagination button according to the page to display
-    this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
-
-    // Replace search button with a spinner icon
-    this.DOMObject.find('.search-btn').html('<i class="fa fa-spinner fa-spin"></i>');
+    const self = this;
 
     if(menu < this.fixedTabs) { // Fixed Tabs
+
+        // Calculate pagination
+        const pagination = this.calculatePagination(menu);
+
+        // Enable/Disable page down pagination button according to the page to display
+        this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
 
         switch(menu) {
             // Tools
@@ -572,152 +549,53 @@ Toolbar.prototype.loadContent = function(menu = -1) {
 
         // Enable/Disable page up pagination button according to the page to display and total elements
         this.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= this.menuItems[menu].content.length) ? 'disabled' : '';
-        
-        this.menuItems[menu].state = 'active';
 
-        // Save user preferences
-        this.savePrefs();
-
-        this.render();
-
-    } else { // Generated tabs ( search )
-
-        // Load using the API
-        const linkToAPI = urlsForApi.library.get;
-
-        // Lock buttons
-        this.searchButtonsLock = true;
-
-        // Save filters
-        this.menuItems[menu].filters.name.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
-        this.menuItems[menu].filters.tag.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
-        this.menuItems[menu].filters.type.value = this.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
-
-        // Create filter
-        let customFilter = {
-            retired: 0,
-            assignable: 1,
-            start: pagination.start,
-            length: pagination.length,
-            media: this.menuItems[menu].filters.name.value,
-            tags: this.menuItems[menu].filters.tag.value,
-            type: this.menuItems[menu].filters.type.value
-        };
-
-        // Change tab name to reflect the search query
-        if(customFilter.media != '' && customFilter.media != undefined) {
-            this.menuItems[menu].itemName = '"' + customFilter.media + '"';
-        } else {
-            this.menuIndex += 1;
-            this.menuItems[menu].itemName = toolbarTrans.tabName.replace('%tagId%', this.menuIndex);
-        }
-
-        if(customFilter.tags != '' && customFilter.tags != undefined) {
-            this.menuItems[menu].itemName += ' {' + customFilter.tags + '} ';
-        }
-
-        if(customFilter.type != '' && customFilter.type != undefined) {
-            this.menuItems[menu].itemName += ' [' + customFilter.type + '] ';
-        }
-
-        // Request elements based on filters
-        let self = this;
-        $.ajax({
-            url: linkToAPI.url,
-            type: linkToAPI.type,
-            data: customFilter
-        }).done(function(res) {
-
-            if(res.data.length == 0) {
-                toastr.info(toolbarTrans.noResults, toolbarTrans.search);
-                self.menuItems[menu].content = null;
-            } else {
-                //Convert tags into an array
-                res.data.forEach((el) => {
-                    if(typeof el.tags != undefined && el.tags != null) {
-                        el.tags = el.tags.split(',');
-                        el.tagsCount = el.tags.length;
-                        el.tagsShow = (el.tagsCount === 1) ? true : false;
-                        el.tagsMessage = toolbarTrans.toolbarTagsMessage.replace('%tagCount%', el.tagsCount);
-
-                    } else {
-                        el.tagsCount = 0;
-                        el.tagsShow = false;
-                        el.tagsMessage = '';
-                    }
-                });
-
-                self.menuItems[menu].content = res.data;
-            }
-
-            // Unlock buttons
-            self.searchButtonsLock = false;
-
-            // Enable/Disable page up pagination button according to the page to display and total elements
-            self.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= res.recordsTotal) ? 'disabled' : '';
-
-            // Save user preferences
-            self.savePrefs();
-
-            self.render();
-        }).catch(function(jqXHR, textStatus, errorThrown) {
-
-            console.error(jqXHR, textStatus, errorThrown);
-            toastr.error(errorMessagesTrans.libraryLoadFailed);
-
-            // Unlock buttons
-            self.searchButtonsLock = false;
-
-            self.menuItems[menu].content = null;
-        });
     }
+
+    // Make menu state to be active
+    this.menuItems[menu].state = 'active';
+
+    // Save user preferences and render
+    this.savePrefs();
+    this.render();
 };
 
 /**
  * Open menu
  * @param {number} menu - menu to open index, -1 by default and to toggle
+ * @param {bool} forceOpen - force tab open ( even if opened before )
  */
-Toolbar.prototype.openTab = function(menu = -1) {
+Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
 
-    // Toggle previous opened menu
-    if(menu == -1) {
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
 
-        if(this.openedMenu != -1) { // Close opened tab
-            this.previousOpenedMenu = this.openedMenu;
-            this.menuItems[this.openedMenu].state = '';
-            this.openedMenu = -1;
-        } else if(this.previousOpenedMenu != -1 && this.menuItems[this.previousOpenedMenu] != undefined) { // Reopen previously opened tab
-            this.menuItems[this.previousOpenedMenu].state = 'active';
-            this.openedMenu = this.previousOpenedMenu;
-            this.previousOpenedMenu = -1;
-
-            // If menu is the default/widget, load content
-            if(this.openedMenu < this.fixedTabs && this.openedMenu > -1) {
-                this.loadContent(this.openedMenu);
-                return; // To avoid double save and render
-            }
-        }
-    } else { // Open specific menu
+    // Open specific menu
+    if(menu != -1) {
+        let active = (forceOpen) ? false : (this.menuItems[menu].state == 'active');
 
         // Close all menus
         for(let index = this.menuItems.length - 1;index >= 0;index--) {
             this.menuItems[index].state = '';
         }
 
-        this.menuItems[menu].state = 'active';
-        this.openedMenu = menu;
-        this.previousOpenedMenu = -1;
+        if(active) {
+            this.openedMenu = -1;
+        } else {
+            this.openedMenu = menu;
 
-        // If menu is the default/widget/tools, load content
-        if(menu < this.fixedTabs && menu > -1) {
-            this.loadContent(menu);
-            return; // To avoid double save and render
+            // If menu is the default/widget/tools, load content
+            if(menu > -1) {
+                this.loadContent(menu);
+                return; // To avoid double save and render
+            }
         }
     }
 
     // Save user preferences
     this.savePrefs();
 
+    // Render toolbar
     this.render();
 };
 
@@ -735,11 +613,8 @@ Toolbar.prototype.createNewTab = function() {
         }
     });
 
-    this.menuIndex += 1;
-
     this.menuItems.push({
         name: 'search',
-        itemName: toolbarTrans.tabName.replace('%tagId%', this.menuIndex),
         search: true,
         page: 0,
         query: '',
@@ -761,8 +636,6 @@ Toolbar.prototype.createNewTab = function() {
     });
 
     this.openTab(this.menuItems.length - 1);
-
-    this.render();
 };
 
 /**
@@ -771,21 +644,22 @@ Toolbar.prototype.createNewTab = function() {
  */
 Toolbar.prototype.deleteTab = function(menu) {
 
+    // Remove menu option from the array
     this.menuItems.splice(menu, 1);
 
-    if(this.openedMenu >= this.fixedTabs) {
+    if(this.openedMenu == menu) {
+        // Deselect menu if we're closing the selected one
         this.openedMenu = -1;
-        this.previousOpenedMenu = -1;
+    } else if(this.openedMenu < menu) {
+        // If the deleted menu is lower than the selected, update the selected index
+        this.openedMenu -= 1;
     }
 
-    // Reset menu index
-    if(this.menuItems.length === this.fixedTabs) {
-        this.menuIndex = this.menuItems.length;
-    }
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
 
     // Save user preferences
     this.savePrefs();
-
     this.render();
 };
 
@@ -797,18 +671,16 @@ Toolbar.prototype.deleteAllTabs = function() {
     for(let index = this.menuItems.length - 1;index >= this.fixedTabs;index--) {
         this.menuItems.splice(index, 1);
     }
-    
+
     if(this.openedMenu >= this.fixedTabs) {
         this.openedMenu = -1;
-        this.previousOpenedMenu = -1;
     }
 
-    // Reset menu index
-    this.menuIndex = this.menuItems.length;
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
 
     // Save user preferences
     this.savePrefs();
-    
     this.render();
 };
 
@@ -817,7 +689,7 @@ Toolbar.prototype.deleteAllTabs = function() {
  * @param {number} menu
  */
 Toolbar.prototype.calculatePagination = function(menu) {
-    
+
     // Get page and number of elements
     const currentPage = this.menuItems[menu].page;
 
@@ -829,7 +701,7 @@ Toolbar.prototype.calculatePagination = function(menu) {
 
     // Space used
     const usedSpace = elementsToDisplay * (this.cardDimensions.width + this.cardDimensions.margin);
-    
+
     // Remaining space to be filled ( without the right margin )
     const remainingSpace = containerWidth - usedSpace - this.cardDimensions.margin;
 
@@ -839,7 +711,7 @@ Toolbar.prototype.calculatePagination = function(menu) {
     } else {
         this.cardCalculatedWidth = this.cardDimensions.width;
     }
-    
+
     this.menuItems[menu].contentWidth = this.contentDimentions.width;
 
     return {
@@ -921,7 +793,7 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
         window.location = jumpList.data().designerUrl.replace(":id", e.params.data.id);
     }).on("select2:opening", function(e) {
         // Set the search box according to the saved value (if we have one)
-        
+
         if(localStorage.liveSearchPlaceholder != null && localStorage.liveSearchPlaceholder !== "") {
             var $search = jumpList.data("select2").dropdown.$search;
             $search.val(localStorage.liveSearchPlaceholder);
@@ -947,7 +819,7 @@ Toolbar.prototype.selectCard = function(card) {
     const previouslySelected = this.selectedCard;
 
     if(previouslySelected[0] != card[0]) {
-        
+
         // Get card info
         const dropTo = $(card).attr('drop-to');
         const subType = $(card).attr('data-sub-type');
@@ -982,11 +854,47 @@ Toolbar.prototype.selectCard = function(card) {
 };
 
 /**
+ * Select media so it can be used
+ * @param {object} media - DOM card to select/activate
+ */
+Toolbar.prototype.selectMedia = function(media, data) {
+
+    const alreadySelected = $(media).hasClass('media-selected');
+
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    if(!alreadySelected) {
+        // Select row in the table
+        $(media).addClass('media-selected');
+
+        // Create temp object to simulate a card and use it as the selected card
+        this.selectedCard = $('<div drop-to="region">').data({
+            type: 'media',
+            mediaId: data.mediaId,
+            subType: data.mediaType
+        });
+
+        // Show designer overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            this.deselectCardsAndDropZones();
+        });
+
+        // Set droppable regions as active
+        $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
+    }
+};
+
+/**
  * Deselect all the cards and remove the overlay on the drop zones
  */
 Toolbar.prototype.deselectCardsAndDropZones = function() {
+
     // Deselect other cards
     this.DOMObject.find('.toolbar-card.card-selected').removeClass('card-selected');
+
+    // Deselect other media
+    this.DOMObject.find('.media-table tr.media-selected').removeClass('media-selected');
 
     // Remove drop class from droppable elements
     $('.ui-droppable').removeClass('ui-droppable-active');
@@ -1011,7 +919,215 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
     this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type-' + this.openedMenu).val(type);
 
     // Search/Load Content
-    this.loadContent(this.openedMenu); 
+    this.loadContent(this.openedMenu);
+};
+
+/**
+ * Media form callback
+ */
+Toolbar.prototype.mediaContentCreate = function(menu) {
+
+    const self = this;
+
+    // Get search window Jquery object
+    const $searchContent = self.DOMObject.find('#content-' + menu + '.search-content');
+
+    // Render template
+    const html = ToolbarMediaSearchTemplate({
+        menuIndex: menu,
+        menuObj: this.menuItems[menu],
+        trans: toolbarTrans
+    });
+
+    // Append template to the search main div
+    self.DOMObject.find('#media-search-container-' + menu).html(html);
+
+    var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
+        "language": dataTablesLanguage,
+        "lengthMenu": [5, 10],
+        "pageLength": 5,
+        "autoWidth": false,
+        serverSide: true, stateSave: true,
+        searchDelay: 3000,
+        "order": [[1, "asc"]],
+        "filter": false,
+        ajax: {
+            url: librarySearchUrl,
+            "data": function(d) {
+                $.extend(d, self.DOMObject.find('#media-search-container-' + menu).find("form").serializeObject());
+            }
+        },
+        "columns": [
+            {"data": "mediaId"},
+            {"data": "name"},
+            {"data": "mediaType"},
+            {
+                "sortable": false,
+                "visible": false,
+                "data": dataTableCreateTags
+            },
+            {
+                "name": "mediaId",
+                "data": null,
+                "render": function(data, type, row, meta) {
+                    if(type === "display") {
+                        // Return only the image part of the data
+                        if(data.thumbnailUrl === '')
+                            return '';
+                        else
+                            return '<img src="' + data.thumbnailUrl + '"/>';
+                        return data;
+                    } else {
+                        return row.mediaId;
+                    }
+                }
+            },
+            {
+                "sortable": false,
+                "data": function(data, type, row, meta) {
+                    if(type !== "display")
+                        return "";
+
+                    // Create a click-able span
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                }
+            }
+        ]
+    });
+
+    mediaTable.on('draw', function(e, settings) {
+        dataTableDraw(e, settings);
+
+        // Clicky on the +spans
+        self.DOMObject.find(".assignItem").click(function() {
+            // Get the row that this is in.
+            var data = mediaTable.row($(this).closest("tr")).data();
+            self.selectMedia($(this).closest('tr'), data);
+        });
+
+
+        self.tablePositionUpdate($searchContent);
+    });
+    mediaTable.on('processing.dt', dataTableProcessing);
+
+    // Prevent filter form submit and bind the change event to reload the table
+    self.DOMObject.find('#media-search-form-' + menu).on('submit', function(e) {
+        e.preventDefault();
+        return false;
+    }).find('input, select').change(function() {
+        // Save filter options
+        self.menuItems[menu].filters.name.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
+        self.menuItems[menu].filters.tag.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
+        self.menuItems[menu].filters.type.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
+
+        // Update tab name
+        self.updateTabNames();
+        self.savePrefs();
+
+        // Deselect previous selections
+        self.deselectCardsAndDropZones();
+
+        // Reload table
+        mediaTable.ajax.reload();
+    });
+
+    // Make search window to be draggable and resizable
+    $searchContent
+        .appendTo('.editor-toolbar > nav')
+        .draggable({
+            containment: 'window',
+            scroll: false,
+            handle: '.drag-handle'
+        })
+        .resizable({
+            minWidth: 580
+        }).on('resizestart',
+            function() {
+                self.tablePositionUpdate($searchContent);
+            }
+        ).on('resizestop dragstop',
+            function(event, ui) {
+
+                // Save window positioning
+                self.menuItems[menu].searchPosition = {
+                    width: $(this).width(),
+                    height: $(this).height(),
+                    top: $(this).position().top,
+                    left: $(this).position().left
+                };
+                self.savePrefs();
+
+                self.tablePositionUpdate($searchContent);
+            }
+        );
+
+    // If we have set positions, set them on load
+    if(self.menuItems[menu].searchPosition != undefined) {
+        const position = self.menuItems[menu].searchPosition;
+
+        $searchContent.width(position.width);
+        $searchContent.height(position.height);
+        $searchContent.css({top: position.top});
+        $searchContent.css({left: position.left});
+    }
+
+    // Search content window buttons handling
+    $searchContent.find('.btn-window-close').click(function() {
+        self.deleteTab($(this).data('menu'));
+    });
+
+    $searchContent.find('.btn-window-minimize').click(function() {
+        self.openTab($(this).data('menu'));
+    });
+
+    // Deselect previous selections
+    self.deselectCardsAndDropZones();
+};
+
+/**
+ * Update tab height
+ */
+Toolbar.prototype.tablePositionUpdate = function(container) {
+
+    // Calculate table container height
+    const tableContainerHeight = container.find('.form-inline').height() + container.find('.dataTables_wrapper').height();
+
+    // Set resizable min height
+    container.resizable('option', 'minHeight', tableContainerHeight);
+
+    // Fix height if bigger than the min
+    if(container.height() < tableContainerHeight) {
+        container.height(tableContainerHeight);
+    }
+};
+
+/**
+ * Update tab name
+ */
+Toolbar.prototype.updateTabNames = function() {
+
+    for(let menu = this.fixedTabs;menu < this.menuItems.length;menu++) {
+
+        const customFilter = this.menuItems[menu].filters;
+
+        // Change tab name to reflect the search query
+        if(customFilter.name.value != '' && customFilter.name.value != undefined) {
+            this.menuItems[menu].itemName = '"' + customFilter.name.value + '"';
+        } else {
+            this.menuItems[menu].itemName = toolbarTrans.tabName.replace('%tagId%', menu);
+        }
+
+        if(customFilter.tag.value != '' && customFilter.tag.value != undefined) {
+            this.menuItems[menu].itemName += ' {' + customFilter.tag.value + '} ';
+        }
+
+        if(customFilter.type.value != '' && customFilter.type.value != undefined) {
+            this.menuItems[menu].itemName += ' [' + customFilter.type.value + '] ';
+        }
+
+        // Change 
+        this.DOMObject.find('span.tab-name-' + menu).html(this.menuItems[menu].itemName);
+    }
 };
 
 module.exports = Toolbar;

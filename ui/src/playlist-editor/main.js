@@ -460,6 +460,11 @@ pE.reloadData = function() {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
                 pE.refreshDesigner();
+
+                // If there was a opened menu in the toolbar, open that tab
+                if(pE.toolbar.openedMenu != -1) {
+                    pE.toolbar.openTab(pE.toolbar.openedMenu, true);
+                }
             } else {
                 if(res.login) {
                     window.location.href = window.location.href;

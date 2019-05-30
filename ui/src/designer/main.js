@@ -443,12 +443,11 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 // If there was a opened menu in the toolbar, open that tab
                 if(lD.toolbar.openedMenu != -1) {
-                    lD.toolbar.openTab(lD.toolbar.openedMenu);
+                    lD.toolbar.openTab(lD.toolbar.openedMenu, true);
                 }
 
                 // Check layout status
                 lD.checkLayoutStatus();
-                
             } else {
                 // Login Form needed?
                 if(res.login) {

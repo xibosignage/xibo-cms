@@ -30,7 +30,6 @@
 
 .editor-toolbar nav {
     z-index: @toolbar-z-index;
-    background: @toolbar-main-color;
     margin-left: 0;
     border: none;
 }
@@ -47,6 +46,7 @@
 }
 
 .editor-toolbar .container-toolbar {
+    background: @toolbar-main-color;
     padding: 0 15px;
 }
 
@@ -98,6 +98,61 @@
     display: inline-block;
     font-size: 0; /* To remove the whitespace between elements */
     padding: 5px 0;
+}
+
+.editor-toolbar .search-content {
+    width: 50%;
+    background: rgb(239, 239, 239);
+    border: 4px solid #1c65a3;
+    opacity: 0.95;
+    position: fixed;
+    bottom: 50px;
+    right: 0px;
+    height: fit-content;
+
+    .drag-handle {
+        cursor: grab;
+    }
+
+    &.ui-draggable-dragging .drag-handle {
+        cursor: grabbing;
+    }
+
+    .media-search-controls {
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 4px;
+
+        i.fa {
+            cursor: pointer;
+            &:hover {
+                color: @toolbar-tab-hover-color;
+            }
+        }
+    }
+
+    .dataTables_length {
+        margin-top: 5px;
+    }
+
+    .media-table {
+        tr.media-selected {
+            background-color: @toolbar-tab-hover-color;
+        }
+        
+        .assignItem {
+            color: @toolbar-main-color;
+            font-size: 16px;
+        }
+
+        tbody>tr>td {
+            padding: 4px;
+            img {
+                max-height: 50px;
+            }
+        }
+    }
 }
 
 .editor-toolbar .toolbar-pane {
@@ -375,7 +430,7 @@
     top: 0;
     right: 0;
     position: absolute;
-    padding: 2px 5px;
+    padding: 2px;
 }
 
 .editor-toolbar .navbar-buttons a:hover .close-tab-button {
