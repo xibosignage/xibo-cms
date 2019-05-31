@@ -848,7 +848,7 @@ class Layout extends Base
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
-            'publishedStateId' => $this->getSanitizer()->getInt('publishedStateId'),
+            'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
         ]));
 
         foreach ($layouts as $layout) {
