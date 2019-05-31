@@ -108,6 +108,20 @@ let Toolbar = function(container, customMainButtons = null, customDropdownButton
 
     // Flag to mark if the toolbar has been rendered at least one time
     this.firstRun = true;
+
+    // Refresh opened menu and clear selections on window resize
+    const self = this;
+    $(window).resize(_.debounce(function(e) {
+        if(e.target === window) {
+            // Deselect previous selections
+            self.deselectCardsAndDropZones();
+
+            // If there was a opened menu in the toolbar, open that tab
+            if(self.openedMenu != -1) {
+                self.openTab(self.openedMenu, true);
+            }
+        }
+    }, 250));
 };
 
 /**
@@ -1064,6 +1078,14 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
     // If we have set positions, set them on load
     if(self.menuItems[menu].searchPosition != undefined) {
         const position = self.menuItems[menu].searchPosition;
+
+        if(position.left + position.width > $(window).width()){
+            position.left = $(window).width() - position.width;
+        }
+
+        if(position.top + position.height > $(window).height()) {
+            position.top = $(window).height() - position.height;
+        }
 
         $searchContent.width(position.width);
         $searchContent.height(position.height);

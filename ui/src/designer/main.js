@@ -278,7 +278,7 @@ $(document).ready(function() {
             lD.renderContainer(lD.navigatorEdit);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }
-    }, 500));
+    }, 250));
 });
 
 /**
