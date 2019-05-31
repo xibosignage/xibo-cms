@@ -683,24 +683,29 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, inc_schedule, email_alert, alert_timeout, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, client_type, client_version, client_code)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :inc_schedule, :email_alert, :alert_timeout, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :clientType, :clientVersion, :clientCode)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
             'defaultlayoutid' => $this->defaultLayoutId,
             'license' => $this->license,
             'licensed' => $this->licensed,
+            'lastAccessed' => $this->lastAccessed,
             'inc_schedule' => 0,
             'email_alert' => 0,
             'alert_timeout' => 0,
+            'clientAddress' => $this->clientAddress,
             'xmrChannel' => $this->xmrChannel,
             'xmrPubKey' => ($this->xmrPubKey === null) ? '' : $this->xmrPubKey,
             'lastCommandSuccess' => $this->lastCommandSuccess,
             'macAddress' => $this->macAddress,
+            'lastChanged' => ($this->lastChanged === null) ? 0 : $this->lastChanged,
+            'lastWakeOnLanCommandSent' => ($this->lastWakeOnLanCommandSent === null) ? 0 : $this->lastWakeOnLanCommandSent,
             'clientType' => $this->clientType,
             'clientVersion' => $this->clientVersion,
             'clientCode' => $this->clientCode,
+            'overrideConfig' => ($this->overrideConfig == '') ? null : json_encode($this->overrideConfig),
         ]);
 
 
