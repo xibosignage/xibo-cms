@@ -495,18 +495,6 @@ Toolbar.prototype.render = function() {
         // Initialize tooltips
         app.common.reloadTooltips(this.DOMObject);
 
-        // Initialize tagsinput
-        this.DOMObject.find('input[data-role="tagsinput"]').tagsinput();
-
-        this.DOMObject.find('.media-tags').off('click').on('click', '.media-tags-label', function(e) {
-
-            // See if its the first element, if not add comma
-            var tagText = $(this).text();
-
-            // Add text to form
-            self.DOMObject.find('.toolbar-pane.active .input-tag').tagsinput('add', tagText, {allowDuplicates: false});
-        });
-
         // Load media content
         if(this.openedMenu >= this.fixedTabs) {
             // Load tab search media content
@@ -623,7 +611,10 @@ Toolbar.prototype.createNewTab = function() {
     // Filter module list to create the types for the filter
     modulesList.forEach(element => {
         if(element.assignable == 1 && element.regionSpecific == 0) {
-            moduleListFiltered.push(element);
+            moduleListFiltered.push({
+                type: element.type,
+                name: element.name
+            });
         }
     });
 
@@ -966,7 +957,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         "order": [[1, "asc"]],
         "filter": false,
         ajax: {
-            url: librarySearchUrl,
+            url: librarySearchUrl + '?assignable=1',
             "data": function(d) {
                 $.extend(d, self.DOMObject.find('#media-search-container-' + menu).find("form").serializeObject());
             }
@@ -977,7 +968,6 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             {"data": "mediaType"},
             {
                 "sortable": false,
-                "visible": false,
                 "data": dataTableCreateTags
             },
             {
@@ -1018,7 +1008,6 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             var data = mediaTable.row($(this).closest("tr")).data();
             self.selectMedia($(this).closest('tr'), data);
         });
-
 
         self.tablePositionUpdate($searchContent);
     });
@@ -1100,6 +1089,18 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
 
     $searchContent.find('.btn-window-minimize').click(function() {
         self.openTab($(this).data('menu'));
+    });
+
+    // Initialize tagsinput
+    self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput();
+
+    self.DOMObject.find('#media-table-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
+
+        // See if its the first element, if not add comma
+        var tagText = $(this).text();
+
+        // Add text to form
+        self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
     });
 
     // Deselect previous selections
