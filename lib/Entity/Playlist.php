@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
@@ -278,6 +279,26 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Validate this playlist
+     * @throws DuplicateEntityException
+     */
+    public function validate()
+    {
+        // check for duplicates
+        $duplicates = $this->playlistFactory->query(null, [
+            'userId' => $this->ownerId,
+            'playlistExact' => $this->name,
+            'regionSpecific' => 0,
+            'disableUserCheck' => 1,
+            'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
+        ]);
+
+        if (count($duplicates) > 0) {
+            throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+        }
+    }
+
+    /**
      * Is this Playlist editable.
      * Are we a standalone playlist OR are we on a draft layout
      * @return bool
@@ -428,6 +449,7 @@ class Playlist implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws DuplicateEntityException
      */
     public function save($options = [])
     {
@@ -436,8 +458,13 @@ class Playlist implements \JsonSerializable
             'saveTags' => true,
             'saveWidgets' => true,
             'notify' => true,
+            'validate' => true,
             'auditPlaylist' => true
         ], $options);
+
+        if ($options['validate']) {
+            $this->validate();
+        }
 
         if ($this->playlistId == null || $this->playlistId == 0) {
             $this->add();
