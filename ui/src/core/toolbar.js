@@ -75,12 +75,14 @@ const defaultMenuItems = [
  * @param {object} [customActions] - customized actions
  */
 let Toolbar = function(container, customMainButtons = null, customDropdownButtons = null, customActions = {}, jumpList = {}) {
+
     this.DOMObject = container;
     this.openedMenu = -1;
 
-    this.menuItems = defaultMenuItems;
     // Number of tabs that are fixed ( not removable and always defaulted )
-    this.fixedTabs = defaultMenuItems.length;
+    this.fixedTabs = 2;
+
+    this.menuItems = defaultMenuItems;
 
     // Layout jumplist
     this.jumpList = jumpList;
