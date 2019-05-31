@@ -34,10 +34,10 @@ Cypress.Commands.add('login', function() {
         }
     }).then((res) => {
         // Get access token and save it as a environment variable
-        cy.getAccessToken();
+        cy.getAccessToken().then(function(){
+            cy.getCookie('PHPSESSID').should('exist');
+        });
     });
-
-    cy.getCookie('PHPSESSID').should('exist');
 });
 
 Cypress.Commands.add('getAccessToken', function() {

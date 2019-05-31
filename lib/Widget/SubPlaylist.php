@@ -336,6 +336,17 @@ class SubPlaylist extends ModuleWidget
                     continue;
                 }
 
+                // If there are 0 items in the list, we need to fill
+                if (count($expanded) <= 0) {
+                    // If this is the first list, then we need to skip it completely
+                    if ($firstList === null) {
+                        continue;
+                    } else {
+                        // Not the first list, so we can swap over to fill mode and use the first list instead
+                        $spotFill = 'fill';
+                    }
+                }
+
                 // Expand the list out, using the fill options.
                 $spotFillIndex = 0;
                 while (count($expanded) < $spots) {

@@ -98,6 +98,7 @@ describe('Playlist Editor', function() {
             cy.route('POST', '**/playlist/widget/embedded/*').as('createWidget');
 
             // Open toolbar Widgets tab
+            cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
             cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
             cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"]').should('be.visible').then(() => {
@@ -117,7 +118,7 @@ describe('Playlist Editor', function() {
 
         });
 
-        it('creates a new widget by dragging a searched media from the toolbar to the editor', () => {
+        it('creates a new widget by selecting a searched media from the toolbar to the editor', () => {
 
             populateLibraryWithMedia();
 
@@ -130,14 +131,10 @@ describe('Playlist Editor', function() {
 
             // Select and search image items
             cy.get('.toolbar-pane.active .input-type').select('image');
-            cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
-            // Get a card and drag it to the region
-            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]').should('be.visible').then(() => {
-                dragToElement(
-                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child .drag-area',
-                    '#dropzone-container'
-                ).then(() => {
+            // Get a table row, select it and add to the dropzone
+            cy.get('#playlist-editor-toolbar .media-table .assignItem:first').click().then(() => {
+                cy.get('#dropzone-container').click({force: true}).then(() => {
 
                     // Wait for the layout to reload
                     cy.wait('@reloadPlaylist');
@@ -162,14 +159,10 @@ describe('Playlist Editor', function() {
 
             // Select and search image items
             cy.get('.toolbar-pane.active .input-type').select('image');
-            cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
-            // Get a card and drag it to the region
-            cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]').should('be.visible').then(() => {
-                dragToElement(
-                    '#playlist-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child .drag-area',
-                    '#dropzone-container'
-                ).then(() => {
+            // Get a table row, select it and add to the dropzone
+            cy.get('#playlist-editor-toolbar .media-table .assignItem:first').click().then(() => {
+                cy.get('#dropzone-container').click({force: true}).then(() => {
 
                     // Wait for the layout to reload
                     cy.wait('@reloadPlaylist');

@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (Playlist.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 
@@ -459,17 +458,22 @@ class Playlist implements \JsonSerializable
             'saveTags' => true,
             'saveWidgets' => true,
             'notify' => true,
-            'validate' => true
+            'validate' => true,
+            'auditPlaylist' => true
         ], $options);
 
         if ($options['validate']) {
             $this->validate();
         }
 
-        if ($this->playlistId == null || $this->playlistId == 0)
+        if ($this->playlistId == null || $this->playlistId == 0) {
             $this->add();
-        else if ($this->hash != $this->hash())
+        } else if ($this->hash != $this->hash()) {
             $this->update();
+        } else {
+            // Nothing changed wrt the Playlist itself.
+            $options['auditPlaylist'] = false;
+        }
 
         // Save the widgets?
         if ($options['saveWidgets']) {
@@ -524,6 +528,11 @@ class Playlist implements \JsonSerializable
                 }
             }
         }
+
+        // Audit
+        if ($options['auditPlaylist']) {
+            $this->audit($this->playlistId, 'Saved');
+        }
     }
 
     /**
@@ -538,10 +547,9 @@ class Playlist implements \JsonSerializable
         ], $options);
 
         // We must ensure everything is loaded before we delete
-        if (!$this->loaded)
+        if (!$this->loaded) {
             $this->load();
-
-        $this->getLog()->debug('Deleting ' . $this);
+        }
 
         if (!$options['regionDelete'] && $this->regionId != 0)
             throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
@@ -601,6 +609,9 @@ class Playlist implements \JsonSerializable
 
         // Delete this playlist
         $this->getStore()->update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+
+        // Audit
+        $this->audit($this->playlistId, 'Deleted');
     }
 
     /**

@@ -14,8 +14,10 @@
 
         if($(this).find('form').data('formStep') === 1) {
             // If data set exists, set the drop-down to that value
-            if(this.data().elementOptions.dataSetId !== undefined) {
-                $(this).find('#dataSetId').val(this.data().elementOptions.dataSetId);
+            let dataSetId = $(this).find('form').data().elementOptions.dataSetId;
+            
+            if(dataSetId !== undefined) {
+                $(this).find('#dataSetId').val(dataSetId);
             }
         } else if($(this).find('form').data('formStep') === 2) {
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');

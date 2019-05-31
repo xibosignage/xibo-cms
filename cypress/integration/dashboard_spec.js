@@ -1,9 +1,9 @@
 describe('Dashboard', function () {
 
     beforeEach(function () {
-        cy.login();
-
-        cy.visit('/');
+        cy.login().then(function() {
+            cy.visit('/');
+        });
     });
 
     it('should be at the dashboard page', function() {
@@ -18,7 +18,7 @@ describe('Dashboard', function () {
     it('should show the welcome tutorial', function() {
 
         // Open user dropdown menu
-        cy.get('.user .dropdown-toggle img').click();
+        cy.get('.dropdown-toggle img.nav-avatar').click();
 
         // Click Reshow welcome
         cy.get('#reshowWelcomeMenuItem').click();

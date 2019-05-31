@@ -1,8 +1,9 @@
 describe('Layout View', function() {
 
     beforeEach(function() {
-        cy.login();
-        cy.visit('/layout/view');
+        cy.login().then(function() {
+            cy.visit('/layout/view');
+        });
     });
 
     it('should create a new layout and be redirected to the layout designer', function() {
@@ -10,7 +11,7 @@ describe('Layout View', function() {
         cy.get('a[href="/layout/form/add"]').click();
 
         // Create random name
-        const uuid = Cypress._.random(0, 1e8);
+        const uuid = Cypress._.random(0, 1e10);
 
         // Save id as an alias
         cy.wrap(uuid).as('layout_view_test_layout');
@@ -30,7 +31,7 @@ describe('Layout View', function() {
         cy.route('DELETE', '/layout/*').as('deleteLayout');
 
         // Create random name
-        const uuid = Cypress._.random(0, 1e9);
+        const uuid = Cypress._.random(0, 1e10);
 
         // Create a new layout and go to the layout's designer page, then load toolbar prefs
         cy.createLayout(uuid).as('testLayoutId').then((res) => {
