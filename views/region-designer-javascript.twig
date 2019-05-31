@@ -65,7 +65,13 @@
 
     function regionChangesForm() {
         const app = getXiboApp();
-        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form');
+        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form')
+        
+        // If form not loaded, prevent changes
+        if(form.length == 0 || app.layout.regions[app.selectedObject.id] == undefined) {
+            return;
+        }
+        
         const regionDimensions = app.layout.regions[app.selectedObject.id].dimensions;
 
         form.find('#top').val(regionDimensions.top);

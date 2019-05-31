@@ -421,11 +421,13 @@ describe('Layout Designer (Populated)', function() {
                         .trigger('mouseup');
 
                     // Close the navigator edit
+                    cy.wait('@reloadRegion');
                     cy.get('#layout-navigator-edit #save-btn').click();
 
+                    // Close navigator
+                    cy.get('#layout-navigator-edit #close-btn').click();
+
                     // Wait for the layout to reload
-                    cy.wait('@reloadRegion');
-                    cy.reload();
                     cy.wait('@reloadLayout');
 
                     // Open navigator edit
