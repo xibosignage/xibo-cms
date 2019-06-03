@@ -1443,6 +1443,21 @@ class Soap
 
             $layoutId = $node->getAttribute('layoutid');
 
+            try {
+                // Handle the splash screen
+                if ($layoutId == 'splash') {
+                    $this->getLog()->error('Splash Screen Statistic Ignored');
+                    continue;
+                }
+
+                // Check whether the layout is found
+                $this->layoutFactory->getById($layoutId);
+
+            } catch (NotFoundException $error) {
+                $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
+                continue;
+            }
+
             // Slightly confusing behaviour here to support old players without introducting a different call in
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
