@@ -135,6 +135,7 @@ abstract class PlayerAction implements PlayerActionInterface
 
             // Connect to socket
             $socket = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
+            $socket->setSockOpt(\ZMQ::SOCKOPT_LINGER, 2000);
             $socket->connect($connection);
 
             // Send the message to the socket
