@@ -98,7 +98,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12');
+        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12 00:00:00');
     }
 
     /**

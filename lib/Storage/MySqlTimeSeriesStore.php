@@ -406,7 +406,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-        $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
+
+        if ($fromDt != null) {
+            $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
+        }
+
         $maxage = $this->dateService->parse($maxage, 'Y-m-d H:i:s')->format('U');
 
         try {
