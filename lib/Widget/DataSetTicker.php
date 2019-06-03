@@ -434,37 +434,6 @@ class DataSetTicker extends ModuleWidget
         $this->saveWidget();
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function hoverPreview()
-    {
-        $name = $this->getOption('name');
-
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><i alt="' . $this->module->name . ' thumbnail" class="fa module-preview-icon module-icon-' . $this->getModuleType() . '"></div>';
-        $output .= '<div class="info">';
-        $output .= '    <ul>';
-        $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
-        $output .= '    <li>' . __('Name') . ': ' . $name . '</li>';
-
-        // Get the DataSet name
-        try {
-            $dataSet = $this->dataSetFactory->getById($this->getOption('dataSetId'));
-
-            $output .= '    <li>' . __('Source: DataSet named "%s".', $dataSet->dataSet) . '</li>';
-        } catch (NotFoundException $notFoundException) {
-            $this->getLog()->error('Layout Widget without a DataSet. widgetId: ' . $this->getWidgetId());
-            $output .= '    <li>' . __('Warning: No DataSet found.') . '</li>';
-        }
-
-        $output .= '    <li>' . __('Duration') . ': ' . $this->getDuration() . ' ' . __('seconds') . '</li>';
-        $output .= '    </ul>';
-        $output .= '</div>';
-
-        return $output;
-    }
-
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {
