@@ -411,6 +411,12 @@ Navigator.prototype.closeRegionPropertiesPanel = function() {
 Navigator.prototype.saveRegionPropertiesPanel = function() {
     const app = getXiboApp();
     const form = $(this.regionPropertiesPanel.DOMObject).find('form');
+
+    // If form not loaded, prevent changes
+    if(form.length == 0) {
+        return;
+    }
+    
     const element = app.selectedObject;
     const formNewData = form.serialize();
 

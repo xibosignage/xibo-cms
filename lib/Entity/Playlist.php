@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (Playlist.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,11 +19,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 
+use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
@@ -279,6 +279,26 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Validate this playlist
+     * @throws DuplicateEntityException
+     */
+    public function validate()
+    {
+        // check for duplicates
+        $duplicates = $this->playlistFactory->query(null, [
+            'userId' => $this->ownerId,
+            'playlistExact' => $this->name,
+            'regionSpecific' => 0,
+            'disableUserCheck' => 1,
+            'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
+        ]);
+
+        if (count($duplicates) > 0) {
+            throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+        }
+    }
+
+    /**
      * Is this Playlist editable.
      * Are we a standalone playlist OR are we on a draft layout
      * @return bool
@@ -429,6 +449,7 @@ class Playlist implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws DuplicateEntityException
      */
     public function save($options = [])
     {
@@ -436,13 +457,23 @@ class Playlist implements \JsonSerializable
         $options = array_merge([
             'saveTags' => true,
             'saveWidgets' => true,
-            'notify' => true
+            'notify' => true,
+            'validate' => true,
+            'auditPlaylist' => true
         ], $options);
 
-        if ($this->playlistId == null || $this->playlistId == 0)
+        if ($options['validate']) {
+            $this->validate();
+        }
+
+        if ($this->playlistId == null || $this->playlistId == 0) {
             $this->add();
-        else if ($this->hash != $this->hash())
+        } else if ($this->hash != $this->hash()) {
             $this->update();
+        } else {
+            // Nothing changed wrt the Playlist itself.
+            $options['auditPlaylist'] = false;
+        }
 
         // Save the widgets?
         if ($options['saveWidgets']) {
@@ -497,6 +528,11 @@ class Playlist implements \JsonSerializable
                 }
             }
         }
+
+        // Audit
+        if ($options['auditPlaylist']) {
+            $this->audit($this->playlistId, 'Saved');
+        }
     }
 
     /**
@@ -511,10 +547,9 @@ class Playlist implements \JsonSerializable
         ], $options);
 
         // We must ensure everything is loaded before we delete
-        if (!$this->loaded)
+        if (!$this->loaded) {
             $this->load();
-
-        $this->getLog()->debug('Deleting ' . $this);
+        }
 
         if (!$options['regionDelete'] && $this->regionId != 0)
             throw new InvalidArgumentException(__('This Playlist belongs to a Region, please delete the Region instead.'), 'regionId');
@@ -581,6 +616,9 @@ class Playlist implements \JsonSerializable
 
         // Delete this playlist
         $this->getStore()->update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
+
+        // Audit
+        $this->audit($this->playlistId, 'Deleted');
     }
 
     /**
@@ -800,5 +838,23 @@ class Playlist implements \JsonSerializable
         }
 
         return $this;
+    }
+
+    /**
+     * Clone the closure table for a new PlaylistId
+     *  usually this is used on Draft creation
+     * @param int $newParentId
+     */
+    public function cloneClosureTable($newParentId)
+    {
+        $this->getStore()->update('
+            INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                SELECT :newParentId, childId, depth 
+                  FROM lkplaylistplaylist
+                 WHERE parentId = :parentId AND depth > 0
+        ', [
+            'newParentId' => $newParentId,
+            'parentId' => $this->playlistId
+        ]);
     }
 }

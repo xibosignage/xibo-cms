@@ -77,10 +77,17 @@ class MediaManager extends Base
 
     public function displayPage()
     {
+        $moduleFactory = $this->moduleFactory;
+        
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => $this->moduleFactory->query(null, ['assignable' => 1, 'enabled' => 1])
+            'modules' => $this->moduleFactory->query(null, ['assignable' => 1, 'enabled' => 1]),
+            'assignableModules' => array_map(function($element) use ($moduleFactory) { 
+                    $module = $moduleFactory->createForInstall($element->class);
+                    $module->setModule($element);
+                    return $module;
+                }, $moduleFactory->getAssignableModules())
         ]);
     }
 
@@ -141,9 +148,19 @@ class MediaManager extends Base
                 continue;
             }
 
+            // Get region dimensions
+            foreach ($regions as $region) {
+                $regionWidth = $region->width;
+                $regionHeight = $region->height;
+            }
 
             $row['buttons'][] = [
                 'id' => 'WidgetEditForm',
+                'class' => 'WidgetEditForm',
+                'dataAttributes' => [
+                    ['name' => 'region-width', 'value' => $regionWidth],
+                    ['name' => 'region-height', 'value' => $regionHeight]
+                ],
                 'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
                 'text' => __('Edit')
             ];

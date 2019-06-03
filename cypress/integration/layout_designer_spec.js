@@ -170,10 +170,9 @@ describe('Layout Designer (Empty)', function() {
 
             // Select and search image items
             cy.get('.toolbar-pane.active .input-type').select('audio');
-            cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
             // Check if there are audio items in the search content
-            cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"]').should('be.visible');
+            cy.get('#layout-editor-toolbar .media-table tbody tr:first').should('be.visible').contains('audio');
         });
 
         it('creates multiple tabs and then closes them all', () => {
@@ -317,6 +316,7 @@ describe('Layout Designer (Empty)', function() {
                 cy.route('POST', '**/playlist/widget/embedded/*').as('createWidget');
 
                 // Open toolbar Widgets tab
+                cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
                 cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
                 cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"]').should('be.visible').then(() => {
@@ -337,9 +337,7 @@ describe('Layout Designer (Empty)', function() {
 
             });
 
-            it('creates a new widget by dragging a searched media from the toolbar to ' + target + ' region', () => {
-
-                //populateLibraryWithMedia();
+            it('creates a new widget by selecting a searched media from the toolbar to ' + target + ' region', () => {
 
                 // Create and alias for reload Layout
                 cy.server();
@@ -350,14 +348,10 @@ describe('Layout Designer (Empty)', function() {
 
                 // Select and search image items
                 cy.get('.toolbar-pane.active .input-type').select('image');
-                cy.get('.toolbar-pane.active [data-test="searchButton"]').click();
 
-                // Get a card and drag it to the region
-                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-type="media"]').should('be.visible').then(() => {
-                    dragToElement(
-                        '#layout-editor-toolbar .toolbar-pane-content [data-type="media"]:first-child .drag-area',
-                        '#' + target + ' [data-type="region"]:first-child'
-                    ).then(() => {
+                // Get a table row, select it and add to the region
+                cy.get('#layout-editor-toolbar .media-table .assignItem:first').click().then(() => {
+                    cy.get('#' + target + ' [data-type="region"]:first-child').click({force: true}).then(() => {
 
                         // Wait for the layout to reload
                         cy.wait('@reloadLayout');
@@ -392,10 +386,11 @@ describe('Layout Designer (Empty)', function() {
                 populateLibraryWithMedia();
 
                 // Open toolbar Widgets tab
+                cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
                 cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
                 // Activate the Add button
-                cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click();
+                cy.get('#layout-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click();
 
                 // Click on the region to add
                 cy.get('#' + target + ' [data-type="region"]:first-child').click();
