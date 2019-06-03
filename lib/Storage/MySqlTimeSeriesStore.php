@@ -69,6 +69,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     {
         // Set to Unix Timestamp
         foreach ($statData as $k => $stat) {
+            $statData[$k]['statDate'] = $this->dateService->parse($statData[$k]['statDate'])->format('U');
             $statData[$k]['fromDt'] = $this->dateService->parse($statData[$k]['fromDt'])->format('U');
             $statData[$k]['toDt'] = $this->dateService->parse($statData[$k]['toDt'])->format('U');
         }
@@ -94,7 +95,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
 
-        $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('Y-m-d H:i:s'); // added a day
+        $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
+        $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('U'); // added a day
 
         // Media on Layouts Ran
         $select = '
@@ -317,8 +319,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['media'] = $row['Media'];
             $entry['numberPlays'] = $row['NumberPlays'];
             $entry['duration'] = $row['Duration'];
-            $entry['minStart'] = $row['MinStart'];
-            $entry['maxEnd'] = $row['MaxEnd'];
+            $entry['minStart'] = $this->dateService->parse($row['MinStart'], 'U')->format('Y-m-d H:i:s');
+            $entry['maxEnd'] = $this->dateService->parse($row['MaxEnd'], 'U')->format('Y-m-d H:i:s');
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
@@ -354,8 +356,13 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getStats($fromDt, $toDt, $displayIds = null)
     {
+
+        $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
+        $toDt = $this->dateService->parse($toDt, 'Y-m-d H:i:s')->format('U');
+
         $sql = '
-        SELECT stat.*, display.Display as display, layout.Layout as layout, media.Name AS media
+        SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, FROM_UNIXTIME(stat.start) as start, FROM_UNIXTIME(stat.end) as end, stat.tag, 
+        display.Display as display, layout.Layout as layout, media.Name AS media
           FROM stat
             LEFT OUTER JOIN display
             ON stat.DisplayID = display.DisplayID
@@ -369,8 +376,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
           
         ';
 
-        if (count($displayIds) > 0) {
-            $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
+        if ($displayIds != '') {
+            if (count($displayIds) > 0) {
+                $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
+            }
         }
 
         $params = [
@@ -397,6 +406,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
+        $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
+        $maxage = $this->dateService->parse($maxage, 'Y-m-d H:i:s')->format('U');
+
         try {
             $i = 0;
             $rows = 1;

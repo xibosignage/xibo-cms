@@ -1443,19 +1443,22 @@ class Soap
 
             $layoutId = $node->getAttribute('layoutid');
 
-            try {
-                // Handle the splash screen
-                if ($layoutId == 'splash') {
-                    $this->getLog()->error('Splash Screen Statistic Ignored');
+            // For a type event we have layoutid 0
+            if ($type != 'event') {
+                try {
+                    // Handle the splash screen
+                    if ($layoutId == 'splash') {
+                        $this->getLog()->error('Splash Screen Statistic Ignored');
+                        continue;
+                    }
+
+                    // Check whether the layout is found
+                    $this->layoutFactory->getById($layoutId);
+
+                } catch (NotFoundException $error) {
+                    $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
                     continue;
                 }
-
-                // Check whether the layout is found
-                $this->layoutFactory->getById($layoutId);
-
-            } catch (NotFoundException $error) {
-                $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
-                continue;
             }
 
             // Slightly confusing behaviour here to support old players without introducting a different call in

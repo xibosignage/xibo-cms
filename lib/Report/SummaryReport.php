@@ -257,121 +257,123 @@ class SummaryReport implements ReportInterface
 
         // Get store
         $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
-        $this->getLog()->debug('Timeseries store is '. $timeSeriesStore);
+        $this->getLog()->debug('Timeseries store is ' . $timeSeriesStore);
 
         if ($timeSeriesStore == 'mongodb') {
-            $result =  $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result = $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
         } else {
-            $result =  $this->getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result = $this->getSummaryReportMySql($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
         }
 
         // Summary report result in chart
-        foreach ($result['result'] as $row) {
-            // Label
-            $tsLabel = $this->getDate()->parse($row['start'], 'U');
+        if (count($result) > 0) {
+            foreach ($result['result'] as $row) {
+                // Label
+                $tsLabel = $this->getDate()->parse($row['start'], 'U');
 
-            if ($reportFilter == '') {
-                $tsLabel = $tsLabel->format('Y-m-d'); // as dates. by day (default)
+                if ($reportFilter == '') {
+                    $tsLabel = $tsLabel->format('Y-m-d'); // as dates. by day (default)
 
-                if ($groupByFilter == 'byweek') {
-                    $start = $this->getDate()->parse($fromDt,'Y-m-d H:i:s' )->startOfDay()->format('U');
-                    $end = $this->getDate()->parse($toDt,'Y-m-d H:i:s')->startOfDay()->addDay()->format('U');
+                    if ($groupByFilter == 'byweek') {
+                        $start = $this->getDate()->parse($fromDt, 'Y-m-d H:i:s')->startOfDay()->format('U');
+                        $end = $this->getDate()->parse($toDt, 'Y-m-d H:i:s')->startOfDay()->addDay()->format('U');
 
-                    $weekEnd = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d');
-                    $weekNo = $this->getDate()->parse($row['start'], 'U')->format('W');
+                        $weekEnd = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d');
+                        $weekNo = $this->getDate()->parse($row['start'], 'U')->format('W');
 
-                    if ($row['start'] < $start) {
-                        $tsLabel = $this->getDate()->parse($start, 'U')->format('Y-m-d');
+                        if ($row['start'] < $start) {
+                            $tsLabel = $this->getDate()->parse($start, 'U')->format('Y-m-d');
+                        }
+                        // last day of the month in chart
+                        if ($row['end'] > $end) {
+                            $weekEnd = $this->getDate()->parse($end, 'U')->format('Y-m-d');
+                        }
+
+                        $tsLabel .= ' - ' . $weekEnd . ' (w' . $weekNo . ')';
+                    } elseif ($groupByFilter == 'bymonth') {
+
+                        $tsLabel = $this->getDate()->parse($row['start'], 'U')->format('M') . ' ' . $this->getDate()->parse($row['start'], 'U')->format('Y');
                     }
-                    // last day of the month in chart
-                    if ($row['end'] > $end) {
-                        $weekEnd = $this->getDate()->parse($end, 'U')->format('Y-m-d');
+
+                } elseif (($reportFilter == 'today') || ($reportFilter == 'yesterday')) {
+                    $tsLabel = $tsLabel->format('g:i A'); // hourly format (default)
+
+                } elseif (($reportFilter == 'lastweek') || ($reportFilter == 'thisweek')) {
+                    $tsLabel = $tsLabel->format('D'); // Mon, Tues, etc.  by day (default)
+
+                } elseif (($reportFilter == 'thismonth') || ($reportFilter == 'lastmonth')) {
+                    $tsLabel = $tsLabel->format('Y-m-d'); // as dates. by day (default)
+
+                    if ($groupByFilter == 'byweek') {
+                        $weekEnd = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d');
+                        $weekNo = $this->getDate()->parse($row['start'], 'U')->format('W');
+
+                        // first day of the month in chart
+                        if ($reportFilter == 'thismonth') {
+                            $startOfMonth = $this->getDate()->parse()->startOfMonth()->format('U');
+                            $endOfMonth = $this->getDate()->parse()->endOfMonth()->format('U');
+                        } else {
+                            $startOfMonth = $this->getDate()->parse()->startOfMonth()->subMonth()->format('U');
+                            $endOfMonth = $this->getDate()->parse()->startOfMonth()->subMonth()->endOfMonth()->format('U');
+                        }
+
+                        if ($row['start'] < $startOfMonth) {
+                            $tsLabel = $this->getDate()->parse($startOfMonth, 'U')->format('Y-m-d');
+                        }
+
+                        // last day of the month in chart
+                        if ($row['end'] > $endOfMonth) {
+                            $weekEnd = $this->getDate()->parse($endOfMonth, 'U')->format('Y-m-d');
+                        }
+
+                        $tsLabel = [$tsLabel . ' - ' . $weekEnd, ' (w' . $weekNo . ')'];
                     }
 
-                    $tsLabel .= ' - ' . $weekEnd. ' (w'.$weekNo.')';
-                } elseif ($groupByFilter == 'bymonth') {
+                } elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
+                    $tsLabel = $tsLabel->format('M');// Jan, Feb, etc.  by month (default)
 
-                    $tsLabel = $this->getDate()->parse($row['start'], 'U')->format('M') . ' '. $this->getDate()->parse($row['start'], 'U')->format('Y');
+                    if ($groupByFilter == 'byday') {
+                        $tsLabel = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d');
+
+                    } elseif ($groupByFilter == 'byweek') {
+                        $tsLabel = $this->getDate()->parse($row['start'], 'U')->format('M d');// Jan, Feb, etc.  by month (default)
+
+                        $weekEnd = $this->getDate()->parse($row['end'], 'U')->format('M d');
+                        $weekNo = $this->getDate()->parse($row['start'], 'U')->format('W');
+
+                        // first day of the year in chart
+                        if ($reportFilter == 'thisyear') {
+                            $startOfYear = $this->getDate()->parse()->startOfYear()->format('U');
+                            $endOfYear = $this->getDate()->parse()->endOfYear()->format('U');
+                        } else {
+                            $startOfYear = $this->getDate()->parse()->startOfYear()->subYear()->format('U');
+                            $endOfYear = $this->getDate()->parse()->startOfYear()->subYear()->endOfYear()->format('U');
+                        }
+
+                        if ($row['start'] < $startOfYear) {
+                            $tsLabel = $this->getDate()->parse($startOfYear, 'U')->format('M-d');
+                        }
+
+                        if ($row['end'] > $endOfYear) {
+                            $weekEnd = $this->getDate()->parse($endOfYear, 'U')->format('M-d');
+                        }
+                        $tsLabel = $tsLabel . ' - ' . $weekEnd . ' (w' . $weekNo . ')';
+                    }
                 }
 
-            } elseif (($reportFilter == 'today') || ($reportFilter == 'yesterday')) {
-                $tsLabel = $tsLabel->format('g:i A'); // hourly format (default)
+                // Chart labels in xaxis
+                $labels[] = $tsLabel;
 
-            } elseif(($reportFilter == 'lastweek') || ($reportFilter == 'thisweek') ) {
-                $tsLabel = $tsLabel->format('D'); // Mon, Tues, etc.  by day (default)
+                $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
+                $borderColor[] = 'rgb(240,93,41, 0.8)';
 
-            } elseif (($reportFilter == 'thismonth') || ($reportFilter == 'lastmonth')) {
-                $tsLabel = $tsLabel->format('Y-m-d'); // as dates. by day (default)
+                $count = $this->getSanitizer()->int($row['NumberPlays']);
+                $countData[] = ($count == '') ? 0 : $count;
 
-                if ($groupByFilter == 'byweek') {
-                    $weekEnd = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d');
-                    $weekNo = $this->getDate()->parse($row['start'], 'U')->format('W');
-
-                    // first day of the month in chart
-                    if ($reportFilter == 'thismonth') {
-                        $startOfMonth = $this->getDate()->parse()->startOfMonth()->format('U');
-                        $endOfMonth = $this->getDate()->parse()->endOfMonth()->format('U');
-                    } else {
-                        $startOfMonth = $this->getDate()->parse()->startOfMonth()->subMonth()->format('U');
-                        $endOfMonth = $this->getDate()->parse()->startOfMonth()->subMonth()->endOfMonth()->format('U');
-                    }
-
-                    if ($row['start'] < $startOfMonth) {
-                       $tsLabel = $this->getDate()->parse($startOfMonth, 'U')->format('Y-m-d');
-                    }
-
-                    // last day of the month in chart
-                    if ($row['end'] > $endOfMonth) {
-                        $weekEnd = $this->getDate()->parse($endOfMonth, 'U')->format('Y-m-d');
-                    }
-
-                    $tsLabel = [ $tsLabel . ' - ' . $weekEnd, ' (w'.$weekNo.')'];
-                }
-
-            }  elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
-                $tsLabel = $tsLabel->format('M');// Jan, Feb, etc.  by month (default)
-
-                if ($groupByFilter == 'byday') {
-                    $tsLabel = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d');
-
-                } elseif ($groupByFilter == 'byweek') {
-                    $tsLabel = $this->getDate()->parse($row['start'], 'U')->format('M d');// Jan, Feb, etc.  by month (default)
-
-                    $weekEnd = $this->getDate()->parse($row['end'], 'U')->format('M d');
-                    $weekNo = $this->getDate()->parse($row['start'], 'U')->format('W');
-
-                    // first day of the year in chart
-                    if ($reportFilter == 'thisyear') {
-                        $startOfYear = $this->getDate()->parse()->startOfYear()->format('U');
-                        $endOfYear = $this->getDate()->parse()->endOfYear()->format('U');
-                    } else {
-                        $startOfYear = $this->getDate()->parse()->startOfYear()->subYear()->format('U');
-                        $endOfYear = $this->getDate()->parse()->startOfYear()->subYear()->endOfYear()->format('U');
-                    }
-
-                    if ($row['start'] < $startOfYear){
-                        $tsLabel = $this->getDate()->parse($startOfYear, 'U')->format('M-d');
-                    }
-
-                    if ($row['end'] > $endOfYear){
-                        $weekEnd = $this->getDate()->parse($endOfYear, 'U')->format('M-d');
-                    }
-                    $tsLabel = $tsLabel . ' - ' . $weekEnd. ' (w'.$weekNo.')';
-                }
+                $duration = $this->getSanitizer()->int($row['Duration']);
+                $durationData[] = ($duration == '') ? 0 : $duration;
             }
-
-            // Chart labels in xaxis
-            $labels[] = $tsLabel;
-
-            $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
-            $borderColor[] = 'rgb(240,93,41, 0.8)';
-
-            $count = $this->getSanitizer()->int($row['NumberPlays']);
-            $countData[] = ($count == '') ? 0 : $count;
-
-            $duration = $this->getSanitizer()->int($row['Duration']);
-            $durationData[] = ($duration == '') ? 0 : $duration;
-        }
+    }
 
         // Return data to build chart
         return [
@@ -781,8 +783,8 @@ class SummaryReport implements ReportInterface
 
             return [
                 'result' => $results,
-                'periodStart' => $filterRangeStart,
-                'periodEnd' => $filterRangeEnd
+                'periodStart' => $this->dateService->parse($filterRangeStart, 'U')->format('Y-m-d H:i:s'),
+                'periodEnd' => $this->dateService->parse($filterRangeEnd, 'U')->format('Y-m-d H:i:s')
             ];
 
         } else {
@@ -1423,8 +1425,8 @@ class SummaryReport implements ReportInterface
 
             return [
                 'result' => $resultArray,
-                'periodStart' => $filterRangeStart->toDateTime()->format('Y-m-d H:i:s'),
-                'periodEnd' => $filterRangeEnd->toDateTime()->format('Y-m-d H:i:s')
+                'periodStart' => $this->dateService->parse($filterRangeStart->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s'),
+                'periodEnd' => $this->dateService->parse($filterRangeEnd->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s')
             ];
 
         } else {
