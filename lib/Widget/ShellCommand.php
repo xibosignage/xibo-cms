@@ -176,12 +176,6 @@ class ShellCommand extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function hoverPreview()
-    {
-        return $this->Preview(0, 0);
-    }
-
-    /** @inheritdoc */
     public function isValid()
     {
         if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == ''))

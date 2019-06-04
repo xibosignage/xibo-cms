@@ -126,8 +126,15 @@
 
         i.fa {
             cursor: pointer;
+            color: @toolbar-tab-hover-color;
+            font-size: 20px;
             &:hover {
-                color: @toolbar-tab-hover-color;
+                color: @toolbar-tab-fg-color;
+
+                &.btn-window-close {
+                    color: @bin-bg-color;
+                }
+                
             }
         }
     }

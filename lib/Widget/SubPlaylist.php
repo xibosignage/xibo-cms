@@ -479,8 +479,8 @@ class SubPlaylist extends ModuleWidget
                     $this->getLog()->debug('Assessing playlistId ' . $playlistId . ' which has ' . $countInList . ' widgets.');
 
                     for ($count = 1; $count <= $takeEvery; $count++) {
-                        // Increment the last index we consumed from this list by the count
-                        $index = $lastTakeIndices[$playlistId] + $count;
+                        // Increment the last index we consumed from this list each time
+                        $index = $lastTakeIndices[$playlistId] + 1;
 
                         // Does this key actually have this many items?
                         if ($index >= $countInList) {

@@ -159,6 +159,12 @@ class ReportScheduleFactory extends BaseFactory
             $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
+        if ( $this->getSanitizer()->getCheckbox('onlyMySchedules') == 1) {
+            $body .= ' AND reportschedule.userid = :currentUserId ';
+            $params['currentUserId'] = $this->getUser()->userId;
+
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

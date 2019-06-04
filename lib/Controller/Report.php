@@ -167,21 +167,6 @@ class Report extends Base
                     break;
             }
 
-            // Edit
-            $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_edit_button',
-                'url' => $this->urlFor('reportschedule.edit.form', ['id' => $reportSchedule->reportScheduleId]),
-                'text' => __('Edit')
-            ];
-
-            // Go to report
-            $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_goto_report_button',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('report.form', ['name' => $adhocReportName] ),
-                'text' => __('Go to report')
-            ];
-
             if ($reportSchedule->getLastSavedReportId() > 0) {
 
                 $lastSavedReport = $this->savedReportFactory->getById($reportSchedule->getLastSavedReportId());
@@ -195,11 +180,20 @@ class Report extends Base
                 ];
             }
 
-            // Delete
+            // Go to report
             $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_delete_button',
-                'url' => $this->urlFor('reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
-                'text' => __('Delete')
+                'id' => 'reportSchedule_goto_report_button',
+                'class' => 'XiboRedirectButton',
+                'url' => $this->urlFor('report.form', ['name' => $adhocReportName] ),
+                'text' => __('Go to report')
+            ];
+            $reportSchedule->buttons[] = ['divider' => true];
+
+            // Edit
+            $reportSchedule->buttons[] = [
+                'id' => 'reportSchedule_edit_button',
+                'url' => $this->urlFor('reportschedule.edit.form', ['id' => $reportSchedule->reportScheduleId]),
+                'text' => __('Edit')
             ];
 
             // Reset to previous run
@@ -207,6 +201,13 @@ class Report extends Base
                 'id' => 'reportSchedule_reset_button',
                 'url' => $this->urlFor('reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
                 'text' => __('Reset to previous run')
+            ];
+
+            // Delete
+            $reportSchedule->buttons[] = [
+                'id' => 'reportSchedule_delete_button',
+                'url' => $this->urlFor('reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
+                'text' => __('Delete')
             ];
         }
 
@@ -410,6 +411,7 @@ class Report extends Base
     {
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'saveAs' => $this->getSanitizer()->getString('saveAs'),
+            'userId' => $this->getSanitizer()->getInt('userId'),
         ]));
 
         foreach ($savedReports as $savedReport) {
@@ -423,6 +425,7 @@ class Report extends Base
                 'url' => $this->urlFor('savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
                 'text' => __('Open')
             ];
+            $savedReport->buttons[] = ['divider' => true];
 
             $savedReport->buttons[] = [
                 'id' => 'button_goto_report',
@@ -431,7 +434,16 @@ class Report extends Base
                 'text' => __('Go to report')
             ];
 
+            //TODO
+//            $savedReport->buttons[] = [
+//                'id' => 'button_goto_schedule',
+//                'class' => 'XiboRedirectButton',
+//                'url' => $this->urlFor('', ['reportScheduleId' => $savedReport->reportScheduleId] ),
+//                'text' => __('Go to schedule')
+//            ];
+
             // Delete
+            $savedReport->buttons[] = ['divider' => true];
             $savedReport->buttons[] = [
                 'id' => 'savedReport_delete_button',
                 'url' => $this->urlFor('savedreport.delete.form', ['id' => $savedReport->savedReportId]),
@@ -450,6 +462,9 @@ class Report extends Base
     {
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+        ]);
     }
 
     /**

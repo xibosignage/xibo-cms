@@ -1443,6 +1443,24 @@ class Soap
 
             $layoutId = $node->getAttribute('layoutid');
 
+            // For a type event we have layoutid 0
+            if ($type != 'event') {
+                try {
+                    // Handle the splash screen
+                    if ($layoutId == 'splash') {
+                        $this->getLog()->error('Splash Screen Statistic Ignored');
+                        continue;
+                    }
+
+                    // Check whether the layout is found
+                    $this->layoutFactory->getById($layoutId);
+
+                } catch (NotFoundException $error) {
+                    $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
+                    continue;
+                }
+            }
+
             // Slightly confusing behaviour here to support old players without introducting a different call in
             // xmds v=5.
             // MediaId is actually the widgetId (since 1.8) and the mediaId is looked up by this service
@@ -1489,6 +1507,30 @@ class Soap
             } else {
                 // Get the layout campaignId
                 $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+            }
+
+            // Get the display timezone to use when adjusting log dates.
+            $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
+
+            // Adjust the date according to the display timezone
+            try {
+                // From date
+                $fromdt = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $fromdt, $this->display->timeZone)->tz($defaultTimeZone) :
+                    Date::createFromFormat('Y-m-d H:i:s', $fromdt);
+                $fromdt = $this->getDate()->getLocalDate($fromdt);
+
+                // To date
+                $todt = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $todt, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $todt);
+                $todt = $this->getDate()->getLocalDate($todt);
+
+            } catch (\Exception $e) {
+                // Protect against the date format being unreadable
+                $this->getLog()->debug('From date format unreadable: ' . $fromdt);
+                $this->getLog()->debug('To date format unreadable: ' . $todt);
+
+                // Use now instead
+                $fromdt = $this->getDate()->getLocalDate();
+                $todt = $this->getDate()->getLocalDate();
             }
 
             $stats[] = [
