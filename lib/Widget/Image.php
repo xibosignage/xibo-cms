@@ -173,30 +173,6 @@ class Image extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function hoverPreview()
-    {
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = parent::hoverPreview();
-
-        try {
-            // We might not have a regionId here (we could be previewing on the Playlist page)
-            if ($this->region == null) {
-                $url = $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]);
-            } else {
-                $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
-            }
-
-            $output .= '<div class="hoverPreview">';
-            $output .= '    <img src="' . $url . '?preview=1&width=100&height=56&proportional=1&cache=1&mediaId=' . $this->getMediaId() . '" alt="Hover Preview">';
-            $output .= '</div>';
-        } catch (NotFoundException $e) {
-            $this->getLog()->error('Cannot find image to show in HoverPreview. WidgetId: %d', $this->getWidgetId());
-        }
-
-        return $output;
-    }
-
-    /** @inheritdoc */
     public function getResource($displayId = 0)
     {
         $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());

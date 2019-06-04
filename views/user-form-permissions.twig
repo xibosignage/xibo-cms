@@ -46,10 +46,14 @@
                      data-url="{{ urlFor("user.permissions", {entity: entity, id: objectId}) }}"
                      data-permissions="{{ permissions|json_encode }}">
                     <div class="permissionsTableFilter">
-                        <form onsubmit="false">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("name", title) }}
-                        </form>
+                        <div class="XiboFilter well">
+                            <div class="FilterDiv" id="Filter">
+                                <form class="form-inline">
+                                    {% set title %}{% trans "Name" %}{% endset %}
+                                    {{ inline.input("name", title) }}
+                                </form>
+                            </div>
+                        </div>
                     </div>
                     <div class="XiboData">
                         <table id="permissionsTable" class="table table-striped">

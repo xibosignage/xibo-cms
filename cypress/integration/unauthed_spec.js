@@ -1,22 +1,15 @@
 describe('Unauthenticated CMS access', function () {
-
     it('should visit the login page and check the version', function () {
+        cy.visit('/');
 
-        cy.visit('/logout').then(() => {
-            cy.visit('/login').then(() => {
+        cy.url().should('include', '/login');
 
-                cy.url().should('include', '/login');
-
-                cy.contains('Version 2.');
-            });
-        });
+        cy.contains('Version 2.0.3');
     });
 
     it('should redirect to login when an authenticated page is requested', function() {
-        cy.visit('/logout').then(() => {
-            cy.visit('/layout/view').then(() => {
-                cy.url().should('include', '/login');
-            });
-        });
+
+        cy.visit('/layout/view');
+        cy.url().should('include', '/login');
     });
 });

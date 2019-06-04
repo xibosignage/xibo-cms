@@ -40,10 +40,10 @@ PropertiesPanel.prototype.save = function(element) {
         app.viewer.hideInlineEditor();
     }
 
-    // Run form open module optional function
-    if(element.type === 'widget' && typeof window[element.subType + '_form_edit_submit'] === 'function') {
-        window[element.subType + '_form_edit_submit'].bind(this.DOMObject)();
-    }
+    // Run form submit module optional function
+    if(element.type === 'widget'){
+        formHelpers.widgetFormEditBeforeSubmit(self.DOMObject, element.subType);
+    } 
 
     const form = $(this.DOMObject).find('form');
 
@@ -190,31 +190,7 @@ PropertiesPanel.prototype.render = function(element, step) {
         
         if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
             // Process buttons from result
-            for(let button in res.buttons) {
-                
-                // If button is not a cancel or save button, add it to the button object
-                if(!(res.buttons[button].includes('XiboDialogClose') || res.buttons[button].includes('.submit()'))) {
-                    buttons[button] = {
-                        name: button,
-                        type: 'btn-default',
-                        click: res.buttons[button]
-                    };
-                }
-            }
-
-            // Add back button
-            buttons.back = {
-                name: editorsTrans.back,
-                type: 'btn-default',
-                action: 'back'
-            };
-
-            // Add save button
-            buttons.save = {
-                name: translations.save,
-                type: 'btn-info',
-                action: 'save'
-            };
+            buttons = formHelpers.widgetFormRenderButtons(res.buttons);
         }
         
         const html = propertiesPanel({
@@ -241,14 +217,23 @@ PropertiesPanel.prototype.render = function(element, step) {
         }
         
         // Run form open module optional function
-        if(element.type === 'widget' && typeof window[element.subType + '_form_edit_open'] === 'function') {
+        if(element.type === 'widget') { 
             // Pass widget options to the form as data
-            self.DOMObject.data('elementOptions', element.getOptions());
+            self.DOMObject.find('form').data('elementOptions', element.getOptions());
 
-            window[element.subType + '_form_edit_open'].bind(self.DOMObject)();
+            formHelpers.widgetFormEditAfterOpen(self.DOMObject, element.subType);
         } else if(element.type === 'region' && typeof window.regionFormEditOpen === 'function') {
             window.regionFormEditOpen.bind(self.DOMObject)();
         }
+
+        // Check for spacing issues on text fields
+        self.DOMObject.find('input[type=text]').each(function(index, el) {
+            formRenderDetectSpacingIssues(el);
+
+            $(el).on("keyup", _.debounce(function() {
+                formRenderDetectSpacingIssues(el);
+            }, 500));
+        });
 
         // Save form data
         self.formSerializedLoadData = self.DOMObject.find('form').serialize();
