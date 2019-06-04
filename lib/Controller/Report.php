@@ -411,6 +411,7 @@ class Report extends Base
     {
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'saveAs' => $this->getSanitizer()->getString('saveAs'),
+            'userId' => $this->getSanitizer()->getInt('userId'),
         ]));
 
         foreach ($savedReports as $savedReport) {
@@ -461,6 +462,9 @@ class Report extends Base
     {
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+        ]);
     }
 
     /**

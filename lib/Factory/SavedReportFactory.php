@@ -131,6 +131,7 @@ class SavedReportFactory extends BaseFactory
                saved_report.reportScheduleId,
                saved_report.savedReportId,
                saved_report.saveAs,
+               saved_report.userId,
                reportschedule.name AS reportScheduleName,
                reportschedule.reportName,
                saved_report.generatedOn,
@@ -191,6 +192,12 @@ class SavedReportFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        }
+
+        // Owner filter
+        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
+            $body .= " AND `saved_report`.userid = :userId ";
+            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
         }
 
         if ( $this->getSanitizer()->getCheckbox('onlyMyReport') == 1) {

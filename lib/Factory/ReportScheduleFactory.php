@@ -153,6 +153,12 @@ class ReportScheduleFactory extends BaseFactory
             $body .= " AND reportschedule.reportScheduleId = :reportScheduleId ";
         }
 
+        // Owner filter
+        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
+            $body .= " AND reportschedule.userid = :userId ";
+            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
+        }
+
         if ( $this->getSanitizer()->getCheckbox('onlyMySchedules') == 1) {
             $body .= ' AND reportschedule.userid = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
