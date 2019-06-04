@@ -633,6 +633,10 @@ class DataSetFactory extends BaseFactory
                         case 5:
                             $result[$column->heading] = $this->getSanitizer()->int($value[1]);
                             break;
+                        case 6:
+                            // HTML, without any sanitization
+                            $result[$column->heading] = $value[1];
+                            break;
                         default:
                             $result[$column->heading] = $this->getSanitizer()->string($value[1]);
                     }

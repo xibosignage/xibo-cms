@@ -1,3 +1,23 @@
+{#
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
@@ -161,8 +181,11 @@
                             if (type !== "display" && type !== "export")
                                 return data;
 
-                            if (row.requiresDurationUpdate === 1)
+                            if (row.requiresDurationUpdate === 1) {
                                 return '<span class="fa fa-clock-o" title="{{ "Changes have been made and we are recalculating this Playlists duration" }}"></span>';
+                            } else if (row.requiresDurationUpdate !== 0) {
+                                return moment().startOf("day").seconds(data).format("H:mm:ss") + ' <span class="fa fa-clock-o" title="{{ "This duration will be upaded at " }}' + moment(row.requiresDurationUpdate, "X").format(jsDateFormat) + '"></span>';
+                            }
 
                             return moment().startOf("day").seconds(data).format("H:mm:ss");
                         }

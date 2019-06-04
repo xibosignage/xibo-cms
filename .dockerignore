@@ -28,6 +28,7 @@ web/theme/custom/*
 
 Dockerfile*
 docker-compose.yml
+docker-compose-mysql-5.7.yml
 CONTRIBUTING.md
 
 # Our own container's settings.php shouldn't be included

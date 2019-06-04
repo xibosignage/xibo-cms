@@ -54,8 +54,8 @@
                             {% set helpText %}{% trans "Repeat the new Password for this user." %}{% endset %}
                             {{ forms.password("retypeNewPassword", title, "", helpText) }}
 
-                            {% set title %}{% trans "Disable Two Factor Authentication?" %}{% endset %}
-                            {% set helpText %}{% trans "With this option enabled, existing Two Factor Authentication for this user will be disabled and stored secret cleared. User will need to set up Two Factor Authentication again by editing their user profile" %}{% endset %}
+                            {% set title %}{% trans "Reset Two Factor Authentication" %}{% endset %}
+                            {% set helpText %}{% trans "Once ticked the two factor authentication will be set to ‘Off’ for this User Profile with any stored secret codes cleared. The User can now set up two factor authentication from the User Profile as before." %}{% endset %}
                             {{ forms.checkbox("disableTwoFactor", title, 0, helpText) }}
                         {% endif %}
 

@@ -737,12 +737,14 @@
                                     {% set privateOption %}{% trans "Private" %}{% endset %}
                                     {% set groupOption %}{% trans "Group Read" %}{% endset %}
                                     {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
+                                    {% set groupDeleteOption %}{% trans "Group Delete" %}{% endset %}
                                     {% set publicOption %}{% trans "Public Read" %}{% endset %}
                                     {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
                                     {% set options = [
                                         { id: "private", value: privateOption },
                                         { id: "group", value: groupOption },
                                         { id: "group write", value: groupWriteOption },
+                                        { id: "group delete", value: groupDeleteOption },
                                         { id: "public", value: publicOption },
                                         { id: "public write", value: publicWriteOption }
                                     ] %}
@@ -760,12 +762,14 @@
                                     {% set privateOption %}{% trans "Private" %}{% endset %}
                                     {% set groupOption %}{% trans "Group Read" %}{% endset %}
                                     {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
+                                    {% set groupDeleteOption %}{% trans "Group Delete" %}{% endset %}
                                     {% set publicOption %}{% trans "Public Read" %}{% endset %}
                                     {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
                                     {% set options = [
                                         { id: "private", value: privateOption },
                                         { id: "group", value: groupOption },
                                         { id: "group write", value: groupWriteOption },
+                                        { id: "group delete", value: groupDeleteOption },
                                         { id: "public", value: publicOption },
                                         { id: "public write", value: publicWriteOption }
                                     ] %}
