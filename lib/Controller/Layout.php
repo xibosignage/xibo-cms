@@ -374,11 +374,22 @@ class Layout extends Base
      *  )
      * )
      *
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     function edit($layoutId)
     {
         $layout = $this->layoutFactory->getById($layoutId);
+        $isTemplate = false;
+
+        // check if we're dealing with the template
+        $currentTags = explode(',', $layout->tags);
+        foreach ($currentTags as $tag) {
+            if ($tag === 'template') {
+                $isTemplate = true;
+            }
+        }
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -392,6 +403,17 @@ class Layout extends Base
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $layout->retired = $this->getSanitizer()->getCheckbox('retired');
+
+        $tags = $this->getSanitizer()->getString('tags');
+        $tagsArray = explode(',', $tags);
+
+        if (!$isTemplate) {
+            foreach ($tagsArray as $tag) {
+                if ($tag === 'template') {
+                    throw new InvalidArgumentException('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.', 'tags');
+                }
+            }
+        }
 
         // Save
         $layout->save([
@@ -411,7 +433,7 @@ class Layout extends Base
     }
 
     /**
-     * Edit Layout
+     * Edit Layout Background
      * @param int $layoutId
      *
      * @SWG\Put(
@@ -826,7 +848,7 @@ class Layout extends Base
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
-            'publishedStateId' => $this->getSanitizer()->getInt('publishedStateId'),
+            'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
         ]));
 
         foreach ($layouts as $layout) {
@@ -1930,12 +1952,15 @@ class Layout extends Base
             'notify' => false
         ]);
 
-        // Permissions
+        // Permissions && Sub-Playlists
         // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
         // Regions/Widgets need to copy down our layout permissions
         foreach ($draft->regions as $region) {
             // Match our original region id to the id in the parent layout
             $original = $layout->getRegion($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
 
             // Copy over original permissions
             foreach ($original->permissions as $permission) {

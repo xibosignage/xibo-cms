@@ -64,6 +64,7 @@
     margin-bottom: 10px;
 }
 
+
 #playlist-editor #playlist-timeline #timeline-container{
     padding: 5px;
     height: @playlist-editor-max-content-height;
@@ -100,6 +101,26 @@
     position: absolute;
     bottom: 0;
     width: 100%;
+}
+
+.playlist-widget-preview {
+    z-index: @playlist-editor-z-index-background;
+
+    &.tooltip.right .tooltip-arrow {
+        border-right-color: @properties-panel-nav-active-fg-color;
+    }
+
+    .tooltip-inner-image {
+        min-height: 50px;
+        padding: 4px;
+        background-color: @properties-panel-nav-active-fg-color;
+        border-radius: 4px;
+        
+        img {
+            height: 60px;
+            max-width: 200px;
+        }
+    }
 }
 
 #playlist-editor-container.ui-droppable-active {

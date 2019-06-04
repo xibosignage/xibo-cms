@@ -125,10 +125,10 @@
                     content: "{% trans "This is the layout designer screen where you will add and configure content. By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
                     onShown: function (tour) {
                         if ($(".form-error").length === 1) {
-                            tour.prev();
+                            tour.goTo(5);
                         }
                     },
-                    delay: 2000,
+                    delay: 5000,
                     template: next_template
                 }, { // 8
                     element: '#read-only-message',
@@ -201,28 +201,35 @@
                     template: no_nav_template
                 }, { // 16
                     title: "",
-                    content: "{% trans "Grab the region handle, and drag to resize." %}",
-                    element: '#layout-navigator-edit div[data-type="region"] .ui-resizable-se',
-                    placement: "left",
-                    delay: 200,
-                    reflex: 'mouseup',
+                    content: "{% trans "Click anywhere inside the region to edit it" %}",
+                    element: '#layout-navigator-edit div[data-type="region"]',
+                    smartPlacement: true,
+                    delay: 500,
+                    reflex: true,
                     template: no_nav_template
                 }, {
                     title: "",
-                    content: "{% trans "Click anywhere inside the region, and drag to position on your layout." %}",
-                    element: '#layout-navigator-edit div[data-type="region"]',
+                    content: "{% trans "Grab the region handle, and drag to resize." %}",
+                    element: '#layout-navigator-edit div[data-type="region"] .ui-resizable-se',
                     placement: "bottom",
                     delay: 200,
                     reflex: "mouseup",
                     template: no_nav_template
                 }, { // 18
                     title: "",
-                    content: "{% trans "When you are happy with your positioning, click close to save all changes and go back to the main editor." %}",
-                    element: "#layout-navigator-edit  #close-btn-top",
-                    placement: "bottom",
+                    content: "{% trans "When you are happy with your positioning, click save to save changes." %}",
+                    element: "#layout-navigator-edit  #save-btn",
+                    placement: "left",
                     reflex: true,
                     template: no_nav_template
-                }, {
+                }, { 
+                    title: "",
+                    content: "{% trans "Click close to go back to the main editor." %}",
+                    element: "#layout-navigator-edit  #close-btn",
+                    placement: "left",
+                    reflex: true,
+                    template: no_nav_template
+                }, { // 20
                     title: "",
                     container: '#layout-editor',
                     content: "{% trans "You will now have an empty region that has been resized and positioned on a black background. Let's add some content!" %}",
@@ -236,7 +243,7 @@
                             tour.goTo(25);
                         }
                     }
-                }, { // 20
+                }, { // 21
                     title: "",
                     content: "{% trans "Use the Toolbar tabs to select <b>Widgets</b>" %}",
                     element: "#layout-editor-toolbar #btn-menu-1",
@@ -249,7 +256,7 @@
                     element: "#layout-editor-toolbar #content-1 .toolbar-pane-content",
                     placement: "top",
                     template: next_template
-                }, { // 22
+                }, { // 23
                     title: "",
                     content: "{% trans "Add by <b>dragging</b> the widget to a region, or clicking on the <b>plus button</b> and click on the target region. Click <b>Next</b> after adding the widget." %}",
                     element: '#layout-editor-toolbar .toolbar-card[data-sub-type="text"]',
@@ -269,7 +276,7 @@
                         }
                     },
                     next: 25
-                }, { // 24
+                }, { // 25
                     title: "",
                     content: "{% trans "Click on the widget in the Layout Timeline!" %}",
                     element: '#layout-timeline .designer-widget',
@@ -284,12 +291,12 @@
                     onShown: function (tour) {
                         // If properties panel is not the right one, go to previous step
                         if ($('#properties-panel .form-title-widget').length === 0) {
-                            tour.goTo(24);
+                            tour.goTo(25);
                         }
                     },
                     reflex: true,
                     delay: 1000
-                }, { // 26
+                }, { // 27
                     title: "",
                     content: "{% trans "Add and format your text. The thin red line is showing your region border. Ensure that when you are editing, your text remains within these guidelines." %}",
                     element: '#layout-viewer .viewer-element ',
@@ -303,7 +310,7 @@
                     placement: "right",
                     template: next_template,
                     delay: 500
-                }, { // 28
+                }, { // 29
                     title: "",
                     content: "{% trans "Give an optional name to this widget." %}",
                     element: '#properties-panel input#name',
@@ -318,7 +325,7 @@
                     template: no_nav_template,
                     reflex: true,
                     delay: 500
-                }, { // 30
+                }, { // 31
                     title: "",
                     content: "{% trans "Let’s override the default time to 30 seconds." %}",
                     element: '#properties-panel input#duration',
@@ -337,14 +344,14 @@
                     onShown: function (tour) {
                         // If the input duration is not visible, go back to the checkbox step
                         if (!$('#properties-panel input#duration').is(":visible")) {
-                            tour.goTo(29);
+                            tour.goTo(30);
                         }
                     }
-                }, { // 32
+                }, { // 33
                     title: "",
                     content: "{% trans "The Region Timeline will now show the new updated duration for this Text widget." %}",
-                    element: '#layout-timeline .designer-widget .widgetLabel',
-                    placement: "bottom",
+                    element: '#layout-timeline .designer-widget .widgetLabel .widgetDuration',
+                    placement: "top",
                     template: next_template,
                     delay: 500
                 }, {
@@ -355,7 +362,7 @@
                     template: no_nav_template,
                     reflex: "mousedown",
                     delay: 500
-                }, { // 34
+                }, { // 35
                     title: "",
                     content: "{% trans "Edit options for the layout will open in the Layout Editor." %}",
                     element: '#properties-panel',
@@ -365,7 +372,7 @@
                     onShown: function (tour) {
                         // If properties panel is not the right one, go to previous step
                         if ($('#properties-panel #layoutEditForm').length === 0) {
-                            tour.goTo(33);
+                            tour.goTo(34);
                         }
                     }
                 }, {
@@ -559,9 +566,12 @@
 
     // Function to wait for a given condition before going to the next step
     function customTourWait(tour, step, checkCallback, delay = 500) {
+
+        hasSeenNewUserWizard = -1;
         tour.end();
         setTimeout(function(){
             if(checkCallback()) {
+                hasSeenNewUserWizard = 0;
                 restartTour(tour, true);
                 tour.goTo(step); //next step
             } else {
@@ -582,6 +592,11 @@
         }
 
     function setNewUserWizardState(seen = true) {
+        // If var is invalid, skip set
+        if(hasSeenNewUserWizard == -1) {
+            return;
+        }
+
         if(seen) {
             // Set the new user wizard flag to 1
             hasSeenNewUserWizard = 1;

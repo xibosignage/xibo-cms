@@ -361,28 +361,6 @@ class Ticker extends ModuleWidget
         $this->saveWidget();
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function hoverPreview()
-    {
-        $name = $this->getOption('name');
-        $url = urldecode($this->getOption('uri'));
-
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="thumbnail"><i alt="' . $this->module->name . ' thumbnail" class="fa module-preview-icon module-icon-' . $this->getModuleType() . '"></i></div>';
-        $output .= '<div class="info">';
-        $output .= '    <ul>';
-        $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
-        $output .= '    <li>' . __('Name') . ': ' . $name . '</li>';
-        $output .= '    <li>' . __('Source') . ': <a href="' . $url . '" target="_blank" title="' . __('Source') . '">' . $url . '</a></li>';
-        $output .= '    <li>' . __('Duration') . ': ' . $this->getDuration() . ' ' . __('seconds') . '</li>';
-        $output .= '    </ul>';
-        $output .= '</div>';
-
-        return $output;
-    }
-
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {

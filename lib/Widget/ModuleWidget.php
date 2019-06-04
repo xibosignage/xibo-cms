@@ -801,28 +801,6 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * Default code for the hover preview
-     * @return string
-     */
-    public function hoverPreview()
-    {
-        // Default Hover window contains a thumbnail, media type and duration
-        $output = '<div class="well">';
-        $output .= '<div class="preview-module-image"><i alt="' . __($this->module->name) . ' thumbnail" class="fa module-preview-icon module-icon-' . __($this->module->name) . '"></i></div>';
-        $output .= '<div class="info">';
-        $output .= '    <ul>';
-        $output .= '    <li>' . __('Type') . ': ' . $this->module->name . '</li>';
-        $output .= '    <li>' . __('Name') . ': ' . $this->getName() . '</li>';
-        if ($this->getUseDuration() == 1)
-            $output .= '    <li>' . __('Duration') . ': ' . $this->widget->duration . ' ' . __('seconds') . '</li>';
-        $output .= '    </ul>';
-        $output .= '</div>';
-        $output .= '</div>';
-
-        return $output;
-    }
-
-    /**
      * Gets a Tab
      * @param string $tab
      * @return mixed

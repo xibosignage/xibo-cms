@@ -11,9 +11,10 @@
         let libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ urlFor("library.search") }}";
         var libraryAddUrl = "{{ urlFor("library.add") }}";
+        var imageDownloadUrl = "{{ urlFor("library.download") }}?preview=1";
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
-        var tooltipDelay = {'show': 500, 'hide': 0};
+        var tooltipDelay = {'show': 250, 'hide': 0};
         
         // Save navbar position
         var navbarPosition = 'vertical';
@@ -285,6 +286,14 @@
                     type: "{% trans "Type" %}"
                 },
                 tabName: "{% trans "Library Search %tagId%" %}",
+                tableHeader: {
+                    toolsName: "{% trans "Tools" %}",
+                    id: "{% trans "Id"%}",
+                    name: "{% trans "Name"%}",
+                    type: "{% trans "Type"%}",
+                    tags: "{% trans "Tags"%}",
+                    thumbnail: "{% trans "Thumbnail"%}"
+                },
                 menuItems: {
                     toolsName: "{% trans "Tools" %}",
                     toolsTitle: "{% trans "Layout Designer tools" %}",
