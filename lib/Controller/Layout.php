@@ -846,6 +846,8 @@ class Layout extends Base
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
+            'parentId' => $this->getSanitizer()->getInt('parentId'),
+            'showDrafts' => $this->getSanitizer()->getInt('showDrafts'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
