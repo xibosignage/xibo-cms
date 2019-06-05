@@ -760,6 +760,20 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="parentId",
+     *      in="formData",
+     *      description="Filter by parent Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showDrafts",
+     *      in="formData",
+     *      description="Flag indicating whether to show drafts",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="layout",
      *      in="formData",
      *      description="Filter by partial Layout name",
@@ -802,9 +816,16 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="publishedStatusId",
+     *      in="formData",
+     *      description="Filter by published status id, 1 - Published, 2 - Draft",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="formData",
-     *      description="Embed related data such as regions, playlists, tags, etc",
+     *      description="Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
      *      type="string",
      *      required=false
      *   ),
