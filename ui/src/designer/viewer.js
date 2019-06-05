@@ -250,6 +250,10 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
                 // Show paging info
                 container.find('.preview-paging-message').html(res.extra.current_item + '/' + res.extra.number_items);
+
+                // Show widget name
+                container.find('.preview-paging-name').html(res.extra.moduleName);
+                container.find('.preview-paging-name').attr('title', res.extra.moduleName);
                 
                 if(res.extra.current_item > 1) {
                     container.find('.preview-paging .widget-left').show().off().on('click', function() {
