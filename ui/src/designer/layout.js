@@ -200,8 +200,9 @@ Layout.prototype.addElement = function(elementType, positionToAdd = null) {
  * Delete an element in the layout, by ID
  * @param {number} elementId - element id
  * @param {string} elementType - element type (widget, region, ...)
+ * @param {object =} [options] - Delete submit params/options
  */
-Layout.prototype.deleteElement = function(elementType, elementId) {
+Layout.prototype.deleteElement = function(elementType, elementId, options = null) {
     
     lD.common.showLoadingScreen('deleteElement'); 
 
@@ -222,7 +223,7 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
                 elementType, // targetType
                 elementId, // targetId
                 null, // oldValues
-                null, // newValues
+                options, // newValues
                 {
                     addToHistory: false // options.addToHistory
                 }

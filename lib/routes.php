@@ -221,6 +221,7 @@ $app->put('/library/setenablestat/:id', '\Xibo\Controller\Library:setEnableStat'
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 $app->post('/library/copy/:id', '\Xibo\Controller\Library:copy')->name('library.copy');
+$app->get('/library/:id/isused', '\Xibo\Controller\Library:isUsed')->name('library.isused');
 // Tagging
 $app->post('/library/:id/tag', '\Xibo\Controller\Library:tag')->name('library.tag');
 $app->post('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');

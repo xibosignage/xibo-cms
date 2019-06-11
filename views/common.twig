@@ -221,6 +221,12 @@
                     url: "{{ urlFor("user.permissions.form") }}",
                     type: 'GET'
                 }
+            },
+            media: {
+                isUsed: {
+                    url: "{{ urlFor("library.isused") }}",
+                    type: 'GET'
+                }
             }
         };
 
@@ -247,6 +253,13 @@
                 cancelUpload: "{% trans "Cancel upload" %}",
                 processing: "{% trans "Processing..." %}",
                 viewLibrary: "{% trans "View Library" %}",
+            };
+
+            var deleteMenuTrans = {
+                mainMessage: "{% trans "Are you sure you want to remove this %obj%? This action cannot be undone." %}",
+                infoDeleteMessage: "{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." %}",
+                deleteMediaFromLibraryTitle: "{% trans "Also delete from the Library?" %}",
+                deleteMediaFromLibraryMessage: "{% trans "This widget is linked to Media in the Library. Check this option to also delete that Media." %}"
             };
 
             var contextMenuTrans = {
@@ -369,6 +382,7 @@
                 formLoadFailed: "{% trans "Form load failed!" %}",
                 revertFailed: "{% trans "Revert failed: %error%" %}",
                 saveOrderFailed: "{% trans "Save order failed: %error%" %}",
+                deleteFailed: "{% trans "Object delete failed: %error%" %}",
                 saveAllChangesFailed: "{% trans "Save all changes failed!" %}",
                 removeAllChangesFailed: "{% trans "Remove all changes failed!!" %}",
                 addMediaFailed: "{% trans "Add media failed: %error%" %}",
