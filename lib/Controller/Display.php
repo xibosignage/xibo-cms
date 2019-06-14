@@ -1446,8 +1446,8 @@ class Display extends Base
                     // Alerts enabled for this display
                     // Display just gone offline, or always alert
                     // Fields for email
-                    $subject = sprintf(__("Email Alert for Display %s"), $display->display);
-                    $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
+                    $subject = sprintf(__("Alert for Display %s"), $display->display);
+                    $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
                     // Add to system
                     $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
