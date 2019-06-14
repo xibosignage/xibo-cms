@@ -756,6 +756,20 @@ class Display extends Base
         // We have permission - load
         $display->load();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $display->tags));
+        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
@@ -799,7 +813,10 @@ class Display extends Base
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
-            'versions' => [$playerVersions]
+            'versions' => [$playerVersions],
+            'data' => [
+                'gettag' => $this->urlFor('tag.getByName'),
+            ]
         ]);
     }
 

@@ -101,6 +101,7 @@ class Media implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
+    public $tagValues;
 
     /**
      * @SWG\Property(description="The file size in bytes")
@@ -376,6 +377,7 @@ class Media implements \JsonSerializable
      * Assign Tag
      * @param Tag $tag
      * @return $this
+     * @throws XiboException
      */
     public function assignTag($tag)
     {
@@ -401,6 +403,7 @@ class Media implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
+     * @throws XiboException
      */
     public function unassignTag($tag)
     {

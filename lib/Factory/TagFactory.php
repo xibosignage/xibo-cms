@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (TagFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -51,24 +52,36 @@ class TagFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Tag($this->getStore(), $this->getLog());
+        return new Tag($this->getStore(), $this->getLog(), $this);
     }
 
     /**
+     * @param $name
+     * @return Tag
+     */
+    public function create($name)
+    {
+       $tag = $this->createEmpty();
+       $tag->tag = $name;
+
+       return $tag;
+    }
+
+        /**
      * Get tags from a string
      * @param string $tagString
      * @return array[Tag]
      */
     public function tagsFromString($tagString)
     {
-        $tags = array();
+        $tags = [];
 
         if ($tagString == '') {
             return $tags;
         }
 
         // Parse the tag string, create tags
-        foreach(explode(',', $tagString) as $tagName) {
+        foreach (explode(',', $tagString) as $tagName) {
             $tagName = trim($tagName);
 
             $tags[] = $this->tagFromString($tagName);
@@ -86,15 +99,26 @@ class TagFactory extends BaseFactory
     {
         // Trim the tag
         $tagString = trim($tagString);
+        $explode = explode('|', $tagString);
 
         // Add to the list
         try {
-            $tag = $this->getByTag($tagString);
+            $tag = $this->getByTag($explode[0]);
+            if( isset($explode[1])) {
+                $tag->value = $explode[1];
+            } else {
+                $tag->value = null;
+            }
         }
         catch (NotFoundException $e) {
             // New tag
             $tag = $this->createEmpty();
-            $tag->tag = $tagString;
+            $tag->tag = $explode[0];
+            if( isset($explode[1])) {
+                $tag->value = $explode[1];
+            } else {
+                $tag->value = null;
+            }
         }
 
         return $tag;
@@ -108,17 +132,21 @@ class TagFactory extends BaseFactory
      */
     public function getByTag($tagName)
     {
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` WHERE tag.tag = :tag';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` WHERE tag.tag = :tag';
 
         $tags = $this->getStore()->select($sql, array('tag' => $tagName));
 
-        if (count($tags) <= 0)
+        if (count($tags) <= 0) {
             throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));
+        }
 
         $row = $tags[0];
         $tag = $this->createEmpty();
         $tag->tagId = $this->getSanitizer()->int($row['tagId']);
         $tag->tag = $this->getSanitizer()->string($row['tag']);
+        $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
+        $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
+        $tag->options = $this->getSanitizer()->string($row['options']);
 
         return $tag;
     }
@@ -130,15 +158,17 @@ class TagFactory extends BaseFactory
      */
     public function loadByLayoutId($layoutId)
     {
-        $tags = array();
+        $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
-        foreach ($this->getStore()->select($sql, array('layoutId' => $layoutId)) as $row) {
+        foreach ($this->getStore()->select($sql, ['layoutId' => $layoutId]) as $row) {
             $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignLayout($layoutId);
+            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
+            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
+            $tag->options = $this->getSanitizer()->string($row['options']);
 
             $tags[] = $tag;
         }
@@ -153,15 +183,17 @@ class TagFactory extends BaseFactory
      */
     public function loadByPlaylistId($playlistId)
     {
-        $tags = array();
+        $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
 
         foreach ($this->getStore()->select($sql, array('playlistId' => $playlistId)) as $row) {
             $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignPlaylist($playlistId);
+            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
+            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
+            $tag->options = $this->getSanitizer()->string($row['options']);
 
             $tags[] = $tag;
         }
@@ -176,15 +208,17 @@ class TagFactory extends BaseFactory
      */
     public function loadByCampaignId($campaignId)
     {
-        $tags = array();
+        $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
 
         foreach ($this->getStore()->select($sql, array('campaignId' => $campaignId)) as $row) {
             $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignCampaign($campaignId);
+            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
+            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
+            $tag->options = $this->getSanitizer()->string($row['options']);
 
             $tags[] = $tag;
         }
@@ -199,15 +233,17 @@ class TagFactory extends BaseFactory
      */
     public function loadByMediaId($mediaId)
     {
-        $tags = array();
+        $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
 
         foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
             $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignMedia($mediaId);
+            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
+            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
+            $tag->options = $this->getSanitizer()->string($row['options']);
 
             $tags[] = $tag;
         }
@@ -222,19 +258,143 @@ class TagFactory extends BaseFactory
      */
     public function loadByDisplayGroupId($displayGroupId)
     {
-        $tags = array();
+        $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
 
         foreach ($this->getStore()->select($sql, array('displayGroupId' => $displayGroupId)) as $row) {
             $tag = $this->createEmpty();
             $tag->tagId = $this->getSanitizer()->int($row['tagId']);
             $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->assignDisplayGroup($displayGroupId);
+            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
+            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
+            $tag->options = $this->getSanitizer()->string($row['options']);
 
             $tags[] = $tag;
         }
 
         return $tags;
+    }
+
+    /**
+     * Get Tag by ID
+     * @param int $tagId
+     * @return Tag
+     * @throws NotFoundException
+     */
+    public function getById($tagId)
+    {
+        $this->getLog()->debug('TagFactory getById(%d)', $tagId);
+
+        $tags = $this->query(null, ['tagId' => $tagId]);
+
+        if (count($tags) <= 0) {
+            $this->getLog()->debug('Tag not found with ID %d', $tagId);
+            throw new NotFoundException(\__('Tag not found'));
+        }
+
+        return $tags[0];
+    }
+
+    /**
+     * Get the system tags
+     * @return array|Tag
+     * @throws NotFoundException
+     */
+    public function getSystemTags()
+    {
+        $tags = $this->query(null, ['isSystem' => 1]);
+
+        if (count($tags) <= 0)
+            throw new NotFoundException();
+
+        return $tags;
+    }
+
+    /**
+     * Query
+     * @param array $sortOrder
+     * @param array $filterBy
+     * @return array[\Xibo\Entity\Log]
+     */
+    public function query($sortOrder = null, $filterBy = [])
+    {
+        if ($sortOrder == null)
+            $sortOrder = ['tagId DESC'];
+
+        $entries = [];
+        $params = [];
+        $order = '';
+        $limit = '';
+
+        $select = 'SELECT tagId, tag, isSystem, isRequired, options ';
+
+        $body = '
+              FROM `tag`
+                  ';
+
+        $body .= ' WHERE 1 = 1 ';
+
+        if ($this->getSanitizer()->getString('tagId', $filterBy) != null) {
+            $body .= " AND `tag`.tagId = :tagId ";
+            $params['tagId'] = $this->getSanitizer()->getString('tagId', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('notTagId', 0, $filterBy) != 0) {
+            $body .= " AND tag.tagId <> :notTagId ";
+            $params['notTagId'] = $this->getSanitizer()->getInt('notTagId', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getString('tag', $filterBy) != '') {
+            $terms = explode(',', $this->getSanitizer()->getString('tag', $filterBy));
+            $this->nameFilter('tag', 'tag', $terms, $body, $params);
+        }
+
+        if ($this->getSanitizer()->getString('tagExact', $filterBy) != '') {
+            $body.= " AND tag.tag = :exact ";
+            $params['exact'] = $this->getSanitizer()->getString('tagExact', $filterBy);
+        }
+
+        //isSystem filter, by default hide tags with isSystem flag
+        if ($this->getSanitizer()->getInt('isSystem', 0, $filterBy) === 1) {
+            $body .= " AND `tag`.isSystem = 1 ";
+        } else {
+            $body .= " AND `tag`.isSystem = 0 ";
+        }
+
+        // isRequired filter, by default hide tags with isSystem flag
+        if ($this->getSanitizer()->getInt('isRequired', $filterBy) != 0) {
+            $body .= " AND `tag`.isRequired = :isRequired ";
+            $params['isRequired'] = $this->getSanitizer()->getInt('isRequired', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('haveOptions', 0, $filterBy) === 1) {
+            $body .= " AND `tag`.options IS NOT NULL";
+        }
+
+        // Sorting?
+        if (is_array($sortOrder))
+            $order = ' ORDER BY ' . implode(',', $sortOrder);
+
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $tag = $this->createEmpty()->hydrate($row, ['intProperties' => ['isSystem', 'isRequired']]);
+            $tag->excludeProperty('value');
+
+            $entries[] = $tag;
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+        return $entries;
     }
 }

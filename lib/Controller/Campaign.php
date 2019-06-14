@@ -267,7 +267,10 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-add';
         $this->getState()->setData([
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Add')
+            'help' => $this->getHelp()->link('Campaign', 'Add'),
+            'data' => [
+                'gettag' => $this->urlFor('tag.getByName'),
+            ]
         ]);
     }
 
@@ -330,6 +333,20 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($campaignId);
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $campaign->tags));
+        $arrayOfTagValues = array_filter(explode(',', $campaign->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] != 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
@@ -353,7 +370,11 @@ class Campaign extends Base
         $this->getState()->setData([
             'campaign' => $campaign,
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Edit')
+            'help' => $this->getHelp()->link('Campaign', 'Edit'),
+            'tags' => $tags,
+            'data' => [
+                'gettag' => $this->urlFor('tag.getByName'),
+            ]
         ]);
     }
 

@@ -62,7 +62,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.add") }}">
+            <form id="displayGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.add") }}" data-gettag="{{ data.gettag }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
                 {{ forms.input("displayGroup", title, "", helpText) }}
@@ -73,7 +73,14 @@
 
                 {% set title %}{% trans "Tags" %}{% endset %}
                 {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
-                {{ forms.inputWithTags("tags", title, "", helpText) }}
+                {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
+
+                {% set title %}{% trans "Tag value" %}{% endset %}
+                {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                <div id="tagValueRequired" class="alert alert-info">
+                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                </div>
 
                 {% set title %}{% trans "Dynamic Group?" %}{% endset %}
                 {% set helpText %}{% trans "Are the members of this group dynamic?" %}{% endset %}

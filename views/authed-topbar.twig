@@ -166,6 +166,10 @@
             {% if currentUser.routeViewable("/task") %}
                 <li><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
+
+            {% if currentUser.isSuperAdmin() %}
+                <li><a href="{{ urlFor("tag.view") }}">{% trans "Tags" %}</a></li>
+            {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
             </ul>
         </li>

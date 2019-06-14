@@ -244,6 +244,8 @@ class Layout implements \JsonSerializable
     public $owner;
     public $groupsWithPermissions;
 
+    public $tagValues;
+
     // Private
     private $unassignTags = [];
 

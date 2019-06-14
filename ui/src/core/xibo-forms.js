@@ -1115,3 +1115,115 @@ function userProfileEditFormOpen() {
         });
     });
 }
+
+function tagsWithValues(formId) {
+    $("#tagValue").addClass("hidden");
+    $('label[for="tagValue"]').addClass("hidden");
+    $('#tagValueRequired').addClass('hidden');
+
+    let tag;
+    let tagWithOption = '';
+    let tagN = '';
+    let tagV = '';
+    let tagOptions = [];
+    let tagIsRequired = 0;
+
+    let formSelector = '#' + formId + ' input#tags';
+
+    $(formSelector).on('beforeItemAdd', function(event) {
+        $('#tagValue').html('');
+        tag = event.item;
+        tagOptions = [];
+        tagIsRequired = 0;
+        tagN = tag.split('|')[0];
+        tagV = tag.split('|')[1];
+
+        if ($(formSelector).val().indexOf(tagN) === -1 && tagV === undefined) {
+            $.ajax({
+                url: $('#'+formId).data().gettag,
+                type: "GET",
+                data: {
+                    name: tagN,
+                },
+                success: function (response) {
+                    if (response.success) {
+                        tagOptions = JSON.parse(response.data.tag.options);
+                        tagIsRequired = response.data.tag.isRequired;
+
+                        if (tagOptions != null && tagOptions != []) {
+                            $("#tagValue").removeClass("hidden");
+                            $('label[for="tagValue"]').removeClass("hidden");
+
+                            $('#tagValue')
+                                .append($("<option></option>")
+                                    .attr("value", '')
+                                    .text(''));
+
+                            $.each(tagOptions, function (key, value) {
+                                $('#tagValue')
+                                    .append($("<option></option>")
+                                        .attr("value", value)
+                                        .text(value));
+                            });
+
+                            $('#tagValue').focus();
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    $(formSelector).on('itemAdded', function(event) {
+        if (tagOptions != null && tagOptions !== []) {
+            $('#tagValue').focus();
+        }
+    });
+
+    $(formSelector).on('itemRemoved', function(event) {
+
+        if(tagN === event.item) {
+            $('#tagValueRequired').addClass('hidden');
+            $('.save-button').prop('disabled', false);
+            $('#tagValue').html('');
+            $("#tagValue").addClass("hidden");
+            $('label[for="tagValue"]').addClass("hidden");
+        } else if ($(".save-button").is(":disabled")) {
+            // do nothing with jQuery
+        } else {
+            $('#tagValue').html('');
+            $("#tagValue").addClass("hidden");
+            $('label[for="tagValue"]').addClass("hidden");
+        }
+    });
+
+    $("#tagValue").on("change", function (e) {
+        e.preventDefault();
+        tagWithOption = tagN + '|' + $(this).val();
+
+        if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
+            $(formSelector).tagsinput('add', tagWithOption);
+            $(formSelector).tagsinput('remove', tagN);
+            $('#tagValue').html('');
+            $("#tagValue").addClass("hidden");
+            $('label[for="tagValue"]').addClass("hidden");
+            $('#tagValueRequired').addClass('hidden');
+            $('.save-button').prop('disabled', false);
+        } else {
+            $('#tagValueRequired').removeClass('hidden');
+            $('#tagValue').focus();
+        }
+    });
+
+    $('#tagValue').blur(function() {
+        if($(this).val() === '' && tagIsRequired === 1 ) {
+            $('#tagValueRequired').removeClass('hidden');
+            $('#tagValue').focus();
+            $('.save-button').prop('disabled', true);
+        } else {
+            $('#tagValue').html('');
+            $("#tagValue").addClass("hidden");
+            $('label[for="tagValue"]').addClass("hidden");
+        }
+    });
+}
