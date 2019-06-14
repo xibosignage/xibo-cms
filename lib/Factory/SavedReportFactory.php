@@ -98,22 +98,6 @@ class SavedReportFactory extends BaseFactory
     }
 
     /**
-     * Get by Media Id
-     * @param int $mediaId
-     * @return SavedReport
-     * @throws NotFoundException
-     */
-    public function getByMediaId($mediaId)
-    {
-        $savedReports = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
-
-        if (count($savedReports) <= 0)
-            throw new NotFoundException(__('Cannot find media'));
-
-        return $savedReports[0];
-    }
-
-    /**
      * Get by Version Id
      * @param int $savedReportId
      * @return SavedReport
@@ -137,15 +121,17 @@ class SavedReportFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null)
-            $sortOrder = ['saveAs DESC'];
+            $sortOrder = ['generatedOn DESC'];
 
         $params = [];
         $entries = [];
 
         $select = '
             SELECT  
+               saved_report.reportScheduleId,
                saved_report.savedReportId,
                saved_report.saveAs,
+               saved_report.userId,
                reportschedule.name AS reportScheduleName,
                reportschedule.reportName,
                saved_report.generatedOn,
@@ -206,6 +192,17 @@ class SavedReportFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        }
+
+        // Owner filter
+        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
+            $body .= " AND `saved_report`.userid = :userId ";
+            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
+        }
+
+        if ( $this->getSanitizer()->getCheckbox('onlyMyReport') == 1) {
+            $body .= ' AND `saved_report`.userId = :currentUserId ';
+            $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Sorting?

@@ -1,11 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (EntityTrait.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 
@@ -249,16 +262,18 @@ trait EntityTrait
      */
     protected function audit($entityId, $message, $changedProperties = null)
     {
+        $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
+
         if ($changedProperties === null) {
             // No properties provided, so we should work them out
             // If we have originals, then get changed, otherwise get the current object state
             $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray() : $this->getChangedProperties();
+        } else if (count($changedProperties) <= 0) {
+            // We provided changed properties, so we only audit if there are some
+            return;
         }
 
-        $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
-
-        if (count($changedProperties) > 0)
-            $this->getLog()->audit($class, $entityId, $message, $changedProperties);
+        $this->getLog()->audit($class, $entityId, $message, $changedProperties);
     }
 
     /**

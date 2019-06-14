@@ -412,6 +412,11 @@ function XiboInitialise(scope) {
     $(scope + " span.notification-date").each(function() {
         $(this).html(moment($(this).html(), "X").fromNow());
     });
+
+    // Switch form elements
+    $(scope + " input.bootstrap-switch-target").each(function() {
+        $(this).bootstrapSwitch();
+    });
     
     // Initialize tags input form
     $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();

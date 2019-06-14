@@ -24,20 +24,23 @@
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 Cypress.Commands.add('login', function() {
-    cy.request({
-        method: 'POST',
-        url: '/login',
-        form: true,
-        body: {
-            'username': 'xibo_admin',
-            'password': 'password'
-        }
-    }).then((res) => {
-        // Get access token and save it as a environment variable
-        cy.getAccessToken();
-    });
 
-    cy.getCookie('PHPSESSID').should('exist');
+    cy.visit('/').then(function() {
+        cy.request({
+            method: 'POST',
+            url: '/login',
+            form: true,
+            body: {
+                'username': 'xibo_admin',
+                'password': 'password'
+            }
+        }).then((res) => {
+            // Get access token and save it as a environment variable
+            cy.getAccessToken().then(function(){
+                cy.getCookie('PHPSESSID').should('exist');
+            });
+        });
+    });
 });
 
 Cypress.Commands.add('getAccessToken', function() {

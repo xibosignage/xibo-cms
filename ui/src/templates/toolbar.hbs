@@ -15,9 +15,12 @@
             <div class="toolbar-content hide-on-read-only">
                 {{!-- Menu items/tabs --}}
                 {{#each menuItems}}
-                    <div id="content-{{@index}}" class="toolbar-pane {{state}}">
-                        {{!-- Show content if exists --}}
-                        {{#if content}}
+                    <div id="content-{{@index}}" class="toolbar-pane {{state}} {{#if search}}search-content{{/if}}">
+                        {{#if search}}
+                            {{!-- Show search container --}}
+                            <div id="media-search-container-{{@index}}" class="media-search-container"></div>
+                        {{else if content}}
+                            {{!-- Show content if exists --}}
                             <button id="pag-btn-left-{{@index}}" {{pagBtnLeftDisabled}} class="btn btn-primary pagination-btn pag-btn-left">
                                 <i class="fa fa-arrow-left"></i>
                             </button>
@@ -28,9 +31,7 @@
                                 {{#each content}}
                                     {{#unless hideElement}}
                                         {{!-- Load cards according to type searchItem/Widget --}}
-                                        {{#if ../search}}
-                                            {{> toolbar-card-media trans=../../trans}}
-                                        {{else if ../tool}}
+                                        {{#if ../tool}}
                                             {{> toolbar-card-tool trans=../../trans}}
                                         {{else}}
                                             {{> toolbar-card trans=../../trans}}
@@ -43,46 +44,11 @@
                                 <i class="fa fa-arrow-right"></i>
                             </button>
                         {{/if}}
-
-                        {{#if search}}
-                            <form id="media-search-form-{{@index}}" class="form-inline">
-                                <div class="form-group search-form-group">
-                                    <input id="input-name-{{@index}}" type="text" value="{{filters.name.value}}" class="form-control input-name" placeholder="{{filters.name.name}}">
-                                    
-                                    <input id="input-tag-{{@index}}" type="text" value="{{filters.tag.value}}" data-role="tagsinput" class="form-control input-tag" placeholder="{{filters.tag.name}}">
-                                
-                                    <select id="input-type-{{@index}}" class="form-control input-type">
-                                        <option value="">{{filters.type.name}}</option>
-                                        {{#each filters.type.values}}
-                                            <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
-                                        {{/each}}
-                                    </select>
-                                
-                                    <button data-search-id="{{@index}}" data-test="searchButton" class="btn btn-primary btn-menu-tab search-btn" type="button">                                    
-                                        <span>{{../trans.search}}</span>
-                                    </button>
-                                </div>
-                            </form>
-                        {{/if}}
-                        
                     </div>
                 {{/each}}
-            
-            </div>
-
-            <div class="navbar-header hide-on-read-only">
-                <a id="btn-menu-toggle" class="navbar-brand btn-menu-tool hide-on-read-only">
-                    
-                    {{#if opened}}
-                        <i class="fa fa-toggle-on"></i>
-                    {{else}}
-                        <i class="fa fa-toggle-off"></i>
-                    {{/if}}
-                </a>
             </div>
 
             <ul class="nav navbar-nav navbar-right">
-
                 {{#if customDropdownButtons}}
                     <li class="dropdown navbar-submenu">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
@@ -158,9 +124,9 @@
                 {{#each menuItems}}
                     <li>
                         <a id="btn-menu-{{@index}}" class="btn-menu-tab {{state}}" data-toggle="tooltip" title="{{itemTitle}}" data-test="toolbarTabs">
-                            <span>{{itemName}}</span>
+                            <span class="tab-name-{{@index}}">{{itemName}}</span>
                             {{#if search}}
-                                <i id="close-btn-menu-{{@index}}" class="fa fa-times close-tab-button"></i>
+                                <i id="close-btn-menu-{{@index}}" class="fa fa-times-circle close-tab-button"></i>
                             {{/if}}
                         </a>
                     </li>    

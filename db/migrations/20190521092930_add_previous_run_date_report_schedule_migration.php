@@ -1,3 +1,4 @@
+<?php
 /**
  * Copyright (C) 2019 Xibo Signage Ltd
  *
@@ -18,7 +19,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
-/* This file is included after the core Layout Preview CSS, replace 
- * this with a theme to override Layout Preview CSS.
+
+use Phinx\Migration\AbstractMigration;
+
+/**
+ * Class AddPreviousRunDateReportScheduleMigration
  */
+class AddPreviousRunDateReportScheduleMigration extends AbstractMigration
+{
+    /** @inheritdoc */
+    public function change()
+    {
+        $table = $this->table('reportschedule');
+        $table
+            ->addColumn('previousRunDt', 'integer', ['default' => 0, 'after' => 'lastRunDt'])
+            ->addColumn('lastSavedReportId', 'integer', ['default' => 0, 'after' => 'schedule'])
+            ->save();
+    }
+}

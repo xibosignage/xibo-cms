@@ -777,17 +777,16 @@ class Chart extends ModuleWidget
         // Axis are only applicable for charts with a cartesan axis
         if ($chartType !== 'pie' && $chartType !== 'doughnut' && $chartType !== 'radar') {
 
-            if ($this->getOption('x-axis-label') != '') {
-                $options['scales']['xAxes'][] = [
-                    'scaleLabel' => [
-                        'display' => true,
-                        'labelString' => $this->getOption('x-axis-label')
-                    ]
-                ];
-            }
-
             // Options effecting the Y-Axis
             $yAxis = [];
+            $xAxis = [];
+
+            if ($this->getOption('x-axis-label') != '') {
+                $xAxis['scaleLabel'] = [
+                    'display' => true,
+                    'labelString' => $this->getOption('x-axis-label')
+                ];
+            }
 
             if ($this->getOption('y-axis-label') != '') {
                 $yAxis['scaleLabel'] = [
@@ -797,10 +796,15 @@ class Chart extends ModuleWidget
             }
 
             if ($this->getOption('startYAtZero') == '1') {
-                $yAxis['ticks']['beginAtZero'] = true;
+                if ($chartType === 'horizontalBar') {
+                    $xAxis['ticks']['beginAtZero'] = true;
+                } else {
+                    $yAxis['ticks']['beginAtZero'] = true;
+                }
             }
 
             $options['scales']['yAxes'][] = $yAxis;
+            $options['scales']['xAxes'][] = $xAxis;
         }
 
         return $options;

@@ -78,7 +78,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12');
+        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12 00:00:00');
 
     }
 

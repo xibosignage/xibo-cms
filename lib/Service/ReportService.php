@@ -110,6 +110,8 @@ class ReportService implements ReportServiceInterface
             $reports[] = $config;
         }
 
+        $this->log->debug('Reports found in total: '.count($reports));
+
         return $reports;
     }
 
@@ -121,6 +123,9 @@ class ReportService implements ReportServiceInterface
         foreach($this->listReports() as $report) {
 
             if($report->name == $reportName) {
+
+                $this->log->debug('Get report by name: '.json_encode($report, JSON_PRETTY_PRINT));
+
                 return $report;
             }
         }
@@ -140,6 +145,8 @@ class ReportService implements ReportServiceInterface
                 if ($report->class == '') {
                     throw new NotFoundException(__('Report class not found'));
                 }
+                $this->log->debug('Get report class: '.$report->class);
+
                 return $report->class;
             }
         }
@@ -176,6 +183,8 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportScheduleFormData($reportName)
     {
+        $this->log->debug('Populate form title and hidden fields');
+
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);
@@ -189,6 +198,8 @@ class ReportService implements ReportServiceInterface
      */
     public function setReportScheduleFormData($reportName)
     {
+        $this->log->debug('Set Report Schedule form data');
+
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);
@@ -202,6 +213,8 @@ class ReportService implements ReportServiceInterface
      */
     public function generateSavedReportName($reportName, $filterCriteria)
     {
+        $this->log->debug('Generate Saved Report name');
+
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);
@@ -238,7 +251,9 @@ class ReportService implements ReportServiceInterface
         $json = json_decode($zip->getFromName('reportschedule.json'), true);
 
         // Retrieve the saved report result array
-        $results = $object->getSavedReportResults($json, $savedReport->saveAs);
+        $results = $object->getSavedReportResults($json, $savedReport);
+
+        $this->log->debug('Saved Report results'. json_encode($results, JSON_PRETTY_PRINT));
 
         // Return data to build chart
         return [
@@ -253,6 +268,8 @@ class ReportService implements ReportServiceInterface
      */
     public function runReport($reportName, $filterCriteria)
     {
+        $this->log->debug('Run the report to get results');
+
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);

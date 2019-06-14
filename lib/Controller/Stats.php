@@ -528,7 +528,7 @@ class Stats extends Base
             $type = $this->getSanitizer()->string($row['type']);
             $fromDt = $this->getSanitizer()->string($row['start']);
             $toDt = $this->getSanitizer()->string($row['end']);
-            $layout = ($layoutName != '') ? $layoutName :  __('Not Found');;
+            $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
             $display = ($displayName != '') ? $displayName : __('Not Found');
             $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
             $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';

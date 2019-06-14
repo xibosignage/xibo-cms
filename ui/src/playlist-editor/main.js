@@ -60,9 +60,6 @@ window.pE = {
     // Timeline
     timeline: {},
 
-    // Viewer
-    //viewer: {},
-
     // Properties Panel
     propertiesPanel: {},
 
@@ -76,8 +73,7 @@ window.pE = {
     toolbar: {}
 };
 
-
-// Load Layout and build app structure
+// Load Playlist and build app structure
 pE.loadEditor = function() {
 
     pE.common.showLoadingScreen();
@@ -102,7 +98,7 @@ pE.loadEditor = function() {
     $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
         .done(function(res) {
 
-            if(res.data.length > 0) {
+            if(res.data != null && res.data.length > 0) {
 
                 // Append layout html to the main div
                 pE.editorDiv.html(playlistEditorTemplate());
@@ -180,7 +176,13 @@ pE.loadEditor = function() {
                 pE.common.hideLoadingScreen();
 
             } else {
-                pE.showErrorMessage();
+                // Login Form needed?
+                if(res.login) {
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+                    pE.showErrorMessage();
+                }
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
 
@@ -386,6 +388,11 @@ pE.refreshDesigner = function() {
     this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
 
+    // If there was a opened menu in the toolbar, open that tab
+    if(this.toolbar.openedMenu != -1) {
+        this.toolbar.openTab(this.toolbar.openedMenu, true);
+    }
+
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
     if(!$.isEmptyObject(pE.playlist.widgets)) {
 
@@ -413,7 +420,7 @@ pE.refreshDesigner = function() {
         
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
-            this.toolbar.openTab(1);
+            this.toolbar.openTab(1, true);
         }
     }
 
@@ -448,15 +455,19 @@ pE.reloadData = function() {
 
     $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
         .done(function(res) {
-
             pE.common.hideLoadingScreen();
 
-            if(res.data.length > 0) {
+            if(res.data != null && res.data.length > 0) {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
                 pE.refreshDesigner();
             } else {
-                pE.showErrorMessage();
+                if(res.login) {
+                    window.location.href = window.location.href;
+                    location.reload(false);
+                } else {
+                    pE.showErrorMessage();
+                }
             }
 
             // Reload the form helper connection
@@ -526,6 +537,24 @@ pE.saveOrder = function() {
  */
 pE.close = function() {
 
+    /**
+     * Clear all object own properties
+     * @param {object} objectToClean 
+     */
+    const deleteObjectProperties = function(objectToClean) {
+        for(var x in objectToClean) if(objectToClean.hasOwnProperty(x)) delete objectToClean[x];
+    };
+
+    // Clear loaded vars
+    this.mainObjectId = '';
+    deleteObjectProperties(this.playlist);
+    deleteObjectProperties(this.editorDiv);
+    deleteObjectProperties(this.timeline);
+    deleteObjectProperties(this.propertiesPanel);
+    deleteObjectProperties(this.manager);
+    deleteObjectProperties(this.selectedObject);
+    deleteObjectProperties(this.toolbar);
+
     // Restore toastr positioning
     toastr.options.positionClass = this.toastrPosition;
 
@@ -533,7 +562,7 @@ pE.close = function() {
 };
 
 /**
- * Close playlist editor
+ * Show loading screen
  */
 pE.showLocalLoadingScreen = function() {
     // If there are no widgets, render the loading template in the drop zone
@@ -736,10 +765,8 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
                 pE[prefToLoad] = defaultValue;
             }
         } else {
-
             // Login Form needed?
             if(res.login) {
-
                 window.location.href = window.location.href;
                 location.reload(false);
             } else {

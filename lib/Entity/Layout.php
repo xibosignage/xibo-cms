@@ -1344,7 +1344,7 @@ class Layout implements \JsonSerializable
 
         foreach ($this->getWidgets() as $widget) {
             /** @var Widget $widget */
-            if ($widget->type == 'datasetview' || $widget->type == 'datasetticker') {
+            if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
                 $dataSetId = $widget->getOptionValue('dataSetId', 0);
 
                 if ($dataSetId != 0) {

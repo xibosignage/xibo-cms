@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (Widget.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Entity;
 
 use Xibo\Exception\NotFoundException;
@@ -573,6 +572,14 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * @return bool true if this widget has an expiry date
+     */
+    public function hasExpiry()
+    {
+        return $this->toDt !== self::$DATE_MAX;
+    }
+
+    /**
      * @return bool true if this widget has expired
      */
     public function isExpired()
@@ -672,10 +679,13 @@ class Widget implements \JsonSerializable
         $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. ' . json_encode($options, JSON_PRETTY_PRINT));
 
         // Add/Edit
-        if ($this->widgetId == null || $this->widgetId == 0)
+        $isNew = false;
+        if ($this->widgetId == null || $this->widgetId == 0) {
             $this->add();
-        else if ($this->hash != $this->hash() || $options['alwaysUpdate'])
+            $isNew = true;
+        } else if ($this->hash != $this->hash() || $options['alwaysUpdate']) {
             $this->update();
+        }
 
         // Save the widget options
         if ($options['saveWidgetOptions']) {
@@ -725,18 +735,23 @@ class Widget implements \JsonSerializable
         $this->notify($options);
 
         if ($options['audit']) {
-            $changedProperties = $this->getChangedProperties();
-            $changedItems = [];
+            if ($isNew) {
+                $changedProperties = null;
+            } else {
+                $changedProperties = $this->getChangedProperties();
+                $changedItems = [];
 
-            foreach ($this->widgetOptions as $widgetOption) {
-                $itemsProperties = $widgetOption->getChangedProperties();
+                foreach ($this->widgetOptions as $widgetOption) {
+                    $itemsProperties = $widgetOption->getChangedProperties();
 
-                if (count($itemsProperties) > 0)
-                    $changedItems[] = $itemsProperties;
-            }
+                    if (count($itemsProperties) > 0) {
+                        $changedItems[] = $itemsProperties;
+                    }
+                }
 
-            if (count($changedItems) > 0) {
-                $changedProperties['widgetOptions'] = $changedItems;
+                if (count($changedItems) > 0) {
+                    $changedProperties['widgetOptions'] = $changedItems;
+                }
             }
 
             $this->audit($this->widgetId, 'Saved', $changedProperties);
@@ -793,6 +808,9 @@ class Widget implements \JsonSerializable
         $this->notify($options);
 
         $this->getLog()->debug('Delete Widget Complete');
+
+        // Audit
+        $this->audit($this->widgetId, 'Deleted');
     }
 
     /**
@@ -813,7 +831,11 @@ class Widget implements \JsonSerializable
 
         // Should we notify the Playlist
         // we do this if the duration has changed on this widget.
-        if ($options['forceNotifyPlaylists'] || ($options['notifyPlaylists'] && $this->hasPropertyChanged('calculatedDuration'))) {
+        if ($options['forceNotifyPlaylists']|| ($options['notifyPlaylists'] && (
+                $this->hasPropertyChanged('calculatedDuration')
+                || $this->hasPropertyChanged('fromDt')
+                || $this->hasPropertyChanged('toDt')
+            ))) {
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,

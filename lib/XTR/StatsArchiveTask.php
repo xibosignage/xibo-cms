@@ -59,7 +59,7 @@ class StatsArchiveTask implements TaskInterface
         }
 
         /** @var Date $earliestDate */
-        $earliestDate = $this->date->parse($earliestDate[0]['minDate'])->setTime(0, 0, 0);
+        $earliestDate = $this->date->parse($earliestDate[0]['minDate'], 'U')->setTime(0, 0, 0);
 
         // Take the earliest date and roll forward until the current time
         /** @var Date $now */

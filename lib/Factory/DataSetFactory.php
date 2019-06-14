@@ -156,7 +156,7 @@ class DataSetFactory extends BaseFactory
      */
     public function getByName($dataSet, $userId = null)
     {
-        $dataSets = $this->query(null, ['dataSet' => $dataSet, 'userId' => $userId]);
+        $dataSets = $this->query(null, ['dataSetExact' => $dataSet, 'userId' => $userId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -243,6 +243,11 @@ class DataSetFactory extends BaseFactory
         if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('dataSet', $filterBy));
             $this->nameFilter('dataset', 'dataSet', $terms, $body, $params);
+        }
+
+        if ($this->getSanitizer()->getString('dataSetExact', $filterBy) != '') {
+            $body.= " AND dataset.dataSet = :exact ";
+            $params['exact'] = $this->getSanitizer()->getString('dataSetExact', $filterBy);
         }
 
         if ($this->getSanitizer()->getString('code', $filterBy) != null) {

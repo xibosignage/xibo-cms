@@ -1,3 +1,4 @@
+<?php
 /**
  * Copyright (C) 2019 Xibo Signage Ltd
  *
@@ -18,7 +19,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
- 
-/* This file is included after the core Layout Preview CSS, replace 
- * this with a theme to override Layout Preview CSS.
+
+use Phinx\Migration\AbstractMigration;
+
+/**
+ * Class AddReportScheduleTaskMigration
  */
+class AddReportScheduleTaskMigration extends AbstractMigration
+{
+    /** @inheritdoc */
+    public function change()
+    {
+        $table = $this->table('task');
+        if (!$this->fetchRow('SELECT * FROM `task` WHERE name = \'Report Schedule\'')) {
+            $table->insert([
+                [
+                    'name' => 'Report Schedule',
+                    'class' => '\Xibo\XTR\ReportScheduleTask',
+                    'options' => '[]',
+                    'schedule' => '*/5 * * * * *',
+                    'isActive' => '1',
+                    'configFile' => '/tasks/report-schedule.task'
+                ],
+            ])->save();
+        }
+    }
+}

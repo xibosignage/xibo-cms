@@ -172,9 +172,19 @@ class SavedReport implements \JsonSerializable
     {
         $this->load();
 
+        $this->getLog()->debug('Delete saved report: '.$this->saveAs.'. Generated on: '.$this->generatedOn);
         $this->getStore()->update('DELETE FROM `saved_report` WHERE `savedReportId` = :savedReportId', [
             'savedReportId' => $this->savedReportId
         ]);
+
+        // Update last saved report in report schedule
+        $this->getLog()->debug('Update last saved report in report schedule');
+        $this->getStore()->update('
+        UPDATE `reportschedule` SET lastSavedReportId = ( SELECT MAX(`savedReportId`) FROM `saved_report` WHERE `reportScheduleId`= :reportScheduleId) 
+        WHERE `reportScheduleId` = :reportScheduleId',
+            [
+            'reportScheduleId' => $this->reportScheduleId
+            ]);
     }
 
     /**

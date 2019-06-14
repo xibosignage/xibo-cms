@@ -653,7 +653,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStatisticStore()
+    public function getEngine()
     {
         return 'mongodb';
     }
@@ -661,6 +661,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function executeQuery($options = [])
     {
+        $this->log->debug('Execute MongoDB query.');
+
         $options = array_merge([
             'allowDiskUse' => true
         ], $options);

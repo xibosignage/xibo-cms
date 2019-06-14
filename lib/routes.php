@@ -499,6 +499,7 @@ $app->get('/report/reportschedule', '\Xibo\Controller\Report:reportScheduleGrid'
 $app->post('/report/reportschedule', '\Xibo\Controller\Report:reportScheduleAdd')->name('reportschedule.add');
 $app->put('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleEdit')->name('reportschedule.edit');
 $app->delete('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleDelete')->name('reportschedule.delete');
+$app->post('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleReset')->name('reportschedule.reset');
 
 //
 // Saved reports

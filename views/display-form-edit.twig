@@ -91,7 +91,7 @@
                         {{ forms.dropdown("licensed", "single", title, display.licensed, options, "licensedid", "licensed", helpText) }}
 
                         {% set title %}{% trans "Default Layout" %}{% endset %}
-                        {% set helpText %}{% trans "The Default Layout to Display where there is no other content." %}{% endset %}
+                        {% set helpText %}{% trans "The Default Layout to display where there is no other content scheduled. If left empty with no other content scheduled the splash screen will be displayed" %}{% endset %}
                         {% set attributes = [
                             { name: "data-search-url", value: urlFor("layout.search") },
                             { name: "data-search-term", value: "layout" },

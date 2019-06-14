@@ -386,12 +386,13 @@ $app->get('/report/reportschedule/view', '\Xibo\Controller\Report:displayReportS
 $app->get('/report/reportschedule/form/add', '\Xibo\Controller\Report:addReportScheduleForm')->name('reportschedule.add.form');
 $app->get('/report/reportschedule/form/edit/:id', '\Xibo\Controller\Report:editReportScheduleForm')->name('reportschedule.edit.form');
 $app->get('/report/reportschedule/form/delete/:id', '\Xibo\Controller\Report:deleteReportScheduleForm')->name('reportschedule.delete.form');
+$app->get('/report/reportschedule/form/reset/:id', '\Xibo\Controller\Report:resetReportScheduleForm')->name('reportschedule.reset.form');
 
 //
 // Saved reports
 //
 $app->get('/report/savedreport/view', '\Xibo\Controller\Report:displaySavedReportPage')->name('savedreport.view');
-$app->get('/report/savedreport/:id/report/:name/preview', '\Xibo\Controller\Report:savedReportPreview')->name('savedreport.preview');
+$app->get('/report/savedreport/:id/report/:name/open', '\Xibo\Controller\Report:savedReportOpen')->name('savedreport.open');
 $app->get('/report/savedreport/form/delete/:id', '\Xibo\Controller\Report:deleteSavedReportForm')->name('savedreport.delete.form');
 
 //

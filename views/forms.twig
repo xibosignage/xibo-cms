@@ -207,7 +207,6 @@
     </div>
 {% endmacro %}
 
-
 {% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group dateTimePicker {{ groupClass }}" data-link-combined="{{ name }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
@@ -245,3 +244,21 @@
     </div>
 {% endmacro %}
 
+{% macro switch(name, title, value, helpText, labelWidth, switchSize, onText, offText, groupClass, accessKey, disabled) %}
+    <div class="form-group {{ groupClass }}">
+        <div class="col-sm-offset-2 col-sm-10">
+            <div class="checkbox" title="{{ helpText }}">
+                <input type="checkbox" class="bootstrap-switch-target" id="{{ name }}" name="{{ name }}" accesskey="{{ accessKey }}"
+                    {% if value == 1 %}checked{% endif %} 
+                    {% if disabled == 1 %}disabled{% endif %}
+                    data-label-text="{{ title }}"
+                    {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}
+                    {% if offText not in [null, undefined, ""] %} data-off-text="{{ offText }}"{% endif %}
+                    {% if switchSize not in [null, undefined, ""] %}data-size="{{ switchSize }}"{% else %}data-size="small"{% endif %}
+                    {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
+                    >
+            </div>
+            <span class="help-block">{{ helpText }}</span>
+        </div>
+    </div>
+{% endmacro %}

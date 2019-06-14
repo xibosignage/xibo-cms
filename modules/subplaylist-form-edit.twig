@@ -96,24 +96,6 @@
                             { id: "repeat", value: repeatOption }
                         ] %}
                         {{ forms.dropdown("remainder", "single", title, module.getOption("remainder"), options, "id", "value", helpText) }}
-
-                        {% set title %}{% trans "Spots" %}{% endset %}
-                        {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used after ordering to expand or shrink the list to the specified size. Leave as 0 to use the combined length after ordering has occured." %}{% endset %}
-                        {{ forms.number("spots", title, module.getOption("spots", 0), helpText) }}
-
-                        {% set title %}{% trans "Spot Length" %}{% endset %}
-                        {% set helpText %}{% trans "Set the length of all Widgets in each Playlist to a specific value in seconds. Leave as 0 to use the Widget duration." %}{% endset %}
-                        {{ forms.number("spotLength", title, module.getOption("spotLength", 0), helpText) }}
-
-                        {% set title %}{% trans "Spot Fill" %}{% endset %}
-                        {% set helpText %}{% trans "If there are Widgets left unordered at the end, what should be done with these Widgets?" %}{% endset %}
-                        {% set fillOption %}{% trans "Fill - use the first Playlist to fill any remaining spots after ordering" %}{% endset %}
-                        {% set repeatOption %}{% trans "Repeat - repeat the resolved list after ordering" %}{% endset %}
-                        {% set options = [
-                            { id: "fill", value: fillOption },
-                            { id: "repeat", value: repeatOption }
-                        ] %}
-                        {{ forms.dropdown("spotFill", "single", title, module.getOption("spotFill", "repeat"), options, "id", "value", helpText) }}
                     </div>
                 </div>
             </form>

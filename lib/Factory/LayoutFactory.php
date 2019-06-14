@@ -749,6 +749,7 @@ class LayoutFactory extends BaseFactory
             foreach ($layout->regions as $region) {
                 if (array_key_exists($region->tempId, $layoutDetails['regions'])) {
                     $region->name = $layoutDetails['regions'][$region->tempId];
+                    $region->regionPlaylist->name = $layoutDetails['regions'][$region->tempId];
                 }
             }
         }
@@ -1007,7 +1008,7 @@ class LayoutFactory extends BaseFactory
                 // Also make sure we replace the columnId's with the columnId's in the new "existing" DataSet.
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
-                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker') {
+                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
                         $widgetDataSetId = $widget->getOptionValue('dataSetId', 0);
 
                         if ($widgetDataSetId != 0 && $widgetDataSetId == $dataSetId) {
@@ -1016,7 +1017,8 @@ class LayoutFactory extends BaseFactory
 
                             // Check for and replace column references.
                             // We are looking in the "columns" option for datasetview
-                            // and the "template" option for ticker
+                            // and the "template" option for datasetticker
+                            // and the "config" option for chart
                             if ($widget->type == 'datasetview') {
                                 // Get the columns option
                                 $columns = explode(',', $widget->getOptionValue('columns', ''));
@@ -1036,8 +1038,8 @@ class LayoutFactory extends BaseFactory
                                 $widget->setOptionValue('columns', 'attrib', $columns);
 
                                 $this->getLog()->debug('Replaced columns with %s', $columns);
-                                
-                            } else if ($widget->type == 'ticker') {
+
+                            } else if ($widget->type == 'datasetticker') {
                                 // Get the template option
                                 $template = $widget->getOptionValue('template', '');
 
@@ -1051,6 +1053,32 @@ class LayoutFactory extends BaseFactory
                                 $widget->setOptionValue('template', 'raw', $template);
 
                                 $this->getLog()->debug('Replaced columns with %s', $template);
+                            } else if ($widget->type == 'chart') {
+                                // get the config for the chart widget
+                                $oldConfig = json_decode($widget->getOptionValue('config', '[]'), true);
+                                $newConfig = [];
+                                $this->getLog()->debug('Looking to replace config from %s', json_encode($oldConfig));
+
+                                // go through the chart config and our dataSet
+                                foreach ($oldConfig as $config) {
+                                    foreach ($existingDataSet->columns as $column) {
+
+                                        // replace with this condition to avoid double replacements
+                                        if ($config['dataSetColumnId'] == $column->priorDatasetColumnId) {
+
+                                            // create our new config, with replaced dataSetColumnIds
+                                            $newConfig[] = [
+                                                'columnType' => $config['columnType'],
+                                                'dataSetColumnId' => $column->dataSetColumnId
+                                            ];
+                                        }
+                                    }
+                                }
+
+                                $this->getLog()->debug('Replaced config with %s', json_encode($newConfig));
+
+                                // json encode our newConfig and set it as config attribute in the imported chart widget.
+                                $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
                             }
                         }
                     }
@@ -1286,8 +1314,8 @@ class LayoutFactory extends BaseFactory
             $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
         }
 
-        // Retired options (default to 0 - provide -1 to return all
-        if ($this->getSanitizer()->getInt('retired', 0, $filterBy) != -1) {
+        // Retired options (provide -1 to return all)
+        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
             $body .= " AND layout.retired = :retired ";
             $params['retired'] = $this->getSanitizer()->getInt('retired', 0, $filterBy);
         }

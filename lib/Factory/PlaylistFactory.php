@@ -235,8 +235,17 @@ class PlaylistFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
-            $body .= ' AND `playlist`.requiresDurationUpdate = :requiresDurationUpdate ';
-            $params['requiresDurationUpdate'] = $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy);
+            // Either 1, or 0
+            if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) == 1) {
+                // Not 0 and behind now.
+                $body .= ' AND `playlist`.requiresDurationUpdate <= :requiresDurationUpdate ';
+                $body .= ' AND `playlist`.requiresDurationUpdate <> 0 ';
+                $params['requiresDurationUpdate'] = time();
+            } else {
+                // Ahead of now means we don't need to update yet, or we are set to 0 and we never update
+                $body .= ' AND (`playlist`.requiresDurationUpdate > :requiresDurationUpdate OR `playlist`.requiresDurationUpdate = 0)';
+                $params['requiresDurationUpdate'] = time();
+            }
         }
 
         if ($this->getSanitizer()->getInt('isDynamic', $filterBy) !== null) {
@@ -277,6 +286,18 @@ class PlaylistFactory extends BaseFactory
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
             $this->nameFilter('playlist', 'name', $terms, $body, $params);
+        }
+
+        // Playlist exact name
+        if ($this->getSanitizer()->getString('playlistExact', $filterBy) != '') {
+            $body.= " AND playlist.name = :exact ";
+            $params['exact'] = $this->getSanitizer()->getString('playlistExact', $filterBy);
+        }
+
+        // Not PlaylistId
+        if ($this->getSanitizer()->getInt('notPlaylistId', 0, $filterBy) != 0) {
+            $body .= " AND playlist.playlistId <> :notPlaylistId ";
+            $params['notPlaylistId'] = $this->getSanitizer()->getInt('notPlaylistId', 0, $filterBy);
         }
 
         // Tags
