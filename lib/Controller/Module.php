@@ -37,6 +37,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -118,6 +119,9 @@ class Module extends Base
 
     /** @var DataSetFactory */
     private $dataSetFactory;
+
+    /** @var PlayerVersionFactory  */
+    private $playerVersionFactory;
 
     /**
      * Set common dependencies.
@@ -645,6 +649,7 @@ class Module extends Base
         $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         $moduleName = $module->getName();
+        $widgetMedia = $module->widget->mediaIds;
 
         // Inject the Current User
         $module->setUser($this->getUser());
@@ -654,6 +659,20 @@ class Module extends Base
 
         // Call Widget Delete
         $module->widget->delete();
+
+         // Delete Media?
+        if ($this->getSanitizer()->getInt('deleteMedia', 0) == 1) {
+            foreach ($widgetMedia as $mediaId) {
+                $media = $this->mediaFactory->getById($mediaId);
+
+                // Check we have permissions to delete
+                if (!$this->getUser()->checkDeleteable($media))
+                    throw new AccessDeniedException();
+
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+                $media->delete();
+            }
+        }
 
         // Successful
         $this->getState()->hydrate([

@@ -274,17 +274,24 @@ $(document).ready(function() {
                 // Show time slider on agenda view and call the calendar view on slide stop event
                 if (this.options.view == 'agenda') {
                     $('.cal-event-time-bar').show();
+
+                    const $timePicker = $('#timePicker');
                     
-                    $('#timePicker').slider({
+                    $timePicker.slider({
                         value: (moment().hour() * 60) + moment().minute(),
                         tooltip: 'always',
-                        step: 5,
                         formatter: function(value) {
                             return moment().startOf("day").minute(value).format(jsTimeFormat);
                         }
                     }).off('slideStop').on('slideStop', function(ev) {
                         calendar.view();
                     });
+
+                    $('.time-picker-step-btn').off().on('click', function() {
+                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
+                        calendar.view();
+                    });
+
                 } else {
                     $('.cal-event-time-bar').hide();
                 }

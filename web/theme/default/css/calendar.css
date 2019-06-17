@@ -114,7 +114,15 @@
 }
 
 .cal-event-time-bar .slider.slider-horizontal {
-    width: 100%;
+    float: left;
+    width: calc(100% - 68px);
+    margin-top: 7px;
+}
+
+.cal-event-time-bar .slider-step-btn {
+    float: left;
+    width: 34px;
+    color: #337ab7;
 }
 
 .cal-event-time-bar .slider .tooltip.top {
