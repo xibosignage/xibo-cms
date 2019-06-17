@@ -278,7 +278,6 @@ $(document).ready(function() {
                     $('#timePicker').slider({
                         value: (moment().hour() * 60) + moment().minute(),
                         tooltip: 'always',
-                        step: 5,
                         formatter: function(value) {
                             return moment().startOf("day").minute(value).format(jsTimeFormat);
                         }
