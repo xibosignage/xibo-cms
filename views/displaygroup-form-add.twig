@@ -75,6 +75,8 @@
                 {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
                 {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
 
+                <p id="loadingValues" style="margin-left: 17%"></p>
+
                 {% set title %}{% trans "Tag value" %}{% endset %}
                 {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
 

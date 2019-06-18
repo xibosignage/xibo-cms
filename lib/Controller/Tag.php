@@ -409,6 +409,11 @@ class Tag extends Base
             throw new AccessDeniedException(__('Access denied System tags cannot be edited'));
         }
 
+        if(isset($tag->options)) {
+            $tagOptionsCurrent = implode(',', json_decode($tag->options));
+            $tagOptionsArrayCurrent = explode(',', $tagOptionsCurrent);
+        }
+
         $values = [];
 
         $tag->tag = $this->getSanitizer()->getString('name');
@@ -421,6 +426,28 @@ class Tag extends Base
                 $values[] = trim($option);
             }
             $tag->options = json_encode($values);
+        } else {
+            $tag->options = null;
+        }
+
+        // if option were changed, we need to compare the array of options before and after edit
+        if($tag->hasPropertyChanged('options')) {
+
+            if (isset($tagOptionsArrayCurrent)) {
+
+                if(isset($tag->options)) {
+                    $tagOptions = implode(',', json_decode($tag->options));
+                    $tagOptionsArray = explode(',', $tagOptions);
+                } else {
+                    $tagOptionsArray = [];
+                }
+
+                // compare array of options before and after the Tag edit was made
+                $tagValuesToRemove = array_diff($tagOptionsArrayCurrent, $tagOptionsArray);
+
+                // go through every element of the new array and set the value to null if removed value was assigned to one of the lktag tables
+                $tag->updateTagValues($tagValuesToRemove);
+            }
         }
 
         $tag->save(['validate' => true]);

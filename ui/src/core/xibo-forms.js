@@ -1145,6 +1145,9 @@ function tagsWithValues(formId) {
                 data: {
                     name: tagN,
                 },
+                beforeSend: function () {
+                    $("#loadingValues").addClass('fa fa-spinner fa-spin loading-icon')
+                },
                 success: function (response) {
                     if (response.success) {
                         tagOptions = JSON.parse(response.data.tag.options);
@@ -1169,6 +1172,9 @@ function tagsWithValues(formId) {
                             $('#tagValue').focus();
                         }
                     }
+                },
+                complete: function () {
+                    $("#loadingValues").removeClass('fa fa-spinner fa-spin loading-icon')
                 }
             });
         }

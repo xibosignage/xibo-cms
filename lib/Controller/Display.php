@@ -814,6 +814,7 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => [$playerVersions],
+            'tags' => $tags,
             'data' => [
                 'gettag' => $this->urlFor('tag.getByName'),
             ]
