@@ -420,6 +420,11 @@ function XiboInitialise(scope) {
     
     // Initialize tags input form
     $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
+
+    // Initialize tag with values function from xibo-forms.js
+    $(scope + " .tags-with-value").each(function() {
+        tagsWithValues($(this).closest("form").attr('id'));
+    });
 }
 
 /**
@@ -592,13 +597,21 @@ function dataTableCreateTags(data, type) {
     var returnData = '';
 
     if(typeof data.tags != undefined && data.tags != null ) {
+        let arrayOfValues = [];
         var arrayOfTags = data.tags.split(',');
+
+        if(typeof data.tagValues != undefined && data.tagValues != null) {
+            arrayOfValues = data.tagValues.split(',');
+        }
 
         returnData += '<div id="tagDiv">';
 
-        for (var i = 0; i < arrayOfTags.length; i++) {
-            if(arrayOfTags[i] != '')
+        for (let i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
                 returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+            } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
+                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
+            }
         }
 
         returnData += '</div>';
@@ -689,48 +702,61 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter) {
-    var colVis = new $.fn.dataTable.Buttons(table, {
-        buttons: [
-            {
-                extend: 'colvis',
-                text: function ( dt, button, config ) {
-                    return dt.i18n( 'buttons.colvis' );
-                }
-            },
-            {
-                extend: 'print',
-                text: function ( dt, button, config ) {
-                    return dt.i18n( 'buttons.print' );
+function dataTableAddButtons(table, filter, allButtons = true) {
+    if (allButtons) {
+        var colVis = new $.fn.dataTable.Buttons(table, {
+            buttons: [
+                {
+                    extend: 'colvis',
+                    text: function (dt, button, config) {
+                        return dt.i18n('buttons.colvis');
+                    }
                 },
-                exportOptions: {
-                    orthogonal: 'export',
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (data === null || data === "" || data === "null")
-                                return "";
-                            else
-                                return data;
+                {
+                    extend: 'print',
+                    text: function (dt, button, config) {
+                        return dt.i18n('buttons.print');
+                    },
+                    exportOptions: {
+                        orthogonal: 'export',
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (data === null || data === "" || data === "null")
+                                    return "";
+                                else
+                                    return data;
+                            }
+                        }
+                    }
+                },
+                {
+                    extend: 'csv',
+                    exportOptions: {
+                        orthogonal: 'export',
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (data === null || data === "")
+                                    return "";
+                                else
+                                    return data;
+                            }
                         }
                     }
                 }
-            },
-            {
-                extend: 'csv',
-                exportOptions: {
-                    orthogonal: 'export',
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (data === null || data === "")
-                                return "";
-                            else
-                                return data;
-                        }
+            ]
+        });
+    } else {
+        var colVis = new $.fn.dataTable.Buttons(table, {
+            buttons: [
+                {
+                    extend: 'colvis',
+                    text: function (dt, button, config) {
+                        return dt.i18n('buttons.colvis');
                     }
                 }
-            }
-        ]
-    });
+            ]
+        });
+    }
 
     table.buttons( 0, null ).container().prependTo(filter);
     $(".ColVis_MasterButton").addClass("btn");

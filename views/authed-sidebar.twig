@@ -103,6 +103,10 @@
             {% if currentUser.routeViewable("/task") %}
                 <li class="sidebar-list"><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
+
+            {% if currentUser.isSuperAdmin() %}
+                <li class="sidebar-list"><a href="{{ urlFor("tag.view") }}">{% trans "Tags" %}</a></li>
+            {% endif %}
         {% endif %}
 
 

@@ -140,7 +140,73 @@ class Playlist extends Base
     }
 
     /**
-     * Search
+     * Playlist Search
+     *
+     * @SWG\Get(
+     *  path="/playlist",
+     *  operationId="playlistSearch",
+     *  tags={"playlist"},
+     *  summary="Search Playlists",
+     *  description="Search for Playlists viewable by this user",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="formData",
+     *      description="Filter by Playlist Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Filter by partial Playlist name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userId",
+     *      in="formData",
+     *      description="Filter by user Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Filter by tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ownerUserGroupId",
+     *      in="formData",
+     *      description="Filter by users in this UserGroupId",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as regions, widgets, permissions, tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Playlist")
+     *      )
+     *  )
+     * )
+     * 
      */
     public function grid()
     {
@@ -447,13 +513,27 @@ class Playlist extends Base
     public function editForm($playlistId)
     {
         $playlist = $this->playlistFactory->getById($playlistId);
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $playlist->tags));
+        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
-            'playlist' => $playlist
+            'playlist' => $playlist,
+            'tags' => $tags
         ]);
     }
 

@@ -178,6 +178,15 @@ class PlaylistFactory extends BaseFactory
                 ) AS tags,
                 
                 (
+                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
+                  FROM tag 
+                    INNER JOIN lktagplaylist 
+                    ON lktagplaylist.tagId = tag.tagId 
+                 WHERE lktagplaylist.playlistId = playlist.playlistId 
+                GROUP BY lktagplaylist.playlistId
+                ) AS tagValues,
+                
+                (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
                     INNER JOIN `permissionentity`
@@ -313,22 +322,9 @@ class PlaylistFactory extends BaseFactory
                     INNER JOIN lktagplaylist
                     ON lktagplaylist.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 

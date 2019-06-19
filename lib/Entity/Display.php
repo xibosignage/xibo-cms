@@ -310,6 +310,7 @@ class Display implements \JsonSerializable
      * @var Tag[]
      */
     public $tags;
+    public $tagValues;
 
     /**
      * @SWG\Property(description="The configuration options that will overwrite Display Profile Config")

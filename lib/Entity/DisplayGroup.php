@@ -103,6 +103,7 @@ class DisplayGroup implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
+    public $tagValues;
 
     /**
      * @SWG\Property(description="The display bandwidth limit")
@@ -484,6 +485,7 @@ class DisplayGroup implements \JsonSerializable
      * Assign Tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
      */
     public function assignTag($tag)
     {
@@ -499,14 +501,20 @@ class DisplayGroup implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
      */
     public function unassignTag($tag)
     {
+        $this->load();
         $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
             return $a->tagId - $b->tagId;
         });
+
+        $this->unassignTags[] = $tag;
+
+        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
         return $this;
     }

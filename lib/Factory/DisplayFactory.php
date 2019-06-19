@@ -230,6 +230,17 @@ class DisplayFactory extends BaseFactory
                   GROUP BY lktagdisplaygroup.displayGroupId
                 ) AS tags
             ';
+
+            $select .= ", 
+                (
+                  SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) 
+                    FROM tag 
+                      INNER JOIN lktagdisplaygroup 
+                      ON lktagdisplaygroup.tagId = tag.tagId 
+                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                  GROUP BY lktagdisplaygroup.displayGroupId
+                ) AS tagValues
+            ";
         }
 
         $body = '
@@ -414,22 +425,9 @@ class DisplayFactory extends BaseFactory
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 

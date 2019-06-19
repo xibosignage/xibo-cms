@@ -1818,7 +1818,7 @@ class Soap
                 && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
 
                 $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
-                $body = sprintf(__("Display %s with ID %d is now back online."), $this->display->display, $this->display->displayId);
+                $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId, $this->getDate()->parse());
 
                 // Create a notification assigned to system wide user groups
                 try {

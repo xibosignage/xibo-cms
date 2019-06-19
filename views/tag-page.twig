@@ -1,0 +1,156 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Tag" %}" href="{{ urlFor("tag.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Tag" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Tags" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="tagView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "ID" %}{% endset %}
+                            {{ inline.number("tagId", title) }}
+
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("tag", title) }}
+
+                            {% set title %}{% trans "Show System tags?" %}{% endset %}
+                            {{ inline.checkbox("isSystem", title, 0) }}
+
+                            {% set title %}{% trans "Show only tags with options?" %}{% endset %}
+                            {{ inline.checkbox("haveOptions", title, 0) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="tags" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "isRequired" %}</th>
+                            <th>{% trans "Options" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        let table = $("#tags").DataTable({ "language": dataTablesLanguage,
+            serverSide: true, stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                let data = {};
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=tagsGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        if (json.success)
+                            data = JSON.parse(json.data.value);
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "tagsGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            "order": [[ 1, "desc"]],
+            ajax: {
+                "url": "{{ urlFor("tag.search") }}",
+                "data": function(d) {
+                    $.extend(d, $("#tags").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { "data": "tagId", "width": "70px" },
+                { "data": "tag" },
+                {
+                    "data": "isRequired",
+                    "width": "70px",
+                    "render": function (data, type, row) {
+                        if (type != "display") {
+                            return data;
+                        }
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-check";
+                        else if (data == 0)
+                            icon = "fa-times";
+
+                        return "<span class='fa " + icon  + "'></span>";
+                    }
+                },
+                { "data": "options",
+                    "render": function (data, type, row) {
+
+                        if (type != "display") {
+                            return data;
+                        }
+
+                        return JSON.parse(data);
+                    }
+                },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#tags_wrapper').find('.col-sm-6').eq(1), false);
+    </script>
+{% endblock %}

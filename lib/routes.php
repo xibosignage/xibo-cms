@@ -529,3 +529,18 @@ $app->get('/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSsspInstall')-
 $app->get('/sssp_dl.wgt', '\Xibo\Controller\PlayerSoftware:getSsspInstallDownload')->name('playersoftware.sssp.install.download');
 $app->get('/playersoftware/:nonce/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSssp')->name('playersoftware.sssp');
 $app->get('/playersoftware/:nonce/sssp_dl.wgt', '\Xibo\Controller\PlayerSoftware:getVersionFile')->name('playersoftware.version.file');
+
+
+/**
+ * Tags
+ * @SWG\Tag(
+ *  name="tags",
+ *  description="Tags"
+ * )
+ */
+$app->get('/tag', '\Xibo\Controller\Tag:grid')->name('tag.search');
+$app->post('/tag', '\Xibo\Controller\Tag:add')->name('tag.add');
+$app->put('/tag/:id', '\Xibo\Controller\Tag:edit')->name('tag.edit');
+$app->delete('/tag/:id', '\Xibo\Controller\Tag:delete')->name('tag.delete');
+$app->get('/tag/name', '\Xibo\Controller\Tag:loadTagOptions')->name('tag.getByName');
+

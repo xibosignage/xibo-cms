@@ -358,10 +358,25 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
+        $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => $this->getHelp()->link('DisplayGroup', 'Edit')
+            'help' => $this->getHelp()->link('DisplayGroup', 'Edit'),
+            'tags' => $tags
         ]);
     }
 

@@ -48,7 +48,7 @@
                 <li><a href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}">
+            <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
@@ -71,7 +71,16 @@
 
                         {% set title %}{% trans "Tags" %}{% endset %}
                         {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
-                        {{ forms.inputWithTags("tags", title, display.tags, helpText) }}
+                        {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+
+                        <p id="loadingValues" style="margin-left: 17%"></p>
+
+                        {% set title %}{% trans "Tag value" %}{% endset %}
+                        {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                        <div id="tagValueRequired" class="alert alert-info">
+                            <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                        </div>
 
                         {% set title %}{% trans "Authorise display?" %}{% endset %}
                         {% set helpText %}{% trans "Use one of the available slots for this display?" %}{% endset %}
