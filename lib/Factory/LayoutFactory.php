@@ -861,7 +861,7 @@ class LayoutFactory extends BaseFactory
                 // Also make sure we replace the columnId's with the columnId's in the new "existing" DataSet.
                 foreach ($widgets as $widget) {
                     /* @var Widget $widget */
-                    if ($widget->type == 'datasetview' || $widget->type == 'ticker') {
+                    if ($widget->type == 'datasetview' || $widget->type == 'ticker' || $widget->type == 'chart') {
                         $widgetDataSetId = $widget->getOptionValue('dataSetId', 0);
 
                         if ($widgetDataSetId != 0 && $widgetDataSetId == $dataSetId) {
@@ -871,6 +871,7 @@ class LayoutFactory extends BaseFactory
                             // Check for and replace column references.
                             // We are looking in the "columns" option for datasetview
                             // and the "template" option for ticker
+                            // and the "config" option for chart
                             if ($widget->type == 'datasetview') {
                                 // Get the columns option
                                 $columns = explode(',', $widget->getOptionValue('columns', ''));
@@ -905,6 +906,32 @@ class LayoutFactory extends BaseFactory
                                 $widget->setOptionValue('template', 'raw', $template);
 
                                 $this->getLog()->debug('Replaced columns with %s', $template);
+                            } else if ($widget->type == 'chart') {
+                                // get the config for the chart widget
+                                $oldConfig = json_decode($widget->getOptionValue('config', '[]'), true);
+                                $newConfig = [];
+                                $this->getLog()->debug('Looking to replace config from %s', json_encode($oldConfig));
+
+                                // go through the chart config and our dataSet
+                                foreach ($oldConfig as $config) {
+                                    foreach ($existingDataSet->columns as $column) {
+
+                                        // replace with this condition to avoid double replacements
+                                        if ($config['dataSetColumnId'] == $column->priorDatasetColumnId) {
+
+                                            // create our new config, with replaced dataSetColumnIds
+                                            $newConfig[] = [
+                                                'columnType' => $config['columnType'],
+                                                'dataSetColumnId' => $column->dataSetColumnId
+                                            ];
+                                        }
+                                    }
+                                }
+
+                                $this->getLog()->debug('Replaced config with %s', json_encode($newConfig));
+
+                                // json encode our newConfig and set it as config attribute in the imported chart widget.
+                                $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
                             }
                         }
                     }
@@ -1176,9 +1203,9 @@ class LayoutFactory extends BaseFactory
         // Exclude templates by default
         if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
             if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
-                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+                $body .= " AND layout.layoutID NOT IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
             } else {
-                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout WHERE tagId = 1) ";
+                $body .= " AND layout.layoutID IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template') ";
             }
         }
 
