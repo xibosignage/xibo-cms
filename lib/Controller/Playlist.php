@@ -352,11 +352,6 @@ class Playlist extends Base
     public function addForm()
     {
         $this->getState()->template = 'playlist-form-add';
-        $this->getState()->setData([
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
-        ]);
     }
 
     /**
@@ -538,10 +533,7 @@ class Playlist extends Base
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'tags' => $tags,
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'tags' => $tags
         ]);
     }
 

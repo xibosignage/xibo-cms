@@ -786,50 +786,36 @@ class Tag implements \JsonSerializable
         foreach ($values as $value) {
             $this->getLog()->debug('removing following value from lktag tables ' . $value);
 
-            if ($this->getStore()->exists('SELECT * FROM `lktagcampaign` INNER JOIN `tag` on lktagcampaign.tagId = tag.tagId WHERE `tag` = :tag AND value = :value', ['value' => $value, 'tag' => $this->tag])) {
+            $this->getStore()->update('UPDATE `lktagcampaign` SET `value` = null WHERE tagId = :tagId AND value = :value',
+                [
+                    'value' => $value,
+                    'tagId' => $this->tagId
+                ]);
 
-                $this->getStore()->update('UPDATE `lktagcampaign` SET `value` = null WHERE tagId = :tagId AND value = :value',
-                    [
-                        'value' => $value,
-                        'tagId' => $this->tagId
-                    ]);
-            }
+            $this->getStore()->update('UPDATE `lktagdisplaygroup` SET `value` = null WHERE tagId = :tagId AND value = :value',
+                [
+                    'value' => $value,
+                    'tagId' => $this->tagId
+                ]);
 
-            if ($this->getStore()->exists('SELECT * FROM `lktagdisplaygroup` INNER JOIN `tag` on lktagdisplaygroup.tagId = tag.tagId WHERE `tag` = :tag AND value = :value', ['value' => $value, 'tag' => $this->tag])) {
+            $this->getStore()->update('UPDATE `lktaglayout` SET `value` = null WHERE tagId = :tagId AND value = :value',
+                [
+                    'value' => $value,
+                    'tagId' => $this->tagId
+                ]);
 
-                $this->getStore()->update('UPDATE `lktagdisplaygroup` SET `value` = null WHERE tagId = :tagId AND value = :value',
-                    [
-                        'value' => $value,
-                        'tagId' => $this->tagId
-                    ]);
-            }
+            $this->getStore()->update('UPDATE `lktagmedia` SET `value` = null WHERE tagId = :tagId AND value = :value',
+                [
+                    'value' => $value,
+                    'tagId' => $this->tagId
+                ]);
 
-            if ($this->getStore()->exists('SELECT * FROM `lktaglayout` INNER JOIN `tag` on lktaglayout.tagId = tag.tagId WHERE `tag` = :tag AND value = :value', ['value' => $value, 'tag' => $this->tag])) {
+            $this->getStore()->update('UPDATE `lktagplaylist` SET `value` = null WHERE tagId = :tagId AND value = :value',
+                [
+                    'value' => $value,
+                    'tagId' => $this->tagId
+                ]);
 
-                $this->getStore()->update('UPDATE `lktaglayout` SET `value` = null WHERE tagId = :tagId AND value = :value',
-                    [
-                        'value' => $value,
-                        'tagId' => $this->tagId
-                    ]);
-            }
-
-            if ($this->getStore()->exists('SELECT * FROM `lktagmedia` INNER JOIN `tag` on lktagmedia.tagId = tag.tagId WHERE `tag` = :tag AND value = :value', ['value' => $value, 'tag' => $this->tag])) {
-
-                $this->getStore()->update('UPDATE `lktagmedia` SET `value` = null WHERE tagId = :tagId AND value = :value',
-                    [
-                        'value' => $value,
-                        'tagId' => $this->tagId
-                    ]);
-            }
-
-            if ($this->getStore()->exists('SELECT * FROM `lktagplaylist` INNER JOIN `tag` on lktagplaylist.tagId = tag.tagId WHERE `tag` = :tag AND value = :value', ['value' => $value, 'tag' => $this->tag])) {
-
-                $this->getStore()->update('UPDATE `lktagplaylist` SET `value` = null WHERE tagId = :tagId AND value = :value',
-                    [
-                        'value' => $value,
-                        'tagId' => $this->tagId
-                    ]);
-            }
         }
     }
 }

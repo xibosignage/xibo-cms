@@ -459,9 +459,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getByTag($tag)
     {
-        $layouts = $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1]);
-
-        return $layouts;
+        return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1]);
     }
 
     /**

@@ -25,7 +25,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ data.gettag }}">
+            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, campaign.campaign, helpText) }}

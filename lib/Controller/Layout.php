@@ -1271,10 +1271,7 @@ class Layout extends Base
         $this->getState()->setData([
             'layouts' => $this->layoutFactory->query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
             'resolutions' => $this->resolutionFactory->query(['resolution']),
-            'help' => $this->getHelp()->link('Layout', 'Add'),
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
     }
 
@@ -1310,10 +1307,7 @@ class Layout extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'tags' => $tags,
-            'help' => $this->getHelp()->link('Layout', 'Edit'),
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
     }
 

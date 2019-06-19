@@ -25,7 +25,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ data.gettag }}">
+            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% if media.mediaType != "font" %}
 
                     {% set title %}{% trans "Name" %}{% endset %}

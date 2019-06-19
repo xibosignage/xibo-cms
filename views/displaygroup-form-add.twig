@@ -62,7 +62,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.add") }}" data-gettag="{{ data.gettag }}">
+            <form id="displayGroupAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.add") }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
                 {{ forms.input("displayGroup", title, "", helpText) }}

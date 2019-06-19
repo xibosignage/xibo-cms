@@ -267,10 +267,7 @@ class Campaign extends Base
         $this->getState()->template = 'campaign-form-add';
         $this->getState()->setData([
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Add'),
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'help' => $this->getHelp()->link('Campaign', 'Add')
         ]);
     }
 
@@ -371,10 +368,7 @@ class Campaign extends Base
             'campaign' => $campaign,
             'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Edit'),
-            'tags' => $tags,
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'tags' => $tags
         ]);
     }
 

@@ -48,7 +48,7 @@
                 <li><a href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}" data-gettag="{{ data.gettag }}">
+            <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 

@@ -134,7 +134,7 @@ class TagFactory extends BaseFactory
     {
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` WHERE tag.tag = :tag';
 
-        $tags = $this->getStore()->select($sql, array('tag' => $tagName));
+        $tags = $this->getStore()->select($sql, ['tag' => $tagName]);
 
         if (count($tags) <= 0) {
             throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));

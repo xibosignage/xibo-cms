@@ -824,8 +824,7 @@ class Library extends Base
             'image_versions' => array(),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
-            'gettag' => $this->urlFor('tag.getByName'),
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
         );
 
         // Output handled by UploadHandler
@@ -867,10 +866,7 @@ class Library extends Base
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $tags,
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'tags' => $tags
         ]);
     }
 

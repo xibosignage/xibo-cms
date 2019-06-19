@@ -1117,9 +1117,7 @@ function userProfileEditFormOpen() {
 }
 
 function tagsWithValues(formId) {
-    $("#tagValue").addClass("hidden");
-    $('label[for="tagValue"]').addClass("hidden");
-    $('#tagValueRequired').addClass('hidden');
+    $('#tagValue, label[for="tagValue"], #tagValueRequired').addClass("hidden");
 
     let tag;
     let tagWithOption = '';
@@ -1149,13 +1147,13 @@ function tagsWithValues(formId) {
                     $("#loadingValues").addClass('fa fa-spinner fa-spin loading-icon')
                 },
                 success: function (response) {
-                    if (response.success) {
+
+                    if (response.success && response.data.tag != null) {
                         tagOptions = JSON.parse(response.data.tag.options);
                         tagIsRequired = response.data.tag.isRequired;
 
                         if (tagOptions != null && tagOptions != []) {
-                            $("#tagValue").removeClass("hidden");
-                            $('label[for="tagValue"]').removeClass("hidden");
+                            $('#tagValue, label[for="tagValue"]').removeClass("hidden");
 
                             $('#tagValue')
                                 .append($("<option></option>")
@@ -1175,6 +1173,9 @@ function tagsWithValues(formId) {
                 },
                 complete: function () {
                     $("#loadingValues").removeClass('fa fa-spinner fa-spin loading-icon')
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error(jqXHR, textStatus, errorThrown);
                 }
             });
         }
@@ -1189,16 +1190,13 @@ function tagsWithValues(formId) {
     $(formSelector).on('itemRemoved', function(event) {
 
         if(tagN === event.item) {
-            $('#tagValueRequired').addClass('hidden');
+            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
             $('.save-button').prop('disabled', false);
-            $('#tagValue').html('');
-            $("#tagValue").addClass("hidden");
-            $('label[for="tagValue"]').addClass("hidden");
+            $('#tagValue').html('').addClass("hidden");
         } else if ($(".save-button").is(":disabled")) {
             // do nothing with jQuery
         } else {
-            $('#tagValue').html('');
-            $("#tagValue").addClass("hidden");
+            $('#tagValue').html('').addClass("hidden");
             $('label[for="tagValue"]').addClass("hidden");
         }
     });
@@ -1210,10 +1208,8 @@ function tagsWithValues(formId) {
         if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
             $(formSelector).tagsinput('add', tagWithOption);
             $(formSelector).tagsinput('remove', tagN);
-            $('#tagValue').html('');
-            $("#tagValue").addClass("hidden");
-            $('label[for="tagValue"]').addClass("hidden");
-            $('#tagValueRequired').addClass('hidden');
+            $('#tagValue').html('').addClass("hidden");
+            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
             $('.save-button').prop('disabled', false);
         } else {
             $('#tagValueRequired').removeClass('hidden');
@@ -1227,8 +1223,7 @@ function tagsWithValues(formId) {
             $('#tagValue').focus();
             $('.save-button').prop('disabled', true);
         } else {
-            $('#tagValue').html('');
-            $("#tagValue").addClass("hidden");
+            $('#tagValue').html('').addClass("hidden");
             $('label[for="tagValue"]').addClass("hidden");
         }
     });

@@ -562,11 +562,12 @@ class Tag extends Base
         try {
             $tag = $this->tagFactory->getByTag($tagName);
         } catch (NotFoundException $e) {
-            throw new NotFoundException(sprintf(__('Unable to find Tag %s'), $tagName));
+            // User provided new tag, which is fine
+            $tag = null;
         }
 
         $this->getState()->setData([
-            'tag' => $tag
+            'tag' => ($tag === null) ? null : $tag
         ]);
     }
 }

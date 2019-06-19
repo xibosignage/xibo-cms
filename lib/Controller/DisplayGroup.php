@@ -343,10 +343,7 @@ class DisplayGroup extends Base
     {
         $this->getState()->template = 'displaygroup-form-add';
         $this->getState()->setData([
-            'help' => $this->getHelp()->link('DisplayGroup', 'Add'),
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'help' => $this->getHelp()->link('DisplayGroup', 'Add')
         ]);
     }
 
@@ -379,10 +376,7 @@ class DisplayGroup extends Base
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'help' => $this->getHelp()->link('DisplayGroup', 'Edit'),
-            'tags' => $tags,
-            'data' => [
-                'gettag' => $this->urlFor('tag.getByName'),
-            ]
+            'tags' => $tags
         ]);
     }
 

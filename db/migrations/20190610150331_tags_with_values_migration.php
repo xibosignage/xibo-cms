@@ -40,11 +40,7 @@ class TagsWithValuesMigration extends AbstractMigration
         }
 
         // set isSystem flag on these tags
-        $systemTags = ["template", "background", "thumbnail", "imported"];
-
-        foreach ($systemTags as $systemTag) {
-            $this->execute('UPDATE `tag` SET `isSystem` = 1 WHERE \'' . $systemTag . '\';');
-        }
+        $this->execute('UPDATE `tag` SET `isSystem` = 1 WHERE tag IN (\'template\', \'background\', \'thumbnail\', \'imported\')');
 
         // add value column to lktag tables
         $lktagTables = ["lktagcampaign", "lktagdisplaygroup", "lktaglayout", "lktagmedia", "lktagplaylist"];

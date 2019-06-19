@@ -156,9 +156,7 @@ class DisplayGroupFactory extends BaseFactory
      */
     public function getByTag($tag)
     {
-        $displayGroups = $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1, 'isDisplaySpecific' => 1]);
-
-        return $displayGroups;
+        return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1, 'isDisplaySpecific' => 1]);
     }
 
     /**
