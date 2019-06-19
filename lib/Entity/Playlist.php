@@ -284,17 +284,20 @@ class Playlist implements \JsonSerializable
      */
     public function validate()
     {
-        // check for duplicates
-        $duplicates = $this->playlistFactory->query(null, [
-            'userId' => $this->ownerId,
-            'playlistExact' => $this->name,
-            'regionSpecific' => 0,
-            'disableUserCheck' => 1,
-            'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
-        ]);
+        // check for duplicates,
+        // we check for empty playlist name due to layouts existing in the CMS before upgrade to v2
+        if ($this->name != '') {
+            $duplicates = $this->playlistFactory->query(null, [
+                'userId' => $this->ownerId,
+                'playlistExact' => $this->name,
+                'regionSpecific' => 0,
+                'disableUserCheck' => 1,
+                'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
+            ]);
 
-        if (count($duplicates) > 0) {
-            throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+            if (count($duplicates) > 0) {
+                throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+            }
         }
     }
 

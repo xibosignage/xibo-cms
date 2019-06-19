@@ -24,7 +24,9 @@ use Xibo\Entity\Display;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -96,6 +98,11 @@ class DisplayGroup extends Base
     private $tagFactory;
 
     /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -113,8 +120,9 @@ class DisplayGroup extends Base
      * @param CommandFactory $commandFactory
      * @param ScheduleFactory $scheduleFactory
      * @param TagFactory $tagFactory
+     * @param CampaignFactory $campaignFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -127,6 +135,7 @@ class DisplayGroup extends Base
         $this->commandFactory = $commandFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->tagFactory = $tagFactory;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /**
@@ -1412,7 +1421,7 @@ class DisplayGroup extends Base
      *  operationId="displayGroupActionChangeLayout",
      *  tags={"displayGroup"},
      *  summary="Action: Change Layout",
-     *  description="Send the change layout action to this DisplayGroup",
+     *  description="Send the change layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
      *  @SWG\Parameter(
      *      name="displayGroupId",
      *      in="path",
@@ -1426,6 +1435,13 @@ class DisplayGroup extends Base
      *      description="The Layout Id",
      *      type="integer",
      *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="The layout specific Campaign Id",
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
@@ -1460,24 +1476,46 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        // Get the layoutId
+        // Get the layoutId or campaignId
         $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $campaignId = $this->getSanitizer()->getInt('campaignId');
         $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
 
-        if ($layoutId == 0)
-            throw new \InvalidArgumentException(__('Please provide a Layout'));
+        if ($layoutId == 0 && $campaignId == 0) {
+            throw new InvalidArgumentException(__('Please provide a Layout ID or Campaign ID'), 'layoutId');
+        }
 
         // Check that this user has permissions to see this layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        if ($layoutId != 0 && $campaignId == 0) {
+            $layout = $this->layoutFactory->getById($layoutId);
+        } elseif ($layoutId == 0 && $campaignId != 0) {
+            $campaign = $this->campaignFactory->getById($campaignId);
 
-        if (!$this->getUser()->checkViewable($layout))
+            if ($campaign->isLayoutSpecific == 0) {
+                throw new NotFoundException(__('Please provide Layout specific campaign ID'));
+            }
+
+            $layouts = $this->layoutFactory->getByCampaignId($campaignId);
+
+            if (count($layouts) <= 0) {
+                throw new NotFoundException(__('Cannot find layout by campaignId'));
+            }
+
+            $layout = $layouts[0];
+        } else {
+            throw new InvalidArgumentException(__('Please provide Layout id or Campaign id'), 'layoutId');
+        }
+
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Check to see if this layout is assigned to this display group.
-        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
             // Assign
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->load();
@@ -1502,7 +1540,7 @@ class DisplayGroup extends Base
 
         // Create and send the player action
         $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
-            $layoutId,
+            $layout->layoutId,
             $this->getSanitizer()->getInt('duration'),
             $downloadRequired,
             $this->getSanitizer()->getString('changeMode', 'queue')
@@ -1568,7 +1606,7 @@ class DisplayGroup extends Base
      *  operationId="displayGroupActionOverlayLayout",
      *  tags={"displayGroup"},
      *  summary="Action: Overlay Layout",
-     *  description="Send the overlay layout action to this DisplayGroup",
+     *  description="Send the overlay layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
      *  @SWG\Parameter(
      *      name="displayGroupId",
      *      in="path",
@@ -1582,6 +1620,13 @@ class DisplayGroup extends Base
      *      description="The Layout Id",
      *      type="integer",
      *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="The layout specific Campaign Id",
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
@@ -1609,24 +1654,46 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Get the layoutId
         $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $campaignId = $this->getSanitizer()->getInt('campaignId');
         $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
 
-        if ($layoutId == 0)
-            throw new \InvalidArgumentException(__('Please provide a Layout'));
+        if ($layoutId == 0 && $campaignId == 0) {
+            throw new \InvalidArgumentException(__('Please provide a Layout ID or Campaign ID'));
+        }
 
         // Check that this user has permissions to see this layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        if ($layoutId != 0 && $campaignId == 0) {
+            $layout = $this->layoutFactory->getById($layoutId);
+        } elseif ($layoutId == 0 && $campaignId != 0) {
+            $campaign = $this->campaignFactory->getById($campaignId);
 
-        if (!$this->getUser()->checkViewable($layout))
+            if ($campaign->isLayoutSpecific == 0) {
+                throw new NotFoundException(__('Please provide Layout specific campaign ID'));
+            }
+
+            $layouts = $this->layoutFactory->getByCampaignId($campaignId);
+
+            if (count($layouts) <= 0) {
+                throw new NotFoundException(__('Cannot find layout by campaignId'));
+            }
+
+            $layout = $layouts[0];
+        } else {
+            throw new InvalidArgumentException(__('Please provide Layout id or Campaign id'), 'layoutId');
+        }
+
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Check to see if this layout is assigned to this display group.
-        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
             // Assign
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->load();
@@ -1647,7 +1714,7 @@ class DisplayGroup extends Base
         }
 
         $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new OverlayLayoutAction())->setLayoutDetails(
-            $layoutId,
+            $layout->layoutId,
             $this->getSanitizer()->getInt('duration'),
             $downloadRequired
         ));
