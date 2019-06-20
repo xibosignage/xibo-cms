@@ -43,7 +43,7 @@ class DisplayTableDatabaseSchemaAdjustmentsMigration extends AbstractMigration
             SELECT * FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS WHERE constraint_schema=DATABASE()
                 AND `table_name` = \'display\' AND referenced_table_name = \'displayprofile\';')) {
 
-            $this->execute('DELETE FROM `display` WHERE NOT EXISTS (SELECT displayProfileId FROM `displayprofile` WHERE `displayprofile`.displayProfileId = `display`.displayProfileId) ');
+            $this->execute('UPDATE `display` SET displayProfileId = NULL WHERE NOT EXISTS (SELECT displayProfileId FROM `displayprofile` WHERE `displayprofile`.displayProfileId = `display`.displayProfileId)');
 
             // Add the constraint
             $this->execute('ALTER TABLE `display` ADD CONSTRAINT `display_ibfk_1` FOREIGN KEY (`displayProfileId`) REFERENCES `displayprofile` (`displayProfileId`);');
