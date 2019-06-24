@@ -1188,7 +1188,7 @@ class Playlist extends Base
      *  summary="Enable Stats Collection",
      *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
      *  @SWG\Parameter(
-     *      name="playlist",
+     *      name="playlistId",
      *      in="path",
      *      description="The Playlist ID",
      *      type="integer",
