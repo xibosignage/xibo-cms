@@ -45,6 +45,14 @@
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
                             {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
 
+                            {% set summaryReport %}{% trans "Summary Report" %}{% endset %}
+                            {% set options = [
+                                { id: "", value: ""},
+                                { id: "summaryReport", value: summaryReport },
+                            ] %}
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {{ inline.dropdown("reportName", "single", title, "", options, "id", "value") }}
+
                             {% set title %}{% trans "Only my reports?" %}{% endset %}
                             {{ inline.checkbox("onlyMyReport", title, 1) }}
                         </form>
@@ -56,6 +64,7 @@
                         <tr>
                             <th>{% trans "Report Schedule" %}</th>
                             <th>{% trans "Saved as" %}</th>
+                            <th>{% trans "Report Type" %}</th>
                             <th>{% trans "Generated on" %}</th>
                             <th>{% trans "Owner" %}</th>
                             <th></th>
@@ -118,6 +127,7 @@
             "columns": [
                 { "data": "reportScheduleName"},
                 { "data": "saveAs"},
+                { "data": "reportName", "visible": false},
                 {
                     "data": "generatedOn",
                     "render": dataTableDateFromUnix
@@ -133,5 +143,16 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#savedreports_wrapper').find('.col-sm-6').eq(1));
+
+        $(document).ready(function() {
+            let url_string = window.location.href;
+            let url = new URL(url_string);
+            let reportName = url.searchParams.get("reportName");
+
+            if (reportName !== undefined && reportName != null) {
+                $('#reportName').val(reportName);
+                table.ajax.reload();
+            }
+        })
     </script>
 {% endblock %}
