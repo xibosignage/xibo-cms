@@ -42,44 +42,54 @@ class StatsArchiveTask implements TaskInterface
     /** @inheritdoc */
     public function run()
     {
-        // Archive tasks by week.
-        $periodSizeInDays = $this->getOption('periodSizeInDays', 7);
-        $maxPeriods = $this->getOption('maxPeriods', 4);
-        $periodsToKeep = $this->getOption('periodsToKeep', 1);
-        $this->setArchiveOwner();
+        $this->archiveStats();
+        $this->tidyStats();
+    }
 
+    public function archiveStats()
+    {
         $this->runMessage = '# ' . __('Stats Archive') . PHP_EOL . PHP_EOL;
 
-        // Get the earliest
-        $earliestDate = $this->timeSeriesStore->getEarliestDate();
+        if ($this->getOption('archiveStats', "Off") == "On") {
+            // Archive tasks by week.
+            $periodSizeInDays = $this->getOption('periodSizeInDays', 7);
+            $maxPeriods = $this->getOption('maxPeriods', 4);
+            $periodsToKeep = $this->getOption('periodsToKeep', 1);
+            $this->setArchiveOwner();
 
-        if (count($earliestDate) <= 0) {
-            $this->runMessage = __('Nothing to archive');
-            return;
+            // Get the earliest
+            $earliestDate = $this->timeSeriesStore->getEarliestDate();
+
+            if (count($earliestDate) <= 0) {
+                $this->runMessage = __('Nothing to archive');
+                return;
+            }
+
+            /** @var Date $earliestDate */
+            $earliestDate = $this->date->parse($earliestDate[0]['minDate'], 'U')->setTime(0, 0, 0);
+
+            // Take the earliest date and roll forward until the current time
+            /** @var Date $now */
+            $now = $this->date->parse()->subDay($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
+            $i = 0;
+
+            while ($earliestDate < $now && $i < $maxPeriods) {
+                $i++;
+
+                $this->log->debug('Running archive number ' . $i);
+
+                // Push forward
+                $fromDt = $earliestDate->copy();
+                $earliestDate->addDays($periodSizeInDays);
+
+                $this->exportStatsToLibrary($fromDt, $earliestDate);
+                $this->store->commitIfNecessary();
+            }
+
+            $this->runMessage .= ' - ' . __('Done') . PHP_EOL . PHP_EOL;
+        } else {
+            $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
         }
-
-        /** @var Date $earliestDate */
-        $earliestDate = $this->date->parse($earliestDate[0]['minDate'], 'U')->setTime(0, 0, 0);
-
-        // Take the earliest date and roll forward until the current time
-        /** @var Date $now */
-        $now = $this->date->parse()->subDay($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
-        $i = 0;
-
-        while ($earliestDate < $now && $i < $maxPeriods) {
-            $i++;
-
-            $this->log->debug('Running archive number ' . $i);
-
-            // Push forward
-            $fromDt = $earliestDate->copy();
-            $earliestDate->addDays($periodSizeInDays);
-
-            $this->exportStatsToLibrary($fromDt, $earliestDate);
-            $this->store->commitIfNecessary();
-        }
-
-        $this->runMessage .= __('Done') . PHP_EOL . PHP_EOL;
     }
 
     /**
@@ -175,6 +185,40 @@ class StatsArchiveTask implements TaskInterface
             } catch (NotFoundException $e) {
                 throw new TaskRunException(__('Archive Owner not found'));
             }
+        }
+    }
+
+    /**
+     * Tidy Stats
+     */
+    private function tidyStats()
+    {
+        $this->runMessage .= '## ' . __('Tidy Stats') . PHP_EOL;
+
+        if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
+
+            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE'))));
+
+            $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
+
+            $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
+
+            $options = [
+                'maxAttempts' => $maxAttempts,
+                'statsDeleteSleep' => $statsDeleteSleep,
+                'limit' => 10000
+            ];
+
+            try {
+                $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
+                if ($result > 0) {
+                    $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
+                }
+            } catch (\RuntimeException $exception) {
+                $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
+            }
+        } else {
+            $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
         }
     }
 }
