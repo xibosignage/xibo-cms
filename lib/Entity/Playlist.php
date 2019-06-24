@@ -30,6 +30,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -117,6 +118,14 @@ class Playlist implements \JsonSerializable
     public $requiresDurationUpdate;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The option to enable the collection of Playlist Proof of Play statistics"
+     * )
+     */
+    public $enableStat;
+
+    /**
      * @SWG\Property(description="An array of Tags")
      * @var Tag[]
      */
@@ -150,6 +159,11 @@ class Playlist implements \JsonSerializable
 
     //<editor-fold desc="Factories and Dependencies">
     /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
      * @var DateServiceInterface
      */
     private $dateService;
@@ -182,16 +196,18 @@ class Playlist implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
+        $this->config = $config;
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
@@ -655,8 +671,8 @@ class Playlist implements \JsonSerializable
         $time = date('Y-m-d H:i:s');
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -667,7 +683,8 @@ class Playlist implements \JsonSerializable
             'filterMediaTags' => $this->filterMediaTags,
             'createdDt' => $time,
             'modifiedDt' => $time,
-            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate
+            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
+            'enableStat' => $this->enableStat
         ));
 
         // Insert my self link
@@ -693,7 +710,8 @@ class Playlist implements \JsonSerializable
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
-                `requiresDurationUpdate` = :requiresDurationUpdate
+                `requiresDurationUpdate` = :requiresDurationUpdate,
+                `enableStat` = :enableStat
              WHERE `playlistId` = :playlistId
         ';
 
@@ -706,7 +724,8 @@ class Playlist implements \JsonSerializable
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
             'modifiedDt' => date('Y-m-d H:i:s'),
-            'requiresDurationUpdate' => $this->requiresDurationUpdate
+            'requiresDurationUpdate' => $this->requiresDurationUpdate,
+            'enableStat' => $this->enableStat
         ));
     }
 
@@ -771,6 +790,9 @@ class Playlist implements \JsonSerializable
             } else {
                 /** @var SubPlaylist $module */
                 $module = $this->moduleFactory->createWithWidget($widget);
+                // Check all widgets assigned to subplaylist, adjust the enableStat option if it is set to Inherit on a widget - this is recursive function, as we need to cover nested subplaylists as well.
+                $this->checkSubplaylistEnableStat($module);
+
                 $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
             }
         }
@@ -880,5 +902,43 @@ class Playlist implements \JsonSerializable
             'newParentId' => $newParentId,
             'parentId' => $this->playlistId
         ]);
+    }
+
+    /**
+     * Check Subplaylist and widget enableStat, adjust widget enableStat option when it is set to Inherit
+     * @param SubPlaylist $widget
+     * @throws NotFoundException
+     */
+    private function checkSubplaylistEnableStat($widget)
+    {
+        $playlistIds = $widget->getAssignedPlaylistIds();
+
+        foreach ($playlistIds as $playlistId) {
+            /** @var $playlist Playlist */
+            $playlist = $this->playlistFactory->getById($playlistId);
+            $playlist->load();
+            $playlistEnableStat = $playlist->enableStat;
+
+            if (($playlistEnableStat === null) || ($playlistEnableStat === "")) {
+                $playlistEnableStat = $this->config->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
+            }
+
+            foreach ($playlist->widgets as $subPlaylistWidget) {
+
+                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+
+                if ($subPlaylistWidget->type == 'subplaylist') {
+                    /** @var SubPlaylist $module */
+                    $module = $this->moduleFactory->createWithWidget($subPlaylistWidget);
+                    $this->checkSubplaylistEnableStat($module);
+                } else {
+                    if ($subPlaylistWidgetEnableStat == 'Inherit') {
+                        $subPlaylistWidget->setOptionValue('enableStat', 'attr', $playlistEnableStat);
+                        $subPlaylistWidget->save();
+                        $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
+                    }
+                }
+            }
+        }
     }
 }

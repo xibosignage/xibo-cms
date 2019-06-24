@@ -1429,6 +1429,7 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
+                $container->configService,
                 $container->dateService,
                 $container->permissionFactory,
                 $container->widgetFactory,

@@ -271,6 +271,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('LAYOUT_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getCheckbox('LAYOUT_STATS_ENABLED_DEFAULT'));
         }
 
+        if ($this->getConfig()->isSettingEditable('PLAYLIST_STATS_ENABLED_DEFAULT')) {
+            $this->getConfig()->changeSetting('PLAYLIST_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getString('PLAYLIST_STATS_ENABLED_DEFAULT'));
+        }
+
         if ($this->getConfig()->isSettingEditable('MEDIA_STATS_ENABLED_DEFAULT')) {
             $this->getConfig()->changeSetting('MEDIA_STATS_ENABLED_DEFAULT', $this->getSanitizer()->getString('MEDIA_STATS_ENABLED_DEFAULT'));
         }
