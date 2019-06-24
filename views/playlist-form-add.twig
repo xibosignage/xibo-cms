@@ -75,7 +75,7 @@
                         {{ forms.input("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Tags" %}{% endset %}
-                        {% set helpText %}{% trans "Tags for this playlist - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                        {% set helpText %}{% trans "Tags for this Playlist - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
                         {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
 
                         <p id="loadingValues" style="margin-left: 17%"></p>
