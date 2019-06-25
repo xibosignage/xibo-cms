@@ -309,6 +309,23 @@ class SubPlaylist extends ModuleWidget
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
+            $playlistEnableStat = $playlist->enableStat;
+
+            if (($playlistEnableStat === null) || ($playlistEnableStat === "")) {
+                $playlistEnableStat = $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
+            }
+
+            // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit, then change that option according to the Playlist enableStat value.
+            foreach ($playlist->widgets as $subPlaylistWidget) {
+
+                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+
+                if ($subPlaylistWidgetEnableStat == 'Inherit') {
+                    $subPlaylistWidget->setOptionValue('enableStat', 'attr', $playlistEnableStat);
+                    $subPlaylistWidget->save();
+                    $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
+                }
+            }
 
             // Do we have a number of spots set?
             $options = $this->getSubPlaylistOptions($playlistId);

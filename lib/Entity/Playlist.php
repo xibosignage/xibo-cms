@@ -158,10 +158,6 @@ class Playlist implements \JsonSerializable
     private $unassignTags = [];
 
     //<editor-fold desc="Factories and Dependencies">
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
 
     /**
      * @var DateServiceInterface
@@ -196,18 +192,16 @@ class Playlist implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $config, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
-        $this->config = $config;
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
@@ -790,9 +784,6 @@ class Playlist implements \JsonSerializable
             } else {
                 /** @var SubPlaylist $module */
                 $module = $this->moduleFactory->createWithWidget($widget);
-                // Check all widgets assigned to subplaylist, adjust the enableStat option if it is set to Inherit on a widget - this is recursive function, as we need to cover nested subplaylists as well.
-                $this->checkSubplaylistEnableStat($module);
-
                 $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
             }
         }
@@ -902,43 +893,5 @@ class Playlist implements \JsonSerializable
             'newParentId' => $newParentId,
             'parentId' => $this->playlistId
         ]);
-    }
-
-    /**
-     * Check Subplaylist and widget enableStat, adjust widget enableStat option when it is set to Inherit
-     * @param SubPlaylist $widget
-     * @throws NotFoundException
-     */
-    private function checkSubplaylistEnableStat($widget)
-    {
-        $playlistIds = $widget->getAssignedPlaylistIds();
-
-        foreach ($playlistIds as $playlistId) {
-            /** @var $playlist Playlist */
-            $playlist = $this->playlistFactory->getById($playlistId);
-            $playlist->load();
-            $playlistEnableStat = $playlist->enableStat;
-
-            if (($playlistEnableStat === null) || ($playlistEnableStat === "")) {
-                $playlistEnableStat = $this->config->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
-            }
-
-            foreach ($playlist->widgets as $subPlaylistWidget) {
-
-                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
-
-                if ($subPlaylistWidget->type == 'subplaylist') {
-                    /** @var SubPlaylist $module */
-                    $module = $this->moduleFactory->createWithWidget($subPlaylistWidget);
-                    $this->checkSubplaylistEnableStat($module);
-                } else {
-                    if ($subPlaylistWidgetEnableStat == 'Inherit') {
-                        $subPlaylistWidget->setOptionValue('enableStat', 'attr', $playlistEnableStat);
-                        $subPlaylistWidget->save();
-                        $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
-                    }
-                }
-            }
-        }
     }
 }
