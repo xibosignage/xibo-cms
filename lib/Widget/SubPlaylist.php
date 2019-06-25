@@ -316,7 +316,7 @@ class SubPlaylist extends ModuleWidget
             }
 
             // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit, then change that option according to the Playlist enableStat value.
-            foreach ($playlist->widgets as $subPlaylistWidget) {
+            foreach ($expanded as $subPlaylistWidget) {
 
                 $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
 
