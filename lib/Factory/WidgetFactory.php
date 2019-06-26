@@ -140,11 +140,11 @@ class WidgetFactory extends BaseFactory
     {
         // Try getting the widget directly
         $row = $this->getStore()->select('
-            SELECT widgetId, mediaId 
+            SELECT `widget`.widgetId, `lkwidgetmedia`.mediaId 
               FROM `widget`
                 LEFT OUTER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = `widget`.widgetId
-             WHERE widgetId = :widgetId
+             WHERE `widget`.widgetId = :widgetId
         ', [
             'widgetId' => $widgetId
         ]);
