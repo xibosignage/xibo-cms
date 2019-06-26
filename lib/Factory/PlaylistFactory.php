@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -168,6 +169,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.filterMediaName,
                 `playlist`.filterMediaTags,
                 `playlist`.requiresDurationUpdate,
+                `playlist`.enableStat,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
                   FROM tag 

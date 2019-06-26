@@ -42,13 +42,13 @@
                 {% set helpText %}{% trans "The Name for this Tag" %}{% endset %}
                 {{ forms.input("name", title, tag.tag, helpText) }}
 
-                {% set title %}{% trans "Required Value?" %}{% endset %}
-                {% set helpText %}{% trans "Does this tag require additional values to be associated with it?" %}{% endset %}
-                {{ forms.checkbox("isRequired", title, tag.isRequired, helpText) }}
-
-                {% set title %}{% trans "Options" %}{% endset %}
-                {% set helpText %}{% trans "Additional options that should be assosiated with this tag" %}{% endset %}
+                {% set title %}{% trans "Values" %}{% endset %}
+                {% set helpText %}{% trans "Comma separated string of additional values that should be associated with this Tag. Values entered here will be available for selection when assigning this Tag." %}{% endset %}
                 {{ forms.input("options", title, options, helpText) }}
+
+                {% set title %}{% trans "Required Value?" %}{% endset %}
+                {% set helpText %}{% trans "Tick to ensure that a value is selected when assigning this Tag" %}{% endset %}
+                {{ forms.checkbox("isRequired", title, tag.isRequired, helpText) }}
             </form>
         </div>
     </div>

@@ -277,6 +277,20 @@ class Playlist extends Base
             $playlist->includeProperty('buttons');
             $playlist->includeProperty('requiresDurationUpdate');
 
+            switch ($playlist->enableStat) {
+
+                case 'On':
+                    $playlist->enableStatDescription = __('This Playlist has enable stat collection set to ON');
+                    break;
+
+                case 'Off':
+                    $playlist->enableStatDescription = __('This Playlist has enable stat collection set to OFF');
+                    break;
+
+                default:
+                    $playlist->enableStatDescription = __('This Playlist has enable stat collection set to INHERIT');
+            }
+
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($playlist)) {
 
@@ -304,6 +318,22 @@ class Playlist extends Base
                     'id' => 'playlist_button_copy',
                     'url' => $this->urlFor('playlist.copy.form', ['id' => $playlist->playlistId]),
                     'text' => __('Copy')
+                );
+
+                // Set Enable Stat
+                $playlist->buttons[] = array(
+                    'id' => 'playlist_button_setenablestat',
+                    'url' => $this->urlFor('playlist.setenablestat.form', ['id' => $playlist->playlistId]),
+                    'text' => __('Enable stats collection?'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('playlist.setenablestat', ['id' => $playlist->playlistId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                        array('name' => 'text', 'value' => __('Enable stats collection?')),
+                        array('name' => 'rowtitle', 'value' => $playlist->name),
+                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                    )
                 );
 
                 $playlist->buttons[] = ['divider' => true];
@@ -420,6 +450,8 @@ class Playlist extends Base
 
         $playlist = $this->playlistFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
+        $playlist->enableStat = $this->getSanitizer()->getString('enableStat');
+
         $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
 
         // Do we have a tag or name filter?
@@ -606,6 +638,8 @@ class Playlist extends Base
 
         $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
+        $playlist->enableStat = $this->getSanitizer()->getString('enableStat');
+
         $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
 
         // Do we have a tag or name filter?
@@ -759,6 +793,11 @@ class Playlist extends Base
                 // Update the widget option with the new ID
                 $widget->setOptionValue('uri', 'attrib', $media->storedAs);
             }
+        }
+
+        // Set from global setting
+        if ($playlist->enableStat == null) {
+            $playlist->enableStat = $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
         }
 
         // Save the new playlist
@@ -1136,5 +1175,82 @@ class Playlist extends Base
             'message' => __('Order Changed'),
             'data' => $playlist
         ]);
+    }
+
+    /**
+     * Set Enable Stats Collection of a Playlist
+     * @param int $playlistId
+     *
+     * @SWG\Put(
+     *  path="/playlist/setenablestat/{playlistId}",
+     *  operationId="playlistSetEnableStat",
+     *  tags={"Playlist"},
+     *  summary="Enable Stats Collection",
+     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws XiboException
+     */
+
+    function setEnableStat($playlistId)
+    {
+        // Get the Playlist
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        $enableStat = $this->getSanitizer()->getString('enableStat');
+
+        $playlist->enableStat = $enableStat;
+        $playlist->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('For Playlist %s Enable Stats Collection is set to %s'), $playlist->name, __($playlist->enableStat))
+        ]);
+    }
+
+    /**
+     * Set Enable Stat Form
+     * @param int $playlistId
+     * @throws XiboException
+     */
+    public function setEnableStatForm($playlistId)
+    {
+        // Get the Playlist
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        $data = [
+            'playlist' => $playlist,
+            'help' => $this->getHelp()->link('Playlist', 'EnableStat')
+        ];
+
+        $this->getState()->template = 'playlist-form-setenablestat';
+        $this->getState()->setData($data);
     }
 }

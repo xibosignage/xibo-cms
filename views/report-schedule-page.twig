@@ -38,8 +38,19 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "ID" %}{% endset %}
+                            {{ inline.number("reportScheduleId", title ) }}
+
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("name", title) }}
+
+                            {% set summaryReport %}{% trans "Summary Report" %}{% endset %}
+                            {% set options = [
+                                { id: "", value: ""},
+                                { id: "summaryReport", value: summaryReport },
+                            ] %}
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {{ inline.dropdown("reportName", "single", title, "", options, "id", "value") }}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
@@ -152,5 +163,23 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#reportschedules_wrapper').find('.col-sm-6').eq(1));
+
+        $(document).ready(function() {
+            let url_string = window.location.href;
+            let url = new URL(url_string);
+            let savedReportId = url.searchParams.get("savedReportId");
+            let reportName = url.searchParams.get("reportName");
+
+            if (savedReportId !== undefined && savedReportId != null) {
+                $('#reportScheduleId').val(savedReportId);
+                table.ajax.reload();
+            }
+
+            if (reportName !== undefined && reportName != null) {
+                $('#reportName').val(reportName);
+                table.ajax.reload();
+            }
+        })
+
     </script>
 {% endblock %}

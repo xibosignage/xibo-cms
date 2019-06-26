@@ -75,7 +75,7 @@
                         {{ forms.input("name", title, "", helpText) }}
 
                         {% set title %}{% trans "Tags" %}{% endset %}
-                        {% set helpText %}{% trans "Tags for this playlist - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
+                        {% set helpText %}{% trans "Tags for this Playlist - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
                         {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
 
                         <p id="loadingValues" style="margin-left: 17%"></p>
@@ -90,6 +90,19 @@
                         {% set title %}{% trans "Dynamic?" %}{% endset %}
                         {% set helpText %}{% trans "Is the Playlist to have Library media assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
                         {{ forms.checkbox("isDynamic", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Enable Playlist Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Playlist. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, theme.getSetting("PLAYLIST_STATS_ENABLED_DEFAULT"), options, "id", "value", helpText) }}
 
                         {% set message %}{% trans "If you want to prepopulate your Playlist with Media using a search, then you can do so on the filter tab. Leave the Dynamic checkbox unticked to make it a one-time assignment." %}{% endset %}
                         {{ forms.message(message) }}

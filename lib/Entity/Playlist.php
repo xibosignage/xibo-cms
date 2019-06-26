@@ -30,6 +30,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -117,6 +118,14 @@ class Playlist implements \JsonSerializable
     public $requiresDurationUpdate;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The option to enable the collection of Playlist Proof of Play statistics"
+     * )
+     */
+    public $enableStat;
+
+    /**
      * @SWG\Property(description="An array of Tags")
      * @var Tag[]
      */
@@ -149,6 +158,7 @@ class Playlist implements \JsonSerializable
     private $unassignTags = [];
 
     //<editor-fold desc="Factories and Dependencies">
+
     /**
      * @var DateServiceInterface
      */
@@ -655,8 +665,8 @@ class Playlist implements \JsonSerializable
         $time = date('Y-m-d H:i:s');
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -667,7 +677,8 @@ class Playlist implements \JsonSerializable
             'filterMediaTags' => $this->filterMediaTags,
             'createdDt' => $time,
             'modifiedDt' => $time,
-            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate
+            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
+            'enableStat' => $this->enableStat
         ));
 
         // Insert my self link
@@ -693,7 +704,8 @@ class Playlist implements \JsonSerializable
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
-                `requiresDurationUpdate` = :requiresDurationUpdate
+                `requiresDurationUpdate` = :requiresDurationUpdate,
+                `enableStat` = :enableStat
              WHERE `playlistId` = :playlistId
         ';
 
@@ -706,7 +718,8 @@ class Playlist implements \JsonSerializable
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
             'modifiedDt' => date('Y-m-d H:i:s'),
-            'requiresDurationUpdate' => $this->requiresDurationUpdate
+            'requiresDurationUpdate' => $this->requiresDurationUpdate,
+            'enableStat' => $this->enableStat
         ));
     }
 

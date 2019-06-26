@@ -182,6 +182,12 @@ class SavedReportFactory extends BaseFactory
             $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
+        // Report name
+        if ($this->getSanitizer()->getString('reportName', $filterBy) != '') {
+            $body .= " AND reportschedule.reportName = :reportName ";
+            $params['reportName'] = $this->getSanitizer()->getString('reportName',  $filterBy);
+        }
+
         // User Group filter
         if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
             $body .= ' AND `saved_report`.userId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';

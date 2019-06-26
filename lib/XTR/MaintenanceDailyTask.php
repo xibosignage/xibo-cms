@@ -55,9 +55,6 @@ class MaintenanceDailyTask implements TaskInterface
         // Tidy logs
         $this->tidyLogs();
 
-        // Tidy stats
-        $this->tidyStats();
-
         // Tidy Cache
         $this->tidyCache();
 
@@ -84,41 +81,6 @@ class MaintenanceDailyTask implements TaskInterface
             catch (\PDOException $e) {
                 $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
                 $this->log->error($e->getMessage());
-            }
-        }
-        else {
-            $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
-        }
-    }
-
-    /**
-     * Tidy Stats
-     */
-    private function tidyStats()
-    {
-        $this->runMessage .= '## ' . __('Tidy Stats') . PHP_EOL;
-
-        if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
-
-            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE'))));
-
-            $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
-
-            $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
-
-            $options = [
-                'maxAttempts' => $maxAttempts,
-                'statsDeleteSleep' => $statsDeleteSleep,
-                'limit' => 10000
-            ];
-
-            try {
-                $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
-                if ($result > 0) {
-                    $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-                }
-            } catch (\RuntimeException $exception) {
-                $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
             }
         }
         else {
