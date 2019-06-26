@@ -128,6 +128,20 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * Get Widget by its ID
+     *  first check the lkwidgetmedia table for any active links
+     *  if that fails, check the widgethistory table
+     *  in either case, if we find a widget that isn't a media record, then still throw not found
+     * @param int $widgetId
+     * @return int|null
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getWidgetForStat($widgetId)
+    {
+        //
+    }
+
+    /**
      * Get widget by widget id
      * @param $widgetId
      * @return Widget

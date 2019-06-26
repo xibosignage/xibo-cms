@@ -23,7 +23,6 @@
 namespace Xibo\Factory;
 
 
-use http\Exception\RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
@@ -300,61 +299,46 @@ class LayoutFactory extends BaseFactory
     /**
      * Get CampaignId from layout history
      * @param int $layoutId
-     * @return int campaignId|null
-     * @throws NotFoundException
+     * @return int campaignId
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function getCampaignIdFromLayoutHistory($layoutId)
     {
-        $campaignId = null;
-
-        if ($layoutId == 0) {
-            throw new NotFoundException(\__('LayoutId is 0'));
+        if ($layoutId == null) {
+            throw new InvalidArgumentException('Invalid Input', 'layoutId');
         }
 
-        try {
-            $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
-            if(count($row) > 0) {
-                $campaignId = (int) $row[0]['campaignId'];
-            } else {
-                // layouthistory is not added on upgrade for a deleted layout but there is
-                // still stats exist in the player
-                $campaignId = null;
-                $this->getLog()->debug('Campaign ID not found for layoutId: '.$layoutId);
-            }
-        } catch (\RuntimeException $error) {
-            $this->getLog()->error($error);
+        $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
+
+        if (count($row) <= 0) {
+            throw new NotFoundException(__('Layout does not exist'));
         }
 
-        // Set our Campaign ID
-        return $campaignId;
+        return intval($row[0]['campaignId']);
     }
 
     /**
      * Get latest layoutId by CampaignId from layout history
      * @param int campaignId
      * @return int layoutId
-     * @throws NotFoundException
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function getLatestLayoutIdFromLayoutHistory($campaignId)
     {
+        if ($campaignId == null) {
+            throw new InvalidArgumentException('Invalid Input', 'campaignId');
+        }
 
-        if ($campaignId == null)
-            throw new NotFoundException(\__('CampaignId is null'));
+        $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
 
-        try {
-            $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
-            if(count($row) > 0) {
-                $layoutId = $row[0]['layoutId'];
-            } else {
-                $layoutId = 0;
-                $this->getLog()->debug('Layout ID not found for campaignId: '.$campaignId);
-            }
-        } catch (\RuntimeException $error) {
-            $this->getLog()->error($error);
+        if (count($row) <= 0) {
+            throw new NotFoundException(__('Layout does not exist'));
         }
 
         // Set our Layout ID
-        return $layoutId;
+        return intval($row[0]['layoutId']);
     }
 
     /**
@@ -369,6 +353,27 @@ class LayoutFactory extends BaseFactory
             throw new NotFoundException();
 
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
+    }
+
+    /**
+     * Get a Layout by its Layout Specific Campaign OwnerId
+     * @param int $campaignId
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public function getByParentCampaignId($campaignId)
+    {
+        if ($campaignId == 0)
+            throw new NotFoundException();
+
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'ownerCampaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));

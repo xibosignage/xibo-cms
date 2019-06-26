@@ -442,17 +442,6 @@ class MediaFactory extends BaseFactory
     }
 
     /**
-     * Get Media by LayoutId
-     * @param int $layoutId
-     * @param int $widgetId
-     * @return array[Media]
-     */
-    public function getByLayoutAndWidget($layoutId, $widgetId)
-    {
-        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'widgetId' => $widgetId]);
-    }
-
-    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return Media[]
