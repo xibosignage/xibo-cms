@@ -194,7 +194,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             // Display tags
-            $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById(902)->tags);
+            $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
 
             // TagFilter array
             $statData[$k]['tagFilter'] = $tagFilter;
