@@ -89,9 +89,6 @@ class StatisticsLayoutTest extends LocalWebTestCase
     {
         $type = 'layout';
 
-        // Checkout layout
-        $layout = $this->checkout($this->layout);
-
         $hardwareId = $this->display->license;
 
         // Set start and date time
@@ -135,7 +132,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
                         todt="2018-02-15 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" />
+                        layoutid="'.$this->layout->layoutId.'" />
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -146,7 +143,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
                         todt="2018-02-16 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -157,7 +154,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
                         todt="2018-02-17 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -174,7 +171,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         //$this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));
     }

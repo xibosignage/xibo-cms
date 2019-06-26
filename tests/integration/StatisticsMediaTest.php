@@ -22,11 +22,11 @@
 
 namespace Xibo\Tests\Integration;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
-use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -108,13 +108,10 @@ class StatisticsMediaTest extends LocalWebTestCase
     {
         $type = 'media';
 
-        // Checkout layout
-        $layout = $this->checkout($this->layout);
-
         $hardwareId = $this->display->license;
 
         // Add another region
-        $region = $layout->regions[0];
+        $region = $this->layout->regions[0];
 
         // Assign media to a playlists
         $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist->playlistId);
@@ -150,7 +147,7 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-13 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" 
+                        layoutid="'.$this->layout->layoutId.'" 
                         mediaid="'.$widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -162,7 +159,7 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-14 00:00:00"
                         type="'.$type.'" 
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="'.$this->layout->layoutId.'"
                         mediaid="'.$widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -174,7 +171,7 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-17 00:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="'.$this->layout->layoutId.'"
                         mediaid="'.$widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -186,7 +183,7 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-15 00:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="'.$this->layout->layoutId.'"
                         mediaid="'.$widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -198,7 +195,7 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-16 00:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="'.$this->layout->layoutId.'"
                         mediaid="'.$widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
@@ -210,7 +207,7 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-16 12:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
+                        layoutid="'.$this->layout->layoutId.'"
                         mediaid="'.$widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
