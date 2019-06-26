@@ -138,7 +138,35 @@ class WidgetFactory extends BaseFactory
      */
     public function getWidgetForStat($widgetId)
     {
-        //
+        // Try getting the widget directly
+        $row = $this->getStore()->select('
+            SELECT widgetId, mediaId 
+              FROM `widget`
+                LEFT OUTER JOIN `lkwidgetmedia`
+                ON `lkwidgetmedia`.widgetId = `widget`.widgetId
+             WHERE widgetId = :widgetId
+        ', [
+            'widgetId' => $widgetId
+        ]);
+
+        // The widget doesn't exist
+        if (count($row) <= 0) {
+            // Try and get the same from the widget history table
+            $row = $this->getStore()->select('
+                SELECT widgetId, mediaId 
+                  FROM `widgethistory`
+                 WHERE widgetId = :widgetId
+            ', [
+                'widgetId' => $widgetId
+            ]);
+
+            // The widget didn't ever exist
+            if (count($row) <= 0) {
+                throw new NotFoundException();
+            }
+        }
+
+        return ($row[0]['mediaId'] == null) ? null : intval($row[0]['mediaId']);
     }
 
     /**
