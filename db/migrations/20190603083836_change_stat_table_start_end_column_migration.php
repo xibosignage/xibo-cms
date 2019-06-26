@@ -31,10 +31,6 @@ class ChangeStatTableStartEndColumnMigration extends AbstractMigration
     public function change()
     {
         $table = $this->table('stat');
-        $table
-            ->changeColumn('statDate', 'integer')
-            ->changeColumn('start', 'integer')
-            ->changeColumn('end', 'integer')
-            ->save();
+        $table->rename('stat_archive');
     }
 }
