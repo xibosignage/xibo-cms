@@ -1,5 +1,5 @@
 {
   "name": "summaryReport",
-  "description": "Chart: Summary by Layout or Media from File",
+  "description": "Chart: Summary by Layout, Media or Event",
   "class": "\\Xibo\\Report\\SummaryReport"
 }
