@@ -1,0 +1,111 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <i class="fa fa-list"></i>
+            {{ savedReport.saveAs }}
+                <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span>
+            <div><span class="small">From {{ periodStart }} To {{ periodEnd }}</span></div>
+            <div class="clearfix"></div>
+        </div>
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+
+                <div class="XiboData">
+                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        var reportChart = new Chart($("#reportChart"), {
+            type: "bar",
+            data: {
+                labels: {{ labels|raw }},
+                datasets: [{
+                    label: "{% trans "Total duration" %}",
+                    yAxisID: 'Duration',
+                    backgroundColor: {{ backgroundColor|raw }},
+                    data: {{ durationData|raw }},
+                },
+                    {
+                        label: "{% trans "Total count" %}",
+                        yAxisID: 'Count',
+                        borderColor: {{ borderColor|raw }},
+                        data: {{ countData|raw }},
+                        type: 'line',
+                        fill: false
+                    }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        id: 'Duration',
+                        type: 'linear',
+                        position: 'left',
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Duration(s)'
+                        },
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }, {
+                        id: 'Count',
+                        type: 'linear',
+                        position: 'right',
+                        display: true,
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Count'
+                        },
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    }]
+                },
+                maintainAspectRatio: true,
+            }
+        });
+
+    </script>
+{% endblock %}

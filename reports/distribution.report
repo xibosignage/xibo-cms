@@ -1,0 +1,5 @@
+{
+  "name": "distributionReport",
+  "description": "Chart: Distribution by Layout, Media or Event",
+  "class": "\\Xibo\\Report\\DistributionReport"
+}
