@@ -27,6 +27,7 @@ use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -87,6 +88,11 @@ class Report extends Base
     private $userFactory;
 
     /**
+     * @var CampaignFactory
+     */
+    private $campaignFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
@@ -104,7 +110,7 @@ class Report extends Base
      * @param LayoutFactory $layoutFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $layoutFactory, $userFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $layoutFactory, $userFactory, $campaignFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -116,6 +122,7 @@ class Report extends Base
         $this->mediaFactory = $mediaFactory;
         $this->layoutFactory = $layoutFactory;
         $this->userFactory = $userFactory;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /// //<editor-fold desc="Report Schedules">
@@ -180,12 +187,12 @@ class Report extends Base
                 ];
             }
 
-            // Go to report
+            // Back to Reports
             $reportSchedule->buttons[] = [
                 'id' => 'reportSchedule_goto_report_button',
                 'class' => 'XiboRedirectButton',
                 'url' => $this->urlFor('report.form', ['name' => $adhocReportName] ),
-                'text' => __('Go to report')
+                'text' => __('Back to Reports')
             ];
             $reportSchedule->buttons[] = ['divider' => true];
 
@@ -197,11 +204,13 @@ class Report extends Base
             ];
 
             // Reset to previous run
-            $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_reset_button',
-                'url' => $this->urlFor('reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
-                'text' => __('Reset to previous run')
-            ];
+            if ($this->getUser()->isSuperAdmin()) {
+                $reportSchedule->buttons[] = [
+                    'id' => 'reportSchedule_reset_button',
+                    'url' => $this->urlFor('reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'text' => __('Reset to previous run')
+                ];
+            }
 
             // Delete
             $reportSchedule->buttons[] = [
@@ -333,19 +342,9 @@ class Report extends Base
         // Populate form title and hidden fields
         $formData = $this->reportService->getReportScheduleFormData($reportName);
 
-        $data = ['filters' => []];
-
-        $data['filters'][] = ['name'=> 'Daily', 'filter'=> 'daily'];
-        $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
-        $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
-        $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
-
-        $data['formTitle'] = $formData['title'];
-        $data['hiddenFields'] = (count($formData['hiddenFields']) > 0 ) ? json_encode($formData['hiddenFields']) : '';
-        $data['reportName'] = $reportName;
-
-        $this->getState()->template = 'report-schedule-form-add';
-        $this->getState()->setData($data);
+        $template = $formData['template'];
+        $this->getState()->template = $template;
+        $this->getState()->setData($formData['data']);
 
     }
 
@@ -431,7 +430,7 @@ class Report extends Base
                 'id' => 'button_goto_report',
                 'class' => 'XiboRedirectButton',
                 'url' => $this->urlFor('report.form', ['name' => $savedReport->reportName] ),
-                'text' => __('Go to report')
+                'text' => __('Back to Reports')
             ];
 
             //TODO
