@@ -25,11 +25,11 @@ namespace Xibo\Storage;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
@@ -134,7 +134,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // unset($statData[$k]);
                     continue;
                 }
-                $statData[$k]['mediaName'] = $mediaName;
+                 $mediaName = $media->name; //dont remove used later
+                 $statData[$k]['mediaName'] = $mediaName;
                 $tagFilter['media'] = explode(',', $media->tags);
             }
 
@@ -181,7 +182,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if ($stat['type'] != 'event') {
 
                 try {
-                    $layout = $this->layoutFactory->getById($stat['layoutId']);
+                    $layout = $this->layoutFactory->getByParentCampaignId($stat['campaignId']);
 
                     $this->log->debug('Found layout : '. $stat['layoutId']);
 
@@ -189,46 +190,26 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     $layoutName = $layout->layout;
                     $layoutTags = $layout->tags;
 
+                    // Get layout Campaign ID
+                    $statData[$k]['campaignId'] = (int) $campaignId;
+
+                    // Layout tags
+                    $tagFilter['layout'] = $layoutTags;
+
                 } catch (NotFoundException $error) {
-
-                    $this->log->debug('Layout not Found. Search in layout history for latest layout.');
-
-                    // an old layout which has been deleted still plays on the player
-                    // so we will get layout not found
-                    // Hence, get the latest layout
-
-                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($stat['layoutId']);
-
-                    if ($campaignId !== null) {
-
-                        $this->log->debug('CampaignId is: '.$campaignId);
-
-                        $latestLayoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
-
-                        $this->log->debug('Latest layoutId: '.$latestLayoutId);
-
-                        // Latest layout
-                        $layout = $this->layoutFactory->getById($latestLayoutId);
-                        $layoutName = $layout->layout;
-                        $layoutTags = $layout->tags;
-
-                    }
-
+                    // All we can do here is log
+                    // we shouldn't ever get in this situation because the campaignId we used above will have
+                    // already been looked up in the layouthistory table.
+                    $this->log->alert('Error processing statistic into MongoDB. Stat is: ' . json_encode($stat));
                 }
 
-                // Get layout Campaign ID
-                $statData[$k]['campaignId'] = (int) $campaignId;
+                // Display tags
+                $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
 
-                // Layout tags
-                $tagFilter['layout'] = explode(',', $layoutTags);
+                // TagFilter array
+                $statData[$k]['tagFilter'] = $tagFilter;
 
             }
-
-            // Display tags
-            $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
-
-            // TagFilter array
-            $statData[$k]['tagFilter'] = $tagFilter;
 
             $statData[$k]['layoutName'] = $layoutName;
         }
@@ -311,7 +292,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // Get campaignIds for selected layoutIds
             $campaignIds = [];
             foreach ($layoutIds as $layoutId) {
-                $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+                try {
+                    $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+                } catch (NotFoundException $notFoundException) {
+                    // Ignore the missing one
+                    $this->log->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
+                }
             }
             $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
         }

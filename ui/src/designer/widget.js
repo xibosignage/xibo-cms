@@ -36,6 +36,9 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     // widget tags
     this.tags = data.tags;
 
+    // widget media
+    this.mediaIds = data.mediaIds;
+
     // Widget colouring
     if(playlistRegionColouring === 'Permissions Colouring') {
         this.widgetColouring = (data.isEditable) ? 'timelineMediaItemColouring_enabled' : 'timelineMediaItemColouring_disabled';

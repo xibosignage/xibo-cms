@@ -899,10 +899,25 @@ ul li.active.tab-design:hover a {
     height: auto;
 }
 
+.btn-tag {
+    background-color: #5bc0de;
+    border-color: #46b8da;
+    color:white;
+    margin:2px;
+    font-weight: 700;
+    border-radius: 10px;
+}
+
+.btn-tag:hover {
+    background-color: lightblue;
+}
+
 .bootstrap-tagsinput .tag {
     margin-right: 0;
     background-color: #5bc0de;
     border-color: #46b8da;
+    font-weight: 700;
+    border-radius: 10px;
 }
 
 /*

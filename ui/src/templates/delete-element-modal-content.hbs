@@ -1,0 +1,25 @@
+<div class="elementDeleteModal container-fluid">
+    <div class="col-sm-12 ">
+        <p>{{ mainMessage }}</p>
+    </div>
+
+    {{#if hasMedia}}
+        {{#if showDeleteFromLibrary}}
+            <div class="col-sm-offset-2 col-sm-10">
+                <div class="checkbox">
+                    <label for="deleteMedia"
+                        title="{{ trans.deleteMediaFromLibraryTitle }}"
+                        accesskey="">
+                        <input type="checkbox" id="deleteMedia" name="deleteMedia">
+                        {{ trans.deleteMediaFromLibraryTitle }}
+                    </label>
+                </div>
+                <span class="help-block">{{ trans.deleteMediaFromLibraryMessage }}</span>
+            </div>
+        {{else}}
+            <div class="col-sm-12 ">
+                <p>{{ trans.infoDeleteMessage }}</p>
+            </div>
+        {{/if}}
+    {{/if}}
+</div>

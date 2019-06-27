@@ -294,8 +294,9 @@ Playlist.prototype.addElement = function(droppable, draggable) {
  * Delete an element in the playlist, by ID
  * @param {number} elementId - element id
  * @param {string} elementType - element type (widget, region, ...)
+ * @param {object =} [options] - Delete submit params/options
  */
-Playlist.prototype.deleteElement = function(elementType, elementId) {
+Playlist.prototype.deleteElement = function(elementType, elementId, options = null) {
 
     pE.common.showLoadingScreen();
 
@@ -313,7 +314,7 @@ Playlist.prototype.deleteElement = function(elementType, elementId) {
             elementType, // targetType
             elementId, // targetId
             null, // oldValues
-            null, // newValues
+            options, // newValues
             {
                 addToHistory: false // options.addToHistory
             }

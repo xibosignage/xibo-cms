@@ -42,8 +42,11 @@ This is the template for the campaign page
                             {{ inline.input("name", title) }}
                             
                             {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                             {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                            {% set title %}{% trans "Exact match?" %}{% endset %}
+                            {{ inline.checkbox("exactTags", title) }}
                             
                             {% set title %}{% trans "Layouts" %}{% endset %}
                             {% set values = [{id: 0, value: ""}, {id: 2, value: "Yes"}, {id: 1, value: "No"}] %}

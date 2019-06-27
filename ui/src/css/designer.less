@@ -520,7 +520,11 @@
     }
 
     .center-msg {
-        font-size: 10px;
+        font-size: 12px;
+        overflow: visible;
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 
     .preview-select {
@@ -536,13 +540,17 @@
         color: white;
         display: none;
         position: absolute;
-        width: 100%;
+        min-width: 100%;
+        width: max-content;
         height: 20px;
         bottom: 0;
         z-index: 2;
         .set-transparent-color(background; black; 50%);
-        opacity: 0.3;
-        padding: 0 5px;
+        opacity: 0.2;
+        padding: 0 4px;
+        white-space: nowrap;
+        left: 50%;
+        transform: translate(-50%, 0);
     }
 
     .preview-paging.active {
@@ -552,6 +560,15 @@
     .preview-paging-message {
         font-weight: bold;
         font-size: 13px;
+    }
+
+    .preview-paging-name {
+        font-weight: bold;
+        font-style: italic;
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .widget-arrow
@@ -630,7 +647,7 @@
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar.designer-layout {
-    background: darken(@layout-main-bg-color, 10%);
+    background: darken(@designer-secondary-color, 10%);
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar.designer-region {

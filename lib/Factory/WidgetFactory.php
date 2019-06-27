@@ -128,6 +128,48 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * Get Widget by its ID
+     *  first check the lkwidgetmedia table for any active links
+     *  if that fails, check the widgethistory table
+     *  in either case, if we find a widget that isn't a media record, then still throw not found
+     * @param int $widgetId
+     * @return int|null
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function getWidgetForStat($widgetId)
+    {
+        // Try getting the widget directly
+        $row = $this->getStore()->select('
+            SELECT `widget`.widgetId, `lkwidgetmedia`.mediaId 
+              FROM `widget`
+                LEFT OUTER JOIN `lkwidgetmedia`
+                ON `lkwidgetmedia`.widgetId = `widget`.widgetId
+             WHERE `widget`.widgetId = :widgetId
+        ', [
+            'widgetId' => $widgetId
+        ]);
+
+        // The widget doesn't exist
+        if (count($row) <= 0) {
+            // Try and get the same from the widget history table
+            $row = $this->getStore()->select('
+                SELECT widgetId, mediaId 
+                  FROM `widgethistory`
+                 WHERE widgetId = :widgetId
+            ', [
+                'widgetId' => $widgetId
+            ]);
+
+            // The widget didn't ever exist
+            if (count($row) <= 0) {
+                throw new NotFoundException();
+            }
+        }
+
+        return ($row[0]['mediaId'] == null) ? null : intval($row[0]['mediaId']);
+    }
+
+    /**
      * Get widget by widget id
      * @param $widgetId
      * @return Widget

@@ -25,14 +25,23 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}">
+            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, campaign.campaign, helpText) }}
                 
                 {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tags for this campaign - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                {{ forms.inputWithTags("tags", title, campaign.tags, helpText) }}
+                {% set helpText %}{% trans "Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+
+                <p id="loadingValues" style="margin-left: 17%"></p>
+
+                {% set title %}{% trans "Tag value" %}{% endset %}
+                {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                <div id="tagValueRequired" class="alert alert-info">
+                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                </div>
 
                 <div id="assignLayouts"></div>
                 <div id="unassignLayouts"></div>

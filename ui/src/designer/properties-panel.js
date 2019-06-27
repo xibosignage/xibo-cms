@@ -42,7 +42,7 @@ PropertiesPanel.prototype.save = function(element) {
 
     // Run form submit module optional function
     if(element.type === 'widget'){
-        formHelpers.widgetFormEditBeforeSubmit(self.DOMObject, element.subType);
+        formHelpers.widgetFormEditBeforeSubmit(this.DOMObject, element.subType);
     } 
 
     const form = $(this.DOMObject).find('form');

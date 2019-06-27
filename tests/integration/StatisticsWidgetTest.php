@@ -24,7 +24,6 @@ namespace Xibo\Tests\Integration;
 
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\Tests\Helper\DisplayHelperTrait;
@@ -46,6 +45,9 @@ class StatisticsWidgetTest extends LocalWebTestCase
     /** @var XiboDisplay */
     protected $display;
 
+    /** @var \Xibo\OAuth2\Client\Entity\XiboWidget */
+    private $widget;
+
     /**
      * setUp - called before every test automatically
      */
@@ -59,6 +61,23 @@ class StatisticsWidgetTest extends LocalWebTestCase
         // Create a Display
         $this->display = $this->createDisplay();
         $this->displaySetLicensed($this->display);
+
+        // Checkout our Layout and add some Widgets to it.
+        $layout = $this->checkout($this->layout);
+
+        // Create and assign new text widget
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
+
+        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
+            'text' => 'Widget A',
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
+
+        // Publish the Layout
+        $this->layout = $this->publish($this->layout);
 
         $this->getLogger()->debug('Finished Setup');
 
@@ -90,16 +109,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
     {
         $type = 'widget';
 
-        // Checkout layout
-        $layout = $this->checkout($this->layout);
-
         $hardwareId = $this->display->license;
-
-        // Add a region
-        $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 100,100,475,425);
-
-        // Create and assign new text widget
-        $text = (new XiboText($this->getEntityProvider()))->create('Text item', 10, 1, 'marqueeRight', 5, null, null, 'TEST API TEXT', null, $region->regionPlaylist->playlistId);
 
         // First insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
@@ -108,8 +118,8 @@ class StatisticsWidgetTest extends LocalWebTestCase
                         todt="2018-02-15 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" 
-                        mediaid="'.$text->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'" 
+                        mediaid="'.$this->widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -120,8 +130,8 @@ class StatisticsWidgetTest extends LocalWebTestCase
                         todt="2018-02-16 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" 
-                        mediaid="'.$text->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'" 
+                        mediaid="'.$this->widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -132,8 +142,8 @@ class StatisticsWidgetTest extends LocalWebTestCase
                         todt="2018-02-17 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" 
-                        mediaid="'.$text->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'" 
+                        mediaid="'.$this->widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -150,7 +160,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         //$this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));
 

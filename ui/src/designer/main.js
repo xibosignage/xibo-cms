@@ -26,6 +26,7 @@ const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
+const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
 
 // Include modules
 const Layout = require('../designer/layout.js');
@@ -875,7 +876,15 @@ lD.undoLastAction = function() {
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
-    lD.deleteObject(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type+'Id']);
+    if(lD.selectedObject.type === 'region') {
+        lD.deleteObject(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type+'Id']);
+    } else if(lD.selectedObject.type === 'widget') {
+        lD.deleteObject(
+            lD.selectedObject.type, 
+            lD.selectedObject[lD.selectedObject.type + 'Id'],
+            lD.layout.regions[lD.selectedObject.regionId].regionId
+        );
+    }
 };
 
 /**
@@ -885,70 +894,128 @@ lD.deleteSelectedObject = function() {
 lD.deleteDraggedObject = function(draggable) {
     const objectType = draggable.data('type');
     let objectId = null;
+    let objectAuxId = null;
 
     if(objectType === 'region') {
         objectId = lD.layout.regions[draggable.attr('id')].regionId;
     } else if(objectType === 'widget') {
         objectId = lD.layout.regions[draggable.data('widgetRegion')].widgets[draggable.data('widgetId')].widgetId;
+        objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
     }
 
-    lD.deleteObject(objectType, objectId);
+    lD.deleteObject(objectType, objectId, objectAuxId);
 };
 
 /**
  * Delete object
  * @param {object} objectToDelete - menu to load content for
  */
-lD.deleteObject = function(objectType, objectId) {
+lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
 
-    bootbox.hideAll();
+    const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
 
-    if(objectType === 'region' || objectType === 'widget') {
+        bootbox.hideAll();
 
-        bootbox.confirm({
+        const htmlContent = deleteElementModalContentTemplate({
+            mainMessage: deleteMenuTrans.mainMessage.replace('%obj%', objectType),
+            hasMedia: hasMedia,
+            showDeleteFromLibrary: showDeleteFromLibrary,
+            trans: deleteMenuTrans
+        });
+
+        bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
-            message: editorsTrans.deleteConfirm,
+            message: htmlContent,
             buttons: {
-                confirm: {
-                    label: editorsTrans.yes,
-                    className: 'btn-danger'
-                },
                 cancel: {
                     label: editorsTrans.no,
                     className: 'btn-default'
-                }
-            },
-            callback: function(result) {
-                if(result) {
+                },
+                confirm: {
+                    label: editorsTrans.yes,
+                    className: 'btn-danger',
+                    callback: function() {
 
-                    lD.common.showLoadingScreen('deleteObject');
+                        // Empty options object
+                        let options = null;
 
-                    // Delete element from the layout
-                    lD.layout.deleteElement(objectType, objectId).then((res) => { // Success
-
-                        lD.common.hideLoadingScreen('deleteObject');
-
-                        // Behavior if successful 
-                        toastr.success(res.message);
-                        lD.reloadData(lD.layout);
-                    }).catch((error) => { // Fail/error
-
-                        lD.common.hideLoadingScreen('deleteObject');
-
-                        // Show error returned or custom message to the user
-                        let errorMessage = '';
-
-                        if(typeof error == 'string') {
-                            errorMessage = error;
-                        } else {
-                            errorMessage = error.errorThrown;
+                        // If delete media is checked, pass that as a param for delete
+                        if($(this).find('input#deleteMedia').is(':checked')) {
+                            options = {
+                                deleteMedia: 1
+                            };
                         }
 
-                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-                    });
+                        lD.common.showLoadingScreen('deleteObject');
+
+                        // Delete element from the layout
+                        lD.layout.deleteElement(objectType, objectId, options).then((res) => { // Success
+
+                            lD.common.hideLoadingScreen('deleteObject');
+
+                            // Behavior if successful 
+                            toastr.success(res.message);
+                            lD.reloadData(lD.layout);
+                        }).catch((error) => { // Fail/error
+
+                            lD.common.hideLoadingScreen('deleteObject');
+
+                            // Show error returned or custom message to the user
+                            let errorMessage = '';
+
+                            if(typeof error == 'string') {
+                                errorMessage = error;
+                            } else {
+                                errorMessage = error.errorThrown;
+                            }
+
+                            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+                        });
+                        
+                    }
                 }
             }
         }).attr('data-test', 'deleteObjectModal');
+    };
+
+    if(objectType === 'region') {
+        createDeleteModal(objectType, objectId);
+    } else if(objectType === 'widget') {
+
+        const widgetToDelete = lD.getElementByTypeAndId('widget', 'widget_' + objectAuxId + '_' + objectId, 'region_' + objectAuxId);
+
+        if(widgetToDelete.mediaIds.length == 0) {
+            createDeleteModal(objectType, objectId);
+        } else {
+            lD.common.showLoadingScreen('checkMediaIsUsed');
+
+            const linkToAPI = urlsForApi.media.isUsed;
+            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+            // Request with count as being 2, for the published layout and draft
+            $.get(requestPath + '?count=1')
+                .done(function(res) {
+                    if(res.success) {
+                        createDeleteModal(objectType, objectId, true, !res.data.isUsed);
+                    } else {
+                        if(res.login) {
+                            window.location.href = window.location.href;
+                            location.reload(false);
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    }
+
+                    lD.common.hideLoadingScreen('checkMediaIsUsed');
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+
+                    lD.common.hideLoadingScreen('checkMediaIsUsed');
+
+                    // Output error to console
+                    console.error(jqXHR, textStatus, errorThrown);
+                });
+        }
     }
 };
 
@@ -1438,7 +1505,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
-            lD.deleteObject(objType, layoutObject[objType + 'Id']);
+            lD.deleteObject(objType, layoutObject[objType + 'Id'], objRegionId);
         } else if(target.data('action') == 'Move') {
             // Move widget in the timeline
             lD.timeline.moveWidgetInRegion(layoutObject.regionId, layoutObject.id, target.data('actionType'));

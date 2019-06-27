@@ -123,6 +123,8 @@ $app->get('/playlist/form/edit/:id', '\Xibo\Controller\Playlist:editForm')->name
 $app->get('/playlist/form/copy/:id', '\Xibo\Controller\Playlist:copyForm')->name('playlist.copy.form');
 $app->get('/playlist/form/delete/:id', '\Xibo\Controller\Playlist:deleteForm')->name('playlist.delete.form');
 $app->get('/playlist/form/timeline/:id', '\Xibo\Controller\Playlist:timelineForm')->name('playlist.timeline.form');
+$app->get('/playlist/form/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStatForm')->name('playlist.setenablestat.form');
+
 // Designer
 $app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
 // Module functions
@@ -405,3 +407,9 @@ $app->get('/report/form/:name', '\Xibo\Controller\Report:getReportForm')->name('
 $app->get('/playersoftware/view', '\Xibo\Controller\PlayerSoftware:displayPage')->name('playersoftware.view');
 $app->get('/playersoftware/form/edit/:id', '\Xibo\Controller\PlayerSoftware:editForm')->name('playersoftware.edit.form');
 $app->get('/playersoftware/form/delete/:id', '\Xibo\Controller\PlayerSoftware:deleteForm')->name('playersoftware.delete.form');
+
+// Tags
+$app->get('/tag/view', '\Xibo\Controller\Tag:displayPage')->name('tag.view');
+$app->get('/tag/form/add', '\Xibo\Controller\Tag:addForm')->name('tag.add.form');
+$app->get('/tag/form/edit/:id', '\Xibo\Controller\Tag:editForm')->name('tag.edit.form');
+$app->get('/tag/form/delete/:id', '\Xibo\Controller\Tag:deleteForm')->name('tag.delete.form');

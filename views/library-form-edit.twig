@@ -25,7 +25,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}">
+            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% if media.mediaType != "font" %}
 
                     {% set title %}{% trans "Name" %}{% endset %}
@@ -37,8 +37,17 @@
                     {{ forms.number("duration", title, media.duration, helpText) }}
 
                     {% set title %}{% trans "Tags" %}{% endset %}
-                    {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                    {{ forms.inputWithTags("tags", title, media.tags, helpText) }}
+                    {% set helpText %}{% trans "Tags for this Media - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                    {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+
+                    <p id="loadingValues" style="margin-left: 17%"></p>
+
+                    {% set title %}{% trans "Tag value" %}{% endset %}
+                    {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                    <div id="tagValueRequired" class="alert alert-info">
+                        <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                    </div>
 
                     {% set title %}{% trans "Retire this media?" %}{% endset %}
                     {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}

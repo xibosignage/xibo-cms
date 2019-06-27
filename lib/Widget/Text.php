@@ -232,6 +232,11 @@ class Text extends ModuleWidget
             $text = str_replace('[Date]', '[DD/MM/YYYY]', $text);
         }
 
+        if (stripos($text, '[Date|')) {
+            $clock = true;
+            $text = str_replace('[Date|', '[', $text);
+        }
+
         if ($clock) {
             // Strip out the bit between the [] brackets and use that as the format mask for moment.
             $matches = '';

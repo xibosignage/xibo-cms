@@ -135,6 +135,8 @@ class Report extends Base
         $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'name' => $this->getSanitizer()->getString('name'),
             'userId' => $this->getSanitizer()->getInt('userId'),
+            'reportScheduleId' => $this->getSanitizer()->getInt('reportScheduleId'),
+            'reportName' => $this->getSanitizer()->getString('reportName')
         ]));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
@@ -411,6 +413,7 @@ class Report extends Base
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'saveAs' => $this->getSanitizer()->getString('saveAs'),
             'userId' => $this->getSanitizer()->getInt('userId'),
+            'reportName' => $this->getSanitizer()->getString('reportName')
         ]));
 
         foreach ($savedReports as $savedReport) {
@@ -433,13 +436,12 @@ class Report extends Base
                 'text' => __('Back to Reports')
             ];
 
-            //TODO
-//            $savedReport->buttons[] = [
-//                'id' => 'button_goto_schedule',
-//                'class' => 'XiboRedirectButton',
-//                'url' => $this->urlFor('', ['reportScheduleId' => $savedReport->reportScheduleId] ),
-//                'text' => __('Go to schedule')
-//            ];
+            $savedReport->buttons[] = [
+                'id' => 'button_goto_schedule',
+                'class' => 'XiboRedirectButton',
+                'url' => $this->urlFor('reportschedule.view' ) . '?savedReportId=' . $savedReport->savedReportId,
+                'text' => __('Go to schedule')
+            ];
 
             // Delete
             $savedReport->buttons[] = ['divider' => true];

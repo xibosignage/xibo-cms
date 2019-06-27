@@ -275,4 +275,33 @@ trait EntityTrait
 
         $this->getLog()->audit($class, $entityId, $message, $changedProperties);
     }
+
+    /**
+     * Compare two arrays, both keys and values.
+     *
+     * @param $array1
+     * @param $array2
+     * @param bool $compareValues
+     * @return array
+     */
+    public function compareMultidimensionalArrays($array1, $array2, $compareValues = true)
+    {
+        $result = [];
+
+        // go through arrays, compare keys and values
+        // the compareValues flag is there for tag unlink - we're interested only in array keys
+        foreach ($array1 as $key => $value) {
+
+            if (!is_array($array2) || !array_key_exists($key, $array2)) {
+                $result[$key] = $value;
+                continue;
+            }
+
+            if ($value != $array2[$key] && $compareValues) {
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
+    }
 }

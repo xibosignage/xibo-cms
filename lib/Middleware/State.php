@@ -1033,6 +1033,28 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\Tag', function($container) {
+            return new \Xibo\Controller\Tag(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->store,
+                $container->displayGroupFactory,
+                $container->layoutFactory,
+                $container->tagFactory,
+                $container->userFactory,
+                $container->displayFactory,
+                $container->mediaFactory,
+                $container->scheduleFactory,
+                $container->campaignFactory,
+                $container->playlistFactory
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Template', function($container) {
             return new \Xibo\Controller\Template(
                 $container->logService,

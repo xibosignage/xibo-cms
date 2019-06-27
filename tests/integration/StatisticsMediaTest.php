@@ -22,11 +22,11 @@
 
 namespace Xibo\Tests\Integration;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
-use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -53,6 +53,12 @@ class StatisticsMediaTest extends LocalWebTestCase
     /** @var XiboLibrary */
     protected $media2;
 
+    /** @var \Xibo\OAuth2\Client\Entity\XiboWidget */
+    private $widget;
+
+    /** @var \Xibo\OAuth2\Client\Entity\XiboWidget */
+    private $widget2;
+
     /**
      * setUp - called before every test automatically
      */
@@ -73,6 +79,20 @@ class StatisticsMediaTest extends LocalWebTestCase
 
         $this->media2 = (new XiboLibrary($this->getEntityProvider()))
             ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
+
+        // Checkout our Layout and add some Widgets to it.
+        $layout = $this->checkout($this->layout);
+
+        // Add another region
+        // Assign media to the layouts default region.
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $layout->regions[0]->regionPlaylist->playlistId);
+
+        // Get Widget Ids
+        $this->widget = $playlist->widgets[0];
+        $this->widget2 = $playlist->widgets[1];
+
+        // Publish the Layout
+        $this->layout = $this->publish($this->layout);
 
         $this->getLogger()->debug('Finished Setup');
 
@@ -108,20 +128,7 @@ class StatisticsMediaTest extends LocalWebTestCase
     {
         $type = 'media';
 
-        // Checkout layout
-        $layout = $this->checkout($this->layout);
-
         $hardwareId = $this->display->license;
-
-        // Add another region
-        $region = $layout->regions[0];
-
-        // Assign media to a playlists
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId, $this->media2->mediaId], 10, $region->regionPlaylist->playlistId);
-
-        // Get Widget Id
-        $widget = $playlist->widgets[0];
-        $widget2 = $playlist->widgets[1];
 
         // Set start and date time
         //
@@ -150,8 +157,8 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-13 00:00:00" 
                         type="'.$type.'" 
                         scheduleid="0" 
-                        layoutid="'.$layout->layoutId.'" 
-                        mediaid="'.$widget->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'" 
+                        mediaid="'.$this->widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -162,8 +169,8 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-14 00:00:00"
                         type="'.$type.'" 
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
-                        mediaid="'.$widget->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"
+                        mediaid="'.$this->widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -174,8 +181,8 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-17 00:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
-                        mediaid="'.$widget->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"
+                        mediaid="'.$this->widget->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -186,8 +193,8 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-15 00:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
-                        mediaid="'.$widget2->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"
+                        mediaid="'.$this->widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -198,8 +205,8 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-16 00:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
-                        mediaid="'.$widget2->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"
+                        mediaid="'.$this->widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -210,8 +217,8 @@ class StatisticsMediaTest extends LocalWebTestCase
                         todt="2018-02-16 12:00:00"
                         type="'.$type.'"
                         scheduleid="0"
-                        layoutid="'.$layout->layoutId.'"
-                        mediaid="'.$widget2->widgetId.'"/>
+                        layoutid="'.$this->layout->layoutId.'"
+                        mediaid="'.$this->widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -228,7 +235,7 @@ class StatisticsMediaTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         //$this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));
 

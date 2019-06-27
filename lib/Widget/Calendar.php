@@ -451,6 +451,17 @@ class Calendar extends ModuleWidget
                     break;
             }
 
+            // custom date formats
+            if (strpos($sub, '[StartDate|') !== false) {
+                $format = str_replace('[', '', str_replace(']', '', str_replace('[StartDate|', '[', $sub)));
+                $replace = $startDt->format($format);
+            }
+
+            if (strpos($sub, '[EndDate|') !== false) {
+                $format = str_replace('[', '', str_replace(']', '', str_replace('[EndDate|', '[', $sub)));
+                $replace = $endDt->format($format);
+            }
+
             // Substitute the replacement we have found (it might be '')
             $string = str_replace($sub, $replace, $string);
         }

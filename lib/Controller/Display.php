@@ -756,6 +756,20 @@ class Display extends Base
         // We have permission - load
         $display->load();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $display->tags));
+        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
@@ -799,7 +813,8 @@ class Display extends Base
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
-            'versions' => [$playerVersions]
+            'versions' => [$playerVersions],
+            'tags' => $tags
         ]);
     }
 
@@ -1446,8 +1461,8 @@ class Display extends Base
                     // Alerts enabled for this display
                     // Display just gone offline, or always alert
                     // Fields for email
-                    $subject = sprintf(__("Email Alert for Display %s"), $display->display);
-                    $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
+                    $subject = sprintf(__("Alert for Display %s"), $display->display);
+                    $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
                     // Add to system
                     $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());

@@ -4,6 +4,7 @@
   "options": {
     "periodSizeInDays": 7,
     "maxPeriods": 4,
-    "archiveOwner": ""
+    "archiveOwner": "",
+    "archiveStats": "Off"
   }
 }

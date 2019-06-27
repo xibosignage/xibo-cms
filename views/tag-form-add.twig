@@ -1,0 +1,55 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Add Tag" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#tagAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="tagAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("tag.add") }}">
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Tag" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Values" %}{% endset %}
+                {% set helpText %}{% trans "Comma separated string of additional values that should be associated with this Tag. Values entered here will be available for selection when assigning this Tag." %}{% endset %}
+                {{ forms.input("options", title, "", helpText) }}
+
+                {% set title %}{% trans "Required Value?" %}{% endset %}
+                {% set helpText %}{% trans "Tick to ensure that a value is selected when assigning this Tag" %}{% endset %}
+                {{ forms.checkbox("isRequired", title, 0, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

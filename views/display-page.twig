@@ -68,8 +68,11 @@
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                                     {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                                    {% set title %}{% trans "Exact match?" %}{% endset %}
+                                    {{ inline.checkbox("exactTags", title) }}
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}

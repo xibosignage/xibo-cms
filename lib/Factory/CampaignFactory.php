@@ -171,7 +171,14 @@ class CampaignFactory extends BaseFactory
                 FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
                 WHERE lktagcampaign.campaignId = campaign.CampaignID 
                 GROUP BY lktagcampaign.campaignId
-            ) AS tags
+            ) AS tags,
+            
+            (
+                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
+                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
+                WHERE lktagcampaign.campaignId = campaign.CampaignID 
+                GROUP BY lktagcampaign.campaignId
+            ) AS tagValues
         ';
 
         $body  = '
@@ -235,25 +242,17 @@ class CampaignFactory extends BaseFactory
                     )
                 ';
             } else {
+                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+
                 $body .= " AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId
                   FROM tag
                     INNER JOIN lktagcampaign
                     ON lktagcampaign.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= " WHERE tag LIKE :tags$i ";
-                    else
-                        $body .= " OR tag LIKE :tags$i ";
-
-                    $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 

@@ -295,6 +295,25 @@
                                     {% endif %}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("PLAYLIST_STATS_ENABLED_DEFAULT") %}
+                                    {% set title %}{% trans "Enable Playlist Stats Collection?" %}{% endset %}
+                                    {% set helpText %}{% trans "Select the Default setting to use for the collection of Proof of Play statistics for all Playlists." %}{% endset %}
+
+                                    {% set offOption %}{% trans "Off" %}{% endset %}
+                                    {% set onOption %}{% trans "On" %}{% endset %}
+                                    {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                                    {% set options = [
+                                        { id: "Off", value: offOption },
+                                        { id: "On", value: onOption },
+                                        { id: "Inherit", value: inheritOption }
+                                    ] %}
+                                    {% if theme.isSettingEditable("PLAYLIST_STATS_ENABLED_DEFAULT") %}
+                                        {{ forms.dropdown("PLAYLIST_STATS_ENABLED_DEFAULT", "single", title, theme.getSetting("PLAYLIST_STATS_ENABLED_DEFAULT"), options, "id", "value", helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("PLAYLIST_STATS_ENABLED_DEFAULT", title, theme.getSetting("PLAYLIST_STATS_ENABLED_DEFAULT"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("WIDGET_STATS_ENABLED_DEFAULT") %}
                                     {% set title %}{% trans "Enable Widget Stats Collection?" %}{% endset %}
                                     {% set helpText %}{% trans "Select the Default setting to use for the collection for Proof of Play statistics for all Widgets." %}{% endset %}

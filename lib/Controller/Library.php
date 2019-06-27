@@ -847,11 +847,26 @@ class Library extends Base
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $media->tags));
+        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
-            'help' => $this->getHelp()->link('Library', 'Edit')
+            'help' => $this->getHelp()->link('Library', 'Edit'),
+            'tags' => $tags
         ]);
     }
 
@@ -1853,5 +1868,41 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+    }
+
+
+    /**
+     * @SWG\Get(
+     *  path="/library/{mediaId}/isused/",
+     *  operationId="mediaIsUsed",
+     *  tags={"library"},
+     *  summary="Media usage check",
+     *  description="Checks if a Media is being used",
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $mediaId
+     */
+    public function isUsed($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Get count, being the number of times the media needs to appear to be true ( or use the default 0)
+        $count = $this->getSanitizer()->getInt('count', 0);
+
+        // Check and return result
+        $this->getState()->setData([
+            'isUsed' => $media->isUsed($count)
+        ]);
+        
     }
 }

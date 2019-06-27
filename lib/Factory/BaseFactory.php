@@ -314,4 +314,67 @@ class BaseFactory
         }
         $body .= ' ) ';
     }
+
+    /**
+     * @param array $tags An array of tags
+     * @param string $operator exactTags passed from factory, determines if the search is LIKE or =
+     * @param string $body Current SQL body passed by reference
+     * @param array $params Array of parameters passed by reference
+     */
+    public function tagFilter($tags, $operator, &$body, &$params)
+    {
+        $i = 0;
+
+        foreach ($tags as $tag) {
+            $i++;
+
+            $tagV = explode('|', $tag);
+
+            // search tag without value
+            if (!isset($tagV[1])) {
+                if ($i == 1) {
+                    $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                } else {
+                    $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                }
+
+                if ($operator === '=') {
+                    $params['tags' . $i] = $tag;
+                } else {
+                    $params['tags' . $i] = '%' . $tag . '%';
+                }
+                // search tag only by value
+            } elseif ($tagV[0] == '') {
+                if ($i == 1) {
+                    $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
+                } else {
+                    $body .= ' OR `value` ' . $operator . ' :value' . $i;
+                }
+
+                if ($operator === '=') {
+                    $params['value' . $i] = $tagV[1];
+                } else {
+                    $params['value' . $i] = '%' . $tagV[1] . '%';
+                }
+                // search tag by both tag and value
+            } else {
+                if ($i == 1) {
+                    $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
+                        ' AND value ' . $operator . ' :value' . $i;
+                } else {
+                    $body .= ' OR `tag` ' . $operator . ' :tags' . $i .
+                        ' AND value ' . $operator . ' :value' . $i;
+                }
+
+                if ($operator === '=') {
+                    $params['tags' . $i] = $tagV[0];
+                    $params['value' . $i] = $tagV[1];
+                } else {
+                    $params['tags' . $i] = '%' . $tagV[0] . '%';
+                    $params['value' . $i] = '%' . $tagV[1] . '%';
+                }
+            }
+        }
+        $body .= ' ) ';
+    }
 }

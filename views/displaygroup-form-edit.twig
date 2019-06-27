@@ -61,7 +61,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayGroup.edit", {"id": displayGroup.displayGroupId}) }}">
+            <form id="displayGroupEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayGroup.edit", {"id": displayGroup.displayGroupId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
                 {{ forms.input("displayGroup", title, displayGroup.displayGroup , helpText) }}
@@ -71,8 +71,17 @@
                 {{ forms.input("description", title, displayGroup.description, helpText) }}
 
                 {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tag this item. Comma Separated." %}{% endset %}
-                {{ forms.inputWithTags("tags", title, displayGroup.tags, helpText) }}
+                {% set helpText %}{% trans "Tags for this Display Group - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+
+                <p id="loadingValues" style="margin-left: 17%"></p>
+
+                {% set title %}{% trans "Tag value" %}{% endset %}
+                {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                <div id="tagValueRequired" class="alert alert-info">
+                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                </div>
 
                 {% set title %}{% trans "Dynamic Group?" %}{% endset %}
                 {% set helpText %}{% trans "Are the members of this group dynamic?" %}{% endset %}
