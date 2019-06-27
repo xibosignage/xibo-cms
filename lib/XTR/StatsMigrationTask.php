@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\XTR;
+use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
@@ -62,33 +63,22 @@ class StatsMigrationTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Stats Migration') . PHP_EOL . PHP_EOL;
 
+        // Config options
+        $options = [
+            'killSwitch' => $this->getOption('killSwitch', 0),
+            'numberOfRecords' => $this->getOption('numberOfRecords', 10000),
+            'numberOfLoops' => $this->getOption('numberOfLoops', 1000),
+            'pauseBetweenLoops' => $this->getOption('pauseBetweenLoops', 10),
+            'optimiseOnComplete' => $this->getOption('optimiseOnComplete', 1),
+        ];
+
         // read configOverride
         $configOverrideFile = $this->getOption('configOverride', '');
-        if (file_exists($configOverrideFile)) {
-
-            $contents = json_decode(file_get_contents($configOverrideFile), true);
-
-            $options = [
-                'killSwitch' => $contents['killSwitch'],
-                'numberOfRecords' => $contents['numberOfRecords'],
-                'numberOfLoops' => $contents['numberOfLoops'],
-                'pauseBetweenLoops' => $contents['pauseBetweenLoops'],
-                'optimiseOnComplete' => $contents['optimiseOnComplete'],
-            ];
-
-        } else {
-
-            // Config options
-            $options = [
-                'killSwitch' => $this->getOption('killSwitch', 0),
-                'numberOfRecords' => $this->getOption('numberOfRecords', 10000),
-                'numberOfLoops' => $this->getOption('numberOfLoops', 1000),
-                'pauseBetweenLoops' => $this->getOption('pauseBetweenLoops', 10),
-                'optimiseOnComplete' => $this->getOption('optimiseOnComplete', 1),
-            ];
+        if (!empty($configOverrideFile) && file_exists($configOverrideFile)) {
+            $options = array_merge($options, json_decode(file_get_contents($configOverrideFile), true));
         }
 
-        if ($options['killSwitch'] == 1) {
+        if ($options['killSwitch'] == 0) {
 
             // Check stat_archive table exists
             $this->archiveExist = $this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
@@ -236,16 +226,16 @@ class StatsMigrationTask implements TaskInterface
         $sql->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
         $sql->execute();
 
-        // Mark the Stats Archiver as disabled if there are records in stat table and set option archiveStats off
+        // Mark the Stats Archiver as disabled if there are records in stat table
         if ($sql->rowCount() > 0) {
 
             // Quit the StatsArchiveTask if it is running
-            if ($archiveTask->runNow == 1) {
+            if ($archiveTask->status == Task::$STATUS_RUNNING) {
                 $this->log->debug('Quitting the stat migration task as stat archive task is running');
+                var_dump('Quitting the stat migration task as stat archive task is running');
                 return;
             }
             $archiveTask->isActive = 0;
-            $archiveTask->options['archiveStats'] = 'Off';
             $archiveTask->save();
             $this->store->commitIfNecessary();
         }
@@ -269,9 +259,8 @@ class StatsMigrationTask implements TaskInterface
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
 
-                // Enable the StatsArchiver task and set option archiveStats on
+                // Enable the StatsArchiver task
                 $archiveTask->isActive = 1;
-                $archiveTask->options['archiveStats'] = 'On';
                 $archiveTask->save();
                 $this->store->commitIfNecessary();
 
