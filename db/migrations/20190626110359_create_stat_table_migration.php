@@ -44,8 +44,8 @@ class CreateStatTableMigration extends AbstractMigration
         ->addColumn('start', 'integer')
         ->addColumn('end', 'integer')
         ->addColumn('tag', 'string', ['limit' => 254, 'default' => null, 'null' => true])
-        ->addColumn('duration', 'integer', ['null' => true])
-        ->addColumn('count', 'integer', ['null' => true])
+        ->addColumn('duration', 'integer')
+        ->addColumn('count', 'integer')
 
         ->addIndex('statDate')
         ->addIndex(['displayId', 'end', 'type'])

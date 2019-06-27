@@ -27,8 +27,6 @@ use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
-use Xibo\Factory\CampaignFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
@@ -78,19 +76,9 @@ class Report extends Base
     private $mediaFactory;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
      * @var UserFactory
      */
     private $userFactory;
-
-    /**
-     * @var CampaignFactory
-     */
-    private $campaignFactory;
 
     /**
      * Set common dependencies.
@@ -107,10 +95,9 @@ class Report extends Base
      * @param ReportScheduleFactory $reportScheduleFactory
      * @param SavedReportFactory $savedReportFactory
      * @param MediaFactory $mediaFactory
-     * @param LayoutFactory $layoutFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $layoutFactory, $userFactory, $campaignFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -120,9 +107,7 @@ class Report extends Base
         $this->reportScheduleFactory = $reportScheduleFactory;
         $this->savedReportFactory = $savedReportFactory;
         $this->mediaFactory = $mediaFactory;
-        $this->layoutFactory = $layoutFactory;
         $this->userFactory = $userFactory;
-        $this->campaignFactory = $campaignFactory;
     }
 
     /// //<editor-fold desc="Report Schedules">

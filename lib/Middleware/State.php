@@ -902,9 +902,7 @@ class State extends Middleware
                 $container->reportScheduleFactory,
                 $container->savedReportFactory,
                 $container->mediaFactory,
-                $container->layoutFactory,
-                $container->userFactory,
-                $container->campaignFactory
+                $container->userFactory
             );
         });
 
