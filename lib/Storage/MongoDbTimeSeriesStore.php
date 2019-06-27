@@ -123,15 +123,35 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // Media name
             $mediaName = null;
             if ($stat['mediaId'] != null) {
-                $media = $this->mediaFactory->getById($stat['mediaId']);
-                $mediaName = $media->name; //dont remove used later
+                try {
+                    $media = $this->mediaFactory->getById($stat['mediaId']);
+                } catch (NotFoundException $error) {
+                    // Media not found ignore and log the stat
+                    $this->log->error('Media not found. Media Id: '. $stat['mediaId'] .',Layout Id: '. $stat['layoutId']
+                        .', FromDT: '.$statData[$k]['start'].', ToDt: '.$statData[$k]['end'].', Type: '.$stat['type']
+                        .', Duration: '.$stat['duration'] .', Count '.$stat['count']);
+
+                    // unset($statData[$k]);
+                    continue;
+                }
                 $statData[$k]['mediaName'] = $mediaName;
                 $tagFilter['media'] = explode(',', $media->tags);
             }
 
             // Widget name
             if ($stat['widgetId'] != null) {
-                $widget = $this->widgetFactory->getById($stat['widgetId']);
+                try {
+                    $widget = $this->widgetFactory->getById($stat['widgetId']);
+                } catch (NotFoundException $error) {
+                    // Widget not found, ignore and log the stat
+                    $this->log->error('Widget not found. Widget Id: '. $stat['widgetId'] .',Layout Id: '. $stat['layoutId']
+                        .', FromDT: '.$statData[$k]['start'].', ToDt: '.$statData[$k]['end'].', Type: '.$stat['type']
+                        .', Duration: '.$stat['duration'] .', Count '.$stat['count']);
+
+                    // unset($statData[$k]);
+                    continue;
+                }
+
                 if($widget != null) {
                     $widget->load();
                     $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
@@ -140,7 +160,18 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             // Display name
-            $display = $this->displayFactory->getById($stat['displayId']);
+            try {
+                $display = $this->displayFactory->getById($stat['displayId']); //TODO what if you dont find the displayId
+            } catch (NotFoundException $error) {
+                // Display not found, ignore and log the stat
+                $this->log->error('Display not found. Display Id: '. $stat['displayId'] .',Layout Id: '. $stat['layoutId']
+                    .', FromDT: '.$statData[$k]['start'].', ToDt: '.$statData[$k]['end'].', Type: '.$stat['type']
+                    .', Duration: '.$stat['duration'] .', Count '.$stat['count']);
+
+                // unset($statData[$k]);
+                continue;
+            }
+
             $statData[$k]['displayName'] = $display->display;
 
             // Layout data
