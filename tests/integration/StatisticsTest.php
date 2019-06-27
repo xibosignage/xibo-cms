@@ -330,9 +330,6 @@ class StatisticsTest extends LocalWebTestCase
      */
     public function testExport()
     {
-        // Checkout layout
-        $layout = $this->checkout($this->layout);
-
         $hardwareId = $this->display->license;
 
         // One insert
@@ -342,7 +339,7 @@ class StatisticsTest extends LocalWebTestCase
                         todt="2018-02-15 00:00:00" 
                         type="layout" 
                         scheduleid="0" 
-                        layoutid="' . $layout->layoutId . '" />
+                        layoutid="' . $this->layout->layoutId . '" />
                     </stats>');
         $this->assertSame(true, $response);
 

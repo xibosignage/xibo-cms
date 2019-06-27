@@ -1414,6 +1414,12 @@ class Soap
         // Store an array of parsed stat data for insert
         $now = $this->getDate()->getLocalDate();
 
+        // Get the display timezone to use when adjusting log dates.
+        $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
+
+        // Process the XML file into an array
+        $stats = [];
+
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
@@ -1438,12 +1444,15 @@ class Soap
 
             $scheduleId = $node->getAttribute('scheduleid');
 
-            if (empty($scheduleId))
+            if (empty($scheduleId)) {
                 $scheduleId = 0;
+            }
 
+            $campaignId = 0;
             $layoutId = $node->getAttribute('layoutid');
 
-            // For a type event we have layoutid 0
+            // For a type "event" we have layoutid 0
+            // otherwise we should try and resolve the campaignId
             if ($type != 'event') {
                 try {
                     // Handle the splash screen
@@ -1452,10 +1461,10 @@ class Soap
                         continue;
                     }
 
-                    // Check whether the layout is found
-                    $this->layoutFactory->getById($layoutId);
+                    // Get the layout campaignId
+                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
 
-                } catch (NotFoundException $error) {
+                } catch (XiboException $error) {
                     $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
                     continue;
                 }
@@ -1474,19 +1483,23 @@ class Soap
             }
 
             // The mediaId (really widgetId) might well be null
-            if ($widgetId == 'null' || $widgetId == '')
+            if ($widgetId == 'null' || $widgetId == '') {
                 $widgetId = 0;
+            } else {
+                // Try to get details for this widget
+                try {
+                    $mediaId = $this->widgetFactory->getWidgetForStat($widgetId);
 
-            if ($widgetId > 0) {
-                // Lookup the mediaId
-                $media = $this->mediaFactory->getByLayoutAndWidget($layoutId, $widgetId);
+                    // If the mediaId is empty, then we can assume we're a stat for a region specific widget
+                    if ($mediaId === null) {
+                        $type = 'widget';
+                    }
 
-                if (count($media) <= 0) {
-                    // Non-media widget
-                    $mediaId = null;
-                    $type = 'widget';
-                } else {
-                    $mediaId = $media[0]->mediaId;
+                } catch (NotFoundException $notFoundException) {
+                    // Widget isn't found
+                    // we can only log this and move on
+                    $this->getLog()->info('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    continue;
                 }
             }
             
@@ -1501,16 +1514,6 @@ class Soap
 
                 $duration = $end->diffInSeconds($start);
             }
-
-            if ($type == 'event') {
-                $campaignId = 0;
-            } else {
-                // Get the layout campaignId
-                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
-            }
-
-            // Get the display timezone to use when adjusting log dates.
-            $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
 
             // Adjust the date according to the display timezone
             try {

@@ -713,6 +713,9 @@ class Layout implements \JsonSerializable
 
         if ($this->parentId === null) {
 
+            // Delete widget history
+            $this->getStore()->update('DELETE FROM `widgethistory` WHERE layoutHistoryId IN (SELECT layoutHistoryId FROM `layouthistory` WHERE campaignId = :campaignId)', ['campaignId' => $this->campaignId]);
+
             // Delete layout history
             $this->getStore()->update('DELETE FROM `layouthistory` WHERE campaignId = :campaignId', ['campaignId' => $this->campaignId]);
 
@@ -825,9 +828,13 @@ class Layout implements \JsonSerializable
 
     /**
      * Add layout history
+     *  this is called when a new Layout is added, and when a Draft Layout is published
+     *  we can therefore expect to always have a Layout History record for a Layout
      */
-    public function addLayoutHistory()
+    private function addLayoutHistory()
     {
+        $this->getLog()->debug('Adding Layout History record for ' . $this->layoutId);
+
         // Add a record in layout history when a layout is added or published
         $this->getStore()->insert('
           INSERT INTO `layouthistory` (campaignId, layoutId, publishedDate)
@@ -837,6 +844,56 @@ class Layout implements \JsonSerializable
             'layoutId' => $this->layoutId,
             'publishedDate' => $this->date->parse()->format('Y-m-d H:i:s')
         ]);
+    }
+
+    /**
+     * Add Widget History
+     *  this should be called when the contents of a Draft Layout are destroyed during the publish process
+     *  it preserves the current state of widgets before they are removed from the database
+     *  that can then be used for proof of play stats, to get back to the original widget name/type and mediaId
+     * @param \Xibo\Entity\Layout $parent
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    private function addWidgetHistory($parent)
+    {
+        // Get the most recent layout history record
+        $layoutHistoryId = $this->getStore()->select('
+            SELECT layoutHistoryId FROM `layouthistory` WHERE layoutId = :layoutId
+        ', [
+            'layoutId' => $parent->layoutId
+        ]);
+
+        if (count($layoutHistoryId) <= 0) {
+            // We are missing the parent layout history record, which isn't good.
+            // I think all we can do at this stage is log it
+            $this->getLog()->alert('Missing Layout History for layoutId ' . $parent->layoutId . ' which is on campaignId ' . $parent->campaignId);
+            return;
+        }
+
+        $layoutHistoryId = intval($layoutHistoryId[0]['layoutHistoryId']);
+
+        // Add records in the widget history table representing all widgets on this Layout
+        foreach ($parent->getWidgets() as $widget) {
+
+            // Does this widget have a mediaId
+            $mediaId = null;
+            try {
+                $mediaId = $widget->getPrimaryMediaId();
+            } catch (NotFoundException $notFoundException) {
+                // this is fine
+            }
+
+            $this->getStore()->insert('
+                INSERT INTO `widgethistory` (layoutHistoryId, widgetId, mediaId, type, name) 
+                    VALUES (:layoutHistoryId, :widgetId, :mediaId, :type, :name);
+            ', [
+                'layoutHistoryId' => $layoutHistoryId,
+                'widgetId' => $widget->widgetId,
+                'mediaId' => $mediaId,
+                'type' => $widget->type,
+                'name' => $widget->getOptionValue('name', null),
+            ]);
+        }
     }
 
     /**
@@ -1515,6 +1572,9 @@ class Layout implements \JsonSerializable
             // Change it over to me.
             $this->config->changeSetting('DEFAULT_LAYOUT', $this->layoutId);
         }
+
+        // Preserve the widget information
+        $this->addWidgetHistory($parent);
 
         // Delete the parent (make sure we set the parent to be a child of us, otherwise we will delete the linked
         // campaign
