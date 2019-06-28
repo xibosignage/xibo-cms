@@ -103,6 +103,7 @@ class StatsMigrationTask implements TaskInterface
 
                 } else {
                     // Disable the task
+                    $this->log->debug('Stats migration task is disabled as stat_archive table is not found');
                     $this->getTask()->isActive = 0;
                     $this->getTask()->save();
                 }
@@ -110,23 +111,18 @@ class StatsMigrationTask implements TaskInterface
         }
     }
 
-    public function moveStatsFromStatArchiveToStatMysql($options = [])
+    public function moveStatsFromStatArchiveToStatMysql($options)
     {
 
         $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_archive_mysql.txt';
-
-        $options = array_merge([
-            'numberOfRecords' => 10000,
-            'numberOfLoops' => 1000,
-            'pauseBetweenLoops' => 10,
-        ], $options);
 
         // Get low watermark from file
         $watermark = $this->getWatermarkFromFile($fileName, 'stat_archive');
 
         $numberOfLoops = 0;
-        $count = 0;
+
         while ($watermark > 0) {
+            $count = 0;
 
             $stats = $this->store->getConnection()
                 ->prepare('SELECT * FROM stat_archive WHERE statId < :watermark ORDER BY statId DESC LIMIT :limit');
@@ -192,15 +188,8 @@ class StatsMigrationTask implements TaskInterface
 
     }
 
-    public function moveStatsFromStatArchiveToStatMongoDb($options = [])
+    public function moveStatsFromStatArchiveToStatMongoDb($options)
     {
-
-        $options = array_merge([
-
-            'numberOfRecords' => 10000,
-            'numberOfLoops' => 1000,
-            'pauseBetweenLoops' => 10,
-        ], $options);
 
         // Migration from stat table to Mongo
         $this->migrationStatToMongo($options);
@@ -240,9 +229,9 @@ class StatsMigrationTask implements TaskInterface
         }
 
         $numberOfLoops = 0;
-        $count = 0;
-        while ($watermark > 0) {
 
+        while ($watermark > 0) {
+            $count = 0;
             $stats = $this->store->getConnection()
                 ->prepare('SELECT * FROM stat WHERE statId < :watermark ORDER BY statId DESC LIMIT :limit');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
@@ -330,9 +319,9 @@ class StatsMigrationTask implements TaskInterface
         $watermark = $this->getWatermarkFromFile($fileName, 'stat_archive');
 
         $numberOfLoops = 0;
-        $count = 0;
-        while ($watermark > 0) {
 
+        while ($watermark > 0) {
+            $count = 0;
             $stats = $this->store->getConnection()
                 ->prepare('SELECT * FROM stat_archive WHERE statId < :watermark ORDER BY statId DESC LIMIT :limit');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);

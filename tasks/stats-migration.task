@@ -2,11 +2,11 @@
   "name": "Stats Migration",
   "class": "\\Xibo\\XTR\\StatsMigrationTask",
   "options": {
-    "killSwitch": 1,
-    "numberOfRecords": 4,
-    "numberOfLoops": 2,
-    "pauseBetweenLoops": 5,
+    "killSwitch": 0,
+    "numberOfRecords": 5000,
+    "numberOfLoops": 10,
+    "pauseBetweenLoops": 1,
     "optimiseOnComplete": 1,
-    "configOverride": "/var/www/cms/library/configoverridetest.json"
+    "configOverride": ""
   }
 }
