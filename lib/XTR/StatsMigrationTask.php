@@ -232,7 +232,6 @@ class StatsMigrationTask implements TaskInterface
             // Quit the StatsArchiveTask if it is running
             if ($archiveTask->status == Task::$STATUS_RUNNING) {
                 $this->log->debug('Quitting the stat migration task as stat archive task is running');
-                var_dump('Quitting the stat migration task as stat archive task is running');
                 return;
             }
             $archiveTask->isActive = 0;

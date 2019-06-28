@@ -908,6 +908,52 @@ class DistributionReport implements ReportInterface
                     $input = range(0, 6);
                 }
 
+            }
+
+            elseif (($reportFilter == 'thismonth')) {
+
+                $startUTC = $this->dateService->parse()->startOfMonth()->format('U'); //firstdaythismonth
+                $endUTC =  $this->dateService->parse()->endOfMonth()->addSecond()->format('U'); //lastdaythismonth
+
+                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
+                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
+
+
+                if ($groupByFilter == 'byhour') {
+                    $hour = 1;
+                    $input = range(0, 24 * 31 - 1);
+
+                } elseif ($groupByFilter == 'bydayofweek') {
+                    $hour = 24;
+                    $input = range(0, 30);
+
+                } elseif ($groupByFilter == 'bydayofmonth') {
+                    $hour = 24;
+                    $input = range(0, 30);
+                }
+            }
+
+            elseif (($reportFilter == 'lastmonth')) {
+
+                $startUTC = $this->dateService->parse()->startOfMonth()->subMonth()->format('U'); //firstdaylastmonth
+                $endUTC =  $this->dateService->parse()->startOfMonth()->subMonth()->endOfMonth()->addSecond()->format('U'); //lastdaylastmonth
+
+                $filterRangeStart = new UTCDateTime($startUTC * 1000);
+                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
+
+                if ($groupByFilter == 'byhour') {
+                    $hour = 1;
+                    $input = range(0, 24 * 31 - 1);
+
+                } elseif ($groupByFilter == 'bydayofweek') {
+                    $hour = 24;
+                    $input = range(0, 30);
+
+                } elseif ($groupByFilter == 'bydayofmonth') {
+                    $hour = 24;
+                    $input = range(0, 30);
+                }
+
             } elseif (($reportFilter == 'thisyear')) {
 
                 $startUTC = $this->dateService->parse()->startOfYear()->format('U'); //firstdaythisyear
@@ -918,7 +964,7 @@ class DistributionReport implements ReportInterface
 
                 if ($groupByFilter == 'byhour') {
                     $hour = 1;
-                    $input = range(0, 24 * 365 - 1);
+                    $input = range(0, 24 * 366 - 1);
 
                 } elseif ($groupByFilter == 'bydayofweek') {
                     $hour = 24;
@@ -942,7 +988,7 @@ class DistributionReport implements ReportInterface
 
                 if ($groupByFilter == 'byhour') {
                     $hour = 1;
-                    $input = range(0, 24 * 365 - 1);
+                    $input = range(0, 24 * 366 - 1);
 
                 } elseif ($groupByFilter == 'bydayofweek') {
                     $hour = 24;
