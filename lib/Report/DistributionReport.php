@@ -5,6 +5,7 @@ namespace Xibo\Report;
 use Jenssegers\Date\Date;
 use MongoDB\BSON\UTCDateTime;
 use Xibo\Entity\ReportSchedule;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -108,12 +109,23 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData()
     {
-        $type = $this->getSanitizer()->getParam('type', 'layout');
+        $type = $this->getSanitizer()->getParam('type', '');
 
-        if ($type == 'event') {
-            $selectedId = 0; // we only need tag
-            $tag = $this->getSanitizer()->getParam('eventTag', null);
-            $title = __('Add distribution report Schedule for '). $type. ' - '. $tag;
+        if ($type == 'layout') {
+            $selectedId = $this->getSanitizer()->getParam('layoutId', null);
+            $title = __('Add Report Schedule for '). $type. ' - '.
+                $this->layoutFactory->getById($selectedId)->layout;
+
+        } else if ($type == 'media') {
+            $selectedId = $this->getSanitizer()->getParam('mediaId', null);
+            $title = __('Add Report Schedule for '). $type. ' - '.
+                $this->mediaFactory->getById($selectedId)->name;
+
+        } else if ($type == 'event') {
+            $selectedId = 0; // we only need eventTag
+            $eventTag = $this->getSanitizer()->getParam('eventTag', null);
+            $title = __('Add Report Schedule for '). $type. ' - '. $eventTag;
+
         }
 
         $data = [];
@@ -123,7 +135,7 @@ class DistributionReport implements ReportInterface
         $data['hiddenFields'] =  json_encode([
             'type' => $type,
             'selectedId' => (int) $selectedId,
-            'tag' => isset($tag) ? $tag : null
+            'eventTag' => isset($eventTag) ? $eventTag : null
         ]);
 
         $data['reportName'] = 'distributionReport';
@@ -144,12 +156,16 @@ class DistributionReport implements ReportInterface
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
-        $tag = $hiddenFields['tag'];
+        $eventTag = $hiddenFields['eventTag'];
 
         $filterCriteria['displayId'] = $displayId;
         $filterCriteria['type'] = $type;
-        if ($type == 'event') {
-            $filterCriteria['eventTag'] = $tag;
+        if ($type == 'layout') {
+            $filterCriteria['layoutId'] = $selectedId;
+        } else if ($type == 'media') {
+            $filterCriteria['mediaId'] = $selectedId;
+        } else if ($type == 'event') {
+            $filterCriteria['eventTag'] = $eventTag;
         }
 
         $filterCriteria['filter'] = $filter;
@@ -186,8 +202,45 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        if ($filterCriteria['type'] == 'event') {
-            $saveAs = 'Distribution report: '. ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
+        if ($filterCriteria['type'] == 'layout') {
+            try {
+                $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
+
+            } catch (NotFoundException $error) {
+
+                // Get the campaign ID
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($filterCriteria['layoutId']);
+                $layoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
+                $layout = $this->layoutFactory->getById($layoutId);
+
+            }
+
+            $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
+
+
+        } else if ($filterCriteria['type'] == 'media') {
+            try {
+                $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
+                $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+
+            } catch (NotFoundException $error) {
+                $saveAs = 'Media not found';
+            }
+
+        } else if ($filterCriteria['type'] == 'event') {
+            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
+        }
+
+        if (!empty($filterCriteria['displayId'])) {
+
+            // Get display
+            try{
+                $displayName = $this->displayFactory->getById($filterCriteria['displayId'])->display;
+                $saveAs .= ' (Display: '. $displayName . ')';
+
+            } catch (NotFoundException $error){
+                $saveAs .= ' (DisplayId: Not Found )';
+            }
         }
 
         return $saveAs;
@@ -222,6 +275,9 @@ class DistributionReport implements ReportInterface
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
 
+        $type = strtolower($this->getSanitizer()->getString('type', $filterCriteria));
+        $layoutId = $this->getSanitizer()->getInt('layoutId', $filterCriteria);
+        $mediaId = $this->getSanitizer()->getInt('mediaId', $filterCriteria);
         $eventTag = $this->getSanitizer()->getString('eventTag', $filterCriteria);
         $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
         $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
@@ -282,9 +338,9 @@ class DistributionReport implements ReportInterface
         $this->getLog()->debug('Timeseries store is ' . $timeSeriesStore);
 
         if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getDistributionReportMongoDb($displayIds, $displayGroupIds, $diffInDays, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result = $this->getDistributionReportMongoDb($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
         } else {
-            $result = $this->getDistributionReportMySql($displayIds, $displayGroupIds, $diffInDays, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result = $this->getDistributionReportMySql($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
         }
 
         // Summary report result in chart
@@ -383,7 +439,7 @@ class DistributionReport implements ReportInterface
 
     }
 
-    function getDistributionReportMySql($displayIds, $displayGroupIds, $diffInDays, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    function getDistributionReportMySql($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
         // range - by hour, by dayofweek, by dayofmonth
         // today and yesterday - only by hour
@@ -391,7 +447,9 @@ class DistributionReport implements ReportInterface
         // thismonth and lastmonth - by hour, by dayofweek, by dayofmonth
         // thisyear and lastyear - by dayofweek, by dayofmonth
 
-        if ($eventTag != '') {
+        if ( (($type == 'media') && ($mediaId != '')) ||
+            (($type == 'layout') && ($layoutId != '')) ||
+            (($type == 'event') && ($eventTag != '')) ) {
 
             $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('U');
             $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('U');
@@ -709,8 +767,17 @@ class DistributionReport implements ReportInterface
                 $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ') ';
             }
 
-            $body .= ' AND `stat`.type = \'event\'  
+            // Type filter
+            if (($type == 'layout') && ($layoutId != '')) {
+                $body .= ' AND `stat`.type = \'layout\' 
+                       AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = ' . $layoutId. ') ';
+            } elseif (($type == 'media') && ($mediaId != '')) {
+                $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
+                       AND `stat`.mediaId = ' . $mediaId;
+            } elseif (($type == 'event') && ($eventTag != '')) {
+                $body .= ' AND `stat`.type = \'event\'  
                        AND `stat`.tag = "' . $eventTag. '"';
+            }
 
             $params = [
                 'fromDt' => $fromDt,
@@ -773,7 +840,7 @@ class DistributionReport implements ReportInterface
         }
     }
 
-    function getDistributionReportMongoDb($displayIds, $displayGroupIds, $diffInDays, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    function getDistributionReportMongoDb($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
 
         // range - by hour, by dayofweek, by dayofmonth
@@ -782,7 +849,9 @@ class DistributionReport implements ReportInterface
         // thismonth and lastmonth - by hour, by dayofweek, by dayofmonth
         // thisyear and lastyear - by dayofweek, by dayofmonth
 
-        if ($eventTag != '') {
+        if ( (($type == 'media') && ($mediaId != '')) ||
+            (($type == 'layout') && ($layoutId != '')) ||
+            (($type == 'event') && ($eventTag != '')) ) {
 
             $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('U');
             $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('U');
@@ -1003,13 +1072,33 @@ class DistributionReport implements ReportInterface
 
             $this->getLog()->debug('Period start: '.$filterRangeStart->toDateTime()->format('Y-m-d H:i:s'). ' Period end: '. $filterRangeEnd->toDateTime()->format('Y-m-d H:i:s'));
 
-             // Match query
-            $matchType = [
-                '$eq' => [ '$type', 'event' ]
-            ];
-            $matchId = [
-                '$eq' => [ '$eventName', $eventTag ]
-            ];
+            // Type filter
+            if (($type == 'layout') && ($layoutId != '')) {
+
+                // Get the campaign ID
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+
+                $matchType = [
+                    '$eq' => [ '$type', 'layout' ]
+                ];
+                $matchId = [
+                    '$eq' => [ '$campaignId', $campaignId ]
+                ];
+            } elseif (($type == 'media') && ($mediaId != '')) {
+                $matchType = [
+                    '$eq' => [ '$type', 'media' ]
+                ];
+                $matchId = [
+                    '$eq' => [ '$mediaId', $mediaId ]
+                ];
+            } elseif (($type == 'event') && ($eventTag != '')) {
+                $matchType = [
+                    '$eq' => [ '$type', 'event' ]
+                ];
+                $matchId = [
+                    '$eq' => [ '$eventName', $eventTag ]
+                ];
+            }
 
             // PERIOD GENERATION
             // Addition of 1 day/hour from start
