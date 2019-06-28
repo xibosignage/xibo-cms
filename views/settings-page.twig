@@ -266,7 +266,7 @@
 
                                 {% if theme.isSettingVisible("DISPLAY_PROFILE_STATS_DEFAULT") %}
                                     {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
-                                    {% set helpText %}{% trans "Set the Default Settings for Proof of Play statistics to be applied to all Displays added to a Display Profile." %}{% endset %}
+                                    {% set helpText %}{% trans "Set the Default Settings for Proof of Play statistics to apply to all Displays. This can be toggled off by using Display Profiles." %}{% endset %}
                                     {{ forms.checkbox("DISPLAY_PROFILE_STATS_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_STATS_DEFAULT"), helpText, "", "", not theme.isSettingEditable("DISPLAY_PROFILE_STATS_DEFAULT")) }}
                                 {% endif %}
 

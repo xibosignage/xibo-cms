@@ -38,6 +38,7 @@ interface ReportInterface
 
     /**
      * Return the twig file name of the report form
+     * Load the report form
      * @return string
      */
     public function getReportForm();

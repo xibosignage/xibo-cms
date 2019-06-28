@@ -5,6 +5,7 @@ namespace Xibo\Report;
 use Jenssegers\Date\Date;
 use MongoDB\BSON\UTCDateTime;
 use Xibo\Entity\ReportSchedule;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
@@ -93,7 +94,7 @@ class SummaryReport implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData()
     {
-        $type = $this->getSanitizer()->getParam('type', 'layout');
+        $type = $this->getSanitizer()->getParam('type', '');
 
         if ($type == 'layout') {
             $selectedId = $this->getSanitizer()->getParam('layoutId', null);
@@ -106,19 +107,32 @@ class SummaryReport implements ReportInterface
                     $this->mediaFactory->getById($selectedId)->name;
 
         } else if ($type == 'event') {
-            $selectedId = 0; // we only need tag
-            $tag = $this->getSanitizer()->getParam('eventTag', null);
-            $title = __('Add Report Schedule for '). $type. ' - '. $tag;
+            $selectedId = 0; // we only need eventTag
+            $eventTag = $this->getSanitizer()->getParam('eventTag', null);
+            $title = __('Add Report Schedule for '). $type. ' - '. $eventTag;
 
         }
 
+        $data = ['filters' => []];
+
+        $data['filters'][] = ['name'=> 'Daily', 'filter'=> 'daily'];
+        $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
+        $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
+        $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
+
+        $data['formTitle'] = $title;
+
+        $data['hiddenFields'] =  json_encode([
+            'type' => $type,
+            'selectedId' => (int) $selectedId,
+            'eventTag' => isset($eventTag) ? $eventTag : null
+        ]);
+
+        $data['reportName'] = 'summaryReport';
+
         return [
-            'title' => $title,
-            'hiddenFields' => [
-                'type' => $type,
-                'selectedId' => (int) $selectedId,
-                'tag' => isset($tag) ? $tag : null
-            ]
+            'template' => 'summary-report-schedule-form-add',
+            'data' => $data
         ];
     }
 
@@ -130,7 +144,7 @@ class SummaryReport implements ReportInterface
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
-        $tag = $hiddenFields['tag'];
+        $eventTag = $hiddenFields['eventTag'];
 
         $filterCriteria['type'] = $type;
         if ($type == 'layout') {
@@ -138,7 +152,7 @@ class SummaryReport implements ReportInterface
         } else if ($type == 'media') {
             $filterCriteria['mediaId'] = $selectedId;
         } else if ($type == 'event') {
-            $filterCriteria['tag'] = $tag;
+            $filterCriteria['eventTag'] = $eventTag;
         }
 
         $filterCriteria['filter'] = $filter;
@@ -151,17 +165,16 @@ class SummaryReport implements ReportInterface
         } else if ($filter == 'weekly') {
             $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
             $filterCriteria['reportFilter'] = 'lastweek';
-            $filterCriteria['groupFilter'] = 'byweek';
 
         } else if ($filter == 'monthly') {
             $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
             $filterCriteria['reportFilter'] = 'lastmonth';
-            $filterCriteria['groupFilter'] = 'bymonth';
+            $filterCriteria['groupByFilter'] = 'byweek';
 
         } else if ($filter == 'yearly') {
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
-            $filterCriteria['groupFilter'] = 'bymonth';
+            $filterCriteria['groupByFilter'] = 'bymonth';
         }
 
         // Return
@@ -176,15 +189,32 @@ class SummaryReport implements ReportInterface
     {
 
         if ($filterCriteria['type'] == 'layout') {
-            $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
+            try {
+                $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
+
+            } catch (NotFoundException $error) {
+
+                // Get the campaign ID
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($filterCriteria['layoutId']);
+                $layoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
+                $layout = $this->layoutFactory->getById($layoutId);
+
+            }
+
             $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
 
+
         } else if ($filterCriteria['type'] == 'media') {
-            $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+            try {
+                $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
+                $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+
+            } catch (NotFoundException $error) {
+                $saveAs = 'Media not found';
+            }
 
         } else if ($filterCriteria['type'] == 'event') {
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['tag'];
+            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
         }
 
         return $saveAs;
@@ -223,7 +253,7 @@ class SummaryReport implements ReportInterface
         $type = strtolower($this->getSanitizer()->getString('type', $filterCriteria));
         $layoutId = $this->getSanitizer()->getInt('layoutId', $filterCriteria);
         $mediaId = $this->getSanitizer()->getInt('mediaId', $filterCriteria);
-        $eventTag = $this->getSanitizer()->getString('tag', $filterCriteria);
+        $eventTag = $this->getSanitizer()->getString('eventTag', $filterCriteria);
         $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
         $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
 
@@ -377,8 +407,8 @@ class SummaryReport implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => $result['periodStart'],
-            'periodEnd' => $result['periodEnd'],
+            'periodStart' => isset($result['periodStart']) ? $result['periodStart'] : '',
+            'periodEnd' => isset($result['periodEnd']) ? $result['periodEnd'] : '',
             'labels' => $labels,
             'countData' => $countData,
             'durationData' => $durationData,
@@ -590,7 +620,7 @@ class SummaryReport implements ReportInterface
                     '.$extendedPeriodEnd.' - 86400 - (c.number * 86400)  AS start, 
                     '.$extendedPeriodEnd.' - (c.number * 86400) AS end ';
 
-                } elseif ($groupByFilter == 'byweek') { //TODO
+                } elseif ($groupByFilter == 'byweek') {
 
                     $range = ceil($diffInDays / 7 );
 
@@ -697,7 +727,7 @@ class SummaryReport implements ReportInterface
             ';
             }
 
-
+            // BODY
             $body = '
                 LEFT OUTER JOIN
                 
@@ -739,7 +769,7 @@ class SummaryReport implements ReportInterface
                        AND `stat`.mediaId = ' . $mediaId;
             } elseif (($type == 'event') && ($eventTag != '')) {
                 $body .= ' AND `stat`.type = \'event\'  
-                       AND `stat`.tag = ' . $eventTag;
+                       AND `stat`.tag = "' . $eventTag. '"';
             }
 
             $params = [
