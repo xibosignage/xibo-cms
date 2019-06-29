@@ -90,7 +90,27 @@ class StatsMigrationTask implements TaskInterface
             $timeSeriesStore = $this->timeSeriesStore->getEngine();
 
             if ($timeSeriesStore == 'mongodb') {
-                $this->moveStatsFromStatArchiveToStatMongoDb($options);
+
+                // If no records in both the stat and stat_archive then disable the task
+                $statSql = $this->store->getConnection()->prepare('SELECT statId FROM stat LIMIT 1');
+                $statSql->execute();
+
+                $statArchiveSqlCount =  0;
+                if ( $this->archiveExist === true) {
+                    $statArchiveSql = $this->store->getConnection()->prepare('SELECT statId FROM stat_archive LIMIT 1');
+                    $statArchiveSql->execute();
+                    $statArchiveSqlCount = $statArchiveSql->rowCount();
+                }
+
+                if( ($statSql->rowCount() == 0) && ($statArchiveSqlCount == 0) ) {
+
+                    // Disable the task
+                    $this->log->debug('Stats migration task is disabled as stat_archive and stat is empty');
+                    $this->disableTask();
+                }
+
+
+                $this->moveStatsToMongoDb($options);
             }
 
             // If when the task runs it finds that MongoDB is disabled,
@@ -104,8 +124,7 @@ class StatsMigrationTask implements TaskInterface
                 } else {
                     // Disable the task
                     $this->log->debug('Stats migration task is disabled as stat_archive table is not found');
-                    $this->getTask()->isActive = 0;
-                    $this->getTask()->save();
+                    $this->disableTask();
                 }
             }
         }
@@ -139,8 +158,14 @@ class StatsMigrationTask implements TaskInterface
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
 
+                $this->log->debug('End of records in stat_archive (migration to MYSQL). Dropping table and disabling task.');
+
                 // Drop the stat_archive table
                 $this->store->update('DROP TABLE `stat_archive`;', []);
+
+                // Disable the task
+                $this->disableTask();
+
                 break;
             }
 
@@ -181,14 +206,14 @@ class StatsMigrationTask implements TaskInterface
 
             // Give SQL time to recover
             if ($watermark > 0) {
-                $this->log->debug('Stats migration effected '.$count.' rows, sleeping.');
+                $this->log->debug('MYSQL stats migration from stat_archive to stat. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
         }
 
     }
 
-    public function moveStatsFromStatArchiveToStatMongoDb($options)
+    public function moveStatsToMongoDb($options)
     {
 
         // Migration from stat table to Mongo
@@ -252,7 +277,7 @@ class StatsMigrationTask implements TaskInterface
                 $archiveTask->save();
                 $this->store->commitIfNecessary();
 
-                $this->log->debug('End of records in stat . Truncate and Optimize');
+                $this->log->debug('End of records in stat table. Truncate and Optimize.');
 
                 // Truncate stat table
                 $this->store->update('TRUNCATE TABLE stat', []);
@@ -304,7 +329,7 @@ class StatsMigrationTask implements TaskInterface
 
             // Give Mongo time to recover
             if ($watermark > 0) {
-                $this->log->debug('Stats migration effected '.$count.' rows, sleeping.');
+                $this->log->debug('Mongo stats migration from stat. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
         }
@@ -336,6 +361,8 @@ class StatsMigrationTask implements TaskInterface
 
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
+
+                $this->log->debug('End of records in stat_archive (migration to Mongo). Dropping table.');
 
                 // Drop the stat_archive table
                 $this->store->update('DROP TABLE `stat_archive`;', []);
@@ -384,7 +411,7 @@ class StatsMigrationTask implements TaskInterface
 
             // Give Mongo time to recover
             if ($watermark > 0) {
-                $this->log->debug('Stats migration effected '.$count.' rows, sleeping.');
+                $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
         }
@@ -453,6 +480,15 @@ class StatsMigrationTask implements TaskInterface
         }
 
         return false;
+    }
+
+    // Disable the task
+    function disableTask() {
+
+        $this->getTask()->isActive = 0;
+        $this->getTask()->save();
+
+        return;
     }
 
 }
