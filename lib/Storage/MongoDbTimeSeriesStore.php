@@ -108,10 +108,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     {
         foreach ($statData as $k => $stat) {
 
-            $statData[$k]['start'] = new UTCDateTime($this->dateService->parse($statData[$k]['fromDt'])->format('U')*1000);
+            $statData[$k]['start'] = new UTCDateTime($statData[$k]['fromDt']->format('U') * 1000);
             unset($statData[$k]['fromDt']);
 
-            $statData[$k]['end'] = new UTCDateTime($this->dateService->parse($statData[$k]['toDt'])->format('U')*1000);
+            $statData[$k]['end'] = new UTCDateTime($statData[$k]['toDt']->format('U') * 1000);
             unset($statData[$k]['toDt']);
 
             $statData[$k]['eventName'] = $statData[$k]['tag'];

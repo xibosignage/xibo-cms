@@ -34,6 +34,7 @@ use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\DeadlockException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\BandwidthFactory;
@@ -1412,7 +1413,7 @@ class Soap
             throw new \SoapFault('Receiver', "Stat XML is empty.");
 
         // Store an array of parsed stat data for insert
-        $now = $this->getDate()->getLocalDate();
+        $now = $this->getDate()->parse();
 
         // Get the display timezone to use when adjusting log dates.
         $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
@@ -1508,32 +1509,34 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
-            if ($duration == '') {
-                $start = $this->getDate()->parse($fromdt);
-                $end = $this->getDate()->parse($todt);
-
-                $duration = $end->diffInSeconds($start);
-            }
-
             // Adjust the date according to the display timezone
+            // stats are returned in the local date/time of the Player
+            // the CMS will have been configured with that Player's timezone, so we can convert accordingly.
             try {
                 // From date
-                $fromdt = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $fromdt, $this->display->timeZone)->tz($defaultTimeZone) :
-                    Date::createFromFormat('Y-m-d H:i:s', $fromdt);
-                $fromdt = $this->getDate()->getLocalDate($fromdt);
+                $fromdt = ($this->display->timeZone != null)
+                    ? Date::createFromFormat('Y-m-d H:i:s', $fromdt, $this->display->timeZone)->tz($defaultTimeZone)
+                    : Date::createFromFormat('Y-m-d H:i:s', $fromdt);
 
                 // To date
-                $todt = ($this->display->timeZone != null) ? Date::createFromFormat('Y-m-d H:i:s', $todt, $this->display->timeZone)->tz($defaultTimeZone) : Date::createFromFormat('Y-m-d H:i:s', $todt);
-                $todt = $this->getDate()->getLocalDate($todt);
+                $todt = ($this->display->timeZone != null)
+                    ? Date::createFromFormat('Y-m-d H:i:s', $todt, $this->display->timeZone)->tz($defaultTimeZone)
+                    : Date::createFromFormat('Y-m-d H:i:s', $todt);
+
+                // Do we need to set the duration of this record (we will do for older individually collected stats)
+                if ($duration == '') {
+                    $duration = $todt->diffInSeconds($fromdt);
+
+                    // If the duration is enormous, then we have an eroneous message from the player
+                    if ($duration > (86400 * 365)) {
+                        throw new InvalidArgumentException('Dates are too far apart', 'duration');
+                    }
+                }
 
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
-                $this->getLog()->debug('From date format unreadable: ' . $fromdt);
-                $this->getLog()->debug('To date format unreadable: ' . $todt);
-
-                // Use now instead
-                $fromdt = $this->getDate()->getLocalDate();
-                $todt = $this->getDate()->getLocalDate();
+                $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: ' . $fromdt . ', toDt: ' . $todt . '. E = ' . $e->getMessage());
+                continue;
             }
 
             $stats[] = [

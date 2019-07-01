@@ -22,7 +22,6 @@
 
 namespace Xibo\Storage;
 
-use MongoDB\BSON\UTCDateTime;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -69,9 +68,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     {
         // Set to Unix Timestamp
         foreach ($statData as $k => $stat) {
-            $statData[$k]['statDate'] = $this->dateService->parse($statData[$k]['statDate'])->format('U');
-            $statData[$k]['fromDt'] = $this->dateService->parse($statData[$k]['fromDt'])->format('U');
-            $statData[$k]['toDt'] = $this->dateService->parse($statData[$k]['toDt'])->format('U');
+            $statData[$k]['statDate'] = $statData[$k]['statDate']->format('U');
+            $statData[$k]['fromDt'] = $statData[$k]['fromDt']->format('U');
+            $statData[$k]['toDt'] = $statData[$k]['toDt']->format('U');
         }
 
         $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
