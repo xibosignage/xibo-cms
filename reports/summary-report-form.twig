@@ -36,13 +36,16 @@
 {% block pageContent %}
 
     <div class="widget">
-        <div class="widget-title">{% trans "Summary Report" %}</div>
+        <div class="widget-title">
+            {% trans "Summary by Layout, Media or Event" %}
+            <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below.  Where the Range crosses period boundaries a new period is generated - i.e 1 week grouped by hourly produces 24 x 7 periods." %}"></span>
+        </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="summaryReport">
                         <form class="form-inline">
-                            {% set title %}{% trans "Filter" %}{% endset %}
+                            {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
                             {% set today %}{% trans "Today" %}{% endset %}
                             {% set yesterday %}{% trans "Yesterday" %}{% endset %}
@@ -93,7 +96,8 @@
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
 
-                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set title %}{% trans "Layout" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Layout" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
@@ -106,9 +110,10 @@
                                 { name: "data-text-property", value: "layout" }
                             ] %}
 
-                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", "", "pagedSelect layout-select", "", "l", "", attributes) }}
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", helpText, "pagedSelect layout-select", "", "l", "", attributes) }}
 
-                            {% set title %}{% trans "Media" %}{% endset %}
+                            {% set title %}{% trans "Media" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Media" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
@@ -119,10 +124,11 @@
                                 { name: "data-id-property", value: "mediaId" },
                                 { name: "data-text-property", value: "name" }
                             ] %}
-                            {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", "", "pagedSelect media-select", "", "m", "", attributes) }}
+                            {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-select", "", "m", "", attributes) }}
 
-                            {% set title %}{% trans "Tag" %}{% endset %}
-                            {{ inline.input("eventTag", title, "", "", "tag-text") }}
+                            {% set title %}{% trans "Tag" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Event" %}{% endset %}
+                            {{ inline.input("eventTag", title, "", helpText, "tag-text") }}
 
                         </form>
                     </div>
@@ -139,6 +145,10 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
 
         var reportChart = null;
 
