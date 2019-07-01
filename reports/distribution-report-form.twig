@@ -36,7 +36,10 @@
 {% block pageContent %}
 
     <div class="widget">
-        <div class="widget-title">{% trans "Distribution Report" %}</div>
+        <div class="widget-title">
+            {% trans "Distribution by Layout, Media or Event" %}
+            <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below. Where the Range crosses period boundaries the data is aggregated into the correct period - i.e 1 week grouped by hourly produces 24 periods." %}"></span>
+        </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
@@ -71,20 +74,6 @@
                             {% set title %}{% trans "To Date" %}{% endset %}
                             {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
 
-                            {% set title %}{% trans "Display" %}{% endset %}
-                            {% set attributes = [
-                                { name: "data-width", value: "200px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("display.search") },
-                                { name: "data-search-term", value: "display" },
-                                { name: "data-search-term-tags", value: "tags" },
-                                { name: "data-id-property", value: "displayId" },
-                                { name: "data-text-property", value: "display" }
-                            ] %}
-                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
-
                             {% set title %}{% trans "Group by" %}{% endset %}
                             {% set byhour %}{% trans "Hour" %}{% endset %}
                             {% set bydayofweek %}{% trans "Day of week" %}{% endset %}
@@ -107,7 +96,8 @@
                             ] %}
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
 
-                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {% set title %}{% trans "Layout" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Layout" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
@@ -120,9 +110,10 @@
                                 { name: "data-text-property", value: "layout" }
                             ] %}
 
-                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", "", "pagedSelect layout-select", "", "l", "", attributes) }}
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", helpText, "pagedSelect layout-select", "", "l", "", attributes) }}
 
-                            {% set title %}{% trans "Media" %}{% endset %}
+                            {% set title %}{% trans "Media" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Media" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
                                 { name: "data-allow-clear", value: "true" },
@@ -133,10 +124,25 @@
                                 { name: "data-id-property", value: "mediaId" },
                                 { name: "data-text-property", value: "name" }
                             ] %}
-                            {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", "", "pagedSelect media-select", "", "m", "", attributes) }}
+                            {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-select", "", "m", "", attributes) }}
 
-                            {% set title %}{% trans "Tag" %}{% endset %}
-                            {{ inline.input("eventTag", title, "", "", "tag-text") }}
+                            {% set title %}{% trans "Tag" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Event" %}{% endset %}
+                            {{ inline.input("eventTag", title, "", helpText, "tag-text") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
                         </form>
                     </div>
@@ -153,6 +159,10 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
 
         var reportChart = null;
 

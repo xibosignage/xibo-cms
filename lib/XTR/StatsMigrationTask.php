@@ -303,8 +303,8 @@ class StatsMigrationTask implements TaskInterface
                 $entry = [];
 
                 $entry['type'] = $stat['type'];
-                $entry['fromDt'] = $this->date->parse($stat['start'], 'U')->format('Y-m-d H:i:s');
-                $entry['toDt'] = $this->date->parse($stat['end'], 'U')->format('Y-m-d H:i:s');
+                $entry['fromDt'] = $this->date->parse($stat['start'], 'U');
+                $entry['toDt'] = $this->date->parse($stat['end'], 'U');
                 $entry['scheduleId'] = $stat['scheduleId'];
                 $entry['mediaId'] = $stat['mediaId'];
                 $entry['layoutId'] = $stat['layoutId'];

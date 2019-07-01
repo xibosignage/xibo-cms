@@ -108,10 +108,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     {
         foreach ($statData as $k => $stat) {
 
-            $statData[$k]['start'] = new UTCDateTime($this->dateService->parse($statData[$k]['fromDt'])->format('U')*1000);
+            $statData[$k]['start'] = new UTCDateTime($statData[$k]['fromDt']->format('U') * 1000);
             unset($statData[$k]['fromDt']);
 
-            $statData[$k]['end'] = new UTCDateTime($this->dateService->parse($statData[$k]['toDt'])->format('U')*1000);
+            $statData[$k]['end'] = new UTCDateTime($statData[$k]['toDt']->format('U') * 1000);
             unset($statData[$k]['toDt']);
 
             $statData[$k]['eventName'] = $statData[$k]['tag'];
@@ -119,6 +119,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             unset($statData[$k]['scheduleId']);
             unset($statData[$k]['statDate']);
+
+            // Make an empty array to collect tags into
+            $tagFilter = [];
 
             // Media name
             $mediaName = null;
@@ -134,8 +137,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // unset($statData[$k]);
                     continue;
                 }
-                 $mediaName = $media->name; //dont remove used later
-                 $statData[$k]['mediaName'] = $mediaName;
+                $mediaName = $media->name; //dont remove used later
+                $statData[$k]['mediaName'] = $mediaName;
                 $tagFilter['media'] = explode(',', $media->tags);
             }
 
@@ -200,18 +203,24 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // All we can do here is log
                     // we shouldn't ever get in this situation because the campaignId we used above will have
                     // already been looked up in the layouthistory table.
-                    $this->log->alert('Error processing statistic into MongoDB. Stat is: ' . json_encode($stat));
+                    $this->log->alert('Error processing statistic into MongoDB. Layout not found. Stat is: ' . json_encode($stat));
                 }
-
-                // Display tags
-                $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
-
-                // TagFilter array
-                $statData[$k]['tagFilter'] = $tagFilter;
 
             }
 
             $statData[$k]['layoutName'] = $layoutName;
+
+            // Display tags
+            try {
+                $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
+            } catch (NotFoundException $notFoundException) {
+                $this->log->alert('Error processing statistic into MongoDB. Display not found. Stat is: ' . json_encode($stat));
+                // TODO: need to remove the record?
+                continue;
+            }
+
+            // TagFilter array
+            $statData[$k]['tagFilter'] = $tagFilter;
         }
 
         // Insert statistics
