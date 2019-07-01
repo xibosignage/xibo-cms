@@ -868,7 +868,7 @@ class DistributionReport implements ReportInterface
                 if ($groupByFilter == 'byhour') {
 
                     $hour = 1;
-                    $input = range(0, ( ($diffInDays + 1) * 24 -1) );
+                    $input = range(0, (($diffInDays + 1) * 24 - 1));
 
                 } elseif ($groupByFilter == 'bydayofweek') {
 
@@ -881,9 +881,7 @@ class DistributionReport implements ReportInterface
                     $input = range(0, $diffInDays);
                 }
 
-            }
-
-            elseif (($reportFilter == 'today')) {
+            } elseif (($reportFilter == 'today')) {
 
                 $filterRangeStart = new UTCDateTime($today * 1000);
                 $filterRangeEnd = new UTCDateTime($nextday * 1000);
@@ -904,9 +902,7 @@ class DistributionReport implements ReportInterface
                     $input = range(0, 0);
                 }
 
-            }
-
-            elseif (($reportFilter == 'yesterday')) {
+            } elseif (($reportFilter == 'yesterday')) {
 
                 $filterRangeStart = new UTCDateTime($yesterday * 1000);
                 $filterRangeEnd = new UTCDateTime($today * 1000);
@@ -926,20 +922,18 @@ class DistributionReport implements ReportInterface
                     $hour = 24;
                     $input = range(0, 0);
                 }
-            }
-
-            elseif (($reportFilter == 'thisweek')) {
+            } elseif (($reportFilter == 'thisweek')) {
 
                 $startUTC = $this->dateService->parse()->startOfWeek()->format('U');
                 $endUTC = $this->dateService->parse()->endOfWeek()->addSecond()->format('U');
 
-                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
+                $filterRangeStart = new UTCDateTime($startUTC * 1000);
+                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
 
                 if ($groupByFilter == 'byhour') {
 
-                     $hour = 1;
-                     $input = range(0, 24 * 7 - 1);
+                    $hour = 1;
+                    $input = range(0, 24 * 7 - 1);
 
                 } elseif ($groupByFilter == 'bydayofweek') {
 
@@ -951,15 +945,13 @@ class DistributionReport implements ReportInterface
                     $hour = 24;
                     $input = range(0, 6);
                 }
-            }
-
-            elseif (($reportFilter == 'lastweek')) {
+            } elseif (($reportFilter == 'lastweek')) {
 
                 $startUTC = $this->dateService->parse()->startOfWeek()->subWeek()->format('U'); //firstdaylastweek
                 $endUTC = $this->dateService->parse()->endOfWeek()->addSecond()->subWeek()->format('U'); //lastdaylastweek
 
-                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
+                $filterRangeStart = new UTCDateTime($startUTC * 1000);
+                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
 
                 if ($groupByFilter == 'byhour') {
 
@@ -977,15 +969,13 @@ class DistributionReport implements ReportInterface
                     $input = range(0, 6);
                 }
 
-            }
-
-            elseif (($reportFilter == 'thismonth')) {
+            } elseif (($reportFilter == 'thismonth')) {
 
                 $startUTC = $this->dateService->parse()->startOfMonth()->format('U'); //firstdaythismonth
-                $endUTC =  $this->dateService->parse()->endOfMonth()->addSecond()->format('U'); //lastdaythismonth
+                $endUTC = $this->dateService->parse()->endOfMonth()->addSecond()->format('U'); //lastdaythismonth
 
-                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
+                $filterRangeStart = new UTCDateTime($startUTC * 1000);
+                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
 
 
                 if ($groupByFilter == 'byhour') {
@@ -1000,12 +990,10 @@ class DistributionReport implements ReportInterface
                     $hour = 24;
                     $input = range(0, 30);
                 }
-            }
-
-            elseif (($reportFilter == 'lastmonth')) {
+            } elseif (($reportFilter == 'lastmonth')) {
 
                 $startUTC = $this->dateService->parse()->startOfMonth()->subMonth()->format('U'); //firstdaylastmonth
-                $endUTC =  $this->dateService->parse()->startOfMonth()->subMonth()->endOfMonth()->addSecond()->format('U'); //lastdaylastmonth
+                $endUTC = $this->dateService->parse()->startOfMonth()->subMonth()->endOfMonth()->addSecond()->format('U'); //lastdaylastmonth
 
                 $filterRangeStart = new UTCDateTime($startUTC * 1000);
                 $filterRangeEnd = new UTCDateTime($endUTC * 1000);
@@ -1045,9 +1033,7 @@ class DistributionReport implements ReportInterface
                     $input = range(0, 365);
                 }
 
-            }
-
-            elseif (($reportFilter == 'lastyear')) {
+            } elseif (($reportFilter == 'lastyear')) {
 
                 $startUTC = $this->dateService->parse()->startOfYear()->subYear()->format('U'); //firstdaylastyear
                 $endUTC = $this->dateService->parse()->endOfYear()->addSecond()->subYear()->format('U'); //lastdaylastyear
@@ -1070,98 +1056,60 @@ class DistributionReport implements ReportInterface
                 }
             }
 
-            $this->getLog()->debug('Period start: '.$filterRangeStart->toDateTime()->format('Y-m-d H:i:s'). ' Period end: '. $filterRangeEnd->toDateTime()->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('Period start: ' . $filterRangeStart->toDateTime()->format('Y-m-d H:i:s') . ' Period end: ' . $filterRangeEnd->toDateTime()->format('Y-m-d H:i:s'));
+
+            $match = [
+                '$match' => [
+                    'start' => [
+                        '$lt' => $filterRangeEnd
+                    ],
+                    'end' => [
+                        '$gt' => $filterRangeStart
+                    ],
+                    'type' => $type,
+                    'displayId' => [
+                        '$in' => $displayIds
+                    ]
+                ]
+            ];
+
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
 
                 // Get the campaign ID
                 $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+                $match['$match']['campaignId'] = $campaignId;
 
-                $matchType = [
-                    '$eq' => [ '$type', 'layout' ]
-                ];
-                $matchId = [
-                    '$eq' => [ '$campaignId', $campaignId ]
-                ];
             } elseif (($type == 'media') && ($mediaId != '')) {
-                $matchType = [
-                    '$eq' => [ '$type', 'media' ]
-                ];
-                $matchId = [
-                    '$eq' => [ '$mediaId', $mediaId ]
-                ];
+
+                $match['$match']['mediaId'] = $mediaId;
+
             } elseif (($type == 'event') && ($eventTag != '')) {
-                $matchType = [
-                    '$eq' => [ '$type', 'event' ]
-                ];
-                $matchId = [
-                    '$eq' => [ '$eventName', $eventTag ]
-                ];
+
+                $match['$match']['eventName'] = $eventTag;
+
             }
 
-            // PERIOD GENERATION
-            // Addition of 1 day/hour from start
-            $projectMap = [
-                '$project' => [
-                    'periods' =>  [
-                        '$map' => [
-                            'input' => $input,
-                            'as' => 'number',
-                            'in' => [
-                                'start' => [
-                                    '$add' => [
-                                        $filterRangeStart,
-                                        [
-                                            '$multiply' => [
-                                                $hour*3600000,
-                                                '$$number'
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                'end' => [
-                                    '$add' => [
-                                        [
-                                            '$add' => [
-                                                $filterRangeStart,
-                                                [
-                                                    '$multiply' => [
-                                                        $hour*3600000,
-                                                        '$$number'
-                                                    ]
-                                                ]
-                                            ]
-                                        ]
-                                        , $hour*3600000
-                                    ]
-                                ],
-                                'groupbycol' => '$$number'
-                            ]
-                        ]
-                    ]
-                ]
-            ];
-
             // GROUP BY
-            if ($groupByFilter == 'bydayofweek'){
+            if ($groupByFilter == 'bydayofweek') {
 
                 $groupBy = [
                     'dayofweek' => '$dayofweek'
                 ];
 
                 $sort = [
-                    '$sort' => ['dayofweek'=> 1]
+                    '$sort' => ['dayofweek' => 1]
                 ];
 
-            } elseif ($groupByFilter == 'bydayofmonth'){
+            } elseif ($groupByFilter == 'bydayofmonth') {
 
                 $groupBy = [
                     'dayofmonth' => '$dayofmonth'
                 ];
 
                 $sort = [
-                    '$sort' => ['dayofmonth'=> 1]
+                    '$sort' => ['dayofmonth' => 1]
                 ];
 
             } else { // ($groupByFilter == 'byhour')
@@ -1171,14 +1119,55 @@ class DistributionReport implements ReportInterface
                 ];
 
                 $sort = [
-                    '$sort' => ['hour'=> 1]
+                    '$sort' => ['hour' => 1]
                 ];
             }
 
             // PERIODS QUERY
             $cursorPeriodQuery = [
 
-                $projectMap,
+                // PERIOD GENERATION
+                // Addition of 1 day/hour from start
+                [
+                    '$project' => [
+                        'periods' => [
+                            '$map' => [
+                                'input' => $input,
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$add' => [
+                                            $filterRangeStart,
+                                            [
+                                                '$multiply' => [
+                                                    $hour * 3600000,
+                                                    '$$number'
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$add' => [
+                                            [
+                                                '$add' => [
+                                                    $filterRangeStart,
+                                                    [
+                                                        '$multiply' => [
+                                                            $hour * 3600000,
+                                                            '$$number'
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                            , $hour * 3600000
+                                        ]
+                                    ],
+                                    'groupbycol' => '$$number'
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
 
                 // periods needs to be unwind to merge next
                 [
@@ -1198,13 +1187,13 @@ class DistributionReport implements ReportInterface
                         'end' => 1,
                         'groupbycol' => 1,
                         'hour' => [
-                            '$hour' =>  '$start'
+                            '$hour' => '$start'
                         ],
                         'dayofweek' => [
-                            '$dayOfWeek' =>  '$start'
+                            '$dayOfWeek' => '$start'
                         ],
                         'dayofmonth' => [
-                            '$dayOfMonth' =>  '$start'
+                            '$dayOfMonth' => '$start'
                         ],
                     ]
                 ],
@@ -1232,7 +1221,7 @@ class DistributionReport implements ReportInterface
                     ]
                 ],
 
-                 $sort
+                $sort
 
             ];
 
@@ -1242,65 +1231,43 @@ class DistributionReport implements ReportInterface
             // STAT AGGREGATION QUERY
             $statQuery = [
 
-                [
-                    '$match' => [
-                        'start' =>  [
-                            '$lt' => $filterRangeEnd
-                        ],
-                        'end' => [
-                            '$gt' => $filterRangeStart
-                        ],
-                    ]
-                ],
+                $match,
 
                 [
-                    '$lookup' => [
-                        'from' => 'period',
-                        'let' => [
-                            'stat_start' => '$start',
-                            'stat_end' => '$end',
-                            'stat_duration' => '$duration',
-                            'stat_count' => '$count',
-                        ],
-                        'pipeline' => [
-                            $projectMap,
-                            [
-                                '$unwind' => '$periods'
-                            ],
-
-                        ],
-                        'as' => 'statdata'
-                    ]
-                ],
-
-                [
-                    '$unwind' => '$statdata'
-                ],
-
-                [
-                    '$match' => [
-                        '$expr' => [
-                            '$and' => [
-
-                                // match media id / layout id
-                                $matchType,
-                                $matchId,
-
-                                // display ids
+                    '$addFields' => [
+                        'range' => [
+                            '$range' => [
+                                0,
                                 [
-                                    '$in' => [ '$displayId', $displayIds ]
+                                    '$ceil' => [
+                                        '$divide' => [
+                                            [
+                                                '$subtract' => [
+                                                    '$end',
+                                                    '$start'
+                                                ]
+                                            ],
+                                            3600000
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        'period_start' => [
+                            '$dateFromParts' =>  [
+                                'year' => [
+                                    '$year' => '$start'
+                                ],
+                                'month' => [
+                                    '$month' => '$start'
+                                ],
+                                'day' => [
+                                    '$dayOfMonth' => '$start'
+                                ],
+                                'hour' => [
+                                    '$hour' => '$start'
                                 ],
 
-                                // stat.start < period end AND stat.end > period start
-                                // for example, when report filter 'today' is selected
-                                // where start is less than last hour of the day + 1 hour (i.e., nextday of today)
-                                // and end is greater than or equal first hour of the day
-                                [
-                                    '$lt' => [ '$start', '$statdata.periods.end' ]
-                                ],
-                                [
-                                    '$gt' => [ '$end', '$statdata.periods.start' ]
-                                ],
                             ]
                         ]
                     ]
@@ -1308,28 +1275,76 @@ class DistributionReport implements ReportInterface
 
                 [
                     '$project' => [
-                        '_id' => 1,
                         'count' => 1,
                         'duration' => 1,
                         'start' => 1,
                         'end' => 1,
-                        'period_start' => '$statdata.periods.start',
-                        'period_end' => '$statdata.periods.end',
-                        'groupbycol' => '$statdata.periods.groupbycol',
+                        'periods' => [
+                            '$map' => [
+                                'input' => '$range',
+                                'as' => 'number',
+                                'in' => [
+                                    'start' => [
+                                        '$add' => [
+                                            '$period_start',
+                                            [
+                                                '$multiply' => [
+                                                    $hour * 3600000,
+                                                    '$$number'
+                                                ]
+                                            ]
+                                        ]
+                                    ],
+                                    'end' => [
+                                        '$add' => [
+                                            [
+                                                '$add' => [
+                                                    '$period_start',
+                                                    [
+                                                        '$multiply' => [
+                                                            $hour * 3600000,
+                                                            '$$number'
+                                                        ]
+                                                    ]
+                                                ]
+                                            ]
+                                            , $hour * 3600000
+                                        ]
+                                    ],
+                                    'groupbycol' => '$$number'
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+
+                [
+                    '$unwind' => '$periods'
+                ],
+
+                [
+                    '$project' => [
+                        'count' => 1,
+                        'duration' => 1,
+                        'start' => 1,
+                        'end' => 1,
+                        'period_start' => '$periods.start',
+                        'period_end' => '$periods.end',
+                        'groupbycol' => '$periods.groupbycol',
                         'hour' => [
-                            '$hour' =>  '$statdata.periods.start'
+                            '$hour' => '$periods.start'
                         ],
                         'dayofweek' => [
-                            '$dayOfWeek' =>  '$statdata.periods.start'
+                            '$dayOfWeek' => '$periods.start'
                         ],
                         'dayofmonth' => [
-                            '$dayOfMonth' =>  '$statdata.periods.start'
+                            '$dayOfMonth' => '$periods.start'
                         ],
                         'actualStart' => [
-                            '$max' => [ '$start', '$statdata.periods.start', $filterRangeStart ]
+                            '$max' => ['$start', '$periods.start', $filterRangeStart]
                         ],
                         'actualEnd' => [
-                            '$min' => [ '$end', '$statdata.periods.end', $filterRangeEnd ]
+                            '$min' => ['$end', '$periods.end', $filterRangeEnd]
                         ],
                         'actualDiff' => [
                             '$min' => [
@@ -1338,8 +1353,8 @@ class DistributionReport implements ReportInterface
                                     '$divide' => [
                                         [
                                             '$subtract' => [
-                                                ['$min' => [ '$end', '$statdata.periods.end', $filterRangeEnd ]],
-                                                ['$max' => [ '$start', '$statdata.periods.start', $filterRangeStart ]]
+                                                ['$min' => ['$end', '$periods.end', $filterRangeEnd]],
+                                                ['$max' => ['$start', '$periods.start', $filterRangeStart]]
                                             ]
                                         ], 1000
                                     ]
