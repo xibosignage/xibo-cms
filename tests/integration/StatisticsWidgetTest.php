@@ -22,6 +22,7 @@
 
 namespace Xibo\Tests\Integration;
 
+use Jenssegers\Date\Date;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboStats;
@@ -99,7 +100,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12 00:00:00');
+        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat(DATE_ISO8601, '2018-02-12 00:00:00'));
     }
 
     /**
