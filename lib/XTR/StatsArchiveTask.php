@@ -94,7 +94,7 @@ class StatsArchiveTask implements TaskInterface
         $sql = '
             SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
               FROM stat
-                INNER JOIN display
+                LEFT OUTER JOIN display
                 ON stat.DisplayID = display.DisplayID
                 LEFT OUTER JOIN layout
                 ON layout.LayoutID = stat.LayoutID
