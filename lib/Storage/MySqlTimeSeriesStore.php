@@ -390,6 +390,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Run our query using a connection object (to save memory)
         $connection = $this->store->getConnection();
+        $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
         $statement = $connection->prepare($sql);
 
         // Execute
