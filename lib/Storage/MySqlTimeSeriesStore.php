@@ -405,22 +405,29 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
+        // Set some default options
+        $options = array_merge([
+            'maxAttempts' => 10,
+            'statsDeleteSleep' => 3,
+            'limit' => 10000,
+        ], $options);
+
+        // Convert to a simple type so that we can pass by reference to bindParam.
         $maxage = $maxage->format('U');
 
         try {
             $i = 0;
             $rows = 1;
-            $options = array_merge([
-                'maxAttempts' => 10,
-                'statsDeleteSleep' => 3,
-                'limit' => 10000,
-            ], $options);
 
             if ($fromDt !== null) {
+                // Convert to a simple type so that we can pass by reference to bindParam.
+                $fromDt = $fromDt->format('U');
+
+                // Prepare a delete statement which we will use multiple times
                 $delete = $this->store->getConnection()
                     ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT :limit');
 
-                $delete->bindParam(':fromDt', $fromDt->format('U'), \PDO::PARAM_STR);
+                $delete->bindParam(':fromDt', $fromDt, \PDO::PARAM_STR);
                 $delete->bindParam(':toDt', $maxage, \PDO::PARAM_STR);
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             } else {
@@ -451,9 +458,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     sleep($options['statsDeleteSleep']);
                 }
 
-                // Break if we've exceeded the maximum attempts.
-                if ($i >= $options['maxAttempts'])
+                // Break if we've exceeded the maximum attempts, assuming that has been provided
+                if ($options['maxAttempts'] > -1 && $i >= $options['maxAttempts']) {
                     break;
+                }
             }
 
             $this->log->debug('Deleted Stats back to ' . $maxage . ' in ' . $i . ' attempts');

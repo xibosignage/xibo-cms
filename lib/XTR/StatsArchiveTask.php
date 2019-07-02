@@ -149,8 +149,9 @@ class StatsArchiveTask implements TaskInterface
         $media = $this->mediaFactory->create(__('Stats Export %s to %s - '.bin2hex(random_bytes(5)), $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
+        // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
         $options = [
-            'maxAttempts' => 10,
+            'maxAttempts' => -1,
             'statsDeleteSleep' => 1,
             'limit' => 1000
         ];

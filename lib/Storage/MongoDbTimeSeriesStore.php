@@ -572,17 +572,19 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
+        // Set default options
+        $options = array_merge([
+            'maxAttempts' => 10,
+            'statsDeleteSleep' => 3,
+            'limit' => 10000,
+        ], $options);
+
         $toDt = $maxage->format(DATE_ISO8601);
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
         $i = 0;
         $rows = 1;
-        $options = array_merge([
-            'maxAttempts' => 10,
-            'statsDeleteSleep' => 3,
-            'limit' => 10000,
-        ], $options);
 
         $count = 0;
         while ($rows > 0) {
@@ -671,8 +673,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             // Break if we've exceeded the maximum attempts.
-            if ($i >= $options['maxAttempts'])
+            if ($options['maxAttempts'] > -1 && $i >= $options['maxAttempts']) {
                 break;
+            }
         }
 
         return $count;
