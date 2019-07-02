@@ -60,8 +60,8 @@ interface TimeSeriesStoreInterface
 
     /**
      * Retrieve statistics
-     * @param $fromDt string
-     * @param $toDt string
+     * @param $fromDt \Jenssegers\Date\Date
+     * @param $toDt \Jenssegers\Date\Date
      * @param $displayIds array
      * @param $layoutIds array[mixed]|null
      * @param $mediaIds array[mixed]|null
@@ -84,8 +84,8 @@ interface TimeSeriesStoreInterface
 
     /**
      * Get statistics
-     * @param $fromDt string
-     * @param $toDt string
+     * @param $fromDt \Jenssegers\Date\Date
+     * @param $toDt \Jenssegers\Date\Date
      * @param $displayIds array
      * @return TimeSeriesResultsInterface
      */
@@ -93,8 +93,8 @@ interface TimeSeriesStoreInterface
 
     /**
      * Delete statistics
-     * @param $fromDt string|null
-     * @param $toDt string
+     * @param $toDt \Jenssegers\Date\Date
+     * @param $fromDt \Jenssegers\Date\Date|null
      * @param $options array
      * @return int number of deleted stat records
      * @throws \Exception

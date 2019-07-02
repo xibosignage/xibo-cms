@@ -45,8 +45,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var DateServiceInterface */
     private $dateService;
 
+    /** @var array */
     private $config;
 
+    /** @var \MongoDB\Client */
     private $client;
 
     private $table = 'stat';
@@ -255,8 +257,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
 
-        $fromDt = new UTCDateTime($this->dateService->parse($fromDt)->format('U')*1000);
-        $toDt = new UTCDateTime($this->dateService->parse($toDt)->addDay()->format('U')*1000);
+        $fromDt = new UTCDateTime($fromDt->format('U')*1000);
+        $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
 
         // Filters the documents to pass only the documents that
         // match the specified condition(s) to the next pipeline stage.
@@ -429,8 +431,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $this->log->error($e->getMessage());
         }
 
-        $this->log->debug($cursor, JSON_PRETTY_PRINT);
-        $this->log->debug($result, JSON_PRETTY_PRINT);
+        $this->log->debug(json_encode($cursor, JSON_PRETTY_PRINT));
+        $this->log->debug(json_encode($result, JSON_PRETTY_PRINT));
 
         $totalStats = 0;
         try {
@@ -511,8 +513,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getStats($fromDt, $toDt, $displayIds = null)
     {
-        $fromDt = new UTCDateTime($this->dateService->parse($fromDt)->format('U')*1000);
-        $toDt = new UTCDateTime($this->dateService->parse($toDt)->addDay()->format('U')*1000);
+        $fromDt = new UTCDateTime($fromDt->format('U')*1000);
+        $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
 
         $match =  [
             '$match' => [
@@ -570,19 +572,19 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-
-        $fromDt = date(DATE_ISO8601, strtotime($fromDt));
-        $toDt = date(DATE_ISO8601, strtotime($maxage));
-
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
-
-        $i = 0;
-        $rows = 1;
+        // Set default options
         $options = array_merge([
             'maxAttempts' => 10,
             'statsDeleteSleep' => 3,
             'limit' => 10000,
         ], $options);
+
+        $toDt = $maxage->format(DATE_ISO8601);
+
+        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+
+        $i = 0;
+        $rows = 1;
 
         $count = 0;
         while ($rows > 0) {
@@ -590,6 +592,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $i++;
 
             if ($fromDt != null) {
+                $fromDt = $fromDt->format(DATE_ISO8601);
                 $match =  [
                     '$match' => [
                         '$expr' => [
@@ -670,8 +673,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             // Break if we've exceeded the maximum attempts.
-            if ($i >= $options['maxAttempts'])
+            if ($options['maxAttempts'] > -1 && $i >= $options['maxAttempts']) {
                 break;
+            }
         }
 
         return $count;

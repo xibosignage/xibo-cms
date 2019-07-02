@@ -99,11 +99,7 @@ class StatsArchiveTask implements TaskInterface
      */
     private function exportStatsToLibrary($fromDt, $toDt)
     {
-        $this->runMessage .= ' - ' . $fromDt . ' / ' . $toDt . PHP_EOL;
-
-        /*Format param dates*/
-        $fromDt = $this->date->getLocalDate($fromDt);
-        $toDt = $this->date->getLocalDate($toDt);
+        $this->runMessage .= ' - ' . $this->date->getLocalDate($fromDt) . ' / ' . $this->date->getLocalDate($toDt) . PHP_EOL;
 
         $resultSet = $this->timeSeriesStore->getStats($fromDt, $toDt);
 
@@ -153,14 +149,15 @@ class StatsArchiveTask implements TaskInterface
         $media = $this->mediaFactory->create(__('Stats Export %s to %s - '.bin2hex(random_bytes(5)), $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
+        // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
         $options = [
-            'maxAttempts' => 10,
+            'maxAttempts' => -1,
             'statsDeleteSleep' => 1,
             'limit' => 1000
         ];
+
         // Delete the stats, incrementally
         $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
-
     }
 
     /**
@@ -197,10 +194,8 @@ class StatsArchiveTask implements TaskInterface
 
         if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
 
-            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE'))));
-
+            $maxage = Date::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')));
             $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
-
             $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
 
             $options = [
@@ -214,7 +209,7 @@ class StatsArchiveTask implements TaskInterface
                 if ($result > 0) {
                     $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
                 }
-            } catch (\RuntimeException $exception) {
+            } catch (\Exception $exception) {
                 $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
             }
         } else {

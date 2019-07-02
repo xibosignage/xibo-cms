@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -275,11 +274,7 @@ class Stats extends Base
             $toDt->addDay(1);
         }
 
-        // Format param dates
-        $fromDt = $this->getDate()->getLocalDate($fromDt);
-        $toDt = $this->getDate()->getLocalDate($toDt);
-
-        $this->getLog()->debug('Converted Times received are: FromDt=' . $fromDt . '. ToDt=' . $toDt);
+        $this->getLog()->debug('Converted Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt));
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -508,10 +503,6 @@ class Stats extends Base
                 $displayIds = [$displayId];
             }
         }
-
-        // Format param dates
-        $fromDt = $this->getDate()->getLocalDate($fromDt);
-        $toDt = $this->getDate()->getLocalDate($toDt);
 
         // Get result set
         $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);

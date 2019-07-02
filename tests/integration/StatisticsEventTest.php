@@ -22,13 +22,13 @@
 
 namespace Xibo\Tests\Integration;
 
+use Jenssegers\Date\Date;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
-use Xibo\Helper\Random;
 use Xibo\Tests\LocalWebTestCase;
 
 /**
@@ -80,7 +80,7 @@ class StatisticsEventTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(date("Y-m-d H:i:s"), '2018-02-12 00:00:00');
+        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
     }
 
     /**
