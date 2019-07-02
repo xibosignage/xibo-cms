@@ -13,6 +13,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Random;
 
 /**
  * Class StatsArchiveTask
@@ -146,7 +147,7 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s - '.bin2hex(random_bytes(5)), $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(__('Stats Export %s to %s - ' . Random::generateString(5), $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
         // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
