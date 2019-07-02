@@ -2,16 +2,15 @@
 
 namespace Xibo\Report;
 
-use Jenssegers\Date\Date;
 use MongoDB\BSON\UTCDateTime;
 use Xibo\Entity\ReportSchedule;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -269,33 +268,15 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function getResults($filterCriteria)
     {
-
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
-
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
-        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
 
         $type = strtolower($this->getSanitizer()->getString('type', $filterCriteria));
         $layoutId = $this->getSanitizer()->getInt('layoutId', $filterCriteria);
         $mediaId = $this->getSanitizer()->getInt('mediaId', $filterCriteria);
         $eventTag = $this->getSanitizer()->getString('eventTag', $filterCriteria);
-        $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
-        $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
 
         $displayId = $this->getSanitizer()->getInt('displayId', $filterCriteria);
         $displayGroupId = $this->getSanitizer()->getInt('displayGroupId', $filterCriteria);
-
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
-            $toDt->addDay(1);
-        }
-
-        $diffInDays = $toDt->diffInDays($fromDt);
-
-        // Format param dates
-        $fromDt = $this->getDate()->getLocalDate($fromDt);
-        $toDt = $this->getDate()->getLocalDate($toDt);
 
         // Get an array of display id this user has access to.
         $displayIds = [];
@@ -314,8 +295,9 @@ class DistributionReport implements ReportInterface
             }
         }
 
-        if (count($displayIds) <= 0)
+        if (count($displayIds) <= 0) {
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+        }
 
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
@@ -324,96 +306,105 @@ class DistributionReport implements ReportInterface
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 
-        if (count($displayGroupIds) <= 0)
+        if (count($displayGroupIds) <= 0) {
             throw new InvalidArgumentException(__('No display groups with View permissions'), 'displayGroup');
+        }
 
+        //
+        // From and To Date Selection
+        // --------------------------
+        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // check the range filter first and set from/to dates accordingly.
+        $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
+
+        // Use the current date as a helper
+        $now = $this->getDate()->parse();
+
+        switch ($reportFilter) {
+
+            case 'today':
+                $fromDt = $now->copy()->startOfDay();
+                $toDt = $fromDt->copy()->addDay();
+                break;
+
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'thisweek':
+                $fromDt = $now->copy()->startOfWeek();
+                $toDt = $fromDt->copy()->addWeek();
+                break;
+
+            case 'thismonth':
+                $fromDt = $now->copy()->startOfMonth();
+                $toDt = $fromDt->copy()->addMonth();
+                break;
+
+            case 'thisyear':
+                $fromDt = $now->copy()->startOfYear();
+                $toDt = $fromDt->copy()->addYear();
+                break;
+
+            case 'lastweek':
+                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $toDt = $fromDt->copy()->addWeek();
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+                break;
+
+            case '':
+            default:
+                // Expect dates to be provided.
+                $fromDt = $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1));
+                $toDt = $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse());
+
+                // What if the fromdt and todt are exactly the same?
+                // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+                if ($fromDt == $toDt) {
+                    $toDt->addDay();
+                }
+
+                break;
+        }
+
+        // Use the group by filter provided
+        // NB: this differs from the Summary Report where we set the group by according to the range selected
+        $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
+
+        //
+        // Get Results!
+        // -------------
+        $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
+        if ($timeSeriesStore == 'mongodb') {
+            $result = $this->getDistributionReportMongoDb($displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
+        } else {
+            $result = $this->getDistributionReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag);
+        }
+
+        //
+        // Output Results
+        // --------------
         $labels = [];
         $countData = [];
         $durationData = [];
         $backgroundColor = [];
         $borderColor = [];
 
-        // Get store
-        $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
-        $this->getLog()->debug('Timeseries store is ' . $timeSeriesStore);
-
-        if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getDistributionReportMongoDb($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
-        } else {
-            $result = $this->getDistributionReportMySql($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
-        }
-
-        // Summary report result in chart
+        // Format the results for output on a chart
         if (count($result) > 0) {
-            foreach ($result['result'] as $row) {
-                // Day Label
-                $dayLabel = [1 => 'Mon', 2 => 'Tues', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
-
-                // Label
-                $tsLabel = $this->getDate()->parse($row['start'], 'U');
-
-                if ($reportFilter == '') {
-
-                    if ($groupByFilter == 'byhour') {
-                        $tsLabel = $tsLabel->format('g:i A ');
-
-                    } elseif ($groupByFilter == 'bydayofweek') {
-                        $tsLabel = $dayLabel[$row['groupbycol']];
-
-                    } elseif ($groupByFilter == 'bydayofmonth') {
-                        $tsLabel = $row['groupbycol'];
-                    }
-
-                } elseif (($reportFilter == 'today') || ($reportFilter == 'yesterday')) {
-                    if ($groupByFilter == 'byhour') {
-                        $tsLabel = $tsLabel->format('g:i A');
-
-                    } elseif ($groupByFilter == 'bydayofweek') {
-                        $tsLabel = $dayLabel[$row['groupbycol']];
-
-                    } elseif ($groupByFilter == 'bydayofmonth') {
-                        $tsLabel = $row['groupbycol'];
-                    }
-
-                } elseif (($reportFilter == 'lastweek') || ($reportFilter == 'thisweek')) {
-
-                    if ($groupByFilter == 'byhour') {
-                        $tsLabel = $tsLabel->format('g:i A');
-
-                    } elseif ($groupByFilter == 'bydayofweek') {
-                        $tsLabel = $dayLabel[$row['groupbycol']];
-
-                    } elseif ($groupByFilter == 'bydayofmonth') {
-                        $tsLabel = $row['groupbycol'];
-                    }
-
-                } elseif (($reportFilter == 'thismonth') || ($reportFilter == 'lastmonth')) {
-
-                    if ($groupByFilter == 'byhour') {
-                        $tsLabel = $tsLabel->format('g:i A ');
-
-                    } elseif ($groupByFilter == 'bydayofweek') {
-                        $tsLabel = $dayLabel[$row['groupbycol']];
-
-                    } elseif ($groupByFilter == 'bydayofmonth') {
-                        $tsLabel = $row['groupbycol'];
-                    }
-
-                } elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
-
-                    if ($groupByFilter == 'byhour') {
-                        $tsLabel = $tsLabel->format('g:i A ');
-
-                    } elseif ($groupByFilter == 'bydayofweek') {
-                        $tsLabel = $dayLabel[$row['groupbycol']];
-
-                    } elseif ($groupByFilter == 'bydayofmonth') {
-                        $tsLabel = $row['groupbycol'];
-                    }
-                }
-
+            foreach ($result as $row) {
                 // Chart labels in xaxis
-                $labels[] = $tsLabel;
+                $labels[] = $row['label'];
 
                 $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
                 $borderColor[] = 'rgb(240,93,41, 0.8)';
@@ -428,8 +419,8 @@ class DistributionReport implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => isset($result['periodStart']) ? $result['periodStart'] : '',
-            'periodEnd' => isset($result['periodEnd']) ? $result['periodEnd'] : '',
+            'periodStart' => $this->getDate()->getLocalDate($fromDt),
+            'periodEnd' => $this->getDate()->getLocalDate($toDt),
             'labels' => $labels,
             'countData' => $countData,
             'durationData' => $durationData,
@@ -439,408 +430,171 @@ class DistributionReport implements ReportInterface
 
     }
 
-    function getDistributionReportMySql($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    /**
+     * MySQL distribution report
+     * @param \Jenssegers\Date\Date $fromDt The filter range from date
+     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param string $groupByFilter Grouping, byhour, bydayofweek and bydayofmonth
+     * @param $displayIds
+     * @param $displayGroupIds
+     * @param $type
+     * @param $layoutId
+     * @param $mediaId
+     * @param $eventTag
+     * @return array
+     */
+    private function getDistributionReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
     {
-        // range - by hour, by dayofweek, by dayofmonth
-        // today and yesterday - only by hour
-        // thisweek and lastweek - only by hour
-        // thismonth and lastmonth - by hour, by dayofweek, by dayofmonth
-        // thisyear and lastyear - by dayofweek, by dayofmonth
+        // Only return something if we have the necessary options selected.
+        if (
+            (($type == 'media') && ($mediaId != ''))
+            || (($type == 'layout') && ($layoutId != ''))
+            || (($type == 'event') && ($eventTag != ''))
+        ) {
+            // My from/to dt represent the entire range we're interested in.
+            // we need to generate periods according to our grouping, within that range.
+            // we will use a temporary table for this.
+            $periods = '
+                CREATE TEMPORARY TABLE temp_periods AS       
+            ';
 
-        if ( (($type == 'media') && ($mediaId != '')) ||
-            (($type == 'layout') && ($layoutId != '')) ||
-            (($type == 'event') && ($eventTag != '')) ) {
-
-            $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('U');
-            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('U');
-
-            $yesterday = $this->dateService->parse()->startOfDay()->subDay()->format('U');
-            $today = $this->dateService->parse()->startOfDay()->format('U');
-            $nextday = $this->dateService->parse()->startOfDay()->addDay()->format('U');
-
-            if ($reportFilter == '') {
-                $filterRangeStart = $fromDt;
-                $filterRangeEnd = $toDt;
-
+            // Loop until we've covered all periods needed
+            $loopDate = $fromDt->copy();
+            while ($toDt > $loopDate) {
+                // We add different periods for each type of grouping
                 if ($groupByFilter == 'byhour') {
+                    $periods .= ' 
+                        SELECT  ' . $loopDate->hour . ' AS id, 
+                            \'' . $loopDate->format('g:i A') . '\' AS label, 
+                            ' . $loopDate->format('U') . ' AS start, 
+                            ' . $loopDate->addHour()->format('U') . ' AS end ';
 
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, ($diffInDays + 1) * 24);
-                    
-                    $start = $this->dateService->parse($fromDt, 'U')->startOfDay()->subHour();
-                    $end = $this->dateService->parse($fromDt, 'U')->startOfDay();
+                } else if ($groupByFilter == 'bydayofweek') {
+                    $periods .= ' 
+                        SELECT  ' . $loopDate->dayOfWeek . ' AS id, 
+                            \'' . $loopDate->format('D') . '\' AS label, 
+                            ' . $loopDate->format('U') . ' AS start, 
+                            ' . $loopDate->addDay()->format('U') . ' AS end ';
 
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(0, $diffInDays);
-                    
-                    $start = $this->dateService->parse($fromDt, 'U')->startOfDay()->subDay();
-                    $end = $this->dateService->parse($fromDt, 'U')->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
+                } else if ($groupByFilter == 'bydayofmonth') {
+                    $periods .= ' 
+                        SELECT  ' . $loopDate->day . ' AS id, 
+                            \'' . $loopDate->format('d') . '\' AS label, 
+                            ' . $loopDate->format('U') . ' AS start, 
+                            ' . $loopDate->addDay()->format('U') . ' AS end ';
+                } else {
+                    $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
+                    return [];
                 }
 
-            } elseif (($reportFilter == 'today')) {
-                $filterRangeStart = $today;
-                $filterRangeEnd = $nextday;
-
-                if ($groupByFilter == 'byhour') {
-
-                    $ranges = range(1, 24);
-
-                    $start = $this->dateService->parse()->startOfDay()->subHour();
-                    $end = $this->dateService->parse()->startOfDay();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 1);
-
-                    $start = $this->dateService->parse()->subDay()->startOfDay();
-                    $end = $this->dateService->parse()->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-                }
-
-            } elseif (($reportFilter == 'yesterday')) {
-                $filterRangeStart = $yesterday;
-                $filterRangeEnd = $today;
-
-                if ($groupByFilter == 'byhour') {
-
-                    $ranges = range(1, 24);
-
-                    $start = $this->dateService->parse()->subDay()->startOfDay()->subHour();
-                    $end = $this->dateService->parse()->subDay()->startOfDay();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    $ranges = range(1, 1);
-
-                    $start = $this->dateService->parse()->subDay()->subDay()->startOfDay();
-                    $end = $this->dateService->parse()->subDay()->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-
-                }
-
-            } elseif (($reportFilter == 'thisweek')) {
-                $filterRangeStart = $this->dateService->parse()->startOfWeek()->format('U');  //firstdaythisweek
-                $filterRangeEnd = $this->dateService->parse()->endOfWeek()->addSecond()->format('U');//lastdaythisweek
-
-                if ($groupByFilter == 'byhour') {
-
-                    $ranges = range(1, 24 * 7);
-
-                    $start = $this->dateService->parse()->startOfWeek()->subHour();
-                    $end = $this->dateService->parse()->startOfWeek();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    $ranges = range(1, 7);
-
-                    $start = $this->dateService->parse()->startOfWeek()->subDay();
-                    $end = $this->dateService->parse()->startOfWeek();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-
-                }
-
-            } elseif (($reportFilter == 'lastweek')) {
-                $filterRangeStart = $this->dateService->parse()->subWeek()->startOfWeek()->format('U'); //firstdaylastweek
-                $filterRangeEnd = $this->dateService->parse()->endOfWeek()->addSecond()->subWeek()->format('U'); //lastdaylastweek
-
-                if ($groupByFilter == 'byhour') {
-
-                    $ranges = range(1, 24 * 7);
-
-                    $start = $this->dateService->parse()->subWeek()->startOfWeek()->subHour();
-                    $end = $this->dateService->parse()->subWeek()->startOfWeek();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    $ranges = range(1, 24 * 7);
-
-                    $start = $this->dateService->parse()->subWeek()->startOfWeek()->subDay();
-                    $end = $this->dateService->parse()->subWeek()->startOfWeek();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-
-                }
-
-            } elseif (($reportFilter == 'thismonth')) {
-                $filterRangeStart = $this->dateService->parse()->startOfMonth()->format('U'); //firstdaythismonth
-                $filterRangeEnd = $this->dateService->parse()->endOfMonth()->addSecond()->format('U'); //lastdaythismonth
-
-                if ($groupByFilter == 'byhour') {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 24 * 31);
-                    
-                    $start = $this->dateService->parse()->startOfMonth()->subHour();
-                    $end = $this->dateService->parse()->startOfMonth();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 31);
-                    
-                    $start = $this->dateService->parse()->startOfMonth()->subDay()->startOfDay();
-                    $end = $this->dateService->parse()->startOfMonth()->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-                }
-
-            } elseif (($reportFilter == 'lastmonth')) {
-                $filterRangeStart = $this->dateService->parse()->startOfMonth()->subMonth()->format('U'); //firstdaylastmonth
-                $filterRangeEnd = $this->dateService->parse()->startOfMonth()->subMonth()->endOfMonth()->addSecond()->format('U'); //lastdaylastmonth
-
-                if ($groupByFilter == 'byhour') {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 24 * 31);
-                    
-                    $start = $this->dateService->parse()->subMonth()->startOfMonth()->subHour();
-                    $end = $this->dateService->parse()->subMonth()->startOfMonth();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 31);
-                    
-                    $start = $this->dateService->parse()->subMonth()->startOfMonth()->subDay()->startOfDay();
-                    $end = $this->dateService->parse()->subMonth()->startOfMonth()->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-                }
-
-            } elseif (($reportFilter == 'thisyear')) {
-                $filterRangeStart = $this->dateService->parse()->startOfYear()->format('U'); //firstdaythisyear
-                $filterRangeEnd = $this->dateService->parse()->endOfYear()->addSecond()->format('U'); //lastdaythisyear
-
-                if ($groupByFilter == 'byhour') {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 24 * 366);
-
-                    $start = $this->dateService->parse()->startOfYear()->subHour();
-                    $end = $this->dateService->parse()->startOfYear();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 366);
-                    
-                    $start = $this->dateService->parse()->startOfYear()->subDay()->startOfDay();
-                    $end = $this->dateService->parse()->startOfYear()->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
-                }
-
-            } elseif (($reportFilter == 'lastyear')) {
-                $filterRangeStart = $this->dateService->parse()->startOfYear()->subYear()->format('U'); //firstdaylastyear
-                $filterRangeEnd = $this->dateService->parse()->endOfYear()->addSecond()->subYear()->format('U'); //lastdaylastyear
-
-                if ($groupByFilter == 'byhour') {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 24 * 366);
-
-                    $start = $this->dateService->parse()->subYear()->startOfYear()->subHour();
-                    $end = $this->dateService->parse()->subYear()->startOfYear();
-
-                    // Get all hours of the period
-                    $periodData = $this->generateHourPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges);
-
-                } elseif ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') ) {
-
-                    // Maximum number of period records in the periods view
-                    $ranges = range(1, 366);
-                    
-                    $start = $this->dateService->parse()->subYear()->startOfYear()->subDay()->startOfDay();
-                    $end = $this->dateService->parse()->subYear()->startOfYear()->startOfDay();
-
-                    // Get all days of the period
-                    $periodData = $this->generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter);
+                if ($toDt > $loopDate) {
+                    $periods .= ' UNION ALL ';
                 }
             }
 
+            $this->getStore()->update($periods, []);
+
+            $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
+
+            // Join in stats
+            // -------------
             $select = '                      
-                SELECT start, end, groupbycol,
+            SELECT start, end, periodsWithStats.id, periodsWithStats.label,
                 SUM(count) as NumberPlays, 
-                CONVERT(SUM(B.actualDiff), SIGNED INTEGER) as Duration
-            FROM (
+                CONVERT(SUM(periodsWithStats.actualDiff), SIGNED INTEGER) as Duration
+             FROM (
                 SELECT
                      *,
-                    GREATEST(periods.start, statStart, '. $filterRangeStart . ') AS actualStart,
-                    LEAST(periods.end, statEnd, '. $filterRangeEnd . ') AS actualEnd,
-                    LEAST(stat.duration, LEAST(periods.end, statEnd, '. $filterRangeEnd . ') - GREATEST(periods.start, statStart, '. $filterRangeStart . ')) AS actualDiff
-                FROM
-                ( 
-                    SELECT                
-                        
+                    GREATEST(periods.start, statStart, '. $fromDt->format('U') . ') AS actualStart,
+                    LEAST(periods.end, statEnd, '. $toDt->format('U') . ') AS actualEnd,
+                    LEAST(stat.duration, LEAST(periods.end, statEnd, '. $toDt->format('U') . ') - GREATEST(periods.start, statStart, '. $fromDt->format('U') . ')) AS actualDiff
+                 FROM temp_periods AS periods
+                    LEFT OUTER JOIN (
+                        SELECT 
+                            layout.Layout,
+                            IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
+                            stat.mediaId,
+                            stat.`start` as statStart,
+                            stat.`end` as statEnd,
+                            stat.duration,
+                            stat.`count`
+                          FROM stat
+                            LEFT OUTER JOIN layout
+                            ON layout.layoutID = stat.layoutID
+                            LEFT OUTER JOIN `widget`
+                            ON `widget`.widgetId = stat.widgetId
+                            LEFT OUTER JOIN `widgetoption`
+                            ON `widgetoption`.widgetId = `widget`.widgetId
+                                AND `widgetoption`.type = \'attrib\'
+                                AND `widgetoption`.option = \'name\'
+                            LEFT OUTER JOIN `media`
+                            ON `media`.mediaId = `stat`.mediaId
+                         WHERE stat.type <> \'displaydown\' 
+                            AND stat.start < :toDt
+                            AND stat.end >= :fromDt
             ';
 
-            // Period views
-            $string = ' ';
-            $inc =   0;
-            foreach ($periodData as $key => $p) {
-
-                $string .= $p['start'].'  start, '.$p['end']. ' end, '.$p['groupbycol']. ' groupbycol ';
-
-                $inc++;
-                if ($inc != count($periodData)) {
-                    $string .= ' UNION ALL SELECT ';
-                }
-            }
-
-            $periods = '            
-                                ' .$string.'
-                ) periods        
-            ';
-
-            // BODY
-            $body = '
-                LEFT OUTER JOIN
-                
-                (SELECT 
-                    layout.Layout,
-                    IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
-                    stat.mediaId,
-                    stat.`start` as statStart,
-                    stat.`end` as statEnd,
-                    stat.duration,
-                    stat.`count`
-                     
-                    FROM stat
-                    
-                    LEFT OUTER JOIN layout
-                        ON layout.layoutID = stat.layoutID
-                    LEFT OUTER JOIN `widget`
-                        ON `widget`.widgetId = stat.widgetId
-                    LEFT OUTER JOIN `widgetoption`
-                        ON `widgetoption`.widgetId = `widget`.widgetId
-                        AND `widgetoption`.type = \'attrib\'
-                        AND `widgetoption`.option = \'name\'
-                    LEFT OUTER JOIN `media`
-                        ON `media`.mediaId = `stat`.mediaId
-                    WHERE stat.type <> \'displaydown\' 
-            ';
+            $params = [
+                'fromDt' => $fromDt->format('U'),
+                'toDt' => $toDt->format('U')
+            ];
 
             // Displays
             if (count($displayIds) > 0) {
-                $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ') ';
+                $select .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ') ';
             }
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
-                $body .= ' AND `stat`.type = \'layout\' 
-                       AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = ' . $layoutId. ') ';
+                // Filter by Layout
+                $select .= ' 
+                    AND `stat`.type = \'layout\' 
+                    AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = :layoutId) 
+                ';
+                $params['layoutId'] = $layoutId;
+
             } elseif (($type == 'media') && ($mediaId != '')) {
-                $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
-                       AND `stat`.mediaId = ' . $mediaId;
+                // Filter by Media
+                $select .= '
+                    AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
+                    AND `stat`.mediaId = :mediaId ';
+                $params['mediaId'] = $mediaId;
+
             } elseif (($type == 'event') && ($eventTag != '')) {
-                $body .= ' AND `stat`.type = \'event\'  
-                       AND `stat`.tag = "' . $eventTag. '"';
+                // Filter by Event
+                $select .= '
+                    AND `stat`.type = \'event\'  
+                    AND `stat`.tag = :tag ';
+                $params['tag'] = $eventTag;
             }
 
-            $params = [
-                'fromDt' => $fromDt,
-                'toDt' => $toDt
-            ];
-
-            // where start is less than last day/hour of the period
-            // and end is greater than or equal first day/hour of the period
-            $body .= ' AND stat.`start` <  '.$filterRangeEnd.'
-            AND stat.`end` >= '.$filterRangeStart.' ';
-
-            $body .= ' ) stat               
-            ON statStart < periods.`end`
-            AND statEnd > periods.`start`
+            $select .= ' 
+                        ) stat               
+                        ON statStart < periods.`end`
+                            AND statEnd > periods.`start`
             ';
 
-            // e.g.,
-            // where periods start is greater than or equal today and
-            // periods end is less than or equal today + 1 day i.e. nextday
-            $body .= ' WHERE periods.`start` >= '.$filterRangeStart.'
-            AND periods.`end` <= '.$filterRangeEnd.' ';
+            // Periods and Stats tables are joined, we should only have periods we're interested in, but it
+            // wont hurt to restrict them
+            $select .= ' 
+             WHERE periods.`start` >= :fromDt
+                AND periods.`end` <= :toDt ';
 
-            // ORDER BY
-            $body .= '  
-            ORDER BY periods.`start`, statStart
-	        ) B ';
+            // Close out our containing view and group things together
+            $select .= '
+                ) periodsWithStats 
+            GROUP BY periodsWithStats.id, periodsWithStats.label
+            ORDER BY periodsWithStats.id
+            ';
 
-            // GROUP BY
-            if(($reportFilter == '')) {
-
-                $body .= '
-                GROUP BY groupbycol 
-                ORDER BY start ';
-
-            } else {
-
-                $body .= '
-                GROUP BY groupbycol 
-                ORDER BY groupbycol ';
-
-            }
-
-            /*Execute sql statement*/
-            $query = $select . $periods . $body;
-            $this->getLog()->debug($query);
-
-            $options['query'] = $query;
-            $options['params'] = $params;
-
-            $results = $this->getTimeSeriesStore()->executeQuery($options);
-
-            return [
-                'result' => $results,
-                'periodStart' => $this->dateService->parse($filterRangeStart, 'U')->format('Y-m-d H:i:s'),
-                'periodEnd' => $this->dateService->parse($filterRangeEnd, 'U')->format('Y-m-d H:i:s')
-            ];
+            return $this->getStore()->select($select, $params);
 
         } else {
             return [];
         }
     }
 
-    function getDistributionReportMongoDb($displayIds, $displayGroupIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    function getDistributionReportMongoDb($displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
     {
 
         // range - by hour, by dayofweek, by dayofmonth
