@@ -94,8 +94,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
     {
 
-        $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
-        $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('U'); // added a day
+        $fromDt = $fromDt->format('U');
+        $toDt = $toDt->startOfDay()->addDay()->format('U'); // added a day
 
         // Media on Layouts Ran
         $select = '
@@ -356,8 +356,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     public function getStats($fromDt, $toDt, $displayIds = null)
     {
 
-        $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
-        $toDt = $this->dateService->parse($toDt, 'Y-m-d H:i:s')->format('U');
+        $fromDt = $fromDt->format('U');
+        $toDt = $toDt->format('U');
 
         $sql = '
         SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, FROM_UNIXTIME(stat.start) as start, FROM_UNIXTIME(stat.end) as end, stat.tag, 
@@ -405,12 +405,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-
-        if ($fromDt != null) {
-            $fromDt = $this->dateService->parse($fromDt, 'Y-m-d H:i:s')->format('U');
-        }
-
-        $maxage = $this->dateService->parse($maxage, 'Y-m-d H:i:s')->format('U');
+        $maxage = $maxage->format('U');
 
         try {
             $i = 0;
@@ -421,11 +416,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 'limit' => 10000,
             ], $options);
 
-            if ($fromDt != null) {
+            if ($fromDt !== null) {
                 $delete = $this->store->getConnection()
                     ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT :limit');
 
-                $delete->bindParam(':fromDt', $fromDt, \PDO::PARAM_STR);
+                $delete->bindParam(':fromDt', $fromDt->format('U'), \PDO::PARAM_STR);
                 $delete->bindParam(':toDt', $maxage, \PDO::PARAM_STR);
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             } else {
