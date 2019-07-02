@@ -22,16 +22,25 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("template.add.from.layout", {id: layout.layoutId}) }}">
+            <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("template.add.from.layout", {id: layout.layoutId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
                 {% set templateName %}{{ layout.layout }} {% trans "Template" %}{% endset %}
                 {{ forms.input("name", title, templateName, helpText) }}
 
                 {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tags for this Template - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                {{ forms.input("tags", title, layout.tags, helpText) }}
+                {% set helpText %}{% trans "Tags for this Layout - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
 
+                <p id="loadingValues" style="margin-left: 17%"></p>
+
+                {% set title %}{% trans "Tag value" %}{% endset %}
+                {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                <div id="tagValueRequired" class="alert alert-info">
+                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                </div>
+                
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "An optional description of the Template. (1 - 250 characters)" %}{% endset %}
                 {{ forms.textarea("description", title, layout.description, helpText) }}
