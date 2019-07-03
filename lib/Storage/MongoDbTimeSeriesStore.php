@@ -460,8 +460,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
             $entry['numberPlays'] = $row['numberPlays'];
             $entry['duration'] = $row['duration'];
-            $entry['minStart'] = $row['minStart']->toDateTime()->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $row['maxEnd']->toDateTime()->format('Y-m-d H:i:s');
+            $entry['minStart'] = $row['minStart']->toDateTime()->format('U');
+            $entry['maxEnd'] = $row['maxEnd']->toDateTime()->format('U');
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
@@ -524,18 +524,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 [
                     '$project' => [
                         'type'=> 1,
-                        'start'=> [
-                            '$dateToString' => [
-                                'format' => '%Y-%m-%d %H:%M:%S',
-                                'date' => '$start'
-                            ]
-                        ],
-                        'end'=> [
-                            '$dateToString' => [
-                                'format' => '%Y-%m-%d %H:%M:%S',
-                                'date' => '$end'
-                            ]
-                        ],
+                        'start'=> 1,
+                        'end'=> 1,
                         'layout'=> '$layoutName',
                         'display'=> '$displayName',
                         'media'=> '$mediaName',

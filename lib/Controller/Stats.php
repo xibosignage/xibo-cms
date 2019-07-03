@@ -346,8 +346,8 @@ class Stats extends Base
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $this->getSanitizer()->int($row['numberPlays']);
             $entry['duration'] = $this->getSanitizer()->int($row['duration']);
-            $entry['minStart'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['minStart']));
-            $entry['maxEnd'] = $this->getDate()->getLocalDate($this->getDate()->parse($row['maxEnd']));
+            $entry['minStart'] = $this->getDate()->parse($row['minStart'], 'U')->format('Y-m-d H:i:s');
+            $entry['maxEnd'] = $this->getDate()->parse($row['maxEnd'], 'U')->format('Y-m-d H:i:s');
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
@@ -521,13 +521,21 @@ class Stats extends Base
 
         while ($row = $resultSet->getNextRow() ) {
 
-            $displayName = $this->getSanitizer()->string($row['display']);
-            $layoutName = $this->getSanitizer()->string($row['layout']);
+            $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
+            $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
 
             // Read the columns
             $type = $this->getSanitizer()->string($row['type']);
-            $fromDt = $this->getSanitizer()->string($row['start']);
-            $toDt = $this->getSanitizer()->string($row['end']);
+            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+
+                $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+            } else {
+                
+                $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+                $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+            }
+
             $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
             $display = ($displayName != '') ? $displayName : __('Not Found');
             $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';

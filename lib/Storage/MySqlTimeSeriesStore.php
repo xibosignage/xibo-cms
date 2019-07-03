@@ -319,8 +319,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['media'] = $row['Media'];
             $entry['numberPlays'] = $row['NumberPlays'];
             $entry['duration'] = $row['Duration'];
-            $entry['minStart'] = $this->dateService->parse($row['MinStart'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->dateService->parse($row['MaxEnd'], 'U')->format('Y-m-d H:i:s');
+            $entry['minStart'] = $this->dateService->parse($row['MinStart'], 'U');
+            $entry['maxEnd'] = $this->dateService->parse($row['MaxEnd'], 'U');
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
