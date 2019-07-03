@@ -582,11 +582,11 @@ class DistributionReport implements ReportInterface
                 $id = '$hour';
             } elseif ($groupByFilter == 'bydayofweek') {
                 $hour = 24;
-                $input = range(0, 1 * $diffInDays - 1);
+                $input = range(0, $diffInDays - 1);
                 $id = '$isoDayOfWeek';
             } elseif ($groupByFilter == 'bydayofmonth') {
                 $hour = 24;
-                $input = range(0, 1 * $diffInDays - 1);
+                $input = range(0, $diffInDays - 1);
                 $id = '$dayOfMonth';
             } else {
                 $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
