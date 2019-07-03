@@ -31,7 +31,7 @@ interface ReportInterface
 {
     /**
      * Set factories
-     * @param $container
+     * @param \Slim\Helper\Set $container
      * @return $this
      */
     public function setFactories($container);
@@ -57,6 +57,7 @@ interface ReportInterface
 
     /**
      * Generate saved report name
+     * @param $filterCriteria
      * @return string
      */
     public function generateSavedReportName($filterCriteria);
@@ -71,6 +72,7 @@ interface ReportInterface
 
     /**
      * Return results
+     * @param $filterCriteria
      * @return array
      */
     public function getResults($filterCriteria);

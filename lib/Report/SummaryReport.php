@@ -2,15 +2,14 @@
 
 namespace Xibo\Report;
 
-use Jenssegers\Date\Date;
 use MongoDB\BSON\UTCDateTime;
 use Xibo\Entity\ReportSchedule;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -67,7 +66,7 @@ class SummaryReport implements ReportInterface
         $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
     }
 
-    /** @inheritdoc */
+    /** @inheritDoc */
     public function setFactories($container)
     {
 
