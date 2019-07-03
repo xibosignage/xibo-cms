@@ -230,7 +230,7 @@ trait ReportTrait
     /**
      * Get a temporary table representing the periods covered
      * @param \Jenssegers\Date\Date $fromDt
-     * @param \Jenssegers\Date\Date
+     * @param \Jenssegers\Date\Date $toDt
      * @param string $groupByFilter
      * @return string
      * @throws \Xibo\Exception\InvalidArgumentException
@@ -239,6 +239,26 @@ trait ReportTrait
     {
         // My from/to dt represent the entire range we're interested in.
         // we need to generate periods according to our grouping, within that range.
+        // Clone them so as to not effect the calling object
+        $fromDt = $fromDt->copy();
+        $toDt = $toDt->copy();
+
+        // our from/to dates might not sit nicely inside our period groupings
+        // for example if we look at June, by week, the 1st of June is a Saturday, week 22.
+        // NB:
+        // FromDT/ToDt should always be at the start of the day.
+        switch ($groupByFilter) {
+            case 'byweek':
+                $fromDt->startOfWeek();
+                break;
+
+            case 'bymonth':
+                $fromDt->startOfMonth();
+                break;
+        }
+
+        // Temporary Periods Table
+        // -----------------------
         // we will use a temporary table for this.
         // Drop table if exists
 
@@ -248,7 +268,7 @@ trait ReportTrait
         $this->getStore()->getConnection()->exec('
                 CREATE TEMPORARY TABLE temp_periods (
                     id INT,
-                    label VARCHAR(10),
+                    label VARCHAR(20),
                     start INT,
                     end INT
                 );
@@ -270,6 +290,27 @@ trait ReportTrait
                     'label' => $loopDate->format('g:i A'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addHour()->format('U')
+                ]);
+            } else if ($groupByFilter == 'byday') {
+                $periods->execute([
+                    'id' => $loopDate->year . $loopDate->month . $loopDate->day,
+                    'label' => $loopDate->format('Y-m-d'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addDay()->format('U')
+                ]);
+            } else if ($groupByFilter == 'byweek') {
+                $periods->execute([
+                    'id' => $loopDate->weekOfYear . $loopDate->year,
+                    'label' => $loopDate->format('Y-m-d (\wW)'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addWeek()->format('U')
+                ]);
+            } else if ($groupByFilter == 'bymonth') {
+                $periods->execute([
+                    'id' => $loopDate->year . $loopDate->month,
+                    'label' => $loopDate->format('M'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addMonth()->format('U')
                 ]);
             } else if ($groupByFilter == 'bydayofweek') {
                 $periods->execute([
