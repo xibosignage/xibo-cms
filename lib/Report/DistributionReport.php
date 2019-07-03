@@ -454,45 +454,51 @@ class DistributionReport implements ReportInterface
             // My from/to dt represent the entire range we're interested in.
             // we need to generate periods according to our grouping, within that range.
             // we will use a temporary table for this.
-            $periods = '
-                CREATE TEMPORARY TABLE temp_periods AS       
-            ';
+            $this->getStore()->getConnection()->exec('
+                CREATE TEMPORARY TABLE temp_periods (
+                    id INT,
+                    label VARCHAR(10),
+                    start INT,
+                    end INT
+                );
+            ');
+
+            // Prepare an insert statement
+            $periods = $this->getStore()->getConnection()->prepare('
+                INSERT INTO temp_periods (id, label, start, end) 
+                VALUES (:id, :label, :start, :end)
+            ');
 
             // Loop until we've covered all periods needed
             $loopDate = $fromDt->copy();
             while ($toDt > $loopDate) {
                 // We add different periods for each type of grouping
                 if ($groupByFilter == 'byhour') {
-                    $periods .= ' 
-                        SELECT  ' . $loopDate->hour . ' AS id, 
-                            \'' . $loopDate->format('g:i A') . '\' AS label, 
-                            ' . $loopDate->format('U') . ' AS start, 
-                            ' . $loopDate->addHour()->format('U') . ' AS end ';
-
+                    $periods->execute([
+                        'id' => $loopDate->hour,
+                        'label' => $loopDate->format('g:i A'),
+                        'start' => $loopDate->format('U'),
+                        'end' => $loopDate->addHour()->format('U')
+                    ]);
                 } else if ($groupByFilter == 'bydayofweek') {
-                    $periods .= ' 
-                        SELECT  ' . $loopDate->dayOfWeek . ' AS id, 
-                            \'' . $loopDate->format('D') . '\' AS label, 
-                            ' . $loopDate->format('U') . ' AS start, 
-                            ' . $loopDate->addDay()->format('U') . ' AS end ';
-
+                    $periods->execute([
+                        'id' => $loopDate->dayOfWeek,
+                        'label' => $loopDate->format('D'),
+                        'start' => $loopDate->format('U'),
+                        'end' => $loopDate->addDay()->format('U')
+                    ]);
                 } else if ($groupByFilter == 'bydayofmonth') {
-                    $periods .= ' 
-                        SELECT  ' . $loopDate->day . ' AS id, 
-                            \'' . $loopDate->format('d') . '\' AS label, 
-                            ' . $loopDate->format('U') . ' AS start, 
-                            ' . $loopDate->addDay()->format('U') . ' AS end ';
+                    $periods->execute([
+                        'id' => $loopDate->day,
+                        'label' => $loopDate->format('d'),
+                        'start' => $loopDate->format('U'),
+                        'end' => $loopDate->addDay()->format('U')
+                    ]);
                 } else {
                     $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
                     return [];
                 }
-
-                if ($toDt > $loopDate) {
-                    $periods .= ' UNION ALL ';
-                }
             }
-
-            $this->getStore()->update($periods, []);
 
             $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
 
