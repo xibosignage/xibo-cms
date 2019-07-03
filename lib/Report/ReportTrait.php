@@ -240,6 +240,11 @@ trait ReportTrait
         // My from/to dt represent the entire range we're interested in.
         // we need to generate periods according to our grouping, within that range.
         // we will use a temporary table for this.
+        // Drop table if exists
+
+        $this->getStore()->getConnection()->exec('
+                DROP TABLE IF EXISTS temp_periods ');
+
         $this->getStore()->getConnection()->exec('
                 CREATE TEMPORARY TABLE temp_periods (
                     id INT,
