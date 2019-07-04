@@ -390,6 +390,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     'mediaorwidget'=> [ '$ifNull' => [ '$mediaId', '$widgetId' ] ],
                     'displayId'=> [ '$ifNull' => [ '$displayId', null ] ],
                     'display'=> '$displayName',
+                    'eventName'=> '$eventName',
                     // we don't need to group by media name and widget name
 
                 ],
