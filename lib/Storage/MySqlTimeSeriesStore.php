@@ -318,8 +318,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $entry['media'] = $row['Media'];
             $entry['numberPlays'] = $row['NumberPlays'];
             $entry['duration'] = $row['Duration'];
-            $entry['minStart'] = $this->dateService->parse($row['MinStart'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->dateService->parse($row['MaxEnd'], 'U')->format('Y-m-d H:i:s');
+            $entry['minStart'] = $row['MinStart'];
+            $entry['maxEnd'] = $row['MaxEnd'];
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
@@ -349,18 +349,20 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     {
         $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
 
-        return $earliestDate;
+        return [
+            'minDate' => $earliestDate[0]['minDate']
+        ];
     }
 
     /** @inheritdoc */
-    public function getStats($fromDt, $toDt, $displayIds = null)
+    public function getStats($fromDt, $toDt, $displayIds = [])
     {
 
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
 
         $sql = '
-        SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, FROM_UNIXTIME(stat.start) as start, FROM_UNIXTIME(stat.end) as end, stat.tag, 
+        SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, 
         display.Display as display, layout.Layout as layout, media.Name AS media
           FROM stat
             LEFT OUTER JOIN display
@@ -375,10 +377,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
           
         ';
 
-        if ($displayIds != '') {
-            if (count($displayIds) > 0) {
-                $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
-            }
+        if (count($displayIds) > 0) {
+            $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
         }
 
         $params = [

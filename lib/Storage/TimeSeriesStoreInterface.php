@@ -89,7 +89,7 @@ interface TimeSeriesStoreInterface
      * @param $displayIds array
      * @return TimeSeriesResultsInterface
      */
-    public function getStats($fromDt, $toDt, $displayIds = null);
+    public function getStats($fromDt, $toDt, $displayIds = []);
 
     /**
      * Delete statistics

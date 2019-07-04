@@ -357,7 +357,7 @@ class SummaryReport implements ReportInterface
         $this->getLog()->debug('Timeseries store is ' . $timeSeriesStore);
 
         if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter, $fromDt, $toDt);
+            $result = $this->getSummaryReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag,  $reportFilter);
         } else {
             $result = $this->getSummaryReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag);
         }
@@ -373,7 +373,7 @@ class SummaryReport implements ReportInterface
 
         // Summary report result in chart
         if (count($result) > 0) {
-            foreach ($result as $row) {
+            foreach ($result['result'] as $row) {
                 // Label
                 $labels[] = $row['label'];
 
@@ -520,278 +520,100 @@ class SummaryReport implements ReportInterface
             ORDER BY periodsWithStats.id
             ';
 
-            return $this->getStore()->select($select, $params);
+            return [
+                'result' => $this->getStore()->select($select, $params),
+                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
+                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+            ];
 
         } else {
             return [];
         }
     }
 
-    function getSummaryReportMongoDb($displayIds, $diffInDays, $type, $layoutId, $mediaId, $eventTag, $reportFilter, $groupByFilter = null, $fromDt = null, $toDt = null)
+    /**
+     * MongoDB summary report
+     * @param \Jenssegers\Date\Date $fromDt The filter range from date
+     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param string $groupByFilter Grouping, byhour, byday, byweek, bymonth
+     * @param $displayIds
+     * @param $type
+     * @param $layoutId
+     * @param $mediaId
+     * @param $eventTag
+     * @param $reportFilter
+     * @return array
+     */
+    private function getSummaryReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag, $reportFilter)
     {
         if ( (($type == 'media') && ($mediaId != '')) ||
             (($type == 'layout') && ($layoutId != '')) ||
             (($type == 'event') && ($eventTag != '')) ) {
 
-            $fromDt = $this->dateService->parse($fromDt)->startOfDay()->format('U');
-            $toDt = $this->dateService->parse($toDt)->startOfDay()->addDay()->format('U');
+            $diffInDays = $toDt->diffInDays($fromDt);
 
-            $yesterday = $this->dateService->parse()->startOfDay()->subDay()->format('U');
-            $today = $this->dateService->parse()->startOfDay()->format('U');
-            $nextday = $this->dateService->parse()->startOfDay()->addDay()->format('U');
-
-            if ($reportFilter == '') {
-
+            if ($groupByFilter == 'byhour') {
+                $hour = 1;
+                $input = range(0,  23);
+            } elseif ($groupByFilter == 'byday') {
                 $hour = 24;
+                $input = range(0, $diffInDays - 1);
+            } elseif ($groupByFilter == 'byweek') {
+                $hour = 24 * 7;
+                $input = range(0, ceil($diffInDays / 7));
+            } elseif ($groupByFilter == 'bymonth') {
+                $hour = 24;
+                $input = range(0, ceil($diffInDays / 30));
+            } else {
+                $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
+                throw new InvalidArgumentException('Unknown Grouping ' . $groupByFilter, 'groupByFilter');
+            }
 
-                $filterRangeStart = new UTCDateTime($fromDt * 1000);
-                $filterRangeEnd = new UTCDateTime($toDt * 1000);
+            $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
+            $filterRangeEnd = new UTCDateTime($toDt->format('U') * 1000);
 
-                if ($groupByFilter == 'byday') {
-                    $input = range(0, $diffInDays);
-
-                    $extendedPeriodStart = $filterRangeStart;
-                    $extendedPeriodEnd = $filterRangeEnd;
-
-                } elseif ($groupByFilter == 'byweek') {
-                    $input = range(0,  ceil($diffInDays / 7 ) );
-
-                    // Extend the range upto the start of the week of the range start, and end of the week of the range end
-                    $startOfWeek = $this->dateService->parse($fromDt, 'U')->startOfWeek()->format('U');
-                    $endOfWeek = $this->dateService->parse($toDt, 'U')->endOfWeek()->addSecond()->format('U');
-
-                    // Formatting
-                    $extendedPeriodStart = new UTCDateTime( $startOfWeek * 1000);
-                    $extendedPeriodEnd = new UTCDateTime($endOfWeek * 1000);
-
-                } elseif ($groupByFilter == 'bymonth') {
-
-                    $input = range(0, ceil($diffInDays / 30));
+            // Extend the range
+            if (($groupByFilter == 'byhour') || ($groupByFilter == 'byday')) {
+                $extendedPeriodStart = $filterRangeStart;
+                $extendedPeriodEnd = $filterRangeEnd;
+            } elseif ($groupByFilter == 'byweek') {
+                // Extend upto the start of the first week of the fromdt, and end of the week of the todt
+                $startOfWeek = $fromDt->copy()->startOfWeek();
+                $endOfWeek = $toDt->copy()->endOfWeek()->addSecond();
+                $extendedPeriodStart = new UTCDateTime( $startOfWeek->format('U') * 1000);
+                $extendedPeriodEnd = new UTCDateTime($endOfWeek->format('U') * 1000);
+            } elseif ($groupByFilter == 'bymonth') {
+                if ($reportFilter == '') {
 
                     // We extend the fromDt and toDt range filter
                     // so that we can generate each month period
-                    $fromDtStartOfMonth = $this->dateService->parse($fromDt, 'U')->startOfMonth();
-                    $toDtEndOfMonth = $this->dateService->parse($toDt, 'U')->endOfMonth()->addSecond();
+                    $fromDtStartOfMonth = $fromDt->copy()->startOfMonth();
+                    $toDtEndOfMonth = $toDt->copy()->endOfMonth()->addSecond();
 
                     // Generate all months that lie in the extended range
                     $monthperiods = [];
                     foreach ($input as $key => $value) {
 
-                        $monthPeriodStart = $this->dateService->parse($fromDtStartOfMonth)->addMonth($key)->format('U');
-                        $monthPeriodEnd = $this->dateService->parse($fromDtStartOfMonth)->addMonth($key)->addMonth()->format('U');
+                        $monthPeriodStart = $fromDtStartOfMonth->copy()->addMonth($key);
+                        $monthPeriodEnd = $fromDtStartOfMonth->copy()->addMonth($key)->addMonth();
 
                         // Remove the month period which crossed the extended end range
-                        if ($monthPeriodStart >= $toDtEndOfMonth->format('U')) {
+                        if ($monthPeriodStart >= $toDtEndOfMonth) {
                             continue;
                         }
-                        $monthperiods[$key]['start'] =  new UTCDateTime( $monthPeriodStart * 1000);
-                        $monthperiods[$key]['end'] =    new UTCDateTime( $monthPeriodEnd * 1000);
+                        $monthperiods[$key]['start'] =  new UTCDateTime( $monthPeriodStart->format('U') * 1000);
+                        $monthperiods[$key]['end'] =    new UTCDateTime( $monthPeriodEnd->format('U') * 1000);
                     }
 
                     $extendedPeriodStart = new UTCDateTime( $fromDtStartOfMonth->format('U') * 1000);
                     $extendedPeriodEnd = new UTCDateTime( $toDtEndOfMonth->format('U') * 1000);
-                }
-            }
 
-            elseif (($reportFilter == 'today')) {
-
-                $hour = 1;
-                $input = range(0, 23);
-
-                $filterRangeStart = new UTCDateTime($today * 1000);
-                $filterRangeEnd = new UTCDateTime($nextday * 1000);
-
-                $extendedPeriodStart = $filterRangeStart;
-                $extendedPeriodEnd = $filterRangeEnd;
-
-            }
-
-            elseif (($reportFilter == 'yesterday')) {
-
-                $hour = 1;
-                $input = range(0, 23);
-
-                $filterRangeStart = new UTCDateTime($yesterday * 1000);
-                $filterRangeEnd = new UTCDateTime($today * 1000);
-
-                $extendedPeriodStart = $filterRangeStart;
-                $extendedPeriodEnd = $filterRangeEnd;
-            }
-
-            elseif (($reportFilter == 'thisweek')) {
-
-                $hour = 24;
-                $input = range(0, 6);
-
-                $startUTC = $this->dateService->parse()->startOfWeek()->format('U');  //firstdaythisweek
-                $endUTC = $this->dateService->parse()->endOfWeek()->addSecond()->format('U');//lastdaythisweek
-
-                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
-
-                $extendedPeriodStart = $filterRangeStart;
-                $extendedPeriodEnd = $filterRangeEnd;
-            }
-
-            elseif (($reportFilter == 'lastweek')) {
-
-                $hour = 24;
-                $input = range(0, 6);
-
-                $startUTC = $this->dateService->parse()->startOfWeek()->subWeek()->format('U'); //firstdaylastweek
-                $endUTC = $this->dateService->parse()->endOfWeek()->addSecond()->subWeek()->format('U'); //lastdaylastweek
-
-                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
-
-                $extendedPeriodStart = $filterRangeStart;
-                $extendedPeriodEnd = $filterRangeEnd;
-
-            }
-
-            elseif (($reportFilter == 'thismonth')) {
-
-                $hour = 24;
-
-                $startUTC = $this->dateService->parse()->startOfMonth()->format('U'); //firstdaythismonth
-                $endUTC =  $this->dateService->parse()->endOfMonth()->addSecond()->format('U'); //lastdaythismonth
-
-                $filterRangeStart = new UTCDateTime( $startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime( $endUTC * 1000);
-
-                if ($groupByFilter == 'byday') {
-                    $input = range(0, 30);
-
+                } elseif (($reportFilter == 'thisyear') || ($reportFilter == 'lastyear')) {
                     $extendedPeriodStart = $filterRangeStart;
                     $extendedPeriodEnd = $filterRangeEnd;
 
-                } elseif ($groupByFilter == 'byweek') {
-                    $input = range(0, 5);
-
-                    $startOfWeek = $this->dateService->parse()->startOfMonth()->startOfWeek()->format('U');
-                    $endOfWeek = $this->dateService->parse()->endOfMonth()->endOfWeek()->addSecond()->format('U');
-
-                    // Extend the range upto the start of the week of the month, and end of the week of the month
-                    $extendedPeriodStart = new UTCDateTime( $startOfWeek * 1000);
-                    $extendedPeriodEnd = new UTCDateTime($endOfWeek * 1000);
-
-                }
-
-            }
-
-            elseif (($reportFilter == 'lastmonth')) {
-
-                $hour = 24;
-
-                $startUTC = $this->dateService->parse()->startOfMonth()->subMonth()->format('U'); //firstdaylastmonth
-                $endUTC =  $this->dateService->parse()->startOfMonth()->subMonth()->endOfMonth()->addSecond()->format('U'); //lastdaylastmonth
-
-                $filterRangeStart = new UTCDateTime($startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
-
-
-                if ($groupByFilter == 'byday') {
-                    $input = range(0, 30);
-
-                    $extendedPeriodStart = $filterRangeStart;
-                    $extendedPeriodEnd = $filterRangeEnd;
-
-                } elseif ($groupByFilter == 'byweek') {
-                    $input = range(0, 5);
-
-                    $startOfWeek = $this->dateService->parse()->startOfMonth()->subMonth()->startOfWeek()->format('U');
-                    $endOfWeek = $this->dateService->parse()->endOfMonth()->subMonth()->endOfWeek()->addSecond()->format('U');
-
-                    // Extend the range upto the start of the week of the month, and end of the week of the month
-                    $extendedPeriodStart = new UTCDateTime( $startOfWeek * 1000);
-                    $extendedPeriodEnd = new UTCDateTime( $endOfWeek * 1000);
-
-                }
-            }
-
-            elseif (($reportFilter == 'thisyear')) {
-
-                $hour = 24;
-
-                $startUTC = $this->dateService->parse()->startOfYear()->format('U'); //firstdaythisyear
-                $endUTC = $this->dateService->parse()->endOfYear()->addSecond()->format('U'); //lastdaythisyear
-                
-                $filterRangeStart = new UTCDateTime($startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
-
-                if ($groupByFilter == 'byday') {
-                    $input = range(0, 365);
-
-                    $extendedPeriodStart = $filterRangeStart;
-                    $extendedPeriodEnd = $filterRangeEnd;
-
-                } elseif ($groupByFilter == 'byweek') {
-                    $input = range(0, 53);
-
-                    // Extend the range upto the start of the first week of the year, and end of the week of the year
-                    $startOfWeek = $this->dateService->parse()->startOfYear()->startOfWeek()->format('U');
-                    $endOfWeek = $this->dateService->parse()->endOfYear()->endOfWeek()->addSecond()->format('U');
-
-                    // Formatting
-                    $extendedPeriodStart = new UTCDateTime( $startOfWeek * 1000);
-                    $extendedPeriodEnd = new UTCDateTime($endOfWeek * 1000);
-
-                } elseif ($groupByFilter == 'bymonth') { 
-                    $input = range(0, 11);
-
-                    $extendedPeriodStart = $filterRangeStart;
-                    $extendedPeriodEnd = $filterRangeEnd;
-
-
-                    $start = $this->dateService->parse()->startOfYear()->subMonth()->startOfMonth();
-                    $end = $this->dateService->parse()->startOfYear()->startOfMonth();
-
-                    // Generate all 12 months
-                    $monthperiods = [];
-                    foreach ($input as $key => $value) {
-                        $monthperiods[$key]['start'] = new UTCDateTime( $start->addMonth()->format('U') * 1000);
-                        $monthperiods[$key]['end'] = new UTCDateTime( $end->addMonth()->format('U') * 1000);
-                    }
-
-                }
-
-            }
-
-            elseif (($reportFilter == 'lastyear')) {
-
-                $hour = 24;
-
-                $startUTC = $this->dateService->parse()->startOfYear()->subYear()->format('U'); //firstdaylastyear
-                $endUTC = $this->dateService->parse()->endOfYear()->addSecond()->subYear()->format('U'); //lastdaylastyear
-
-                $filterRangeStart = new UTCDateTime($startUTC * 1000);
-                $filterRangeEnd = new UTCDateTime($endUTC * 1000);
-
-                if ($groupByFilter == 'byday') {
-                    $input = range(0, 365);
-
-                    $extendedPeriodStart = $filterRangeStart;
-                    $extendedPeriodEnd = $filterRangeEnd;
-
-                } elseif ($groupByFilter == 'byweek') {
-                    $input = range(0, 53);
-
-                    // Extend the range upto the start of the first week of the year, and end of the week of the year
-                    $startOfWeek = $this->dateService->parse()->startOfYear()->subYear()->startOfWeek()->format('U');
-                    $endOfWeek = $this->dateService->parse()->endOfYear()->subYear()->endOfWeek()->addSecond()->format('U');
-
-                    // Formatting
-                    $extendedPeriodStart = new UTCDateTime( $startOfWeek * 1000);
-                    $extendedPeriodEnd = new UTCDateTime($endOfWeek * 1000);
-
-                } elseif ($groupByFilter == 'bymonth') { 
-                    $input = range(0, 11);
-
-                    $extendedPeriodStart = $filterRangeStart;
-                    $extendedPeriodEnd = $filterRangeEnd;
-
-                    $start = $this->dateService->parse()->subYear()->startOfYear()->subMonth()->startOfMonth();
-                    $end = $this->dateService->parse()->subYear()->startOfYear()->startOfMonth();
+                    $start = $fromDt->copy()->subMonth()->startOfMonth();
+                    $end = $fromDt->copy()->startOfMonth();
 
                     // Generate all 12 months
                     $monthperiods = [];
@@ -850,7 +672,7 @@ class SummaryReport implements ReportInterface
                                             [
                                                 '$multiply' => [
                                                     '$$number',
-                                                    604800000
+                                                    $hour * 3600000
                                                 ]
                                             ]
                                         ]
@@ -860,13 +682,13 @@ class SummaryReport implements ReportInterface
                                             [
                                                 '$add' => [
                                                     $extendedPeriodStart,
-                                                    604800000
+                                                    $hour * 3600000
                                                 ]
                                             ],
                                             [
                                                 '$multiply' => [
                                                     '$$number',
-                                                    604800000
+                                                    $hour * 3600000
                                                 ]
                                             ]
                                         ]
@@ -910,7 +732,7 @@ class SummaryReport implements ReportInterface
                                             $extendedPeriodStart,
                                             [
                                                 '$multiply' => [
-                                                    $hour*3600000,
+                                                    $hour * 3600000,
                                                     '$$number'
                                                 ]
                                             ]
@@ -923,13 +745,13 @@ class SummaryReport implements ReportInterface
                                                     $extendedPeriodStart,
                                                     [
                                                         '$multiply' => [
-                                                            $hour*3600000,
+                                                            $hour * 3600000,
                                                             '$$number'
                                                         ]
                                                     ]
                                                 ]
                                             ]
-                                            , $hour*3600000
+                                            , $hour * 3600000
                                         ]
                                     ],
                                 ]
@@ -1126,42 +948,72 @@ class SummaryReport implements ReportInterface
 
             // Run period loop and map the stat result for each period
             $resultArray = [];
+
             foreach ($periods as $key => $period) {
 
-                $period_start = $period['start']->toDateTime()->format('U');
-                $period_end = $period['end']->toDateTime()->format('U');
+                // UTC date format
+                $period_start_u = $period['start']->toDateTime()->format('U');
+                $period_end_u = $period['end']->toDateTime()->format('U');
+
+                // CMS date
+                $period_start = $this->getDate()->parse($period_start_u, 'U');
+                $period_end = $this->getDate()->parse($period_end_u, 'U');
+
+                if ($groupByFilter == 'byhour'){
+                    $label = $period_start->format('g:i A');
+                } elseif ($groupByFilter == 'byday') {
+                    if ( ($reportFilter == 'thisweek') || ($reportFilter == 'lastweek') ) {
+                        $label = $period_start->format('D');
+                    } else {
+                        $label = $period_start->format('Y-m-d');
+                    }
+                } elseif ($groupByFilter == 'byweek') {
+                    $weekstart = $period_start->format('M d');
+                    $weekend = $period_end->format('M d');
+                    $weekno = $period_start->format('W');
+
+                    if ($period_start_u < $fromDt->copy()->format('U')) {
+                        $weekstart = $fromDt->copy()->format('M-d');
+                    }
+
+                    if ($period_end_u > $toDt->copy()->format('U')) {
+                        $weekend = $toDt->copy()->format('M-d');
+                    }
+                    $label = $weekstart . ' - ' . $weekend . ' (w' . $weekno . ')';
+                } elseif ($groupByFilter == 'bymonth') {
+                    $label = $period_start->format('M');
+                    if ($reportFilter == '') {
+                        $label .= ' ' .$period_start->format('Y');
+                    }
+                } else {
+                    $label = 'N/A';
+                }
 
                 $matched = false;
                 foreach ($results as $k => $result) {
-
                     if( $result['period_start'] == $period['start'] ) {
-
                         $NumberPlays = $result['NumberPlays'];
                         $Duration = $result['Duration'];
-
                         $matched = true;
                         break;
                     }
                 }
 
-                $resultArray[$key]['start'] = $period_start;
-                $resultArray[$key]['end'] = $period_end;
-
+                // Chart label
+                $resultArray[$key]['label'] = $label;
                 if($matched == true) {
                     $resultArray[$key]['NumberPlays'] = $NumberPlays;
                     $resultArray[$key]['Duration'] = $Duration;
-
                 } else {
                     $resultArray[$key]['NumberPlays'] = 0;
                     $resultArray[$key]['Duration'] = 0;
-
                 }
             }
 
             return [
                 'result' => $resultArray,
-                'periodStart' => $this->dateService->parse($filterRangeStart->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s'),
-                'periodEnd' => $this->dateService->parse($filterRangeEnd->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
+                'periodEnd' => $toDt->format('Y-m-d H:i:s')
             ];
 
         } else {
