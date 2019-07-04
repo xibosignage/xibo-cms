@@ -1,6 +1,7 @@
 {% for region in regions %}
     {{ region.name }} - {{ region.width }} x {{ region.height }} [{{ region.top }},{{ region.left }}]
-
+    <p>{% trans "Widgets that have been Published will be displayed below" %}</p>
+    {% if (region.regionPlaylist.widgets|length > 0) %}
     <table class="table table-bordered">
         <thead>
             <th>{% trans "Playlist" %}</th>
@@ -9,9 +10,9 @@
             <th>{% trans "Duration" %}</th>
         </thead>
         <tbody>
-        {% for widget in region.tempPlaylist.widgets %}
+        {% for widget in region.regionPlaylist.widgets|slice(0, 10) %}
             <tr>
-                <td>{{ region.tempPlaylist.name }}</td>
+                <td>{{ region.regionPlaylist.name }}</td>
                 <td>{{ widget.module.getName() }}</td>
                 <td>{{ widget.module.getModuleName() }}</td>
                 <td>{{ widget.calculatedDuration }}</td>
@@ -19,4 +20,8 @@
         {% endfor %}
         </tbody>
     </table>
+        {% if (region.regionPlaylist.widgets|length > 10) %}
+            <p>{% trans "This Playlist has more than 10 widgets. The first ten widgets are shown as they appear" %}</p>
+        {% endif %}
+    {% endif %}
 {% endfor %}

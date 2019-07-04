@@ -270,7 +270,9 @@ class DataSetData extends Base
             if ($dataSetColumn->dataTypeId === 5) {
                 // Add this image object to my row
                 try {
-                    $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
+                    if (isset($row[$dataSetColumn->heading])) {
+                        $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
+                    }
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->debug('DataSet ' . $dataSetId . ' references an image that no longer exists. ID is ' . $row[$dataSetColumn->heading]);
                 }
@@ -366,8 +368,11 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    if ($value !== null)
+                    if (isset($value)) {
                         $value = $this->getSanitizer()->int($value);
+                    } else {
+                        $value = null;
+                    }
                 }
                 else {
                     // String
