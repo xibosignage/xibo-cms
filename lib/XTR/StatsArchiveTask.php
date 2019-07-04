@@ -13,6 +13,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\Random;
 
 /**
  * Class StatsArchiveTask
@@ -66,7 +67,7 @@ class StatsArchiveTask implements TaskInterface
             }
 
             /** @var Date $earliestDate */
-            $earliestDate = $this->date->parse($earliestDate[0]['minDate'], 'U')->setTime(0, 0, 0);
+            $earliestDate = $this->date->parse($earliestDate['minDate'], 'U')->setTime(0, 0, 0);
 
             // Take the earliest date and roll forward until the current time
             /** @var Date $now */
@@ -117,8 +118,8 @@ class StatsArchiveTask implements TaskInterface
             // Read the columns
             fputcsv($out, [
                 $this->sanitizer->string($row['type']),
-                $this->sanitizer->string($row['start']),
-                $this->sanitizer->string($row['end']),
+                $this->date->parse($this->sanitizer->string($row['start']), 'U')->format('Y-m-d H:i:s'),
+                $this->date->parse($this->sanitizer->string($row['end']), 'U')->format('Y-m-d H:i:s'),
                 $this->sanitizer->string($row['layout']),
                 $this->sanitizer->string($row['display']),
                 $this->sanitizer->string($row['media']),
@@ -146,7 +147,7 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s - '.bin2hex(random_bytes(5)), $this->date->parse($fromDt)->format('Y-m-d'), $this->date->parse($toDt)->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(__('Stats Export %s to %s - ' . Random::generateString(5), $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
         // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported

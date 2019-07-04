@@ -2,13 +2,14 @@
 
 namespace Xibo\Report;
 
+use Slim\Http\Request;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
-use Slim\Http\Request;
 
 trait ReportTrait
 {
@@ -224,5 +225,115 @@ trait ReportTrait
         }
         return $periodData;
 
+    }
+
+    /**
+     * Get a temporary table representing the periods covered
+     * @param \Jenssegers\Date\Date $fromDt
+     * @param \Jenssegers\Date\Date $toDt
+     * @param string $groupByFilter
+     * @return string
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
+    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter)
+    {
+        // My from/to dt represent the entire range we're interested in.
+        // we need to generate periods according to our grouping, within that range.
+        // Clone them so as to not effect the calling object
+        $fromDt = $fromDt->copy();
+        $toDt = $toDt->copy();
+
+        // our from/to dates might not sit nicely inside our period groupings
+        // for example if we look at June, by week, the 1st of June is a Saturday, week 22.
+        // NB:
+        // FromDT/ToDt should always be at the start of the day.
+        switch ($groupByFilter) {
+            case 'byweek':
+                $fromDt->startOfWeek();
+                break;
+
+            case 'bymonth':
+                $fromDt->startOfMonth();
+                break;
+        }
+
+        // Temporary Periods Table
+        // -----------------------
+        // we will use a temporary table for this.
+        // Drop table if exists
+
+        $this->getStore()->getConnection()->exec('
+                DROP TABLE IF EXISTS temp_periods ');
+
+        $this->getStore()->getConnection()->exec('
+                CREATE TEMPORARY TABLE temp_periods (
+                    id INT,
+                    label VARCHAR(20),
+                    start INT,
+                    end INT
+                );
+            ');
+
+        // Prepare an insert statement
+        $periods = $this->getStore()->getConnection()->prepare('
+                INSERT INTO temp_periods (id, label, start, end) 
+                VALUES (:id, :label, :start, :end)
+            ');
+
+        // Loop until we've covered all periods needed
+        $loopDate = $fromDt->copy();
+        while ($toDt > $loopDate) {
+            // We add different periods for each type of grouping
+            if ($groupByFilter == 'byhour') {
+                $periods->execute([
+                    'id' => $loopDate->hour,
+                    'label' => $loopDate->format('g:i A'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addHour()->format('U')
+                ]);
+            } else if ($groupByFilter == 'byday') {
+                $periods->execute([
+                    'id' => $loopDate->year . $loopDate->month . $loopDate->day,
+                    'label' => $loopDate->format('Y-m-d'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addDay()->format('U')
+                ]);
+            } else if ($groupByFilter == 'byweek') {
+                $periods->execute([
+                    'id' => $loopDate->weekOfYear . $loopDate->year,
+                    'label' => $loopDate->format('Y-m-d (\wW)'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addWeek()->format('U')
+                ]);
+            } else if ($groupByFilter == 'bymonth') {
+                $periods->execute([
+                    'id' => $loopDate->year . $loopDate->month,
+                    'label' => $loopDate->format('M'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addMonth()->format('U')
+                ]);
+            } else if ($groupByFilter == 'bydayofweek') {
+                $periods->execute([
+                    'id' => $loopDate->dayOfWeek,
+                    'label' => $loopDate->format('D'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addDay()->format('U')
+                ]);
+            } else if ($groupByFilter == 'bydayofmonth') {
+                $periods->execute([
+                    'id' => $loopDate->day,
+                    'label' => $loopDate->format('d'),
+                    'start' => $loopDate->format('U'),
+                    'end' => $loopDate->addDay()->format('U')
+                ]);
+            } else {
+                $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
+                throw new InvalidArgumentException('Unknown Grouping ' . $groupByFilter, 'groupByFilter');
+            }
+        }
+
+        $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
+
+        return 'temp_periods';
     }
 }
