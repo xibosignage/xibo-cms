@@ -1438,6 +1438,12 @@ class Soap
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
 
+            // if fromdt and to dt are same then ignore them
+            if ($fromdt == $todt) {
+                $this->getLog()->error('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
+                continue;
+            }
+
             if ($fromdt == '' || $todt == '' || $type == '') {
                 $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
                 continue;

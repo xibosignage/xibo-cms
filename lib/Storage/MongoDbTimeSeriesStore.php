@@ -545,6 +545,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         'display'=> '$displayName',
                         'media'=> '$mediaName',
                         'tag'=> '$eventName',
+                        'duration'=> '$duration',
+                        'count'=> '$count',
                         'displayId'=> 1,
                         'layoutId'=> 1,
                         'widgetId'=> 1,

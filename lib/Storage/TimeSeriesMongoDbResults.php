@@ -66,6 +66,8 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
             $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
             $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
             $entry['tag'] = $row['tag'];
+            $entry['duration'] = $row['duration'];
+            $entry['count'] = $row['count'];
             $entry['displayId'] = isset($row['displayId']) ? $row['displayId']: 0;
             $entry['layoutId'] = isset($row['layoutId']) ? $row['layoutId']: 0;
             $entry['widgetId'] = isset($row['widgetId']) ? $row['widgetId']: 0;
