@@ -468,9 +468,9 @@ class DistributionReport implements ReportInterface
              FROM (
                 SELECT
                      *,
-                    GREATEST(periods.start, statStart, '. $fromDt->format('U') . ') AS actualStart,
-                    LEAST(periods.end, statEnd, '. $toDt->format('U') . ') AS actualEnd,
-                    LEAST(stat.duration, LEAST(periods.end, statEnd, '. $toDt->format('U') . ') - GREATEST(periods.start, statStart, '. $fromDt->format('U') . ')) AS actualDiff
+                    GREATEST(periods.start, statStart, :fromDt) AS actualStart,
+                    LEAST(periods.end, statEnd, :toDt) AS actualEnd,
+                    LEAST(stat.duration, LEAST(periods.end, statEnd, :toDt) - GREATEST(periods.start, statStart, :fromDt)) AS actualDiff
                  FROM `' . $periods . '` AS periods
                     LEFT OUTER JOIN (
                         SELECT 
