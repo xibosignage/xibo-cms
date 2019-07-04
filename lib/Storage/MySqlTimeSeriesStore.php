@@ -293,7 +293,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
-        $body .= 'GROUP BY stat.type, display.Display, stat.displayId, stat.campaignId, IFNULL(stat.mediaId, stat.widgetId), 
+        $body .= 'GROUP BY stat.type, stat.tag, display.Display, stat.displayId, stat.campaignId, IFNULL(stat.mediaId, stat.widgetId), 
         IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
 
         $order = '';
