@@ -506,12 +506,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $this->log->error($e->getMessage());
         }
 
-        return $earliestDate;
-
+        if(count($earliestDate) > 0) {
+            return [
+                'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
+            ];
+        }
+        return [];
     }
 
     /** @inheritdoc */
-    public function getStats($fromDt, $toDt, $displayIds = null)
+    public function getStats($fromDt, $toDt, $displayIds = [])
     {
         $fromDt = new UTCDateTime($fromDt->format('U')*1000);
         $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
@@ -582,7 +586,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $i++;
 
             if ($fromDt != null) {
-                $fromDt = $fromDt->format(DATE_ISO8601);
+
+                $start = $fromDt->format(DATE_ISO8601);
                 $match =  [
                     '$match' => [
                         '$expr' => [
@@ -600,7 +605,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                                     '$gt' => [
                                         '$end', [
                                             '$dateFromString' => [
-                                                'dateString' => $fromDt
+                                                'dateString' => $start
                                             ]
                                         ]
                                     ]

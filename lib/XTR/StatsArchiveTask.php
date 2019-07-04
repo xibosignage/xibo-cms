@@ -67,7 +67,7 @@ class StatsArchiveTask implements TaskInterface
             }
 
             /** @var Date $earliestDate */
-            $earliestDate = $this->date->parse($earliestDate[0]['minDate'], 'U')->setTime(0, 0, 0);
+            $earliestDate = $this->date->parse($earliestDate['minDate'], 'U')->setTime(0, 0, 0);
 
             // Take the earliest date and roll forward until the current time
             /** @var Date $now */
@@ -118,8 +118,8 @@ class StatsArchiveTask implements TaskInterface
             // Read the columns
             fputcsv($out, [
                 $this->sanitizer->string($row['type']),
-                $this->sanitizer->string($row['start']),
-                $this->sanitizer->string($row['end']),
+                $this->date->parse($this->sanitizer->string($row['start']), 'U')->format('Y-m-d H:i:s'),
+                $this->date->parse($this->sanitizer->string($row['end']), 'U')->format('Y-m-d H:i:s'),
                 $this->sanitizer->string($row['layout']),
                 $this->sanitizer->string($row['display']),
                 $this->sanitizer->string($row['media']),

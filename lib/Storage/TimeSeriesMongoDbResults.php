@@ -60,16 +60,17 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
             $entry = [];
 
             $entry['type'] = $row['type'];
-            $entry['start'] = $row['start'];
-            $entry['end'] = $row['end'];
+            $entry['start'] = $row['start']->toDateTime()->format('U');
+            $entry['end'] = $row['end']->toDateTime()->format('U');
             $entry['display'] = isset($row['display']) ? $row['display']: 'No display';
             $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
             $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
             $entry['tag'] = $row['tag'];
-            $entry['displayId'] = $row['displayId'];
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
-            $entry['mediaId'] = $row['mediaId'];
+            $entry['displayId'] = isset($row['displayId']) ? $row['displayId']: 0;
+            $entry['layoutId'] = isset($row['layoutId']) ? $row['layoutId']: 0;
+            $entry['widgetId'] = isset($row['widgetId']) ? $row['widgetId']: 0;
+            $entry['mediaId'] = isset($row['mediaId']) ? $row['mediaId']: 0;
+
 
             $rows[] = $entry;
         }
