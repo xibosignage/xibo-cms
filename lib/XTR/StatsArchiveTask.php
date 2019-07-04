@@ -111,7 +111,7 @@ class StatsArchiveTask implements TaskInterface
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
-        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
+        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
         foreach ($result['statData'] as $row) {
 
@@ -124,6 +124,8 @@ class StatsArchiveTask implements TaskInterface
                 $this->sanitizer->string($row['display']),
                 $this->sanitizer->string($row['media']),
                 $this->sanitizer->string($row['tag']),
+                $this->sanitizer->string($row['duration']),
+                $this->sanitizer->string($row['count']),
                 $this->sanitizer->int($row['displayId']),
                 $this->sanitizer->int($row['layoutId']),
                 $this->sanitizer->int($row['widgetId']),

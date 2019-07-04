@@ -508,7 +508,7 @@ class Stats extends Base
         $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag']);
+        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
 
         while ($row = $resultSet->getNextRow() ) {
 
@@ -532,7 +532,10 @@ class Stats extends Base
             $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
             $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
 
-            fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag]);
+            $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
+            $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
+
+            fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count]);
         }
 
         fclose($out);

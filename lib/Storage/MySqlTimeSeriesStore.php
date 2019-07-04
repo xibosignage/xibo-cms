@@ -362,7 +362,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $toDt = $toDt->format('U');
 
         $sql = '
-        SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, 
+        SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
         display.Display as display, layout.Layout as layout, media.Name AS media
           FROM stat
             LEFT OUTER JOIN display
