@@ -402,18 +402,22 @@ class Playlist implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
 
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
+        if ($this->tags != $tags) {
+            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
+                /* @var Tag $a */
+                /* @var Tag $b */
+                return $a->tagId - $b->tagId;
+            });
 
-        $this->getLog()->debug('Tags to be removed: ' . json_encode($this->unassignTags));
+            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
-        // Replace the arrays
-        $this->tags = $tags;
+            // Replace the arrays
+            $this->tags = $tags;
 
-        $this->getLog()->debug('Tags remaining: ' . json_encode($this->tags));
+            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
     }
 
     /**

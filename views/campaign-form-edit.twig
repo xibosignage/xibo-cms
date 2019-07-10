@@ -65,11 +65,14 @@
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
                 <div class="layoutAssignFilterOptions XiboFilter">
                     <form class="form-inline" onsubmit="false">
-                    {% set title %}{% trans "Name" %}{% endset %}
-                    {{ inline.input("layout", title) }}
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {{ inline.input("layout", title) }}
 
-                    {% set title %}{% trans "Tags" %}{% endset %}
-                    {{ inline.inputWithTags("tags", title) }}
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {{ inline.inputWithTags("tags", title) }}
+
+                        {% set title %}{% trans "Exact match?" %}{% endset %}
+                        {{ inline.checkbox("exactTags", title) }}
                     </form>
                 </div>
 

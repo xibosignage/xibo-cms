@@ -508,7 +508,7 @@ class Tag extends Base
         // go through each linked layout and unassign the tag
         foreach($linkedLayoutsIds as $layoutId => $value) {
             $layout = $this->layoutFactory->getById($layoutId);
-            $layout->unassignTag($tag);
+            $tag->unassignLayout($layoutId);
             $layout->save();
         }
 
@@ -516,7 +516,7 @@ class Tag extends Base
         foreach ($linkedDisplayGroupsIds as $displayGroupId => $value) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $displayGroup->unassignTag($tag);
+            $tag->unassignDisplayGroup($displayGroupId);
             $displayGroup->save();
         }
 
@@ -524,21 +524,21 @@ class Tag extends Base
         foreach ($linkedCampaignsIds as $campaignId => $value) {
             $campaign = $this->campaignFactory->getById($campaignId);
             $campaign->setChildObjectDependencies($this->layoutFactory);
-            $campaign->unassignTag($tag);
+            $tag->unassignCampaign($campaignId);
             $campaign->save();
         }
 
         // go through each linked playlist and unassign the tag
         foreach ($linkedPlaylistsIds as $playlistId => $value) {
             $playlist = $this->playlistFactory->getById($playlistId);
-            $playlist->unassignTag($tag);
+            $tag->unassignPlaylist($playlistId);
             $playlist->save();
         }
 
         // go through each linked media and unassign the tag
         foreach($linkedMediaIds as $mediaId => $value) {
             $media = $this->mediaFactory->getById($mediaId);
-            $media->unassignTag($tag);
+            $tag->unassignMedia($mediaId);
             $media->save();
         }
 

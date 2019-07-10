@@ -820,8 +820,14 @@ class Layout implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($tag, $this->tags))
-            $this->tags[] = $tag;
+        if ($this->tags != [$tag]) {
+
+            if (!in_array($tag, $this->tags)) {
+                $this->tags[] = $tag;
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
 
         return $this;
     }
@@ -900,6 +906,8 @@ class Layout implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
+     * @throws XiboException
      */
     public function unassignTag($tag)
     {
@@ -926,18 +934,22 @@ class Layout implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = $this->tagFactory->loadByLayoutId($this->layoutId);
 
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
+        if ($this->tags != $tags) {
+            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
+                /* @var Tag $a */
+                /* @var Tag $b */
+                return $a->tagId - $b->tagId;
+            });
 
-        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
-        // Replace the arrays
-        $this->tags = $tags;
+            // Replace the arrays
+            $this->tags = $tags;
 
-        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
     }
 
     /**

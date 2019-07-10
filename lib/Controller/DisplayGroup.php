@@ -728,7 +728,7 @@ class DisplayGroup extends Base
         }
 
         // Save the result
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Save the displays themselves
         foreach ($modifiedDisplays as $display) {
@@ -808,7 +808,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignDisplay($display);
         }
 
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -901,7 +901,7 @@ class DisplayGroup extends Base
         }
 
         // Save the result
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -967,7 +967,7 @@ class DisplayGroup extends Base
             $displayGroup->unassignDisplayGroup($this->displayGroupFactory->getById($assignDisplayGroupId));
         }
 
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1083,7 +1083,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->setCollectRequired(false);
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1148,7 +1148,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->setCollectRequired(false);
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1265,7 +1265,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->setCollectRequired(false);
-        $displayGroup->save(['validate' => false]);
+        $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1524,7 +1524,7 @@ class DisplayGroup extends Base
             // notify will still occur if the layout isn't already assigned (which is shouldn't be)
             $displayGroup->setCollectRequired(false);
 
-            $displayGroup->save(['validate' => false]);
+            $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
             // Convert into a download required
             $downloadRequired = true;
@@ -1670,7 +1670,7 @@ class DisplayGroup extends Base
             $displayGroup->assignLayout($layout);
             // Don't notify, this player action will cause a download.
             $displayGroup->setCollectRequired(false);
-            $displayGroup->save(['validate' => false]);
+            $displayGroup->save(['validate' => false, 'saveTags' => false]);
 
             // Convert into a download required
             $downloadRequired = true;
@@ -1924,7 +1924,20 @@ class DisplayGroup extends Base
 
         // handle tags
         if ($copyTags) {
-            $new->replaceTags($this->tagFactory->tagsFromString($displayGroup->tags));
+            $tags = '';
+
+            $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
+            $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
+
+            for ($i=0; $i<count($arrayOfTags); $i++) {
+                if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                    $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                    $tags .= ',';
+                } else {
+                    $tags .= $arrayOfTags[$i] . ',';
+                }
+            }
+            $new->replaceTags($this->tagFactory->tagsFromString($tags));
         }
 
         $new->displayGroup = $this->getSanitizer()->getString('displayGroup');
