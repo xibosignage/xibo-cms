@@ -1291,6 +1291,9 @@ class Layout extends Base
 
         // Load the layout for Copy
         $layout->load();
+        $originalLayout = $layout;
+
+        // Clone
         $layout = clone $layout;
 
         $layout->layout = $this->getSanitizer()->getString('name');
@@ -1329,6 +1332,15 @@ class Layout extends Base
 
         // Save the new layout
         $layout->save();
+
+        // Sub-Playlist
+        foreach ($layout->regions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+        }
 
         // Permissions
         foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
