@@ -23,6 +23,8 @@
 namespace Xibo\XTR;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
+use Xibo\Exception\NotFoundException;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
 
@@ -43,6 +45,9 @@ class StatsMigrationTask implements TaskInterface
     /** @var TaskFactory */
     private $taskFactory;
 
+    /** @var LayoutFactory */
+    private $layoutFactory;
+
     private $archiveExist;
 
     /** @inheritdoc */
@@ -50,6 +55,7 @@ class StatsMigrationTask implements TaskInterface
     {
         $this->userFactory = $container->get('userFactory');
         $this->taskFactory = $container->get('taskFactory');
+        $this->layoutFactory = $container->get('layoutFactory');
         return $this;
     }
 
@@ -61,8 +67,6 @@ class StatsMigrationTask implements TaskInterface
 
     public function migrateStats()
     {
-        $this->runMessage = '# ' . __('Stats Migration') . PHP_EOL . PHP_EOL;
-
         // Config options
         $options = [
             'killSwitch' => $this->getOption('killSwitch', 0),
@@ -81,8 +85,7 @@ class StatsMigrationTask implements TaskInterface
         if ($options['killSwitch'] == 0) {
 
             // Check stat_archive table exists
-            $this->archiveExist = $this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
-                'schema' => $_SERVER['MYSQL_DATABASE'],
+            $this->archiveExist = $this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :name', [
                 'name' => 'stat_archive'
             ]);
 
@@ -104,11 +107,13 @@ class StatsMigrationTask implements TaskInterface
 
                 if( ($statSql->rowCount() == 0) && ($statArchiveSqlCount == 0) ) {
 
+                    $this->runMessage = '## Stat migration to Mongo' . PHP_EOL ;
+                    $this->appendRunMessage('- Both stat_archive and stat is empty. '. PHP_EOL);
+
                     // Disable the task
                     $this->log->debug('Stats migration task is disabled as stat_archive and stat is empty');
                     $this->disableTask();
                 }
-
 
                 $this->moveStatsToMongoDb($options);
             }
@@ -119,11 +124,16 @@ class StatsMigrationTask implements TaskInterface
             else {
 
                 if ($this->archiveExist == true) {
+                    $this->runMessage = '## Moving from stat_archive to stat (MySQL)' . PHP_EOL ;
                     $this->moveStatsFromStatArchiveToStatMysql($options);
 
                 } else {
                     // Disable the task
-                    $this->log->debug('Stats migration task is disabled as stat_archive table is not found');
+
+                    $this->runMessage = '## Moving from stat_archive to stat (MySQL)' . PHP_EOL ;
+                    $this->appendRunMessage('- Table stat_archive does not exist.' . PHP_EOL);
+
+                    $this->log->debug('Table stat_archive does not exist.');
                     $this->disableTask();
                 }
             }
@@ -142,9 +152,12 @@ class StatsMigrationTask implements TaskInterface
 
         while ($watermark > 0) {
             $count = 0;
-
-            $stats = $this->store->getConnection()
-                ->prepare('SELECT * FROM stat_archive WHERE statId < :watermark ORDER BY statId DESC LIMIT :limit');
+            $stats = $this->store->getConnection()->prepare('
+                SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
+                  FROM stat_archive 
+                 WHERE statId < :watermark 
+                ORDER BY statId DESC LIMIT :limit
+            ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
             $stats->bindParam(':limit', $options['numberOfRecords'], \PDO::PARAM_INT);
 
@@ -158,10 +171,13 @@ class StatsMigrationTask implements TaskInterface
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
 
-                $this->log->debug('End of records in stat_archive (migration to MYSQL). Dropping table and disabling task.');
+                $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.');
+                $this->log->debug('End of records in stat_archive (migration to MYSQL). Dropping table.');
 
                 // Drop the stat_archive table
                 $this->store->update('DROP TABLE `stat_archive`;', []);
+
+                $this->appendRunMessage(__('Done.'. PHP_EOL));
 
                 // Disable the task
                 $this->disableTask();
@@ -175,17 +191,36 @@ class StatsMigrationTask implements TaskInterface
             }
             $numberOfLoops++;
 
+            $temp = [];
+
             foreach ($stats->fetchAll() as $stat) {
 
                 $columns = 'type, statDate, scheduleId, displayId, campaignId, layoutId, mediaId, widgetId, `start`, `end`, tag, duration, `count`';
                 $values = ':type, :statDate, :scheduleId, :displayId, :campaignId, :layoutId, :mediaId, :widgetId, :start, :end, :tag, :duration, :count';
+
+                // Get campaignId
+                if (($stat['type'] != 'event') && ($stat['layoutId'] != null)) {
+                    try {
+                        // Search the campaignId in the temp array first to reduce query in layouthistory
+                        if (array_key_exists($stat['layoutId'], $temp) ) {
+                            $campaignId = $temp[$stat['layoutId']];
+                        } else {
+                            $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($stat['layoutId']);
+                            $temp[$stat['layoutId']] = $campaignId;
+                        }
+                    } catch (NotFoundException $error) {
+                        continue;
+                    }
+                } else {
+                    $campaignId = 0;
+                }
 
                 $params = [
                     'type' => $stat['type'],
                     'statDate' =>  $this->date->parse($stat['statDate'])->format('U'),
                     'scheduleId' => (int) $stat['scheduleId'],
                     'displayId' => (int) $stat['displayId'],
-                    'campaignId' => (int) $stat['campaignId'],
+                    'campaignId' => $campaignId,
                     'layoutId' => (int) $stat['layoutId'],
                     'mediaId' => (int) $stat['mediaId'],
                     'widgetId' => (int) $stat['widgetId'],
@@ -206,11 +241,12 @@ class StatsMigrationTask implements TaskInterface
 
             // Give SQL time to recover
             if ($watermark > 0) {
+                $this->appendRunMessage('- '. $count. ' rows migrated.');
+
                 $this->log->debug('MYSQL stats migration from stat_archive to stat. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
         }
-
     }
 
     public function moveStatsToMongoDb($options)
@@ -226,8 +262,10 @@ class StatsMigrationTask implements TaskInterface
         }
     }
 
-    function migrationStatToMongo($options)
-    {
+    function migrationStatToMongo($options) {
+
+        $this->appendRunMessage('## Moving from stat to Mongo');
+
         // Stat Archive Task
         $archiveTask = $this->taskFactory->getByClass('\Xibo\XTR\\StatsArchiveTask');
 
@@ -245,7 +283,9 @@ class StatsMigrationTask implements TaskInterface
 
             // Quit the StatsArchiveTask if it is running
             if ($archiveTask->status == Task::$STATUS_RUNNING) {
-                $this->log->debug('Quitting the stat migration task as stat archive task is running');
+
+                $this->appendRunMessage('Quitting the stat migration task as stat archive task is running');
+                $this->log->debug('Quitting the stat migration task as stat archive task is running.');
                 return;
             }
             $archiveTask->isActive = 0;
@@ -277,7 +317,8 @@ class StatsMigrationTask implements TaskInterface
                 $archiveTask->save();
                 $this->store->commitIfNecessary();
 
-                $this->log->debug('End of records in stat table. Truncate and Optimize.');
+                $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Truncating and Optimising stat.');
+                $this->log->debug('End of records in stat table. Truncate and Optimise.');
 
                 // Truncate stat table
                 $this->store->update('TRUNCATE TABLE stat', []);
@@ -286,6 +327,8 @@ class StatsMigrationTask implements TaskInterface
                 if ($options['optimiseOnComplete'] == 1) {
                     $this->store->update('OPTIMIZE TABLE stat', []);
                 }
+
+                $this->appendRunMessage(__('Done.'. PHP_EOL));
 
                 break;
             }
@@ -305,15 +348,15 @@ class StatsMigrationTask implements TaskInterface
                 $entry['type'] = $stat['type'];
                 $entry['fromDt'] = $this->date->parse($stat['start'], 'U');
                 $entry['toDt'] = $this->date->parse($stat['end'], 'U');
-                $entry['scheduleId'] = $stat['scheduleId'];
-                $entry['mediaId'] = $stat['mediaId'];
-                $entry['layoutId'] = $stat['layoutId'];
-                $entry['displayId'] = $stat['displayId'];
-                $entry['campaignId'] = $stat['campaignId'];
+                $entry['scheduleId'] = (int) $stat['scheduleId'];
+                $entry['mediaId'] = (int) $stat['mediaId'];
+                $entry['layoutId'] = (int) $stat['layoutId'];
+                $entry['displayId'] = (int) $stat['displayId'];
+                $entry['campaignId'] = (int) $stat['campaignId'];
                 $entry['tag'] = $stat['tag'];
-                $entry['widgetId'] = $stat['widgetId'];
-                $entry['duration'] = $stat['duration'];
-                $entry['count'] = $stat['count'];
+                $entry['widgetId'] = (int) $stat['widgetId'];
+                $entry['duration'] = (int) $stat['duration'];
+                $entry['count'] = (int) $stat['count'];
 
                 $statDataMongo[] = $entry;
 
@@ -324,20 +367,22 @@ class StatsMigrationTask implements TaskInterface
             if (count($statDataMongo) > 0) {
                 $this->timeSeriesStore->addStat($statDataMongo);
             } else {
+                $this->appendRunMessage('No stat to migrate from stat to mongo');
                 $this->log->debug('No stat to migrate from stat to mongo');
             }
 
             // Give Mongo time to recover
             if ($watermark > 0) {
+                $this->appendRunMessage('- '. $count. ' rows migrated.');
                 $this->log->debug('Mongo stats migration from stat. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
         }
     }
 
-    function migrationStatArchiveToMongo($options)
-    {
+    function migrationStatArchiveToMongo($options) {
 
+        $this->appendRunMessage(PHP_EOL. '## Moving from stat_archive to Mongo');
         $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_archive_mongo.txt';
 
         // Get low watermark from file
@@ -347,8 +392,12 @@ class StatsMigrationTask implements TaskInterface
 
         while ($watermark > 0) {
             $count = 0;
-            $stats = $this->store->getConnection()
-                ->prepare('SELECT * FROM stat_archive WHERE statId < :watermark ORDER BY statId DESC LIMIT :limit');
+            $stats = $this->store->getConnection()->prepare('
+                SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
+                  FROM stat_archive 
+                 WHERE statId < :watermark 
+                ORDER BY statId DESC LIMIT :limit
+            ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
             $stats->bindParam(':limit', $options['numberOfRecords'], \PDO::PARAM_INT);
 
@@ -362,10 +411,14 @@ class StatsMigrationTask implements TaskInterface
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
 
+                $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.');
                 $this->log->debug('End of records in stat_archive (migration to Mongo). Dropping table.');
 
                 // Drop the stat_archive table
                 $this->store->update('DROP TABLE `stat_archive`;', []);
+
+                $this->appendRunMessage(__('Done.'. PHP_EOL));
+
                 break;
             }
 
@@ -376,10 +429,28 @@ class StatsMigrationTask implements TaskInterface
             $numberOfLoops++;
 
             $statDataMongo = [];
+            $temp = [];
 
             foreach ($stats->fetchAll() as $stat) {
 
                 $entry = [];
+
+                // Get campaignId
+                if (($stat['type'] != 'event') && ($stat['layoutId'] != null)) {
+                    try {
+                        // Search the campaignId in the temp array first to reduce query in layouthistory
+                        if (array_key_exists($stat['layoutId'], $temp) ) {
+                            $campaignId = $temp[$stat['layoutId']];
+                        } else {
+                            $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($stat['layoutId']);
+                            $temp[$stat['layoutId']] = $campaignId;
+                        }
+                    } catch (NotFoundException $error) {
+                        continue;
+                    }
+                } else {
+                    $campaignId = 0;
+                }
 
                 $start = $this->date->parse($stat['start']);
                 $end = $this->date->parse($stat['end']);
@@ -387,13 +458,13 @@ class StatsMigrationTask implements TaskInterface
                 $entry['type'] = $stat['type'];
                 $entry['fromDt'] = $start;
                 $entry['toDt'] = $end;
-                $entry['scheduleId'] = $stat['scheduleId'];
-                $entry['displayId'] = $stat['displayId'];
-                $entry['campaignId'] = $stat['campaignId'];
-                $entry['layoutId'] = $stat['layoutId'];
-                $entry['mediaId'] = $stat['mediaId'];
+                $entry['scheduleId'] = (int) $stat['scheduleId'];
+                $entry['displayId'] = (int) $stat['displayId'];
+                $entry['campaignId'] = (int) $campaignId;
+                $entry['layoutId'] = (int) $stat['layoutId'];
+                $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['tag'] = $stat['tag'];
-                $entry['widgetId'] = $stat['widgetId'];
+                $entry['widgetId'] = (int) $stat['widgetId'];
                 $entry['duration'] = $end->diffInSeconds($start);
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
@@ -406,11 +477,13 @@ class StatsMigrationTask implements TaskInterface
             if (count($statDataMongo) > 0) {
                 $this->timeSeriesStore->addStat($statDataMongo);
             } else {
+                $this->appendRunMessage('No stat to migrate from stat archive to mongo');
                 $this->log->debug('No stat to migrate from stat archive to mongo');
             }
 
             // Give Mongo time to recover
             if ($watermark > 0) {
+                $this->appendRunMessage('- '. $count. ' rows migrated.');
                 $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
@@ -418,8 +491,8 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Get low watermark from file
-    function getWatermarkFromFile($fileName, $tableName)
-    {
+    function getWatermarkFromFile($fileName, $tableName) {
+
         if (file_exists($fileName)) {
 
             $file = fopen($fileName, 'r');
@@ -440,13 +513,13 @@ class StatsMigrationTask implements TaskInterface
 
         // We need to increase it
         $watermark+= 1;
+        $this->appendRunMessage('- Initial watermark is '.$watermark);
 
         return $watermark;
     }
 
     // Check if end of records
-    function checkEndOfRecords($recordCount, $fileName)
-    {
+    function checkEndOfRecords($recordCount, $fileName) {
 
         if($recordCount == 0) {
             // No records in stat, save watermark in file
@@ -463,8 +536,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Check loop limits
-    function checkLoopLimits($numberOfLoops, $optionsNumberOfLoops, $fileName, $watermark)
-    {
+    function checkLoopLimits($numberOfLoops, $optionsNumberOfLoops, $fileName, $watermark) {
 
         if($numberOfLoops == $optionsNumberOfLoops) {
 
@@ -485,10 +557,14 @@ class StatsMigrationTask implements TaskInterface
     // Disable the task
     function disableTask() {
 
+        $this->appendRunMessage('# Disabling task.');
+        $this->log->debug('Disabling task.');
+
         $this->getTask()->isActive = 0;
         $this->getTask()->save();
 
+        $this->appendRunMessage(__('Done.'. PHP_EOL));
+
         return;
     }
-
 }

@@ -127,7 +127,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             // Media name
             $mediaName = null;
-            if ($stat['mediaId'] != null) {
+            if (!empty($stat['mediaId'])) {
                 try {
                     $media = $this->mediaFactory->getById($stat['mediaId']);
                 } catch (NotFoundException $error) {
@@ -145,7 +145,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             }
 
             // Widget name
-            if ($stat['widgetId'] != null) {
+            if (!empty($stat['widgetId'])) {
                 try {
                     $widget = $this->widgetFactory->getById($stat['widgetId']);
                 } catch (NotFoundException $error) {
@@ -214,7 +214,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             // Display tags
             try {
-                $tagFilter['dg'] = explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags);
+                $arrayOfTags = array_filter(explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags));
+                $arrayOfTagValues = array_filter(explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tagValues));
+
+                for ($i=0; $i<count($arrayOfTags); $i++) {
+                    if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                        $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+                        $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
+                    } else {
+                        $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+                    }
+                }
             } catch (NotFoundException $notFoundException) {
                 $this->log->alert('Error processing statistic into MongoDB. Display not found. Stat is: ' . json_encode($stat));
                 // TODO: need to remove the record?
@@ -279,20 +289,39 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['type'] = $type;
         }
 
+        $tagsArray = [];
+
         // Tag Filter
         if ($tags != null) {
 
-            $tagsArray = explode(',', $tags);
+            $i = 0;
+            foreach (explode(',', $tags) as $tag ) {
 
-            // When exact match is not desired
-            if ($exactTags != 1) {
-                $tagsArray = array_map(function ($tag) { return new \MongoDB\BSON\Regex('.*'.$tag. '.*', 'i'); }, $tagsArray);
+                $tagV = explode('|', $tag);
+
+                if (!isset($tagV[1])) {
+                    $tagsArray[$i]['tag'] = $tag;
+                } elseif ($tagV[0] == '') {
+                    $tagsArray[$i]['val'] = $tagV[1];
+                } else {
+                    $tagsArray[$i]['tag'] = $tagV[0];
+                    $tagsArray[$i]['val'] = $tagV[1];
+                }
+                $i++;
             }
 
+            if ($exactTags != 1) {
+                $tagsArray = array_map(function ($tagValue) {
+                    return array_map(function ($tag) { return new \MongoDB\BSON\Regex('.*'.$tag. '.*', 'i'); }, $tagValue);
+                }, $tagsArray);
+            }
+
+            // When exact match is not desired
             if (count($tagsArray) > 0) {
                 $match['$match']['tagFilter.' . $tagsType] = [
-                    '$exists' => true,
-                    '$in' => $tagsArray
+                    '$elemMatch' => [
+                        '$or' => $tagsArray
+                    ]
                 ];
             }
         }

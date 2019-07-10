@@ -315,6 +315,7 @@ class Report extends Base
         $this->getState()->template = 'report-schedule-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
+            'availableReports' => $this->reportService->listReports()
         ]);
     }
 
@@ -450,6 +451,7 @@ class Report extends Base
         $this->getState()->template = 'saved-report-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
+            'availableReports' => $this->reportService->listReports()
         ]);
     }
 
