@@ -108,7 +108,7 @@ class StatsMigrationTask implements TaskInterface
                 if( ($statSql->rowCount() == 0) && ($statArchiveSqlCount == 0) ) {
 
                     $this->runMessage = '## Stat migration to Mongo' . PHP_EOL ;
-                    $this->runMessage = '- Both stat_archive and stat is empty. '. PHP_EOL . PHP_EOL;
+                    $this->appendRunMessage('- Both stat_archive and stat is empty. '. PHP_EOL);
 
                     // Disable the task
                     $this->log->debug('Stats migration task is disabled as stat_archive and stat is empty');
@@ -131,7 +131,7 @@ class StatsMigrationTask implements TaskInterface
                     // Disable the task
 
                     $this->runMessage = '## Moving from stat_archive to stat (MySQL)' . PHP_EOL ;
-                    $this->runMessage = '- Table stat_archive does not exist.' . PHP_EOL. PHP_EOL;
+                    $this->appendRunMessage('- Table stat_archive does not exist.' . PHP_EOL);
 
                     $this->log->debug('Table stat_archive does not exist.');
                     $this->disableTask();
@@ -171,13 +171,13 @@ class StatsMigrationTask implements TaskInterface
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
 
-                $this->runMessage = PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.' . PHP_EOL;
+                $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.');
                 $this->log->debug('End of records in stat_archive (migration to MYSQL). Dropping table.');
 
                 // Drop the stat_archive table
                 $this->store->update('DROP TABLE `stat_archive`;', []);
 
-                $this->appendRunMessage(__('Done.'. PHP_EOL. PHP_EOL));
+                $this->appendRunMessage(__('Done.'. PHP_EOL));
 
                 // Disable the task
                 $this->disableTask();
@@ -241,7 +241,7 @@ class StatsMigrationTask implements TaskInterface
 
             // Give SQL time to recover
             if ($watermark > 0) {
-                $this->runMessage = '- '. $count. ' rows migrated.' . PHP_EOL;
+                $this->appendRunMessage('- '. $count. ' rows migrated.');
 
                 $this->log->debug('MYSQL stats migration from stat_archive to stat. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
@@ -264,7 +264,7 @@ class StatsMigrationTask implements TaskInterface
 
     function migrationStatToMongo($options) {
 
-        $this->runMessage = '## Moving from stat to Mongo' . PHP_EOL ;
+        $this->appendRunMessage('## Moving from stat to Mongo');
 
         // Stat Archive Task
         $archiveTask = $this->taskFactory->getByClass('\Xibo\XTR\\StatsArchiveTask');
@@ -284,7 +284,7 @@ class StatsMigrationTask implements TaskInterface
             // Quit the StatsArchiveTask if it is running
             if ($archiveTask->status == Task::$STATUS_RUNNING) {
 
-                $this->runMessage = 'Quitting the stat migration task as stat archive task is running' . PHP_EOL;
+                $this->appendRunMessage('Quitting the stat migration task as stat archive task is running');
                 $this->log->debug('Quitting the stat migration task as stat archive task is running.');
                 return;
             }
@@ -317,7 +317,7 @@ class StatsMigrationTask implements TaskInterface
                 $archiveTask->save();
                 $this->store->commitIfNecessary();
 
-                $this->runMessage = PHP_EOL. '# End of records.' . PHP_EOL. '- Truncating and Optimising stat.' . PHP_EOL;
+                $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Truncating and Optimising stat.');
                 $this->log->debug('End of records in stat table. Truncate and Optimise.');
 
                 // Truncate stat table
@@ -367,13 +367,13 @@ class StatsMigrationTask implements TaskInterface
             if (count($statDataMongo) > 0) {
                 $this->timeSeriesStore->addStat($statDataMongo);
             } else {
-                $this->runMessage = 'No stat to migrate from stat to mongo' . PHP_EOL;
+                $this->appendRunMessage('No stat to migrate from stat to mongo');
                 $this->log->debug('No stat to migrate from stat to mongo');
             }
 
             // Give Mongo time to recover
             if ($watermark > 0) {
-                $this->runMessage = '- '. $count. ' rows migrated.' . PHP_EOL;
+                $this->appendRunMessage('- '. $count. ' rows migrated.');
                 $this->log->debug('Mongo stats migration from stat. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
@@ -382,7 +382,7 @@ class StatsMigrationTask implements TaskInterface
 
     function migrationStatArchiveToMongo($options) {
 
-        $this->runMessage = PHP_EOL. '## Moving from stat_archive to Mongo' . PHP_EOL ;
+        $this->appendRunMessage(PHP_EOL. '## Moving from stat_archive to Mongo');
         $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_archive_mongo.txt';
 
         // Get low watermark from file
@@ -411,13 +411,13 @@ class StatsMigrationTask implements TaskInterface
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
 
-                $this->runMessage = PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.' . PHP_EOL;
+                $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Dropping stat_archive.');
                 $this->log->debug('End of records in stat_archive (migration to Mongo). Dropping table.');
 
                 // Drop the stat_archive table
                 $this->store->update('DROP TABLE `stat_archive`;', []);
 
-                $this->appendRunMessage(__('Done.'. PHP_EOL. PHP_EOL));
+                $this->appendRunMessage(__('Done.'. PHP_EOL));
 
                 break;
             }
@@ -477,13 +477,13 @@ class StatsMigrationTask implements TaskInterface
             if (count($statDataMongo) > 0) {
                 $this->timeSeriesStore->addStat($statDataMongo);
             } else {
-                $this->runMessage = 'No stat to migrate from stat archive to mongo' . PHP_EOL;
+                $this->appendRunMessage('No stat to migrate from stat archive to mongo');
                 $this->log->debug('No stat to migrate from stat archive to mongo');
             }
 
             // Give Mongo time to recover
             if ($watermark > 0) {
-                $this->runMessage = '- '. $count. ' rows migrated.' . PHP_EOL;
+                $this->appendRunMessage('- '. $count. ' rows migrated.');
                 $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 sleep($options['pauseBetweenLoops']);
             }
@@ -513,7 +513,7 @@ class StatsMigrationTask implements TaskInterface
 
         // We need to increase it
         $watermark+= 1;
-        $this->runMessage = '- Initial watermark is '.$watermark . PHP_EOL;
+        $this->appendRunMessage('- Initial watermark is '.$watermark);
 
         return $watermark;
     }
@@ -557,13 +557,13 @@ class StatsMigrationTask implements TaskInterface
     // Disable the task
     function disableTask() {
 
-        $this->runMessage =  __('# Disabling task.') . PHP_EOL;
+        $this->appendRunMessage('# Disabling task.');
         $this->log->debug('Disabling task.');
 
         $this->getTask()->isActive = 0;
         $this->getTask()->save();
 
-        $this->appendRunMessage(__('Done.'. PHP_EOL. PHP_EOL));
+        $this->appendRunMessage(__('Done.'. PHP_EOL));
 
         return;
     }
