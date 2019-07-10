@@ -348,15 +348,15 @@ class StatsMigrationTask implements TaskInterface
                 $entry['type'] = $stat['type'];
                 $entry['fromDt'] = $this->date->parse($stat['start'], 'U');
                 $entry['toDt'] = $this->date->parse($stat['end'], 'U');
-                $entry['scheduleId'] = $stat['scheduleId'];
-                $entry['mediaId'] = $stat['mediaId'];
-                $entry['layoutId'] = $stat['layoutId'];
-                $entry['displayId'] = $stat['displayId'];
-                $entry['campaignId'] = $stat['campaignId'];
+                $entry['scheduleId'] = (int) $stat['scheduleId'];
+                $entry['mediaId'] = (int) $stat['mediaId'];
+                $entry['layoutId'] = (int) $stat['layoutId'];
+                $entry['displayId'] = (int) $stat['displayId'];
+                $entry['campaignId'] = (int) $stat['campaignId'];
                 $entry['tag'] = $stat['tag'];
-                $entry['widgetId'] = $stat['widgetId'];
-                $entry['duration'] = $stat['duration'];
-                $entry['count'] = $stat['count'];
+                $entry['widgetId'] = (int) $stat['widgetId'];
+                $entry['duration'] = (int) $stat['duration'];
+                $entry['count'] = (int) $stat['count'];
 
                 $statDataMongo[] = $entry;
 
@@ -458,13 +458,13 @@ class StatsMigrationTask implements TaskInterface
                 $entry['type'] = $stat['type'];
                 $entry['fromDt'] = $start;
                 $entry['toDt'] = $end;
-                $entry['scheduleId'] = $stat['scheduleId'];
-                $entry['displayId'] = $stat['displayId'];
-                $entry['campaignId'] = $campaignId;
-                $entry['layoutId'] = $stat['layoutId'];
-                $entry['mediaId'] = $stat['mediaId'];
+                $entry['scheduleId'] = (int) $stat['scheduleId'];
+                $entry['displayId'] = (int) $stat['displayId'];
+                $entry['campaignId'] = (int) $campaignId;
+                $entry['layoutId'] = (int) $stat['layoutId'];
+                $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['tag'] = $stat['tag'];
-                $entry['widgetId'] = $stat['widgetId'];
+                $entry['widgetId'] = (int) $stat['widgetId'];
                 $entry['duration'] = $end->diffInSeconds($start);
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
