@@ -662,8 +662,9 @@ class Campaign extends Base
         }
 
         // Save the campaign
-        if ($changesMade)
-            $campaign->save(['validate' => false]);
+        if ($changesMade) {
+            $campaign->save(['validate' => false, 'saveTags' => false]);
+        }
 
         // Return
         $this->getState()->hydrate([
