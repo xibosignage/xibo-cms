@@ -15,6 +15,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Service\ReportServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -58,6 +59,11 @@ class DistributionReport implements ReportInterface
      */
     private $displayGroupFactory;
 
+    /**
+     * @var ReportServiceInterface
+     */
+    private $reportService;
+
     private $table = 'stat';
 
     private $periodTable = 'period';
@@ -88,6 +94,7 @@ class DistributionReport implements ReportInterface
         $this->savedReportFactory = $container->get('savedReportFactory');
         $this->userFactory = $container->get('userFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
+        $this->reportService = $container->get('reportService');
 
         return $this;
     }
@@ -100,7 +107,8 @@ class DistributionReport implements ReportInterface
             'data' =>  [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'toDate' => $this->getDate()->getLocalDate(),
+                'availableReports' => $this->reportService->listReports()
             ]
         ];
     }

@@ -13,6 +13,7 @@ use Xibo\Factory\SavedReportFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Service\ReportServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -46,6 +47,11 @@ class SummaryReport implements ReportInterface
      */
     private $savedReportFactory;
 
+    /**
+     * @var ReportServiceInterface
+     */
+    private $reportService;
+
     private $table = 'stat';
 
     private $periodTable = 'period';
@@ -74,6 +80,7 @@ class SummaryReport implements ReportInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
+        $this->reportService = $container->get('reportService');
         return $this;
     }
 
@@ -85,7 +92,9 @@ class SummaryReport implements ReportInterface
             'data' =>  [
                 'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
                 'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'toDate' => $this->getDate()->getLocalDate(),
+                'availableReports' => $this->reportService->listReports()
+
             ]
         ];
     }
