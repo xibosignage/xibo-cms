@@ -128,6 +128,7 @@ class ReportScheduleFactory extends BaseFactory
                 reportschedule.previousRunDt, 
                 reportschedule.createdDt, 
                 reportschedule.userId,
+                reportschedule.isActive,
                `user`.UserName AS owner 
            ';
 
@@ -170,6 +171,12 @@ class ReportScheduleFactory extends BaseFactory
             $params['reportName'] = $this->getSanitizer()->getString('reportName',  $filterBy);
         }
 
+        // isActive
+        if ($this->getSanitizer()->getInt('isActive', 0, $filterBy) != 0) {
+            $body .= " AND reportschedule.isActive = :isActive ";
+            $params['isActive'] = $this->getSanitizer()->getInt('isActive', 0,  $filterBy);
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -186,7 +193,7 @@ class ReportScheduleFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'reportScheduleId, lastRunDt, previousRunDt, lastSavedReportId'
+                    'reportScheduleId, lastRunDt, previousRunDt, lastSavedReportId, isActive'
                 ]
             ]);
         }

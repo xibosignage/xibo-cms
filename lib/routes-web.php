@@ -388,6 +388,8 @@ $app->get('/report/reportschedule/view', '\Xibo\Controller\Report:displayReportS
 $app->get('/report/reportschedule/form/add', '\Xibo\Controller\Report:addReportScheduleForm')->name('reportschedule.add.form');
 $app->get('/report/reportschedule/form/edit/:id', '\Xibo\Controller\Report:editReportScheduleForm')->name('reportschedule.edit.form');
 $app->get('/report/reportschedule/form/delete/:id', '\Xibo\Controller\Report:deleteReportScheduleForm')->name('reportschedule.delete.form');
+$app->get('/report/reportschedule/form/deleteall/:id', '\Xibo\Controller\Report:deleteAllSavedReportReportScheduleForm')->name('reportschedule.deleteall.form');
+$app->get('/report/reportschedule/form/toggleactive/:id', '\Xibo\Controller\Report:toggleActiveReportScheduleForm')->name('reportschedule.toggleactive.form');
 $app->get('/report/reportschedule/form/reset/:id', '\Xibo\Controller\Report:resetReportScheduleForm')->name('reportschedule.reset.form');
 
 //

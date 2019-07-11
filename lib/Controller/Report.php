@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use http\Exception\InvalidArgumentException;
 use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\AccessDeniedException;
@@ -161,6 +162,16 @@ class Report extends Base
                     break;
             }
 
+            switch ($reportSchedule->isActive) {
+
+                case 1:
+                    $reportSchedule->isActiveDescription = __('This report schedule is active');
+                    break;
+
+                default:
+                    $reportSchedule->isActiveDescription = __('This report schedule is paused');
+            }
+
             if ($reportSchedule->getLastSavedReportId() > 0) {
 
                 $lastSavedReport = $this->savedReportFactory->getById($reportSchedule->getLastSavedReportId());
@@ -200,11 +211,42 @@ class Report extends Base
             }
 
             // Delete
+            if ($this->getUser()->checkDeleteable($reportSchedule)) {
+                // Show the delete button
+                $reportSchedule->buttons[] = array(
+                    'id' => 'reportschedule_button_delete',
+                    'url' => $this->urlFor('reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('reportschedule.delete', ['id' => $reportSchedule->reportScheduleId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'reportschedule_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $reportSchedule->name),
+                    )
+                );
+            }
+
+            // Toggle active
             $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_delete_button',
-                'url' => $this->urlFor('reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
-                'text' => __('Delete')
+                'id' => 'reportSchedule_toggleactive_button',
+                'url' => $this->urlFor('reportschedule.toggleactive.form', ['id' => $reportSchedule->reportScheduleId]),
+                'text' => ($reportSchedule->isActive == 1) ? __('Pause') : __('Resume')
             ];
+
+            // Delete all saved report
+            $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId]);
+            if ((count($savedreports) > 0)  && $this->getUser()->checkDeleteable($reportSchedule)) {
+
+                $reportSchedule->buttons[] = ['divider' => true];
+
+                $reportSchedule->buttons[] = array(
+                    'id' => 'reportschedule_button_delete_all',
+                    'url' => $this->urlFor('reportschedule.deleteall.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'text' => __('Delete all saved reports'),
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -297,12 +339,73 @@ class Report extends Base
         if (!$this->getUser()->checkDeleteable($reportSchedule))
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
 
-        $reportSchedule->delete();
+        try {
+            $reportSchedule->delete();
+        } catch (\RuntimeException $e) {
+            throw new \InvalidArgumentException(__('Report schedule cannot be deleted. Please ensure there are no saved reports against the schedule.'));
+
+        }
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $reportSchedule->name)
+        ]);
+    }
+
+    /**
+     * Report Schedule Delete All Saved Report
+     */
+    public function reportScheduleDeleteAllSavedReport($reportScheduleId)
+    {
+
+        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+
+        if (!$this->getUser()->checkDeleteable($reportSchedule))
+            throw new AccessDeniedException(__('You do not have permissions to delete the saved report of this report schedule'));
+
+        // Get all saved reports of the report schedule
+        $savedReports = $this->savedReportFactory->query(null, ['reportScheduleId' => $reportScheduleId]);
+        foreach ($savedReports as $savedreport) {
+            try {
+                $savedreport->delete();
+            } catch (\RuntimeException $e) {
+                throw new \InvalidArgumentException(__('Saved report cannot be deleted'));
+            }
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted all saved reports of %s'), $reportSchedule->name)
+        ]);
+    }
+
+    /**
+     * Report Schedule Toggle Active
+     */
+    public function reportScheduleToggleActive($reportScheduleId)
+    {
+
+        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+
+        if (!$this->getUser()->checkEditable($reportSchedule))
+            throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
+
+        if ($reportSchedule->isActive == 1) {
+            $reportSchedule->isActive = 0;
+            $msg = sprintf(__('Paused %s'), $reportSchedule->name);
+        } else {
+            $reportSchedule->isActive = 1;
+            $msg = sprintf(__('Resumed %s'), $reportSchedule->name);
+
+        }
+        $reportSchedule->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => $msg
         ]);
     }
 
@@ -387,6 +490,44 @@ class Report extends Base
 
     }
 
+    /**
+     * Report Schedule Delete All Saved Report Form
+     */
+    public function deleteAllSavedReportReportScheduleForm($reportScheduleId)
+    {
+        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+
+        if (!$this->getUser()->checkDeleteable($reportSchedule))
+            throw new AccessDeniedException(__('You do not have permissions to delete saved reports of this report schedule'));
+
+        $data = [
+            'reportSchedule' => $reportSchedule
+        ];
+
+        $this->getState()->template = 'reportschedule-form-deleteall';
+        $this->getState()->setData($data);
+
+    }
+
+    /**
+     * Report Schedule Toggle Active Form
+     */
+    public function toggleActiveReportScheduleForm($reportScheduleId)
+    {
+        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+
+        if (!$this->getUser()->checkEditable($reportSchedule))
+            throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
+
+        $data = [
+            'reportSchedule' => $reportSchedule
+        ];
+
+        $this->getState()->template = 'reportschedule-form-toggleactive';
+        $this->getState()->setData($data);
+
+    }
+
     //</editor-fold>
 
     //<editor-fold desc="Saved report">
@@ -425,17 +566,29 @@ class Report extends Base
             $savedReport->buttons[] = [
                 'id' => 'button_goto_schedule',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('reportschedule.view' ) . '?savedReportId=' . $savedReport->savedReportId,
+                'url' => $this->urlFor('reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
                 'text' => __('Go to schedule')
             ];
 
-            // Delete
             $savedReport->buttons[] = ['divider' => true];
-            $savedReport->buttons[] = [
-                'id' => 'savedReport_delete_button',
-                'url' => $this->urlFor('savedreport.delete.form', ['id' => $savedReport->savedReportId]),
-                'text' => __('Delete')
-            ];
+
+            // Delete
+            if ($this->getUser()->checkDeleteable($savedReport)) {
+                // Show the delete button
+                $savedReport->buttons[] = array(
+                    'id' => 'savedreport_button_delete',
+                    'url' => $this->urlFor('savedreport.delete.form', ['id' => $savedReport->savedReportId]),
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('savedreport.delete', ['id' => $savedReport->savedReportId])),
+                        array('name' => 'commit-method', 'value' => 'delete'),
+                        array('name' => 'id', 'value' => 'savedreport_button_delete'),
+                        array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'rowtitle', 'value' => $savedReport->saveAs),
+                    )
+                );
+            }
         }
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->savedReportFactory->countLast();

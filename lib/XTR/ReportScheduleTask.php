@@ -82,9 +82,10 @@ class ReportScheduleTask implements TaskInterface
      */
     private function runReportSchedule()
     {
-        $this->runMessage .= '## ' . __('Run report schedule') . PHP_EOL;
 
-        $reportSchedules = $this->reportScheduleFactory->query();
+        $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1]);
+//        var_dump(count($reportSchedules));
+//        die();
 
         // Get list of ReportSchedule
         foreach($reportSchedules as $reportSchedule) {
