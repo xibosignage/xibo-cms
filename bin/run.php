@@ -31,9 +31,6 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-if (\Xibo\Helper\Environment::migrationPending())
-    die('Upgrade pending');
-
 // convert all the command line arguments into a URL
 $argv = $GLOBALS['argv'];
 array_shift($GLOBALS['argv']);
@@ -59,6 +56,11 @@ $app->setName('console');
 
 // Config
 $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+
+// Check for upgrade AFTER loading the config service
+// sometimes people put include_once/require_once in their settings.php file
+if (\Xibo\Helper\Environment::migrationPending())
+    die('Upgrade pending');
 
 // Set up the environment so that Slim can route
 $app->environment = Slim\Environment::mock([
