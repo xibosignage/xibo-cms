@@ -551,6 +551,9 @@ Viewer.prototype.closeInlineEditorContent = function() {
     // Update inline editor text area
     let data = CKEDITOR.instances['viewer_' + lD.propertiesPanel.inlineEditorId].getData();
 
+    // Parse library references
+    data = formHelpers.revertLibraryReferences(data);
+
     // Copy data back to properties panel text area
     lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).val(data);
 
