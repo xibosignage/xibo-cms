@@ -221,45 +221,6 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
-     * Create Layout from Template
-     * @param int $layoutId
-     * @param int $ownerId
-     * @param string $name
-     * @param string $description
-     * @param string $tags
-     * @return Layout
-     * @throws XiboException
-     */
-    public function createFromTemplate($layoutId, $ownerId, $name, $description, $tags)
-    {
-        // Load the template
-        $template = $this->loadById($layoutId);
-        $template->load();
-
-        // Empty all of the ID's
-        $layout = clone $template;
-
-        // Overwrite our new properties
-        $layout->layout = $name;
-        $layout->description = $description;
-
-        // Create some tags (overwriting the old ones)
-        $layout->tags = $this->tagFactory->tagsFromString($tags);
-
-        // Set the owner
-        $layout->setOwner($ownerId);
-
-        // Ensure we have Playlists for each region
-        foreach ($layout->regions as $region) {
-            // Set the ownership of this region to the user creating from template
-            $region->setOwner($ownerId, true);
-        }
-
-        // Fresh layout object, entirely new and ready to be saved
-        return $layout;
-    }
-
-    /**
      * Load a layout by its ID
      * @param int $layoutId
      * @return Layout The Layout
