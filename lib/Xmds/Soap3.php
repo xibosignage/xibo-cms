@@ -58,8 +58,6 @@ class Soap3 extends Soap
         try {
             $display = $this->displayFactory->getByLicence($hardwareKey);
 
-            $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
-
             if (!$display->isDisplaySlotAvailable()) {
                 $display->licensed = 0;
             }
