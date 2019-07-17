@@ -552,7 +552,8 @@ class State extends Middleware
                 $container->mediaFactory,
                 $container->commandFactory,
                 $container->scheduleFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->campaignFactory
             );
         });
 
