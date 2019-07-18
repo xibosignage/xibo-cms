@@ -862,13 +862,7 @@ class DataSetTicker extends ModuleWidget
         $widgetModifiedDt = ($dataSet->lastDataEdit > $widgetModifiedDt) ? $dataSet->lastDataEdit : $widgetModifiedDt;
 
         // Remote dataSets are kept "active" by required files
-        if ($dataSet->isRemote) {
-            // Touch this dataSet
-            $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
-            $dataSetCache->set('true');
-            $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
-            $this->getPool()->saveDeferred($dataSetCache);
-        }
+        $dataSet->setActive();
 
         return $this->getDate()->parse($widgetModifiedDt, 'U');
     }

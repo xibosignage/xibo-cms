@@ -365,8 +365,6 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [], $options = [])
     {
-        $this->touchLastAccessed();
-
         $start = $this->sanitizer->getInt('start', 0, $filterBy);
         $size = $this->sanitizer->getInt('size', 0, $filterBy);
         $filter = $this->sanitizer->getParam('filter', $filterBy);
@@ -698,7 +696,7 @@ class DataSet implements \JsonSerializable
         }
 
         // We've been touched
-        $this->touchLastAccessed();
+        $this->setActive();
 
         // Notify Displays?
         $this->notify();
@@ -736,13 +734,29 @@ class DataSet implements \JsonSerializable
         return $this;
     }
 
-    private function touchLastAccessed()
+    /**
+     * Is this DataSet active currently
+     * @return bool
+     */
+    public function isActive()
     {
-        // Touch this dataSet
-        $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
-        $dataSetCache->set('true');
-        $dataSetCache->expiresAfter(intval($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
-        $this->pool->saveDeferred($dataSetCache);
+        $cache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
+        return $cache->isHit();
+    }
+
+    /**
+     * Indicate that this DataSet has been accessed recently
+     * @return $this
+     */
+    public function setActive()
+    {
+        $this->getLog()->debug('Setting ' . $this->dataSetId . ' as active');
+
+        $cache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
+        $cache->set('true');
+        $cache->expiresAfter(intval($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
+        $this->pool->saveDeferred($cache);
+        return $this;
     }
 
     /**
