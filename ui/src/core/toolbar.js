@@ -947,6 +947,7 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
 Toolbar.prototype.mediaContentCreate = function(menu) {
 
     const self = this;
+    const app = getXiboApp();
 
     // Get search window Jquery object
     const $searchContent = self.DOMObject.find('#content-' + menu + '.search-content');
@@ -1116,6 +1117,9 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         // Add text to form
         self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
     });
+
+    // Initialize tooltips
+    app.common.reloadTooltips(self.DOMObject);
 
     // Deselect previous selections
     self.deselectCardsAndDropZones();

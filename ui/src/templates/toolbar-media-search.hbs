@@ -1,8 +1,8 @@
 <form id="media-search-form-{{menuIndex}}" class="form-inline drag-handle">
-    <div class="media-search-controls">
+    <div class="media-search-controls" data-toggle="tooltip" title="{{trans.window.drag}}">
         <span class="tab-name-{{menuIndex}}">{{menuObj.itemName}}</span>
-        <i class="fa btn-window-close fa-times pull-right" data-menu="{{menuIndex}}"></i>
-        <i class="fa btn-window-minimize fa-arrow-circle-down pull-right" data-menu="{{menuIndex}}"></i></i>
+        <i class="fa btn-window-close fa-times pull-right" data-toggle="tooltip" title="{{trans.window.close}}" data-menu="{{menuIndex}}"></i>
+        <i class="fa btn-window-minimize fa-arrow-circle-down pull-right" data-toggle="tooltip" title="{{trans.window.minimise}}" data-menu="{{menuIndex}}"></i></i>
     </div>
     <div class="form-group form-group-small search-form-group">
         <select id="input-type-{{menuIndex}}" name="type" class="form-control input-type">
