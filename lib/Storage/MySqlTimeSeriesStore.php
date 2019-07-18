@@ -91,299 +91,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
-    {
-
-        $fromDt = $fromDt->format('U');
-        $toDt = $toDt->startOfDay()->addDay()->format('U'); // added a day
-
-        // Media on Layouts Ran
-        $select = '
-          SELECT stat.type,
-              display.Display,
-              IFNULL(layout.Layout, 
-              (SELECT `layout` FROM `layout` WHERE layoutId = (SELECT  MAX(layoutId) FROM  layouthistory  WHERE
-                            campaignId = stat.campaignId))) AS Layout,
-              IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
-              SUM(stat.count) AS NumberPlays,
-              SUM(stat.duration) AS Duration,
-              MIN(start) AS MinStart,
-              MAX(end) AS MaxEnd,
-              stat.tag,
-              stat.layoutId,
-              stat.mediaId,
-              stat.widgetId,
-              stat.displayId
-        ';
-
-        $body = '
-            FROM stat
-              LEFT OUTER JOIN display
-              ON stat.DisplayID = display.DisplayID
-              LEFT OUTER JOIN layouthistory 
-              ON layouthistory.LayoutID = stat.LayoutID              
-              LEFT OUTER JOIN layout
-              ON layout.LayoutID = layouthistory.layoutId
-              LEFT OUTER JOIN `widget`
-              ON `widget`.widgetId = stat.widgetId
-              LEFT OUTER JOIN `widgetoption`
-              ON `widgetoption`.widgetId = `widget`.widgetId
-                AND `widgetoption`.type = \'attrib\'
-                AND `widgetoption`.option = \'name\'
-              LEFT OUTER JOIN `media`
-              ON `media`.mediaId = `stat`.mediaId
-              ';
-
-        if ($tags != '' ) {
-            if ($tagsType === 'dg') {
-                $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = display.displayid
-                     INNER JOIN `displaygroup`
-                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
-                         AND `displaygroup`.isDisplaySpecific = 1 ';
-            }
-        }
-
-        $body .= ' WHERE stat.type <> \'displaydown\'
-                AND stat.end > :fromDt
-                AND stat.start <= :toDt
-        ';
-
-        // Filter by display
-        if (count($displayIds) > 0 ) {
-            $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ') ';
-        }
-
-        $params = [
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
-        ];
-
-        if ($tags != '') {
-            if (trim($tags) === '--no-tag') {
-                if ($tagsType === 'dg') {
-                    $body .= ' AND `displaygroup`.displaygroupId NOT IN (
-                    SELECT `lktagdisplaygroup`.displaygroupId
-                     FROM tag
-                        INNER JOIN `lktagdisplaygroup`
-                        ON `lktagdisplaygroup`.tagId = tag.tagId
-                        )
-                        ';
-                }
-
-                // old layout and latest layout have same tags
-                // old layoutId replaced with latest layoutId in the lktaglayout table and
-                // join with layout history to get campaignId then we can show old layouts that have no tag
-                if ($tagsType === 'layout') {
-                    $body .= ' AND `stat`.campaignId NOT IN (
-                        SELECT 
-                            `layouthistory`.campaignId
-                        FROM
-                        (
-                            SELECT `lktaglayout`.layoutId
-                            FROM tag
-                            INNER JOIN `lktaglayout`
-                            ON `lktaglayout`.tagId = tag.tagId ) B
-                        LEFT OUTER JOIN
-                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId 
-                        )
-                        ';
-                }
-                if ($tagsType === 'media') {
-                    $body .= ' AND `media`.mediaId NOT IN (
-                    SELECT `lktagmedia`.mediaId
-                     FROM tag
-                        INNER JOIN `lktagmedia`
-                        ON `lktagmedia`.tagId = tag.tagId
-                        )
-                        ';
-                }
-            } else {
-                $operator = $exactTags == 1 ? '=' : 'LIKE';
-                if ($tagsType === 'dg') {
-                    $body .= " AND `displaygroup`.displaygroupId IN (
-                        SELECT `lktagdisplaygroup`.displaygroupId
-                          FROM tag
-                            INNER JOIN `lktagdisplaygroup`
-                            ON `lktagdisplaygroup`.tagId = tag.tagId
-                        ";
-                }
-                // old layout and latest layout have same tags
-                // old layoutId replaced with latest layoutId in the lktaglayout table and
-                // join with layout history to get campaignId then we can show old layouts that have given tag
-                if ($tagsType === 'layout') {
-                    $body .= " AND `stat`.campaignId IN (
-                        SELECT 
-                            `layouthistory`.campaignId
-                        FROM
-                        (
-                            SELECT `lktaglayout`.layoutId
-                            FROM tag
-                            INNER JOIN `lktaglayout`
-                            ON `lktaglayout`.tagId = tag.tagId
-                        ";
-                }
-                if ($tagsType === 'media') {
-                    $body .= " AND `media`.mediaId IN (
-                        SELECT `lktagmedia`.mediaId
-                          FROM tag
-                            INNER JOIN `lktagmedia`
-                            ON `lktagmedia`.tagId = tag.tagId
-                    ";
-                }
-                $i = 0;
-                foreach (explode(',', $tags) as $tag) {
-                    $i++;
-
-                    $tagV = explode('|', $tag);
-
-                    // search tag without value
-                    if (!isset($tagV[1])) {
-                        if ($i == 1) {
-                            $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                        } else {
-                            $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-                        }
-
-                        if ($operator === '=') {
-                            $params['tags' . $i] = $tag;
-                        } else {
-                            $params['tags' . $i] = '%' . $tag . '%';
-                        }
-                        // search tag only by value
-                    } elseif ($tagV[0] == '') {
-                        if ($i == 1) {
-                            $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
-                        } else {
-                            $body .= ' OR `value` ' . $operator . ' :value' . $i;
-                        }
-
-                        if ($operator === '=') {
-                            $params['value' . $i] = $tagV[1];
-                        } else {
-                            $params['value' . $i] = '%' . $tagV[1] . '%';
-                        }
-                        // search tag by both tag and value
-                    } else {
-                        if ($i == 1) {
-                            $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
-                                ' AND value ' . $operator . ' :value' . $i;
-                        } else {
-                            $body .= ' OR `tag` ' . $operator . ' :tags' . $i .
-                                ' AND value ' . $operator . ' :value' . $i;
-                        }
-
-                        if ($operator === '=') {
-                            $params['tags' . $i] = $tagV[0];
-                            $params['value' . $i] = $tagV[1];
-                        } else {
-                            $params['tags' . $i] = '%' . $tagV[0] . '%';
-                            $params['value' . $i] = '%' . $tagV[1] . '%';
-                        }
-                    }
-                }
-                if ($tagsType === 'layout') {
-                    $body .= " ) B
-                        LEFT OUTER JOIN
-                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ";
-                }
-                else {
-                    $body .= " ) ";
-                }
-            }
-        }
-
-        // Type filter
-        if ($type == 'layout') {
-            $body .= ' AND `stat`.type = \'layout\' ';
-        } else if ($type == 'media') {
-            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
-        } else if ($type == 'widget') {
-            $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
-        } else if ($type == 'event') {
-            $body .= ' AND `stat`.type = \'event\' ';
-        }
-
-        // Layout Filter
-        if (count($layoutIds) != 0) {
-
-            $layoutSql = '';
-            $i = 0;
-            foreach ($layoutIds as $layoutId) {
-                $i++;
-                $layoutSql .= ':layoutId_' . $i . ',';
-                $params['layoutId_' . $i] = $layoutId;
-            }
-
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
-        }
-
-        // Media Filter
-        if (count($mediaIds) != 0) {
-
-            $mediaSql = '';
-            $i = 0;
-            foreach ($mediaIds as $mediaId) {
-                $i++;
-                $mediaSql .= ':mediaId_' . $i . ',';
-                $params['mediaId_' . $i] = $mediaId;
-            }
-
-            $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
-        }
-
-        $body .= 'GROUP BY stat.type, stat.tag, display.Display, stat.displayId, stat.campaignId, IFNULL(stat.mediaId, stat.widgetId), 
-        IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
-
-        $order = '';
-        if ($columns != null)
-            $order = 'ORDER BY ' . implode(',', $columns);
-
-        $limit= '';
-        if ($length != null)
-            $limit = ' LIMIT ' . $start . ', ' . $length;
-
-        /*Execute sql statement*/
-        $sql = $select . $body . $order . $limit;
-
-        $rows = [];
-        foreach ($this->store->select($sql, $params) as $row) {
-            $entry = [];
-
-            $entry['type'] = $row['type'];
-            $entry['displayId'] = $row['displayId'];
-            $entry['display'] = $row['Display'];
-            $entry['layout'] = $row['Layout'];
-            $entry['media'] = $row['Media'];
-            $entry['numberPlays'] = $row['NumberPlays'];
-            $entry['duration'] = $row['Duration'];
-            $entry['minStart'] = $row['MinStart'];
-            $entry['maxEnd'] = $row['MaxEnd'];
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
-            $entry['mediaId'] = $row['mediaId'];
-            $entry['tag'] = $row['tag'];
-
-            $rows[] = $entry;
-        }
-
-        // Paging
-        $results = [];
-        if ($limit != '' && count($rows) > 0) {
-            $results = $this->store->select('
-              SELECT COUNT(*) AS total FROM (SELECT stat.type, display.Display, layout.Layout, IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ' . $body . ') total
-            ', $params);
-        }
-
-        return [
-            'statData' => $rows,
-            'count' => count($rows),
-            'totalStats' => isset($results[0]['total']) ? $results[0]['total'] : 0
-        ];
-
-    }
-
-    /** @inheritdoc */
     public function getEarliestDate()
     {
         $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
@@ -394,7 +101,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStats($fromDt, $toDt, $displayIds = [])
+    public function getStats($fromDt, $toDt, $displayIds = [], $type = null, $layoutIds = [], $mediaIds = [])
     {
 
         $fromDt = $fromDt->format('U');
@@ -420,10 +127,49 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
         }
 
+        // Type filter
+        if ($type == 'layout') {
+            $sql .= ' AND `stat`.type = \'layout\' ';
+        } else if ($type == 'media') {
+            $sql .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
+        } else if ($type == 'widget') {
+            $sql .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
+        } else if ($type == 'event') {
+            $sql .= ' AND `stat`.type = \'event\' ';
+        }
+
         $params = [
             'fromDt' => $fromDt,
             'toDt' => $toDt
         ];
+
+        // Layout Filter
+        if (count($layoutIds) != 0) {
+
+            $layoutSql = '';
+            $i = 0;
+            foreach ($layoutIds as $layoutId) {
+                $i++;
+                $layoutSql .= ':layoutId_' . $i . ',';
+                $params['layoutId_' . $i] = $layoutId;
+            }
+
+            $sql .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
+        }
+
+        // Media Filter
+        if (count($mediaIds) != 0) {
+
+            $mediaSql = '';
+            $i = 0;
+            foreach ($mediaIds as $mediaId) {
+                $i++;
+                $mediaSql .= ':mediaId_' . $i . ',';
+                $params['mediaId_' . $i] = $mediaId;
+            }
+
+            $sql .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
+        }
 
         $sql .= " ORDER BY stat.start ";
 

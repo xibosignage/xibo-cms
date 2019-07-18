@@ -264,261 +264,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null)
-    {
-
-        $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-        $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
-
-        // Filters the documents to pass only the documents that
-        // match the specified condition(s) to the next pipeline stage.
-        $match =  [
-            '$match' => [
-                'end' => [ '$gt' => $fromDt],
-                'start' => [ '$lte' => $toDt]
-            ]
-        ];
-
-        // Display Filter
-        if (count($displayIds) > 0) {
-            $match['$match']['displayId'] = [ '$in' => $displayIds ];
-        }
-
-        // Type Filter
-        if ($type != null) {
-            $match['$match']['type'] = $type;
-        }
-
-        $tagsArray = [];
-
-        // Tag Filter
-        if ($tags != null) {
-
-            $i = 0;
-            foreach (explode(',', $tags) as $tag ) {
-
-                $tagV = explode('|', $tag);
-
-                if (!isset($tagV[1])) {
-                    $tagsArray[$i]['tag'] = $tag;
-                } elseif ($tagV[0] == '') {
-                    $tagsArray[$i]['val'] = $tagV[1];
-                } else {
-                    $tagsArray[$i]['tag'] = $tagV[0];
-                    $tagsArray[$i]['val'] = $tagV[1];
-                }
-                $i++;
-            }
-
-            if ($exactTags != 1) {
-                $tagsArray = array_map(function ($tagValue) {
-                    return array_map(function ($tag) { return new \MongoDB\BSON\Regex('.*'.$tag. '.*', 'i'); }, $tagValue);
-                }, $tagsArray);
-            }
-
-            // When exact match is not desired
-            if (count($tagsArray) > 0) {
-                $match['$match']['tagFilter.' . $tagsType] = [
-                    '$elemMatch' => [
-                        '$or' => $tagsArray
-                    ]
-                ];
-            }
-        }
-
-        // Layout Filter
-        if (count($layoutIds) != 0) {
-            $this->log->debug($layoutIds, JSON_PRETTY_PRINT);
-            // Get campaignIds for selected layoutIds
-            $campaignIds = [];
-            foreach ($layoutIds as $layoutId) {
-                try {
-                    $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
-                } catch (NotFoundException $notFoundException) {
-                    // Ignore the missing one
-                    $this->log->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
-                }
-            }
-            $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
-        }
-
-        // Media Filter
-        if (count($mediaIds) != 0) {
-            $this->log->debug($mediaIds, JSON_PRETTY_PRINT);
-            $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
-        }
-
-        // For sorting
-        // The selected column has a key
-        $temp = [
-            '_id.type' => 'type',
-            '_id.display' => 'display',
-            'layout' => 'layout',
-            'media' => 'media',
-            'eventName' => 'eventName',
-            'layoutId' => 'layoutId',
-            'widgetId' => 'widgetId',
-            '_id.displayId' => 'displayId',
-            'numberPlays' => 'numberPlays',
-            'minStart' => 'minStart',
-            'maxEnd' => 'maxEnd',
-            'duration' => 'duration',
-        ];
-
-        // Remove ` and DESC from the array strings
-        $cols = [];
-        foreach ($columns as $column) {
-            $str = str_replace("`","",str_replace(" DESC","",$column));
-            if (\strpos($column, 'DESC') !== false) {
-                $cols[$str] = -1;
-            } else {
-                $cols[$str] = 1;
-
-            }
-        }
-
-        // The selected column key gets stored in an array with value 1 or -1 (for DESC)
-        $array = [];
-        foreach ($cols as $k => $v) {
-            if (array_search($k, $temp))
-                $array[array_search($k, $temp)] = $v;
-        }
-
-        $order = ['_id.type'=> 1]; // default sorting by type
-        if ($array != null) {
-            $order = $array;
-        }
-
-        $project = [
-            '$project' => [
-                'campaignId' =>  1,
-                'mediaId' =>  1,
-                'mediaName'=> 1,
-                'media'=> [ '$ifNull' => [ '$mediaName', '$widgetName' ] ],
-                'eventName' => 1,
-                'widgetId' =>  1,
-                'widgetName' =>  1,
-                'layoutId' =>  1,
-                'layoutName' =>  1,
-                'displayId' =>  1,
-                'displayName' =>  1,
-                'start' => 1,
-                'end' => 1,
-                'type' => 1,
-                'duration' => 1,
-                'count' => 1,
-                'total' => ['$sum' => 1],
-            ]
-        ];
-
-        $group = [
-            '$group' => [
-                '_id' => [
-                    'type' => '$type',
-                    'campaignId'=> [ '$ifNull' => [ '$campaignId', '$layoutId' ] ],
-                    'mediaorwidget'=> [ '$ifNull' => [ '$mediaId', '$widgetId' ] ],
-                    'displayId'=> [ '$ifNull' => [ '$displayId', null ] ],
-                    'display'=> '$displayName',
-                    'eventName'=> '$eventName',
-                    // we don't need to group by media name and widget name
-
-                ],
-
-                'media'=> [ '$first' => '$media'],
-                'eventName'=> [ '$first' => '$eventName'],
-                'mediaId' => ['$first' => '$mediaId'],
-                'widgetId' => ['$first' => '$widgetId' ],
-
-                'layout' => ['$first' => '$layoutName'],
-
-                // use the last layoutId to say that is the latest layoutId
-                'layoutId' => ['$last' => '$layoutId'],
-
-                'minStart' => ['$min' => '$start'],
-                'maxEnd' => ['$max' => '$end'],
-                'numberPlays' => ['$sum' => '$count'],
-                'duration' => ['$sum' => '$duration'],
-                'total' => ['$max' => '$total'],
-            ],
-        ];
-
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
-        try {
-            $cursor = $collection->aggregate([
-                // Filters the documents to pass only the documents that
-                // match the specified condition(s) to the next pipeline stage.
-                $match,
-                $project,
-                $group,
-                ['$skip' => $start],
-                ['$limit' => $length],
-                ['$sort' => $order],
-            ]);
-
-            $result = $cursor->toArray();
-
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
-        }
-
-        $this->log->debug(json_encode($cursor, JSON_PRETTY_PRINT));
-        $this->log->debug(json_encode($result, JSON_PRETTY_PRINT));
-
-        $totalStats = 0;
-        try {
-            $totalStatCursor = $collection->aggregate([
-                $match,
-                $project,
-                $group,
-                [
-                    '$group' => [
-                        '_id' => [],
-                        'totals' => ['$sum' => '$total'],
-
-                    ],
-                ]
-            ]);
-
-            $resTotal = $totalStatCursor->toArray();
-
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
-        }
-
-        if (count($resTotal) > 0) {
-            $totalStats = $resTotal[0]['totals'];
-        }
-
-        $rows = [];
-
-        foreach ($result as $row) {
-            $entry = [];
-
-            $entry['type'] = $row['_id']['type'];
-            $entry['displayId'] = $row['_id']['displayId'];
-            $entry['display'] = isset($row['_id']['display']) ? $row['_id']['display']: 'No display';
-            $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
-            $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
-            $entry['numberPlays'] = $row['numberPlays'];
-            $entry['duration'] = $row['duration'];
-            $entry['minStart'] = $row['minStart']->toDateTime()->format('U');
-            $entry['maxEnd'] = $row['maxEnd']->toDateTime()->format('U');
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
-            $entry['mediaId'] = $row['mediaId'];
-            $entry['tag'] = $row['eventName'];
-
-            $rows[] = $entry;
-        }
-
-        return [
-            'statData' => $rows,
-            'count' => count($rows),
-            'totalStats' => $totalStats
-        ];
-    }
-
-    /** @inheritdoc */
     public function getEarliestDate()
     {
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
@@ -545,7 +290,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStats($fromDt, $toDt, $displayIds = [])
+    public function getStats($fromDt, $toDt, $displayIds = [], $type = null, $layoutIds = [], $mediaIds = [])
     {
         $fromDt = new UTCDateTime($fromDt->format('U')*1000);
         $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
@@ -558,8 +303,32 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         ];
 
         if (count($displayIds) != 0) {
-            $this->log->debug($displayIds, JSON_PRETTY_PRINT);
             $match['$match']['displayId'] = [ '$in' => $displayIds ];
+        }
+
+        // Type Filter
+        if ($type != null) {
+            $match['$match']['type'] = $type;
+        }
+
+        // Layout Filter
+        if (count($layoutIds) != 0) {
+            // Get campaignIds for selected layoutIds
+            $campaignIds = [];
+            foreach ($layoutIds as $layoutId) {
+                try {
+                    $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+                } catch (NotFoundException $notFoundException) {
+                    // Ignore the missing one
+                    $this->getLog()->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
+                }
+            }
+            $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
+        }
+
+        // Media Filter
+        if (count($mediaIds) != 0) {
+            $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
         }
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);

@@ -28,6 +28,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Report\ProofOfPlay;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -264,9 +265,6 @@ class Stats extends Base
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $type = strtolower($this->getSanitizer()->getString('type'));
-        $tags = $this->getSanitizer()->getString('tags');
-        $tagsType = $this->getSanitizer()->getString('tagsType');
-        $exactTags = $this->getSanitizer()->getCheckbox('exactTags');
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
@@ -302,47 +300,31 @@ class Stats extends Base
             }
         }
 
-        // Sorting?
-        $filterBy = $this->gridRenderFilter();
-        $sortOrder = $this->gridRenderSort();
-
-        $columns = [];
-        if (is_array($sortOrder))
-            $columns = $sortOrder;
-
-        // Paging
-        $start = 0;
-        $length = 0;
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-
-            $start = intval($this->getSanitizer()->getInt('start', $filterBy), 0);
-            $length = $this->getSanitizer()->getInt('length', 10, $filterBy);
-        }
-
         // Call the time series interface getStatsReport
-        $result =  $this->timeSeriesStore->getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
+        $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds, $type, $layoutIds, $mediaIds);
 
-        // Sanitize results
+        // Get results as array
+        $result = $resultSet->getArray();
+
         $rows = [];
         foreach ($result['statData'] as $row) {
             $entry = [];
 
             $widgetId = $this->getSanitizer()->int($row['widgetId']);
             $widgetName = $this->getSanitizer()->string($row['media']);
-            // If the media name is empty, and the widgetid is not, then we can assume it has been deleted.
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
-            $displayName = $this->getSanitizer()->string($row['display']);
-            $layoutName = $this->getSanitizer()->string($row['layout']);
 
+            $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
+            $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
-            $entry['numberPlays'] = $this->getSanitizer()->int($row['numberPlays']);
+            $entry['numberPlays'] = $this->getSanitizer()->int($row['count']);
             $entry['duration'] = $this->getSanitizer()->int($row['duration']);
-            $entry['minStart'] = $this->getDate()->parse($row['minStart'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->getDate()->parse($row['maxEnd'], 'U')->format('Y-m-d H:i:s');
+            $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+            $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
@@ -351,15 +333,10 @@ class Stats extends Base
             $rows[] = $entry;
         }
 
-        // Paging
-        if ($result['count'] > 0) {
-            $this->getState()->recordsTotal = intval($result['totalStats']);
-        }
-
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
-
     }
+
 
     /**
      * Bandwidth Data
