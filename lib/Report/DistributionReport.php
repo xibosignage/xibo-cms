@@ -3,6 +3,7 @@
 namespace Xibo\Report;
 
 use MongoDB\BSON\UTCDateTime;
+use Slim\Slim;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -28,6 +29,11 @@ class DistributionReport implements ReportInterface
 {
 
     use ReportTrait;
+
+    /**
+     * @var \Slim\Slim
+     */
+    public $app;
 
     /**
      * @var DisplayFactory
@@ -70,6 +76,7 @@ class DistributionReport implements ReportInterface
 
     /**
      * Report Constructor.
+     * @param Slim $app
      * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -78,9 +85,9 @@ class DistributionReport implements ReportInterface
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
+    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
     {
-
+        $this->app = $app;
         $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
     }
 
