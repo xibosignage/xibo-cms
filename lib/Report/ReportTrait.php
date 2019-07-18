@@ -54,6 +54,8 @@ trait ReportTrait
      */
     private $request;
 
+    private $userId;
+
     /**
      * Set common dependencies.
      * @param \Xibo\Helper\ApplicationState $state
@@ -335,5 +337,18 @@ trait ReportTrait
         $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
 
         return 'temp_periods';
+    }
+
+    public function getUserId() {
+
+        return $this->userId;
+
+    }
+
+    public function setUserId($userId) {
+
+        $this->userId = $userId;
+
+        return;
     }
 }
