@@ -164,7 +164,6 @@ class ReportService implements ReportServiceInterface
             throw new NotFoundException(__('Class %s not found', $className));
 
         $object = new $className(
-            $this->app,
             $this->state,
             $this->store,
             $this->timeSeriesStore,

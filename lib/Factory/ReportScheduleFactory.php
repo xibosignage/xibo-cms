@@ -172,9 +172,9 @@ class ReportScheduleFactory extends BaseFactory
         }
 
         // isActive
-        if ($this->getSanitizer()->getInt('isActive', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('isActive', $filterBy) !== null) {
             $body .= " AND reportschedule.isActive = :isActive ";
-            $params['isActive'] = $this->getSanitizer()->getInt('isActive', 0,  $filterBy);
+            $params['isActive'] = $this->getSanitizer()->getInt('isActive', $filterBy);
         }
 
         // Sorting?
@@ -193,7 +193,7 @@ class ReportScheduleFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'reportScheduleId, lastRunDt, previousRunDt, lastSavedReportId, isActive'
+                    'reportScheduleId', 'lastRunDt', 'previousRunDt', 'lastSavedReportId', 'isActive'
                 ]
             ]);
         }

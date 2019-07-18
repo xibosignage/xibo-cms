@@ -3,7 +3,6 @@
 namespace Xibo\Report;
 
 use MongoDB\BSON\UTCDateTime;
-use Slim\Slim;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -30,11 +29,6 @@ class ProofOfPlay implements ReportInterface
 {
 
     use ReportTrait;
-
-    /**
-     * @var \Slim\Slim
-     */
-    public $app;
 
     /**
      * @var DisplayFactory
@@ -86,7 +80,6 @@ class ProofOfPlay implements ReportInterface
 
     /**
      * Report Constructor.
-     * @param Slim $app
      * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -95,9 +88,8 @@ class ProofOfPlay implements ReportInterface
      * @param DateServiceInterface $date
      * @param SanitizerServiceInterface $sanitizer
      */
-    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
+    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
     {
-        $this->app = $app;
         $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
     }
 
@@ -1103,50 +1095,5 @@ class ProofOfPlay implements ReportInterface
             'count' => count($rows),
             'totalStats' => $totalStats,
         ];
-    }
-
-    /**
-     * Set the filter
-     * @param array[Optional] $extraFilter
-     * @return array
-     */
-    protected function gridRenderFilter($extraFilter = [])
-    {
-        // Handle filtering
-        $filter = [
-            'start' => $this->getSanitizer()->getInt('start', 0),
-            'length' => $this->getSanitizer()->getInt('length', 10)
-        ];
-
-        $search = $this->app->request()->get('search', array());
-        if (is_array($search) && isset($search['value'])) {
-            $filter['search'] = $search['value'];
-        }
-        else if ($search != '') {
-            $filter['search'] = $search;
-        }
-
-        // Merge with any extra filter items that have been provided
-        $filter = array_merge($extraFilter, $filter);
-
-        return $filter;
-    }
-
-    /**
-     * Set the sort order
-     * @return array
-     */
-    protected function gridRenderSort()
-    {
-        $columns = $this->app->request()->get('columns');
-
-        if ($columns == null || !is_array($columns))
-            return null;
-
-        $order = array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $this->app->request()->get('order', array()));
-
-        return $order;
     }
 }

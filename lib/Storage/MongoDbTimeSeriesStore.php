@@ -110,6 +110,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     {
         foreach ($statData as $k => $stat) {
 
+            $statData[$k]['statDate'] = new UTCDateTime($statData[$k]['statDate']->format('U') * 1000);
             $statData[$k]['start'] = new UTCDateTime($statData[$k]['fromDt']->format('U') * 1000);
             unset($statData[$k]['fromDt']);
 
@@ -120,7 +121,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             unset($statData[$k]['tag']);
 
             unset($statData[$k]['scheduleId']);
-            unset($statData[$k]['statDate']);
 
             // Make an empty array to collect tags into
             $tagFilter = [];
@@ -272,7 +272,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 [
                     '$group' => [
                         '_id' => [],
-                        'minDate' => ['$min' => '$start'],
+                        'minDate' => ['$min' => '$statDate'],
                     ]
                 ]
             ])->toArray();

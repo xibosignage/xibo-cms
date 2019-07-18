@@ -22,11 +22,10 @@
 
 namespace Xibo\Controller;
 
-use http\Exception\InvalidArgumentException;
 use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -342,7 +341,7 @@ class Report extends Base
         try {
             $reportSchedule->delete();
         } catch (\RuntimeException $e) {
-            throw new \InvalidArgumentException(__('Report schedule cannot be deleted. Please ensure there are no saved reports against the schedule.'));
+            throw new InvalidArgumentException(__('Report schedule cannot be deleted. Please ensure there are no saved reports against the schedule.'), 'reportScheduleId' );
 
         }
 
@@ -370,7 +369,7 @@ class Report extends Base
             try {
                 $savedreport->delete();
             } catch (\RuntimeException $e) {
-                throw new \InvalidArgumentException(__('Saved report cannot be deleted'));
+                throw new InvalidArgumentException(__('Saved report cannot be deleted'), 'savedReportId');
             }
         }
 
