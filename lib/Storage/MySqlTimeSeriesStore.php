@@ -117,6 +117,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             ON layout.LayoutID = stat.LayoutID
             LEFT OUTER JOIN media
             ON media.mediaID = stat.mediaID
+            LEFT OUTER JOIN widget
+            ON widget.widgetId = stat.widgetId
          WHERE 1 = 1
           AND stat.end > :fromDt
           AND stat.start <= :toDt
