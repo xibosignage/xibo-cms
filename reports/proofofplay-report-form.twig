@@ -1,0 +1,376 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
+    </ul>
+    <div class="proof-of-play-report-div pull-right btn-group">
+        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <span class="fa fa-caret-down"></span>
+            {% trans "Reports" %}
+        </button>
+        <ul class="dropdown-menu">
+            {% for report in defaults.availableReports %}
+                <li>
+                    <a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">{% trans "Proof of Play" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="proofofplayReport">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set today %}{% trans "Today" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
+                            {% set options = [
+                                { filterName: "", reportFilter: range },
+                                { filterName: "today", reportFilter: today },
+                                { filterName: "yesterday", reportFilter: yesterday },
+                                { filterName: "thisweek", reportFilter: thisweek },
+                                { filterName: "thismonth", reportFilter: thismonth },
+                                { filterName: "thisyear", reportFilter: thisyear },
+                                { filterName: "lastweek", reportFilter: lastweek },
+                                { filterName: "lastmonth", reportFilter: lastmonth },
+                                { filterName: "lastyear", reportFilter: lastyear },
+                            ] %}
+                            {{ inline.dropdown("reportFilter", "single", title, "", options, "filterName", "reportFilter") }}
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+
+                            {% set title %}{% trans "Layout" %}{% endset %}
+                            {{ inline.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
+
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" }
+                            ] %}
+                            {% set title %}{% trans "Media" %}{% endset %}
+                            {{ inline.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set widget %}{% trans "Widget" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
+                            {% set options = [
+                                { typeid: "", type: null },
+                                { typeid: "layout", type: layout },
+                                { typeid: "media", type: media },
+                                { typeid: "widget", type: widget },
+                                { typeid: "event", type: event }
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
+
+                            {% set title %}{% trans "Tags from" %}{% endset %}
+                            {% set dg %}{% trans "Display Group" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set options = [
+                                { tagsTypeid: "dg", tagsType: dg },
+                                { tagsTypeid: "layout", tagsType: layout },
+                                { tagsTypeid: "media", tagsType: media }
+                            ] %}
+                            {{ inline.dropdown("tagsType", "single", title, "dg", options, "tagsTypeid", "tagsType") }}
+
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                            {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
+                            {{ inline.checkbox("exactTags", title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="stats" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Display ID" %}</th>
+                            <th>{% trans "Display" %}</th>
+                            <th>{% trans "Layout ID" %}</th>
+                            <th>{% trans "Layout" %}</th>
+                            <th>{% trans "Widget ID" %}</th>
+                            <th>{% trans "Media" %}</th>
+                            <th>{% trans "Tag" %}</th>
+                            <th>{% trans "Number of Plays" %}</th>
+                            <th>{% trans "Total Duration" %}</th>
+                            <th>{% trans "Total Duration (s)" %}</th>
+                            <th>{% trans "First Shown" %}</th>
+                            <th>{% trans "Last Shown" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            // Grid
+            var table = $("#stats").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data = {};
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=proofOfPlayGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "proofOfPlayGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("report.data", {name: reportName}) }}",
+                    "data": function (d) {
+                        console.log(d)
+                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "type"},
+                    {"data": "displayId"},
+                    {"data": "display"},
+                    {"data": "layoutId"},
+                    {"data": "layout"},
+                    {"data": "widgetId"},
+                    {"data": "media"},
+                    {"data": "tag"},
+                    {"data": "numberPlays"},
+                    {
+                        "data": "duration",
+                        "render": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            let durationData = moment.duration(data, "seconds");
+                            let dataM = '';
+
+                            let months = durationData.months();
+                            if (months > 0) {
+                                durationData.subtract(moment.duration(months,'months'));
+                                dataM += months + '{% trans "month" %} ';
+                            }
+
+                            let days = durationData.days();
+                            durationData.subtract(moment.duration(days,'days'));
+                            dataM += days + '{% trans "day" %} ';
+
+                            let hours = durationData.hours();
+                            durationData.subtract(moment.duration(hours,'hours'));
+                            dataM += hours + '{% trans "hr" %} ';
+
+                            let minutes = durationData.minutes();
+                            durationData.subtract(moment.duration(minutes,'minutes'));
+                            dataM += minutes + '{% trans "min" %} ';
+
+                            let seconds = durationData.seconds();
+                            dataM += seconds + '{% trans "sec" %} ';
+
+                            return  dataM;
+                        }
+                    },
+                    {"data": "duration"},
+                    {"data": "minStart"},
+                    {"data": "maxEnd"}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#stats_wrapper').find('.col-sm-6').eq(1));
+
+            // Refresh
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
+
+            // Report Filter
+            var reportFilter = $("#reportFilter");
+
+            function checkReportFilter(reportFilter, reload) {
+
+                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
+                    $(".stats-from-dt").show();
+                    $(".stats-to-dt").show();
+                } else {
+                    $(".stats-from-dt").hide();
+                    $(".stats-to-dt").hide();
+                }
+
+                if (reload === true) {
+                    table.ajax.reload();
+                }
+            }
+
+            const checkFilterAndApply = function() {
+
+                reportFilter.off('change').change( function() {
+                    checkReportFilter(reportFilter, true);
+                });
+
+                var anchorReportAddBtn = $("a#reportAddBtn");
+                var type = $("#type").val();
+                var tagsType = $("#tagsType").val();
+                var tags = $("#tags").val();
+                var exactTags = $('#exactTags').is(":checked");
+
+                anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
+                    + "&reportName=proofofplayReport" );
+
+            };
+
+            // Bind to form change
+            $('#proofofplayReport input[type="text"], #proofofplayReport input[type="checkbox"], #proofofplayReport select').on('change', function() {
+                checkFilterAndApply();
+            });
+
+            checkReportFilter(reportFilter, false);
+            checkFilterAndApply();
+        });
+
+        function proofOfPlayScheduleCallback() {
+
+            const $displayId = $('#proofofplayReport #displayId');
+            const $layoutId = $('#proofofplayReport [id="layoutId[]"]');
+            const $mediaId = $('#proofofplayReport [id="mediaId[]"]');
+            const $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
+            const $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
+            const $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
+
+            appendOptions($newDisplayId, $displayId.find('option:selected').clone());
+            appendOptions($newLayoutId, $layoutId.find('option:selected').clone());
+            appendOptions($newMediaId, $mediaId.find('option:selected').clone());
+        }
+
+        function appendOptions(element, options) {
+
+            for (var i = 0; i < options.length; i++) {
+
+                let option = options[i];
+                element.append(option).trigger('change');
+                $(option).prop('selected', true);
+                element.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data: option
+                    }
+                });
+            }
+
+        }
+    </script>
+{% endblock %}

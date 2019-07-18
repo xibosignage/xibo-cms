@@ -1,0 +1,5 @@
+{
+  "name": "proofofplayReport",
+  "description": "Report: Proof of Play",
+  "class": "\\Xibo\\Report\\ProofOfPlay"
+}
