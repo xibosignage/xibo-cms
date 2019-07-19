@@ -116,6 +116,10 @@
                         {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
                         {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
 
+                        {% set title %}{% trans "Decode the HTML entities in this feed before parsing it" %}{% endset %}
+                        {% set helpText %}{% trans "Should we decode the HTML entities in this feed before parsing it?" %}{% endset %}
+                        {{ forms.checkbox("decodeHtml", title, module.getOption("decodeHtml"), helpText) }}
+
                         {% set title %}{% trans "Disable Date Sort" %}{% endset %}
                         {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
                         {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
