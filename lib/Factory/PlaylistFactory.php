@@ -127,6 +127,17 @@ class PlaylistFactory extends BaseFactory
     }
 
     /**
+     * Get by OwnerId
+     * @param int $ownerId
+     * @return Playlist[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, array('userId' => $ownerId));
+    }
+
+    /**
      * Create a Playlist
      * @param string $name
      * @param int $ownerId

@@ -41,6 +41,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
@@ -124,6 +125,9 @@ class User extends Base
     /** @var PlayerVersionFactory */
     private $playerVersionFactory;
 
+    /** @var PlaylistFactory */
+    private $playlistFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -148,10 +152,11 @@ class User extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param PlaylistFactory $playlistFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -170,6 +175,7 @@ class User extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetFactory = $widgetFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     /**
@@ -822,7 +828,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
