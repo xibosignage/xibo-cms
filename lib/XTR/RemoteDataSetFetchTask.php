@@ -88,8 +88,7 @@ class RemoteDataSetFetchTask implements TaskInterface
 
             try {
                 // Has this dataSet been accessed recently?
-                $cache = $this->pool->getItem('/dataset/accessed/' . $dataSet->dataSetId);
-                if ($cache->isMiss()) {
+                if (!$dataSet->isActive()) {
                     // Skipping dataSet due to it not being accessed recently
                     $this->log->info('Skipping dataSet ' . $dataSet->dataSetId . ' due to it not being accessed recently');
                     continue;

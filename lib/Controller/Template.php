@@ -292,15 +292,19 @@ class Template extends Base
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
 
+        // Should the copy include the widgets
+        $includeWidgets = ($this->getSanitizer()->getCheckbox('includeWidgets') == 1);
+
         // Load without anything
         $layout->load([
             'loadPlaylists' => true,
-            'loadWidgets' => ($this->getSanitizer()->getCheckbox('includeWidgets') == 1),
+            'loadWidgets' => $includeWidgets,
             'playlistIncludeRegionAssignments' => false,
             'loadTags' => false,
             'loadPermissions' => false,
             'loadCampaigns' => false
         ]);
+        $originalLayout = $layout;
 
         $layout = clone $layout;
 
@@ -310,6 +314,17 @@ class Template extends Base
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
+
+        if ($includeWidgets) {
+            // Sub-Playlist
+            foreach ($layout->regions as $region) {
+                // Match our original region id to the id in the parent layout
+                $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+
+                // Make sure Playlist closure table from the published one are copied over
+                $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+            }
+        }
 
         // Return
         $this->getState()->hydrate([

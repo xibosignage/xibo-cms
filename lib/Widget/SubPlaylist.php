@@ -294,6 +294,7 @@ class SubPlaylist extends ModuleWidget
         $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId() . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
 
         // As a first step, get all of our playlists widgets loaded into an array
+        /** @var Widget[] $resolvedWidgets */
         $resolvedWidgets = [];
         $widgets = [];
         $firstList = null;
@@ -541,6 +542,17 @@ class SubPlaylist extends ModuleWidget
         $log = 'Resolved: ';
         foreach ($resolvedWidgets as $resolvedWidget) {
             $log .= $resolvedWidget->playlistId . '-' . $resolvedWidget->widgetId . ',';
+
+            // Should my from/to dates be applied to the resolved widget?
+            // only if they are more restrictive.
+            // because this is recursive, we should end up with the top most widget being "ruler" of the from/to dates
+            if ($this->widget->fromDt > $resolvedWidget->fromDt) {
+                $resolvedWidget->fromDt = $this->widget->fromDt;
+            }
+
+            if ($this->widget->toDt < $resolvedWidget->toDt) {
+                $resolvedWidget->toDt = $this->widget->toDt;
+            }
         }
         $this->getLog()->debug($log);
 
