@@ -195,7 +195,7 @@ class Region implements \JsonSerializable
 
     private function hash()
     {
-        return md5($this->name . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
+        return md5($this->name . $this->ownerId . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
     }
 
     /**
@@ -231,6 +231,7 @@ class Region implements \JsonSerializable
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
                 $playlist->setOwner($ownerId);
+                $playlist->save();
             }
         }
     }

@@ -187,6 +187,7 @@ class Playlist implements \JsonSerializable
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
             $widget->setOwner($ownerId);
+            $widget->save();
         }
     }
 
@@ -360,10 +361,11 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Updating Playlist ' . $this->name . '. Id = ' . $this->playlistId);
 
-        $sql = 'UPDATE `playlist` SET `name` = :name WHERE `playlistId` = :playlistId';
+        $sql = 'UPDATE `playlist` SET `name` = :name, `ownerId` = :ownerId WHERE `playlistId` = :playlistId';
         $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
-            'name' => $this->name
+            'name' => $this->name,
+            'ownerId' => $this->ownerId
         ));
     }
 
