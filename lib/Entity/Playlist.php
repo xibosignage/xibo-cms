@@ -718,6 +718,7 @@ class Playlist implements \JsonSerializable
      * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[]
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function expandWidgets($parentWidgetId = 0)
     {
@@ -743,6 +744,8 @@ class Playlist implements \JsonSerializable
             } else {
                 /** @var SubPlaylist $module */
                 $module = $this->moduleFactory->createWithWidget($widget);
+                $module->isValid();
+
                 $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
             }
         }

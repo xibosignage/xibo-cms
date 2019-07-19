@@ -23,6 +23,7 @@
 namespace Xibo\Widget;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 
 /**
  * Class Playlist
@@ -39,7 +40,24 @@ class SubPlaylist extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        return (count($this->getAssignedPlaylistIds()) > 0) ? self::$STATUS_VALID : self::$STATUS_INVALID;
+        $valid = self::$STATUS_VALID;
+        if (count($this->getAssignedPlaylistIds()) <= 0) {
+           $valid = self::$STATUS_INVALID;
+        } else {
+            foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+                try {
+                    $this->playlistFactory->getById($playlistId);
+                } catch (NotFoundException $e) {
+                    $this->getLog()->error('Misconfigured subplaylist, playlist ID ' . $playlistId . ' Not found');
+                    $valid =  self::$STATUS_INVALID;
+                }
+            }
+        }
+        if ($valid == 0) {
+            throw new InvalidArgumentException(__('Please select a Playlist'), 'playlistId');
+        }
+
+        return $valid;
     }
 
     /** @inheritdoc */
@@ -270,7 +288,12 @@ class SubPlaylist extends ModuleWidget
         $names = [];
 
         foreach ($this->getAssignedPlaylistIds() as $playlistId) {
-            $names[] = $this->playlistFactory->getById($playlistId)->name;
+            try {
+                $names[] = $this->playlistFactory->getById($playlistId)->name;
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Misconfigured subplaylist, playlist ID ' . $playlistId . ' Not found');
+                $names[] = '';
+            }
         }
 
         return __('Sub-Playlist: %s', implode(', ', $names));
