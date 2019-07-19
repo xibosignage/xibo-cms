@@ -29,6 +29,12 @@
             modulesList.push({{ module.getModule()|json_encode|raw }});
         {% endfor %}
 
+        // USERS LIST
+        var usersList = [];
+        {% for user in users %}
+            usersList.push({{ user|json_encode|raw }});
+        {% endfor %}
+
         // Structure with API URLs
         let urlsForApi = {
             layout: {
@@ -300,7 +306,8 @@
                 searchFilters: {
                     name: "{% trans "Name" %}",
                     tag: "{% trans "Tag" %}",
-                    type: "{% trans "Type" %}"
+                    type: "{% trans "Type" %}",
+                    owner: "{% trans "Owner" %}"
                 },
                 tabName: "{% trans "Library Search %tagId%" %}",
                 tableHeader: {

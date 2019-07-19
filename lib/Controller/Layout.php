@@ -205,6 +205,7 @@ class Layout extends Base
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
+            'users' => $this->userFactory->query(),
             'modules' => array_map(function($element) use ($moduleFactory) { 
                     $module = $moduleFactory->createForInstall($element->class);
                     $module->setModule($element);
@@ -214,7 +215,6 @@ class Layout extends Base
 
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
-        //$this->getState()->template = 'layout-designer-page-old';
         $this->getState()->setData($data);
     }
 

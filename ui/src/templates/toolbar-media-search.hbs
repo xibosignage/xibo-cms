@@ -17,6 +17,13 @@
 
         <input id="input-tag-{{menuIndex}}" name="tags" type="text" value="{{menuObj.filters.tag.value}}" data-role="tagsinput"
             class="form-control input-tag" placeholder="{{menuObj.filters.tag.name}}">
+
+        <select id="input-owner-{{menuIndex}}" name="ownerId" class="form-control input-type">
+            <option value="">{{menuObj.filters.owner.name}}</option>
+            {{#each menuObj.filters.owner.values}}
+                <option value="{{userId}}" {{#eq ../menuObj.filters.owner.value userId}}selected{{/eq}}>{{name}}</option>
+            {{/each}}
+        </select>
     </div>
 </form>
 <div class="XiboGrid" id="media-table-container-{{menuIndex}}">
