@@ -218,6 +218,31 @@ class PlayerVersionFactory extends BaseFactory
             $params['playerCode'] = $this->getSanitizer()->getInt('playerCode', $filterBy);
         }
 
+        if ($this->getSanitizer()->getString('playerShowVersion') != null) {
+            // convert into a space delimited array
+            $names = explode(' ', $this->getSanitizer()->getString('playerShowVersion', $filterBy));
+
+            $i = 0;
+            foreach($names as $searchName)
+            {
+                $i++;
+
+                // Ignore if the word is empty
+                if($searchName == '')
+                    continue;
+
+                // Not like, or like?
+                if (substr($searchName, 0, 1) == '-') {
+                    $body.= " AND  player_software.playerShowVersion NOT LIKE (:search$i) ";
+                    $params['search' . $i] = '%' . ltrim($searchName) . '%';
+                }
+                else {
+                    $body.= " AND  player_software.playerShowVersion LIKE (:search$i) ";
+                    $params['search' . $i] = '%' . $searchName . '%';
+                }
+            }
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
