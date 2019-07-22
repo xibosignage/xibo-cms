@@ -286,7 +286,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getByOwnerId($ownerId)
     {
-        return $this->query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1));
+        return $this->query(null, array('userId' => $ownerId, 'excludeTemplates' => -1, 'retired' => -1, 'showDrafts' => 1));
     }
 
     /**

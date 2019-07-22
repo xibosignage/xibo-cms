@@ -821,8 +821,8 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`';
-        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote';
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`';
+        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear';
 
         $params = [
             'dataSet' => $this->dataSet,
@@ -830,7 +830,9 @@ class DataSet implements \JsonSerializable
             'userId' => $this->userId,
             'code' => ($this->code == '') ? null : $this->code,
             'isLookup' => $this->isLookup,
-            'isRemote' => $this->isRemote
+            'isRemote' => $this->isRemote,
+            'lastDataEdit' => 0,
+            'lastClear' => 0
         ];
 
         // Insert the extra columns we expect for a remote DataSet

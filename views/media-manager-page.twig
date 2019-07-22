@@ -3,7 +3,7 @@
 
 {% block pageContent %}
     <div class="widget">
-        <div class="widget-title">{% trans "All Layouts and Media" %}</div>
+        <div class="widget-title">{% trans "All Editable Widgets" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="mediaManagerView">
                 <div class="XiboFilter well">
@@ -11,16 +11,26 @@
                         <form class="form-inline">
 
                             {% set title %}{% trans "Layout" %}{% endset %}
-                            {{ inline.input("layout", title) }}
+                            {{ inline.input("layout", title, "", "", 'layout-draft') }}
 
                             {% set title %}{% trans "Region" %}{% endset %}
-                            {{ inline.input("region", title) }}
+                            {{ inline.input("region", title, "", "", "layout-draft") }}
+
+                            {% set title %}{% trans "Playlist" %}{% endset %}
+                            {{ inline.input("playlist", title, "", "", "playlist") }}
 
                             {% set title %}{% trans "Media" %}{% endset %}
                             {{ inline.input("media", title) }}
 
                             {% set title %}{% trans "Module" %}{% endset %}
                             {{ inline.dropdown("type", "single", title, "", [{type:null, name:""}]|merge(modules), "type", "name") }}
+
+                            {% set title = "Widgets From"|trans %}
+                            {% set options = [
+                                { id: 1, value: "Drafts"|trans },
+                                { id: 2, value: "Playlists"|trans }
+                            ] %}
+                            {{ inline.dropdown("showWidgetsFrom", "single", title, "", options, "id", "value", helpText) }}
 
                         </form>
                     </div>
@@ -36,7 +46,7 @@
                                 <th>{% trans "Region" %}</th>
                                 <th>{% trans "Playlist" %}</th>
                                 <th>{% trans "Display Order" %}</th>
-                                <th></th>
+                                <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,6 +67,29 @@
         var table;
 
         $(document).ready(function() {
+
+            if ($('#showWidgetsFrom').val() == 1) {
+                $('.playlist').hide();
+                $('#playlist').val("");
+                $('.layout-draft').show()
+            } else {
+                $('.layout-draft').hide();
+                $('#layout,#region').val("");
+                $('.playlist').show()
+            }
+
+            $('#showWidgetsFrom').change(function() {
+                if ($('#showWidgetsFrom').val() == 1) {
+                    $('.playlist').hide();
+                    $('#playlist').val("");
+                    $('.layout-draft').show()
+                } else {
+                    $('.layout-draft').hide();
+                    $('#layout,#region').val("");
+                    $('.playlist').show()
+                }
+            });
+
             table = $("#entries").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,

@@ -315,7 +315,7 @@ class ForecastIo extends ModuleWidget
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
         $this->setOption('units', $this->getSanitizer()->getString('units'));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setOption('lang', $this->getSanitizer()->getString('lang'));
+        $this->setOption('lang', $this->getSanitizer()->getString('lang', 'en'));
         $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
         
         if ($this->getOption('overrideTemplate') == 1) {

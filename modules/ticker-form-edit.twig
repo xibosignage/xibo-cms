@@ -116,6 +116,10 @@
                         {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
                         {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
 
+                        {% set title %}{% trans "Decode the HTML entities in this feed before parsing it" %}{% endset %}
+                        {% set helpText %}{% trans "Should we decode the HTML entities in this feed before parsing it?" %}{% endset %}
+                        {{ forms.checkbox("decodeHtml", title, module.getOption("decodeHtml"), helpText) }}
+
                         {% set title %}{% trans "Disable Date Sort" %}{% endset %}
                         {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
                         {{ forms.checkbox("disableDateSort", title, module.getOption("disableDateSort"), helpText) }}
@@ -335,11 +339,11 @@
                     <div class="tab-pane" id="cacheTab">
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
-                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
                                                 
                         {% set title %}{% trans "Update Interval Images (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings." %}{% endset %}
-                        {% set fieldUpdateIntervalImages %}{{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages")), helpText, "", "required") }}{% endset %}
+                        {{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages", 240)), helpText, "", "required") }}
                     </div>
                 </div>
             </form>
