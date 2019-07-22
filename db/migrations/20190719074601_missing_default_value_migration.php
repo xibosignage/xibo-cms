@@ -27,7 +27,9 @@ class MissingDefaultValueMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $this->execute('ALTER TABLE dataset MODIFY `lastDataEdit` int(11) DEFAULT 0');
-        $this->execute('ALTER TABLE dataset MODIFY `lastClear` int(11) DEFAULT 0');
+        $table = $this->table('dataset');
+        $table->changeColumn('lastDataEdit', 'integer', ['default' => 0])
+            ->changeColumn('lastClear', 'integer', ['default' => 0])
+            ->save();
     }
 }

@@ -27,6 +27,7 @@ class NullableCommandValidationStringMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $this->execute('ALTER TABLE lkcommanddisplayprofile MODIFY validationString varchar(1000) NULL;');
+        $table = $this->table('lkcommanddisplayprofile');
+        $table->changeColumn('validationString', 'string', ['limit' => 1000, 'null' => true])->save();
     }
 }
