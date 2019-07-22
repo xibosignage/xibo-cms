@@ -272,7 +272,7 @@
 
                 {% set title %}{% trans "Update Interval Images (mins)" %}{% endset %}
                 {% set helpText %}{% trans "Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings." %}{% endset %}
-                {% set fieldUpdateIntervalImages %}{{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages")), helpText, "", "required") }}{% endset %}
+                {% set fieldUpdateIntervalImages %}{{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages", 240)), helpText, "", "required") }}{% endset %}
 
                 {% set title %}{% trans "Duration is per item" %}{% endset %}
                 {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
@@ -432,6 +432,10 @@
                         {% set title %}{% trans "Strip Tags" %}{% endset %}
                         {% set helpText %}{% trans "A comma separated list of HTML tags that should be stripped from the feed in addition to the default ones." %}{% endset %}
                         {{ forms.input("stripTags", title, module.getOption("stripTags"), helpText) }}
+
+                        {% set title %}{% trans "Decode the HTML entities in this feed before parsing it" %}{% endset %}
+                        {% set helpText %}{% trans "Should we decode the HTML entities in this feed before parsing it?" %}{% endset %}
+                        {{ forms.checkbox("decodeHtml", title, module.getOption("decodeHtml"), helpText) }}
 
                         {% set title %}{% trans "Disable Date Sort" %}{% endset %}
                         {% set helpText %}{% trans "Should the date sort applied to the feed be disabled?" %}{% endset %}
