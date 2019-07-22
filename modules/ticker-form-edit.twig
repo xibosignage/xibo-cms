@@ -343,7 +343,7 @@
                                                 
                         {% set title %}{% trans "Update Interval Images (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Override the update interval for images. This should be kept as high as possible and can be set for all Tickers in Module Settings." %}{% endset %}
-                        {{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages", 240)), helpText, "", "required") }}{% endset %}
+                        {{ forms.number("updateIntervalImages", title, module.getOption("updateIntervalImages", module.getSetting("updateIntervalImages", 240)), helpText, "", "required") }}
                     </div>
                 </div>
             </form>
