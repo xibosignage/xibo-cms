@@ -187,7 +187,6 @@ class Playlist implements \JsonSerializable
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
             $widget->setOwner($ownerId);
-            $widget->save();
         }
     }
 

@@ -231,7 +231,6 @@ class Region implements \JsonSerializable
             foreach ($this->playlists as $playlist) {
                 /* @var Playlist $playlist */
                 $playlist->setOwner($ownerId);
-                $playlist->save();
             }
         }
     }
