@@ -25,6 +25,8 @@ namespace Xibo\Storage;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -70,6 +72,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var  DisplayGroupFactory */
     protected $displayGroupFactory;
 
+    /** @var  CampaignFactory */
+    protected $campaignFactory;
+
     /**
      * @inheritdoc
      */
@@ -82,7 +87,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
     {
         $this->log = $log;
         $this->dateService = $date;
@@ -91,6 +96,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->campaignFactory = $campaignFactory;
 
         try {
             $this->client = new Client('mongodb://'.$this->config['host'].':'. $this->config['port'],
@@ -290,20 +296,80 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStats($fromDt, $toDt, $displayIds = [], $type = null, $layoutIds = [], $mediaIds = [])
+    public function getStats($filterBy = [])
     {
+        // do we consider that the fromDt and toDt will always be provided?
+        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
+        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
+
+        if ($fromDt == null) {
+            throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+        }
+        if ($toDt == null) {
+            throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+        }
+
+        $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        if ( isset($statDate) && ($statDate < $fromDt) ) {
+            throw new InvalidArgumentException(__("statDate cannot be less than fromDt"), 'statDate');
+        }
+
+        $type = isset($filterBy['type']) ? $filterBy['type'] : null;
+        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+        $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
+        $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
+        $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+
+        // Limit
+        $start = isset($filterBy['start']) ? $filterBy['start'] : null;
+        $length = isset($filterBy['length']) ? $filterBy['length'] : null;
+
+        // Match query
+        $match = [];
         $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-        $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
+        $match['$match']['end'] = [ '$gt' => $fromDt];
 
-        $match =  [
-            '$match' => [
-                'end' => [ '$gt' => $fromDt],
-                'start' => [ '$lte' => $toDt]
-            ]
-        ];
+        $toDt = new UTCDateTime($toDt->format('U')*1000);
+        $match['$match']['start'] = [ '$lte' => $toDt];
 
+        // statDate Filter
+        if ($statDate != null) {
+            $statDate = new UTCDateTime($statDate->format('U')*1000);
+            $match['$match']['statDate'] = [ '$gte' => $statDate];
+        }
+
+        // Displays Filter
         if (count($displayIds) != 0) {
             $match['$match']['displayId'] = [ '$in' => $displayIds ];
+        }
+
+        // Campaign selection
+        // ------------------
+        // Get all the layouts of that campaign.
+        // Then get all the campaigns of the layouts
+        $campaignIds = [];
+        if ($campaignId != null) {
+            try {
+                $campaign = $this->campaignFactory->getById($campaignId);
+                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+                if (count($layouts) > 0) {
+                    foreach ($layouts as $layout) {
+                        $campaignIds[] = $layout->campaignId;
+                    }
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->log->error('Empty campaignIds.');
+            }
+        }
+
+        // Campaign Filter
+        if ($campaignId != null) {
+            if (count($campaignIds) != 0) {
+                $match['$match']['campaignId'] = ['$in' => $campaignIds];
+            } else {
+                // we wont get any match as we store layoutspecific campaignid in stat
+                $match['$match']['campaignId'] = ['$eq' => $campaignId];
+            }
         }
 
         // Type Filter
@@ -333,27 +399,58 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
         try {
-            $cursor = $collection->aggregate([
-                $match,
-                [
-                    '$project' => [
-                        'type'=> 1,
-                        'start'=> 1,
-                        'end'=> 1,
-                        'layout'=> '$layoutName',
-                        'display'=> '$displayName',
-                        'media'=> '$mediaName',
-                        'tag'=> '$eventName',
-                        'duration'=> '$duration',
-                        'count'=> '$count',
-                        'displayId'=> 1,
-                        'layoutId'=> 1,
-                        'widgetId'=> 1,
-                        'mediaId'=> 1,
+           if(count($match) <= 0) {
+               $cursor = $collection->aggregate([
+                   [
+                       '$project' => [
+                           'type'=> 1,
+                           'start'=> 1,
+                           'end'=> 1,
+                           'layout'=> '$layoutName',
+                           'display'=> '$displayName',
+                           'media'=> '$mediaName',
+                           'tag'=> '$eventName',
+                           'duration'=> '$duration',
+                           'count'=> '$count',
+                           'displayId'=> 1,
+                           'layoutId'=> 1,
+                           'widgetId'=> 1,
+                           'mediaId'=> 1,
+                           'statDate'=> 1,
 
-                    ]
-                ]
-            ]);
+                       ]
+                   ]
+               ]);
+           } else {
+               $query = [
+                   $match,
+                   [
+                       '$project' => [
+                           'type'=> 1,
+                           'start'=> 1,
+                           'end'=> 1,
+                           'layout'=> '$layoutName',
+                           'display'=> '$displayName',
+                           'media'=> '$mediaName',
+                           'tag'=> '$eventName',
+                           'duration'=> '$duration',
+                           'count'=> '$count',
+                           'displayId'=> 1,
+                           'layoutId'=> 1,
+                           'widgetId'=> 1,
+                           'mediaId'=> 1,
+                           'statDate'=> 1,
+                       ]
+                   ],
+               ];
+
+               if ($start !== null && $length !== null) {
+                   $query[]['$skip'] =  $start;
+                   $query[]['$limit'] = $length;
+               }
+
+               $cursor = $collection->aggregate($query);
+           }
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }

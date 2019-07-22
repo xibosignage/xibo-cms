@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -165,12 +166,28 @@ class Stats extends Base
      *      type="string"
      *  ),
      *  @SWG\Property(
+     *      property="displayId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
      *      property="layout",
      *      type="string"
      *  ),
      *  @SWG\Property(
+     *      property="layoutId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
      *      property="media",
      *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="mediaId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="widgetId",
+     *      type="integer"
      *  ),
      *  @SWG\Property(
      *      property="numberPlays",
@@ -186,6 +203,14 @@ class Stats extends Base
      *  ),
      *  @SWG\Property(
      *      property="maxEnd",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="statDate",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="tag",
      *      type="string"
      *  )
      * )
@@ -245,6 +270,13 @@ class Stats extends Base
      *          type="integer"
      *      )
      *  ),
+     *   @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="An optional Campaign Id to filter",
+     *      type="integer",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -261,18 +293,25 @@ class Stats extends Base
     {
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
+        $type = strtolower($this->getSanitizer()->getString('type'));
+
         $displayId = $this->getSanitizer()->getInt('displayId');
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
-        $type = strtolower($this->getSanitizer()->getString('type'));
+        $statDate = $this->getSanitizer()->getDate('statDate');
+        $campaignId = $this->getSanitizer()->getInt('campaignId');
+
+        $start = $this->getSanitizer()->getInt('start', 0);
+        $length = $this->getSanitizer()->getInt('length', 10);
+
+        $fromDt->startOfDay();
+        $toDt->addDay()->startOfDay();
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt == $toDt) {
             $toDt->addDay(1);
         }
-
-        $this->getLog()->debug('Converted Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt));
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -300,8 +339,20 @@ class Stats extends Base
             }
         }
 
-        // Call the time series interface getStatsReport
-        $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds, $type, $layoutIds, $mediaIds);
+        // Call the time series interface getStats
+        $resultSet =  $this->timeSeriesStore->getStats(
+            [
+                'fromDt'=> $fromDt,
+                'toDt'=> $toDt,
+                'type' => $type,
+                'displayIds' => $displayIds,
+                'layoutIds' => $layoutIds,
+                'mediaIds' => $mediaIds,
+                'statDate' => $statDate,
+                'campaignId' => $campaignId,
+                'start' => $start,
+                'length' => $length,
+            ]);
 
         // Get results as array
         $result = $resultSet->getArray();
@@ -329,6 +380,7 @@ class Stats extends Base
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
+            $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
 
             $rows[] = $entry;
         }
@@ -481,11 +533,24 @@ class Stats extends Base
             }
         }
 
+        $fromDt->startOfDay();
+        $toDt->addDay()->startOfDay();
+
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
+            $toDt->addDay();
+        }
+
         // Get result set
-        $resultSet =  $this->timeSeriesStore->getStats($fromDt, $toDt, $displayIds);
+        $resultSet =  $this->timeSeriesStore->getStats([
+            'fromDt'=> $fromDt,
+            'toDt'=> $toDt,
+            'displayIds' => $displayIds,
+        ]);
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
 
         while ($row = $resultSet->getNextRow() ) {
 
@@ -496,10 +561,12 @@ class Stats extends Base
             $type = $this->getSanitizer()->string($row['type']);
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
+                $statDate = $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
             } else {
-                
+
+                $statDate = $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s');
                 $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
             }
@@ -512,7 +579,7 @@ class Stats extends Base
             $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
             $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
 
-            fputcsv($out, [$type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count]);
+            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count]);
         }
 
         fclose($out);

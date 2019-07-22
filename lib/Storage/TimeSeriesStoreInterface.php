@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -49,8 +50,9 @@ interface TimeSeriesStoreInterface
      * @param WidgetFactory $widgetFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
+     * @param CampaignFactory $campaignFactory
      */
-    public function setDependencies($logger, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
+    public function setDependencies($logger, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
 
     /**
      * Add statistics
@@ -66,15 +68,10 @@ interface TimeSeriesStoreInterface
 
     /**
      * Get statistics
-     * @param $fromDt \Jenssegers\Date\Date
-     * @param $toDt \Jenssegers\Date\Date
-     * @param $displayIds array
-     * @param $type mixed
-     * @param $layoutIds array[mixed]|null
-     * @param $mediaIds array[mixed]|null
+     * @param $filterBy array[mixed]|null
      * @return TimeSeriesResultsInterface
      */
-    public function getStats($fromDt, $toDt, $displayIds = [], $type = null, $layoutIds = [], $mediaIds = []);
+    public function getStats($filterBy = []);
 
     /**
      * Delete statistics

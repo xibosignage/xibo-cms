@@ -22,9 +22,12 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 
 /**
  * Class MySqlTimeSeriesStore
@@ -44,6 +47,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var  LayoutFactory */
     protected $layoutFactory;
 
+    /** @var  CampaignFactory */
+    protected $campaignFactory;
+
     /**
      * @inheritdoc
      */
@@ -55,11 +61,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
+    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
     {
         $this->log = $log;
         $this->dateService = $date;
         $this->layoutFactory = $layoutFactory;
+        $this->campaignFactory = $campaignFactory;
         return $this;
     }
 
@@ -101,14 +108,39 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStats($fromDt, $toDt, $displayIds = [], $type = null, $layoutIds = [], $mediaIds = [])
+    public function getStats($filterBy = [])
     {
+
+        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
+        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
+
+        if ($fromDt == null) {
+            throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+        }
+        if ($toDt == null) {
+            throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+        }
+
+        $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        if ( isset($statDate) && ($statDate < $fromDt) ) {
+            throw new InvalidArgumentException(__("statDate cannot be less than fromDt"), 'statDate');
+        }
+
+        $type = isset($filterBy['type']) ? $filterBy['type'] : null;
+        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+        $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
+        $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
+        $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+
+        // Limit
+        $start = isset($filterBy['start']) ? $filterBy['start'] : null;
+        $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
 
         $sql = '
-        SELECT stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
+        SELECT stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
         display.Display as display, layout.Layout as layout, media.Name AS media
           FROM stat
             LEFT OUTER JOIN display
@@ -124,6 +156,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
           AND stat.start <= :toDt
           
         ';
+
+        // statDate Filter
+        if ($statDate != null) {
+            $sql .= ' AND stat.statDate >= '. $statDate->format('U');
+        }
 
         if (count($displayIds) > 0) {
             $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
@@ -173,7 +210,39 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $sql .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
+        // Campaign selection
+        // ------------------
+        // Get all the layouts of that campaign.
+        // Then get all the campaigns of the layouts
+        $campaignIds = [];
+        if ($campaignId != null) {
+            try {
+                $campaign = $this->campaignFactory->getById($campaignId);
+                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+                if (count($layouts) > 0) {
+                    foreach ($layouts as $layout) {
+                        $campaignIds[] = $layout->campaignId;
+                    }
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->log->error('CampaignIds not Found.');
+            }
+        }
+
+        // Campaign Filter
+        if ($campaignId != null) {
+            if (count($campaignIds) != 0) {
+                $sql .= ' AND stat.campaignId IN (' . implode(',', $campaignIds) . ')';
+            } else {
+                // we wont get any match as we store layoutspecific campaignid in stat
+                $sql .= ' AND stat.campaignId = '. $campaignId;
+            }
+        }
+
         $sql .= " ORDER BY stat.start ";
+
+        if ($start !== null && $length !== null)
+            $sql .= ' LIMIT ' . $start . ', ' . $length;
 
         // Run our query using a connection object (to save memory)
         $connection = $this->store->getConnection();
