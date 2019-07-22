@@ -240,7 +240,6 @@ class Region implements \JsonSerializable
         if ($cascade) {
             $playlist = $this->getPlaylist();
             $playlist->setOwner($ownerId);
-            $playlist->save(['saveTags' => false]);
         }
     }
 

@@ -218,7 +218,7 @@ class PlayerVersionFactory extends BaseFactory
             $params['playerCode'] = $this->getSanitizer()->getInt('playerCode', $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('playerShowVersion') != null) {
+        if ($this->getSanitizer()->getString('playerShowVersion') !== null) {
             $terms = explode(',', $this->getSanitizer()->getString('playerShowVersion', $filterBy));
             $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params);
         }

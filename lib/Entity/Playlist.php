@@ -262,13 +262,11 @@ class Playlist implements \JsonSerializable
     public function setOwner($ownerId)
     {
         $this->load();
-
         $this->ownerId = $ownerId;
 
         foreach ($this->widgets as $widget) {
             /* @var Widget $widget */
             $widget->setOwner($ownerId);
-            $widget->save();
         }
     }
 
