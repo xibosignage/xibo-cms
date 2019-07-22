@@ -50,6 +50,8 @@ class StatsMigrationTask implements TaskInterface
 
     private $archiveExist;
 
+    public $archiveTask;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
@@ -84,6 +86,10 @@ class StatsMigrationTask implements TaskInterface
 
         if ($options['killSwitch'] == 0) {
 
+
+            // Stat Archive Task
+            $this->archiveTask = $this->taskFactory->getByClass('\Xibo\XTR\\StatsArchiveTask');
+
             // Check stat_archive table exists
             $this->archiveExist = $this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :name', [
                 'name' => 'stat_archive'
@@ -105,14 +111,28 @@ class StatsMigrationTask implements TaskInterface
                     $statArchiveSqlCount = $statArchiveSql->rowCount();
                 }
 
-                if( ($statSql->rowCount() == 0) && ($statArchiveSqlCount == 0) ) {
+                if(($statSql->rowCount() == 0) && ($statArchiveSqlCount == 0)) {
 
                     $this->runMessage = '## Stat migration to Mongo' . PHP_EOL ;
                     $this->appendRunMessage('- Both stat_archive and stat is empty. '. PHP_EOL);
 
-                    // Disable the task
+                    // Disable the task and Enable the StatsArchiver task
                     $this->log->debug('Stats migration task is disabled as stat_archive and stat is empty');
                     $this->disableTask();
+
+                    if ($this->archiveTask->isActive == 0) {
+                        $this->archiveTask->isActive = 1;
+                        $this->archiveTask->save();
+                        $this->store->commitIfNecessary();
+
+                        $this->appendRunMessage('Enabling Stats Archive Task.');
+                        $this->log->debug('Enabling Stats Archive Task.');
+                    }
+                } else {
+
+                    // if any of the two tables contain any records
+                    $this->quitMigrationTaskOrDisableStatArchiveTask();
+
                 }
 
                 $this->moveStatsToMongoDb($options);
@@ -124,7 +144,11 @@ class StatsMigrationTask implements TaskInterface
             else {
 
                 if ($this->archiveExist == true) {
-                    $this->runMessage = '## Moving from stat_archive to stat (MySQL)' . PHP_EOL ;
+                    $this->runMessage = '## Moving from stat_archive to stat (MySQL)' . PHP_EOL;
+
+                    $this->quitMigrationTaskOrDisableStatArchiveTask();
+
+                    // Start migration
                     $this->moveStatsFromStatArchiveToStatMysql($options);
 
                 } else {
@@ -135,6 +159,16 @@ class StatsMigrationTask implements TaskInterface
 
                     $this->log->debug('Table stat_archive does not exist.');
                     $this->disableTask();
+
+                    // Enable the StatsArchiver task
+                    if ($this->archiveTask->isActive == 0) {
+                        $this->archiveTask->isActive = 1;
+                        $this->archiveTask->save();
+                        $this->store->commitIfNecessary();
+
+                        $this->appendRunMessage('Enabling Stats Archive Task.');
+                        $this->log->debug('Enabling Stats Archive Task.');
+                    }
                 }
             }
         }
@@ -181,6 +215,16 @@ class StatsMigrationTask implements TaskInterface
 
                 // Disable the task
                 $this->disableTask();
+
+                // Enable the StatsArchiver task
+                if ($this->archiveTask->isActive == 0) {
+                    $this->archiveTask->isActive = 1;
+                    $this->archiveTask->save();
+                    $this->store->commitIfNecessary();
+
+                    $this->appendRunMessage('Enabling Stats Archive Task.');
+                    $this->log->debug('Enabling Stats Archive Task.');
+                }
 
                 break;
             }
@@ -266,32 +310,10 @@ class StatsMigrationTask implements TaskInterface
 
         $this->appendRunMessage('## Moving from stat to Mongo');
 
-        // Stat Archive Task
-        $archiveTask = $this->taskFactory->getByClass('\Xibo\XTR\\StatsArchiveTask');
-
         $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '.watermark_stat_mongo.txt';
 
         // Get low watermark from file
         $watermark = $this->getWatermarkFromFile($fileName, 'stat');
-
-        $sql = $this->store->getConnection()->prepare('SELECT statId FROM stat WHERE statId < :watermark ORDER BY statId DESC LIMIT 1');
-        $sql->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
-        $sql->execute();
-
-        // Mark the Stats Archiver as disabled if there are records in stat table
-        if ($sql->rowCount() > 0) {
-
-            // Quit the StatsArchiveTask if it is running
-            if ($archiveTask->status == Task::$STATUS_RUNNING) {
-
-                $this->appendRunMessage('Quitting the stat migration task as stat archive task is running');
-                $this->log->debug('Quitting the stat migration task as stat archive task is running.');
-                return;
-            }
-            $archiveTask->isActive = 0;
-            $archiveTask->save();
-            $this->store->commitIfNecessary();
-        }
 
         $numberOfLoops = 0;
 
@@ -311,11 +333,6 @@ class StatsMigrationTask implements TaskInterface
 
             // End of records
             if ($this->checkEndOfRecords($recordCount, $fileName) === true) {
-
-                // Enable the StatsArchiver task
-                $archiveTask->isActive = 1;
-                $archiveTask->save();
-                $this->store->commitIfNecessary();
 
                 $this->appendRunMessage(PHP_EOL. '# End of records.' . PHP_EOL. '- Truncating and Optimising stat.');
                 $this->log->debug('End of records in stat table. Truncate and Optimise.');
@@ -344,6 +361,8 @@ class StatsMigrationTask implements TaskInterface
             foreach ($stats->fetchAll() as $stat) {
 
                 $entry = [];
+
+                $entry['statDate'] = $this->date->parse($stat['statDate'], 'U');
 
                 $entry['type'] = $stat['type'];
                 $entry['fromDt'] = $this->date->parse($stat['start'], 'U');
@@ -452,9 +471,11 @@ class StatsMigrationTask implements TaskInterface
                     $campaignId = 0;
                 }
 
+                $statDate = $this->date->parse($stat['statDate']);
                 $start = $this->date->parse($stat['start']);
                 $end = $this->date->parse($stat['end']);
 
+                $entry['statDate'] = $statDate;
                 $entry['type'] = $stat['type'];
                 $entry['fromDt'] = $start;
                 $entry['toDt'] = $end;
@@ -564,6 +585,29 @@ class StatsMigrationTask implements TaskInterface
         $this->getTask()->save();
 
         $this->appendRunMessage(__('Done.'. PHP_EOL));
+
+        return;
+    }
+
+    // Disable the task
+    function quitMigrationTaskOrDisableStatArchiveTask() {
+
+        // Quit the migration task if stat archive task is running
+        if ($this->archiveTask->status == Task::$STATUS_RUNNING) {
+            $this->appendRunMessage('Quitting the stat migration task as stat archive task is running');
+            $this->log->debug('Quitting the stat migration task as stat archive task is running.');
+            return;
+        }
+
+        // Mark the Stats Archiver as disabled if it is active
+        if ($this->archiveTask->isActive == 1) {
+            $this->archiveTask->isActive = 0;
+            $this->archiveTask->save();
+            $this->store->commitIfNecessary();
+
+            $this->appendRunMessage('Disabling Stats Archive Task.');
+            $this->log->debug('Disabling Stats Archive Task.');
+        }
 
         return;
     }

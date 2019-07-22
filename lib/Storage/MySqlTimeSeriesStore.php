@@ -113,17 +113,26 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
-
-        if ($fromDt == null) {
-            throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
-        }
-        if ($toDt == null) {
-            throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
-        }
-
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-        if ( isset($statDate) && ($statDate < $fromDt) ) {
-            throw new InvalidArgumentException(__("statDate cannot be less than fromDt"), 'statDate');
+
+        if ($statDate == null) {
+
+            // Check whether fromDt and toDt are provided
+            if (($fromDt == null) && ($toDt == null)) {
+                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+            }
+
+            if ($fromDt == null) {
+                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+            }
+
+            if ($toDt == null) {
+                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+            }
+        } else {
+            if (($fromDt != null) || ($toDt != null)) {
+                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+            }
         }
 
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
@@ -136,9 +145,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $start = isset($filterBy['start']) ? $filterBy['start'] : null;
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
-        $fromDt = $fromDt->format('U');
-        $toDt = $toDt->format('U');
-
+        $params = [];
         $sql = '
         SELECT stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
         display.Display as display, layout.Layout as layout, media.Name AS media
@@ -152,13 +159,13 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             LEFT OUTER JOIN widget
             ON widget.widgetId = stat.widgetId
          WHERE 1 = 1
-          AND stat.end > :fromDt
-          AND stat.start <= :toDt
           
         ';
 
-        // statDate Filter
-        if ($statDate != null) {
+        // fromDt/toDt Filter
+        if (($fromDt != null) && ($toDt != null)) {
+            $sql .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
+        } else { // statDate Filter
             $sql .= ' AND stat.statDate >= '. $statDate->format('U');
         }
 
@@ -176,11 +183,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         } else if ($type == 'event') {
             $sql .= ' AND `stat`.type = \'event\' ';
         }
-
-        $params = [
-            'fromDt' => $fromDt,
-            'toDt' => $toDt
-        ];
 
         // Layout Filter
         if (count($layoutIds) != 0) {

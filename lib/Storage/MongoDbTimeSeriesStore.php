@@ -301,17 +301,26 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // do we consider that the fromDt and toDt will always be provided?
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
-
-        if ($fromDt == null) {
-            throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
-        }
-        if ($toDt == null) {
-            throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
-        }
-
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-        if ( isset($statDate) && ($statDate < $fromDt) ) {
-            throw new InvalidArgumentException(__("statDate cannot be less than fromDt"), 'statDate');
+
+        if ($statDate == null) {
+
+            // Check whether fromDt and toDt are provided
+            if (($fromDt == null) && ($toDt == null)) {
+                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+            }
+
+            if ($fromDt == null) {
+                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+            }
+
+            if ($toDt == null) {
+                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+            }
+        } else {
+            if (($fromDt != null) || ($toDt != null)) {
+                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+            }
         }
 
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
@@ -326,14 +335,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Match query
         $match = [];
-        $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-        $match['$match']['end'] = [ '$gt' => $fromDt];
 
-        $toDt = new UTCDateTime($toDt->format('U')*1000);
-        $match['$match']['start'] = [ '$lte' => $toDt];
+        // fromDt/toDt Filter
+        if (($fromDt != null) && ($toDt != null)) {
+            $fromDt = new UTCDateTime($fromDt->format('U')*1000);
+            $match['$match']['end'] = [ '$gt' => $fromDt];
 
-        // statDate Filter
-        if ($statDate != null) {
+            $toDt = new UTCDateTime($toDt->format('U')*1000);
+            $match['$match']['start'] = [ '$lte' => $toDt];
+        } else { // statDate Filter
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $match['$match']['statDate'] = [ '$gte' => $statDate];
         }
@@ -399,58 +409,35 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
         try {
-           if(count($match) <= 0) {
-               $cursor = $collection->aggregate([
-                   [
-                       '$project' => [
-                           'type'=> 1,
-                           'start'=> 1,
-                           'end'=> 1,
-                           'layout'=> '$layoutName',
-                           'display'=> '$displayName',
-                           'media'=> '$mediaName',
-                           'tag'=> '$eventName',
-                           'duration'=> '$duration',
-                           'count'=> '$count',
-                           'displayId'=> 1,
-                           'layoutId'=> 1,
-                           'widgetId'=> 1,
-                           'mediaId'=> 1,
-                           'statDate'=> 1,
-
-                       ]
+           $query = [
+               $match,
+               [
+                   '$project' => [
+                       'type'=> 1,
+                       'start'=> 1,
+                       'end'=> 1,
+                       'layout'=> '$layoutName',
+                       'display'=> '$displayName',
+                       'media'=> '$mediaName',
+                       'tag'=> '$eventName',
+                       'duration'=> '$duration',
+                       'count'=> '$count',
+                       'displayId'=> 1,
+                       'layoutId'=> 1,
+                       'widgetId'=> 1,
+                       'mediaId'=> 1,
+                       'statDate'=> 1,
                    ]
-               ]);
-           } else {
-               $query = [
-                   $match,
-                   [
-                       '$project' => [
-                           'type'=> 1,
-                           'start'=> 1,
-                           'end'=> 1,
-                           'layout'=> '$layoutName',
-                           'display'=> '$displayName',
-                           'media'=> '$mediaName',
-                           'tag'=> '$eventName',
-                           'duration'=> '$duration',
-                           'count'=> '$count',
-                           'displayId'=> 1,
-                           'layoutId'=> 1,
-                           'widgetId'=> 1,
-                           'mediaId'=> 1,
-                           'statDate'=> 1,
-                       ]
-                   ],
-               ];
+               ],
+           ];
 
-               if ($start !== null && $length !== null) {
-                   $query[]['$skip'] =  $start;
-                   $query[]['$limit'] = $length;
-               }
-
-               $cursor = $collection->aggregate($query);
+           if ($start !== null && $length !== null) {
+               $query[]['$skip'] =  $start;
+               $query[]['$limit'] = $length;
            }
+
+           $cursor = $collection->aggregate($query);
+
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
