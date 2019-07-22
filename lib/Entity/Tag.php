@@ -166,7 +166,7 @@ class Tag implements \JsonSerializable
 
         foreach ($this->layouts as $id => $value) {
 
-            if ($id = $layoutId) {
+            if ($id == $layoutId) {
                 $v = implode("", $value);
             }
         }
@@ -206,7 +206,7 @@ class Tag implements \JsonSerializable
         $this->load();
 
         foreach ($this->playlists as $id => $value) {
-            if ($id = $playlistId) {
+            if ($id == $playlistId) {
                 $v = implode("", $value);
             }
         }
@@ -247,7 +247,7 @@ class Tag implements \JsonSerializable
         $this->load();
 
         foreach ($this->medias as $id => $value) {
-            if ($id = $mediaId) {
+            if ($id == $mediaId) {
                 $v = implode("", $value);
             }
         }
@@ -287,7 +287,7 @@ class Tag implements \JsonSerializable
         $this->load();
 
         foreach ($this->campaigns as $id => $value) {
-            if ($id = $campaignId) {
+            if ($id == $campaignId) {
                 $v = implode("", $value);
             }
         }
@@ -327,7 +327,7 @@ class Tag implements \JsonSerializable
         $this->load();
 
         foreach ($this->displayGroups as $id => $value) {
-            if ($id = $displayGroupId) {
+            if ($id == $displayGroupId) {
                 $v = implode("", $value);
             }
         }
@@ -763,7 +763,7 @@ class Tag implements \JsonSerializable
             }
 
             if (!isset($this->value) && $this->isRequired == 1) {
-                throw new InvalidArgumentException(sprintf(__('Provided Tag %s , requires a value', $this->tag)),
+                throw new InvalidArgumentException(sprintf(__('Provided Tag %s, requires a value', $this->tag)),
                     'tags');
             }
         }

@@ -234,14 +234,53 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $i = 0;
                 foreach (explode(',', $tags) as $tag) {
                     $i++;
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
+
+                    $tagV = explode('|', $tag);
+
+                    // search tag without value
+                    if (!isset($tagV[1])) {
+                        if ($i == 1) {
+                            $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                        } else {
+                            $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                        }
+
+                        if ($operator === '=') {
+                            $params['tags' . $i] = $tag;
+                        } else {
+                            $params['tags' . $i] = '%' . $tag . '%';
+                        }
+                        // search tag only by value
+                    } elseif ($tagV[0] == '') {
+                        if ($i == 1) {
+                            $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
+                        } else {
+                            $body .= ' OR `value` ' . $operator . ' :value' . $i;
+                        }
+
+                        if ($operator === '=') {
+                            $params['value' . $i] = $tagV[1];
+                        } else {
+                            $params['value' . $i] = '%' . $tagV[1] . '%';
+                        }
+                        // search tag by both tag and value
+                    } else {
+                        if ($i == 1) {
+                            $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
+                                ' AND value ' . $operator . ' :value' . $i;
+                        } else {
+                            $body .= ' OR `tag` ' . $operator . ' :tags' . $i .
+                                ' AND value ' . $operator . ' :value' . $i;
+                        }
+
+                        if ($operator === '=') {
+                            $params['tags' . $i] = $tagV[0];
+                            $params['value' . $i] = $tagV[1];
+                        } else {
+                            $params['tags' . $i] = '%' . $tagV[0] . '%';
+                            $params['value' . $i] = '%' . $tagV[1] . '%';
+                        }
+                    }
                 }
                 if ($tagsType === 'layout') {
                     $body .= " ) B

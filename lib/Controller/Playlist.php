@@ -1052,7 +1052,7 @@ class Playlist extends Base
         }
 
         // Save the playlist
-        $playlist->save();
+        $playlist->save(['saveTags' => false]);
 
         // Handle permissions
         foreach ($newWidgets as $widget) {
@@ -1168,7 +1168,7 @@ class Playlist extends Base
             }
         }
 
-        $playlist->save();
+        $playlist->save(['saveTags' => false]);
 
         // Success
         $this->getState()->hydrate([
@@ -1222,7 +1222,7 @@ class Playlist extends Base
         $enableStat = $this->getSanitizer()->getString('enableStat');
 
         $playlist->enableStat = $enableStat;
-        $playlist->save();
+        $playlist->save(['saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([

@@ -801,7 +801,7 @@ class Layout extends Base
         $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
 
         $layout->enableStat = $enableStat;
-        $layout->save();
+        $layout->save(['saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1451,11 +1451,25 @@ class Layout extends Base
             throw new InvalidArgumentException('Cannot copy a Draft Layout', 'layoutId');
 
         // Load the layout for Copy
-        $layout->load();
+        $layout->load(['loadTags' => false]);
         $layout = clone $layout;
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $layout->tags));
+        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
+        $layout->replaceTags($this->tagFactory->tagsFromString($tags));
         $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
@@ -1964,7 +1978,7 @@ class Layout extends Base
         }
 
         $layout->schemaVersion = Environment::$XLF_VERSION;
-        $layout->save(['validate' => false, 'notify' => $scaleContent]);
+        $layout->save(['validate' => false, 'notify' => $scaleContent, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([

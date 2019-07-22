@@ -383,7 +383,7 @@ class Library extends Base
         $enableStat = $this->getSanitizer()->getString('enableStat');
 
         $media->enableStat = $enableStat;
-        $media->save();
+        $media->save(['saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -928,6 +928,7 @@ class Library extends Base
      *      @SWG\Schema(ref="#/definitions/Media")
      *  )
      * )
+     * @throws InvalidArgumentException
      */
     public function edit($mediaId)
     {
@@ -1349,7 +1350,7 @@ class Library extends Base
                     $media->expires = 0;
                     $media->moduleSystemFile = true;
                     $media->isSaveRequired = true;
-                    $media->save();
+                    $media->save(['saveTags' => false]);
 
                     // We can remove the temp file
                     @unlink($tempUrl);
@@ -1505,6 +1506,7 @@ class Library extends Base
      *
      * @param $mediaId
      * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
      */
     public function tag($mediaId)
     {
@@ -1780,10 +1782,25 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $media->tags));
+        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy')
+            'help' => $this->getHelp()->link('Media', 'Copy'),
+            'tags' => $tags
         ]);
     }
 

@@ -272,8 +272,14 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($tag, $this->tags))
-            $this->tags[] = $tag;
+        if ($this->tags != [$tag]) {
+
+            if (!in_array($tag, $this->tags)) {
+                $this->tags[] = $tag;
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
 
         return $this;
     }
@@ -309,18 +315,22 @@ class Campaign implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = $this->tagFactory->loadByCampaignId($this->campaignId);
 
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
+        if ($this->tags != $tags) {
+            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
+                /* @var Tag $a */
+                /* @var Tag $b */
+                return $a->tagId - $b->tagId;
+            });
 
-        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
-        // Replace the arrays
-        $this->tags = $tags;
+            // Replace the arrays
+            $this->tags = $tags;
 
-        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
     }
 
     /**
@@ -348,28 +358,29 @@ class Campaign implements \JsonSerializable
         }
         else
             $this->update();
-        
-            
-        // Save the tags
-        if (is_array($this->tags)) {
-            foreach ($this->tags as $tag) {
-                /* @var Tag $tag */
 
-                $this->getLog()->debug('Assigning tag ' . $tag->tag);
+        if ($options['saveTags']) {
+            // Save the tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
 
-                $tag->assignCampaign($this->campaignId);
-                $tag->save();
+                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
+
+                    $tag->assignCampaign($this->campaignId);
+                    $tag->save();
+                }
             }
-        }
 
-        // Remove unwanted ones
-        if (is_array($this->unassignTags)) {
-            foreach ($this->unassignTags as $tag) {
-                /* @var Tag $tag */
-                $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
 
-                $tag->unassignCampaign($this->campaignId);
-                $tag->save();
+                    $tag->unassignCampaign($this->campaignId);
+                    $tag->save();
+                }
             }
         }
 

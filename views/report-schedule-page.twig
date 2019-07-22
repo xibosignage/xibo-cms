@@ -44,17 +44,15 @@
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("name", title) }}
 
-                            {% set summaryReport %}{% trans "Summary Report" %}{% endset %}
-                            {% set options = [
-                                { id: "", value: ""},
-                                { id: "summaryReport", value: summaryReport },
-                            ] %}
-                            {% set title %}{% trans "Type" %}{% endset %}
-                            {{ inline.dropdown("reportName", "single", title, "", options, "id", "value") }}
-
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
-                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+                            {% set users = [{userId: null, userName: ""}]|merge(users) %}
+                            {{ inline.dropdown("userId", "single", title, null, users, "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set helpText %}{% trans "Show items belong to a report." %}{% endset %}
+                            {% set reports = [{name: null, description: ""}]|merge(availableReports) %}
+                            {{ inline.dropdown("reportName", "single", title, null, reports, "name", "description", helpText, "selectPicker", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Only my schedules?" %}{% endset %}
                             {{ inline.checkbox("onlyMySchedules", title, 1) }}
@@ -88,97 +86,92 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#reportschedules").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=reportscheduleGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "reportscheduleGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "asc"]],
-            ajax: {
-                "url": "{{ urlFor("reportschedule.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#reportschedules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "name"},
-                { "data": "reportName"},
-                { "data": "schedule"},
-                { "data": "owner"},
-                {
-                    "data": "lastRunDt",
-                    "render": dataTableDateFromUnix
-                },
-                {
-                    "orderable": false,
-                    "data": "nextRunDt",
-                    "render": dataTableDateFromUnix
-                },
-                {
-                    "data": "previousRunDt",
-                    "render": dataTableDateFromUnix,
-                    "visible": false
-                },
-                {
-                    "data": "createdDt",
-                    "render": dataTableDateFromUnix
-                },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
-
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#reportschedules_wrapper').find('.col-sm-6').eq(1));
-
+        var table;
         $(document).ready(function() {
             let url_string = window.location.href;
             let url = new URL(url_string);
             let savedReportId = url.searchParams.get("savedReportId");
-            let reportName = url.searchParams.get("reportName");
 
             if (savedReportId !== undefined && savedReportId != null) {
                 $('#reportScheduleId').val(savedReportId);
                 table.ajax.reload();
             }
 
-            if (reportName !== undefined && reportName != null) {
-                $('#reportName').val(reportName);
-                table.ajax.reload();
-            }
+            table = $("#reportschedules").DataTable({ "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data = {};
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=reportscheduleGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "reportscheduleGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[ 1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("reportschedule.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#reportschedules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    { "data": "name"},
+                    { "data": "reportName"},
+                    { "data": "schedule"},
+                    { "data": "owner"},
+                    {
+                        "data": "lastRunDt",
+                        "render": dataTableDateFromUnix
+                    },
+                    {
+                        "orderable": false,
+                        "data": "nextRunDt",
+                        "render": dataTableDateFromUnix
+                    },
+                    {
+                        "data": "previousRunDt",
+                        "render": dataTableDateFromUnix,
+                        "visible": false
+                    },
+                    {
+                        "data": "createdDt",
+                        "render": dataTableDateFromUnix
+                    },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#reportschedules_wrapper').find('.col-sm-6').eq(1));
         })
 
     </script>

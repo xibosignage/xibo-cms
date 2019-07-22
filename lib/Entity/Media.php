@@ -381,17 +381,13 @@ class Media implements \JsonSerializable
     {
         $this->load();
 
-        $found = false;
-        foreach ($this->tags as $existingTag) {
-            if ($existingTag->tag === $tag->tag) {
-                $found = true;
-                break;
-            }
-        }
+        if ($this->tags != [$tag]) {
 
-        if (!$found) {
-            $this->getLog()->debug('Tag ' . $tag->tag . ' not found - assigning');
-            $this->tags[] = $tag;
+            if (!in_array($tag, $this->tags)) {
+                $this->tags[] = $tag;
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
         }
 
         return $this;
@@ -407,7 +403,7 @@ class Media implements \JsonSerializable
     {
         $this->load();
 
-        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
+        $this->tags = array_udiff($this->tags, [$tag], function ($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
             return $a->tagId - $b->tagId;
@@ -428,18 +424,22 @@ class Media implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
 
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
+        if ($this->tags != $tags) {
+            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
+                /* @var Tag $a */
+                /* @var Tag $b */
+                return $a->tagId - $b->tagId;
+            });
 
-        $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
-        // Replace the arrays
-        $this->tags = $tags;
+            // Replace the arrays
+            $this->tags = $tags;
 
-        $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
     }
 
     /**
@@ -522,6 +522,10 @@ class Media implements \JsonSerializable
     /**
      * Save this media
      * @param array $options
+     * @throws ConfigurationException
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function save($options = [])
     {
@@ -530,7 +534,8 @@ class Media implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'oldMedia' => null,
-            'deferred' => false
+            'deferred' => false,
+            'saveTags' => true
         ], $options);
 
         if ($options['validate'] && $this->mediaType != 'module')
@@ -561,21 +566,23 @@ class Media implements \JsonSerializable
                 $this->saveFile();
         }
 
-        // Save the tags
-        if (is_array($this->tags)) {
-            foreach ($this->tags as $tag) {
-                /* @var Tag $tag */
-                $tag->assignMedia($this->mediaId);
-                $tag->save();
+        if ($options['saveTags']) {
+            // Save the tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
+                    $tag->assignMedia($this->mediaId);
+                    $tag->save();
+                }
             }
-        }
 
-        // Remove unwanted ones
-        if (is_array($this->unassignTags)) {
-            foreach ($this->unassignTags as $tag) {
-                /* @var Tag $tag */
-                $tag->unassignMedia($this->mediaId);
-                $tag->save();
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $tag->unassignMedia($this->mediaId);
+                    $tag->save();
+                }
             }
         }
     }
