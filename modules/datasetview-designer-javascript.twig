@@ -96,5 +96,14 @@
                 }
             }
         });
+
+        if($(dialog).hasClass('modal')) {
+            $(dialog).on("hide.bs.modal", function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    $(dialog).find(".colorpicker-element").colorpicker('destroy');
+                }
+            });
+        }
     }
 </script>

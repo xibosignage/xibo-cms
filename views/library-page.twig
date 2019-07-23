@@ -461,6 +461,16 @@
 
             usageTableLayouts.on('draw', dataTableDraw);
             usageTableLayouts.on('processing.dt', dataTableProcessing);
+
+            // Tidy up timepickers on modal close
+            if(dialog.hasClass('modal')) {
+                dialog.on("hide.bs.modal", function(e) {
+                    if(e.namespace === 'bs.modal') {
+                            // Remove colour pickers
+                            dialog.find("#mediaEventDateLink").datetimepicker('remove');
+                    }
+                });
+            }
         }
 
         function setDefaultMultiSelectFormOpen(dialog) {

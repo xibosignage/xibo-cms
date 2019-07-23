@@ -1395,6 +1395,12 @@ lD.openUploadFormModelShown = function(form) {
  */
 lD.clearTemporaryData = function() {
 
+    // Fix for remaining ckeditor elements or colorpickers
+    lD.designerDiv.find('.colorpicker-element').colorpicker('destroy');
+
+    // Hide open tooltips
+    lD.designerDiv.find('[data-toggle="tooltip"]').tooltip('hide');
+
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
 };

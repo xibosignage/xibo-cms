@@ -752,9 +752,6 @@ let formHelpers = function() {
             });
         }
 
-        // Turn the background colour into a picker
-        $("#backgroundColor").colorpicker();
-
         return false;
     };
     
