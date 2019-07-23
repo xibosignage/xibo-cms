@@ -218,7 +218,7 @@ class SubPlaylist extends ModuleWidget
                 'parentId' => $this->getPlaylistId(),
                 'childId' => $addedEntry
             ])) {
-                throw new InvalidArgumentException(__('Duplicate entry in closure table. Cannot add the same Playlist to two separate subplaylist widgets.'), 'playlistId');
+                throw new InvalidArgumentException(__('Cannot add the same SubPlaylist twice.'), 'playlistId');
             }
 
             $this->getStore()->insert('
