@@ -283,7 +283,7 @@
                 if (mediaTable != null) {
                     mediaTable.destroy();
                     mediaTable = null;
-                    $("#media tbody").empty();
+                    $("#playlistLibraryMedia tbody").empty();
                 }
 
                 return;
@@ -292,7 +292,7 @@
             if (mediaTable != null) {
                 mediaTable.ajax.reload();
             } else {
-                mediaTable = $("#media").DataTable({
+                mediaTable = $("#playlistLibraryMedia").DataTable({
                     "language": dataTablesLanguage,
                     serverSide: true,
                     stateSave: true,
@@ -310,6 +310,7 @@
                         {"data": "mediaId"},
                         {"data": "name"},
                         {"data": "mediaType"},
+                        {"data": dataTableCreateTags},
                         {
                             "name": "duration",
                             "data": function (data, type) {
@@ -323,6 +324,7 @@
                 });
 
                 mediaTable.on('processing.dt', dataTableProcessing);
+                mediaTable.on('draw', { form: $(".playlistForm") }, dataTableCreateTagEvents);
             }
         }
     </script>

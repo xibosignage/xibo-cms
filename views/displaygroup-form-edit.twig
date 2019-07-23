@@ -61,7 +61,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayGroup.edit", {"id": displayGroup.displayGroupId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
+            <form id="displayGroupEditForm" class="XiboForm form-horizontal displayGroupForm" method="put" action="{{ urlFor("displayGroup.edit", {"id": displayGroup.displayGroupId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
                 {{ forms.input("displayGroup", title, displayGroup.displayGroup , helpText) }}
@@ -87,34 +87,40 @@
                 {% set helpText %}{% trans "Are the members of this group dynamic?" %}{% endset %}
                 {{ forms.checkbox("isDynamic", title, displayGroup.isDynamic, helpText) }}
 
-                {% set title %}{% trans "Criteria" %}{% endset %}
-                {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
-                {{ forms.input("dynamicCriteria", title, displayGroup.dynamicCriteria, helpText, "dynamic-fields") }}
+                <div class="widget dynamic-fields">
+                    <div class="widget-title">{% trans "Displays" %}</div>
+                    <div class="widget-body">
+                        <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGroupDynamicDisplaysView">
+                            <div class="FilterDiv" id="Filter">
+                                {% set title %}{% trans "Criteria" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
+                                {{ forms.input("dynamicCriteria", title, displayGroup.dynamicCriteria, helpText, "dynamic-fields") }}
 
-                {% set title %}{% trans "Criteria Tags" %}{% endset %}
-                {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
-                {{ forms.inputWithTags("dynamicCriteriaTags", title, displayGroup.dynamicCriteriaTags, helpText, "dynamic-fields") }}
+                                {% set title %}{% trans "Criteria Tags" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
+                                {{ forms.inputWithTags("dynamicCriteriaTags", title, displayGroup.dynamicCriteriaTags, helpText, "dynamic-fields") }}
+                            </div>
+
+                            <div class="XiboData">
+                                <table id="displayGroupDisplays" class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Tags" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Licence" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </form>
-        </div>
-    </div>
-    <div class="row dynamic-fields">
-        <div class="col-md-12">
-            <h4>Displays</h4>
-            <div id="displayGroupDisplayList" class="well">
-                <table id="displays" class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th>{% trans "ID" %}</th>
-                        <th>{% trans "Display" %}</th>
-                        <th>{% trans "Status" %}</th>
-                        <th>{% trans "Licence" %}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
 {% endblock %}
