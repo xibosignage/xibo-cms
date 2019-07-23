@@ -214,6 +214,13 @@ class SubPlaylist extends ModuleWidget
         foreach ($addedEntries as $addedEntry) {
             $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId() . ' and child ' . $addedEntry);
 
+            if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [
+                'parentId' => $this->getPlaylistId(),
+                'childId' => $addedEntry
+            ])) {
+                throw new InvalidArgumentException(__('Duplicate entry in closure table. Cannot add the same Playlist to two separate subplaylist widgets.'), 'playlistId');
+            }
+
             $this->getStore()->insert('
                 INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
                 SELECT p.parentId, c.childId, p.depth + c.depth + 1
