@@ -389,6 +389,12 @@ Viewer.prototype.playPreview = function(url, dimensions) {
  * Toggle fullscreen
  */
 Viewer.prototype.toggleFullscreen = function() {
+    // If inline editor is opened, needs to be saved/closed
+    if(this.inlineEditorState == 2) {
+        // Close editor content
+        this.closeInlineEditorContent();
+    }
+    
     this.DOMObject.parent().toggleClass('fullscreen');
     this.render(lD.selectedObject, lD.layout);
 };
