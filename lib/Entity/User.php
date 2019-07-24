@@ -39,6 +39,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -219,6 +220,12 @@ class User implements \JsonSerializable
     public $events = [];
 
     /**
+     * @SWG\Property(description="An array of Playlists owned by this User")
+     * @var Playlist[]
+     */
+    public $playlists = [];
+
+    /**
      * @SWG\Property(description="The name of home page")
      * @var string
      */
@@ -324,6 +331,9 @@ class User implements \JsonSerializable
     /** @var PlayerVersionFactory */
     private $playerVersionFactory;
 
+    /** @var PlaylistFactory */
+    private $playlistFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -380,9 +390,10 @@ class User implements \JsonSerializable
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param PlaylistFactory $playlistFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -392,6 +403,7 @@ class User implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetFactory = $widgetFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->playlistFactory = $playlistFactory;
         return $this;
     }
 
@@ -609,6 +621,7 @@ class User implements \JsonSerializable
     /**
      * Load this User
      * @param bool $all Load everything this user owns
+     * @throws NotFoundException
      */
     public function load($all = false)
     {
@@ -623,13 +636,14 @@ class User implements \JsonSerializable
         $this->groups = $this->userGroupFactory->getByUserId($this->userId);
 
         if ($all) {
-            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null)
+            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null || $this->playlistFactory == null)
                 throw new \RuntimeException('Cannot load user with all objects without first calling setChildObjectDependencies');
 
             $this->campaigns = $this->campaignFactory->getByOwnerId($this->userId);
             $this->layouts = $this->layoutFactory->getByOwnerId($this->userId);
             $this->media = $this->mediaFactory->getByOwnerId($this->userId);
             $this->events = $this->scheduleFactory->getByOwnerId($this->userId);
+            $this->playlists = $this->playlistFactory->getByOwnerId($this->userId);
         }
 
         $this->userOptions = $this->userOptionFactory->getByUserId($this->userId);
@@ -648,7 +662,7 @@ class User implements \JsonSerializable
     {
         $this->load(true);
 
-        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events);
+        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events) + count($this->playlists);
         $this->getLog()->debug('Counted Children on %d, there are %d', $this->userId, $count);
 
         return $count;
@@ -674,19 +688,24 @@ class User implements \JsonSerializable
         }
         foreach ($this->events as $event) {
             /* @var Schedule $event */
+            $event->load();
             $event->setOwner($user->getOwnerId());
             $event->setDisplayFactory($this->displayFactory);
             $event->save(['generate' => false]);
         }
         foreach ($this->layouts as $layout) {
             /* @var Layout $layout */
-            $layout->setOwner($user->getOwnerId());
+            $layout->setOwner($user->getOwnerId(), true);
             $layout->save();
         }
         foreach ($this->campaigns as $campaign) {
             /* @var Campaign $campaign */
             $campaign->setOwner($user->getOwnerId());
             $campaign->save();
+        }
+        foreach ($this->playlists as $playlist) {
+            $playlist->setOwner($user->getOwnerId());
+            $playlist->save(['saveTags' => false]);
         }
 
 
@@ -832,6 +851,12 @@ class User implements \JsonSerializable
             /* @var Media $media */
             $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
             $media->delete();
+        }
+
+        // Delete Playlists owned by this user
+        foreach ($this->playlists as $playlist) {
+            /* @var Playlist $playlist */
+            $playlist->delete();
         }
 
         // Delete user specific entities

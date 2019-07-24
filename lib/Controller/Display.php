@@ -775,12 +775,22 @@ class Display extends Base
 
         // Player Version Setting
         $versionId = $display->getSetting('versionMediaId', null, ['displayOnly' => true]);
-        $playerVersions = null;
+        $profileVersionId = $display->getDisplayProfile()->getSetting('versionMediaId');
+        $playerVersions = [];
 
         // Get the Player Version for this display profile type
         if ($versionId !== null) {
             try {
-                $playerVersions = $this->playerVersionFactory->getByMediaId($versionId);
+                $playerVersions[] = $this->playerVersionFactory->getByMediaId($versionId);
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
+            }
+        }
+
+        // Get the Player Version for this display profile type
+        if ($versionId !== $profileVersionId) {
+            try {
+                $playerVersions[] = $this->playerVersionFactory->getByMediaId($profileVersionId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
             }
@@ -797,7 +807,7 @@ class Display extends Base
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
-            'versions' => [$playerVersions]
+            'versions' => $playerVersions
         ]);
     }
 

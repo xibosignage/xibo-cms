@@ -389,6 +389,12 @@ Viewer.prototype.playPreview = function(url, dimensions) {
  * Toggle fullscreen
  */
 Viewer.prototype.toggleFullscreen = function() {
+    // If inline editor is opened, needs to be saved/closed
+    if(this.inlineEditorState == 2) {
+        // Close editor content
+        this.closeInlineEditorContent();
+    }
+    
     this.DOMObject.parent().toggleClass('fullscreen');
     this.render(lD.selectedObject, lD.layout);
 };
@@ -550,6 +556,9 @@ Viewer.prototype.closeInlineEditorContent = function() {
 
     // Update inline editor text area
     let data = CKEDITOR.instances['viewer_' + lD.propertiesPanel.inlineEditorId].getData();
+
+    // Parse library references
+    data = formHelpers.revertLibraryReferences(data);
 
     // Copy data back to properties panel text area
     lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).val(data);

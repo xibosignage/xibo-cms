@@ -274,11 +274,35 @@ class Layout extends Base
         $description = $this->getSanitizer()->getString('description');
         $templateId = $this->getSanitizer()->getInt('layoutId');
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
+        $template = null;
 
-        if ($templateId != 0)
-            $layout = $this->layoutFactory->createFromTemplate($templateId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
-        else
+        if ($templateId != 0) {
+            // Load the template
+            $template = $this->layoutFactory->loadById($templateId);
+            $template->load();
+
+            // Empty all of the ID's
+            $layout = clone $template;
+
+            // Overwrite our new properties
+            $layout->layout = $name;
+            $layout->description = $description;
+
+            // Create some tags (overwriting the old ones)
+            $layout->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
+
+            // Set the owner
+            $layout->setOwner($this->getUser()->userId);
+
+            // Ensure we have Playlists for each region
+            foreach ($layout->regions as $region) {
+                // Set the ownership of this region to the user creating from template
+                $region->setOwner($this->getUser()->userId, true);
+            }
+        }
+        else {
             $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
+        }
 
         // Save
         $layout->save();
@@ -291,6 +315,15 @@ class Layout extends Base
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
+
+            if ($templateId != null && $template !== null) {
+                // Match our original region id to the id in the parent layout
+                $original = $template->getRegion($region->getOriginalValue('regionId'));
+
+                // Make sure Playlist closure table from the published one are copied over
+                $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+            }
+
             foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
@@ -760,6 +793,20 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="parentId",
+     *      in="formData",
+     *      description="Filter by parent Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="showDrafts",
+     *      in="formData",
+     *      description="Flag indicating whether to show drafts",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="layout",
      *      in="formData",
      *      description="Filter by partial Layout name",
@@ -802,9 +849,16 @@ class Layout extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="publishedStatusId",
+     *      in="formData",
+     *      description="Filter by published status id, 1 - Published, 2 - Draft",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="formData",
-     *      description="Embed related data such as regions, playlists, tags, etc",
+     *      description="Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
      *      type="string",
      *      required=false
      *   ),
@@ -846,6 +900,8 @@ class Layout extends Base
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
             'layoutId' => $this->getSanitizer()->getInt('layoutId'),
+            'parentId' => $this->getSanitizer()->getInt('parentId'),
+            'showDrafts' => $this->getSanitizer()->getInt('showDrafts'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
@@ -1291,6 +1347,9 @@ class Layout extends Base
 
         // Load the layout for Copy
         $layout->load();
+        $originalLayout = $layout;
+
+        // Clone
         $layout = clone $layout;
 
         $layout->layout = $this->getSanitizer()->getString('name');
@@ -1329,6 +1388,15 @@ class Layout extends Base
 
         // Save the new layout
         $layout->save();
+
+        // Sub-Playlist
+        foreach ($layout->regions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+        }
 
         // Permissions
         foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {

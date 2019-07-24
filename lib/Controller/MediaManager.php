@@ -102,6 +102,8 @@ class MediaManager extends Base
             'region' => $this->getSanitizer()->getString('region'),
             'media' => $this->getSanitizer()->getString('media'),
             'type' => $this->getSanitizer()->getString('type'),
+            'playlist' => $this->getSanitizer()->getString('playlist'),
+            'showWidgetsFrom' => $this->getSanitizer()->getInt('showWidgetsFrom')
         ]));
         $widgetsCount = $this->widgetFactory->countLast();
 
@@ -114,7 +116,7 @@ class MediaManager extends Base
             $module = $this->moduleFactory->createWithWidget($widget);
 
             // Get a list of Layouts that this playlist uses
-            $layouts = $this->layoutFactory->query(null, ['playlistId' => $widget->playlistId]);
+            $layouts = $this->layoutFactory->query(null, ['playlistId' => $widget->playlistId, 'showDrafts' => 1]);
 
             $layoutNames = array_map(function($layout) {
                 return $layout->layout;
@@ -147,6 +149,10 @@ class MediaManager extends Base
                 $rows[] = $row;
                 continue;
             }
+
+            // for widgets on Playlist not inside of a region
+            $regionWidth = null;
+            $regionHeight = null;
 
             // Get region dimensions
             foreach ($regions as $region) {

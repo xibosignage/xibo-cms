@@ -261,6 +261,7 @@ class Playlist implements \JsonSerializable
      */
     public function setOwner($ownerId)
     {
+        $this->load();
         $this->ownerId = $ownerId;
 
         foreach ($this->widgets as $widget) {
@@ -284,17 +285,20 @@ class Playlist implements \JsonSerializable
      */
     public function validate()
     {
-        // check for duplicates
-        $duplicates = $this->playlistFactory->query(null, [
-            'userId' => $this->ownerId,
-            'playlistExact' => $this->name,
-            'regionSpecific' => 0,
-            'disableUserCheck' => 1,
-            'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
-        ]);
+        // check for duplicates,
+        // we check for empty playlist name due to layouts existing in the CMS before upgrade to v2
+        if ($this->name != '') {
+            $duplicates = $this->playlistFactory->query(null, [
+                'userId' => $this->ownerId,
+                'playlistExact' => $this->name,
+                'regionSpecific' => 0,
+                'disableUserCheck' => 1,
+                'notPlaylistId' => ($this->playlistId == null) ? 0 : $this->playlistId,
+            ]);
 
-        if (count($duplicates) > 0) {
-            throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+            if (count($duplicates) > 0) {
+                throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
+            }
         }
     }
 
@@ -656,6 +660,7 @@ class Playlist implements \JsonSerializable
         $sql = '
             UPDATE `playlist` SET 
                 `name` = :name, 
+                `ownerId` = :ownerId,
                 `regionId` = :regionId, 
                 `modifiedDt` = :modifiedDt, 
                 `duration` = :duration,
@@ -669,6 +674,7 @@ class Playlist implements \JsonSerializable
         $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
             'name' => $this->name,
+            'ownerId' => $this->ownerId,
             'regionId' => $this->regionId == 0 ? null : $this->regionId,
             'duration' => $this->duration,
             'isDynamic' => $this->isDynamic,
@@ -715,6 +721,7 @@ class Playlist implements \JsonSerializable
      * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[]
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function expandWidgets($parentWidgetId = 0)
     {
@@ -740,6 +747,8 @@ class Playlist implements \JsonSerializable
             } else {
                 /** @var SubPlaylist $module */
                 $module = $this->moduleFactory->createWithWidget($widget);
+                $module->isValid();
+
                 $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
             }
         }

@@ -139,7 +139,8 @@ class PlayerSoftware extends Base
             'playerVersion' => $this->getSanitizer()->getString('playerVersion'),
             'playerCode' => $this->getSanitizer()->getInt('playerCode'),
             'versionId' => $this->getSanitizer()->getInt('versionId'),
-            'mediaId' => $this->getSanitizer()->getInt('mediaId')
+            'mediaId' => $this->getSanitizer()->getInt('mediaId'),
+            'playerShowVersion' => $this->getSanitizer()->getString('playerShowVersion')
         ];
 
         $versions = $this->playerVersionFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -377,7 +378,8 @@ class PlayerSoftware extends Base
 
             $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
         } else {
-            throw new NotFoundException(__('Installer file is not available in this CMS'), 'versionMediaId');
+            $app = $this->getApp();
+            $app->status(404);
         }
 
         $this->setNoOutput(true);
@@ -403,7 +405,8 @@ class PlayerSoftware extends Base
             $widget->getResource(0);
 
         } else {
-            throw new NotFoundException(__('Installer file is not available in this CMS'), 'versionMediaId');
+            $app = $this->getApp();
+            $app->status(404);
         }
 
         $this->setNoOutput(true);
@@ -422,7 +425,10 @@ class PlayerSoftware extends Base
         $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
         if ($cache->isMiss()) {
-            throw new NotFoundException(__('Installer file is not available in this CMS'), 'nonce');
+            $app = $this->getApp();
+            $app->status(404);
+            $this->setNoOutput(true);
+            return;
         }
 
         $displayId = $cache->get();
@@ -441,11 +447,18 @@ class PlayerSoftware extends Base
 
         // get the media ID from display profile
         $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
-        $media = $this->mediaFactory->getById($mediaId);
 
-        $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
 
-        $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
+
+            $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+        } else {
+            $app = $this->getApp();
+            $app->status(404);
+        }
+
         $this->setNoOutput(true);
     }
 
@@ -460,7 +473,10 @@ class PlayerSoftware extends Base
         $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
         if ($cache->isMiss()) {
-            throw new NotFoundException(__('Installer file is not available in this CMS'), 'nonce');
+            $app = $this->getApp();
+            $app->status(404);
+            $this->setNoOutput(true);
+            return;
         }
 
         $displayId = $cache->get();
@@ -468,11 +484,16 @@ class PlayerSoftware extends Base
         // Get display and media
         $display = $this->displayFactory->getById($displayId);
         $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
-        $media = $this->mediaFactory->getById($mediaId);
 
-        // Create a widget from media and call getResource on it
-        $widget = $this->moduleFactory->createWithMedia($media);
-        $widget->getResource($displayId);
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
+            // Create a widget from media and call getResource on it
+            $widget = $this->moduleFactory->createWithMedia($media);
+            $widget->getResource($displayId);
+        } else {
+            $app = $this->getApp();
+            $app->status(404);
+        }
 
         $this->setNoOutput(true);
     }

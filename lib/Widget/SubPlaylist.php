@@ -23,6 +23,7 @@
 namespace Xibo\Widget;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 
 /**
  * Class Playlist
@@ -39,7 +40,24 @@ class SubPlaylist extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        return (count($this->getAssignedPlaylistIds()) > 0) ? self::$STATUS_VALID : self::$STATUS_INVALID;
+        $valid = self::$STATUS_VALID;
+        if (count($this->getAssignedPlaylistIds()) <= 0) {
+           $valid = self::$STATUS_INVALID;
+        } else {
+            foreach ($this->getAssignedPlaylistIds() as $playlistId) {
+                try {
+                    $this->playlistFactory->getById($playlistId);
+                } catch (NotFoundException $e) {
+                    $this->getLog()->error('Misconfigured subplaylist, playlist ID ' . $playlistId . ' Not found');
+                    $valid =  self::$STATUS_INVALID;
+                }
+            }
+        }
+        if ($valid == 0) {
+            throw new InvalidArgumentException(__('Please select a Playlist'), 'playlistId');
+        }
+
+        return $valid;
     }
 
     /** @inheritdoc */
@@ -196,6 +214,13 @@ class SubPlaylist extends ModuleWidget
         foreach ($addedEntries as $addedEntry) {
             $this->getLog()->debug('Manage closure table for parent ' . $this->getPlaylistId() . ' and child ' . $addedEntry);
 
+            if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [
+                'parentId' => $this->getPlaylistId(),
+                'childId' => $addedEntry
+            ])) {
+                throw new InvalidArgumentException(__('Cannot add the same SubPlaylist twice.'), 'playlistId');
+            }
+
             $this->getStore()->insert('
                 INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
                 SELECT p.parentId, c.childId, p.depth + c.depth + 1
@@ -270,7 +295,12 @@ class SubPlaylist extends ModuleWidget
         $names = [];
 
         foreach ($this->getAssignedPlaylistIds() as $playlistId) {
-            $names[] = $this->playlistFactory->getById($playlistId)->name;
+            try {
+                $names[] = $this->playlistFactory->getById($playlistId)->name;
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Misconfigured subplaylist, playlist ID ' . $playlistId . ' Not found');
+                $names[] = '';
+            }
         }
 
         return __('Sub-Playlist: %s', implode(', ', $names));
@@ -294,6 +324,7 @@ class SubPlaylist extends ModuleWidget
         $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId() . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
 
         // As a first step, get all of our playlists widgets loaded into an array
+        /** @var Widget[] $resolvedWidgets */
         $resolvedWidgets = [];
         $widgets = [];
         $firstList = null;
@@ -541,6 +572,17 @@ class SubPlaylist extends ModuleWidget
         $log = 'Resolved: ';
         foreach ($resolvedWidgets as $resolvedWidget) {
             $log .= $resolvedWidget->playlistId . '-' . $resolvedWidget->widgetId . ',';
+
+            // Should my from/to dates be applied to the resolved widget?
+            // only if they are more restrictive.
+            // because this is recursive, we should end up with the top most widget being "ruler" of the from/to dates
+            if ($this->widget->fromDt > $resolvedWidget->fromDt) {
+                $resolvedWidget->fromDt = $this->widget->fromDt;
+            }
+
+            if ($this->widget->toDt < $resolvedWidget->toDt) {
+                $resolvedWidget->toDt = $this->widget->toDt;
+            }
         }
         $this->getLog()->debug($log);
 

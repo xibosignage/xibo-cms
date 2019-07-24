@@ -352,11 +352,11 @@ class Tag implements \JsonSerializable
      */
     private function linkPlaylists()
     {
-        $playlistsToLink = array_diff($this->playlistIds, $this->originalLayoutIds);
+        $playlistsToLink = array_diff($this->playlistIds, $this->originalPlaylistIds);
 
         $this->getLog()->debug('Linking %d playlists to Tag %s', count($playlistsToLink), $this->tag);
 
-        // Playlists that are in playlistIds but not in originalLayoutIds
+        // Playlists that are in playlistIds but not in originalPlaylistIds
         foreach ($playlistsToLink as $playlistId) {
             $this->getStore()->update('INSERT INTO `lktagplaylist` (tagId, playlistId) VALUES (:tagId, :playlistId) ON DUPLICATE KEY UPDATE playlistId = playlistId', array(
                 'tagId' => $this->tagId,
@@ -370,8 +370,8 @@ class Tag implements \JsonSerializable
      */
     private function unlinkPlaylists()
     {
-        // Playlists that are in the originalLayoutIds but not in the current playlistIds
-        $playlistsToUnlink = array_diff($this->originalLayoutIds, $this->playlistIds);
+        // Playlists that are in the originalPlaylistIds but not in the current playlistIds
+        $playlistsToUnlink = array_diff($this->originalPlaylistIds, $this->playlistIds);
 
         $this->getLog()->debug('Unlinking %d playlists from Tag %s', count($playlistsToUnlink), $this->tag);
 

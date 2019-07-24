@@ -62,7 +62,7 @@
                     <div class="tab-pane" id="configurationTab">
                         {% set title %}{% trans "Use the Display Location" %}{% endset %}
                         {% set helpText %}{% trans "Use the location configured on the display" %}{% endset %}
-                        {{ forms.checkbox("useDisplayLocation", title, module.getOption("useDisplayLocation"), helpText) }}
+                        {{ forms.checkbox("useDisplayLocation", title, module.getOption("useDisplayLocation", 1), helpText) }}
 
                         {% set title %}{% trans "Latitude" %}{% endset %}
                         {% set helpText %}{% trans "The Latitude for this widget" %}{% endset %}
@@ -78,7 +78,7 @@
 
                         {% set title %}{% trans "Language" %}{% endset %}
                         {% set helpText %}{% trans "Select the language you would like to use." %}{% endset %}
-                        {{ forms.dropdown("lang", "single", title, module.getOption("lang"), module.supportedLanguages(), "id", "value", helpText) }}
+                        {{ forms.dropdown("lang", "single", title, module.getOption("lang", "en"), module.supportedLanguages(), "id", "value", helpText) }}
 
                         {% set title %}{% trans "Only show Daytime weather conditions" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to only show the Daytime weather conditions." %}{% endset %}

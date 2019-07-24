@@ -101,7 +101,6 @@ class Soap5 extends Soap4
                 // Display Settings
                 $settings = $this->display->getSettings(['displayOverride' => true]);
 
-                $version = '';
                 // Create the XML nodes
                 foreach ($settings as $arrayItem) {
                     // Upper case the setting name for windows
@@ -141,27 +140,43 @@ class Soap5 extends Soap4
                 }
 
                 // Player upgrades
-                $upgradeMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
+                $version = '';
+                try {
+                    $upgradeMediaId = $this->display->getSetting('versionMediaId', null, ['displayOverride' => true]);
 
-                if ($clientType != 'windows' && $upgradeMediaId != null) {
-                    $version = $this->playerVersionFactory->getByMediaId($upgradeMediaId);
+                    if ($clientType != 'windows' && $upgradeMediaId != null) {
+                        $version = $this->playerVersionFactory->getByMediaId($upgradeMediaId);
 
-                    if ($clientType == 'android') {
-                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code]);
-                    }
-                    elseif ($clientType == 'lg') {
-                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code]);
-                    }
-                    elseif ($clientType == 'sssp') {
-                        // Create a nonce and store it in the cache for this display.
-                        $nonce = Random::generateString();
-                        $cache = $this->getPool()->getItem('/playerVersion/' . $nonce);
-                        $cache->set($this->display->displayId);
-                        $cache->expiresAfter(86400);
-                        $this->getPool()->saveDeferred($cache);
+                        if ($clientType == 'android') {
+                            $version = json_encode([
+                                'id' => $upgradeMediaId,
+                                'file' => $version->storedAs,
+                                'code' => $version->code
+                            ]);
+                        } elseif ($clientType == 'lg') {
+                            $version = json_encode([
+                                'id' => $upgradeMediaId,
+                                'file' => $version->storedAs,
+                                'code' => $version->code
+                            ]);
+                        } elseif ($clientType == 'sssp') {
+                            // Create a nonce and store it in the cache for this display.
+                            $nonce = Random::generateString();
+                            $cache = $this->getPool()->getItem('/playerVersion/' . $nonce);
+                            $cache->set($this->display->displayId);
+                            $cache->expiresAfter(86400);
+                            $this->getPool()->saveDeferred($cache);
 
-                        $version = json_encode(['id' => $upgradeMediaId, 'file' => $version->storedAs, 'code' => $version->code, 'url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce]);
+                            $version = json_encode([
+                                'id' => $upgradeMediaId,
+                                'file' => $version->storedAs,
+                                'code' => $version->code,
+                                'url' => str_replace('/xmds.php', '', Wsdl::getRoot()) . '/playersoftware/' . $nonce
+                            ]);
+                        }
                     }
+                } catch (NotFoundException $notFoundException) {
+                    $this->getLog()->error('Non-existing version set on displayId ' . $this->display->displayId);
                 }
 
                 $displayElement->setAttribute('version_instructions', $version);
