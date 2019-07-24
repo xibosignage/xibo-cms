@@ -656,22 +656,28 @@ function dataTableCreatePermissions(data, type) {
 function dataTableCreateTagEvents(e, settings) {
     
     var table = $("#" + e.target.id);
+    var tableId = e.target.id;
     var form = e.data.form;
-    
     // Unbind all 
     table.off('click');
     
     table.on("click", ".btn-tag", function(e) {
-        
-        // Get the form tag input text field
-        var inputText = form.find("#tags").val();
-        
         // See if its the first element, if not add comma
         var tagText = $(this).text();
-        
-        // Add text to form
-        form.find("#tags").tagsinput('add', tagText, { allowDuplicates: false });
-        
+
+        // Get the form tag input text field
+        var inputText = form.find("#tags").val();
+
+        if (tableId == 'playlistLibraryMedia') {
+            inputText = form.find("#filterMediaTag").val();
+            form.find("#filterMediaTag").tagsinput('add', tagText, { allowDuplicates: false });
+        } else if (tableId == 'displayGroupDisplays') {
+            inputText = form.find("#dynamicCriteriaTags").val();
+            form.find("#dynamicCriteriaTags").tagsinput('add', tagText, { allowDuplicates: false });
+        } else {
+            // Add text to form
+            form.find("#tags").tagsinput('add', tagText, {allowDuplicates: false});
+        }
         // Refresh table to apply the new tag search
         table.DataTable().ajax.reload();
     });

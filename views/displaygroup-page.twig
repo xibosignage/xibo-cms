@@ -211,7 +211,7 @@
                     if (displayTable != null) {
                         displayTable.destroy();
                         displayTable = null;
-                        $("#displays tbody").empty();
+                        $("#displayGroupDisplays tbody").empty();
                     }
 
                     return;
@@ -220,7 +220,7 @@
                 if (displayTable != null) {
                     displayTable.ajax.reload();
                 } else {
-                    displayTable = $("#displays").DataTable({
+                    displayTable = $("#displayGroupDisplays").DataTable({
                         "language": dataTablesLanguage,
                         serverSide: true,
                         stateSave: true, stateDuration: 0,
@@ -238,6 +238,7 @@
                         "columns": [
                             {"data": "displayId"},
                             {"data": "display"},
+                            {"data": dataTableCreateTags},
                             {
                                 "data": "mediaInventoryStatus",
                                 "render": function (data, type, row) {
@@ -260,6 +261,7 @@
                     });
 
                     displayTable.on('processing.dt', dataTableProcessing);
+                    displayTable.on('draw', { form: $(".displayGroupForm") }, dataTableCreateTagEvents);
                 }
             }
         }
