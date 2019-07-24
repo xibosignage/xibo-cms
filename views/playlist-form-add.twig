@@ -120,40 +120,32 @@
                         <div class="widget">
                             <div class="widget-title">{% trans "Library Media" %}</div>
                             <div class="widget-body">
-                                <div class="XiboGrid" id="{{ random() }}" data-grid-name="playlistLibraryMediaView">
-                                    <div class="FilterDiv" id="Filter">
-                                        <form class="form-inline">
-                                            <div class="tab-content">
-                                                <div class="tab-pane active" id="general-filter">
-                                                    {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
-                                                    {{ forms.message(message) }}
+                                <div class="FilterDiv" id="Filter">
+                                    {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
+                                    {{ forms.message(message) }}
 
-                                                    {% set title %}{% trans "Name filter" %}{% endset %}
-                                                    {{ forms.input("filterMediaName", title) }}
+                                    {% set title %}{% trans "Name filter" %}{% endset %}
+                                    {{ forms.input("filterMediaName", title) }}
 
-                                                    {% set title %}{% trans "Tag filter" %}{% endset %}
-                                                    {{ forms.inputWithTags("filterMediaTag", title) }}
+                                    {% set title %}{% trans "Tag filter" %}{% endset %}
+                                    {{ forms.inputWithTags("filterMediaTag", title) }}
+                                </div>
 
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </div>
-                                    <div class="XiboData">
-                                        <table id="playlistLibraryMedia" class="table table-striped">
-                                            <thead>
-                                            <tr>
-                                                <th>{% trans "ID" %}</th>
-                                                <th>{% trans "Name" %}</th>
-                                                <th>{% trans "Type" %}</th>
-                                                <th>{% trans "Tags" %}</th>
-                                                <th>{% trans "Duration" %}</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
+                                <div class="XiboData">
+                                    <table id="playlistLibraryMedia" class="table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "ID" %}</th>
+                                            <th>{% trans "Name" %}</th>
+                                            <th>{% trans "Type" %}</th>
+                                            <th>{% trans "Tags" %}</th>
+                                            <th>{% trans "Duration" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
 
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
