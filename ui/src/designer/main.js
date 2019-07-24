@@ -1511,7 +1511,12 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
-            lD.deleteObject(objType, layoutObject[objType + 'Id'], objRegionId);
+            let regionIdAux = '';
+            if(objRegionId != null) {
+                regionIdAux= objRegionId.split('region_')[1]
+            }
+
+            lD.deleteObject(objType, layoutObject[objType + 'Id'], regionIdAux);
         } else if(target.data('action') == 'Move') {
             // Move widget in the timeline
             lD.timeline.moveWidgetInRegion(layoutObject.regionId, layoutObject.id, target.data('actionType'));
