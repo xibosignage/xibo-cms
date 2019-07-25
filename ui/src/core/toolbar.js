@@ -961,6 +961,9 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
     // Append template to the search main div
     self.DOMObject.find('#media-search-container-' + menu).html(html);
 
+    // Set paging max to 5
+    $.fn.DataTable.ext.pager.numbers_length = 5;
+
     var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
         "language": dataTablesLanguage,
         "lengthMenu": [5, 10],
@@ -1057,7 +1060,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             handle: '.drag-handle'
         })
         .resizable({
-            minWidth: 580
+            minWidth: 640
         }).on('resizestart',
             function() {
                 self.tablePositionUpdate($searchContent);
@@ -1125,7 +1128,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
  * Update tab height
  */
 Toolbar.prototype.tablePositionUpdate = function(container) {
-
+    
     // Calculate table container height
     const tableContainerHeight = container.find('.form-inline').height() + container.find('.dataTables_wrapper').height();
 

@@ -1394,6 +1394,9 @@ lD.openUploadFormModelShown = function(form) {
  * Clear Temporary Data ( Cleaning cached variables )
  */
 lD.clearTemporaryData = function() {
+    // Fix for remaining ckeditor elements or colorpickers
+    $('.colorpicker').remove();
+    $('.cke').remove();
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();

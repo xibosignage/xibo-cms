@@ -155,7 +155,7 @@
                                 <th>{% trans "Bandwidth Limit" %}</th>
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
-                                <th></th>
+                                <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -478,6 +478,8 @@
             // Method to create a new input field based on the hidden form
             const createInputField = function(target, inputName, newValue = null) {
 
+                let select2FixFlag = false;
+
                 // Grab input field from hidden table
                 let $inputFields = $settings.find('#' + inputName);
 
@@ -497,6 +499,8 @@
 
                     // Get both fields
                     $inputFields = $inputFields.parent().find('.select2-hidden-accessible, .select2');
+
+                    select2FixFlag = true;
                 }
 
                 // Add input field to the target
@@ -526,6 +530,15 @@
                         $($inputFields).prop('checked', newValue);
                     } else {
                         $($inputFields).val(newValue);
+                    }
+
+                    // Reload select 2 with new value
+                    if(select2FixFlag) {
+                        const $selectElement = $inputFields.parent().find('select');
+                        if($selectElement.hasClass('select2-hidden-accessible')) {
+                            $selectElement.select2('destroy');
+                        }
+                        makePagedSelect($selectElement, $selectElement.parents('.modal:first'));
                     }
                 }
 
