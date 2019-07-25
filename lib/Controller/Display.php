@@ -823,7 +823,7 @@ class Display extends Base
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
-            'versions' => $playerVersions
+            'versions' => $playerVersions,
             'tags' => $tags
         ]);
     }
