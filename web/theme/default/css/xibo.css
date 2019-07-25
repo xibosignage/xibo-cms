@@ -975,3 +975,17 @@ ul li.active.tab-design:hover a {
 .proof-of-play-report-btn {
     height: 43px;
 }
+
+
+/*
+ * Display settings
+ */
+.override-input {
+    position: relative !important;
+}
+
+.override-input button.button-close-override {
+    position: absolute;
+    right: -16px;
+    top: 8px;
+}

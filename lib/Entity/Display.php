@@ -935,12 +935,27 @@ class Display implements \JsonSerializable
      */
     private function mergeConfigs($default, $override)
     {
+
         foreach ($default as &$defaultItem) {
             for ($i = 0; $i < count($override); $i++) {
                 if ($defaultItem['name'] == $override[$i]['name']) {
-                    // merge
-                    $defaultItem = array_merge($defaultItem, $override[$i]);
-                    break;
+
+                    // For special json fields, we need to decode, merge, encode and save instead
+                    if(in_array($defaultItem['name'], ['timers', 'pictureOptions', 'lockOptions'])) {
+
+                        // Decode values
+                        $defaultItemValueDecoded = json_decode($defaultItem['value'], true);
+                        $overrideValueDecoded = json_decode($override[$i]['value'], true);
+
+                        // Merge values, encode and save
+                        $defaultItem['value'] = json_encode(array_merge($defaultItemValueDecoded, $overrideValueDecoded));
+                        break;
+                    } else {
+                        // merge
+                        $defaultItem = array_merge($defaultItem, $override[$i]);
+                        break;
+                    }
+                    
                 }
             }
         }
