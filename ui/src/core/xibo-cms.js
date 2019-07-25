@@ -425,6 +425,21 @@ function XiboInitialise(scope) {
     $(scope + " .tags-with-value").each(function() {
         tagsWithValues($(this).closest("form").attr('id'));
     });
+
+    // If it's a modal, clear some created field on close
+    if($(scope).hasClass('modal')) {
+        $(scope).on("hide.bs.modal", function(e) {
+            if(e.namespace === 'bs.modal') {
+                // Remove datetimepickers
+                $(scope).find('.dateTimePicker .dateTimePickerDate, .dateTimePicker, .dateMonthPicker').datetimepicker('remove');
+
+                // Remove timepickers ( one by one )
+                $.each($(scope).find('.dateTimePicker .dateTimePickerTime, .timePicker'), function(idx, el) {
+                    $(el).timepicker('remove');
+                });
+            }
+        });
+    }
 }
 
 /**

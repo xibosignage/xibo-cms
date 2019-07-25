@@ -33,6 +33,16 @@
 
         // Turn the background colour into a picker
         $(this).find('#backgroundColor').colorpicker();
+
+        // Tidy up colorpickers on modal close
+        if(dialog.hasClass('modal')) {
+            dialog.on("hide.bs.modal", function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    dialog.find(".colorpicker-element").colorpicker('destroy');
+                }
+            });
+        }
     }
 
     function configureColoursForm(dialog, extra) {

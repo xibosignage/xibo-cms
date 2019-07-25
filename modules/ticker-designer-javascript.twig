@@ -48,6 +48,16 @@
         
         // Set colorpicker for the bg colour
         $(this).find('#backgroundColor').colorpicker({format: 'rgba'});
+
+        // Tidy up colorpickers on modal close
+        if($(this).hasClass('modal')) {
+            $(this).on("hide.bs.modal", function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    $(this).find("#backgroundColor").colorpicker('destroy');
+                }
+            });
+        }
     }
 
     // Runs before form submit

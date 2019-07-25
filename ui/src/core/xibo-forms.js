@@ -123,21 +123,23 @@ var text_callback = function(dialog, extraData) {
     }
 
     // Make sure when we close the dialog we also destroy the editor
-    dialog.on("hide.bs.modal", function() {
-        try {
-            if (CKEDITOR.instances["ta_text"] !== undefined) {
-                CKEDITOR.instances["ta_text"].destroy();
+    dialog.on("hide.bs.modal", function(e) {
+        if(e.namespace === 'bs.modal') {
+            try {
+                if (CKEDITOR.instances["ta_text"] !== undefined) {
+                    CKEDITOR.instances["ta_text"].destroy();
+                }
+
+                if (CKEDITOR.instances["noDataMessage"] !== undefined) {
+                    CKEDITOR.instances["noDataMessage"].destroy();
+                }
+            } catch (e) {
+                console.log("Unable to remove CKEditor instance. " + e);
             }
 
-            if (CKEDITOR.instances["noDataMessage"] !== undefined) {
-                CKEDITOR.instances["noDataMessage"].destroy();
-            }
-        } catch (e) {
-            console.log("Unable to remove CKEditor instance. " + e);
+            // Remove colour picker
+            $("#backgroundColor").colorpicker('destroy');
         }
-
-        // Remove colour picker
-        $("#backgroundColor").colorpicker('destroy');
     });
 
     // Do we have any items to click on that we might want to insert? (these will be our items and not CKEditor ones)
@@ -398,6 +400,16 @@ var settingsUpdated = function(response) {
 
 var backGroundFormSetup = function(dialog) {
     $('#backgroundColor').colorpicker({format: "hex"});
+
+    // Tidy up colorpickers on modal close
+    if(dialog.hasClass('modal')) {
+        dialog.on("hide.bs.modal", function(e) {
+            if(e.namespace === 'bs.modal') {
+                // Remove colour pickers
+                dialog.find("#backgroundColor").colorpicker('destroy');
+            }
+        });
+    }
 
     var backgroundImageList = $('#backgroundImageId');
     var notFoundIcon = $('#bg_not_found_icon');
