@@ -1066,6 +1066,9 @@ class DataSet extends Base
         $dataSet->password = $this->getSanitizer()->getString('password');
         $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
 
+        // Set this DataSet as active.
+        $dataSet->setActive();
+
         // Call the remote service requested
         $data = $this->dataSetFactory->callRemoteService($dataSet, null, false);
 

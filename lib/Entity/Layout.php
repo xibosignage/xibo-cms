@@ -1474,12 +1474,16 @@ class Layout implements \JsonSerializable
             try {
                 file_put_contents($path, $this->toXlf());
             } catch (\Exception $e) {
-                $this->getLog()->error('Cannot build Layout ' . $this->layoutId . '. Unexpected error: ' . $e->getMessage());
+                $this->getLog()->error('Cannot build Layout ' . $this->layoutId . '. error: ' . $e->getMessage());
 
                 // Will continue and save the status as 4
                 $this->status = 4;
-                $this->pushStatusMessage('Unexpected Error');
 
+                if ($e->getMessage() != '') {
+                    $this->pushStatusMessage($e->getMessage());
+                } else {
+                    $this->pushStatusMessage('Unexpected Error');
+                }
                 // No need to notify on an errored build
                 $options['notify'] = false;
             }

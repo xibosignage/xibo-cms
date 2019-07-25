@@ -2717,7 +2717,7 @@
                     "displayGroup"
                 ],
                 "summary": "Action: Change Layout",
-                "description": "Send the change layout action to this DisplayGroup",
+                "description": "Send the change layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
                 "operationId": "displayGroupActionChangeLayout",
                 "parameters": [
                     {
@@ -2732,6 +2732,13 @@
                         "in": "formData",
                         "description": "The Layout Id",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "campaignId",
+                        "in": "formData",
+                        "description": "The layout specific Campaign Id",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -2793,7 +2800,7 @@
                     "displayGroup"
                 ],
                 "summary": "Action: Overlay Layout",
-                "description": "Send the overlay layout action to this DisplayGroup",
+                "description": "Send the overlay layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
                 "operationId": "displayGroupActionOverlayLayout",
                 "parameters": [
                     {
@@ -2808,6 +2815,13 @@
                         "in": "formData",
                         "description": "The Layout Id",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "campaignId",
+                        "in": "formData",
+                        "description": "The layout specific Campaign Id",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -3083,6 +3097,20 @@
                         "type": "integer"
                     },
                     {
+                        "name": "parentId",
+                        "in": "formData",
+                        "description": "Filter by parent Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showDrafts",
+                        "in": "formData",
+                        "description": "Flag indicating whether to show drafts",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "layout",
                         "in": "formData",
                         "description": "Filter by partial Layout name",
@@ -3125,9 +3153,16 @@
                         "type": "integer"
                     },
                     {
+                        "name": "publishedStatusId",
+                        "in": "formData",
+                        "description": "Filter by published status id, 1 - Published, 2 - Draft",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "embed",
                         "in": "formData",
-                        "description": "Embed related data such as regions, playlists, tags, etc",
+                        "description": "Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
                         "required": false,
                         "type": "string"
                     }
@@ -8760,6 +8795,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "decodeHtml",
+                        "in": "formData",
+                        "description": "Should we decode the HTML entities in this feed before parsing it?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "backgroundColor",
                         "in": "formData",
                         "description": "A HEX color to use as the background color of this widget",
@@ -11116,6 +11158,13 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/Schedule"
+                    }
+                },
+                "playlists": {
+                    "description": "An array of Playlists owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Playlist"
                     }
                 },
                 "homePage": {
