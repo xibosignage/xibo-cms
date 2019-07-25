@@ -99,13 +99,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $this->campaignFactory = $campaignFactory;
 
         try {
-            $this->client = new Client('mongodb://'.$this->config['host'].':'. $this->config['port'],
-                [
-                    'username' => $this->config['username'],
-                    'password' => $this->config['password']
-                ]);
+            $uri = isset($this->config['uri']) ? $this->config['uri'] : 'mongodb://' . $this->config['host'] . ':' . $this->config['port'];
+            $this->client = new Client($uri, [
+                'username' => $this->config['username'],
+                'password' => $this->config['password']
+            ]);
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
+            $this->log->critical($e->getMessage());
         }
 
         return $this;

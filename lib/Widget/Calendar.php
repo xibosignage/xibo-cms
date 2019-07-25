@@ -380,30 +380,36 @@ class Calendar extends ModuleWidget
 
         // Go through each event returned
         foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
-            /** @var \ICal\Event $event */
-            $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart, $useEventTimezone));
-            $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend, $useEventTimezone));
+            try {
+                /** @var \ICal\Event $event */
+                $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart, $useEventTimezone));
+                $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend, $useEventTimezone));
 
-            $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / ' . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
+                $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / ' . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
 
-            if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1))
-                continue;
+                if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1)) {
+                    continue;
+                }
 
-            // Substitute for all matches in the template
-            $rowString = $this->substituteForEvent($matches, $template, $startDt, $endDt, $dateFormat, $event);
+                // Substitute for all matches in the template
+                $rowString = $this->substituteForEvent($matches, $template, $startDt, $endDt, $dateFormat, $event);
 
-            if ($currentEventTemplate != '') {
-                $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate, $startDt, $endDt, $dateFormat, $event);
-            } else {
-                $currentEventRow = $rowString;
+                if ($currentEventTemplate != '') {
+                    $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate, $startDt,
+                        $endDt, $dateFormat, $event);
+                } else {
+                    $currentEventRow = $rowString;
+                }
+
+                $items[] = [
+                    'startDate' => $startDt->format('c'),
+                    'endDate' => $endDt->format('c'),
+                    'item' => $rowString,
+                    'currentEventItem' => $currentEventRow
+                ];
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Unable to parse event. ' . var_export($event, true));
             }
-
-            $items[] = [
-                'startDate' => $startDt->format('c'),
-                'endDate' => $endDt->format('c'),
-                'item' => $rowString,
-                'currentEventItem' => $currentEventRow
-            ];
         }
 
         return $items;
