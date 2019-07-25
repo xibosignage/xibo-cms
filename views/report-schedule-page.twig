@@ -70,6 +70,7 @@
                             <th>{% trans "Last Run" %}</th>
                             <th>{% trans "Next Run" %}</th>
                             <th>{% trans "Previous Run" %}</th>
+                            <th>{% trans "Active" %}</th>
                             <th>{% trans "Created" %}</th>
                             <th></th>
                         </tr>
@@ -88,13 +89,19 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
+
             let url_string = window.location.href;
             let url = new URL(url_string);
-            let savedReportId = url.searchParams.get("savedReportId");
+            let reportScheduleId = url.searchParams.get("reportScheduleId");
+            let reportName = url.searchParams.get("reportName");
 
-            if (savedReportId !== undefined && savedReportId != null) {
-                $('#reportScheduleId').val(savedReportId);
-                table.ajax.reload();
+            if (reportScheduleId !== undefined && reportScheduleId != null) {
+                $('#reportScheduleId').val(reportScheduleId);
+            }
+
+            if (reportName !== undefined && reportName != null) {
+                // Grid will be reloaded again
+                $('#reportName').val(reportName).trigger('change');
             }
 
             table = $("#reportschedules").DataTable({ "language": dataTablesLanguage,
@@ -156,6 +163,22 @@
                     {
                         "data": "previousRunDt",
                         "render": dataTableDateFromUnix,
+                        "visible": false
+                    },
+                    {
+                        "data": "isActive",
+                        "render": function (data, type, row) {
+                            if (type !== "display")
+                                return data;
+
+                            var icon = "";
+                            if (data == 1)
+                                icon = "fa-check";
+                            else
+                                icon = "fa-times";
+
+                            return "<span class='fa " + icon + "' title='" + (row.isActiveDescription) + "'></span>";
+                        },
                         "visible": false
                     },
                     {

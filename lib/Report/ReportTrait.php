@@ -54,6 +54,8 @@ trait ReportTrait
      */
     private $request;
 
+    private $userId;
+
     /**
      * Set common dependencies.
      * @param \Xibo\Helper\ApplicationState $state
@@ -335,5 +337,63 @@ trait ReportTrait
         $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
 
         return 'temp_periods';
+    }
+
+    public function getUserId() {
+
+        return $this->userId;
+
+    }
+
+    public function setUserId($userId) {
+
+        $this->userId = $userId;
+
+        return;
+    }
+
+    /**
+     * Set the filter
+     * @param array[Optional] $extraFilter
+     * @return array
+     */
+    public function gridRenderFilter($extraFilter = [])
+    {
+        // Handle filtering
+        $filter = [
+            'start' => $this->getSanitizer()->getInt('start', 0),
+            'length' => $this->getSanitizer()->getInt('length', 10)
+        ];
+
+        $search = $this->getSanitizer()->getStringArray('search');
+        if (is_array($search) && isset($search['value'])) {
+            $filter['search'] = $search['value'];
+        }
+        else if ($search != '') {
+            $filter['search'] = $search;
+        }
+
+        // Merge with any extra filter items that have been provided
+        $filter = array_merge($extraFilter, $filter);
+
+        return $filter;
+    }
+
+    /**
+     * Set the sort order
+     * @return array
+     */
+    public function gridRenderSort()
+    {
+        $columns = $this->getSanitizer()->getStringArray('columns');
+
+        if ($columns == null || !is_array($columns))
+            return null;
+
+        $order = array_map(function ($element) use ($columns) {
+            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
+        }, $this->getSanitizer()->getStringArray('order'));
+
+        return $order;
     }
 }

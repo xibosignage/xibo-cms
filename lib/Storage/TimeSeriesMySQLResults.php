@@ -67,6 +67,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             $entry['layoutId'] = $row['layoutId'];
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
+            $entry['statDate'] = $row['statDate'];
 
             $rows[] = $entry;
         }

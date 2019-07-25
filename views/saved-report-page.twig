@@ -82,6 +82,15 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
+
+            let url_string = window.location.href;
+            let url = new URL(url_string);
+            let reportName = url.searchParams.get("reportName");
+
+            if (reportName !== undefined && reportName != null) {
+                $('#reportName').val(reportName).trigger('change');
+            }
+
             table = $("#savedreports").DataTable({ "language": dataTablesLanguage,
                 serverSide: true, stateSave: true, stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
