@@ -43,66 +43,25 @@
                 </div>
             </div>
         </div>
-        <div class="report-box col-lg-3 col-md-6 col-xs-12">
-            <div class="widget content">
-                <div class="widget-body">
-                    <div class="widget-icon blue">
-                        <i class="fa fa-th"></i>
+
+         {% for report in defaults.availableReports %}
+            <div class="report-box col-lg-3 col-md-6 col-xs-12">
+                 <div class="widget content">
+                    <div class="widget-body">
+                        <div class="widget-icon {{ report.color }} ">
+                            <i class="fa {{ report.fa_icon }}"></i>
+                        </div>
+                        <div class="widget-content">
+                            <div class="report-title">  {{ report.description }}  </div>
+                            <div class="comment"><a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
+                        </div>
+                        <div class="clearfix"></div>
                     </div>
-                    <div class="widget-content">
-                        <div class="report-title">{% trans "Proof of Play" %}</div>
-                        <div class="comment"><a class="divLink" href="{{ urlFor("report.form", {name: "proofofplayReport"}) }}">{% trans "Report" %}</a></div>
-                    </div>
-                    <div class="clearfix"></div>
                 </div>
             </div>
-        </div>
-        <div class="report-box col-lg-3 col-md-6 col-xs-12">
-            <div class="widget content">
-                <div class="widget-body">
-                    <div class="widget-icon red">
-                        <i class="fa fa-bar-chart"></i>
-                    </div>
-                    <div class="widget-content">
-                        <div class="report-title">{% trans "Summary by Layout, Media or Event" %}</div>
-                        <div class="comment"><a href="{{ urlFor("report.form", {name: "summaryReport"}) }}">{% trans "Chart" %}</a></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </div>
-        <div class="report-box col-lg-3 col-md-6 col-xs-12">
-            <div class="widget content">
-                <div class="widget-body">
-                    <div class="widget-icon green">
-                        <i class="fa fa-bar-chart"></i>
-                    </div>
-                    <div class="widget-content">
-                        <div class="report-title">{% trans "Distribution by Layout, Media or Event" %}</div>
-                        <div class="comment"><a href="{{ urlFor("report.form", {name: "distributionReport"}) }}">{% trans "Chart" %}</a></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 
-    <div class="row row-flex">
-     <div class="report-box col-lg-3 col-md-6 col-xs-12">
-            <div class="widget content">
-                <div class="widget-body">
-                    <div class="widget-icon orange">
-                        <i class="fa fa-tablet"></i>
-                    </div>
-                    <div class="widget-content">
-                        <div class="report-title">{% trans "Engagement" %}</div>
-                        <div class="comment"><a href="{{ urlFor("report.form", {name: "engagementReport"}) }}">{% trans "Report" %}</a></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
-            </div>
-        </div>
-    </div>
 {% endblock %}
 
 
