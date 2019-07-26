@@ -941,7 +941,7 @@ class Display implements \JsonSerializable
                 if ($defaultItem['name'] == $override[$i]['name']) {
 
                     // For special json fields, we need to decode, merge, encode and save instead
-                    if(in_array($defaultItem['name'], ['timers', 'pictureOptions', 'lockOptions'])) {
+                    if(in_array($defaultItem['name'], ['timers', 'pictureOptions', 'lockOptions']) && isset($defaultItem['value']) && isset($override[$i]['value'])) {
 
                         // Decode values
                         $defaultItemValueDecoded = json_decode($defaultItem['value'], true);
