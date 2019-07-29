@@ -838,8 +838,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `lastClear`, `summarize`, `summarizeField`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :lastClear, :summarize, :summarizeField';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -854,7 +854,6 @@ class DataSet implements \JsonSerializable
             $params['summarize'] = $this->summarize;
             $params['summarizeField'] = $this->summarizeField;
             $params['lastSync'] = 0;
-            $params['lastClear'] = 0;
         }
 
         // Do the insert
