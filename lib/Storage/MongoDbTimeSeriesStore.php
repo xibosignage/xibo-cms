@@ -24,8 +24,8 @@ namespace Xibo\Storage;
 
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -103,7 +103,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $this->client = new Client($uri, [
                 'username' => $this->config['username'],
                 'password' => $this->config['password']
-            ]);
+            ], (array_key_exists('driverOptions', $this->config) ? $this->config['driverOptions'] : []));
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->critical($e->getMessage());
         }
