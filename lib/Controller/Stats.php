@@ -533,6 +533,10 @@ class Stats extends Base
             }
         }
 
+        if ($fromDt == null || $toDt == null) {
+            throw new InvalidArgumentException(__("Both fromDt/toDt should be provided"), 'fromDt/toDt');
+        }
+
         $fromDt->startOfDay();
         $toDt->addDay()->startOfDay();
 
@@ -561,12 +565,12 @@ class Stats extends Base
             $type = $this->getSanitizer()->string($row['type']);
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
             } else {
 
-                $statDate = $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
             }

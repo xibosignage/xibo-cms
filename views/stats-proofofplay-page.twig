@@ -68,8 +68,40 @@
 {% block javaScript %}
     <script type="text/javascript">
         function statsExportFormSubmit() {
-            $("#statisticsExportForm").submit();
-            XiboDialogClose();
+
+            let form = $("#statisticsExportForm");
+            let valid = true;
+
+            const validateForm = function(element) {
+                if (element.val() == null || element.val() == '') {
+                    valid = false;
+                    element.closest('.form-group').removeClass('has-success').addClass('has-error');
+                } else {
+                    element.closest('.form-group').addClass('has-success').removeClass('has-error');
+                }
+            };
+
+            validateForm(form.find("#fromDt"));
+            validateForm(form.find("#toDt"));
+
+            if (valid) {
+                form.submit();
+                form.find(".form-error").remove();
+
+                XiboDialogClose();
+
+            } else {
+                // Remove the spinner
+                form.closest(".modal-dialog").find(".saving").remove();
+                // https://github.com/xibosignage/xibo/issues/1589
+                form.closest(".modal-dialog").find(".save-button").removeClass("disabled");
+
+                if (!form.find(".form-error").length) {
+                    form.append('<div class="alert alert-danger form-error">{% trans "Form field is required." %}</div>');
+                }
+
+            }
+
         }
 
         // Or use this to Open link in same window (similar to target=_blank)
