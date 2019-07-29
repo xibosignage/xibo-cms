@@ -1432,7 +1432,7 @@ class Ticker extends ModuleWidget
                 // Touch this dataSet
                 $dataSetCache = $this->getPool()->getItem('/dataset/accessed/' . $dataSet->dataSetId);
                 $dataSetCache->set('true');
-                $dataSetCache->expiresAfter($this->getSetting('REQUIRED_FILES_LOOKAHEAD') * 1.5);
+                $dataSetCache->expiresAfter(doubleval($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
                 $this->getPool()->saveDeferred($dataSetCache);
             }
         }
