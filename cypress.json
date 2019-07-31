@@ -2,6 +2,7 @@
   "baseUrl": "http://localhost",
   "viewportWidth": 1366,
   "viewportHeight": 768,
+  "numTestsKeptInMemory": 5,
   "defaultCommandTimeout": 10000,
   "requestTimeout": 10000,
   "env": {
