@@ -1,13 +1,11 @@
 describe('Unauthenticated CMS access', function () {
     it('should visit the login page and check the version', function () {
 
-        cy.visit('/logout').then(() => {
-            cy.visit('/login').then(() => {
+        cy.visit('/login').then(() => {
 
-                cy.url().should('include', '/login');
+            cy.url().should('include', '/login');
 
-                cy.contains('Version 2.');
-            });
+            cy.contains('Version 2.');
         });
     });
 

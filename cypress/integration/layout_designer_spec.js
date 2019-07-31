@@ -342,12 +342,17 @@ describe('Layout Designer (Empty)', function() {
                 // Create and alias for reload Layout
                 cy.server();
                 cy.route('/layout?layoutId=*').as('reloadLayout');
+                cy.route('/library?assignable=*').as('mediaLoad');
 
                 // Open a new tab
                 cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
+                cy.wait('@mediaLoad');
+
                 // Select and search image items
                 cy.get('.toolbar-pane.active .input-type').select('image');
+
+                cy.wait('@mediaLoad');
 
                 // Get a table row, select it and add to the region
                 cy.get('#layout-editor-toolbar .media-table .assignItem:first').click().then(() => {

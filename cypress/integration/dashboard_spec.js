@@ -1,12 +1,12 @@
 describe('Dashboard', function () {
 
     beforeEach(function () {
-        cy.login().then(function() {
-            cy.visit('/');
-        });
+        cy.login();
     });
 
     it('should be at the dashboard page', function() {
+
+        cy.visit('/statusdashboard');
 
         cy.url().should('include', 'dashboard');
 
@@ -16,6 +16,8 @@ describe('Dashboard', function () {
     });
 
     it('should show the welcome tutorial', function() {
+
+        cy.visit('/statusdashboard');
 
         // Open user dropdown menu
         cy.get('.dropdown-toggle img.nav-avatar').click();
@@ -28,10 +30,12 @@ describe('Dashboard', function () {
 
     it('should dismiss the welcome tutorial', function() {
 
+        cy.visit('/statusdashboard');
+
         cy.contains('Welcome to the Xibo CMS!');
         cy.get('button[data-role="end"]').click();
 
-        cy.visit('/').then(() => {
+        cy.visit('/statusdashboard').then(() => {
             cy.get('.popover.tour').should('not.be.visible');
         });
     });

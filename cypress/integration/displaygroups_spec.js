@@ -6,14 +6,6 @@ describe('Display Groups', function () {
         cy.login();
 
         testRun = Cypress._.random(0, 1e6);
-
-        cy.server();
-        cy.route('/displaygroup?draw=*').as('displaygroupGridLoad');
-        cy.route('DELETE', '/displaygroup/*').as('deleteDisplaygroup');
-        cy.route('POST', '/displaygroup').as('addDisplaygroup');
-        cy.route('PUT', '/displaygroup/*').as('saveDisplaygroup');
-
-        cy.visit('/displaygroup/view');
     });
 
     /**
@@ -39,6 +31,8 @@ describe('Display Groups', function () {
 
     it('should add two empty display groups', function() {
 
+        cy.visit('/displaygroup/view');
+
         // Click on the Add Displaygroup button
         cy.contains('Add Display Group').click();
 
@@ -63,10 +57,8 @@ describe('Display Groups', function () {
 
     it('should add a displaygroup with the form filled', function() {
 
-        // Create some layouts
-        createTempLayouts(3);
+        cy.visit('/displaygroup/view');
 
-        // Create a new displaygroup with assign layouts
         // Click on the Add Displaygroup button
         cy.contains('Add Display Group').click();
 
@@ -85,9 +77,6 @@ describe('Display Groups', function () {
 
         // Check if displaygroup is added in toast message
         cy.get('.toast').contains('Added Cypress Test Displaygroup ' + testRun);
-
-        // Delete temp layouts
-        deleteTempLayouts(3);
     });
 
     it('searches and delete existing displaygroup', function() {
@@ -100,8 +89,9 @@ describe('Display Groups', function () {
             cy.get('#Filter input[name="displayGroup"]')
                 .type('Cypress Test Displaygroup ' + testRun);
 
-            // Wait for the filter to make effect
-            cy.wait(2000);
+            // Wait for the grid reload
+            cy.server();
+            cy.route('/displaygroup?draw=2&*').as('displaygroupGridLoad');
             cy.wait('@displaygroupGridLoad');
 
             // Click on the first row element to open the delete modal
@@ -111,11 +101,8 @@ describe('Display Groups', function () {
             // Delete test displaygroup
             cy.get('.bootbox .save-button').click();
 
-            // Wait for the delete request
-            cy.wait('@deleteDisplaygroup');
-
             // Check if displaygroup is deleted in toast message
-            cy.get('.toast').contains('Deleted Cypress Test Displaygroup ' + testRun);
+            cy.get('.toast').contains('Deleted Cypress Test Displaygroup');
         });
     });
 
@@ -132,9 +119,10 @@ describe('Display Groups', function () {
                 .clear()
                 .type('Cypress Test Displaygroup');
 
-            // Wait for the filter to make effect
-            cy.wait(3000);
-
+            // Wait for the grid reload
+            cy.server();
+            cy.route('/displaygroup?draw=2&*').as('displaygroupGridLoad');
+            cy.wait('@displaygroupGridLoad');
 
             // Select all
             cy.get('button[data-toggle="selectAll"]').click();
