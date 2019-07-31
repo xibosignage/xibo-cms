@@ -258,6 +258,16 @@ describe('Layout Designer (Populated)', function() {
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
 
+            cy.get('#properties-panel #select2-backgroundImageId-container').click();
+
+            // Select the last image option available ( avoid result and message "options")
+            cy.get('.select2-container .select2-results .select2-results__option:not(.select2-results__option--load-more):not(.loading-results):not(.select2-results__message):first').click();
+
+            // Save form
+            cy.get('#properties-panel button[data-action="save"]').click();
+
+            cy.wait('@reloadLayout');
+
             // Change background image
             cy.get('#properties-panel #select2-backgroundImageId-container').should('have.attr', 'title').then((title) => {
                 cy.get('#properties-panel #select2-backgroundImageId-container').click();
