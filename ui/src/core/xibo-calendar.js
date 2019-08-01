@@ -604,6 +604,79 @@ var setupScheduleForm = function(dialog) {
 
         $(dialog).find('.modal-footer').prepend($button);
     }
+    
+    configReminderFields($(dialog));
+
+};
+
+var beforeSubmitScheduleForm = function(form) {
+
+    var checkboxes = form.find('[name="isEmail[]"]');
+
+    checkboxes.each(function (index) {
+        $(this).parent().find('[type="hidden"]').val($(this).is(":checked") ? "1" : "0");
+    });
+
+    form.submit();
+
+};
+
+/**
+ * Configure the query builder ( order and filter )
+ * @param {object} dialog - Dialog object
+ */
+ var configReminderFields = function(dialog) {
+
+    var reminderFields = dialog.find("#reminderFields");
+
+    if(reminderFields.length == 0)
+        return;
+
+    var reminderEventTemplate = Handlebars.compile($("#reminderEventTemplate").html());
+
+    console.log(reminderFields.data().reminders.length);
+    if(reminderFields.data().reminders.length == 0) {
+        // Add a template row
+        var context = {
+            title: 0,
+            buttonGlyph: "fa-plus"
+        };
+        reminderFields.append(reminderEventTemplate(context));
+    } else {
+
+        console.log(reminderFields.data().reminders)
+        // For each of the existing codes, create form components
+        var i = 0;
+        $.each(reminderFields.data().reminders, function(index, field) {
+            i++;
+
+            var context = {
+                scheduleReminderId: field.scheduleReminderId,
+                value: field.value,
+                type: field.type,
+                option: field.option,
+                isEmail: field.isEmail,
+                title: i,
+                buttonGlyph: ((i == 1) ? "fa-plus" : "fa-minus")
+            };
+
+            reminderFields.append(reminderEventTemplate(context));
+        });
+    }
+
+    // Nabble the resulting buttons
+    reminderFields.on("click", "button", function(e) {
+        e.preventDefault();
+
+        // find the gylph
+        if($(this).find("i").hasClass("fa-plus")) {
+            var context = {title: reminderFields.find('.form-group').length + 1, buttonGlyph: "fa-minus"};
+            reminderFields.append(reminderEventTemplate(context));
+        } else {
+            // Remove this row
+            $(this).closest(".form-group").remove();
+        }
+    });
 };
 
 /**
@@ -686,15 +759,18 @@ var processScheduleFormElements = function(el) {
             var endTimeControlDisplay = (meta.isCustom === 0) ? "none" : "block";
             var startTimeControlDisplay = (meta.isAlways === 1) ? "none" : "block";
             var repeatsControlDisplay = (meta.isAlways === 1) ? "none" : "block";
-            
+            var reminderControlDisplay = (meta.isAlways === 1) ? "none" : "block";
+
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
             var $repeats = $("li.repeats");
+            var $reminder = $("li.reminder");
 
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);
             $endTime.css('display', endTimeControlDisplay);
             $repeats.css('display', repeatsControlDisplay);
+            $reminder.css('display', reminderControlDisplay);
 
             // Dayparts only show the start control
             if (meta.isAlways === 0 && meta.isCustom === 0) {

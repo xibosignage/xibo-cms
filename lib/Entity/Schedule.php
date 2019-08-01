@@ -27,9 +27,11 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -253,6 +255,14 @@ class Schedule implements \JsonSerializable
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
+    /** @var  CampaignFactory */
+    private $campaignFactory;
+
+    /**
+     * @var UserFactory
+     */
+    private $userFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -262,8 +272,9 @@ class Schedule implements \JsonSerializable
      * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DayPartFactory $dayPartFactory
+     * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
@@ -271,8 +282,19 @@ class Schedule implements \JsonSerializable
         $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->userFactory = $userFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
+    }
+
+    /**
+     * @param CampaignFactory $campaignFactory
+     * @return $this
+     */
+    public function setCampaignFactory($campaignFactory)
+    {
+        $this->campaignFactory = $campaignFactory;
+        return $this;
     }
 
     public function __clone()
@@ -650,6 +672,39 @@ class Schedule implements \JsonSerializable
             'syncEvent' => $this->syncEvent,
             'eventId' => $this->eventId
         ]);
+    }
+
+    public function getNextReminderDate($now, $reminder = null, $reminder_in_seconds = null) {
+
+        $toDt = $this->dateService->parse($this->recurrenceRange, 'U');
+
+        $scheduleEvents = $this->getEvents($now, $toDt);
+        foreach($scheduleEvents as $event) {
+
+            if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START) {
+                $reminderDt = $event->fromDt - $reminder_in_seconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_START) {
+                $reminderDt = $event->fromDt + $reminder_in_seconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_BEFORE_END) {
+                $reminderDt = $event->toDt - $reminder_in_seconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_END) {
+                $reminderDt = $event->toDt + $reminder_in_seconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -1147,5 +1202,45 @@ class Schedule implements \JsonSerializable
         $dayPart = $this->dayPartFactory->getById($this->dayPartId);
 
         return $dayPart->isCustom === 1;
+    }
+
+    public function getEventTitle() {
+
+        // Setting for whether we show Layouts with out permissions
+        $showLayoutName = ($this->config->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+
+        // Load the display groups
+        $this->load();
+        $this->setCampaignFactory($this->campaignFactory);
+
+        $displayGroupList = '';
+
+        if (count($this->displayGroups) >= 0) {
+            $array = array_map(function ($object) {
+                return $object->displayGroup;
+            }, $this->displayGroups);
+            $displayGroupList = implode(', ', $array);
+        }
+
+        $user = $this->userFactory->getById($this->userId);
+
+        // Event Title
+        if ($this->campaignId == 0) {
+            // Command
+            $title = __('%s scheduled on %s', $this->command, $displayGroupList);
+        } else {
+            // Should we show the Layout name, or not (depending on permission)
+            // Make sure we only run the below code if we have to, its quite expensive
+            if (!$showLayoutName && !$user->isSuperAdmin()) {
+                // Campaign
+                $campaign = $this->campaignFactory->getById($this->campaignId);
+
+                if (!$user->checkViewable($campaign))
+                    $this->campaign = __('Private Item');
+            }
+            $title = __('%s scheduled on %s', $this->campaign, $displayGroupList);
+        }
+
+        return $title;
     }
 }

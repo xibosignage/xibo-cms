@@ -57,6 +57,9 @@ class ScheduleFactory extends BaseFactory
     /** @var DayPartFactory */
     private $dayPartFactory;
 
+    /** @var  UserFactory */
+    private $userFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -67,8 +70,9 @@ class ScheduleFactory extends BaseFactory
      * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DayPartFactory $dayPartFactory
+     * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory, $dayPartFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
@@ -76,6 +80,7 @@ class ScheduleFactory extends BaseFactory
         $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->userFactory = $userFactory;
     }
 
     /**
@@ -91,7 +96,8 @@ class ScheduleFactory extends BaseFactory
             $this->pool,
             $this->dateService,
             $this->displayGroupFactory,
-            $this->dayPartFactory
+            $this->dayPartFactory,
+            $this->userFactory
         );
     }
 
