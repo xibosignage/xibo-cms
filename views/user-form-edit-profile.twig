@@ -59,6 +59,16 @@
                 {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
                 {{ forms.email("email", title, currentUser.email, helpText) }}
 
+                {% if currentUser.isSuperAdmin() %}
+                    {% set title %}{% trans "Library Content From" %}{% endset %}
+                    {% set helpText %}{% trans "Select Standard or DOOH to see relevant library content" %}{% endset %}
+                    {% set options = [
+                        { id: 1, value: "Standard"|trans },
+                        { id: 2, value: "DOOH"|trans }
+                    ] %}
+                    {{ forms.dropdown("libraryContentFrom", "single", title, user.libraryContentFrom, options, "id", "value", helpText) }}
+                {% endif %}
+
                 {% set title %}{% trans "Two Factor Authentication" %}{% endset %}
                 {% set helpText %}{% trans "Enable an option to provide a two factor authentication code to log into the CMS for added security." %}{% endset %}
                 {% set values = [{id: 0, value: "Off"}, {id: 1, value: "Email"}, {id: 2, value: "Google Authenticator"}] %}

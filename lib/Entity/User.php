@@ -254,6 +254,8 @@ class User implements \JsonSerializable
      */
     public $twoFactorRecoveryCodes = [];
 
+    public $libraryContentFrom = 1;
+
 
     /**
      * @var UserOption[]
@@ -917,6 +919,7 @@ class User implements \JsonSerializable
                   `twoFactorTypeId` = :twoFactorTypeId,
                   `twoFactorSecret` = :twoFactorSecret,
                   `twoFactorRecoveryCodes` = :twoFactorRecoveryCodes,
+                  `libraryContentFrom` = :libraryContentFrom,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -940,6 +943,7 @@ class User implements \JsonSerializable
             'twoFactorTypeId' => $this->twoFactorTypeId,
             'twoFactorSecret' => $this->twoFactorSecret,
             'twoFactorRecoveryCodes' => ($this->twoFactorRecoveryCodes == '') ? null : json_encode($this->twoFactorRecoveryCodes),
+            'libraryContentFrom' => $this->libraryContentFrom,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,
@@ -1195,7 +1199,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
             return true;
 
         // Group Admins
@@ -1224,7 +1228,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
             return true;
 
         // Group Admins

@@ -161,7 +161,7 @@ class BaseFactory
 
         $permissionSql = '';
 
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && $user->userTypeId != 1) {
+        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && ($user->userTypeId != 1 && $user->userTypeId != 4)) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId

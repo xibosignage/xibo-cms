@@ -278,8 +278,9 @@ class User extends Base
             $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
             $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
 
-            if ($this->isApi())
+            if ($this->isApi()) {
                 break;
+            }
 
             $user->includeProperty('buttons');
             $user->homePage = __($user->homePage);
@@ -978,6 +979,14 @@ class User extends Base
         $user->twoFactorTypeId = $this->getSanitizer()->getInt('twoFactorTypeId');
         $code = $this->getSanitizer()->getString('code');
         $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
+
+        if ($user->isSuperAdmin()) {
+            $user->libraryContentFrom = $this->getSanitizer()->getInt('libraryContentFrom');
+        }
+
+        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('libraryContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'libraryContentFrom');
+        }
 
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));

@@ -284,11 +284,61 @@ class Applications extends Base
 
     /**
      * Register a new application with OAuth
+     * @throws InvalidArgumentException
      */
     public function add()
     {
         $application = $this->applicationFactory->create();
         $application->name = $this->getSanitizer()->getString('name');
+
+        if ($application->name == '' ) {
+            throw new InvalidArgumentException(__('Please enter Application name'), 'name');
+        }
+
+        $application->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Added %s'), $application->name),
+            'data' => $application,
+            'id' => $application->key
+        ]);
+    }
+
+    /**
+     * Form to register a new application for Advertisement.
+     */
+    public function addDoohForm()
+    {
+        $this->getState()->template = 'applications-form-add-dooh';
+        $this->getState()->setData([
+            'help' => $this->getHelp()->link('Services', 'Register')
+        ]);
+    }
+
+    /**
+     * Register a new application with OAuth
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function addDooh()
+    {
+        $application = $this->applicationFactory->create();
+        $application->name = $this->getSanitizer()->getString('name');
+        $application->userId = $this->getSanitizer()->getInt('userId');
+
+        if ($application->name == '' ) {
+            throw new InvalidArgumentException(__('Please enter Application name'), 'name');
+        }
+
+        if ($application->userId == null ) {
+            throw new InvalidArgumentException(__('Please select user'), 'userId');
+        }
+
+        if ($this->userFactory->getById($application->userId)->userTypeId != 4 ) {
+            throw new InvalidArgumentException(__('Invalid user type'), 'userTypeId');
+        }
+
         $application->save();
 
         // Return

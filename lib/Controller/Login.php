@@ -112,40 +112,44 @@ class Login extends Base
                 try {
                     $user = $this->userFactory->getById($validated['userId']);
 
-                    // Log in this user
-                    $user->touch(true);
+                    if ($user->userTypeId != 4) {
+                        // Log in this user
+                        $user->touch(true);
 
-                    $this->getLog()->info($user->userName . ' user logged in via token.');
+                        $this->getLog()->info($user->userName . ' user logged in via token.');
 
-                    // Set the userId on the log object
-                    $this->getLog()->setUserId($user->userId);
+                        // Set the userId on the log object
+                        $this->getLog()->setUserId($user->userId);
 
-                    // Overwrite our stored user with this new object.
-                    $this->getApp()->user = $user;
+                        // Overwrite our stored user with this new object.
+                        $this->getApp()->user = $user;
 
-                    // Expire all sessions
-                    $session = $this->session;
+                        // Expire all sessions
+                        $session = $this->session;
 
-                    // this is a security measure in case the user is logged in somewhere else.
-                    // (not this one though, otherwise we will deadlock
-                    $session->expireAllSessionsForUser($user->userId);
+                        // this is a security measure in case the user is logged in somewhere else.
+                        // (not this one though, otherwise we will deadlock
+                        $session->expireAllSessionsForUser($user->userId);
 
-                    // Switch Session ID's
-                    $session->setIsExpired(0);
-                    $session->regenerateSessionId();
-                    $session->setUser($user->userId);
+                        // Switch Session ID's
+                        $session->setIsExpired(0);
+                        $session->regenerateSessionId();
+                        $session->setUser($user->userId);
 
-                    // Audit Log
-                    $this->getLog()->audit('User', $user->userId, 'Login Granted via token', [
-                        'IPAddress' => $this->getApp()->request()->getIp(),
-                        'UserAgent' => $this->getApp()->request()->getUserAgent()
-                    ]);
+                        // Audit Log
+                        $this->getLog()->audit('User', $user->userId, 'Login Granted via token', [
+                            'IPAddress' => $this->getApp()->request()->getIp(),
+                            'UserAgent' => $this->getApp()->request()->getUserAgent()
+                        ]);
 
-                    $this->getApp()->redirectTo('home');
+                        $this->getApp()->redirectTo('home');
 
-                    // We're done here
-                    return;
-
+                        // We're done here
+                        return;
+                    } else {
+                        $this->getLog()->error('Cannot log in as this User type');
+                        $this->getApp()->flashNow('login_message', __('Invalid User Type'));
+                    }
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
                     $this->getApp()->flashNow('login_message', __('This link has expired.'));
@@ -189,36 +193,40 @@ class Login extends Base
                 /* @var User $user */
                 $user = $this->userFactory->getByName($username);
 
-                // Check password
-                $user->checkPassword($password);
+                if ($user->userTypeId != 4) {
+                    // Check password
+                    $user->checkPassword($password);
 
-                // check if 2FA is enabled
-                if ($user->twoFactorTypeId != 0) {
-                    $_SESSION['tfaUsername'] = $user->userName;
-                    $this->app->redirect('tfa');
+                    // check if 2FA is enabled
+                    if ($user->twoFactorTypeId != 0) {
+                        $_SESSION['tfaUsername'] = $user->userName;
+                        $this->app->redirect('tfa');
+                    }
+
+                    $user->touch();
+
+                    $this->getLog()->info('%s user logged in.', $user->userName);
+
+                    // Set the userId on the log object
+                    $this->getLog()->setUserId($user->userId);
+
+                    // Overwrite our stored user with this new object.
+                    $this->getApp()->user = $user;
+
+                    // Switch Session ID's
+                    $session = $this->session;
+                    $session->setIsExpired(0);
+                    $session->regenerateSessionId();
+                    $session->setUser($user->userId);
+
+                    // Audit Log
+                    $this->getLog()->audit('User', $user->userId, 'Login Granted', [
+                        'IPAddress' => $this->getApp()->request()->getIp(),
+                        'UserAgent' => $this->getApp()->request()->getUserAgent()
+                    ]);
+                } else {
+                    throw new AccessDeniedException('Invalid User Type');
                 }
-
-                $user->touch();
-
-                $this->getLog()->info('%s user logged in.', $user->userName);
-
-                // Set the userId on the log object
-                $this->getLog()->setUserId($user->userId);
-
-                // Overwrite our stored user with this new object.
-                $this->getApp()->user = $user;
-
-                // Switch Session ID's
-                $session = $this->session;
-                $session->setIsExpired(0);
-                $session->regenerateSessionId();
-                $session->setUser($user->userId);
-
-                // Audit Log
-                $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                    'IPAddress' => $this->getApp()->request()->getIp(),
-                    'UserAgent' => $this->getApp()->request()->getUserAgent()
-                ]);
             }
             catch (NotFoundException $e) {
                 throw new AccessDeniedException('User not found');
@@ -228,7 +236,11 @@ class Login extends Base
         }
         catch (\Xibo\Exception\AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
-            $this->getApp()->flash('login_message', __('Username or Password incorrect'));
+            if ($user->userTypeId != 4) {
+                $this->getApp()->flash('login_message', __('Username or Password incorrect'));
+            } else {
+                $this->getApp()->flash('login_message', __($e->getMessage()));
+            }
             $this->getApp()->flash('priorRoute', $priorRoute);
         }
         catch (\Xibo\Exception\FormExpiredException $e) {

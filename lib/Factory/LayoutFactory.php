@@ -1399,6 +1399,14 @@ class LayoutFactory extends BaseFactory
             $body .= " AND `layout`.publishedDate IS NOT NULL ";
         }
 
+        $user = $this->getUser();
+
+        if ( ($user->userTypeId == 1 && $user->libraryContentFrom == 2) || $user->userTypeId == 4 ) {
+            $body .= ' AND user.userTypeId = 4 ';
+        } else {
+            $body .= ' AND user.userTypeId <> 4 ';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

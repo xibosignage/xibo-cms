@@ -12,6 +12,9 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add an Application" %}" href="{{ urlFor("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</a></li>
+        {% if currentUser.isSuperAdmin() %}
+            <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a DOOH Application" %}" href="{{ urlFor("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</a></li>
+        {% endif %}
     </ul>
 {% endblock %}
 

@@ -176,6 +176,15 @@ class UserFactory extends BaseFactory
     }
 
     /**
+     * Get Dooh user
+     * @return User[]
+     */
+    public function getDoohUsers()
+    {
+        return $this->query(null, array('disableUserCheck' => 1, 'userTypeId' => 4));
+    }
+
+    /**
      * Get system user
      * @return User
      */
@@ -233,7 +242,8 @@ class UserFactory extends BaseFactory
                 `user`.isPasswordChangeRequired,
                 `user`.twoFactorTypeId,
                 `user`.twoFactorSecret,
-                `user`.twoFactorRecoveryCodes
+                `user`.twoFactorRecoveryCodes,
+                `user`.libraryContentFrom
             ';
 
         $body = '
