@@ -132,6 +132,12 @@ class DataSet implements \JsonSerializable
     public $password;
 
     /**
+     * @SWG\Property(description="Comma separated string of custom HTTP headers")
+     * @var string
+     */
+    public $customHeaders;
+
+    /**
      * @SWG\Property(description="Time in seconds this DataSet should fetch new Datas from the remote host")
      * @var int
      */
@@ -822,8 +828,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `lastClear`, `summarize`, `summarizeField`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :lastClear, :summarize, :summarizeField';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `lastClear`, `summarize`, `summarizeField`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :lastClear, :summarize, :summarizeField';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -831,6 +837,7 @@ class DataSet implements \JsonSerializable
             $params['authentication'] = $this->authentication;
             $params['username'] = $this->username;
             $params['password'] = $this->password;
+            $params['customHeaders'] = $this->customHeaders;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
             $params['runsAfter'] = $this->runsAfter;
@@ -865,7 +872,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -873,6 +880,7 @@ class DataSet implements \JsonSerializable
             $params['authentication'] = $this->authentication;
             $params['username'] = $this->username;
             $params['password'] = $this->password;
+            $params['customHeaders'] = $this->customHeaders;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
             $params['runsAfter'] = $this->runsAfter;
