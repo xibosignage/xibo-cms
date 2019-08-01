@@ -546,6 +546,11 @@ class Library extends Base
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
 
+            // Media expiry
+            $media->mediaExpiresIn = __('Expires %s');
+            $media->mediaExpiryFailed = __('Expired ');
+            $media->mediaNoExpiryDate = __('Never');
+
             if ($this->isApi())
                 break;
 
@@ -861,12 +866,15 @@ class Library extends Base
             }
         }
 
+        $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
+
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $tags
+            'tags' => $tags,
+            'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
         ]);
     }
 
@@ -945,6 +953,15 @@ class Library extends Base
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $media->enableStat = $this->getSanitizer()->getString('enableStat');
+
+        if ($this->getSanitizer()->getDate('expires') != null ) {
+
+            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
+                $media->expires = $this->getSanitizer()->getDate('expires')->format('U');
+            } else {
+                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
+            }
+        }
 
         // Should we update the media in all layouts?
         if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {

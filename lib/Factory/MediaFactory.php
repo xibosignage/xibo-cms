@@ -660,7 +660,7 @@ class MediaFactory extends BaseFactory
             $body .= ' 
                 AND media.expires < :expires 
                 AND IFNULL(media.expires, 0) <> 0 
-                AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
+                AND ( media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`) OR media.type <> \'module\')
             ';
             $params['expires'] = $this->getSanitizer()->getInt('expires', $filterBy);
         }

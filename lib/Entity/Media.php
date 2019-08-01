@@ -668,12 +668,12 @@ class Media implements \JsonSerializable
             }
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($this->expires == 0 && count($widget->mediaIds) <= 0) {
+            if ($this->mediaType != 'module' && count($widget->mediaIds) <= 0) {
                 $widget->setChildObjectDepencencies($this->playlistFactory);
                 $widget->delete();
-            }
-            else
+            } else {
                 $widget->save(['saveWidgetOptions' => false]);
+            }
         }
 
         foreach ($this->displayGroups as $displayGroup) {
@@ -755,7 +755,8 @@ class Media implements \JsonSerializable
                 released = :released,
                 apiRef = :apiRef,
                 modifiedDt = :modifiedDt,
-                `enableStat` = :enableStat
+                `enableStat` = :enableStat,
+                expires = :expires
            WHERE mediaId = :mediaId
         ';
 
@@ -771,7 +772,8 @@ class Media implements \JsonSerializable
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId,
             'modifiedDt' => date('Y-m-d H:i:s'),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'expires' => $this->expires
         ];
 
         $this->getStore()->update($sql, $params);
