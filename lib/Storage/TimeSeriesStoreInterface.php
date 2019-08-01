@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -49,32 +50,15 @@ interface TimeSeriesStoreInterface
      * @param WidgetFactory $widgetFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
+     * @param CampaignFactory $campaignFactory
      */
-    public function setDependencies($logger, $date, $layoutFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
+    public function setDependencies($logger, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
 
     /**
      * Add statistics
      * @param $statData array
      */
     public function addStat($statData);
-
-    /**
-     * Retrieve statistics
-     * @param $fromDt \Jenssegers\Date\Date
-     * @param $toDt \Jenssegers\Date\Date
-     * @param $displayIds array
-     * @param $layoutIds array[mixed]|null
-     * @param $mediaIds array[mixed]|null
-     * @param $type mixed
-     * @param $columns array
-     * @param $tags string
-     * @param $tagsType string
-     * @param $exactTags mixed
-     * @param $start int
-     * @param $length int
-     * @return array[array statData, int count, int totalStats]
-     */
-    public function getStatsReport($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start = null, $length = null);
 
     /**
      * Get the earliest date
@@ -84,12 +68,10 @@ interface TimeSeriesStoreInterface
 
     /**
      * Get statistics
-     * @param $fromDt \Jenssegers\Date\Date
-     * @param $toDt \Jenssegers\Date\Date
-     * @param $displayIds array
+     * @param $filterBy array[mixed]|null
      * @return TimeSeriesResultsInterface
      */
-    public function getStats($fromDt, $toDt, $displayIds = []);
+    public function getStats($filterBy = []);
 
     /**
      * Delete statistics

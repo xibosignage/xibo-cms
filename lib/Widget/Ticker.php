@@ -249,6 +249,13 @@ class Ticker extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="decodeHtml",
+     *      in="formData",
+     *      description="Should we decode the HTML entities in this feed before parsing it?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="backgroundColor",
      *      in="formData",
      *      description="A HEX color to use as the background color of this widget",
@@ -348,6 +355,7 @@ class Ticker extends ModuleWidget
         $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
         $this->setOption('allowedAttributes', $this->getSanitizer()->getString('allowedAttributes'));
         $this->setOption('stripTags', $this->getSanitizer()->getString('stripTags'));
+        $this->setOption('decodeHtml', $this->getSanitizer()->getCheckbox('decodeHtml'));
         $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
         $this->setOption('disableDateSort', $this->getSanitizer()->getCheckbox('disableDateSort'));
         $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
@@ -833,6 +841,10 @@ class Ticker extends ModuleWidget
                             }
                             break;
                     }
+                }
+
+                if ($this->getOption('decodeHtml') == 1) {
+                    $replace = htmlspecialchars_decode($replace);
                 }
 
                 if ($this->getOption('stripTags') != '') {

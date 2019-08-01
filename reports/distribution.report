@@ -1,5 +1,8 @@
 {
   "name": "distributionReport",
   "description": "Chart: Distribution by Layout, Media or Event",
-  "class": "\\Xibo\\Report\\DistributionReport"
+  "class": "\\Xibo\\Report\\DistributionReport",
+  "type": "Chart",
+  "color":"green",
+  "fa_icon": "fa-bar-chart"
 }

@@ -1,0 +1,147 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <i class="fa fa-list"></i>
+            {{ savedReport.saveAs }}
+                <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span>
+            <div><span class="small">From {{ periodStart }} To {{ periodEnd }}</span></div>
+            <div><span class="small">{{ filterInfo }}</span></div>
+            <div class="clearfix"></div>
+        </div>
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+
+                <div class="XiboData">
+                    <table id="stats" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Display ID" %}</th>
+                            <th>{% trans "Display" %}</th>
+                            <th>{% trans "Layout ID" %}</th>
+                            <th>{% trans "Layout" %}</th>
+                            <th>{% trans "Widget ID" %}</th>
+                            <th>{% trans "Media" %}</th>
+                            <th>{% trans "Tag" %}</th>
+                            <th>{% trans "Number of Plays" %}</th>
+                            <th>{% trans "Total Duration" %}</th>
+                            <th>{% trans "Total Duration (s)" %}</th>
+                            <th>{% trans "First Shown" %}</th>
+                            <th>{% trans "Last Shown" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            var outputData = {{ result|raw }}.map(Object);
+
+            // Grid
+            var table = $("#stats").DataTable({
+                "language": dataTablesLanguage,
+                "paging":   false,
+                "ordering": false,
+                "info":     false,
+                "order": [[1, "asc"]],
+                "searching": false,
+                data: outputData,
+                columns: [
+                    { "data": 'type' },
+                    { "data": 'displayId' },
+                    { "data": 'display' },
+                    { "data": 'layoutId' },
+                    { "data": 'layout' },
+                    { "data": 'widgetId' },
+                    { "data": 'media' },
+                    { "data": 'tag' },
+                    { "data": 'numberPlays' },
+                    {
+                        "data": "duration",
+                        "render": function (data, type, row, meta) {
+                            if (type != "display")
+                                return "";
+
+                            let durationData = moment.duration(data, "seconds");
+                            let dataM = '';
+
+                            let months = durationData.months();
+                            if (months > 0) {
+                                durationData.subtract(moment.duration(months,'months'));
+                                dataM += months + '{% trans "month" %} ';
+                            }
+
+                            let days = durationData.days();
+                            durationData.subtract(moment.duration(days,'days'));
+                            dataM += days + '{% trans "day" %} ';
+
+                            let hours = durationData.hours();
+                            durationData.subtract(moment.duration(hours,'hours'));
+                            dataM += hours + '{% trans "hr" %} ';
+
+                            let minutes = durationData.minutes();
+                            durationData.subtract(moment.duration(minutes,'minutes'));
+                            dataM += minutes + '{% trans "min" %} ';
+
+                            let seconds = durationData.seconds();
+                            dataM += seconds + '{% trans "sec" %} ';
+
+                            return  dataM;
+                        }
+                    },
+                    { "data": 'duration' },
+                    { "data": 'minStart' },
+                    { "data": 'maxEnd' },
+                ]
+
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+        });
+    </script>
+{% endblock %}

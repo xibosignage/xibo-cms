@@ -510,6 +510,7 @@ let formHelpers = function() {
         
         // Get extra data
         var extra = extraData;
+        const self = this;
 
         if(extraData === undefined || extraData === null) {
             extra = $(dialog).data().extra;
@@ -644,19 +645,6 @@ let formHelpers = function() {
             }
         };
 
-        var convertLibraryReferences = function(data) {
-            // We need to convert any library references [123] to their full URL counterparts
-            // we leave well alone non-library references.
-            var regex = /\[[0-9]+]/gi;
-
-            data = data.replace(regex, function(match) {
-                var inner = match.replace("]", "").replace("[", "");
-                return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
-            });
-
-            return data;
-        };
-
         // Set CKEDITOR viewer height based on region height ( plus content default margin + border*2: 40px )
         const newHeight = (regionDimensions.height * scale) + (iframeMargin * 2);
         CKEDITOR.config.height = (newHeight > 500) ? 500 : newHeight;
@@ -709,7 +697,7 @@ let formHelpers = function() {
             }
 
             // Handle initial template set up
-            data = convertLibraryReferences(data);
+            data = self.convertLibraryReferences(data);
 
             CKEDITOR.instances[textAreaId].setData(data);
             
@@ -751,9 +739,6 @@ let formHelpers = function() {
 
             });
         }
-
-        // Turn the background colour into a picker
-        $("#backgroundColor").colorpicker();
 
         return false;
     };
@@ -1527,6 +1512,41 @@ let formHelpers = function() {
         };
 
         return buttons;
+    };
+
+    /**
+     *  We need to convert any library references [123] to their full URL counterparts we leave well alone non-library references.
+     * @param {string} - Data string to be processed
+     */
+    this.convertLibraryReferences = function(data) {
+
+        var regex = /\[[0-9]+]/gi;
+
+        data = data.replace(regex, function(match) {
+            var inner = match.replace("]", "").replace("[", "");
+            return CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(":id", inner);
+        });
+
+        return data;
+    };
+
+    /**
+    *  We need to revert all library links to references [123]
+    * @param {string} - Data string to be processed
+    */
+    this.revertLibraryReferences = function(data) {
+
+        String.prototype.replaceAll = function(search, replacement) {
+            var target = this;
+            return target.split(search).join(replacement);
+        };
+
+        var urlSplit = CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.split(':id');
+
+        data = data.replaceAll(urlSplit[0], '[');
+        data = data.replaceAll(urlSplit[1], ']');
+    
+        return data;
     };
 
 };

@@ -104,7 +104,8 @@ interface ReportServiceInterface
      * Run the report
      * @param string $reportName
      * @param string $filterCriteria
+     * @param int $userId
      * @return array
      */
-    public function runReport($reportName, $filterCriteria);
+    public function runReport($reportName, $filterCriteria, $userId);
 }

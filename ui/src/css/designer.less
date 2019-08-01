@@ -263,6 +263,7 @@
     color: white;
     font-weight: bold;
     padding: 10px;
+    position: absolute;
 }
 
 #layout-editor #layout-timeline #timeline-container {
@@ -961,6 +962,25 @@
     background: @region-hover-color !important;
 }
 
+#layout-editor #layout-timeline .designer-region .designer-region-overlay {
+    display: none;
+    z-index: 2;
+    width: calc(100% + 6px);
+    height: calc(100% + 6px);
+    left: -3px;
+    top: -3px;
+    position: relative;
+    .border-radius(4px);
+
+    .info {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        font-weight: bold;
+        font-size: 16px;
+    }
+}
+
 #layout-editor #layout-timeline .designer-widget.selectable:hover {
     background: @widget-hover-color !important;
 }
@@ -997,18 +1017,34 @@
     background: @timeline-widget-to-sort-bg-color !important;
 }
 
-#layout-editor .designer-region.ui-droppable-active {
+#layout-editor #layout-timeline .designer-region.ui-droppable-active {
+    .z-index-set(@designer-z-index-select);
+
+    .designer-region-overlay {
+        .background-stripes(45deg; @region-hover-color; lighten(@region-hover-color, 10%); 10px; 4px);
+        display: block;
+        opacity: 0.75;
+    }
+
+    &.ui-droppable-hover, &:hover {
+        .designer-region-overlay {
+            .background-stripes(45deg; darken(@region-hover-color, 10%); @region-hover-color; 10px; 4px);
+        }
+    }
+}
+
+#layout-editor #layout-navigator .designer-region.ui-droppable-active {
     .z-index-set(@designer-z-index-select);
     .background-stripes(45deg; @region-hover-color; lighten(@region-hover-color, 10%); 10px; 4px);
-}
 
-#layout-editor .designer-region.ui-droppable-active.ui-droppable-hover,
-#layout-editor .designer-region.ui-droppable-active:hover {
-    .background-stripes(45deg; darken(@region-hover-color, 10%); @region-hover-color; 10px; 4px);
-}
+    &.ui-droppable-hover,
+    &:hover {
+        .background-stripes(45deg; darken(@region-hover-color, 10%); @region-hover-color; 10px; 4px);
+    }
 
-#layout-editor .designer-region.ui-droppable-active * {
-    visibility: hidden;
+    * {
+        visibility: hidden;
+    }
 }
 
 #layout-editor  #layout-navigator .layout.ui-droppable-active {

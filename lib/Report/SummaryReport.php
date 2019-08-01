@@ -68,7 +68,6 @@ class SummaryReport implements ReportInterface
      */
     public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
     {
-
         $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
     }
 

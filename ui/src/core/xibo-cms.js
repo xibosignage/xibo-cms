@@ -425,6 +425,21 @@ function XiboInitialise(scope) {
     $(scope + " .tags-with-value").each(function() {
         tagsWithValues($(this).closest("form").attr('id'));
     });
+
+    // If it's a modal, clear some created field on close
+    if($(scope).hasClass('modal')) {
+        $(scope).on("hide.bs.modal", function(e) {
+            if(e.namespace === 'bs.modal') {
+                // Remove datetimepickers
+                $(scope).find('.dateTimePicker .dateTimePickerDate, .dateTimePicker, .dateMonthPicker').datetimepicker('remove');
+
+                // Remove timepickers ( one by one )
+                $.each($(scope).find('.dateTimePicker .dateTimePickerTime, .timePicker'), function(idx, el) {
+                    $(el).timepicker('remove');
+                });
+            }
+        });
+    }
 }
 
 /**
@@ -656,22 +671,28 @@ function dataTableCreatePermissions(data, type) {
 function dataTableCreateTagEvents(e, settings) {
     
     var table = $("#" + e.target.id);
+    var tableId = e.target.id;
     var form = e.data.form;
-    
     // Unbind all 
     table.off('click');
     
     table.on("click", ".btn-tag", function(e) {
-        
-        // Get the form tag input text field
-        var inputText = form.find("#tags").val();
-        
         // See if its the first element, if not add comma
         var tagText = $(this).text();
-        
-        // Add text to form
-        form.find("#tags").tagsinput('add', tagText, { allowDuplicates: false });
-        
+
+        // Get the form tag input text field
+        var inputText = form.find("#tags").val();
+
+        if (tableId == 'playlistLibraryMedia') {
+            inputText = form.find("#filterMediaTag").val();
+            form.find("#filterMediaTag").tagsinput('add', tagText, { allowDuplicates: false });
+        } else if (tableId == 'displayGroupDisplays') {
+            inputText = form.find("#dynamicCriteriaTags").val();
+            form.find("#dynamicCriteriaTags").tagsinput('add', tagText, { allowDuplicates: false });
+        } else {
+            // Add text to form
+            form.find("#tags").tagsinput('add', tagText, {allowDuplicates: false});
+        }
         // Refresh table to apply the new tag search
         table.DataTable().ajax.reload();
     });

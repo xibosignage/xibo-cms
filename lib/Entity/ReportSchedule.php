@@ -48,6 +48,7 @@ class ReportSchedule implements \JsonSerializable
     public $lastRunDt = 0;
     public $previousRunDt;
     public $createdDt;
+    public $isActive = 1;
 
     /**
      * @SWG\Property(description="The username of the User that owns this report schedule")
@@ -116,8 +117,8 @@ class ReportSchedule implements \JsonSerializable
     private function add()
     {
         $this->reportScheduleId = $this->getStore()->insert('
-            INSERT INTO `reportschedule` (`name`, `lastSavedReportId`, `reportName`, `schedule`, `lastRunDt`, `previousRunDt`, `filterCriteria`, `userId`, `createdDt`) VALUES
-                                         (:name,  :lastSavedReportId,  :reportName,  :schedule,  :lastRunDt,  :previousRunDt,  :filterCriteria,  :userId,  :createdDt)
+            INSERT INTO `reportschedule` (`name`, `lastSavedReportId`, `reportName`, `schedule`, `lastRunDt`, `previousRunDt`, `filterCriteria`, `userId`, `isActive`, `createdDt`) VALUES
+                                         (:name,  :lastSavedReportId,  :reportName,  :schedule,  :lastRunDt,  :previousRunDt,  :filterCriteria,  :userId,  :isActive,  :createdDt)
         ', [
             'name' => $this->name,
             'lastSavedReportId' => $this->lastSavedReportId,
@@ -127,6 +128,7 @@ class ReportSchedule implements \JsonSerializable
             'previousRunDt' => $this->previousRunDt,
             'filterCriteria' => $this->filterCriteria,
             'userId' => $this->userId,
+            'isActive' => $this->isActive,
             'createdDt' => $this->createdDt,
         ]);
     }
@@ -146,6 +148,7 @@ class ReportSchedule implements \JsonSerializable
             `previousRunDt` = :previousRunDt,
             `filterCriteria` = :filterCriteria,
             `userId` = :userId,
+            `isActive` = :isActive,
             `createdDt` = :createdDt            
            WHERE reportScheduleId = :reportScheduleId', [
             'reportScheduleId' => $this->reportScheduleId,
@@ -157,6 +160,7 @@ class ReportSchedule implements \JsonSerializable
             'previousRunDt' => $this->previousRunDt,
             'filterCriteria' => $this->filterCriteria,
             'userId' => $this->userId,
+            'isActive' => $this->isActive,
             'createdDt' => $this->createdDt
         ]);
     }

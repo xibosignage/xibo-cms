@@ -82,9 +82,8 @@ class ReportScheduleTask implements TaskInterface
      */
     private function runReportSchedule()
     {
-        $this->runMessage .= '## ' . __('Run report schedule') . PHP_EOL;
 
-        $reportSchedules = $this->reportScheduleFactory->query();
+        $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1]);
 
         // Get list of ReportSchedule
         foreach($reportSchedules as $reportSchedule) {
@@ -107,7 +106,7 @@ class ReportScheduleTask implements TaskInterface
                 $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
                 // Run the report to get results
-                $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria);
+                $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
                 $this->log->debug('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT));
 
                 //  Save the result in a json file

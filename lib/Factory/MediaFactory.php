@@ -682,18 +682,20 @@ class MediaFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
-            //TODO: handle sub-playlists
+            // handles the closure table link with sub-playlists
             $body .= '
                 AND media.mediaId IN (
                     SELECT `lkwidgetmedia`.mediaId
-                      FROM`lkwidgetmedia`
-                        INNER JOIN `widget`
-                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                        INNER JOIN `playlist`
-                        ON `playlist`.playlistId = `widget`.playlistId
-                        INNER JOIN `region`
-                        ON `region`.regionId = `playlist`.regionId
-                    WHERE region.layoutId = :layoutId ';
+                      FROM region
+                        INNER JOIN playlist
+                        ON playlist.regionId = region.regionId
+                        INNER JOIN lkplaylistplaylist
+                        ON lkplaylistplaylist.parentId = playlist.playlistId
+                        INNER JOIN widget
+                        ON widget.playlistId = lkplaylistplaylist.childId
+                        INNER JOIN lkwidgetmedia
+                        ON widget.widgetId = lkwidgetmedia.widgetId
+                     WHERE region.layoutId = :layoutId ';
 
             if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
                 $body .= ' AND `widget`.widgetId = :widgetId ';

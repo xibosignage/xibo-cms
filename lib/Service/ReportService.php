@@ -266,13 +266,16 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function runReport($reportName, $filterCriteria)
+    public function runReport($reportName, $filterCriteria, $userId)
     {
         $this->log->debug('Run the report to get results');
 
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);
+
+        // Set userId
+        $object->setUserId($userId);
 
         $filterCriteria = json_decode($filterCriteria, true);
 

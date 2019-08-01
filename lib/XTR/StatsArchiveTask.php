@@ -102,7 +102,10 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->runMessage .= ' - ' . $this->date->getLocalDate($fromDt) . ' / ' . $this->date->getLocalDate($toDt) . PHP_EOL;
 
-        $resultSet = $this->timeSeriesStore->getStats($fromDt, $toDt);
+        $resultSet = $this->timeSeriesStore->getStats([
+            'fromDt'=> $fromDt,
+            'toDt'=> $toDt,
+        ]);
 
         // Get results as array
         $result = $resultSet->getArray();
@@ -111,12 +114,13 @@ class StatsArchiveTask implements TaskInterface
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
-        fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
         foreach ($result['statData'] as $row) {
 
             // Read the columns
             fputcsv($out, [
+                $this->date->parse($this->sanitizer->string($row['statDate']), 'U')->format('Y-m-d H:i:s'),
                 $this->sanitizer->string($row['type']),
                 $this->date->parse($this->sanitizer->string($row['start']), 'U')->format('Y-m-d H:i:s'),
                 $this->date->parse($this->sanitizer->string($row['end']), 'U')->format('Y-m-d H:i:s'),

@@ -1,0 +1,163 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {{ formTitle }}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#proofofplayScheduleAddForm").submit()
+{% endblock %}
+
+{% block callBack %}proofOfPlayScheduleCallback{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="proofofplayScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.add") }}">
+
+                {{ forms.hidden("hiddenFields", hiddenFields) }}
+                {{ forms.hidden("reportName", reportName) }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
+                {{ forms.input("name", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Filter" %}{% endset %}
+                {% set helpText %}{% trans "Select the report filter you would like to run" %}{% endset %}
+                {% set daily %}{% trans "Daily" %}{% endset %}
+                {% set weekly %}{% trans "Weekly" %}{% endset %}
+                {% set monthly %}{% trans "Monthly" %}{% endset %}
+                {% set yearly %}{% trans "Yearly" %}{% endset %}
+                {% set options = [
+                    { name: "daily", filter: daily },
+                    { name: "weekly", filter: weekly },
+                    { name: "monthly", filter: monthly },
+                    { name: "yearly", filter: yearly },
+                ] %}
+                {{ forms.dropdown("filter", "single", title, "", options, "name", "filter", helpText) }}
+
+                {% set title %}{% trans "Display" %}{% endset %}
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: urlFor("display.search") },
+                    { name: "data-search-term", value: "display" },
+                    { name: "data-search-term-tags", value: "tags" },
+                    { name: "data-default-values", value: displayId },
+                    { name: "data-id-property", value: "displayId" },
+                    { name: "data-text-property", value: "display" }
+                ] %}
+                {{ forms.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: urlFor("layout.search") },
+                    { name: "data-search-term", value: "layout" },
+                    { name: "data-search-term-tags", value: "tags" },
+                    { name: "data-id-property", value: "layoutId" },
+                    { name: "data-text-property", value: "layout" }
+                ] %}
+
+                {% set title %}{% trans "Layout" %}{% endset %}
+                {{ forms.dropdown("layoutId[]", "dropdownmulti", title, "", null, "layoutId", "layout", "", "pagedSelect", "", "l", "", attributes) }}
+
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: urlFor("library.search") },
+                    { name: "data-search-term", value: "media" },
+                    { name: "data-search-term-tags", value: "tags" },
+                    { name: "data-id-property", value: "mediaId" },
+                    { name: "data-text-property", value: "name" }
+                ] %}
+                {% set title %}{% trans "Media" %}{% endset %}
+                {{ forms.dropdown("mediaId[]", "dropdownmulti", title, "", null, "mediaId", "name", "", "pagedSelect", "", "m", "", attributes) }}
+
+                {% set title %}{% trans "Type" %}{% endset %}
+                {% set layout %}{% trans "Layout" %}{% endset %}
+                {% set media %}{% trans "Media" %}{% endset %}
+                {% set widget %}{% trans "Widget" %}{% endset %}
+                {% set event %}{% trans "Event" %}{% endset %}
+                {% set options = [
+                    { typeid: "", type: null },
+                    { typeid: "layout", type: layout },
+                    { typeid: "media", type: media },
+                    { typeid: "widget", type: widget },
+                    { typeid: "event", type: event }
+                ] %}
+                {{ forms.dropdown("type", "single", title, type, options, "typeid", "type") }}
+
+                {% set title %}{% trans "Sort by" %}{% endset %}
+                {% set widgetId %}{% trans "WidgetId" %}{% endset %}
+                {% set type %}{% trans "Type" %}{% endset %}
+                {% set display %}{% trans "Display" %}{% endset %}
+                {% set displayId %}{% trans "Display ID" %}{% endset %}
+                {% set media %}{% trans "Media" %}{% endset %}
+                {% set layout %}{% trans "Layout" %}{% endset %}
+                {% set layoutId %}{% trans "Layout ID" %}{% endset %}
+                {% set tag %}{% trans "Tag" %}{% endset %}
+                {% set options = [
+                    { sortbyid: "widgetId", sortby: widgetId },
+                    { sortbyid: "type", sortby: type },
+                    { sortbyid: "display", sortby: display },
+                    { sortbyid: "displayId", sortby: displayId },
+                    { sortbyid: "media", sortby: media },
+                    { sortbyid: "layout", sortby: layout },
+                    { sortbyid: "layoutId", sortby: layoutId },
+                    { sortbyid: "tag", sortby: tag }
+                ] %}
+                {{ forms.dropdown("sortBy", "single", title, "", options, "sortbyid", "sortby") }}
+
+                {% set title %}{% trans "Tags from" %}{% endset %}
+                {% set dg %}{% trans "Display Group" %}{% endset %}
+                {% set layout %}{% trans "Layout" %}{% endset %}
+                {% set media %}{% trans "Media" %}{% endset %}
+                {% set options = [
+                    { tagsTypeid: "dg", tagsType: dg },
+                    { tagsTypeid: "layout", tagsType: layout },
+                    { tagsTypeid: "media", tagsType: media }
+                ] %}
+                {{ forms.dropdown("tagsType", "single", title, tagsType, options, "tagsTypeid", "tagsType") }}
+
+                {% set title %}{% trans "Tags" %}{% endset %}
+                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, tags, helpText) }}
+
+                {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
+                {{ forms.checkbox("exactTags", title, exactTags) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

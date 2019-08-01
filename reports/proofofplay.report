@@ -1,0 +1,8 @@
+{
+  "name": "proofofplayReport",
+  "description": "Report: Proof of Play",
+  "class": "\\Xibo\\Report\\ProofOfPlay",
+  "type": "Report",
+  "color":"blue",
+  "fa_icon": "fa-th"
+}
