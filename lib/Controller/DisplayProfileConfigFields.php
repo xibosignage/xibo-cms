@@ -156,6 +156,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('updateEndWindow', $this->getSanitizer()->getString('updateEndWindow'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('webViewPluginState')) {
                     $displayProfile->setSetting('webViewPluginState', $this->getSanitizer()->getString('webViewPluginState'), $ownConfig, $config);
                 }

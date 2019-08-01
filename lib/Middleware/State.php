@@ -548,7 +548,8 @@ class State extends Middleware
                 $container->tagFactory,
                 $container->notificationFactory,
                 $container->userGroupFactory,
-                $container->playerVersionFactory
+                $container->playerVersionFactory,
+                $container->dayPartFactory
             );
         });
 
@@ -586,7 +587,8 @@ class State extends Middleware
                 $container->pool,
                 $container->displayProfileFactory,
                 $container->commandFactory,
-                $container->playerVersionFactory
+                $container->playerVersionFactory,
+                $container->dayPartFactory
             );
         });
 
@@ -746,7 +748,8 @@ class State extends Middleware
                 $container->widgetFactory,
                 $container->displayGroupFactory,
                 $container->displayFactory,
-                $container->scheduleFactory
+                $container->scheduleFactory,
+                $container->playerVersionFactory
             );
         });
 
