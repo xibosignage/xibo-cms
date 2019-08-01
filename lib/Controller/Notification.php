@@ -179,7 +179,15 @@ class Notification extends Base
                 $notification->buttons[] = array(
                     'id' => 'notification_button_delete',
                     'url' => $this->urlFor('notification.delete.form', ['id' => $notification->notificationId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor('notification.delete', ['id' => $notification->notificationId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'notification_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete?')],
+                        ['name' => 'rowtitle', 'value' => $notification->subject]
+                    ]
                 );
             }
         }
