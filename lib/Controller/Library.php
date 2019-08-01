@@ -48,6 +48,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Environment;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -1938,5 +1939,127 @@ class Library extends Base
             'isUsed' => $media->isUsed($count)
         ]);
         
+    }
+
+    public function uploadFromURLForm()
+    {
+        $this->getState()->template = 'library-form-uploadFromURL';
+
+        $this->getState()->setData([
+            'uploadSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize())
+        ]);
+    }
+
+    /**
+     * Upload Media via URL
+     *
+     * @SWG\Post(
+     *  path="/library/uploadURL",
+     *  operationId="uploadURL",
+     *  tags={"library"},
+     *  summary="Upload Media from URL",
+     *  description="Upload Media to CMS library from an external URL",
+     *  @SWG\Parameter(
+     *      name="url",
+     *      in="formData",
+     *      description="The URL to the media",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of the media, image, video etc",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @throws InvalidArgumentException
+     * @throws LibraryFullException
+     * @throws NotFoundException
+     * @throws ConfigurationException
+     */
+    public function uploadFromURL()
+    {
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        self::ensureLibraryExists($libraryFolder);
+
+        $url = $this->getSanitizer()->getString('url');
+        $type = $this->getSanitizer()->getString('type');
+
+        if ($url == '') {
+            throw new InvalidArgumentException(__('Please enter URL'), 'url');
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
+
+        }
+
+        $librarySizeLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $librarySizeLimitMB = round(($librarySizeLimit / 1024) / 1024, 2);
+
+        if ($librarySizeLimit > 0 && $this->libraryUsage() > $librarySizeLimit) {
+            throw new InvalidArgumentException(sprintf(__('Your library is full. Library Limit: %s MB'), $librarySizeLimitMB), 'libraryLimit');
+        }
+
+        // remote file size
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+        curl_setopt($ch, CURLOPT_HEADER, TRUE);
+        curl_setopt($ch, CURLOPT_NOBODY, TRUE);
+        $data = curl_exec($ch);
+        $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
+        curl_close($ch);
+
+        if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
+            throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
+        }
+
+        $this->getUser()->isQuotaFullByUser();
+
+        // if the type is not provided (web ui), get the extension from pathinfo and try to find correct module for the media
+        if (!isset($type)) {
+            $ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+            $module = $this->getModuleFactory()->getByExtension($ext);
+            $module = $this->getModuleFactory()->create($module->type);
+        } else {
+            // we have the type in request (API) double check that the module type exists
+            $module = $this->getModuleFactory()->create($type);
+        }
+
+        // get the media name from pathinfo
+        $name = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_FILENAME);
+
+        // add our media to queueDownload and process the downloads
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, [], strtolower($module->getModuleType()), $module->determineDuration());
+        $this->mediaFactory->processDownloads(function($media) {
+            // Success
+            $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+        });
+
+        // get our uploaded media
+        $media = $this->mediaFactory->getByName($name);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Media upload from URL was successful')),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
     }
 }

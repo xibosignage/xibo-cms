@@ -14,6 +14,9 @@ use Xibo\Tests\LocalWebTestCase;
 class LibraryTest extends LocalWebTestCase
 {
     protected $startMedias;
+    protected $mediaName;
+    protected $mediaType;
+    protected $mediaId;
     /**
      * setUp - called before every test automatically
      */
@@ -182,5 +185,44 @@ class LibraryTest extends LocalWebTestCase
     {
         $this->client->delete('/library/tidy');
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+    }
+
+    public function testUploadFromURL()
+    {
+        $this->client->post('/library/uploadURL', [
+            'url' => 'http://localhost/rss/image1.jpg'
+        ]);
+
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertSame('Image', $object->data->mediaType);
+        $this->assertSame('image1', $object->data->name);
+        $this->assertNotEmpty($object->data->mediaId, 'Not successful MediaId is empty');
+
+        $module = $this->getEntityProvider()->get('/module', ['name' => 'Image']);
+        $moduleDefaultDuration = $module[0]['defaultDuration'];
+
+        $this->assertSame($object->data->duration, $moduleDefaultDuration);
+    }
+
+    public function testUploadFromURLWithType()
+    {
+        $this->client->post('/library/uploadURL', [
+            'url' => 'http://localhost/rss/image2.jpg',
+            'type' => 'image'
+        ]);
+
+        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertSame('Image', $object->data->mediaType);
+        $this->assertSame('image2', $object->data->name);
+        $this->assertNotEmpty($object->data->mediaId, 'Not successful MediaId is empty');
+
+        $module = $this->getEntityProvider()->get('/module', ['name' => 'Image']);
+        $moduleDefaultDuration = $module[0]['defaultDuration'];
+
+        $this->assertSame($object->data->duration, $moduleDefaultDuration);
     }
 }

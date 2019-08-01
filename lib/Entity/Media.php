@@ -806,6 +806,10 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
+        if(isset($this->urlDownload) && $this->urlDownload === true) {
+            $this->storedAs = $saveName;
+        }
+
         $this->getLog()->debug('saveFile for "' . $this->name . '" [' . $this->mediaId . '] with storedAs = "'
             . $this->storedAs . '", fileName = "' . $this->fileName . '" to "' . $saveName . '". Always Copy = "'
             . $this->alwaysCopy . '", Cloned = "' . $this->cloned . '"');

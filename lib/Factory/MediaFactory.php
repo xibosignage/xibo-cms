@@ -195,12 +195,28 @@ class MediaFactory extends BaseFactory
      * @param $uri
      * @param $expiry
      * @param array $requestOptions
+     * @param string $fileType
+     * @param null $duration
      * @return Media
      */
-    public function queueDownload($name, $uri, $expiry, $requestOptions = [])
+    public function queueDownload($name, $uri, $expiry, $requestOptions = [], $fileType = null, $duration = null)
     {
-        $media = $this->createModuleFile($name, $uri);
-        $media->isRemote = true;
+        // Determine the save name
+        if ($fileType === null) {
+            $media = $this->createModuleFile($name, $uri);
+            $media->isRemote = true;
+        } else {
+            $media = $this->createEmpty();
+            $media->name = $name;
+            $media->fileName = $uri;
+            $media->ownerId = $this->getUserFactory()->getUser()->userId;
+            $media->mediaType = $fileType;
+            $media->duration = $duration;
+            $media->moduleSystemFile = 0;
+            $media->isRemote = false;
+            $media->urlDownload = true;
+            $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+        }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
 
@@ -732,6 +748,14 @@ class MediaFactory extends BaseFactory
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
+        }
+
+        $user = $this->getUser();
+
+        if ( ($user->userTypeId == 1 && $user->libraryContentFrom == 2) || $user->userTypeId == 4 ) {
+            $body .= ' AND user.userTypeId = 4 ';
+        } else {
+            $body .= ' AND user.userTypeId <> 4 ';
         }
 
         // Sorting?
