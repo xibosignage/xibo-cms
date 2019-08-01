@@ -139,6 +139,7 @@ class ShellCommand extends ModuleWidget
         $windows = $this->getSanitizer()->getString('windowsCommand');
         $linux = $this->getSanitizer()->getString('linuxCommand');
         $webos = $this->getSanitizer()->getString('webosCommand');
+        $tizen = $this->getSanitizer()->getString('tizenCommand');
 
         $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
@@ -147,6 +148,7 @@ class ShellCommand extends ModuleWidget
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
         $this->setOption('webosCommand', urlencode($webos));
+        $this->setOption('tizenCommand', urlencode($tizen));
 
         // Save the widget
         $this->isValid();
@@ -162,14 +164,15 @@ class ShellCommand extends ModuleWidget
         $windows = $this->getOption('windowsCommand');
         $linux = $this->getOption('linuxCommand');
         $webos = $this->getOption('webosCommand');
+        $tizen = $this->getOption('tizenCommand');
 
-        if ($windows == '' && $linux == '') {
+        if ($windows == '' && $linux == '' && $webos == '' && $tizen == '') {
             return __('Stored Command: %s', $this->getOption('commandCode'));
-        }
-        else {
-
+        } else {
             $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
             $preview .= '<p>' . __('Linux Command') . ': ' . urldecode($linux) . '</p>';
+            $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($webos) . '</p>';
+            $preview .= '<p>' . __('Tizen Command') . ': ' . urldecode($tizen) . '</p>';
 
             return $preview;
         }
@@ -178,7 +181,7 @@ class ShellCommand extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == ''))
+        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == '') && $this->getOption('tizenCommand') == '')
             throw new InvalidArgumentException(__('You must enter a command'), 'command');
 
         return self::$STATUS_PLAYER;
