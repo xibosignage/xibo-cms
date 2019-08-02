@@ -674,39 +674,6 @@ class Schedule implements \JsonSerializable
         ]);
     }
 
-    public function getNextReminderDate($now, $reminder = null, $reminder_in_seconds = null) {
-
-        $toDt = $this->dateService->parse($this->recurrenceRange, 'U');
-
-        $scheduleEvents = $this->getEvents($now, $toDt);
-        foreach($scheduleEvents as $event) {
-
-            if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START) {
-                $reminderDt = $event->fromDt - $reminder_in_seconds;
-                if ($reminderDt >= $now->format('U')) {
-                    return $reminderDt;
-                }
-            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_START) {
-                $reminderDt = $event->fromDt + $reminder_in_seconds;
-                if ($reminderDt >= $now->format('U')) {
-                    return $reminderDt;
-                }
-            } elseif ($reminder->option == ScheduleReminder::$OPTION_BEFORE_END) {
-                $reminderDt = $event->toDt - $reminder_in_seconds;
-                if ($reminderDt >= $now->format('U')) {
-                    return $reminderDt;
-                }
-            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_END) {
-                $reminderDt = $event->toDt + $reminder_in_seconds;
-                if ($reminderDt >= $now->format('U')) {
-                    return $reminderDt;
-                }
-            }
-        }
-
-        return null;
-    }
-
     /**
      * Get events between the provided dates.
      * @param Date $fromDt
@@ -1204,6 +1171,95 @@ class Schedule implements \JsonSerializable
         return $dayPart->isCustom === 1;
     }
 
+    /**
+     * Get next reminder date
+     * @param Date $now
+     * @param ScheduleReminder $reminder
+     * @param int $remindSeconds
+     * @param int $recurrenceDetail
+     * @return int|null
+     * @throws XiboException
+     */
+    public function getNextReminderDate($now, $reminder, $remindSeconds, $recurrenceDetail = null) {
+
+        if ($recurrenceDetail == null) {
+            $recurrenceDetail = $this->recurrenceDetail;
+        }
+
+        // Determine toDt so that we don't getEvents which never ends
+        // adding the recurrencedetail at the end (minute/hour/week) to make sure we get at least 2 next events
+        switch ($this->recurrenceType)
+        {
+            case 'Minute':
+                $toDt = $now->copy();
+                $toDt->minute(($toDt->minute + $recurrenceDetail) + $recurrenceDetail);
+                break;
+
+            case 'Hour':
+                $toDt = $now->copy();
+                $toDt->hour(($toDt->hour + $recurrenceDetail) + $recurrenceDetail);
+                break;
+
+            case 'Day':
+                $toDt = $now->copy();
+                $toDt->day(($toDt->day + $recurrenceDetail) + $recurrenceDetail);
+                break;
+
+            case 'Week':
+                $toDt = $now->copy();
+                $toDt->day(($toDt->day + $recurrenceDetail * 7 ) + $recurrenceDetail);
+                break;
+
+            case 'Month':
+                $toDt = $now->copy();
+                $toDt->month(($toDt->month + $recurrenceDetail ) + $recurrenceDetail);
+                break;
+
+            case 'Year':
+                $toDt = $now->copy();
+                $toDt->year(($toDt->year + $recurrenceDetail ) + $recurrenceDetail);
+                break;
+
+            default:
+                throw new InvalidArgumentException('Invalid recurrence type', 'recurrenceType');
+        }
+
+        // toDt is set so that we get two next events from now
+        $scheduleEvents = $this->getEvents($now, $toDt);
+
+        foreach($scheduleEvents as $event) {
+
+            if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START) {
+                $reminderDt = $event->fromDt - $remindSeconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_START) {
+                $reminderDt = $event->fromDt + $remindSeconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_BEFORE_END) {
+                $reminderDt = $event->toDt - $remindSeconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_END) {
+                $reminderDt = $event->toDt + $remindSeconds;
+                if ($reminderDt >= $now->format('U')) {
+                    return $reminderDt;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get event title
+     * @return string
+     * @throws XiboException
+     */
     public function getEventTitle() {
 
         // Setting for whether we show Layouts with out permissions

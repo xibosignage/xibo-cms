@@ -83,11 +83,6 @@ class ScheduleReminderTask implements TaskInterface
      */
     private function runScheduleReminder()
     {
-        $task = $this->getTask();
-        $nextRunDt = $task->nextRunDate();
-        $task->lastRunDt = time();
-        $task->save();
-
         // Get all schedules
         $schedules = $this->scheduleFactory->query();
 
@@ -98,7 +93,8 @@ class ScheduleReminderTask implements TaskInterface
 
             foreach ($reminders as $reminder) {
 
-                if ($reminder->reminderDt <= $nextRunDt) {
+                $now = $this->date->parse();
+                if ($reminder->reminderDt <= $now->format('U')) {
 
                     $schedule->setCampaignFactory($this->campaignFactory);
                     $title = $schedule->getEventTitle();
@@ -161,7 +157,7 @@ class ScheduleReminderTask implements TaskInterface
                     $notification->releaseDt = $reminder->reminderDt;
                     $notification->isEmail = $reminder->isEmail;
                     $notification->isInterrupt = 0;
-                    $notification->userId = $schedule->userId;
+                    $notification->userId = $schedule->userId; // event owner
 
                     // Send
                     $notification->save();
@@ -176,17 +172,17 @@ class ScheduleReminderTask implements TaskInterface
 
                             $reminder->reminderDt = $nextReminderDate;
                             $reminder->save();
-                            $this->appendRunMessage(__('Reminder added. '));
+                            $this->appendRunMessage(__('Reminder added for  '. $title));
                         } else {
 
                             // Remove the reminder
                             $reminder->delete();
-                            $this->appendRunMessage(__('Reminder removed. '));
+                            $this->appendRunMessage(__('Reminder removed for '.$title));
                         }
                     } else {
                         // Remove the reminder for non recurrence event
                         $reminder->delete();
-                        $this->appendRunMessage(__('Reminder removed. '));
+                        $this->appendRunMessage(__('Reminder removed for '.$title));
                     }
 
                 }

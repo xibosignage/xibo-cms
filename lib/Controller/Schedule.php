@@ -1218,9 +1218,12 @@ class Schedule extends Base
             }
 
             $scheduleReminderId = $this->getSanitizer()->getIntArray('scheduleReminderId')[$i];
+
+            $oldReminderDt = null;
             try {
                 $scheduleReminder = $this->scheduleReminderFactory->getById($scheduleReminderId);
                 $scheduleReminder->load();
+                $oldReminderDt = $scheduleReminder->reminderDt;
 
             } catch (NotFoundException $e) {
                 $scheduleReminder = $this->scheduleReminderFactory->createEmpty();
@@ -1233,7 +1236,7 @@ class Schedule extends Base
             $scheduleReminder->option = $this->getSanitizer()->getIntArray('option')[$i];
             $scheduleReminder->isEmail = $this->getSanitizer()->getIntArray('isEmailHidden')[$i];
 
-            $this->saveReminder($schedule, $scheduleReminder);
+            $this->saveReminder($schedule, $scheduleReminder, $oldReminderDt);
         }
 
         // Return
@@ -1377,7 +1380,7 @@ class Schedule extends Base
         ]);
     }
 
-    public function saveReminder($schedule, $scheduleReminder)
+    public function saveReminder($schedule, $scheduleReminder, $oldReminderDt = null)
     {
         switch ($scheduleReminder->type) {
             case ScheduleReminder::$TYPE_MINUTE:
@@ -1418,7 +1421,8 @@ class Schedule extends Base
         if ($schedule->recurrenceType != '') {
             if ($now->format('U') > $scheduleReminder->reminderDt) {
                 // find the next event from now where the remindetDt is greater or equal now
-                $nextReminderDt = $schedule->getNextReminderDate($now, $scheduleReminder, $remindSeconds);
+
+                $nextReminderDt = $schedule->getNextReminderDate($now, $scheduleReminder, $remindSeconds, $schedule->recurrenceDetail);
                 $scheduleReminder->reminderDt = $nextReminderDt;
             }
         }
@@ -1426,6 +1430,12 @@ class Schedule extends Base
         // Save only when reminderDt is not less than the current time
         if($scheduleReminder->reminderDt >= $now->format('U') ) {
             $scheduleReminder->save();
+        } else {
+
+            // If there was a reminder before but the new edit event made the reminder date < now then we remove the old reminder
+            if($oldReminderDt != null) {
+                $scheduleReminder->delete();
+            }
         }
     }
 }
