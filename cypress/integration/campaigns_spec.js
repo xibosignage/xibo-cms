@@ -58,6 +58,9 @@ describe('Campaigns', function () {
         // Create a new campaign and then assign some layouts to it
         cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
 
+            cy.server();
+            cy.route('/campaign?draw=4&*').as('campaignGridLoad');
+
             cy.visit('/campaign/view');
 
             // Filter for the created campaign
@@ -80,8 +83,6 @@ describe('Campaigns', function () {
             cy.get('.bootbox .save-button').click();
 
             // Wait for 4th campaign grid reload
-            cy.server();
-            cy.route('/campaign?draw=4&*').as('campaignGridLoad');
             cy.wait('@campaignGridLoad');
 
             // Should have 2 layouts assigned
@@ -89,7 +90,7 @@ describe('Campaigns', function () {
             cy.get('#campaigns tbody tr:nth-child(1) td:nth-child(2)').contains('2');
 
             // Delete temp layouts
-            deleteTempLayouts(2);
+            //deleteTempLayouts(2);
         });
     });
 
@@ -120,6 +121,10 @@ describe('Campaigns', function () {
 
         // Create a new campaign and then search for it and delete it
         cy.createCampaign('Cypress Test Campaign ' + testRun).then((res) => {
+            
+            cy.server();
+            cy.route('/campaign?draw=2&*').as('campaignGridLoad');
+
             // Delete all test campaigns
             cy.visit('/campaign/view');
 
@@ -129,8 +134,6 @@ describe('Campaigns', function () {
                 .type('Cypress Test Campaign');
 
             // Wait for 2nd campaign grid reload
-            cy.server();
-            cy.route('/campaign?draw=2&*').as('campaignGridLoad');
             cy.wait('@campaignGridLoad');
 
             // Select all
@@ -138,15 +141,12 @@ describe('Campaigns', function () {
             
             // Delete all
             cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-            cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click({force: true});
+            cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click();
 
-            // Save button must be visible
-            cy.get('button.save-button').should('be.visible');
+            cy.get('button.save-button').click();
 
-            cy.get('button.save-button').click({force: true});
-
-            // Save button should be hidden ( delete done )
-            cy.get('button.save-button').should('not.be.visible');
+            // Modal should contain one successful delete at least
+            cy.get('.modal-body').contains(': Success');
         });
     });
 });
