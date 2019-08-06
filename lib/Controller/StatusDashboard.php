@@ -391,7 +391,6 @@ class StatusDashboard extends Base
             $displaysMediaUpToDate = 0;
             $displaysMediaNotUpToDate = 0;
 
-
             foreach ($displays as $display) {
                 $displayIds[] = $display->displayId;
                 $displayNames[] = $display->display;
@@ -401,17 +400,17 @@ class StatusDashboard extends Base
 
             foreach ($displayLoggedIn as $status) {
                 if ($status == 1) {
-                    $displaysOnline ++;
+                    $displaysOnline++;
                 } else {
-                    $displaysOffline ++;
+                    $displaysOffline++;
                 }
             }
 
             foreach ($displayMediaStatus as $statusMedia) {
                 if ($statusMedia == 1) {
-                    $displaysMediaUpToDate ++;
+                    $displaysMediaUpToDate++;
                 } else {
-                    $displaysMediaNotUpToDate ++;
+                    $displaysMediaNotUpToDate++;
                 }
             }
 
@@ -457,7 +456,6 @@ class StatusDashboard extends Base
             }
         }
 
-
         if (isset($labelContent)) {
             if ($labelContent == 'Up to Date') {
                 $inventoryStatus = 1;
@@ -477,7 +475,7 @@ class StatusDashboard extends Base
                           displaygroup.IsDisplaySpecific = 0 ';
 
             if ($status !== null) {
-                $sql .= 'AND display.loggedin = :status';
+                $sql .= ' AND display.loggedIn = :status ';
                 $params = ['status' => $status];
             }
 
@@ -492,7 +490,7 @@ class StatusDashboard extends Base
 
             $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
-            $sql .=' ORDER BY displaygroup.DisplayGroup ';
+            $sql .= ' ORDER BY displaygroup.DisplayGroup ';
 
             $results = $this->store->select($sql, $params);
 
@@ -509,7 +507,6 @@ class StatusDashboard extends Base
             $this->getState()->setData($data);
 
         } catch (Exception $e) {
-
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
         }
