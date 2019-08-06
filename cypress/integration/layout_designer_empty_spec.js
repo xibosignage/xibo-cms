@@ -194,11 +194,13 @@ describe('Layout Designer (Empty)', function() {
 
         it('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
 
+            cy.populateLibraryWithMedia();
+
             // Create and alias for reload Layout
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
             cy.route('/library?assignable=1&draw=2&*').as('mediaLoad');
-
+            
             // Open a new tab
             cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
