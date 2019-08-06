@@ -20,8 +20,11 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Client;
+use Mimey\MimeTypes;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -1973,6 +1976,13 @@ class Library extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="optionalName",
+     *      in="formData",
+     *      description="An optional name for this media file, if left empty it will default to the file name",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -1999,14 +2009,11 @@ class Library extends Base
 
         $url = $this->getSanitizer()->getString('url');
         $type = $this->getSanitizer()->getString('type');
+        $optionalName = $this->getSanitizer()->getString('optionalName');
 
-        if ($url == '') {
-            throw new InvalidArgumentException(__('Please enter URL'), 'url');
-        }
-
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        // Validate the URL
+        if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
-
         }
 
         $librarySizeLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
@@ -2017,13 +2024,7 @@ class Library extends Base
         }
 
         // remote file size
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($ch, CURLOPT_HEADER, TRUE);
-        curl_setopt($ch, CURLOPT_NOBODY, TRUE);
-        $data = curl_exec($ch);
-        $size = curl_getinfo($ch, CURLINFO_CONTENT_LENGTH_DOWNLOAD);
-        curl_close($ch);
+        $size = $this->getRemoteFileSize($url);
 
         if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
             throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
@@ -2031,21 +2032,35 @@ class Library extends Base
 
         $this->getUser()->isQuotaFullByUser();
 
-        // if the type is not provided (web ui), get the extension from pathinfo and try to find correct module for the media
+        // if the type is not provided (web ui), get the extension from pathinfo/Guzzle and try to find correct module for the media
         if (!isset($type)) {
-            $ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+            $ext = $this->getRemoteFileExtension($url);
             $module = $this->getModuleFactory()->getByExtension($ext);
             $module = $this->getModuleFactory()->create($module->type);
         } else {
             // we have the type in request (API) double check that the module type exists
+            // we are also getting extension here from pathinfo / the Content-Type header via Guzzle, depending on the URL we may need it in saveFile in Media entity
+            $ext = $this->getRemoteFileExtension($url);
             $module = $this->getModuleFactory()->create($type);
         }
 
-        // get the media name from pathinfo
-        $name = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_FILENAME);
+        // if we were provided with optional Media name set it here, otherwise get it from pathinfo
+        if (isset($optionalName)) {
+            $name = $optionalName;
+        } else {
+            // get the media name from pathinfo
+            $name = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_FILENAME);
+        }
+
+        // double check that provided Module Type and Extension are valid
+        $moduleCheck = $this->getModuleFactory()->query(null, ['extension' => $ext, 'type' => $module->getModuleType()]);
+
+        if (count($moduleCheck) <= 0) {
+            throw new NotFoundException(sprintf(__('Invalid Module type or extension. Module type %s does not allow for %s extension'), $module->getModuleType(), $ext));
+        }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, [], strtolower($module->getModuleType()), $module->determineDuration());
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext]);
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
@@ -2061,5 +2076,61 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+    }
+
+    /**
+     * @param $url
+     * @return int
+     * @throws InvalidArgumentException
+     */
+    private function getRemoteFileSize($url)
+    {
+        $size = -1;
+        $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+        $head = $guzzle->head($url);
+        $contentLength = $head->getHeader('Content-Length');
+
+        foreach ($contentLength as $value) {
+            $size = $value;
+        }
+
+        if ($size <= 0) {
+            throw new InvalidArgumentException(('Cannot determine the file size'), 'size');
+        }
+
+        return (int)$size;
+    }
+
+    /**
+     * @param $url
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    private function getRemoteFileExtension($url)
+    {
+        // first try to get the extension from pathinfo
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+
+        // failing that get the extension from Content-Type header via Guzzle
+         if ($extension == '') {
+             $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+             $head = $guzzle->head($url);
+             $contentType = $head->getHeader('Content-Type');
+
+             foreach ($contentType as $value) {
+                 $extension = $value;
+             }
+
+             // get the extension corresponding to the mime type
+             $mimeTypes = new MimeTypes();
+             $extension = $mimeTypes->getExtension($extension);
+         }
+
+         // if we could not determine the file extension at this point, throw an error
+        if ($extension == '') {
+            throw new InvalidArgumentException(('Cannot determine the file extension'), 'extension');
+        }
+
+        return $extension;
     }
 }

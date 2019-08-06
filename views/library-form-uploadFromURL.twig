@@ -45,6 +45,10 @@
                 {% set title %}{% trans "URL" %}{% endset %}
                 {% set helpText %}{% trans "Please provide the remote URL to the file" %}{% endset %}
                 {{ forms.input("url", title, "", helpText) }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "Optional Media name, if left empty it will default to the file name" %}{% endset %}
+                {{ forms.input("optionalName", title, "", helpText) }}
             </form>
         </div>
     </div>

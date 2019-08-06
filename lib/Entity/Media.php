@@ -807,6 +807,14 @@ class Media implements \JsonSerializable
         }
 
         if(isset($this->urlDownload) && $this->urlDownload === true) {
+
+            // for upload via URL, handle cases where URL do not have specified extension in url
+            // we either have a long string after lastPeriod or nothing
+
+            if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
+                $saveName = $this->mediaId . '.' . $this->extension;
+            }
+
             $this->storedAs = $saveName;
         }
 

@@ -195,14 +195,12 @@ class MediaFactory extends BaseFactory
      * @param $uri
      * @param $expiry
      * @param array $requestOptions
-     * @param string $fileType
-     * @param null $duration
      * @return Media
      */
-    public function queueDownload($name, $uri, $expiry, $requestOptions = [], $fileType = null, $duration = null)
+    public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
         // Determine the save name
-        if ($fileType === null) {
+        if (!isset($requestOptions['fileType'])) {
             $media = $this->createModuleFile($name, $uri);
             $media->isRemote = true;
         } else {
@@ -210,11 +208,12 @@ class MediaFactory extends BaseFactory
             $media->name = $name;
             $media->fileName = $uri;
             $media->ownerId = $this->getUserFactory()->getUser()->userId;
-            $media->mediaType = $fileType;
-            $media->duration = $duration;
+            $media->mediaType = $requestOptions['fileType'];
+            $media->duration = $requestOptions['duration'];
             $media->moduleSystemFile = 0;
             $media->isRemote = false;
             $media->urlDownload = true;
+            $media->extension = $requestOptions['extension'];
             $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
         }
 
