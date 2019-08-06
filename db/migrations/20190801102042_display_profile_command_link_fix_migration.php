@@ -59,10 +59,11 @@ class DisplayProfileCommandLinkFixMigration extends AbstractMigration
                     }
                 }
             }
-
         }
 
-        // add the primary key
-        $this->execute('ALTER TABLE lkcommanddisplayprofile ADD PRIMARY KEY (commandId, displayProfileId);');
+        // add the primary key for CMS upgrades, fresh CMS Installations will have it correctly added in installation migration.
+        if (!$this->fetchRow('SELECT * FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_NAME = \'lkcommanddisplayprofile\' AND CONSTRAINT_TYPE = \'PRIMARY KEY\' AND CONSTRAINT_SCHEMA = Database();')) {
+            $this->execute('ALTER TABLE lkcommanddisplayprofile ADD PRIMARY KEY (commandId, displayProfileId);');
+        }
     }
 }
