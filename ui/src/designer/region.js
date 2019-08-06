@@ -39,6 +39,8 @@ let Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
         left: data.left
     };
 
+    this.zIndex = data.zIndex;
+
     /**
      * Return the value if the region is selectd or not for the CSS
      */
