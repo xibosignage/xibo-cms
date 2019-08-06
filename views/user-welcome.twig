@@ -465,11 +465,27 @@
                     content: "{% trans "This is the layout designer screen where you will add and configure content. By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
                     template: next_template
                 }, {
+                    element: '#read-only-message',
+                    reflex: true,
+                    placement: "top",
+                    title: "",
+                    content: "{% trans "Open the checkout form by clicking on this message." %}",
+                    template: no_nav_template,
+                    delay:  200
+                }, {
+                    element: '.bootbox button[data-bb-handler="checkout"]',
+                    reflex: true,
+                    placement: "bottom",
+                    title: "",
+                    content: "{% trans "Press <b>Checkout</b>." %}",
+                    template: no_nav_template,
+                    delay: 200
+                }, { // 4
                     title: "",
                     content: "{% trans "This is the <b>Preview</b> window, that shows previews for layouts, regions and widgets." %}",
                     element: "#layout-viewer",
                     placement: "bottom",
-                    delay: 100,
+                    delay: {show: 1500, hide: 100},
                     backdrop: true,
                     template: next_template
                 }, {
@@ -488,16 +504,18 @@
                     delay: 100,
                     backdrop: true,
                     template: next_template
-                }, {
+                }, { 
                     title: "",
                     content: "{% trans "Let's open the Navigator edit mode. Click on the edit button." %}",
                     element: "#layout-navigator #edit-btn",
                     placement: "top",
                     reflex: true,
+                    delay: 500,
                     template: no_nav_template
                 }, {
                     container: '#layout-navigator-edit',
                     orphan: true,
+                    delay: 500,
                     placement: "auto",
                     title: "",
                     content: "{% trans "This is the Navigator edit mode, where you can edit regions and change their properties." %}",
