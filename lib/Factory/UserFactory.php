@@ -243,7 +243,7 @@ class UserFactory extends BaseFactory
                 `user`.twoFactorTypeId,
                 `user`.twoFactorSecret,
                 `user`.twoFactorRecoveryCodes,
-                `user`.libraryContentFrom
+                `user`.showContentFrom
             ';
 
         $body = '

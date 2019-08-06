@@ -261,7 +261,7 @@ class User implements \JsonSerializable
      */
     public $twoFactorRecoveryCodes = [];
 
-    public $libraryContentFrom = 1;
+    public $showContentFrom = 1;
 
 
     /**
@@ -944,7 +944,7 @@ class User implements \JsonSerializable
                   `twoFactorTypeId` = :twoFactorTypeId,
                   `twoFactorSecret` = :twoFactorSecret,
                   `twoFactorRecoveryCodes` = :twoFactorRecoveryCodes,
-                  `libraryContentFrom` = :libraryContentFrom,
+                  `showContentFrom` = :showContentFrom,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -968,7 +968,7 @@ class User implements \JsonSerializable
             'twoFactorTypeId' => $this->twoFactorTypeId,
             'twoFactorSecret' => $this->twoFactorSecret,
             'twoFactorRecoveryCodes' => ($this->twoFactorRecoveryCodes == '') ? null : json_encode($this->twoFactorRecoveryCodes),
-            'libraryContentFrom' => $this->libraryContentFrom,
+            'showContentFrom' => $this->showContentFrom,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,

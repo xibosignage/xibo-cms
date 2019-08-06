@@ -987,11 +987,11 @@ class User extends Base
         $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
 
         if ($user->isSuperAdmin()) {
-            $user->libraryContentFrom = $this->getSanitizer()->getInt('libraryContentFrom');
+            $user->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
         }
 
-        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('libraryContentFrom') == 2) {
-            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'libraryContentFrom');
+        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
         }
 
         if ($recoveryCodes != null || $recoveryCodes != []) {

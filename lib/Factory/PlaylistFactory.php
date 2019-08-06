@@ -375,7 +375,7 @@ class PlaylistFactory extends BaseFactory
 
         $user = $this->getUser();
 
-        if ( ($user->userTypeId == 1 && $user->libraryContentFrom == 2) || $user->userTypeId == 4 ) {
+        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';
         } else {
             $body .= ' AND user.userTypeId <> 4 ';
