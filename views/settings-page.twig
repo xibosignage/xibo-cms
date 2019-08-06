@@ -235,7 +235,7 @@
 
                                 {% if theme.isSettingVisible("MAX_LICENSED_DISPLAYS") %}
                                     {% set title %}{% trans "Number of display slots" %}{% endset %}
-                                    {% set helpText %}{% trans "The maximum number of licensed clients for this server installation. 0 = unlimited" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum number of licensed Players for this server installation. 0 = unlimited" %}{% endset %}
 
                                     {% if theme.isSettingEditable("MAX_LICENSED_DISPLAYS") %}
                                         {{ forms.number("MAX_LICENSED_DISPLAYS", title, theme.getSetting("MAX_LICENSED_DISPLAYS", 0), helpText) }}
@@ -337,7 +337,7 @@
 
                                 {% if theme.isSettingVisible("SCHEDULE_LOOKAHEAD") %}
                                     {% set title %}{% trans "Send Schedule in advance?" %}{% endset %}
-                                    {% set helpText %}{% trans "Should the CMS send future schedule information to clients?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should the CMS send future schedule information to Players?" %}{% endset %}
 
                                     {{ forms.checkbox("SCHEDULE_LOOKAHEAD", title, theme.getSetting("SCHEDULE_LOOKAHEAD", 1), helpText, "", "", not theme.isSettingEditable("SCHEDULE_LOOKAHEAD")) }}
                                 {% endif %}
@@ -479,7 +479,7 @@
 
                                 {% if theme.isSettingVisible("MAINTENANCE_ALERT_TOUT") %}
                                     {% set title %}{% trans "Max Display Timeout" %}{% endset %}
-                                    {% set helpText %}{% trans "How long in minutes after the last time a client connects should we send an alert? Can be overridden on a per client basis." %}{% endset %}
+                                    {% set helpText %}{% trans "How long in minutes after the last time a Player connects should we send an alert? Can be overridden on a per Player basis." %}{% endset %}
 
                                     {% if theme.isSettingEditable("MAINTENANCE_ALERT_TOUT") %}
                                         {{ forms.number("MAINTENANCE_ALERT_TOUT", title, theme.getSetting("MAINTENANCE_ALERT_TOUT", 12), helpText) }}
