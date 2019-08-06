@@ -635,7 +635,7 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
-        $linkCommandDisplayProfile = $this->table('lkcommanddisplayprofile', ['id' => false, ['primary_key' => ['commandId', 'displayProfileId']]]);
+        $linkCommandDisplayProfile = $this->table('lkcommanddisplayprofile', ['id' => false, 'primary_key' => ['commandId', 'displayProfileId']]);
         $linkCommandDisplayProfile->addColumn('commandId', 'integer')
             ->addColumn('displayProfileId', 'integer')
             ->addColumn('commandString', 'string', ['limit' => 1000])
