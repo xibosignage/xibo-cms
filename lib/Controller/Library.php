@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
@@ -2087,11 +2088,18 @@ class Library extends Base
     {
         $size = -1;
         $guzzle = new Client($this->getConfig()->getGuzzleProxy());
-        $head = $guzzle->head($url);
-        $contentLength = $head->getHeader('Content-Length');
 
-        foreach ($contentLength as $value) {
-            $size = $value;
+        try {
+            $head = $guzzle->head($url);
+            $contentLength = $head->getHeader('Content-Length');
+
+            foreach ($contentLength as $value) {
+                $size = $value;
+            }
+
+        } catch (RequestException $e) {
+            $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
+            throw new InvalidArgumentException(('File not found'), 'url');
         }
 
         if ($size <= 0) {

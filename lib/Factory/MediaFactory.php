@@ -775,7 +775,7 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited'
+                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires'
                 ]
             ]);
         }

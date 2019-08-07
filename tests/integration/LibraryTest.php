@@ -189,40 +189,73 @@ class LibraryTest extends LocalWebTestCase
 
     public function testUploadFromURL()
     {
-        $this->client->post('/library/uploadURL', [
-            'url' => 'http://localhost/rss/image1.jpg'
+        shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/rss/image1.jpg ' . PROJECT_ROOT . '/web');
+
+        $response = $this->getEntityProvider()->post('/library/uploadURL?envelope=1', [
+            'url' => 'http://localhost/image1.jpg'
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame('Image', $object->data->mediaType);
-        $this->assertSame('image1', $object->data->name);
-        $this->assertNotEmpty($object->data->mediaId, 'Not successful MediaId is empty');
+        $this->assertSame(201, $response['status'], json_encode($response));
+        $this->assertNotEmpty($response['data'], 'Empty Response');
+        $this->assertSame('image', $response['data']['mediaType']);
+        $this->assertSame(0, $response['data']['expires']);
+        $this->assertSame('image1', $response['data']['name']);
+        $this->assertNotEmpty($response['data']['mediaId'], 'Not successful, MediaId is empty');
 
         $module = $this->getEntityProvider()->get('/module', ['name' => 'Image']);
         $moduleDefaultDuration = $module[0]['defaultDuration'];
 
-        $this->assertSame($object->data->duration, $moduleDefaultDuration);
+        $this->assertSame($response['data']['duration'], $moduleDefaultDuration);
+
+        shell_exec('rm -r ' . PROJECT_ROOT . '/web/image1.jpg');
     }
 
     public function testUploadFromURLWithType()
     {
-        $this->client->post('/library/uploadURL', [
-            'url' => 'http://localhost/rss/image2.jpg',
+        shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/rss/image2.jpg ' . PROJECT_ROOT . '/web');
+
+        $response = $this->getEntityProvider()->post('/library/uploadURL?envelope=1', [
+            'url' =>  'http://localhost/image2.jpg',
             'type' => 'image'
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object);
-        $this->assertSame('Image', $object->data->mediaType);
-        $this->assertSame('image2', $object->data->name);
-        $this->assertNotEmpty($object->data->mediaId, 'Not successful MediaId is empty');
+        $this->assertSame(201, $response['status'], json_encode($response));
+        $this->assertNotEmpty($response['data'], 'Empty Response');
+        $this->assertSame('image', $response['data']['mediaType']);
+        $this->assertSame(0, $response['data']['expires']);
+        $this->assertSame('image2', $response['data']['name']);
+        $this->assertNotEmpty($response['data']['mediaId'], 'Not successful, MediaId is empty');
 
         $module = $this->getEntityProvider()->get('/module', ['name' => 'Image']);
         $moduleDefaultDuration = $module[0]['defaultDuration'];
 
-        $this->assertSame($object->data->duration, $moduleDefaultDuration);
+        $this->assertSame($response['data']['duration'], $moduleDefaultDuration);
+
+        shell_exec('rm -r ' . PROJECT_ROOT . '/web/image2.jpg');
+    }
+
+    public function testUploadFromURLWithTypeAndName()
+    {
+        shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/HLH264.mp4 ' . PROJECT_ROOT . '/web');
+
+        $response = $this->getEntityProvider()->post('/library/uploadURL?envelope=1', [
+            'url' =>  'http://localhost/HLH264.mp4',
+            'type' => 'video',
+            'optionalName' => 'PHPUNIT URL upload video'
+        ]);
+
+        $this->assertSame(201, $response['status'], json_encode($response));
+        $this->assertNotEmpty($response['data'], 'Empty Response');
+        $this->assertSame('video', $response['data']['mediaType']);
+        $this->assertSame(0, $response['data']['expires']);
+        $this->assertSame('PHPUNIT URL upload video', $response['data']['name']);
+        $this->assertNotEmpty($response['data']['mediaId'], 'Not successful, MediaId is empty');
+
+        $module = $this->getEntityProvider()->get('/module', ['name' => 'Video']);
+        $moduleDefaultDuration = $module[0]['defaultDuration'];
+
+        $this->assertSame($response['data']['duration'], $moduleDefaultDuration);
+
+        shell_exec('rm -r ' . PROJECT_ROOT . '/web/HLH264.mp4');
     }
 }
