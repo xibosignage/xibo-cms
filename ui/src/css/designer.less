@@ -760,15 +760,15 @@
         margin: 0;
     }
 
-    form {
+    .row > div > form {
         overflow-x: hidden;
         overflow-y: auto;
         margin-right: -5px;
         padding-right: 5px;
-        height: 40vh;
+        height: 42vh;
         
         .row > div  {
-            padding: 5px;
+            padding: 4px 8px;
         }
         /* width */
         &::-webkit-scrollbar {
@@ -800,6 +800,10 @@
 
     .row > .nav + div form {
         height: 36vh;
+    }
+
+    table td span.label {
+        white-space: inherit;
     }
 }
 
