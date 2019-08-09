@@ -302,7 +302,7 @@ class Soap5 extends Soap4
         $displayElement->setAttribute('checkSchedule', ($cacheSchedule->isHit() ? hash('crc32', $cacheSchedule->get()) : ""));
 
         $cacheRF = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
-        $displayElement->setAttribute('checkRf', ($cacheSchedule->isHit() ? hash('crc32', $cacheRF->get()) : ""));
+        $displayElement->setAttribute('checkRf', ($cacheRF->isHit() ? hash('crc32', $cacheRF->get()) : ""));
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
