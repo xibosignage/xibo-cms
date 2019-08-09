@@ -299,17 +299,17 @@ class Soap5 extends Soap4
 
         // cache checks
         $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
-        $displayElement->setAttribute('checkSchedule', $cacheSchedule->isHit() == true ? "false" : "true");
+        $displayElement->setAttribute('checkSchedule', ($cacheSchedule->isHit() ? hash('crc32', $cacheSchedule->get()) : ""));
 
         $cacheRF = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
-        $displayElement->setAttribute('checkRf', $cacheRF->isHit() == true ? "false" : "true");
+        $displayElement->setAttribute('checkRf', ($cacheRF->isHit() ? hash('crc32', $cacheRF->get()) : ""));
 
         // Log Bandwidth
         $returnXml = $return->saveXML();
         $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($returnXml));
 
         // Audit our return
-        $this->getLog()->debug($returnXml, $display->displayId);
+        $this->getLog()->debug($returnXml);
 
         return $returnXml;
     }
