@@ -1712,3 +1712,25 @@ function makePagedSelect(element, parent) {
         }
     });
 }
+
+// Custom submit for user preferences
+function userPreferencesFormSubmit() {
+    let $form = $("#userPreferences");
+    // Replace all checkboxes with hidden input fields
+    $form.find('input[type="checkbox"]').each(function () {
+        // Get checkbox values
+        let value = $(this).is(':checked') ? 'on' : 'off';
+        let id = $(this).attr('id');
+
+        // Create hidden input
+        $('<input type="hidden">')
+            .attr('id', id)
+            .attr('name', id)
+            .val(value)
+            .appendTo($(this).parent());
+
+        // Disable checkbox so it won't be submitted
+        $(this).attr('disabled', true);
+    });
+    $form.submit();
+}
