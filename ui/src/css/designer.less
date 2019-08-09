@@ -62,8 +62,15 @@
 
 @layout-status-popover-message-bg-color: #e05050;
 
-#toast-container #read-only-message {
-    width: 420px;
+@media (min-width: 768px) {
+    .welcome-screen-modal .modal-dialog {
+        width: 600px;
+    }
+}
+
+#read-only-message {
+    margin: 0 2px 8px 12px;
+    padding: 10px;
 }
 
 // CSS
@@ -166,7 +173,7 @@
 
 #layout-editor #layout-timeline #regions-container {
     overflow: auto;
-    min-height: 20vh;
+    min-height: 18vh;
     max-height: 24vh;
 }
 
@@ -756,17 +763,24 @@
 
 #layout-editor #properties-panel-container .form-container {
 
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: calc(45vh - 22px);
+
+    /*
+        .row > .nav + div form {
+        height: calc(46vh - 72px);
+    }
+    */
+
     .row > div {
         padding: 5px;
         margin: 0;
     }
 
     .row > div > form {
-        overflow-x: hidden;
-        overflow-y: auto;
         margin-right: -5px;
         padding-right: 5px;
-        height: calc(46vh - 40px);
         
         .row > div  {
             padding: 4px 8px;
@@ -797,10 +811,6 @@
             .box-shadow(inset 0 0 5px grey);
         }
 
-    }
-
-    .row > .nav + div form {
-        height: calc(46vh - 72px);
     }
 
     table td span.label {

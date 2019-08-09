@@ -218,8 +218,8 @@ $(document).ready(function() {
 
 
                 if(res.data[0].publishedStatusId != 2) {
-                    // Enter read Only Mode
-                    lD.enterReadOnlyMode();
+                    // Enter welcome screen
+                    lD.welcomeScreen();
                 }
 
                 // Setup helpers
@@ -496,7 +496,7 @@ lD.checkoutLayout = function() {
             lD.readOnlyMode = false;
 
             // Hide read only message
-            $('#toast-container.read-only-message').remove();
+            lD.designerDiv.find('#read-only-message').remove();
             
             // Reload layout
             lD.reloadData(res.data);
@@ -566,32 +566,53 @@ lD.publishLayout = function() {
     });
 };
 
+/**
+ * Read Only Mode
+ */
+lD.welcomeScreen = function() {
+
+    // Turn on read only mode
+    lD.readOnlyMode = true;
+    
+    bootbox.dialog({
+        message: layoutDesignerTrans.welcomeModalMessage,
+        className: "welcome-screen-modal",
+        closeButton: false, 
+        buttons: {
+            checkout: {
+                label: layoutDesignerTrans.checkoutTitle,
+                className: "btn-success",
+                callback: function(res) {
+
+                    $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
+
+                    // Unselect objects ( select layout )
+                    lD.selectObject();
+
+                    lD.checkoutLayout();
+
+                    // Prevent the modal to close ( close only when checkout layout resolves )
+                    return false;
+                }
+            },
+            view: {
+                label: layoutDesignerTrans.viewModeTitle,
+                className: "btn-default",
+                callback: function(res) {
+                    lD.enterReadOnlyMode();
+                }
+            }
+            
+        }
+    }).attr('data-test', 'welcomeModal');
+};
 
 /**
  * Read Only Mode
  */
 lD.enterReadOnlyMode = function() {
-
-    // Calculate position based on the main navbar
-    let toastPosition = 'toast-bottom-center';
-
-    // Show edit mode message
-    let toastObj = toastr.error(
-        layoutDesignerTrans.readOnlyModeMessage,
-        '', 
-        {
-             'timeOut': '0',
-             'extendedTimeOut': '0',
-            'positionClass': toastPosition + ' read-only-message',
-            'closeButton': true,
-            'onclick': function () {
-                lD.showCheckoutScreen();
-            }
-        }
-    );
-
-    // Set id
-    toastObj.attr('id', 'read-only-message');
+    // Add alert message to the layout designer
+    lD.designerDiv.prepend('<div id="read-only-message" class="alert alert-info" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
     
     // Turn on read only mode
     lD.readOnlyMode = true;
@@ -680,10 +701,10 @@ lD.showCheckoutScreen = function() {
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
-                className: "btn-success btn-lg",
+                className: "btn-success",
                 callback: function(res) {
 
-                    $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
+                    $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
 
                     // Unselect objects ( select layout )
                     lD.selectObject();
@@ -709,10 +730,10 @@ lD.showPublishScreen = function() {
         buttons: {
             done: {
                 label: layoutDesignerTrans.publishTitle,
-                className: "btn-primary btn-lg",
+                className: "btn-primary",
                 callback: function(res) {
 
-                    $(res.currentTarget).append('<i class="fa fa-cog fa-spin"></i>');
+                    $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
 
                     lD.publishLayout();
 
