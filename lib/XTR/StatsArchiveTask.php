@@ -107,16 +107,13 @@ class StatsArchiveTask implements TaskInterface
             'toDt'=> $toDt,
         ]);
 
-        // Get results as array
-        $result = $resultSet->getArray();
-
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        foreach ($result['statData'] as $row) {
+        while ($row = $resultSet->getNextRow() ) {
 
             // Read the columns
             fputcsv($out, [
@@ -125,15 +122,15 @@ class StatsArchiveTask implements TaskInterface
                 $this->date->parse($this->sanitizer->string($row['start']), 'U')->format('Y-m-d H:i:s'),
                 $this->date->parse($this->sanitizer->string($row['end']), 'U')->format('Y-m-d H:i:s'),
                 $this->sanitizer->string($row['layout']),
-                $this->sanitizer->string($row['display']),
-                $this->sanitizer->string($row['media']),
-                $this->sanitizer->string($row['tag']),
+                isset($row['display']) ? $this->sanitizer->string($row['display']) :'',
+                isset($row['media']) ? $this->sanitizer->string($row['media']) :'',
+                isset($row['tag']) ? $this->sanitizer->string($row['tag']) :'',
                 $this->sanitizer->string($row['duration']),
                 $this->sanitizer->string($row['count']),
                 $this->sanitizer->int($row['displayId']),
                 $this->sanitizer->int($row['layoutId']),
-                $this->sanitizer->int($row['widgetId']),
-                $this->sanitizer->int($row['mediaId'])
+                isset($row['widgetId']) ? $this->sanitizer->string($row['widgetId']) :'',
+                isset($row['mediaId']) ? $this->sanitizer->string($row['mediaId']) :'',
             ]);
         }
 
