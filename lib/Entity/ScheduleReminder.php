@@ -44,40 +44,46 @@ class ScheduleReminder implements \JsonSerializable
     public $scheduleReminderId;
 
     /**
-     * @SWG\Property(description="The username of the User that owns this schedule reminder")
+     * @SWG\Property(description="The event ID of the schedule reminder")
      * @var int
      */
     public $eventId;
 
     /**
-     * @SWG\Property(description="Report name")
+     * @SWG\Property(description="An integer number to define minutes, hours etc.")
      * @var int
      */
     public $value;
 
     /**
-     * @SWG\Property(description="Saved report generated on")
+     * @SWG\Property(description="The type of the reminder (i.e. Minute, Hour, Day, Week, Month)")
      * @var int
      */
     public $type;
 
     /**
-     * @SWG\Property(description="Report schedule name of the schedule reminder")
+     * @SWG\Property(description="The options regarding sending a reminder for an event. (i.e., Before start, After start, Before end, After end)")
      * @var int
      */
     public $option;
 
     /**
-     * @SWG\Property(description="Report schedule Id of the schedule reminder")
+     * @SWG\Property(description="Email flag for schedule reminder")
      * @var int
      */
     public $isEmail;
 
     /**
-     * @SWG\Property(description="Saved report name As")
+     * @SWG\Property(description="A date that indicates the reminder date")
      * @var int
      */
     public $reminderDt;
+
+    /**
+     * @SWG\Property(description="Last reminder date a reminder was sent")
+     * @var int
+     */
+    public $lastReminderDt = 0;
 
     /**
      * @var ConfigServiceInterface
@@ -110,8 +116,8 @@ class ScheduleReminder implements \JsonSerializable
     private function add()
     {
         $this->scheduleReminderId = $this->getStore()->insert('
-            INSERT INTO `schedulereminder` (`eventId`, `value`, `type`, `option`, `reminderDt`, `isEmail`)
-              VALUES (:eventId, :value, :type, :option, :reminderDt, :isEmail)
+            INSERT INTO `schedulereminder` (`eventId`, `value`, `type`, `option`, `reminderDt`, `isEmail`, `lastReminderDt`)
+              VALUES (:eventId, :value, :type, :option, :reminderDt, :isEmail, :lastReminderDt)
         ', [
             'eventId' => $this->eventId,
             'value' => $this->value,
@@ -119,6 +125,7 @@ class ScheduleReminder implements \JsonSerializable
             'option' => $this->option,
             'reminderDt' => $this->reminderDt,
             'isEmail' => $this->isEmail,
+            'lastReminderDt' => $this->lastReminderDt,
         ]);
     }
 
@@ -134,7 +141,8 @@ class ScheduleReminder implements \JsonSerializable
                 `value` = :value,
                 `option` = :option,
                 `reminderDt` = :reminderDt,
-                `isEmail` = :isEmail
+                `isEmail` = :isEmail,
+                `lastReminderDt` = :lastReminderDt
            WHERE scheduleReminderId = :scheduleReminderId
         ';
 
@@ -145,6 +153,7 @@ class ScheduleReminder implements \JsonSerializable
             'option' => $this->option,
             'reminderDt' => $this->reminderDt,
             'isEmail' => $this->isEmail,
+            'lastReminderDt' => $this->lastReminderDt,
             'scheduleReminderId' => $this->scheduleReminderId,
         ];
 

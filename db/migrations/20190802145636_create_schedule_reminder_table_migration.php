@@ -40,6 +40,7 @@ class CreateScheduleReminderTableMigration extends AbstractMigration
             ->addColumn('type', 'integer')
             ->addColumn('option', 'integer')
             ->addColumn('reminderDt', 'integer')
+            ->addColumn('lastReminderDt', 'integer')
             ->addColumn('isEmail', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addForeignKey('eventId', 'schedule', 'eventId')
             ->save();

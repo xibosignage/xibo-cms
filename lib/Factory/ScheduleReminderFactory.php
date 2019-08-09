@@ -22,6 +22,7 @@
 
 namespace Xibo\Factory;
 
+use Jenssegers\Date\Date;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -76,9 +77,10 @@ class ScheduleReminderFactory extends BaseFactory
      * @param int $value
      * @param int $reminderDt
      * @param int $isEmail
+     * @param int $lastReminderDt
      * @return ScheduleReminder
      */
-    public function create($eventId, $value, $type, $option, $reminderDt, $isEmail)
+    public function create($eventId, $value, $type, $option, $reminderDt, $isEmail, $lastReminderDt)
     {
         $scheduleReminder = $this->createEmpty();
         $scheduleReminder->eventId = $eventId;
@@ -87,25 +89,37 @@ class ScheduleReminderFactory extends BaseFactory
         $scheduleReminder->option = $option;
         $scheduleReminder->reminderDt = $reminderDt;
         $scheduleReminder->isEmail = $isEmail;
+        $scheduleReminder->lastReminderDt = $lastReminderDt;
         $scheduleReminder->save();
 
         return $scheduleReminder;
     }
 
     /**
-     * Get by Version Id
+     * Get by Schedule Reminder Id
      * @param int $scheduleReminderId
      * @return ScheduleReminder
      * @throws NotFoundException
      */
     public function getById($scheduleReminderId)
     {
-        $scheduleReminders = $this->query(null, ['disableUserCheck' => 1, 'scheduleReminderId' => $scheduleReminderId]);
+        $scheduleReminders = $this->query(null, ['scheduleReminderId' => $scheduleReminderId]);
 
         if (count($scheduleReminders) <= 0)
             throw new NotFoundException(__('Cannot find schedule reminder'));
 
         return $scheduleReminders[0];
+    }
+
+    /**
+     * Get due reminders
+     * @param Date $nextRunDate
+     * @return array[ScheduleReminder]
+     * @throws NotFoundException
+     */
+    public function getDueReminders($nextRunDate)
+    {
+        return $this->query(null, ['nextRunDate' => $nextRunDate]);
     }
 
     /**
@@ -129,7 +143,8 @@ class ScheduleReminderFactory extends BaseFactory
                schedulereminder.type,
                schedulereminder.option,
                schedulereminder.reminderDt,
-               schedulereminder.isEmail
+               schedulereminder.isEmail,
+               schedulereminder.lastReminderDt
             ';
 
         $body = ' FROM schedulereminder ';
@@ -166,6 +181,11 @@ class ScheduleReminderFactory extends BaseFactory
             $params['reminderDt'] = $this->getSanitizer()->getInt('reminderDt', $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('nextRunDate', $filterBy) !== null) {
+            $body .= ' AND `schedulereminder`.reminderDt <= :nextRunDate AND `schedulereminder`.reminderDt > `schedulereminder`.lastReminderDt ';
+            $params['nextRunDate'] = $this->getSanitizer()->getInt('nextRunDate', $filterBy);
+        }
+
         if ($this->getSanitizer()->getInt('isEmail', $filterBy) !== null) {
             $body .= ' AND `schedulereminder`.isEmail = :isEmail ';
             $params['isEmail'] = $this->getSanitizer()->getInt('isEmail', $filterBy);
@@ -187,7 +207,7 @@ class ScheduleReminderFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $version = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'value', 'type', 'option', 'reminderDt', 'isEmail'
+                    'value', 'type', 'option', 'reminderDt', 'isEmail', 'lastReminderDt'
                 ]
             ]);
         }

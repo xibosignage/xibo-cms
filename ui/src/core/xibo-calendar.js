@@ -611,7 +611,7 @@ var setupScheduleForm = function(dialog) {
 
 var beforeSubmitScheduleForm = function(form) {
 
-    var checkboxes = form.find('[name="isEmail[]"]');
+    var checkboxes = form.find('[name="reminder_isEmail[]"]');
 
     checkboxes.each(function (index) {
         $(this).parent().find('[type="hidden"]').val($(this).is(":checked") ? "1" : "0");
@@ -764,7 +764,7 @@ var processScheduleFormElements = function(el) {
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
             var $repeats = $("li.repeats");
-            var $reminder = $("li.reminder");
+            var $reminder = $("li.reminders");
 
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);

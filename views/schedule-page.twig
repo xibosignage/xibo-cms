@@ -711,16 +711,16 @@
 
         <script type="text/x-handlebars-template" id="reminderEventTemplate">
             <div class="form-group">
-                <input class="form-control" name="scheduleReminderId[]" type="hidden" value="{{ scheduleReminderId }}" />
+                <input class="form-control" name="reminder_scheduleReminderId[]" type="hidden" value="{{ scheduleReminderId }}" />
 
                 <div class="col-sm-2">
-                    <label for="value[]">
-                        <input class="form-control" name="value[]" type="number" value="{{ value }}" />
+                    <label for="reminder_value[]">
+                        <input class="form-control" name="reminder_value[]" type="number" value="{{ value }}" />
                     </label>
                 </div>
                 <div class="col-sm-3">
-                    <label for="type[]">
-                        <select class="form-control" name="type[]">
+                    <label for="reminder_type[]">
+                        <select class="form-control" name="reminder_type[]">
                             <option value="1" {{#eq type 1}}selected{{/eq}}>{% endraw %}{% trans "Minute" %}{% raw %}</option>
                             <option value="2" {{#eq type 2}}selected{{/eq}}>{% endraw %}{% trans "Hour" %}{% raw %}</option>
                             <option value="3" {{#eq type 3}}selected{{/eq}}>{% endraw %}{% trans "Day" %}{% raw %}</option>
@@ -730,8 +730,8 @@
                     </label>
                 </div>
                 <div class="col-sm-3">
-                    <label for="option[]">
-                        <select class="form-control" name="option[]">
+                    <label for="reminder_option[]">
+                        <select class="form-control" name="reminder_option[]">
                             <option value="1" {{#eq option 1}}selected{{/eq}}>{% endraw %}{% trans "Before schedule starts" %}{% raw %}</option>
                             <option value="2" {{#eq option 2}}selected{{/eq}}>{% endraw %}{% trans "After schedule starts" %}{% raw %}</option>
                             <option value="3" {{#eq option 3}}selected{{/eq}}>{% endraw %}{% trans "Before schedule ends" %}{% raw %}</option>
@@ -740,9 +740,9 @@
                     </label>
                 </div>
                 <div class="col-sm-2">
-                    <label for="isEmail[]">
-                        <input type="checkbox" name="isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
-                        <input type="hidden" name="isEmailHidden[]" />
+                    <label for="reminder_isEmail[]">
+                        <input type="checkbox" name="reminder_isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
+                        <input type="hidden" name="reminder_isEmailHidden[]" />
                     </label>
                 </div>
                 <div class="col-sm-2">

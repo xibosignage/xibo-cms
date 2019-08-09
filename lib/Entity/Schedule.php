@@ -26,11 +26,13 @@ use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -94,6 +96,16 @@ class Schedule implements \JsonSerializable
      * @var DisplayGroup[]
      */
     public $displayGroups = [];
+
+    /**
+     * @SWG\Property(
+     *  description="Schedule Reminders assigned to this Scheduled Event.",
+     *  type="array",
+     *  @SWG\Items(ref="#/definitions/ScheduleReminder")
+     * )
+     * @var ScheduleReminder[]
+     */
+    public $scheduleReminders = [];
 
     /**
      * @SWG\Property(
@@ -258,6 +270,9 @@ class Schedule implements \JsonSerializable
     /** @var  CampaignFactory */
     private $campaignFactory;
 
+    /** @var  ScheduleReminderFactory */
+    private $scheduleReminderFactory;
+
     /**
      * @var UserFactory
      */
@@ -273,8 +288,9 @@ class Schedule implements \JsonSerializable
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DayPartFactory $dayPartFactory
      * @param UserFactory $userFactory
+     * @param ScheduleReminderFactory $scheduleReminderFactory
      */
-    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
@@ -283,6 +299,7 @@ class Schedule implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->userFactory = $userFactory;
+        $this->scheduleReminderFactory = $scheduleReminderFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
     }
@@ -403,13 +420,22 @@ class Schedule implements \JsonSerializable
     /**
      * Load
      */
-    public function load()
+    public function load($options = [])
     {
+        $options = array_merge([
+            'loadScheduleReminders' => false
+        ], $options);
+
         // If we are already loaded, then don't do it again
         if ($this->loaded || $this->eventId == null || $this->eventId == 0)
             return;
 
         $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+
+        // Load schedule reminders
+        if ($options['loadScheduleReminders']) {
+            $this->scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId'=> $this->eventId]);
+        }
 
         // We are fully loaded
         $this->loaded = true;
@@ -578,6 +604,17 @@ class Schedule implements \JsonSerializable
         // Delete display group assignments
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
+
+        $this->getLog()->error($this->scheduleReminderFactory);
+
+        // Delete schedule reminders
+        if ($this->scheduleReminderFactory !== null) {
+            $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $this->eventId]);
+
+            foreach ($scheduleReminders as $reminder) {
+                $reminder->delete();
+            }
+        }
 
         // Delete the event itself
         $this->getStore()->update('DELETE FROM `schedule` WHERE eventId = :eventId', ['eventId' => $this->eventId]);
@@ -1176,48 +1213,47 @@ class Schedule implements \JsonSerializable
      * @param Date $now
      * @param ScheduleReminder $reminder
      * @param int $remindSeconds
-     * @param int $recurrenceDetail
      * @return int|null
+     * @throws NotFoundException
      * @throws XiboException
      */
-    public function getNextReminderDate($now, $reminder, $remindSeconds, $recurrenceDetail = null) {
-
-        if ($recurrenceDetail == null) {
-            $recurrenceDetail = $this->recurrenceDetail;
-        }
+    public function getNextReminderDate($now, $reminder, $remindSeconds) {
 
         // Determine toDt so that we don't getEvents which never ends
         // adding the recurrencedetail at the end (minute/hour/week) to make sure we get at least 2 next events
+        $toDt = $now->copy();
+
+        // For a future event we need to forward now to event fromDt
+        $fromDt = $this->getDate()->parse($this->fromDt, 'U');
+        if ( $fromDt > $toDt ) {
+            $toDt = $fromDt;
+        }
+
         switch ($this->recurrenceType)
         {
+
             case 'Minute':
-                $toDt = $now->copy();
-                $toDt->minute(($toDt->minute + $recurrenceDetail) + $recurrenceDetail);
+                $toDt->minute(($toDt->minute + $this->recurrenceDetail) + $this->recurrenceDetail);
                 break;
 
             case 'Hour':
-                $toDt = $now->copy();
-                $toDt->hour(($toDt->hour + $recurrenceDetail) + $recurrenceDetail);
+                $toDt->hour(($toDt->hour + $this->recurrenceDetail) + $this->recurrenceDetail);
                 break;
 
             case 'Day':
-                $toDt = $now->copy();
-                $toDt->day(($toDt->day + $recurrenceDetail) + $recurrenceDetail);
+                $toDt->day(($toDt->day + $this->recurrenceDetail) + $this->recurrenceDetail);
                 break;
 
             case 'Week':
-                $toDt = $now->copy();
-                $toDt->day(($toDt->day + $recurrenceDetail * 7 ) + $recurrenceDetail);
+                $toDt->day(($toDt->day + $this->recurrenceDetail * 7 ) + $this->recurrenceDetail);
                 break;
 
             case 'Month':
-                $toDt = $now->copy();
-                $toDt->month(($toDt->month + $recurrenceDetail ) + $recurrenceDetail);
+                $toDt->month(($toDt->month + $this->recurrenceDetail ) + $this->recurrenceDetail);
                 break;
 
             case 'Year':
-                $toDt = $now->copy();
-                $toDt->year(($toDt->year + $recurrenceDetail ) + $recurrenceDetail);
+                $toDt->year(($toDt->year + $this->recurrenceDetail ) + $this->recurrenceDetail);
                 break;
 
             default:
@@ -1228,7 +1264,6 @@ class Schedule implements \JsonSerializable
         $scheduleEvents = $this->getEvents($now, $toDt);
 
         foreach($scheduleEvents as $event) {
-
             if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START) {
                 $reminderDt = $event->fromDt - $remindSeconds;
                 if ($reminderDt >= $now->format('U')) {
@@ -1252,7 +1287,8 @@ class Schedule implements \JsonSerializable
             }
         }
 
-        return null;
+        // No next event exist
+        throw new NotFoundException('reminderDt not found as next event does not exist');
     }
 
     /**

@@ -43,7 +43,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
-                <li class="reminder"><a href="#reminder" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
+                <li class="reminders"><a href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
@@ -195,7 +195,7 @@
                         {{ forms.dateTime("recurrenceRange", title, "", helpText, "repeat-control-group", "", "") }}
                     </div>
 
-                    <div class="tab-pane" id="reminder">
+                    <div class="tab-pane" id="reminders">
                         <div id="reminderFields" data-reminders="{{ reminders|json_encode }}"></div>
                     </div>
                 </div>

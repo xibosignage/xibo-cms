@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Entity\ScheduleReminder;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -83,110 +84,145 @@ class ScheduleReminderTask implements TaskInterface
      */
     private function runScheduleReminder()
     {
-        // Get all schedules
-        $schedules = $this->scheduleFactory->query();
 
-        foreach($schedules as $schedule) {
+        $task = $this->getTask();
+        $nextRunDate = $task->nextRunDate();
+        $task->lastRunDt = time();
+        $task->save();
 
-            // Get all reminders of the schedule
-            $reminders = $this->scheduleReminderFactory->query(null, ['eventId' => $schedule->eventId]);
+        // Get those reminders that have reminderDt <= nextRunDate && reminderDt > lastReminderDt
+        // Those which have reminderDt < lastReminderDt exclude them
+        $reminders = $this->scheduleReminderFactory->getDueReminders($nextRunDate);
 
-            foreach ($reminders as $reminder) {
+        foreach($reminders as $reminder) {
+
+            // Get the schedule
+            $schedule = $this->scheduleFactory->getById($reminder->eventId);
+            $schedule->setCampaignFactory($this->campaignFactory);
+            $title = $schedule->getEventTitle();
+
+            switch ($reminder->type) {
+                case ScheduleReminder::$TYPE_MINUTE:
+                    $type = ScheduleReminder::$MINUTE;
+                    $typeText = 'Minute(s)';
+                    break;
+                case ScheduleReminder::$TYPE_HOUR:
+                    $type = ScheduleReminder::$HOUR;
+                    $typeText = 'Hour(s)';
+                    break;
+                case ScheduleReminder::$TYPE_DAY:
+                    $type = ScheduleReminder::$DAY;
+                    $typeText = 'Day(s)';
+                    break;
+                case ScheduleReminder::$TYPE_WEEK:
+                    $type = ScheduleReminder::$WEEK;
+                    $typeText = 'Week(s)';
+                    break;
+                case ScheduleReminder::$TYPE_MONTH:
+                    $type = ScheduleReminder::$MONTH;
+                    $typeText = 'Month(s)';
+                    break;
+                default:
+                    $this->log->error('Unknown schedule reminder type has been provided');
+                    continue;
+            }
+
+            switch ($reminder->option) {
+                case ScheduleReminder::$OPTION_BEFORE_START:
+                    $typeOptionText = 'starting';
+                    break;
+                case ScheduleReminder::$OPTION_AFTER_START:
+                    $typeOptionText = 'started';
+                    break;
+                case ScheduleReminder::$OPTION_BEFORE_END:
+                    $typeOptionText = 'ending';
+                    break;
+                case ScheduleReminder::$OPTION_AFTER_END:
+                    $typeOptionText = 'ended';
+                    break;
+                default:
+                    $this->log->error('Unknown schedule reminder option has been provided');
+                    continue;
+            }
+
+            // Create a notification
+            $subject = sprintf(__("Reminder for %s"), $title);
+            if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START || $reminder->option == ScheduleReminder::$OPTION_BEFORE_END) {
+                $body = sprintf(__("The event (%s) is %s in %d %s"), $title, $typeOptionText, $reminder->value, $typeText);
+            } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_START || $reminder->option == ScheduleReminder::$OPTION_AFTER_END) {
+                $body = sprintf(__("The event (%s) has %s %d %s ago"), $title, $typeOptionText, $reminder->value, $typeText);
+            }
+
+            // Is this schedule a recurring event?
+            if ($schedule->recurrenceType != '') {
 
                 $now = $this->date->parse();
-                if ($reminder->reminderDt <= $now->format('U')) {
+                $remindSeconds = $reminder->value * $type;
 
-                    $schedule->setCampaignFactory($this->campaignFactory);
-                    $title = $schedule->getEventTitle();
-
-                    switch ($reminder->type) {
-                        case ScheduleReminder::$TYPE_MINUTE:
-                            $type = ScheduleReminder::$MINUTE;
-                            $typeText = 'Minute(s)';
-                            break;
-                        case ScheduleReminder::$TYPE_HOUR:
-                            $type = ScheduleReminder::$HOUR;
-                            $typeText = 'Hour(s)';
-                            break;
-                        case ScheduleReminder::$TYPE_DAY:
-                            $type = ScheduleReminder::$DAY;
-                            $typeText = 'Day(s)';
-                            break;
-                        case ScheduleReminder::$TYPE_WEEK:
-                            $type = ScheduleReminder::$WEEK;
-                            $typeText = 'Week(s)';
-                            break;
-                        case ScheduleReminder::$TYPE_MONTH:
-                            $type = ScheduleReminder::$MONTH;
-                            $typeText = 'Month(s)';
-                            break;
-                        default:
-                            throw new \Xibo\Exception\NotFoundException('Unknown type');
-                    }
-
-                    switch ($reminder->option) {
-                        case ScheduleReminder::$OPTION_BEFORE_START:
-                            $typeOptionText = 'starting';
-                            break;
-                        case ScheduleReminder::$OPTION_AFTER_START:
-                            $typeOptionText = 'started';
-                            break;
-                        case ScheduleReminder::$OPTION_BEFORE_END:
-                            $typeOptionText = 'ending';
-                            break;
-                        case ScheduleReminder::$OPTION_AFTER_END:
-                            $typeOptionText = 'ended';
-                            break;
-                        default:
-                            throw new \Xibo\Exception\NotFoundException('Unknown option');
-                    }
-
-                    // Create a notification
-                    $subject = sprintf(__("Reminder for %s"), $title);
-                    if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START || $reminder->option == ScheduleReminder::$OPTION_BEFORE_END) {
-                        $body = sprintf(__("The event (%s) is %s in %d %s"), $title, $typeOptionText, $reminder->value, $typeText);
-                    } elseif ($reminder->option == ScheduleReminder::$OPTION_AFTER_START || $reminder->option == ScheduleReminder::$OPTION_AFTER_END) {
-                        $body = sprintf(__("The event (%s) has %s %d %s ago"), $title, $typeOptionText, $reminder->value, $typeText);
-                    }
-
-                    // Send a notification to the event owner
-                    $notification = $this->notificationFactory->createEmpty();
-                    $notification->subject = $subject;
-                    $notification->body = $body;
-                    $notification->createdDt = $this->date->getLocalDate(null, 'U');
-                    $notification->releaseDt = $reminder->reminderDt;
-                    $notification->isEmail = $reminder->isEmail;
-                    $notification->isInterrupt = 0;
-                    $notification->userId = $schedule->userId; // event owner
-
-                    // Send
-                    $notification->save();
-
-                    // Is this schedule a recurring event?
-                    if ($schedule->recurrenceType != '') {
-
-                        $now = $this->date->parse();
-                        $remindSeconds = $reminder->value * $type;
-                        $nextReminderDate = $schedule->getNextReminderDate($now, $reminder, $remindSeconds);
-                        if($nextReminderDate != null) {
-
-                            $reminder->reminderDt = $nextReminderDate;
-                            $reminder->save();
-                            $this->appendRunMessage(__('Reminder added for  '. $title));
-                        } else {
-
-                            // Remove the reminder
-                            $reminder->delete();
-                            $this->appendRunMessage(__('Reminder removed for '.$title));
-                        }
-                    } else {
-                        // Remove the reminder for non recurrence event
-                        $reminder->delete();
-                        $this->appendRunMessage(__('Reminder removed for '.$title));
-                    }
-
+                // Get the next reminder date
+                $nextReminderDate = 0;
+                try {
+                    $nextReminderDate = $schedule->getNextReminderDate($now, $reminder, $remindSeconds);
+                } catch (NotFoundException $error) {
+                    $this->log->error('No next occurrence of reminderDt found.');
                 }
+
+                $i = 0;
+                $lastReminderDate = $reminder->reminderDt;
+                while ($nextReminderDate != 0 && $nextReminderDate < $nextRunDate) {
+
+                    // Keep the last reminder date
+                    $lastReminderDate = $nextReminderDate;
+
+                    $now = $this->date->parse($nextReminderDate + 1, 'U');
+                    try {
+                        $nextReminderDate = $schedule->getNextReminderDate($now, $reminder, $remindSeconds);
+                    } catch (NotFoundException $error) {
+                        $nextReminderDate = 0;
+                        $this->log->debug('No next occurrence of reminderDt found. ReminderDt set to 0.');
+                    }
+
+                    $this->createNotification($subject, $body, $reminder, $schedule, $lastReminderDate);
+
+                    $i++;
+                }
+
+                if ($i == 0) {
+                    // Create only 1 notification as the next event is outside the nextRunDt
+                    $this->createNotification($subject, $body, $reminder, $schedule, $reminder->reminderDt);
+                    $this->log->debug('Create only 1 notification as the next event is outside the nextRunDt.');
+
+                } else {
+                    $this->log->debug($i. ' notifications created.');
+                }
+
+                $reminder->reminderDt = $nextReminderDate;
+                $reminder->lastReminderDt = $lastReminderDate;
+                $reminder->save();
+
+            } else { // one-off event
+
+                $this->createNotification($subject, $body, $reminder, $schedule, $reminder->reminderDt);
+
+                // Current reminderDt will be used as lastReminderDt
+                $reminder->lastReminderDt = $reminder->reminderDt;
             }
+
+            // Save
+            $reminder->save();
         }
+    }
+
+    function createNotification($subject, $body, $reminder, $schedule, $releaseDt = null) {
+
+        $notification = $this->notificationFactory->createEmpty();
+        $notification->subject = $subject;
+        $notification->body = $body;
+        $notification->createdDt = $this->date->getLocalDate(null, 'U');
+        $notification->releaseDt = $releaseDt;
+        $notification->isEmail = $reminder->isEmail;
+        $notification->isInterrupt = 0;
+        $notification->userId = $schedule->userId; // event owner
+        $notification->save();
     }
 }
