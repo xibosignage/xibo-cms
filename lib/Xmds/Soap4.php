@@ -511,14 +511,6 @@ class Soap4 extends Soap
             }
         }
 
-        // Status Dialog Logging
-        $statusDialog = $this->getSanitizer()->getString('statusDialog', $status);
-
-        if (!empty($statusDialog)) {
-            // Log
-            $this->getLog()->alert($statusDialog);
-        }
-
         // Current Layout
         $currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $status);
 
