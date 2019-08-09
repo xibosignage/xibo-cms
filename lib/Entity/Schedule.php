@@ -605,7 +605,6 @@ class Schedule implements \JsonSerializable
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
 
-        $this->getLog()->error($this->scheduleReminderFactory);
 
         // Delete schedule reminders
         if ($this->scheduleReminderFactory !== null) {
