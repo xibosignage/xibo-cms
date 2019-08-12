@@ -138,7 +138,7 @@
 
                     {% if theme.getSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1 %}
                         {% set title = "Notify current layout"|trans %}
-                        {% set helpText = "When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
+                        {% set helpText = "When enabled the Player will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
                         {{ forms.checkbox("sendCurrentLayoutAsStatusUpdate", title, displayProfile.getSetting("sendCurrentLayoutAsStatusUpdate"), helpText) }}
                     {% endif %}
 
