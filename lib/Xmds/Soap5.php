@@ -9,6 +9,7 @@
 namespace Xibo\Xmds;
 
 
+use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Exception\NotFoundException;
@@ -299,9 +300,11 @@ class Soap5 extends Soap4
 
         // cache checks
         $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
+        $cacheSchedule->setInvalidationMethod(Invalidation::OLD);
         $displayElement->setAttribute('checkSchedule', ($cacheSchedule->isHit() ? crc32($cacheSchedule->get()) : ""));
 
         $cacheRF = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
+        $cacheRF->setInvalidationMethod(Invalidation::OLD);
         $displayElement->setAttribute('checkRf', ($cacheRF->isHit() ? crc32($cacheRF->get()) : ""));
 
         // Log Bandwidth
