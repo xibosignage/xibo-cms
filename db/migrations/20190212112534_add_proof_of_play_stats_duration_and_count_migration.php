@@ -30,10 +30,6 @@ class AddProofOfPlayStatsDurationAndCountMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $table = $this->table('stat');
-        $table
-            ->addColumn('duration', 'integer', ['null' => true])
-            ->addColumn('count', 'integer', ['null' => true])
-            ->save();
+        //
     }
 }
