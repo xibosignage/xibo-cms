@@ -280,8 +280,14 @@ class DisplayFactory extends BaseFactory
             if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) == -1) {
                 $body .= ' AND IFNULL(displayProfileId, 0) = 0 ';
             } else {
-                $body .= ' AND `display`.displayProfileId = :displayProfileId ';
+                $displayProfileSelected = $this->displayProfileFactory->getById($this->getSanitizer()->getInt('displayProfileId', $filterBy));
+                $displayProfileDefault = $this->displayProfileFactory->getDefaultByType($displayProfileSelected->type);
+
+                $body .= ' AND (`display`.displayProfileId = :displayProfileId OR (IFNULL(displayProfileId, :displayProfileDefaultId) = :displayProfileId AND display.client_type = :displayProfileType ) ) ';
+
                 $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+                $params['displayProfileDefaultId'] = $displayProfileDefault->displayProfileId;
+                $params['displayProfileType'] = $displayProfileDefault->type;
             }
         }
 

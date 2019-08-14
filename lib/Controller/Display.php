@@ -535,11 +535,21 @@ class Display extends Base
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $display->getCurrentLayoutId($this->pool);
 
-            if ($this->isApi())
+            if ($this->isApi()) {
                 continue;
+            }
+
+            // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
+            $displayProfileName = '';
+            try {
+                $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
+                $displayProfileName = $defaultDisplayProfile->name;
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
+            }
 
             // Add in the display profile information
-            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? __('Default') : $displayProfiles[$display->displayProfileId];
+            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
 
             $display->includeProperty('buttons');
 
