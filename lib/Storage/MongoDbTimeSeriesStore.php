@@ -458,8 +458,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             'limit' => 1000,
         ], $options);
 
-        // https://stackoverflow.com/questions/10014181/how-to-delete-documents-by-query-efficiently-in-mongo
-        // we will delete 1000 records per transaction (while loop)
+        // we dont use $options['limit'] anymore.
+        // we delete all the records at once based on filter criteria (no-limit approach)
 
         $toDt = new UTCDateTime($maxage->format('U')*1000);
 
