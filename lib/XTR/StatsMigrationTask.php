@@ -239,6 +239,8 @@ class StatsMigrationTask implements TaskInterface
 
             foreach ($stats->fetchAll() as $stat) {
 
+                $watermark = $stat['statId'];
+
                 $columns = 'type, statDate, scheduleId, displayId, campaignId, layoutId, mediaId, widgetId, `start`, `end`, tag, duration, `count`';
                 $values = ':type, :statDate, :scheduleId, :displayId, :campaignId, :layoutId, :mediaId, :widgetId, :start, :end, :tag, :duration, :count';
 
@@ -274,8 +276,6 @@ class StatsMigrationTask implements TaskInterface
                     'duration' => isset($stat['duration']) ? (int) $stat['duration'] : $this->date->parse($stat['end'])->format('U') - $this->date->parse($stat['start'])->format('U'),
                     'count' => isset($stat['count']) ? (int) $stat['count'] : 1,
                 ];
-
-                $watermark = $stat['statId'];
 
                 // Do the insert
                 $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
@@ -452,6 +452,7 @@ class StatsMigrationTask implements TaskInterface
 
             foreach ($stats->fetchAll() as $stat) {
 
+                $watermark = $stat['statId'];
                 $entry = [];
 
                 // Get campaignId
@@ -490,8 +491,6 @@ class StatsMigrationTask implements TaskInterface
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
                 $statDataMongo[] = $entry;
-
-                $watermark = $stat['statId'];
             }
 
             // Do the insert in chunk
@@ -504,8 +503,11 @@ class StatsMigrationTask implements TaskInterface
 
             // Give Mongo time to recover
             if ($watermark > 0) {
-                $this->appendRunMessage('- '. $count. ' rows migrated.');
-                $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
+
+                if(count($statDataMongo) > 0 ) { // TODO FIX this
+                    $this->appendRunMessage('- '. $count. ' rows migrated.');
+                    $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
+                }
                 sleep($options['pauseBetweenLoops']);
             }
         }
