@@ -293,16 +293,18 @@ class LayoutFactory extends BaseFactory
      * Get by CampaignId
      * @param int $campaignId
      * @param bool $permissionsCheck Should we check permissions?
+     * @param bool $includeDrafts Should we include draft Layouts in the results?
      * @return Layout[]
      * @throws NotFoundException
      */
-    public function getByCampaignId($campaignId, $permissionsCheck = true)
+    public function getByCampaignId($campaignId, $permissionsCheck = true, $includeDrafts = false)
     {
         return $this->query(['displayOrder'], [
             'campaignId' => $campaignId,
             'excludeTemplates' => -1,
             'retired' => -1,
-            'disableUserCheck' => $permissionsCheck ? 0 : 1
+            'disableUserCheck' => $permissionsCheck ? 0 : 1,
+            'showDrafts' => $includeDrafts ? 1 : 0
         ]);
     }
 
