@@ -455,8 +455,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $options = array_merge([
             'maxAttempts' => 10,
             'statsDeleteSleep' => 3,
-            'limit' => 10000,
+            'limit' => 1000,
         ], $options);
+
+        // https://stackoverflow.com/questions/10014181/how-to-delete-documents-by-query-efficiently-in-mongo
+        // we will delete 1000 records per transaction (while loop)
 
         $toDt = $maxage->format(DATE_ISO8601);
 
@@ -467,7 +470,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $count = 0;
         while ($rows > 0) {
-
             $i++;
 
             if ($fromDt != null) {
@@ -519,13 +521,19 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ];
             }
 
-            try{
-                $findResult = $collection->aggregate(
+            try {
+                $findResult = $collection->aggregate([
+                    $match,
                     [
-                        $match
+                        '$project' => [
+                            '_id' => 1
+                        ]
                     ],
-                    ['limit' => $options['limit']]
-                )->toArray();
+                    [
+                        '$limit' => $options['limit']
+                    ]
+
+                ])->toArray();
 
             } catch (\MongoDB\Exception\RuntimeException $e) {
                 $this->log->error($e->getMessage());
@@ -534,16 +542,18 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $idsArray = array_map(function ($res) { return $res['_id']; }, $findResult);
 
             try {
-                $deleteResult = $collection->deleteMany([
-                    '_id' => ['$in' => $idsArray]
-                ]);
+                    $deleteResult = $collection->deleteMany([
+                        '_id' => ['$in' => $idsArray]
+                    ]);
+
+                    $rows = $deleteResult->getDeletedCount();
 
             } catch (\MongoDB\Exception\RuntimeException $e) {
                 $this->log->error($e->getMessage());
                 throw new \RuntimeException('Stats cannot be deleted.');
             }
 
-            $rows = $deleteResult->getDeletedCount();
+
             $count += $rows;
 
             // Give MongoDB time to recover
