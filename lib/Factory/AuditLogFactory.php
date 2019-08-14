@@ -93,8 +93,31 @@ class AuditLogFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('entityId', $filterBy) !== null) {
-            $body .= ' AND `auditlog`.entityId = :entityId ';
+            $body .= ' AND ( `auditlog`.entityId = :entityId  ' ;
             $params['entityId'] = $this->getSanitizer()->getInt('entityId', $filterBy);
+
+            $entity = $this->getSanitizer()->getString('entity', $filterBy);
+
+            // if we were supplied with both layout entity and entityId (layoutId), expand the results
+            // we want to get all actions issued on this layout from the moment it was added
+            if (stripos('layout', $entity ) !== false) {
+
+                $sqlLayoutHistory = 'SELECT campaign.campaignId FROM layout INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND layout.layoutId = :layoutId';
+                $paramsLayoutHistory = ['layoutId' => $params['entityId']];
+                $results = $this->getStore()->select($sqlLayoutHistory, $paramsLayoutHistory);
+                foreach ($results as $row) {
+                    $campaignId = $row['campaignId'];
+                }
+
+                if (isset($campaignId)) {
+                    $body .= ' OR auditlog.entityId IN (SELECT layouthistory.layoutId FROM layouthistory WHERE layouthistory.campaignId = :campaignId) ) ';
+                    $params['campaignId'] = $campaignId;
+                } else {
+                    $body .= ' ) ';
+                }
+            } else {
+                $body .= ' ) ';
+            }
         }
 
         $order = '';

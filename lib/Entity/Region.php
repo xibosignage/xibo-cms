@@ -376,6 +376,17 @@ class Region implements \JsonSerializable
         if ($options['validate'])
             $this->validate();
 
+        if ($options['audit']) {
+            // get the layout specific campaignId
+            $campaignId = 0;
+            $sql = 'SELECT campaign.campaignId FROM layout INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND layout.layoutId = :layoutId';
+            $params = ['layoutId' => $this->layoutId];
+            $results = $this->store->select($sql, $params);
+            foreach ($results as $row) {
+                $campaignId = $row['campaignId'];
+            }
+        }
+
         if ($this->regionId == null || $this->regionId == 0) {
             // We are adding
             $this->add();
@@ -391,8 +402,9 @@ class Region implements \JsonSerializable
             $this->regionPlaylist->save();
 
             // Audit
-            if ($options['audit'])
-                $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'details' => (string)$this]);
+            if ($options['audit']) {
+                $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'campaignId' => $campaignId, 'details' => (string)$this]);
+            }
         }
         else if ($this->hash != $this->hash()) {
             $this->update();
@@ -400,8 +412,11 @@ class Region implements \JsonSerializable
             $this->regionPlaylist->name = $this->name;
             $this->regionPlaylist->save();
 
-            if ($options['audit'])
-                $this->audit($this->regionId, 'Saved');
+            if ($options['audit']) {
+                $change = $this->getChangedProperties();
+                $change['campaignId'][] = $campaignId;
+                $this->audit($this->regionId, 'Saved', $change);
+            }
         }
 
         if ($options['saveRegionOptions']) {
@@ -450,7 +465,7 @@ class Region implements \JsonSerializable
         // Delete this region
         $this->getStore()->update('DELETE FROM `region` WHERE regionId = :regionId', array('regionId' => $this->regionId));
 
-        $this->getLog()->audit('Region', $this->regionId, 'Region Deleted', ['regionId' => $this->regionId]);
+        $this->getLog()->audit('Region', $this->regionId, 'Region Deleted', ['regionId' => $this->regionId, 'layoutId' => $this->layoutId]);
 
         // Notify Layout
         if ($options['notify'])
