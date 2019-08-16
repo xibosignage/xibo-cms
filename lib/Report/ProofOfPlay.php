@@ -1029,8 +1029,14 @@ class ProofOfPlay implements ReportInterface
             $query = [
                 $match,
                 $project,
-                $group,
-                ['$sort' => $order],
+                $group, [
+                    '$facet' => [
+                        'totalData' => [
+                            ['$sort' => $order],
+                        ]
+                    ]
+                ],
+
             ];
 
         } else {
@@ -1038,54 +1044,60 @@ class ProofOfPlay implements ReportInterface
                 $match,
                 $project,
                 $group,
-                ['$skip' => $start],
-                ['$limit' => $length],
-                ['$sort' => $order],
+                [
+                    '$facet' => [
+                        'totalData' => [
+
+                            ['$skip' => $start],
+                            ['$limit' => $length],
+                            ['$sort' => $order],
+                        ],
+                        'totalCount' => [
+                            [
+                                '$group' => [
+                                    '_id' => [],
+                                    'totals' => ['$sum' => '$total'],
+
+                                ],
+                            ]
+                        ]
+                    ]
+                ],
             ];
         }
 
         $result = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->table, 'query' => $query]);
 
-        // Get total for pagination
         $totalStats = 0;
-        $totalStatQuery = [
-            $match,
-            $project,
-            $group,
-            [
-                '$group' => [
-                    '_id' => [],
-                    'totals' => ['$sum' => '$total'],
-
-                ],
-            ]
-        ];
-
-        $resTotal = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->table, 'query' => $totalStatQuery]);
-        if (count($resTotal) > 0) {
-            $totalStats = $resTotal[0]['totals'];
-        }
-
         $rows = [];
+        if (count($result) > 0) {
+            // Get total for pagination
+            $totalCount = $result[0]['totalCount'];
 
-        foreach ($result as $row) {
-            $entry = [];
+            if (count($totalCount) > 0) {
+                $totalStats = $totalCount[0]['totals'];
+            }
 
-            $entry['type'] = $row['_id']['type'];
-            $entry['displayId'] = $row['_id']['displayId'];
-            $entry['display'] = isset($row['_id']['display']) ? $row['_id']['display']: 'No display';
-            $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
-            $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
-            $entry['numberPlays'] = $row['numberPlays'];
-            $entry['duration'] = $row['duration'];
-            $entry['minStart'] = $row['minStart']->toDateTime()->format('U');
-            $entry['maxEnd'] = $row['maxEnd']->toDateTime()->format('U');
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
-            $entry['mediaId'] = $row['mediaId'];
-            $entry['tag'] = $row['eventName'];
+            // Grid results
+            foreach ($result[0]['totalData'] as $row) {
+                $entry = [];
 
-            $rows[] = $entry;
+                $entry['type'] = $row['_id']['type'];
+                $entry['displayId'] = $row['_id']['displayId'];
+                $entry['display'] = isset($row['_id']['display']) ? $row['_id']['display']: 'No display';
+                $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
+                $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
+                $entry['numberPlays'] = $row['numberPlays'];
+                $entry['duration'] = $row['duration'];
+                $entry['minStart'] = $row['minStart']->toDateTime()->format('U');
+                $entry['maxEnd'] = $row['maxEnd']->toDateTime()->format('U');
+                $entry['layoutId'] = $row['layoutId'];
+                $entry['widgetId'] = $row['widgetId'];
+                $entry['mediaId'] = $row['mediaId'];
+                $entry['tag'] = $row['eventName'];
+
+                $rows[] = $entry;
+            }
         }
 
         return [
