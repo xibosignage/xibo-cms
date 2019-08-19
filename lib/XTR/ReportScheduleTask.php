@@ -89,12 +89,57 @@ class ReportScheduleTask implements TaskInterface
         foreach($reportSchedules as $reportSchedule) {
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
-
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+            $now = time();
 
-            if ($nextRunDt <= time())
-            {
+            if ($nextRunDt <= $now) {
 
+                $fourHoursInSeconds = 4 * 3600;
+                $threeHoursInSeconds = 3 * 3600;
+                $twoHoursInSeconds = 2 * 3600;
+                $oneHourInSeconds = 1 * 3600;
+
+                $diffFromNow = $now - $nextRunDt;
+
+                if ($diffFromNow < $oneHourInSeconds) {
+
+                    $range = 70;
+                    $random = rand(1, $range);
+
+                    // don't run the report
+                    if ($random > ceil($range * 0.25) ) { // 1/4 of $range
+                        continue;
+                    }
+                } elseif ($diffFromNow < $twoHoursInSeconds) {
+
+                    $range = 50;
+                    $random = rand(1, $range);
+
+                    // don't run the report
+                    if ($random > ceil($range * 0.33) ) { // 1/3 of $range 0.33
+                        continue;
+                    }
+                } elseif ($diffFromNow < $threeHoursInSeconds) {
+
+                    $range = 30;
+                    $random = rand(1, $range);
+
+                    // don't run the report
+                    if ($random > ceil($range * 0.5) ) { // 1/2 of $range 0.5
+                        continue;
+                    }
+                } elseif ($diffFromNow < $fourHoursInSeconds) {
+
+                    $range = 10;
+                    $random = rand(1, $range);
+
+                    // don't run the report
+                    if ($random > ceil($range * 0.7) ) { // 0.7 of $range
+                        continue;
+                    }
+                }
+
+                // execute the report
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
