@@ -101,40 +101,30 @@ class ReportScheduleTask implements TaskInterface
 
                 $diffFromNow = $now - $nextRunDt;
 
+                $range = 100;
+                $random = rand(1, $range);
                 if ($diffFromNow < $oneHourInSeconds) {
 
-                    $range = 70;
-                    $random = rand(1, $range);
-
                     // don't run the report
-                    if ($random > ceil($range * 0.25) ) { // 1/4 of $range
+                    if ($random <= 70 ) { // 70% chance of skipping
                         continue;
                     }
                 } elseif ($diffFromNow < $twoHoursInSeconds) {
 
-                    $range = 50;
-                    $random = rand(1, $range);
-
                     // don't run the report
-                    if ($random > ceil($range * 0.33) ) { // 1/3 of $range 0.33
+                    if ($random <= 50 ) { // 50% chance of skipping
                         continue;
                     }
                 } elseif ($diffFromNow < $threeHoursInSeconds) {
 
-                    $range = 30;
-                    $random = rand(1, $range);
-
                     // don't run the report
-                    if ($random > ceil($range * 0.5) ) { // 1/2 of $range 0.5
+                    if ($random <= 40 ) { // 40% chance of skipping
                         continue;
                     }
                 } elseif ($diffFromNow < $fourHoursInSeconds) {
 
-                    $range = 10;
-                    $random = rand(1, $range);
-
                     // don't run the report
-                    if ($random > ceil($range * 0.7) ) { // 0.7 of $range
+                    if ($random <= 25 ) { // 25% chance of skipping
                         continue;
                     }
                 }
