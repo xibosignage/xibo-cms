@@ -260,6 +260,9 @@
     padding: 3px;
     margin: 4px 0;
     .border-radius(4px);
+    display: box;
+    display: -webkit-box;
+    display: -moz-box;
 }
 
 #layout-editor #layout-timeline .designer-region:not(.editable) {
@@ -288,7 +291,6 @@
 
 #layout-editor #layout-timeline .designer-widget {
     position: relative;
-    float: left;
     background: @timeline-widget-bg-color;
     color: @timeline-widget-fg-color;
     font-weight: bold;
@@ -390,7 +392,6 @@
     .set-transparent-color(background; @timeline-ghost-bg-color; 60%);
     color: @timeline-ghost-fg-color;
     font-weight: bold;
-    float: left;
     display: flex;
     height: 100%;
 }
@@ -419,7 +420,6 @@
     color: @timeline-ghost-fg-color;
     padding: 0 4px;
     font-weight: bold;
-    float: left;
     .set-transparent-color(background; #f3f3f3; 50%);
     height: 80%;
     margin-top: 0.25em;
