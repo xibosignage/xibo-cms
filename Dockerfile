@@ -47,6 +47,7 @@ RUN npm install webpack -g
 # Copy package.json and the webpack config file
 COPY webpack.config.js .
 COPY package.json .
+COPY package-lock.json .
 
 # Install npm packages
 RUN npm install --only=prod
