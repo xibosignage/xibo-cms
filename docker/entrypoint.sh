@@ -233,6 +233,9 @@ sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FI
 sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
 sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
 
+# Configure Apache TimeOut
+sed -i "s/Timeout .*$/Timeout $CMS_APACHE_TIMEOUT/" /etc/apache2/conf.d/default.conf
+
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]
 then
