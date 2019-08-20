@@ -416,7 +416,7 @@ var backGroundFormSetup = function(dialog) {
     // Bind to the background add button click
     $("#backgroundAddButton").on("click", function(e) {
         $(this).addClass("disabled");
-        layoutEditBackgroundButtonClicked(e, dialog)
+        layoutEditBackgroundButtonClicked(e, dialog);
     });
 
     // Bind to the layout form submit
@@ -471,6 +471,7 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
 
     // Hide the original button
     dialog.find('.background-image-add-button').hide();
+    dialog.find('#layoutEditFormBackgroundUpload').show();
 
     // Append a background upload button to the dialog footer.
     var template = Handlebars.compile($("#layout-background-image-upload-template").html());
@@ -563,8 +564,16 @@ function layoutEditBackgroundButtonClicked(e, dialog) {
         }
     });
 
-    // Click the button
-    dialog.find('.fileinput-button').click();
+    // Click the browse button
+    dialog.find('.fileinput-button input').click();
+
+    // Click the close button
+    dialog.find('.fileinput-close-button').click(function() {
+        dialog.find('.background-image-add-button').show();
+        dialog.find('#backgroundAddButton').removeClass('disabled');
+        dialog.find('#layoutEditFormBackgroundUpload').hide();
+        footer.html('');
+    });
 }
 
 function permissionsFormOpen(dialog) {

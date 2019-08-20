@@ -582,9 +582,10 @@ class Widget implements \JsonSerializable
     /**
      * Calculates the duration of this widget according to some rules
      * @param $module ModuleWidget
+     * @param bool $import
      * @return $this
      */
-    public function calculateDuration($module)
+    public function calculateDuration($module, $import = false)
     {
         $this->getLog()->debug('Calculating Duration - existing value is ' . $this->calculatedDuration);
 
@@ -599,11 +600,20 @@ class Widget implements \JsonSerializable
         } else if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
             // If we have paging involved then work out the page count.
             $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
-            if ($itemsPerPage > 0)
+            if ($itemsPerPage > 0) {
                 $numItems = ceil($numItems / $itemsPerPage);
+            }
+
+            // For import
+            // in the layout.xml file the duration associated with widget that has all the above parameters
+            // will already be the calculatedDuration ie $this->duration from xml is duration * (numItems/itemsPerPage)
+            // since we preserve the itemsPerPage, durationIsPerItem and numItems on imported layout, we need to ensure we set the duration correctly
+            // this will ensure that both, the widget duration and calculatedDuration will be correct on import.
+            if ($import) {
+                $this->duration = (($this->useDuration == 1) ? $this->duration / $numItems : $module->getModule()->defaultDuration);
+            }
 
             $this->calculatedDuration = (($this->useDuration == 1) ? $this->duration : $module->getModule()->defaultDuration) * $numItems;
-
         } else if ($this->useDuration == 1) {
             // Widget duration is as specified
             $this->calculatedDuration = $this->duration;

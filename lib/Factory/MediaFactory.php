@@ -601,7 +601,7 @@ class MediaFactory extends BaseFactory
                     $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
                     $heading = $this->getSanitizer()->getString('heading', $dataSet);
 
-                    $body .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+                    $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
                 }
 
                 $body .= ') ';

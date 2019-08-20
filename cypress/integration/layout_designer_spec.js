@@ -95,22 +95,19 @@ describe('Layout Designer (Empty)', function() {
             cy.get('.popover.tour').should('not.be.visible');
         });
 
-        it('shows the read only message', function() {
+        it('shows the welcome modal', function() {
 
-            // Check if the checkout modal appears
-            cy.get('#read-only-message').should('exist');
+            // Check if the welcome modal appears
+            cy.get('.welcome-screen-modal').should('exist');
         });
 
         it('goes into draft mode when checked out', function() {
 
-            // Click message to open the modal
-            cy.get('#read-only-message').click();
+            // Click button to checkout
+            cy.get('.welcome-screen-modal button[data-bb-handler="checkout"]').click();
 
-            // Get the done button from the checkout modal
-            cy.get('[data-test="checkoutModal"] button[data-bb-handler="checkout"]').click();
-
-            // Check if the checkout message disappeared
-            cy.get('#read-only-message').should('not.be.visible');
+            // Check if the checkout modal disappeared
+            cy.get('.welcome-screen-modal').should('not.exist');
         });
     });
 
@@ -342,12 +339,17 @@ describe('Layout Designer (Empty)', function() {
                 // Create and alias for reload Layout
                 cy.server();
                 cy.route('/layout?layoutId=*').as('reloadLayout');
+                cy.route('/library?assignable=*').as('mediaLoad');
 
                 // Open a new tab
                 cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
 
+                cy.wait('@mediaLoad');
+
                 // Select and search image items
                 cy.get('.toolbar-pane.active .input-type').select('image');
+
+                cy.wait('@mediaLoad');
 
                 // Get a table row, select it and add to the region
                 cy.get('#layout-editor-toolbar .media-table .assignItem:first').click().then(() => {
