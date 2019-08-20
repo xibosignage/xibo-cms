@@ -8,7 +8,7 @@ describe('Playlist Editor', function() {
 
         cy.server();
         cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
-        cy.route('/playlist?draw=*').as('playlistGridSearch');
+        cy.route('/playlist?draw=2&*').as('playlistGridSearch');
 
         // Reload playlist table page
         cy.visit('/playlist/view');
@@ -19,6 +19,7 @@ describe('Playlist Editor', function() {
         // Filter for the created playlist
         cy.get('#Filter input[name="name"]').type(playlistName);
 
+        // Wait for the filter to make effect ( debounce + grid reload )
         cy.wait('@playlistGridSearch');
 
         cy.get('[href="/playlist/form/timeline/' + playlistId + '"]').click({force: true});
@@ -125,12 +126,17 @@ describe('Playlist Editor', function() {
             // Create and alias for reload playlist
             cy.server();
             cy.route('/playlist?playlistId=*').as('reloadPlaylist');
+            cy.route('/library?assignable=*').as('mediaLoad');
 
             // Open a new tab
             cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
 
+            cy.wait('@mediaLoad');
+
             // Select and search image items
             cy.get('.toolbar-pane.active .input-type').select('image');
+
+            cy.wait('@mediaLoad');
 
             // Get a table row, select it and add to the dropzone
             cy.get('#playlist-editor-toolbar .media-table .assignItem:first').click().then(() => {

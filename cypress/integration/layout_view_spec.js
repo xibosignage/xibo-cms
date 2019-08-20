@@ -1,12 +1,12 @@
 describe('Layout View', function() {
 
     beforeEach(function() {
-        cy.login().then(function() {
-            cy.visit('/layout/view');
-        });
+        cy.login();
     });
 
     it('should create a new layout and be redirected to the layout designer', function() {
+
+        cy.visit('/layout/view');
 
         cy.get('a[href="/layout/form/add"]').click();
 
@@ -25,9 +25,8 @@ describe('Layout View', function() {
     });
 
     it('searches and delete existing layout', function() {
-        
+
         cy.server();
-        cy.route('/layout?draw=*').as('layoutGridLoad');
         cy.route('DELETE', '/layout/*').as('deleteLayout');
 
         // Create random name
@@ -36,12 +35,14 @@ describe('Layout View', function() {
         // Create a new layout and go to the layout's designer page, then load toolbar prefs
         cy.createLayout(uuid).as('testLayoutId').then((res) => {
 
+            cy.visit('/layout/view');
+
             // Filter for the created layout
             cy.get('#Filter input[name="layout"]')
                 .type(uuid);
 
-            // Wait for the filter to make effect
-            cy.wait(2000);
+            // Wait for the layout grid reload
+            cy.route('/layout?draw=2&*').as('layoutGridLoad');
             cy.wait('@layoutGridLoad');
 
             // Click on the first row element to open the designer

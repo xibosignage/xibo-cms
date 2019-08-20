@@ -23,9 +23,9 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
-Cypress.Commands.add('login', function() {
+Cypress.Commands.add('login', function(callbackRoute = '/login') {
 
-    cy.visit('/').then(function() {
+    cy.visit(callbackRoute).then(function() {
         cy.request({
             method: 'POST',
             url: '/login',

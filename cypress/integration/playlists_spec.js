@@ -19,13 +19,17 @@ describe('Playlists Admin', function () {
         cy.contains('Add Playlist').click();
 
         cy.get('.modal input#name')
-            .type('Cypress Test Playlist' + testRun);
+            .type('Cypress Test Playlist ' + testRun);
 
         cy.get('.modal .save-button').click();
 
-        cy.contains('Cypress Test Playlist');
+        // Filter for the created playlist
+        cy.get('#Filter input[name="name"]')
+            .type('Cypress Test Playlist ' + testRun);
 
-        cy.contains('Showing 1 to');
+        // Should have the added playlist
+        cy.get('#playlists tbody tr').should('have.length', 1);
+        cy.get('#playlists tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Playlist ' + testRun);
     });
 
 });
