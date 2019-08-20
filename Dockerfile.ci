@@ -108,6 +108,7 @@ ENV CMS_DEV_MODE=true \
     MYSQL_USER=root \
     MYSQL_PASSWORD=root \
     MYSQL_DATABASE=cms \
+    MYSQL_BACKUP_ENABLED=false \
     CMS_SERVER_NAME=localhost \
     CMS_ALIAS=none \
     CMS_PHP_SESSION_GC_MAXLIFETIME=1440 \

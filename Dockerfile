@@ -114,6 +114,7 @@ ENV CMS_DEV_MODE=false \
     MYSQL_PASSWORD=none \
     MYSQL_PORT=3306 \
     MYSQL_DATABASE=cms \
+    MYSQL_BACKUP_ENABLED=true \
     CMS_SMTP_SERVER=smtp.gmail.com:587 \
     CMS_SMTP_USERNAME=none \
     CMS_SMTP_PASSWORD=none \
