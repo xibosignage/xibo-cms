@@ -39,6 +39,10 @@
         let padHelpText = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
         let repeatTitle = "{% trans "Repeat" %}";
         let repeatHelpText = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
+        let noPlaylistsMessage = "{% trans "No playlists" %}";
+        let noPlaylistsHelpMessage = "{% trans "You don't have available playlists" %}";
+        let noPlaylistsAccessHelpMessage = "{% trans "You don't have access to this playlist" %}";
+        let playlistIdMessage = "{% trans "Playlist Id " %}";
         
         // Order Clause
         var subPlaylistFields = $(".sub-playlists", $form);
@@ -53,6 +57,7 @@
             // Add a template row
             subPlaylistFields.append(subPlaylistFormTemplate({
                 playlists: $form.data().extra.playlists,
+                isPlaylistEditable: true,
                 title: "1",
                 subPlaylistId: "",
                 subPlaylistIdSpots: "",
@@ -64,16 +69,30 @@
                 repeatTitle: repeatTitle,
                 fillHelpText: fillHelpText,
                 padHelpText: padHelpText,
-                repeatHelpText: repeatHelpText
+                repeatHelpText: repeatHelpText,
+                noPlaylistsMessage: noPlaylistsMessage,
+                noPlaylistsHelpMessage: noPlaylistsHelpMessage,
+                noPlaylistsAccessHelpMessage: noPlaylistsAccessHelpMessage,
+                playlistIdMessage: playlistIdMessage
             }));
         } else {
             // For each of the existing codes, create form components
             var i = 0;
             $.each($form.data().extra.subPlaylistId, function(index, field) {
                 i++;
+
+                let isPlaylistEditable = false;
+
+                $.each($form.data().extra.playlists, function(index2, field2) {
+                    if(field == field2.playlistId) {
+                        isPlaylistEditable = true;
+                    }
+                });
+
                 subPlaylistFields.append(subPlaylistFormTemplate({
                     playlists: $form.data().extra.playlists,
                     title: i,
+                    isPlaylistEditable: isPlaylistEditable,
                     subPlaylistId: field,
                     subPlaylistIdSpots: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpots,
                     subPlaylistIdSpotLength: ($form.data().extra.subPlaylistOptions[field] === undefined) ? "" : $form.data().extra.subPlaylistOptions[field].subPlaylistIdSpotLength,
@@ -84,7 +103,11 @@
                     repeatTitle: repeatTitle,
                     fillHelpText: fillHelpText,
                     padHelpText: padHelpText,
-                    repeatHelpText: repeatHelpText
+                    repeatHelpText: repeatHelpText,
+                    noPlaylistsMessage: noPlaylistsMessage,
+                    noPlaylistsHelpMessage: noPlaylistsHelpMessage,
+                    noPlaylistsAccessHelpMessage: noPlaylistsAccessHelpMessage,
+                    playlistIdMessage: playlistIdMessage
                 }));
             });
         }
@@ -97,6 +120,7 @@
             if($(this).find("i").hasClass("fa-plus")) {
                 subPlaylistFields.append(subPlaylistFormTemplate({
                     playlists: $form.data().extra.playlists,
+                    isPlaylistEditable: true,
                     title: subPlaylistFields.find('.form-group').length + 1,
                     subPlaylistId: "",
                     subPlaylistIdSpots: "",
@@ -108,7 +132,11 @@
                     repeatTitle: repeatTitle,
                     fillHelpText: fillHelpText,
                     padHelpText: padHelpText,
-                    repeatHelpText: repeatHelpText
+                    repeatHelpText: repeatHelpText,
+                    noPlaylistsMessage: noPlaylistsMessage,
+                    noPlaylistsHelpMessage: noPlaylistsHelpMessage,
+                    noPlaylistsAccessHelpMessage: noPlaylistsAccessHelpMessage,
+                    playlistIdMessage: playlistIdMessage
                 }));
 
                 subplaylist_init_row($form);

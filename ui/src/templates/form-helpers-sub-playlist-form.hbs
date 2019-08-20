@@ -1,12 +1,28 @@
 <div class="form-group">
     <label class="col-sm-1 control-label" for="subPlaylistId[]">{{ title }}</label>
     <div class="col-sm-3">
-        <select class="form-control subPlaylistSelect" name="subPlaylistId[]">
-            <option value=""></option>
-            {{#each playlists}}
-                <option value="{{ playlistId }}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
-            {{/each}}
-        </select>
+
+        {{#if playlists}}
+            {{#if isPlaylistEditable}}
+                <select class="form-control subPlaylistSelect" name="subPlaylistId[]">
+                    <option value=""></option>
+                    {{#each playlists}}
+                        <option value="{{ playlistId }}" {{#eq playlistId ../subPlaylistId}}selected{{/eq}}>{{ name }}</option>
+                    {{/each}}
+                </select>
+            {{else}}
+                <input type="hidden" value="{{ subPlaylistId }}" name="subPlaylistId[]">
+                <span title="{{noPlaylistsAccessHelpMessage}}"><i class="fa fa-lock"></i>&nbsp;{{playlistIdMessage}}{{subPlaylistId}}</span>
+            {{/if}}
+        {{else}}
+            <input type="hidden" value="{{ subPlaylistId }}" name="subPlaylistId[]">
+            
+            {{#if subPlaylistId}}
+                <span title="{{noPlaylistsAccessHelpMessage}}"><i class="fa fa-lock"></i>&nbsp;{{playlistIdMessage}}{{subPlaylistId}}</span>
+            {{else}}
+                <span title="{{noPlaylistsHelpMessage}}"><i class="fa fa-close"></i>&nbsp;{{noPlaylistsMessage}}</span>
+            {{/if}}
+        {{/if}}
     </div>
     <div class="col-sm-2">
         <label for="subPlaylistIdSpots[]">
