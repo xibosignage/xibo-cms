@@ -188,8 +188,8 @@ class StatsMigrationTask implements TaskInterface
             $count = 0;
             $stats = $this->store->getConnection()->prepare('
                 SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
-                  FROM stat_archive 
-                 WHERE statId < :watermark 
+                  FROM stat_archive
+                 WHERE statId < :watermark
                 ORDER BY statId DESC LIMIT :limit
             ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
@@ -237,6 +237,7 @@ class StatsMigrationTask implements TaskInterface
 
             $temp = [];
 
+            $statIgnoredCount = 0;
             foreach ($stats->fetchAll() as $stat) {
 
                 $watermark = $stat['statId'];
@@ -255,6 +256,8 @@ class StatsMigrationTask implements TaskInterface
                             $temp[$stat['layoutId']] = $campaignId;
                         }
                     } catch (NotFoundException $error) {
+                        $statIgnoredCount+= 1;
+                        $count = $count - 1;
                         continue;
                     }
                 } else {
@@ -281,6 +284,10 @@ class StatsMigrationTask implements TaskInterface
                 $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
                 $this->store->commitIfNecessary();
 
+            }
+
+            if ($statIgnoredCount > 0) {
+                $this->appendRunMessage($statIgnoredCount. ' stat(s) were ignored while migrating');
             }
 
             // Give SQL time to recover
@@ -413,8 +420,8 @@ class StatsMigrationTask implements TaskInterface
             $count = 0;
             $stats = $this->store->getConnection()->prepare('
                 SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
-                  FROM stat_archive 
-                 WHERE statId < :watermark 
+                  FROM stat_archive
+                 WHERE statId < :watermark
                 ORDER BY statId DESC LIMIT :limit
             ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
@@ -450,6 +457,7 @@ class StatsMigrationTask implements TaskInterface
             $statDataMongo = [];
             $temp = [];
 
+            $statIgnoredCount = 0;
             foreach ($stats->fetchAll() as $stat) {
 
                 $watermark = $stat['statId'];
@@ -466,6 +474,8 @@ class StatsMigrationTask implements TaskInterface
                             $temp[$stat['layoutId']] = $campaignId;
                         }
                     } catch (NotFoundException $error) {
+                        $statIgnoredCount+= 1;
+                        $count = $count - 1;
                         continue;
                     }
                 } else {
@@ -493,6 +503,10 @@ class StatsMigrationTask implements TaskInterface
                 $statDataMongo[] = $entry;
             }
 
+            if ($statIgnoredCount > 0) {
+                $this->appendRunMessage($statIgnoredCount. ' stat(s) were ignored while migrating');
+            }
+
             // Do the insert in chunk
             if (count($statDataMongo) > 0) {
                 $this->timeSeriesStore->addStat($statDataMongo);
@@ -504,7 +518,7 @@ class StatsMigrationTask implements TaskInterface
             // Give Mongo time to recover
             if ($watermark > 0) {
 
-                if(count($statDataMongo) > 0 ) { // TODO FIX this
+                if(count($statDataMongo) > 0 ) {
                     $this->appendRunMessage('- '. $count. ' rows migrated.');
                     $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 }
