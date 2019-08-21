@@ -163,7 +163,7 @@
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
-                                <span id="applyWarning" class="text-warning" style="display:none">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
                             </div>
                         </form>
                     </div>
@@ -316,6 +316,7 @@
             // Report Filter
             var reportFilter = $("#reportFilter");
 
+            // Hide / Show FromDt and ToDt
             function checkReportFilter(reportFilter) {
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
                     $(".stats-from-dt").show();
@@ -353,9 +354,12 @@
             const checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
+                    var value = reportFilter.val();
+
+                    // Hide / Show FromDt and ToDt
                     checkReportFilter(reportFilter);
 
-                    var value = reportFilter.val();
+                    // Hide / Show Warning
                     warning.hide();
                     if ( value === '') {
                         calculateDaysShowHideWarn();

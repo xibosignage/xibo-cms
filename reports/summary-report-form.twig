@@ -78,7 +78,7 @@
                                 { filterName: "lastmonth", reportFilter: lastmonth },
                                 { filterName: "lastyear", reportFilter: lastyear },
                             ] %}
-                            {{ inline.dropdown("reportFilter", "single", title, "", options, "filterName", "reportFilter") }}
+                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
 
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
@@ -261,7 +261,6 @@
             var warning = $("#applyWarning");
             var applyBtn = $("#applyBtn");
             var type = $("#type");
-            var reportFilter = $("#reportFilter");
             var groupByFilter = $("#groupByFilter");
             var groupByFilterCls = $(".group-by-filter");
             var mediaSelect =$(".media-select");
@@ -294,29 +293,50 @@
                 calculateDaysShowHideWarn();
             });
 
-            const checkFilterAndApply = function() {
 
-                reportFilter.off('change').change( function() {
+            // Report Filter
+            var reportFilter = $("#reportFilter");
 
-                    var value = reportFilter.val();
-                    var collectionMonth = [
-                        {id: 'byday', description: "{% trans "Day" %}"},
-                        {id: 'byweek', description: "{% trans "Week" %}"},
-                    ];
-                    var collectionYear = [
-                        {id: 'byday', description: "{% trans "Day" %}"},
-                        {id: 'byweek', description: "{% trans "Week" %}"},
-                        {id: 'bymonth', description: "{% trans "Month" %}"}
-                    ];
+            // Hide / Show FromDt and ToDt
+            function checkReportFilter(reportFilter) {
+                var value = reportFilter.val();
+                var collectionMonth = [
+                    {id: 'byday', description: "{% trans "Day" %}"},
+                    {id: 'byweek', description: "{% trans "Week" %}"},
+                ];
+                var collectionYear = [
+                    {id: 'byday', description: "{% trans "Day" %}"},
+                    {id: 'byweek', description: "{% trans "Week" %}"},
+                    {id: 'bymonth', description: "{% trans "Month" %}"}
+                ];
 
-                    if (value === '' || value === undefined) {
-                        // show the from date and to date
-                        $(".stats-from-dt").show();
-                        $(".stats-to-dt").show();
+                if (value === '' || value === undefined) {
+                    // show the from date and to date
+                    $(".stats-from-dt").show();
+                    $(".stats-to-dt").show();
 
-                        $("#groupByFilter option").remove();
-                        groupByFilterCls.show();
-                        $.each(collectionYear, function(index, item) {
+                    $("#groupByFilter option").remove();
+                    groupByFilterCls.show();
+                    $.each(collectionYear, function(index, item) {
+                        groupByFilter.append(
+                            $("<option></option>")
+                                .text(item.description)
+                                .val(item.id)
+                        );
+                    });
+
+                } else {
+                    // hide the from date and to date
+                    $(".stats-from-dt").hide();
+                    $(".stats-to-dt").hide();
+
+                    // Group by filter
+                    $("#groupByFilter option").remove();
+                    groupByFilterCls.show();
+
+                    if (value === 'thismonth' || value === 'lastmonth') {
+
+                        $.each(collectionMonth, function(index, item) {
                             groupByFilter.append(
                                 $("<option></option>")
                                     .text(item.description)
@@ -324,40 +344,32 @@
                             );
                         });
 
+                    } else if (value === 'thisyear' || value === 'lastyear') {
+                        $.each(collectionYear, function(index, item) {
+                            groupByFilter.append(
+                                $("<option></option>")
+                                    .text(item.description)
+                                    .val(item.id)
+                            );
+                        });
+                        groupByFilter.val('bymonth'); //by default
+
                     } else {
-                        // hide the from date and to date
-                        $(".stats-from-dt").hide();
-                        $(".stats-to-dt").hide();
-
-                        // Group by filter
-                        $("#groupByFilter option").remove();
-                        groupByFilterCls.show();
-
-                        if (value === 'thismonth' || value === 'lastmonth') {
-
-                            $.each(collectionMonth, function(index, item) {
-                                groupByFilter.append(
-                                    $("<option></option>")
-                                        .text(item.description)
-                                        .val(item.id)
-                                );
-                            });
-
-                        } else if (value === 'thisyear' || value === 'lastyear') {
-                            $.each(collectionYear, function(index, item) {
-                                groupByFilter.append(
-                                    $("<option></option>")
-                                        .text(item.description)
-                                        .val(item.id)
-                                );
-                            });
-                            groupByFilter.val('bymonth'); //by default
-
-                        } else {
-                            groupByFilterCls.hide();
-                        }
+                        groupByFilterCls.hide();
                     }
+                }
+            }
 
+            const checkFilterAndApply = function() {
+
+                reportFilter.off('change').change( function() {
+
+                    var value = reportFilter.val();
+
+                    // Hide / Show FromDt and ToDt
+                    checkReportFilter(reportFilter);
+
+                    // Hide / Show Warning
                     warning.hide();
                     if ( value === '') {
                         calculateDaysShowHideWarn();
@@ -457,10 +469,11 @@
             mediaSelect.hide();
             eventTagCls.hide();
 
-            reportFilter.val('');
-            groupByFilter.val('byday');
+            // reportFilter.val('');
+            // groupByFilter.val('byday');
             imageLoader.hide();
 
+            checkReportFilter(reportFilter);
             checkFilterAndApply();
 
             applyBtn.addClass('disabled');
