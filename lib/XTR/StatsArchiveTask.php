@@ -107,33 +107,42 @@ class StatsArchiveTask implements TaskInterface
             'toDt'=> $toDt,
         ]);
 
-        // Get results as array
-        $result = $resultSet->getArray();
-
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        foreach ($result['statData'] as $row) {
+        while ($row = $resultSet->getNextRow() ) {
+
+            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+
+                $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
+                $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+            } else {
+
+                $statDate = isset($row['statDate']) ?$this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
+                $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+                $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+            }
 
             // Read the columns
             fputcsv($out, [
-                $this->date->parse($this->sanitizer->string($row['statDate']), 'U')->format('Y-m-d H:i:s'),
+                $statDate,
                 $this->sanitizer->string($row['type']),
-                $this->date->parse($this->sanitizer->string($row['start']), 'U')->format('Y-m-d H:i:s'),
-                $this->date->parse($this->sanitizer->string($row['end']), 'U')->format('Y-m-d H:i:s'),
-                $this->sanitizer->string($row['layout']),
-                $this->sanitizer->string($row['display']),
-                $this->sanitizer->string($row['media']),
-                $this->sanitizer->string($row['tag']),
+                $start,
+                $end,
+                isset($row['layout']) ? $this->sanitizer->string($row['layout']) :'',
+                isset($row['display']) ? $this->sanitizer->string($row['display']) :'',
+                isset($row['media']) ? $this->sanitizer->string($row['media']) :'',
+                isset($row['tag']) ? $this->sanitizer->string($row['tag']) :'',
                 $this->sanitizer->string($row['duration']),
                 $this->sanitizer->string($row['count']),
                 $this->sanitizer->int($row['displayId']),
-                $this->sanitizer->int($row['layoutId']),
-                $this->sanitizer->int($row['widgetId']),
-                $this->sanitizer->int($row['mediaId'])
+                isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) :'',
+                isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) :'',
+                isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) :'',
             ]);
         }
 
@@ -208,7 +217,7 @@ class StatsArchiveTask implements TaskInterface
             $options = [
                 'maxAttempts' => $maxAttempts,
                 'statsDeleteSleep' => $statsDeleteSleep,
-                'limit' => 10000
+                'limit' => 10000 // Note: for mongo we dont use $options['limit'] anymore
             ];
 
             try {

@@ -30,9 +30,6 @@ class AddCampaignStatMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $table = $this->table('stat');
-        $table
-            ->addColumn('campaignId', 'integer',['null' => true, 'after' => 'displayId'])
-            ->save();
+       // Removed from here to streamline the upgrade from 2.0 to 2.1
     }
 }

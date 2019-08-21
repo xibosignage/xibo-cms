@@ -29,7 +29,6 @@
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
     </ul>
     <div class="proof-of-play-report-div pull-right btn-group">
         <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -52,7 +51,7 @@
         <div class="widget-title">{% trans "Proof of Play" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
-                <div class="XiboFilter well">
+                <div class="XiboFilterCustom well">
                     <div class="FilterDiv" id="proofofplayReport">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -76,7 +75,7 @@
                                 { filterName: "lastmonth", reportFilter: lastmonth },
                                 { filterName: "lastyear", reportFilter: lastyear },
                             ] %}
-                            {{ inline.dropdown("reportFilter", "single", title, "", options, "filterName", "reportFilter") }}
+                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
 
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
@@ -158,6 +157,14 @@
 
                             {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
                             {{ inline.checkbox("exactTags", title) }}
+
+                            <p></p>
+                            <div class="row">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -193,12 +200,15 @@
 {% block javaScript %}
     <script type="text/javascript">
         $(document).ready(function() {
+            var warning = $("#applyWarning");
 
             // Grid
             var table = $("#stats").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
-                stateSave: true, stateDuration: 0,
+                stateSave: true,
+                deferLoading: 0,
+                stateDuration: 0,
                 stateLoadCallback: function (settings, callback) {
                     var data = {};
                     $.ajax({
@@ -230,13 +240,17 @@
                         }
                     });
                 },
+                drawCallback: function( settings ) {
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+                },
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ urlFor("report.data", {name: reportName}) }}",
                     "data": function (d) {
-                        console.log(d)
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
@@ -293,16 +307,17 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#stats_wrapper').find('.col-sm-6').eq(1));
 
-            // Refresh
-            $("#refreshGrid").click(function () {
-                table.ajax.reload();
+            // Apply
+            $("#applyBtn").click(function () {
+                $(this).addClass('disabled');
+                table.search($("#stats").closest(".XiboGrid").find(".FilterDiv form")).draw();
             });
 
             // Report Filter
             var reportFilter = $("#reportFilter");
 
-            function checkReportFilter(reportFilter, reload) {
-
+            // Hide / Show FromDt and ToDt
+            function checkReportFilter(reportFilter) {
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
                     $(".stats-from-dt").show();
                     $(".stats-to-dt").show();
@@ -310,16 +325,47 @@
                     $(".stats-from-dt").hide();
                     $(".stats-to-dt").hide();
                 }
-
-                if (reload === true) {
-                    table.ajax.reload();
-                }
             }
+
+            // Calculate the difference of number of days of a selected range
+            const calculateDaysShowHideWarn = function() {
+
+                let fromDt = moment($("#statsFromDt").val());
+                let toDt = moment($("#statsToDt").val());
+                
+                let days = toDt.diff(fromDt, 'days');
+
+                warning.hide();
+                if ( days >= 30) {
+                    warning.show();
+                }
+                
+                return true;
+            };
+
+            $("#statsFromDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            $("#statsToDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
 
             const checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
-                    checkReportFilter(reportFilter, true);
+                    var value = reportFilter.val();
+
+                    // Hide / Show FromDt and ToDt
+                    checkReportFilter(reportFilter);
+
+                    // Hide / Show Warning
+                    warning.hide();
+                    if ( value === '') {
+                        calculateDaysShowHideWarn();
+                    } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
+                        warning.show();
+                    }
                 });
 
                 var anchorReportAddBtn = $("a#reportAddBtn");
@@ -333,12 +379,7 @@
 
             };
 
-            // Bind to form change
-            $('#proofofplayReport input[type="text"], #proofofplayReport input[type="checkbox"], #proofofplayReport select').on('change', function() {
-                checkFilterAndApply();
-            });
-
-            checkReportFilter(reportFilter, false);
+            checkReportFilter(reportFilter);
             checkFilterAndApply();
         });
 
@@ -370,7 +411,6 @@
                     }
                 });
             }
-
         }
     </script>
 {% endblock %}

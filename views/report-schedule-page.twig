@@ -32,7 +32,9 @@
 
 {% block pageContent %}
     <div class="widget">
-        <div class="widget-title">{% trans "Report Schedule" %}</div>
+        <div class="widget-title">{% trans "Report Schedule" %}
+            <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "The report will be available 6AM every day." %}"></span>
+        </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="reportscheduleView">
                 <div class="XiboFilter well">
@@ -87,6 +89,11 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
+
         var table;
         $(document).ready(function() {
 
