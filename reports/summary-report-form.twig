@@ -29,7 +29,6 @@
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}?reportName=summaryReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}?reportName=summaryReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
     </ul>
     <div class="proof-of-play-report-div pull-right btn-group">
         <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -55,7 +54,7 @@
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+                <div class="XiboFilterCustom">
                     <div class="FilterDiv" id="summaryReport">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -143,6 +142,13 @@
                             {% set helpText %}{% trans "This field is required when the Type selected is Event" %}{% endset %}
                             {{ inline.input("eventTag", title, "", helpText, "tag-text") }}
 
+                            <p></p>
+                            <div class="row">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -164,49 +170,11 @@
         });
 
         var reportChart = null;
+        var imageLoader = $("#imageLoader");
 
         function setReport() {
 
-            var mediaVal = $("#mediaId").val();
-            var layoutVal = $("#layoutId").val();
-            var eventTagVal = $("#eventTag").val();
-            var anchorReportAddBtn = $("a#reportAddBtn");
-
-            var typeVal = $("#type").val();
-
-            if ( typeVal === 'layout') {
-                if (layoutVal == null) {
-                    anchorReportAddBtn.parent().addClass('disabled');
-                    anchorReportAddBtn.removeAttr('href');
-                } else {
-                    anchorReportAddBtn.parent().removeClass('disabled');
-                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
-                    anchorReportAddBtn.removeAttr('title');
-
-                }
-            } else if ( typeVal === 'media') {
-                if (mediaVal == null) {
-                    anchorReportAddBtn.parent().addClass('disabled');
-                    anchorReportAddBtn.removeAttr('href');
-                } else {
-                    anchorReportAddBtn.parent().removeClass('disabled');
-                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
-                    anchorReportAddBtn.removeAttr('title');
-
-                }
-            } else if ( typeVal === 'event') {
-                if (eventTagVal == null) {
-                    anchorReportAddBtn.parent().addClass('disabled');
-                    anchorReportAddBtn.removeAttr('href');
-                } else {
-                    anchorReportAddBtn.parent().removeClass('disabled');
-                    anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
-                    anchorReportAddBtn.removeAttr('title');
-
-                }
-            }
-
-            $("#imageLoader").show();
+            imageLoader.show();
             $.ajax({
                 type: "get",
                 url: "{{ urlFor("report.data", {name: reportName}) }}",
@@ -215,7 +183,11 @@
                 data: $("#summaryReport").find("form").serialize(),
                 success: function(response) {
 
-                    $("#imageLoader").hide();
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+
+                    imageLoader.hide();
                     if (reportChart !== undefined && reportChart !== null) {
                         reportChart.destroy();
                     }
@@ -286,6 +258,8 @@
         $(document).ready(function() {
 
             // Init
+            var warning = $("#applyWarning");
+            var applyBtn = $("#applyBtn");
             var type = $("#type");
             var reportFilter = $("#reportFilter");
             var groupByFilter = $("#groupByFilter");
@@ -293,6 +267,32 @@
             var mediaSelect =$(".media-select");
             var layoutSelect =$(".layout-select");
             var eventTagCls =$(".tag-text");
+
+
+            // Calculate the difference of number of days of a selected range
+            const calculateDaysShowHideWarn = function() {
+
+                console.log('m i here');
+                let fromDt = moment($("#statsFromDt").val());
+                let toDt = moment($("#statsToDt").val());
+
+                let days = toDt.diff(fromDt, 'days');
+
+                warning.hide();
+                if ( days >= 30) {
+                    warning.show();
+                }
+
+                return true;
+            };
+
+            $("#statsFromDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            $("#statsToDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
 
             const checkFilterAndApply = function() {
 
@@ -358,6 +358,13 @@
                         }
                     }
 
+                    warning.hide();
+                    if ( value === '') {
+                        calculateDaysShowHideWarn();
+                    } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
+                        warning.show();
+                    }
+
                 });
 
                 type.off('change').change( function() {
@@ -403,23 +410,84 @@
 
             };
 
+            // Enable/Disable Schedule Btn
+            const checkEnableSchedule = function() {
+
+                var mediaVal = $("#mediaId").val();
+                var layoutVal = $("#layoutId").val();
+                var eventTagVal = $("#eventTag").val();
+                var anchorReportAddBtn = $("a#reportAddBtn");
+
+                var typeVal = $("#type").val();
+
+                if ( typeVal === 'layout') {
+                    if (layoutVal == null) {
+                        anchorReportAddBtn.parent().addClass('disabled');
+                        anchorReportAddBtn.removeAttr('href');
+                    } else {
+                        anchorReportAddBtn.parent().removeClass('disabled');
+                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                        anchorReportAddBtn.removeAttr('title');
+
+                    }
+                } else if ( typeVal === 'media') {
+                    if (mediaVal == null) {
+                        anchorReportAddBtn.parent().addClass('disabled');
+                        anchorReportAddBtn.removeAttr('href');
+                    } else {
+                        anchorReportAddBtn.parent().removeClass('disabled');
+                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
+                        anchorReportAddBtn.removeAttr('title');
+
+                    }
+                } else if ( typeVal === 'event') {
+                    if (eventTagVal == null) {
+                        anchorReportAddBtn.parent().addClass('disabled');
+                        anchorReportAddBtn.removeAttr('href');
+                    } else {
+                        anchorReportAddBtn.parent().removeClass('disabled');
+                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
+                        anchorReportAddBtn.removeAttr('title');
+
+                    }
+                }
+            };
+
             type.val('layout');
             mediaSelect.hide();
             eventTagCls.hide();
 
             reportFilter.val('');
             groupByFilter.val('byday');
+            imageLoader.hide();
 
             checkFilterAndApply();
-            setReport();
+
+            applyBtn.addClass('disabled');
+            checkEnableSchedule();
 
             // Bind to form change
             $("#summaryReport").on('change', function() {
-                checkFilterAndApply();
-                setReport();
+                checkEnableSchedule();
+
+                var layoutVal =  $("#layoutId").val();
+                var mediaVal =  $("#mediaId").val();
+                var eventVal =  $("#eventTag").val();
+
+                if ((layoutVal === null || layoutVal === '' || layoutVal === undefined) &&
+                    (mediaVal === null || mediaVal === '' || mediaVal === undefined) &&
+                    (eventVal === null || eventVal === '' || eventVal === undefined) ) {
+
+                    applyBtn.addClass('disabled');
+
+                } else {
+                    applyBtn.removeClass('disabled');
+                }
             });
 
-            $("#refreshGrid").click(function () {
+            // Apply
+            applyBtn.click(function () {
+                $(this).addClass('disabled');
                 checkFilterAndApply();
                 setReport();
             });
