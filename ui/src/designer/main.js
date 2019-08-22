@@ -538,7 +538,7 @@ lD.publishLayout = function() {
     $.ajax({
         url: requestPath,
         type: linkToAPI.type,
-        data: serializedData + 'publishNow=on'
+        data: serializedData
     }).done(function(res) {
 
         lD.common.hideLoadingScreen();
@@ -727,26 +727,7 @@ lD.showCheckoutScreen = function() {
  * Layout publish screen
  */
 lD.showPublishScreen = function() {
-
-    bootbox.dialog({
-        title: layoutDesignerTrans.publishTitle + ' ' + lD.layout.name,
-        message: layoutDesignerTrans.publishMessage,
-        buttons: {
-            done: {
-                label: layoutDesignerTrans.publishTitle,
-                className: "btn-primary",
-                callback: function(res) {
-
-                    $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
-
-                    lD.publishLayout();
-
-                    // Prevent the modal to close ( close only when chekout layout resolves )
-                    return false;
-                }
-            }
-        }
-    }).attr('data-test', 'publishModal');
+    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')", "lD.publishLayout();");
 };
 
 /**
