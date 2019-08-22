@@ -150,7 +150,7 @@ describe('Layout Designer (Empty)', function() {
 
             cy.get('#layout-editor-toolbar a#publishLayout').click();
 
-            cy.get('button[data-bb-handler="done"]').click();
+            cy.get('button[data-bb-handler="Publish"]').click();
 
             cy.get('.toast-error').contains('Empty Region');
 
