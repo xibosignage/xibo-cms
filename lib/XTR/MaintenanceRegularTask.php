@@ -9,7 +9,6 @@
 namespace Xibo\XTR;
 use Xibo\Controller\Display;
 use Xibo\Controller\Library;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
@@ -369,7 +368,7 @@ class MaintenanceRegularTask implements TaskInterface
         $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1]);
 
         // check if we have any layouts with set publish date
-        if (count($layouts) > 1) {
+        if (count($layouts) > 0) {
 
             foreach ($layouts as $layout) {
 
