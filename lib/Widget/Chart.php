@@ -22,7 +22,6 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
-use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -318,7 +317,7 @@ class Chart extends ModuleWidget
      *  @SWG\Parameter(
      *      name="enableStat",
      *      in="formData",
-     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
      *      type="string",
      *      required=false
      *   ),

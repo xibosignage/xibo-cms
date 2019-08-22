@@ -456,4 +456,106 @@ class DataSetTest extends LocalWebTestCase
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
         $dataSet -> deleteWData();
     }
+
+    public function testAddRemoteDataSet()
+    {
+        $name = Random::generateString(8, 'phpunit');
+        # Add dataset
+        $response = $this->client->post('/dataset', [
+            'dataSet' => $name,
+            'code' => 'remote',
+            'isRemote' => 1,
+            'method' => 'GET',
+            'uri' => 'http://localhost/resources/RemoteDataSet.json',
+            'dataRoot' => 'data',
+            'refreshRate' => 0,
+            'clearRate' => 1
+        ]);
+        # Check if call was successful
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        # Check dataSet object
+        $this->assertSame($name, $object->data->dataSet);
+        $this->assertSame(1, $object->data->isRemote);
+        $this->assertSame('http://localhost/resources/RemoteDataSet.json', $object->data->uri);
+        $this->assertSame(1, $object->data->clearRate);
+        $this->assertSame(0, $object->data->refreshRate);
+        $this->assertSame(0, $object->data->lastClear);
+    }
+
+    public function testEditRemoteDataSet()
+    {
+        $name = Random::generateString(8, 'phpunit');
+        $name2 = Random::generateString(8, 'phpunit');
+
+        // add DataSet with wrapper
+        $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, '', 'remote', 1, 'GET', 'http://localhost/resources/RemoteDataSet.json', '', '', '', '', 1, 0, null, 'data');
+
+        // Edit DataSet
+        $response = $this->client->put('/dataset/' . $dataSet->dataSetId, [
+            'dataSet' => $name2,
+            'code' => 'remote',
+            'isRemote' => 1,
+            'method' => 'GET',
+            'uri' => 'http://localhost/resources/RemoteDataSet.json',
+            'dataRoot' => 'data',
+            'clearRate' => 3600,
+            'refreshRate' => 1
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        # Check if call was successful
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        # Check dataSet object
+        $this->assertSame($name2, $object->data->dataSet);
+        $this->assertSame(1, $object->data->isRemote);
+        $this->assertSame('http://localhost/resources/RemoteDataSet.json', $object->data->uri);
+        $this->assertSame(3600, $object->data->clearRate);
+        $this->assertSame(1, $object->data->refreshRate);
+    }
+
+    public function testRemoteDataSetData()
+    {
+        // copy json file to /web folder
+        shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/RemoteDataSet.json ' . PROJECT_ROOT . '/web');
+
+        $name = Random::generateString(8, 'phpunit');
+        $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, '', 'remote', 1, 'GET',  'http://localhost/RemoteDataSet.json', '', '', '', '', 1, 0, null, 'data');
+
+        // call the remote dataSet test
+        $response = $this->client->post('/dataset/remote/test', [
+            'testDataSetId' => $dataSet->dataSetId,
+            'dataSet' => $name,
+            'code' => 'remote',
+            'isRemote' => 1,
+            'method' => 'GET',
+            'uri' => 'http://localhost/RemoteDataSet.json',
+            'dataRoot' => 'data',
+            'refreshRate' => 0,
+            'clearRate' => 1
+        ]);
+
+        # Check if call was successful
+        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
+        $object = json_decode($this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+        $this->assertSame($object->id, $dataSet->dataSetId);
+        $this->assertNotEmpty($object->data->entries);
+
+        foreach ($object->data->entries as $entry) {
+            $this->assertSame('Title 1', $entry->data[0]->title);
+            $this->assertSame(2, $entry->data[1]->id);
+            $this->assertSame('2019-07-31 06:51:00', $entry->data[2]->Date);
+        }
+
+        // remove json file from /web folder
+        shell_exec('rm -r ' . PROJECT_ROOT . '/web/RemoteDataSet.json');
+    }
 }

@@ -1197,7 +1197,7 @@ class Playlist extends Base
      *  @SWG\Parameter(
      *      name="enableStat",
      *      in="formData",
-     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.
+     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
      *      type="string",
      *      required=true
      *   ),

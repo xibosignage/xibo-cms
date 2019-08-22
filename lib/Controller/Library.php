@@ -358,7 +358,7 @@ class Library extends Base
      *  @SWG\Parameter(
      *      name="enableStat",
      *      in="formData",
-     *      description="The option to enable the collection of Media Proof of Play statistics,
+     *      description="The option to enable the collection of Media Proof of Play statistics",
      *      type="string",
      *      required=true
      *   ),
@@ -370,8 +370,7 @@ class Library extends Base
      *
      * @throws XiboException
      */
-
-    function setEnableStat($mediaId)
+    public function setEnableStat($mediaId)
     {
         // Get the Media
         $media = $this->mediaFactory->getById($mediaId);
