@@ -538,7 +538,7 @@ lD.publishLayout = function() {
     $.ajax({
         url: requestPath,
         type: linkToAPI.type,
-        data: serializedData
+        data: serializedData + 'publishNow=on'
     }).done(function(res) {
 
         lD.common.hideLoadingScreen();
