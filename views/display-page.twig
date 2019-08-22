@@ -96,7 +96,7 @@
                                         </div>
                                     </div>
 
-                                    {% set title %}{% trans "Client Type" %}{% endset %}
+                                    {% set title %}{% trans "Player Type" %}{% endset %}
                                     {% set android %}{% trans "Android" %}{% endset %}
                                     {% set windows %}{% trans "Windows" %}{% endset %}
                                     {% set webos %}{% trans "webOS" %}{% endset %}
@@ -112,7 +112,7 @@
                                     ] %}
                                     {{ inline.dropdown("clientType", "single", title, "", options, "optionid", "option") }}
 
-                                    {% set title %}{% trans "Client Code" %}{% endset %}
+                                    {% set title %}{% trans "Player Code" %}{% endset %}
                                     {{ inline.input("clientCode", title) }}
 
                                     {% set title %}{% trans "Mac Address" %}{% endset %}

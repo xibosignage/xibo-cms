@@ -1027,6 +1027,7 @@ class Module extends Base
         ];
 
         $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter)));
+        $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
     }
 
     /**

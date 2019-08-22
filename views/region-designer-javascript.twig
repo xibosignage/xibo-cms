@@ -44,10 +44,14 @@
             formChangesRegion();
         });
 
+        form.find('#zIndex').on('change', function(){
+            formChangesRegionZIndex();
+        });
+
         regionChangesForm();
     }
 
-    function formChangesRegion(transform) {
+    function formChangesRegion() {
         const app = getXiboApp();
         const layout = app.layout;
         const regionId = app.selectedObject.id;
@@ -61,6 +65,15 @@
         }, false);
 
         app.renderContainer(app.navigatorEdit);
+    }
+
+    function formChangesRegionZIndex() {
+        const app = getXiboApp();
+        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form');
+        const newZIndex = parseInt(form.find('#zIndex').val());
+
+        app.navigatorEdit.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
+        app.selectedObject.zIndex = newZIndex;
     }
 
     function regionChangesForm() {

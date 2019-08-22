@@ -1423,7 +1423,7 @@ class User extends Base
                 }
             };
 
-            foreach ($this->layoutFactory->getByCampaignId($object->campaignId) as $layout) {
+            foreach ($this->layoutFactory->getByCampaignId($object->campaignId, true, true) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
                 $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);

@@ -47,6 +47,7 @@ RUN npm install webpack -g
 # Copy package.json and the webpack config file
 COPY webpack.config.js .
 COPY package.json .
+COPY package-lock.json .
 
 # Install npm packages
 RUN npm install --only=prod
@@ -115,6 +116,7 @@ ENV CMS_DEV_MODE=false \
     MYSQL_PASSWORD=none \
     MYSQL_PORT=3306 \
     MYSQL_DATABASE=cms \
+    MYSQL_BACKUP_ENABLED=true \
     CMS_SMTP_SERVER=smtp.gmail.com:587 \
     CMS_SMTP_USERNAME=none \
     CMS_SMTP_PASSWORD=none \
@@ -133,7 +135,8 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_MIN_SPARE_SERVERS=5 \
     CMS_APACHE_MAX_SPARE_SERVERS=10 \
     CMS_APACHE_MAX_REQUEST_WORKERS=60 \
-    CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300
+    CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300 \
+    CMS_APACHE_TIMEOUT=30
 
 # Expose port 80
 EXPOSE 80

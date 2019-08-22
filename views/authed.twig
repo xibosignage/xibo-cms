@@ -298,12 +298,22 @@
     <script type="text/x-handlebars-template" id="layout-background-image-upload-template">
         <form method="post" action="{{ urlFor("library.add") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/){{ libraryUpload.validImageExt }}$/i">
             <div class="row">
-                <div>
+                <div class="text-center">
                     <span class="btn btn-success fileinput-button">
                         <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{% trans "Add a new background image?" %}</span> <input type="file" name="files[]">
+                        <span>{% trans "Browse/Add image" %}</span>
+                        <input type="file" name="files[]">
+                    </span>
+                    <span class="btn btn-danger fileinput-close-button">
+                        <i class="glyphicon glyphicon-remove glyphicon glyphicon-white"></i>
                     </span>
                 </div>
+
+                <div>
+                    <!-- The table listing the files available for upload/download -->
+                    <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+                </div>
+
                 <div>
                     <span class="fileupload-loading"></span>
                     <div class="fileupload-progress fade">
@@ -319,10 +329,6 @@
                         <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <!-- The table listing the files available for upload/download -->
-                <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
             </div>
         </form>
     </script>

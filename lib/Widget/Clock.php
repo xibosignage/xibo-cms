@@ -146,7 +146,7 @@ class Clock extends ModuleWidget
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 0));
+        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 1));
         $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
         $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
         $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
@@ -199,8 +199,8 @@ class Clock extends ModuleWidget
                 $template = 'clock-get-resource-analog';
 
                 // Render our clock face
-                $theme = ($this->getOption('theme') == 1 ? 'light' : 'dark');
-                $theme_face = ($this->getOption('theme') == 1 ? 'clock_bg_modern_light.png' : 'clock_bg_modern_dark.png');
+                $theme = ($this->getOption('theme') == 2 ? 'dark' : 'light');
+                $theme_face = ($this->getOption('theme') == 2 ? 'clock_bg_modern_dark.png' : 'clock_bg_modern_light.png');
 
                 $data['clockFace'] = base64_encode(file_get_contents(PROJECT_ROOT . '/modules/clock/' . $theme_face));
 
