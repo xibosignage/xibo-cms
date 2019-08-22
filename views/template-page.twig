@@ -19,8 +19,12 @@
                         <form class="form-inline">
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("template", title) }}
+
                             {% set title %}{% trans "Tags" %}{% endset %}
                             {{ inline.input("tags", title) }}
+
+                            {% set title %}{% trans "Exact match?" %}{% endset %}
+                            {{ inline.checkbox("exactTags", title) }}
                         </form>
                     </div>
                 </div>
@@ -95,7 +99,11 @@
                 { "data": "layout"},
                 { "data": "owner"},
                 { "data": "descriptionWithMarkup"},
-                { "data": "tags", "visible": false },
+                {
+                    "sortable": false,
+                    "visible": false,
+                    "data": dataTableCreateTags
+                },
                 { "data": "thumbnail"},
                 { "data": "permissions", "sortable": false},
                 {
@@ -106,6 +114,7 @@
         });
 
         table.on('draw', dataTableDraw);
+        table.on('draw', { form: $("#templates").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#templates_wrapper').find('.col-sm-6').eq(1));
     </script>

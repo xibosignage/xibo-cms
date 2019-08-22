@@ -67,9 +67,15 @@ class XmdsWrapper
         return $response;
     }
     
-    function GetFile()
+    function GetFile($hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
-    
+        $response = $this->client->GetFile($this->KEY,
+                                            $hardwareKey,
+                                            $fileId,
+                                            $fileType,
+                                            $chunkOffset,
+                                            $chunkSize);
+        return $response;
     }
     
     function Schedule($hardwareKey)
@@ -88,9 +94,13 @@ class XmdsWrapper
     {
     
     }
-    
-    function SubmitStats()
+
+    function SubmitStats($hardwareKey, $statXml)
     {
+        $response = $this->client->SubmitStats($this->KEY,
+                                               $hardwareKey,
+                                               $statXml);
+        return $response;
     
     }
     

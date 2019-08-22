@@ -245,7 +245,7 @@ class LayoutFactory extends BaseFactory
     public function getById($layoutId)
     {
         if ($layoutId == 0)
-            throw new NotFoundException();
+            throw new NotFoundException(\__('LayoutId is 0'));
 
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
@@ -255,6 +255,51 @@ class LayoutFactory extends BaseFactory
 
         // Set our layout
         return $layouts[0];
+    }
+
+    /**
+     * Get CampaignId from layout history
+     * @param int $layoutId
+     * @return int campaignId
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
+    public function getCampaignIdFromLayoutHistory($layoutId)
+    {
+        if ($layoutId == null) {
+            throw new InvalidArgumentException('Invalid Input', 'layoutId');
+        }
+
+        $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
+
+        if (count($row) <= 0) {
+            throw new NotFoundException(__('Layout does not exist'));
+        }
+
+        return intval($row[0]['campaignId']);
+    }
+
+    /**
+     * Get latest layoutId by CampaignId from layout history
+     * @param int campaignId
+     * @return int layoutId
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
+    public function getLatestLayoutIdFromLayoutHistory($campaignId)
+    {
+        if ($campaignId == null) {
+            throw new InvalidArgumentException('Invalid Input', 'campaignId');
+        }
+
+        $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
+
+        if (count($row) <= 0) {
+            throw new NotFoundException(__('Layout does not exist'));
+        }
+
+        // Set our Layout ID
+        return intval($row[0]['layoutId']);
     }
 
     /**
@@ -269,6 +314,27 @@ class LayoutFactory extends BaseFactory
             throw new NotFoundException();
 
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
+    }
+
+    /**
+     * Get a Layout by its Layout Specific Campaign OwnerId
+     * @param int $campaignId
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public function getByParentCampaignId($campaignId)
+    {
+        if ($campaignId == 0)
+            throw new NotFoundException();
+
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'ownerCampaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -352,6 +418,16 @@ class LayoutFactory extends BaseFactory
     public function getByBackgroundImageId($backgroundImageId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
+    }
+
+    /**
+     * @param string $tag
+     * @return Layout[]
+     * @throws NotFoundException
+     */
+    public function getByTag($tag)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1]);
     }
 
     /**
@@ -613,6 +689,9 @@ class LayoutFactory extends BaseFactory
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
+        // Get global stat setting of layout to on/off proof of play statistics
+        $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
+
         $this->getLog()->debug('Layout Loaded: ' . $layout);
 
         // Check that the resolution we have in this layout exists, and if not create it.
@@ -722,6 +801,9 @@ class LayoutFactory extends BaseFactory
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
+
+                // Get global stat setting of media to set to on/off/inherit
+                $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 $media->save();
 
                 $newMedia = true;
@@ -980,6 +1062,9 @@ class LayoutFactory extends BaseFactory
         foreach ($layout->getWidgets() as $widget) {
             $module = $this->moduleFactory->createWithWidget($widget);
             $widget->calculateDuration($module, true);
+
+            // Get global stat setting of widget to set to on/off/inherit
+            $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
         if ($fontsAdded) {
@@ -1016,18 +1101,21 @@ class LayoutFactory extends BaseFactory
         $select .= "        campaign.CampaignID, ";
         $select .= "        layout.status, ";
         $select .= "        layout.statusMessage, ";
+        $select .= "        layout.enableStat, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
         $select .= "        layout.retired, ";
         $select .= "        layout.createdDt, ";
         $select .= "        layout.modifiedDt, ";
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
+        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tagValues, ";
         $select .= "        layout.backgroundImageId, ";
         $select .= "        layout.backgroundColor, ";
         $select .= "        layout.backgroundzIndex, ";
         $select .= "        layout.schemaVersion, ";
         $select .= "        layout.publishedStatusId, ";
         $select .= "        `status`.status AS publishedStatus, ";
+        $select .= "        layout.publishedDate, ";
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1233,22 +1321,9 @@ class LayoutFactory extends BaseFactory
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 
@@ -1282,6 +1357,11 @@ class LayoutFactory extends BaseFactory
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', 0, $filterBy);
         }
 
+        // publishedDate
+        if ($this->getSanitizer()->getInt('havePublishDate', -1, $filterBy) != -1) {
+            $body .= " AND `layout`.publishedDate IS NOT NULL ";
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -1307,6 +1387,7 @@ class LayoutFactory extends BaseFactory
             $layout->description = $this->getSanitizer()->string($row['description']);
             $layout->duration = $this->getSanitizer()->int($row['duration']);
             $layout->tags = $this->getSanitizer()->string($row['tags']);
+            $layout->tagValues = $this->getSanitizer()->string($row['tagValues']);
             $layout->backgroundColor = $this->getSanitizer()->string($row['backgroundColor']);
             $layout->owner = $this->getSanitizer()->string($row['owner']);
             $layout->ownerId = $this->getSanitizer()->int($row['userID']);
@@ -1321,8 +1402,10 @@ class LayoutFactory extends BaseFactory
             $layout->modifiedDt = $row['modifiedDt'];
             $layout->displayOrder = $row['displayOrder'];
             $layout->statusMessage = $row['statusMessage'];
+            $layout->enableStat = $this->getSanitizer()->int($row['enableStat']);
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
+            $layout->publishedDate = $this->getSanitizer()->string($row['publishedDate']);
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

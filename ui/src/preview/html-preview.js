@@ -290,15 +290,31 @@ function Layout(id, options, preload, layoutPreview) {
         
         if (self.allEnded) {
             playLog(4, "debug", "All regions have ended", false);
+
+            self.stopAllMedia();
+
             $("#end_" +  self.id).css("display", "block");
             //$("#" + self.containerName).remove();
         }
 
     };
     
+    self.stopAllMedia = function() {
+        playLog(3, "debug", "Stop all media!");
+
+        for(var i = 0;i < self.regionObjects.length;i++) {
+            var region = self.regionObjects[i];
+            for(var j = 0;j < region.mediaObjects.length;j++) {
+                var media = region.mediaObjects[j];
+                media.stop();
+            }
+        }
+    };
+    
     self.ready = false;
     self.id = id;
     self.regionObjects = [];
+    self.allExpired = false;
     
     playLog(3, "debug", "Loading Layout " + self.id , true);
     $.ajax({
@@ -353,16 +369,16 @@ function Region(parent, id, xml, options, preload) {
             return;
         }
         
-        newMedia.run();
-        
         if (oldMedia) {
-            $("#" + oldMedia.containerName).css("display", "none");
-
-            if (oldMedia.mediaType == "video") {
-                $("#" + oldMedia.containerName + "-vid").get(0).pause();
-                $("#" + oldMedia.containerName + "-vid").get(0).currentTime = 0;
-            }
+            oldMedia.stop();
         }
+
+        // If the region has finished, don't run/show media
+        if(self.ended) {
+            return;
+        }
+        
+        newMedia.run();
         
         $("#" + newMedia.containerName).css("display", "block");
     };
@@ -427,7 +443,8 @@ function Region(parent, id, xml, options, preload) {
     playLog(7, "debug", "Render will be (" + self.sWidth + "x" + self.sHeight + ") pixels");
     playLog(7, "debug", "Offset will be (" + self.offsetX + "," + self.offsetY + ") pixels");
     
-    $(self.xml).find("media").each(function() { playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
+    $(self.xml).find("media").each(function() { 
+        playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
                                                 self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
                                               });
     
@@ -457,6 +474,8 @@ function media(parent, id, xml, options, preload) {
     self.iframeName = self.containerName + "-iframe";
     self.mediaType = $(self.xml).attr('type');
     self.render = $(self.xml).attr('render');
+    self.attachedAudio = false;
+
     if (self.render == undefined)
         self.render = "module";
     
@@ -470,11 +489,23 @@ function media(parent, id, xml, options, preload) {
             $("#" + self.containerName + "-vid").get(0).play();
         }
         
+        if(self.mediaType == "audio") {
+            $("#" + self.containerName + "-aud").get(0).play();
+        }
+
+        if(self.attachedAudio) {
+            $("#" + self.containerName + "-attached-aud").get(0).play();
+        }
+        
         if (self.duration == 0) {
             if (self.mediaType == "video") {
                 $("#" + self.containerName + "-vid").bind('ended', self.region.nextMedia);
                 $("#" + self.containerName + "-vid").bind('error', self.region.nextMedia);
                 $("#" + self.containerName + "-vid").bind('click', self.region.nextMedia);
+            } else if(self.mediaType == "audio") {
+                $("#" + self.containerName + "-aud").bind('ended', self.region.nextMedia);
+                $("#" + self.containerName + "-aud").bind('error', self.region.nextMedia);
+                $("#" + self.containerName + "-aud").bind('click', self.region.nextMedia);
             }
             else {
                 self.duration = 3;
@@ -483,6 +514,31 @@ function media(parent, id, xml, options, preload) {
         }
         else {
             setTimeout(self.region.nextMedia, self.duration * 1000);
+        }
+    };
+    
+    self.stop = function() {
+        playLog(5, "debug", "Stop media " + self.id);
+
+        // Hide container
+        $("#" + self.containerName).css("display", "none");
+
+        // Stop video
+        if(self.mediaType == "video") {
+            $("#" + self.containerName + "-vid").get(0).pause();
+            $("#" + self.containerName + "-vid").get(0).currentTime = 0;
+        }
+
+        // Stop audio
+        if(self.mediaType == "audio") {
+            $("#" + self.containerName + "-aud").get(0).pause();
+            $("#" + self.containerName + "-aud").get(0).currentTime = 0;
+        }
+
+        // Stop attached audio
+        if(self.attachedAudio) {
+            $("#" + self.containerName + "-attached-aud").get(0).pause();
+            $("#" + self.containerName + "-attached-aud").get(0).currentTime = 0;
         }
     };
     
@@ -553,6 +609,10 @@ function media(parent, id, xml, options, preload) {
         preload.addFiles(tmpUrl);
         self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
     }
+     else if(self.mediaType == "audio") {
+        preload.addFiles(tmpUrl);
+        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + ((self.options["loop"] == 1) ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
+    }
     else if (self.mediaType == "flash") {
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
         embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
@@ -561,6 +621,36 @@ function media(parent, id, xml, options, preload) {
     }
     else {
         media.css("outline", "red solid thin");
+    }
+    
+    // Attached audio
+    if($(self.xml).find('audio').length > 0) {
+        var $audioObj = $(self.xml).find('audio');
+        var $audioUri = $audioObj.find('uri');
+        var mediaId = $audioUri.attr('mediaid');
+
+        // Get media url and preload
+        var tmpUrl2 = options.libraryDownloadUrl.replace(":id", mediaId);
+
+        //preload.getFile(tmpUrl2);
+        if(preload.filesLoadedMap[tmpUrl2] != undefined) {
+            preload.addFiles(tmpUrl2);
+        }
+
+        // Set volume if defined
+        if($audioUri.attr('volume') != undefined) {
+            var volume = $audioUri.attr('volume') / 100;
+            $audioObj.get(0).volume = volume;
+        }
+        
+        // Loop
+        $audioObj.prop('loop', $audioUri.get(0).getAttribute('loop') == "1");
+        $audioObj.attr('id', self.containerName + '-attached-aud');
+        //$audioUri.remove();
+        $audioObj.append('<source src="' + tmpUrl2 + '">Unsupported Audio');
+
+        media.append($audioObj);
+        self.attachedAudio = true;
     }
     
     playLog(5, "debug", "Created media " + self.id)

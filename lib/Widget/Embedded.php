@@ -85,6 +85,13 @@ class Embedded extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="transparency",
      *      in="formData",
      *      description="Flag (0,1) - Should the HTML be shown with transparent background? - not available on Windows Clients",
@@ -139,6 +146,7 @@ class Embedded extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
         $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));

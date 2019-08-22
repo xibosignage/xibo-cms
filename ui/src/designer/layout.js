@@ -12,6 +12,9 @@ let Layout = function(id, data) {
     // Is it editable? ( checkif status is draft )
     this.editable = (data.publishedStatusId == 2);
 
+    // Does user have permission to schedule now page?
+    this.scheduleNowPermission = (data.scheduleNowPermission);
+
     // Parent Id
     this.parentLayoutId = data.parentId;
 
@@ -197,8 +200,9 @@ Layout.prototype.addElement = function(elementType, positionToAdd = null) {
  * Delete an element in the layout, by ID
  * @param {number} elementId - element id
  * @param {string} elementType - element type (widget, region, ...)
+ * @param {object =} [options] - Delete submit params/options
  */
-Layout.prototype.deleteElement = function(elementType, elementId) {
+Layout.prototype.deleteElement = function(elementType, elementId, options = null) {
     
     lD.common.showLoadingScreen('deleteElement'); 
 
@@ -219,7 +223,7 @@ Layout.prototype.deleteElement = function(elementType, elementId) {
                 elementType, // targetType
                 elementId, // targetId
                 null, // oldValues
-                null, // newValues
+                options, // newValues
                 {
                     addToHistory: false // options.addToHistory
                 }

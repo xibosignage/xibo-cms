@@ -123,21 +123,23 @@ var text_callback = function(dialog, extraData) {
     }
 
     // Make sure when we close the dialog we also destroy the editor
-    dialog.on("hide.bs.modal", function() {
-        try {
-            if (CKEDITOR.instances["ta_text"] !== undefined) {
-                CKEDITOR.instances["ta_text"].destroy();
+    dialog.on("hide.bs.modal", function(e) {
+        if(e.namespace === 'bs.modal') {
+            try {
+                if (CKEDITOR.instances["ta_text"] !== undefined) {
+                    CKEDITOR.instances["ta_text"].destroy();
+                }
+
+                if (CKEDITOR.instances["noDataMessage"] !== undefined) {
+                    CKEDITOR.instances["noDataMessage"].destroy();
+                }
+            } catch (e) {
+                console.log("Unable to remove CKEditor instance. " + e);
             }
 
-            if (CKEDITOR.instances["noDataMessage"] !== undefined) {
-                CKEDITOR.instances["noDataMessage"].destroy();
-            }
-        } catch (e) {
-            console.log("Unable to remove CKEditor instance. " + e);
+            // Remove colour picker
+            $("#backgroundColor").colorpicker('destroy');
         }
-
-        // Remove colour picker
-        $("#backgroundColor").colorpicker('destroy');
     });
 
     // Do we have any items to click on that we might want to insert? (these will be our items and not CKEditor ones)
@@ -166,9 +168,31 @@ var text_callback = function(dialog, extraData) {
                 url: $selectPicker.data().searchUrl,
                 dataType: "json",
                 data: function(params) {
+                    var queryText = params.term;
+                    var queryTags = '';
+
+                    // Tags
+                    if(params.term != undefined) {
+                        var tags = params.term.match(/\[([^}]+)\]/);
+                        if(tags != null) {
+                            // Add tags to search
+                            queryTags = tags[1];
+
+                            // Replace tags in the query text
+                            queryText = params.term.replace(tags[0], '');
+                        }
+
+                        // Remove whitespaces and split by comma
+                        queryText = queryText.replace(' ', '');
+                        queryTags = queryTags.replace(' ', '');
+                    }
+
                     var query = {
-                        media: params.term,
+                        media: queryText,
+                        tags: queryTags,
                         type: "image",
+                        retired: 0,
+                        assignable: 1,
                         start: 0,
                         length: 10
                     };
@@ -376,6 +400,16 @@ var settingsUpdated = function(response) {
 
 var backGroundFormSetup = function(dialog) {
     $('#backgroundColor').colorpicker({format: "hex"});
+
+    // Tidy up colorpickers on modal close
+    if(dialog.hasClass('modal')) {
+        dialog.on("hide.bs.modal", function(e) {
+            if(e.namespace === 'bs.modal') {
+                // Remove colour pickers
+                dialog.find("#backgroundColor").colorpicker('destroy');
+            }
+        });
+    }
 
     var backgroundImageList = $('#backgroundImageId');
     var notFoundIcon = $('#bg_not_found_icon');
@@ -1002,5 +1036,216 @@ function regionEditFormSubmit() {
 
         if (xhr.success)
             window.location.reload();
+    });
+}
+
+function userProfileEditFormOpen() {
+
+    $("#qRCode").addClass("hidden");
+    $("#recoveryButtons").addClass("hidden");
+    $("#recoveryCodes").addClass("hidden");
+
+    $("#twoFactorTypeId").on("change", function (e) {
+        e.preventDefault();
+        if ($("#twoFactorTypeId").val() == 2 && $('#userEditProfileForm').data().currentuser != 2) {
+            $.ajax({
+                url: $('#userEditProfileForm').data().setup,
+                type: "GET",
+                beforeSend: function () {
+                    $("#qr").addClass('fa fa-spinner fa-spin loading-icon')
+                },
+                success: function (response) {
+                    let qRCode = response.data.qRUrl;
+                    $("#qrImage").attr("src", qRCode);
+                },
+                complete: function () {
+                    $("#qr").removeClass('fa fa-spinner fa-spin loading-icon')
+                }
+            });
+            $("#qRCode").removeClass("hidden");
+        } else {
+            $("#qRCode").addClass("hidden");
+        }
+
+        if ($("#twoFactorTypeId").val() == 0) {
+            $("#recoveryButtons").addClass("hidden");
+            $("#recoveryCodes").addClass("hidden");
+        }
+
+        if ($('#userEditProfileForm').data().currentuser != 0 && $("#twoFactorTypeId").val() != 0) {
+            $("#recoveryButtons").removeClass("hidden");
+        }
+    });
+
+    if ($('#userEditProfileForm').data().currentuser != 0) {
+        $("#recoveryButtons").removeClass("hidden");
+    }
+    let generatedCodes = '';
+
+    $('#generateCodesBtn').on("click", function (e) {
+        $("#codesList").html("");
+        $("#recoveryCodes").removeClass('hidden');
+        $(".recBtn").attr("disabled", true).addClass("disabled");
+        generatedCodes = '';
+
+        $.ajax({
+            url: $('#userEditProfileForm').data().generate,
+            async: false,
+            type: "GET",
+            beforeSend: function () {
+                $("#codesList").removeClass('well').addClass('fa fa-spinner fa-spin loading-icon');
+            },
+            success: function (response) {
+                generatedCodes = JSON.parse(response.data.codes);
+                $("#recoveryCodes").addClass('hidden');
+                $(".recBtn").attr("disabled", false).removeClass("disabled");
+                $('#showCodesBtn').click();
+            },
+            complete: function () {
+                $("#codesList").removeClass('fa fa-spinner fa-spin loading-icon');
+            }
+        });
+    });
+
+    $('#showCodesBtn').on("click", function (e) {
+        $(".recBtn").attr("disabled", true).addClass("disabled");
+        $("#codesList").html("");
+        $("#recoveryCodes").toggleClass('hidden');
+        let codesList = [];
+
+        $.ajax({
+            url: $('#userEditProfileForm').data().show,
+            type: "GET",
+            data: {
+                generatedCodes: generatedCodes,
+            },
+            success: function (response) {
+                if (generatedCodes != '') {
+                    codesList = generatedCodes;
+                } else {
+                    codesList = response.data.codes;
+                }
+
+                $('#twoFactorRecoveryCodes').val(JSON.stringify(codesList));
+                $.each(codesList, function (index, value) {
+                    $("#codesList").append(value + "<br/>");
+                });
+                $("#codesList").addClass('well');
+                $(".recBtn").attr("disabled", false).removeClass("disabled");
+            }
+        });
+    });
+}
+
+function tagsWithValues(formId) {
+    $('#tagValue, label[for="tagValue"], #tagValueRequired').addClass("hidden");
+
+    let tag;
+    let tagWithOption = '';
+    let tagN = '';
+    let tagV = '';
+    let tagOptions = [];
+    let tagIsRequired = 0;
+
+    let formSelector = '#' + formId + ' input#tags';
+
+    $(formSelector).on('beforeItemAdd', function(event) {
+        $('#tagValue').html('');
+        tag = event.item;
+        tagOptions = [];
+        tagIsRequired = 0;
+        tagN = tag.split('|')[0];
+        tagV = tag.split('|')[1];
+
+        if ($(formSelector).val().indexOf(tagN) === -1 && tagV === undefined) {
+            $.ajax({
+                url: $('#'+formId).data().gettag,
+                type: "GET",
+                data: {
+                    name: tagN,
+                },
+                beforeSend: function () {
+                    $("#loadingValues").addClass('fa fa-spinner fa-spin loading-icon')
+                },
+                success: function (response) {
+
+                    if (response.success && response.data.tag != null) {
+                        tagOptions = JSON.parse(response.data.tag.options);
+                        tagIsRequired = response.data.tag.isRequired;
+
+                        if (tagOptions != null && tagOptions != []) {
+                            $('#tagValue, label[for="tagValue"]').removeClass("hidden");
+
+                            $('#tagValue')
+                                .append($("<option></option>")
+                                    .attr("value", '')
+                                    .text(''));
+
+                            $.each(tagOptions, function (key, value) {
+                                $('#tagValue')
+                                    .append($("<option></option>")
+                                        .attr("value", value)
+                                        .text(value));
+                            });
+
+                            $('#tagValue').focus();
+                        }
+                    }
+                },
+                complete: function () {
+                    $("#loadingValues").removeClass('fa fa-spinner fa-spin loading-icon')
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error(jqXHR, textStatus, errorThrown);
+                }
+            });
+        }
+    });
+
+    $(formSelector).on('itemAdded', function(event) {
+        if (tagOptions != null && tagOptions !== []) {
+            $('#tagValue').focus();
+        }
+    });
+
+    $(formSelector).on('itemRemoved', function(event) {
+
+        if(tagN === event.item) {
+            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
+            $('.save-button').prop('disabled', false);
+            $('#tagValue').html('').addClass("hidden");
+        } else if ($(".save-button").is(":disabled")) {
+            // do nothing with jQuery
+        } else {
+            $('#tagValue').html('').addClass("hidden");
+            $('label[for="tagValue"]').addClass("hidden");
+        }
+    });
+
+    $("#tagValue").on("change", function (e) {
+        e.preventDefault();
+        tagWithOption = tagN + '|' + $(this).val();
+
+        if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
+            $(formSelector).tagsinput('add', tagWithOption);
+            $(formSelector).tagsinput('remove', tagN);
+            $('#tagValue').html('').addClass("hidden");
+            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
+            $('.save-button').prop('disabled', false);
+        } else {
+            $('#tagValueRequired').removeClass('hidden');
+            $('#tagValue').focus();
+        }
+    });
+
+    $('#tagValue').blur(function() {
+        if($(this).val() === '' && tagIsRequired === 1 ) {
+            $('#tagValueRequired').removeClass('hidden');
+            $('#tagValue').focus();
+            $('.save-button').prop('disabled', true);
+        } else {
+            $('#tagValue').html('').addClass("hidden");
+            $('label[for="tagValue"]').addClass("hidden");
+        }
     });
 }

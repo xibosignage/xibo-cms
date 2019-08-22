@@ -103,7 +103,9 @@ class Logging extends Base
             'userId' => $this->getSanitizer()->getInt('userId'),
             'excludeLog' => $this->getSanitizer()->getCheckbox('excludeLog'),
             'runNo' => $this->getSanitizer()->getString('runNo'),
-            'message' => $this->getSanitizer()->getString('message')
+            'message' => $this->getSanitizer()->getString('message'),
+            'display' => $this->getSanitizer()->getString('display'),
+            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
         ]));
 
         foreach ($logs as $log) {

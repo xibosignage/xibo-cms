@@ -572,6 +572,14 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * @return bool true if this widget has an expiry date
+     */
+    public function hasExpiry()
+    {
+        return $this->toDt !== self::$DATE_MAX;
+    }
+
+    /**
      * @return bool true if this widget has expired
      */
     public function isExpired()
@@ -833,7 +841,11 @@ class Widget implements \JsonSerializable
 
         // Should we notify the Playlist
         // we do this if the duration has changed on this widget.
-        if ($options['forceNotifyPlaylists'] || ($options['notifyPlaylists'] && $this->hasPropertyChanged('calculatedDuration'))) {
+        if ($options['forceNotifyPlaylists']|| ($options['notifyPlaylists'] && (
+                $this->hasPropertyChanged('calculatedDuration')
+                || $this->hasPropertyChanged('fromDt')
+                || $this->hasPropertyChanged('toDt')
+            ))) {
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,

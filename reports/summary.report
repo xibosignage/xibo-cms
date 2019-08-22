@@ -1,0 +1,8 @@
+{
+  "name": "summaryReport",
+  "description": "Chart: Summary by Layout, Media or Event",
+  "class": "\\Xibo\\Report\\SummaryReport",
+  "type": "Chart",
+  "color":"red",
+  "fa_icon": "fa-bar-chart"
+}

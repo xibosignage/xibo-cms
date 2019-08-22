@@ -1,0 +1,156 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Saved reports" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="savedreportView">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("saveAs", title) }}
+
+                            {% set title %}{% trans "Owner" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                            {% set users = [{userId: null, userName: ""}]|merge(users) %}
+                            {{ inline.dropdown("userId", "single", title, null, users, "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set helpText %}{% trans "Show items belong to a report." %}{% endset %}
+                            {% set reports = [{name: null, description: ""}]|merge(availableReports) %}
+                            {{ inline.dropdown("reportName", "single", title, null, reports, "name", "description", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Only my reports?" %}{% endset %}
+                            {{ inline.checkbox("onlyMyReport", title, 1) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="savedreports" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Report Schedule" %}</th>
+                            <th>{% trans "Saved as" %}</th>
+                            <th>{% trans "Report Type" %}</th>
+                            <th>{% trans "Generated on" %}</th>
+                            <th>{% trans "Owner" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table;
+        $(document).ready(function() {
+
+            let url_string = window.location.href;
+            let url = new URL(url_string);
+            let reportName = url.searchParams.get("reportName");
+
+            if (reportName !== undefined && reportName != null) {
+                $('#reportName').val(reportName).trigger('change');
+            }
+
+            table = $("#savedreports").DataTable({ "language": dataTablesLanguage,
+                serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: function (settings, callback) {
+                    var data = {};
+                    $.ajax({
+                        type: "GET",
+                        async: false,
+                        url: "{{ urlFor("user.pref") }}?preference=savedreportGrid",
+                        dataType: 'json',
+                        success: function (json) {
+                            try {
+                                if (json.success) {
+                                    data = JSON.parse(json.data.value);
+                                }
+                            } catch (e) {
+                                // Do nothing
+                            }
+                        }
+                    });
+                    return data;
+                },
+                stateSaveCallback: function (settings, data) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ urlFor("user.pref") }}",
+                        data: {
+                            preference: [{
+                                option: "savedreportGrid",
+                                value: JSON.stringify(data)
+                            }]
+                        }
+                    });
+                },
+                filter: false,
+                searchDelay: 3000,
+                "order": [[ 1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("savedreport.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#savedreports").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    { "data": "reportScheduleName"},
+                    { "data": "saveAs"},
+                    { "data": "reportName", "visible": false},
+                    {
+                        "data": "generatedOn",
+                        "render": dataTableDateFromUnix
+                    },
+                    { "data": "owner"},
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#savedreports_wrapper').find('.col-sm-6').eq(1));
+        })
+    </script>
+{% endblock %}

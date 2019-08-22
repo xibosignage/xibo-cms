@@ -1,0 +1,97 @@
+{#
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit User Profile" %}
+{% endblock %}
+
+{% block callBack %}userProfileEditFormOpen{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help.editProfile }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#userEditProfileForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="userEditProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit.profile", {id: user.userId}) }}" data-setup="{{ data.setup }}" data-generate="{{ data.generate }}" data-show="{{ data.show }}" data-currentuser="{{  currentUser.twoFactorTypeId }}">
+                {% set title %}{% trans "User Name" %}{% endset %}
+                {{ forms.disabled("userName", title, currentUser.userName) }}
+
+                {% set title %}{% trans "Password" %}{% endset %}
+                {% set helpText %}{% trans "Please enter your current password" %}{% endset %}
+                {{ forms.password("password", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "New Password" %}{% endset %}
+                {% set helpText %}{% trans "Please enter your new password" %}{% endset %}
+                {{ forms.password("newPassword", title, "", helpText) }}
+
+                {% set title %}{% trans "Retype New Password" %}{% endset %}
+                {% set helpText %}{% trans "Please repeat the new Password." %}{% endset %}
+                {{ forms.password("retypeNewPassword", title, "", helptext) }}
+
+                {% set title %}{% trans "Email" %}{% endset %}
+                {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
+                {{ forms.email("email", title, currentUser.email, helpText) }}
+
+                {% set title %}{% trans "Two Factor Authentication" %}{% endset %}
+                {% set helpText %}{% trans "Enable an option to provide a two factor authentication code to log into the CMS for added security." %}{% endset %}
+                {% set values = [{id: 0, value: "Off"}, {id: 1, value: "Email"}, {id: 2, value: "Google Authenticator"}] %}
+                {{ forms.dropdown("twoFactorTypeId", "single", title, currentUser.twoFactorTypeId, values, "id", "value", helpText) }}
+
+                {{ forms.hidden("twoFactorRecoveryCodes", currentUser.twoFactorRecoveryCodes) }}
+                <div id="qRCode">
+                    <p>{% trans "Please scan the following image with your app:" %}</p>
+                    <p id="qr"><img id="qrImage" src=""></p>
+                    <div>
+                        {% set title %}{% trans "Access Code" %}{% endset %}
+                        {{ forms.input("code", title) }}
+                    </div>
+                </div>
+
+                <div id="recoveryButtons">
+                    <p>{% trans "Please use the buttons below to generate or show your two factor recovery codes." %}</p>
+
+                    <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
+                        <li class="btn btn-success btn-xs recBtn"><a class="btns generateCodes" id="generateCodesBtn" style="padding: 7px 7px;" title="{% trans "Generate Recovery codes, this action will invalidate all existing recovery codes." %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Generate" %}</a></li>
+                    </ul>
+
+                    <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
+                        <li class="btn btn-info btn-xs recBtn"><a class="btns showCodes" id="showCodesBtn" style="padding: 7px 7px;" title="{% trans "Show existing recovery codes" %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Show" %}</a></li>
+                    </ul>
+                </div>
+
+                <div id="recoveryCodes" style="float: left; width: 100%;">
+                    <p>{% trans "Here are your recovery codes, please make sure to store them in a safe place, like password manager." %}</p>
+                    <p>{% trans "Recovery codes will become active only after this form is successfully saved" %}</p>
+                    <p id="codesList" class=""></p>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

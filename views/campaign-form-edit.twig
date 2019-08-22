@@ -8,6 +8,7 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
 
 {% block formTitle %}
     {% trans "Edit Campaign" %}
@@ -16,21 +17,80 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#campaignEditForm").submit()
+    {% trans "Save" %}, campaignFormSubmit($('#campaignEditForm'))
 {% endblock %}
+
+{% block callBack %}campaignAssignLayoutsFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}">
+            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, campaign.campaign, helpText) }}
                 
                 {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tags for this campaign - used when searching for it. Comma delimited. (1 - 250 characters)" %}{% endset %}
-                {{ forms.inputWithTags("tags", title, campaign.tags, helpText) }}
+                {% set helpText %}{% trans "Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+
+                <p id="loadingValues" style="margin-left: 17%"></p>
+
+                {% set title %}{% trans "Tag value" %}{% endset %}
+                {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                <div id="tagValueRequired" class="alert alert-info">
+                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                </div>
+
+                <div id="assignLayouts"></div>
+                <div id="unassignLayouts"></div>
             </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 well">
+            {% set campaignName = campaign.campaign %}
+            <h4>{% trans %}Layouts on {{campaignName}}{% endtrans %}</h4>
+            <div id="LayoutAssign" class="well" data-url="{{ urlFor("campaign.assign.layout", {id: campaign.campaignId}) }}">
+                <div>
+                    <ul id="LayoutAssignSortable">
+                        {% for item in layouts %}
+                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-default {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="glyphicon glyphicon-minus-sign"></span>{% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
+                <div class="layoutAssignFilterOptions XiboFilter">
+                    <form class="form-inline" onsubmit="false">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {{ inline.input("layout", title) }}
+
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {{ inline.inputWithTags("tags", title) }}
+
+                        {% set title %}{% trans "Exact match?" %}{% endset %}
+                        {{ inline.checkbox("exactTags", title) }}
+                    </form>
+                </div>
+
+                <div class="XiboData">
+                    <table id="layoutAssignments" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}

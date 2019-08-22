@@ -502,7 +502,6 @@ class DataSet implements \JsonSerializable
 
         // Are there any client side formulas?
         if (count($clientSideFormula) > 0) {
-            $language = '';
             $renderedData = [];
             foreach ($data as $item) {
                 foreach ($clientSideFormula as $column) {
@@ -515,6 +514,8 @@ class DataSet implements \JsonSerializable
 
                             if (isset($details[2])) {
                                 $language = str_replace(' ', '', $details[2]);
+                            } else {
+                                $language = $this->config->getSetting('DEFAULT_LANGUAGE', 'en_GB');
                             }
 
                             $this->date->setLocale($language);

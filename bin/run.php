@@ -1,8 +1,10 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016-2018 Spring Signage Ltd
- * (run.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,8 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Console Runner
  */
 
 define('XIBO', true);
@@ -57,10 +57,10 @@ $app->setName('console');
 // Config
 $app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
-// Check for upgrade AFTER loading the config service
-// sometimes people put include_once/require_once in their settings.php file
-if (\Xibo\Helper\Environment::migrationPending())
+// Check for upgrade after we've loaded settings to make sure the main app gets any custom settings it needs.
+if (\Xibo\Helper\Environment::migrationPending()) {
     die('Upgrade pending');
+}
 
 // Set up the environment so that Slim can route
 $app->environment = Slim\Environment::mock([

@@ -30,6 +30,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -117,6 +118,14 @@ class Playlist implements \JsonSerializable
     public $requiresDurationUpdate;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The option to enable the collection of Playlist Proof of Play statistics"
+     * )
+     */
+    public $enableStat;
+
+    /**
      * @SWG\Property(description="An array of Tags")
      * @var Tag[]
      */
@@ -140,6 +149,8 @@ class Playlist implements \JsonSerializable
      */
     public $tempId = null;
 
+    public $tagValues;
+
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
@@ -147,6 +158,7 @@ class Playlist implements \JsonSerializable
     private $unassignTags = [];
 
     //<editor-fold desc="Factories and Dependencies">
+
     /**
      * @var DateServiceInterface
      */
@@ -394,18 +406,44 @@ class Playlist implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
 
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
+        if ($this->tags != $tags) {
+            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
+                /* @var Tag $a */
+                /* @var Tag $b */
+                return $a->tagId - $b->tagId;
+            });
+
+            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+
+            // Replace the arrays
+            $this->tags = $tags;
+
+            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
+    }
+
+    /**
+     * Unassign tag
+     * @param Tag $tag
+     * @return $this
+     */
+    public function unassignTag($tag)
+    {
+        $this->load();
+
+        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
             return $a->tagId - $b->tagId;
         });
 
-        $this->getLog()->debug('Tags to be removed: ' . json_encode($this->unassignTags));
+        $this->unassignTags[] = $tag;
 
-        // Replace the arrays
-        $this->tags = $tags;
+        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
-        $this->getLog()->debug('Tags remaining: ' . json_encode($this->tags));
+        return $this;
     }
 
     /**
@@ -597,6 +635,13 @@ class Playlist implements \JsonSerializable
         // Delete my closure table records
         $this->getStore()->update('DELETE FROM `lkplaylistplaylist` WHERE childId = :playlistId', ['playlistId' => $this->playlistId]);
 
+        // Unassign tags
+        foreach ($this->tags as $tag) {
+            /* @var Tag $tag */
+            $tag->unassignPlaylist($this->playlistId);
+            $tag->save();
+        }
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -628,8 +673,8 @@ class Playlist implements \JsonSerializable
         $time = date('Y-m-d H:i:s');
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -640,7 +685,8 @@ class Playlist implements \JsonSerializable
             'filterMediaTags' => $this->filterMediaTags,
             'createdDt' => $time,
             'modifiedDt' => $time,
-            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : 1
+            'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
+            'enableStat' => $this->enableStat
         ));
 
         // Insert my self link
@@ -667,7 +713,8 @@ class Playlist implements \JsonSerializable
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
-                `requiresDurationUpdate` = :requiresDurationUpdate
+                `requiresDurationUpdate` = :requiresDurationUpdate,
+                `enableStat` = :enableStat
              WHERE `playlistId` = :playlistId
         ';
 
@@ -681,7 +728,8 @@ class Playlist implements \JsonSerializable
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
             'modifiedDt' => date('Y-m-d H:i:s'),
-            'requiresDurationUpdate' => $this->requiresDurationUpdate
+            'requiresDurationUpdate' => $this->requiresDurationUpdate,
+            'enableStat' => $this->enableStat
         ));
     }
 
@@ -775,10 +823,37 @@ class Playlist implements \JsonSerializable
 
         $duration = 0;
 
+        // What is the next time we need to update this Playlist (0 is never)
+        $nextUpdate = 0;
+
         foreach ($this->widgets as $widget) {
+            // Is this widget expired?
+            if ($widget->isExpired()) {
+
+                // Remove this widget.
+                if ($widget->getOptionValue('deleteOnExpiry', 0) == 1) {
+                    // Don't notify at all because we're going to do that when we finish updating our duration.
+                    $widget->delete([
+                        'notify' => false,
+                        'notifyPlaylists' => false,
+                        'forceNotifyPlaylists' => false,
+                        'notifyDisplays' => false
+                    ]);
+                }
+
+                // Do not assess it
+                continue;
+            }
+
             // If we're a standard widget, add right away
             if ($widget->type !== 'subplaylist') {
                 $duration += $widget->calculatedDuration;
+
+                // Does this expire?
+                // Log this as the new next update
+                if ($widget->hasExpiry() && ($nextUpdate == 0 || $nextUpdate > $widget->toDt)) {
+                    $nextUpdate = $widget->toDt;
+                }
             } else {
                 // Add the sub playlist duration
                 /** @var SubPlaylist $module */
@@ -793,7 +868,7 @@ class Playlist implements \JsonSerializable
         $this->getLog()->debug('Delta duration after updateDuration ' . $delta);
 
         $this->duration = $duration;
-        $this->requiresDurationUpdate = 0;
+        $this->requiresDurationUpdate = $nextUpdate;
 
         $this->save(['saveTags' => false, 'saveWidgets' => false]);
 

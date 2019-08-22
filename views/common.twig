@@ -29,6 +29,12 @@
             modulesList.push({{ module.getModule()|json_encode|raw }});
         {% endfor %}
 
+        // USERS LIST
+        var usersList = [];
+        {% for user in users %}
+            usersList.push({{ user|json_encode|raw }});
+        {% endfor %}
+
         // Structure with API URLs
         let urlsForApi = {
             layout: {
@@ -74,11 +80,15 @@
                     url: "{{ urlFor("layout.designer") }}"
                 },
                 schedule: {
-                    url: "{{ urlFor("schedule.now.form", {from: 'Campaign'}) }}",
+                    url: "{{ urlFor("schedulenow.now.form", {from: 'Campaign'}) }}",
                     type: 'GET'
                 },
                 saveTemplate: {
                     url: "{{ urlFor("template.from.layout.form") }}",
+                    type: 'GET'
+                },
+                publishForm: {
+                    url: "{{ urlFor("layout.publish.form") }}",
                     type: 'GET'
                 }
             },
@@ -217,6 +227,12 @@
                     url: "{{ urlFor("user.permissions.form") }}",
                     type: 'GET'
                 }
+            },
+            media: {
+                isUsed: {
+                    url: "{{ urlFor("library.isused") }}",
+                    type: 'GET'
+                }
             }
         };
 
@@ -243,6 +259,13 @@
                 cancelUpload: "{% trans "Cancel upload" %}",
                 processing: "{% trans "Processing..." %}",
                 viewLibrary: "{% trans "View Library" %}",
+            };
+
+            var deleteMenuTrans = {
+                mainMessage: "{% trans "Are you sure you want to remove this %obj%? This action cannot be undone." %}",
+                infoDeleteMessage: "{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." %}",
+                deleteMediaFromLibraryTitle: "{% trans "Also delete from the Library?" %}",
+                deleteMediaFromLibraryMessage: "{% trans "This widget is linked to Media in the Library. Check this option to also delete that Media." %}"
             };
 
             var contextMenuTrans = {
@@ -283,7 +306,8 @@
                 searchFilters: {
                     name: "{% trans "Name" %}",
                     tag: "{% trans "Tag" %}",
-                    type: "{% trans "Type" %}"
+                    type: "{% trans "Type" %}",
+                    owner: "{% trans "Owner" %}"
                 },
                 tabName: "{% trans "Library Search %tagId%" %}",
                 tableHeader: {
@@ -325,6 +349,11 @@
                         name: "{% trans "Permissions" %}",
                         description: "{% trans "Set View, Edit and Delete Permissions for Widgets and Regions" %}"
                     }
+                },
+                window: {
+                    drag: "{% trans "Move Window" %}",
+                    close: "{% trans "Close Window" %}",
+                    minimise: "{% trans "Minimise Window" %}"
                 }
             };
 
@@ -365,6 +394,7 @@
                 formLoadFailed: "{% trans "Form load failed!" %}",
                 revertFailed: "{% trans "Revert failed: %error%" %}",
                 saveOrderFailed: "{% trans "Save order failed: %error%" %}",
+                deleteFailed: "{% trans "Object delete failed: %error%" %}",
                 saveAllChangesFailed: "{% trans "Save all changes failed!" %}",
                 removeAllChangesFailed: "{% trans "Remove all changes failed!!" %}",
                 addMediaFailed: "{% trans "Add media failed: %error%" %}",

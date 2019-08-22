@@ -1,0 +1,467 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}?reportName=distributionReport""><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}?reportName=distributionReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+    <div class="proof-of-play-report-div pull-right btn-group">
+        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <span class="fa fa-caret-down"></span>
+            {% trans "Reports" %}
+        </button>
+        <ul class="dropdown-menu">
+            {% for report in defaults.availableReports %}
+                <li>
+                    <a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            {% trans "Distribution by Layout, Media or Event" %}
+            <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below. Where the Range crosses period boundaries the data is aggregated into the correct period - i.e 1 week grouped by hourly produces 24 periods." %}"></span>
+        </div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilterCustom">
+                    <div class="FilterDiv" id="distributionReport">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Filter" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set today %}{% trans "Today" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
+                            {% set options = [
+                                { filterName: "", reportFilter: range },
+                                { filterName: "today", reportFilter: today },
+                                { filterName: "yesterday", reportFilter: yesterday },
+                                { filterName: "thisweek", reportFilter: thisweek },
+                                { filterName: "thismonth", reportFilter: thismonth },
+                                { filterName: "thisyear", reportFilter: thisyear },
+                                { filterName: "lastweek", reportFilter: lastweek },
+                                { filterName: "lastmonth", reportFilter: lastmonth },
+                                { filterName: "lastyear", reportFilter: lastyear },
+                            ] %}
+                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Group by" %}{% endset %}
+                            {% set byhour %}{% trans "Hour" %}{% endset %}
+                            {% set bydayofweek %}{% trans "Day of week" %}{% endset %}
+                            {% set bydayofmonth %}{% trans "Day of month" %}{% endset %}
+                            {% set options = [
+                                { filterName: "byhour", groupByFilter: byhour },
+                                { filterName: "bydayofweek", groupByFilter: bydayofweek },
+                                { filterName: "bydayofmonth", groupByFilter: bydayofmonth },
+                            ] %}
+                            {{ inline.dropdown("groupByFilter", "single", title, "", options, "filterName", "groupByFilter", "", "group-by-filter") }}
+
+                            {% set title %}{% trans "Type" %}{% endset %}
+                            {% set layout %}{% trans "Layout" %}{% endset %}
+                            {% set media %}{% trans "Media" %}{% endset %}
+                            {% set event %}{% trans "Event" %}{% endset %}
+                            {% set options = [
+                                { typeid: "layout", type: layout },
+                                { typeid: "media", type: media },
+                                { typeid: "event", type: event },
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
+
+                            {% set title %}{% trans "Layout" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Layout" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-search-term", value: "layout" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "layoutId" },
+                                { name: "data-text-property", value: "layout" }
+                            ] %}
+
+                            {{ inline.dropdown("layoutId", "single", title, "", null, "layoutId", "layout", helpText, "pagedSelect layout-select", "", "l", "", attributes) }}
+
+                            {% set title %}{% trans "Media" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Media" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" }
+                            ] %}
+                            {{ inline.dropdown("mediaId", "single", title, "", null, "mediaId", "name", helpText, "pagedSelect media-select", "", "m", "", attributes) }}
+
+                            {% set title %}{% trans "Tag" %} *{% endset %}
+                            {% set helpText %}{% trans "This field is required when the Type selected is Event" %}{% endset %}
+                            {{ inline.input("eventTag", title, "", helpText, "tag-text") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            <p></p>
+                            <div class="row">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
+                    <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
+
+        var reportChart = null;
+        var imageLoader = $("#imageLoader");
+
+        function setReport() {
+
+            imageLoader.show();
+            $.ajax({
+                type: "get",
+                url: "{{ urlFor("report.data", {name: reportName}) }}",
+                cache: false,
+                dataType: "json",
+                data: $("#distributionReport").find("form").serialize(),
+                success: function(response) {
+
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+
+                    imageLoader.hide();
+                    if (reportChart !== undefined && reportChart !== null) {
+                        reportChart.destroy();
+                    }
+
+                    if (response.extra.countData.length <= 0) {
+                        return;
+                    }
+
+                    if (response.extra.durationData.length <= 0) {
+                        return;
+                    }
+
+                    // Create our chart
+                    reportChart = new Chart($("#reportChart"), {
+                        type: "bar",
+                        data: {
+                            labels: response.extra.labels,
+                            datasets: [{
+                                label: "{% trans "Total duration" %}",
+                                yAxisID: 'Duration',
+                                backgroundColor: response.extra.backgroundColor,
+                                data: response.extra.durationData,
+                            },
+                                {
+                                    label: "{% trans "Total count" %}",
+                                    yAxisID: 'Count',
+                                    borderColor: response.extra.borderColor,
+                                    data: response.extra.countData,
+                                    type: 'line',
+                                    fill: false
+                                }]
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    id: 'Duration',
+                                    type: 'linear',
+                                    position: 'left',
+                                    display: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Duration(s)'
+                                    },
+                                    ticks: {
+                                        beginAtZero:true
+                                    }
+                                }, {
+                                    id: 'Count',
+                                    type: 'linear',
+                                    position: 'right',
+                                    display: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Count'
+                                    },
+                                    ticks: {
+                                        beginAtZero:true
+                                    }
+                                }]
+                            },
+                            maintainAspectRatio: true,
+                        }
+                    });
+                }
+            });
+        }
+
+        $(document).ready(function() {
+
+            // Init
+            var warning = $("#applyWarning");
+            var applyBtn = $("#applyBtn");
+            var type = $("#type");
+            var mediaSelect =$(".media-select");
+            var layoutSelect =$(".layout-select");
+            var eventTagCls =$(".tag-text");
+
+            // Calculate the difference of number of days of a selected range
+            const calculateDaysShowHideWarn = function() {
+
+                console.log('m i here');
+                let fromDt = moment($("#statsFromDt").val());
+                let toDt = moment($("#statsToDt").val());
+
+                let days = toDt.diff(fromDt, 'days');
+
+                warning.hide();
+                if ( days >= 30) {
+                    warning.show();
+                }
+
+                return true;
+            };
+
+            $("#statsFromDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            $("#statsToDtLink").change( function() {
+                calculateDaysShowHideWarn();
+            });
+
+            // Enable/Disable Schedule Btn
+            const checkEnableSchedule = function() {
+
+                // Schedule button enable/disable - start
+                var mediaVal = $("#mediaId").val();
+                var layoutVal = $("#layoutId").val();
+                var eventTagVal = $("#eventTag").val();
+                var anchorReportAddBtn = $("a#reportAddBtn");
+
+                var typeVal = $("#type").val();
+
+                if ( typeVal === 'layout') {
+                    if (layoutVal == null) {
+                        anchorReportAddBtn.parent().addClass('disabled');
+                        anchorReportAddBtn.removeAttr('href');
+                    } else {
+                        anchorReportAddBtn.parent().removeClass('disabled');
+                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=distributionReport" );
+                        anchorReportAddBtn.removeAttr('title');
+
+                    }
+                } else if ( typeVal === 'media') {
+                    if (mediaVal == null) {
+                        anchorReportAddBtn.parent().addClass('disabled');
+                        anchorReportAddBtn.removeAttr('href');
+                    } else {
+                        anchorReportAddBtn.parent().removeClass('disabled');
+                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=distributionReport" );
+                        anchorReportAddBtn.removeAttr('title');
+
+                    }
+                } else if ( typeVal === 'event') {
+                    if (eventTagVal == null) {
+                        anchorReportAddBtn.parent().addClass('disabled');
+                        anchorReportAddBtn.removeAttr('href');
+                    } else {
+                        anchorReportAddBtn.parent().removeClass('disabled');
+                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=distributionReport" );
+                        anchorReportAddBtn.removeAttr('title');
+
+                    }
+                }
+            };
+
+
+            // Report Filter
+            var reportFilter = $("#reportFilter");
+
+            // Hide / Show FromDt and ToDt
+            function checkReportFilter(reportFilter) {
+                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
+                    $(".stats-from-dt").show();
+                    $(".stats-to-dt").show();
+                } else {
+                    $(".stats-from-dt").hide();
+                    $(".stats-to-dt").hide();
+                }
+            }
+
+            const checkFilterAndApply = function() {
+
+                reportFilter.off('change').change( function() {
+
+                    var value = reportFilter.val();
+
+                    // Hide / Show FromDt and ToDt
+                    checkReportFilter(reportFilter);
+
+                    // Hide / Show Warning
+                    warning.hide();
+                    if ( value === '') {
+                        calculateDaysShowHideWarn();
+                    } else if ( value === 'thismonth' || value === 'lastmonth' || value === 'thisyear' || value === 'lastyear') {
+                        warning.show();
+                    }
+
+                });
+
+                type.off('change').change( function() {
+
+                    var value = type.val();
+                    if (value === 'media') {
+                        // show media and clear/hide the layout
+                        $("#layoutId").val("");
+                        $("#layoutId option").remove();
+                        layoutSelect.hide();
+
+                        $("#eventTag").val("");
+                        eventTagCls.hide();
+
+                        mediaSelect.show();
+
+
+                    } else if (value === 'layout') {
+                        // show layout and clear/hide the media
+                        $("#mediaId").val("");
+                        $("#mediaId option").remove();
+                        mediaSelect.hide();
+
+                        $("#eventTag").val("");
+                        eventTagCls.hide();
+
+                        layoutSelect.show();
+
+                    } else if (value === 'event') {
+                        // clear/hide the media and layout
+                        $("#mediaId").val("");
+                        $("#mediaId option").remove();
+                        $("#layoutId").val("");
+                        $("#layoutId option").remove();
+                        mediaSelect.hide();
+                        layoutSelect.hide();
+
+                        // show tag
+                        eventTagCls.show();
+
+                    }
+                });
+
+            };
+
+            type.val('layout');
+            mediaSelect.hide();
+            eventTagCls.hide();
+
+            imageLoader.hide();
+
+            checkReportFilter(reportFilter);
+            checkFilterAndApply();
+
+            applyBtn.addClass('disabled');
+            checkEnableSchedule();
+
+            // Bind to form change
+            $("#distributionReport").on('change', function() {
+                checkEnableSchedule();
+
+                var layoutVal =  $("#layoutId").val();
+                var mediaVal =  $("#mediaId").val();
+                var eventVal =  $("#eventTag").val();
+
+                if ((layoutVal === null || layoutVal === '' || layoutVal === undefined) &&
+                    (mediaVal === null || mediaVal === '' || mediaVal === undefined) &&
+                    (eventVal === null || eventVal === '' || eventVal === undefined) ) {
+
+                    applyBtn.addClass('disabled');
+
+                } else {
+                    applyBtn.removeClass('disabled');
+                }
+            });
+
+            // Apply
+            applyBtn.click(function () {
+                checkFilterAndApply();
+                setReport();
+            });
+        });
+
+    </script>
+{% endblock %}

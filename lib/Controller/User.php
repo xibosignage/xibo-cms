@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use RobThree\Auth\TwoFactorAuth;
 use Xibo\Entity\Campaign;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Media;
@@ -49,6 +50,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -756,6 +758,7 @@ class User extends Base
         if ($this->getUser()->userTypeId == 1) {
             $newPassword = $this->getSanitizer()->getString('newPassword');
             $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
+            $disableTwoFactor = $this->getSanitizer()->getCheckbox('disableTwoFactor');
 
             if ($newPassword != null && $newPassword != '') {
                 // Make sure they are the same
@@ -764,6 +767,11 @@ class User extends Base
 
                 // Set the new password
                 $user->setNewPassword($newPassword);
+            }
+
+            // super admin can clear the twoFactorTypeId and secret for the user.
+            if ($disableTwoFactor) {
+                $user->clearTwoFactor();
             }
         }
 
@@ -936,13 +944,22 @@ class User extends Base
 
     /**
      * Change my password form
+     * @throws \RobThree\Auth\TwoFactorAuthException
      */
-    public function changePasswordForm()
+    public function editProfileForm()
     {
-        $this->getState()->template = 'user-form-change-password';
+        $user = $this->getUser();
+
+        $this->getState()->template = 'user-form-edit-profile';
         $this->getState()->setData([
+            'user' => $user,
             'help' => [
-                'changePassword' => $this->getHelp()->link('User', 'ChangePassword')
+                'editProfile' => $this->getHelp()->link('User', 'EditProfile')
+            ],
+            'data' => [
+                'setup' => $this->urlFor('user.setup.profile'),
+                'generate' => $this->urlFor('user.recovery.generate.profile'),
+                'show' => $this->urlFor('user.recovery.show.profile'),
             ]
         ]);
     }
@@ -950,34 +967,198 @@ class User extends Base
     /**
      * Change my Password
      * @throws InvalidArgumentException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws XiboException
      */
-    public function changePassword()
+    public function editProfile()
     {
-        // Save the user
         $user = $this->getUser();
+        // Store current (before edit) value of twoFactorTypeId in a variable
+        $oldTwoFactorTypeId = $user->twoFactorTypeId;
+
+        // get all other values from the form
         $oldPassword = $this->getSanitizer()->getString('password');
         $newPassword = $this->getSanitizer()->getString('newPassword');
         $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
+        $user->email = $this->getSanitizer()->getString('email');
+        $user->twoFactorTypeId = $this->getSanitizer()->getInt('twoFactorTypeId');
+        $code = $this->getSanitizer()->getString('code');
+        $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
 
-        if ($newPassword == null || $retypeNewPassword == '')
-            throw new InvalidArgumentException(__('Please enter the password'), 'password');
+        if ($recoveryCodes != null || $recoveryCodes != []) {
+            $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
+        }
 
-        if ($newPassword != $retypeNewPassword)
+        // check if we have a new password provided, if so check if it was correctly entered
+        if ($newPassword != $retypeNewPassword) {
             throw new InvalidArgumentException(__('Passwords do not match'), 'password');
+        }
 
-        $user->setNewPassword($newPassword, $oldPassword);
-        $user->save([
-            'passwordUpdate' => true
-        ]);
+        // check if we have saved secret, for google auth that is done on jQuery side
+        if (!isset($user->twoFactorSecret) && $user->twoFactorTypeId === 1) {
+            $this->tfaSetup();
+            $user->twoFactorSecret = $_SESSION['tfaSecret'];
+            unset($_SESSION['tfaSecret']);
+        }
 
-        $user->isPasswordChangeRequired = 0;
+        // if we are setting up email two factor auth, check if the email is entered on the form as well
+        if ($user->twoFactorTypeId === 1 && $user->email == '') {
+            throw new InvalidArgumentException(__('Please provide valid email address'), 'email');
+        }
+
+        // if we have a new password provided, update the user record
+        if ($newPassword != null && $newPassword == $retypeNewPassword) {
+            $user->setNewPassword($newPassword, $oldPassword);
+            $user->isPasswordChangeRequired = 0;
+            $user->save([
+                'passwordUpdate' => true
+            ]);
+        }
+
+        // if we are setting up Google auth, we are expecting a code from the form, validate the code here
+        // we want to show QR code and validate the access code also with the previous auth method was set to email
+        if ($user->twoFactorTypeId === 2 && ($user->twoFactorSecret === null || $oldTwoFactorTypeId === 1)) {
+            if (!isset($code)) {
+                throw new InvalidArgumentException(__('Access Code is empty'), 'code');
+            }
+
+            $validation = $this->tfaValidate($code);
+
+            if (!$validation) {
+                unset($_SESSION['tfaSecret']);
+                throw new InvalidArgumentException(__('Access Code is incorrect'), 'code');
+            }
+
+            if ($validation) {
+                // if access code is correct, we want to set the secret to our user - either from session for new 2FA setup or leave it as it is for user changing from email to google auth
+                if (!isset($user->twoFactorSecret)) {
+                    $secret = $_SESSION['tfaSecret'];
+                } else {
+                    $secret = $user->twoFactorSecret;
+                }
+
+                $user->twoFactorSecret = $secret;
+                unset($_SESSION['tfaSecret']);
+            }
+        }
+
+        // if the two factor type is set to Off, clear any saved secrets and set the twoFactorTypeId to 0 in database.
+        if ($user->twoFactorTypeId == 0) {
+            $user->clearTwoFactor();
+        }
+
         $user->save();
 
         // Return
         $this->getState()->hydrate([
-            'message' => __('Password Changed'),
+            'message' => __('User Profile Saved'),
             'id' => $user->userId,
             'data' => $user
+        ]);
+    }
+
+    /**
+     * @throws XiboException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     */
+    public function tfaSetup()
+    {
+        $user = $this->getUser();
+
+        $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+        $appName = $this->getConfig()->getThemeConfig('app_name');
+
+        if ($issuerSettings !== '') {
+            $issuer = $issuerSettings;
+        } else {
+            $issuer = $appName;
+        }
+
+        $tfa = new TwoFactorAuth($issuer);
+
+        // create two factor secret and store it in user record
+        if (!isset($user->twoFactorSecret)) {
+            $secret = $tfa->createSecret();
+            $_SESSION['tfaSecret'] = $secret;
+        } else {
+            $secret = $user->twoFactorSecret;
+        }
+
+        // generate the QR code to scan, we only show it at first set up and only for Google auth
+        $qRUrl = $tfa->getQRCodeImageAsDataUri($user->userName, $secret);
+
+        $this->getState()->setData([
+            'qRUrl' => $qRUrl
+        ]);
+    }
+
+    /**
+     * @param string $code The Code to validate
+     * @return bool
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     */
+    public function tfaValidate($code)
+    {
+        $user = $this->getUser();
+        $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+        $appName = $this->getConfig()->getThemeConfig('app_name');
+
+        if ($issuerSettings !== '') {
+            $issuer = $issuerSettings;
+        } else {
+            $issuer = $appName;
+        }
+
+        $tfa = new TwoFactorAuth($issuer);
+
+        if (isset($_SESSION['tfaSecret'])) {
+            // validate the provided two factor code with secret for this user
+            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code);
+        } elseif (isset($user->twoFactorSecret)) {
+            $result = $tfa->verifyCode($user->twoFactorSecret, $code);
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+
+    public function tfaRecoveryGenerate()
+    {
+        $user = $this->getUser();
+
+        // clear any existing codes when we generate new ones
+        $user->twoFactorRecoveryCodes = [];
+
+        $count = 4;
+        $codes = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $codes[] = $this->getSanitizer()->string(Random::generateString(50));
+        }
+
+        $user->twoFactorRecoveryCodes =  $codes;
+
+        $this->getState()->setData([
+            'codes' => json_encode($codes, JSON_PRETTY_PRINT)
+        ]);
+
+        return $codes;
+    }
+
+    public function tfaRecoveryShow()
+    {
+        $user = $this->getUser();
+
+        $user->twoFactorRecoveryCodes = json_decode($user->twoFactorRecoveryCodes);
+
+        if (isset($_GET["generatedCodes"]) && !empty($_GET["generatedCodes"])) {
+            $generatedCodes = $_GET["generatedCodes"];
+            $user->twoFactorRecoveryCodes = json_encode($generatedCodes);
+        }
+
+        $this->getState()->setData([
+            'codes' => $user->twoFactorRecoveryCodes
         ]);
     }
 

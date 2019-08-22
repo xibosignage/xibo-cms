@@ -403,13 +403,43 @@ function XiboInitialise(scope) {
         makePagedSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
     });
 
+    // make a local select that search for text or tags
+    $(scope + " .localSelect select.form-control").each(function() {
+        makeLocalSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+    });
+
     // Notification dates
     $(scope + " span.notification-date").each(function() {
         $(this).html(moment($(this).html(), "X").fromNow());
     });
+
+    // Switch form elements
+    $(scope + " input.bootstrap-switch-target").each(function() {
+        $(this).bootstrapSwitch();
+    });
     
     // Initialize tags input form
     $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
+
+    // Initialize tag with values function from xibo-forms.js
+    $(scope + " .tags-with-value").each(function() {
+        tagsWithValues($(this).closest("form").attr('id'));
+    });
+
+    // If it's a modal, clear some created field on close
+    if($(scope).hasClass('modal')) {
+        $(scope).on("hide.bs.modal", function(e) {
+            if(e.namespace === 'bs.modal') {
+                // Remove datetimepickers
+                $(scope).find('.dateTimePicker .dateTimePickerDate, .dateTimePicker, .dateMonthPicker').datetimepicker('remove');
+
+                // Remove timepickers ( one by one )
+                $.each($(scope).find('.dateTimePicker .dateTimePickerTime, .timePicker'), function(idx, el) {
+                    $(el).timepicker('remove');
+                });
+            }
+        });
+    }
 }
 
 /**
@@ -582,13 +612,21 @@ function dataTableCreateTags(data, type) {
     var returnData = '';
 
     if(typeof data.tags != undefined && data.tags != null ) {
+        let arrayOfValues = [];
         var arrayOfTags = data.tags.split(',');
+
+        if(typeof data.tagValues != undefined && data.tagValues != null) {
+            arrayOfValues = data.tagValues.split(',');
+        }
 
         returnData += '<div id="tagDiv">';
 
-        for (var i = 0; i < arrayOfTags.length; i++) {
-            if(arrayOfTags[i] != '')
+        for (let i = 0; i < arrayOfTags.length; i++) {
+            if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
                 returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+            } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
+                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
+            }
         }
 
         returnData += '</div>';
@@ -633,22 +671,28 @@ function dataTableCreatePermissions(data, type) {
 function dataTableCreateTagEvents(e, settings) {
     
     var table = $("#" + e.target.id);
+    var tableId = e.target.id;
     var form = e.data.form;
-    
     // Unbind all 
     table.off('click');
     
     table.on("click", ".btn-tag", function(e) {
-        
-        // Get the form tag input text field
-        var inputText = form.find("#tags").val();
-        
         // See if its the first element, if not add comma
         var tagText = $(this).text();
-        
-        // Add text to form
-        form.find("#tags").tagsinput('add', tagText, { allowDuplicates: false });
-        
+
+        // Get the form tag input text field
+        var inputText = form.find("#tags").val();
+
+        if (tableId == 'playlistLibraryMedia') {
+            inputText = form.find("#filterMediaTag").val();
+            form.find("#filterMediaTag").tagsinput('add', tagText, { allowDuplicates: false });
+        } else if (tableId == 'displayGroupDisplays') {
+            inputText = form.find("#dynamicCriteriaTags").val();
+            form.find("#dynamicCriteriaTags").tagsinput('add', tagText, { allowDuplicates: false });
+        } else {
+            // Add text to form
+            form.find("#tags").tagsinput('add', tagText, {allowDuplicates: false});
+        }
         // Refresh table to apply the new tag search
         table.DataTable().ajax.reload();
     });
@@ -679,48 +723,61 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter) {
-    var colVis = new $.fn.dataTable.Buttons(table, {
-        buttons: [
-            {
-                extend: 'colvis',
-                text: function ( dt, button, config ) {
-                    return dt.i18n( 'buttons.colvis' );
-                }
-            },
-            {
-                extend: 'print',
-                text: function ( dt, button, config ) {
-                    return dt.i18n( 'buttons.print' );
+function dataTableAddButtons(table, filter, allButtons = true) {
+    if (allButtons) {
+        var colVis = new $.fn.dataTable.Buttons(table, {
+            buttons: [
+                {
+                    extend: 'colvis',
+                    text: function (dt, button, config) {
+                        return dt.i18n('buttons.colvis');
+                    }
                 },
-                exportOptions: {
-                    orthogonal: 'export',
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (data === null || data === "" || data === "null")
-                                return "";
-                            else
-                                return data;
+                {
+                    extend: 'print',
+                    text: function (dt, button, config) {
+                        return dt.i18n('buttons.print');
+                    },
+                    exportOptions: {
+                        orthogonal: 'export',
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (data === null || data === "" || data === "null")
+                                    return "";
+                                else
+                                    return data;
+                            }
+                        }
+                    }
+                },
+                {
+                    extend: 'csv',
+                    exportOptions: {
+                        orthogonal: 'export',
+                        format: {
+                            body: function (data, row, column, node) {
+                                if (data === null || data === "")
+                                    return "";
+                                else
+                                    return data;
+                            }
                         }
                     }
                 }
-            },
-            {
-                extend: 'csv',
-                exportOptions: {
-                    orthogonal: 'export',
-                    format: {
-                        body: function (data, row, column, node) {
-                            if (data === null || data === "")
-                                return "";
-                            else
-                                return data;
-                        }
+            ]
+        });
+    } else {
+        var colVis = new $.fn.dataTable.Buttons(table, {
+            buttons: [
+                {
+                    extend: 'colvis',
+                    text: function (dt, button, config) {
+                        return dt.i18n('buttons.colvis');
                     }
                 }
-            }
-        ]
-    });
+            ]
+        });
+    }
 
     table.buttons( 0, null ).container().prependTo(filter);
     $(".ColVis_MasterButton").addClass("btn");
@@ -1109,6 +1166,9 @@ function XiboMultiSelectFormRender(button) {
             if (matches.length === 1) {
                 // this is the first button which matches, so use the form open hook if one has been provided.
                 formOpenCallback = $(this).data().formCallback;
+
+                // If form needs confirmation
+                formConfirm = $(this).data().formConfirm;
             }
         }
     });
@@ -1142,6 +1202,12 @@ function XiboMultiSelectFormRender(button) {
 
     if (matches.length > 0) {
         extrabutton = $('<button class="btn">').html(translations.save).addClass('btn-primary save-button');
+
+        // If form needs confirmation, disable save button
+        if(formConfirm) {
+            extrabutton.prop('disabled', true);
+        }
+
         extrabutton.click(function() {
 
             $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -1381,6 +1447,14 @@ function XiboSubmitResponse(response, form) {
             bootbox.hideAll();
         }
         else {
+            // If we have reset on apply
+            if($(form).data("applyCallback")) {
+                eval($(form).data("applyCallback"))(form);
+            }
+
+            // Remove form errors
+            $(form).closest(".modal-dialog").find(".form-error").remove();
+
             // Focus in the first input
             $('input[type=text]', form).eq(0).focus();
         }
@@ -1674,7 +1748,30 @@ function makePagedSelect(element, parent) {
                     length: 10
                 };
 
-                query[element.data("searchTerm")] = params.term;
+                // Term to use for search
+                var searchTerm = params.term;
+
+                // If we search by tags
+                if(searchTerm != undefined && element.data("searchTermTags") != undefined) {
+                    // Get string 
+                    var tags = searchTerm.match(/\[([^}]+)\]/);
+                    var searchTags = '';
+
+                    // If we have match for tag search
+                    if(tags != null) {
+                        // Add tags to search
+                        searchTags = tags[1];
+
+                        // Remove tags in the query text
+                        searchTerm = searchTerm.replace(tags[0], '');
+
+                        // Add search by tags to the query
+                        query[element.data("searchTermTags")] = searchTags;
+                    }
+                }
+
+                // Search by searchTerm
+                query[element.data("searchTerm")] = searchTerm;
 
                 // Check to see if we've been given additional filter options
                 if (element.data("filterOptions") !== undefined) {
@@ -1709,6 +1806,61 @@ function makePagedSelect(element, parent) {
                     }
                 }
             }
+        }
+    });
+}
+
+/**
+ * Make a dropwdown with a search field for option's text and tag datafield (data-tags)
+ * @param element
+ * @param parent
+ */
+function makeLocalSelect(element, parent) {
+
+    element.select2({
+        dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        matcher: function(params, data) {
+
+            // If there are no search terms, return all of the data
+            if($.trim(params.term) === '') {
+                return data;
+            }
+
+            // Tags
+            var tags = params.term.match(/\[([^}]+)\]/);
+            var queryText = params.term;
+            var queryTags = '';
+
+            if(tags != null) {
+                // Add tags to search
+                queryTags = tags[1];
+
+                // Replace tags in the query text
+                queryText = params.term.replace(tags[0], '');
+            }
+
+            // Remove whitespaces and split by comma
+            queryText = queryText.replace(' ', '').split(',');
+            queryTags = queryTags.replace(' ', '').split(',');
+
+            // Find by text
+            for(let index = 0;index < queryText.length; index++) {
+                const text = queryText[index];
+                if(text != '' && data.text.indexOf(text) > -1) {
+                    return data;
+                }
+            }
+            
+            // Find by tag ( data-tag )
+            for(let index = 0;index < queryTags.length;index++) {
+                const tag = queryTags[index];
+                if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').indexOf(tag) > -1) {
+                    return data;
+                }
+            }
+
+            // Return `null` if the term should not be displayed
+            return null;
         }
     });
 }

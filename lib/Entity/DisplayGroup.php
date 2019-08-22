@@ -103,6 +103,13 @@ class DisplayGroup implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
+    public $tagValues;
+
+    /**
+     * @SWG\Property(description="The display bandwidth limit")
+     * @var int
+     */
+    public $bandwidthLimit;
 
     /**
      * Minimum save options
@@ -194,6 +201,11 @@ class DisplayGroup implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
+    }
+
+    public function __clone()
+    {
+        $this->displayGroupId = null;
     }
 
     /**
@@ -473,13 +485,20 @@ class DisplayGroup implements \JsonSerializable
      * Assign Tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
      */
     public function assignTag($tag)
     {
         $this->load();
 
-        if (!in_array($tag, $this->tags))
-            $this->tags[] = $tag;
+        if ($this->tags != [$tag]) {
+
+            if (!in_array($tag, $this->tags)) {
+                $this->tags[] = $tag;
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
 
         return $this;
     }
@@ -488,14 +507,20 @@ class DisplayGroup implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
      */
     public function unassignTag($tag)
     {
+        $this->load();
         $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
             /* @var Tag $a */
             /* @var Tag $b */
             return $a->tagId - $b->tagId;
         });
+
+        $this->unassignTags[] = $tag;
+
+        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
         return $this;
     }
@@ -508,18 +533,22 @@ class DisplayGroup implements \JsonSerializable
         if (!is_array($this->tags) || count($this->tags) <= 0)
             $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
 
-        $this->unassignTags = array_udiff($this->tags, $tags, function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
+        if ($this->tags != $tags) {
+            $this->unassignTags = array_udiff($this->tags, $tags, function ($a, $b) {
+                /* @var Tag $a */
+                /* @var Tag $b */
+                return $a->tagId - $b->tagId;
+            });
 
-        $this->getLog()->debug('Tags to be removed: ' . json_encode($this->unassignTags));
+            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
 
-        // Replace the arrays
-        $this->tags = $tags;
+            // Replace the arrays
+            $this->tags = $tags;
 
-        $this->getLog()->debug('Tags remaining: ' . json_encode($this->tags));
+            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
     }
 
     /**
@@ -602,7 +631,8 @@ class DisplayGroup implements \JsonSerializable
             'manageLinks' => true,
             'manageDisplayLinks' => true,
             'manageDynamicDisplayLinks' => true,
-            'allowNotify' => true
+            'allowNotify' => true,
+            'saveTags' => true
         ], $options);
 
         // Should we allow notification or not?
@@ -619,26 +649,28 @@ class DisplayGroup implements \JsonSerializable
             $this->edit();
         }
 
-        // Tags
-        if (is_array($this->tags)) {
-            foreach ($this->tags as $tag) {
-                /* @var Tag $tag */
+        if ($options['saveTags']) {
+            // Tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
 
-                $this->getLog()->debug('Assigning tag ' . $tag->tag);
+                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
-                $tag->assignDisplayGroup($this->displayGroupId);
-                $tag->save();
+                    $tag->assignDisplayGroup($this->displayGroupId);
+                    $tag->save();
+                }
             }
-        }
 
-        // Remove unwanted ones
-        if (is_array($this->unassignTags)) {
-            foreach ($this->unassignTags as $tag) {
-                /* @var Tag $tag */
-                $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
 
-                $tag->unassignDisplayGroup($this->displayGroupId);
-                $tag->save();
+                    $tag->unassignDisplayGroup($this->displayGroupId);
+                    $tag->save();
+                }
             }
         }
 
@@ -766,6 +798,7 @@ class DisplayGroup implements \JsonSerializable
               `isDynamic` = :isDynamic,
               `dynamicCriteria` = :dynamicCriteria,
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
+              `bandwidthLimit` = :bandwidthLimit,
               `userId` = :userId
            WHERE DisplayGroupID = :displayGroupId
           ', [
@@ -775,6 +808,7 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
+            'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId
         ]);
     }

@@ -224,6 +224,13 @@ class DataSetView extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="updateInterval",
      *      in="formData",
      *      description="Update interval in minutes",
@@ -365,6 +372,7 @@ class DataSetView extends ModuleWidget
             $this->setOption('name', $this->getSanitizer()->getString('name'));
             $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
             $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
+            $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
             $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
             $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
             $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));

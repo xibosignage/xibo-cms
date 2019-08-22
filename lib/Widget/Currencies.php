@@ -157,6 +157,13 @@ class Currencies extends AlphaVantageBase
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="base",
      *      in="formData",
      *      description="The base currency",
@@ -329,6 +336,7 @@ class Currencies extends AlphaVantageBase
         $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
         $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));

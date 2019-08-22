@@ -137,6 +137,13 @@ class Ticker extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="uri",
      *      in="formData",
      *      description="The link for the rss feed",
@@ -325,6 +332,7 @@ class Ticker extends ModuleWidget
         // Other properties
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('xmds', true);
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));

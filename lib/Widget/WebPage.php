@@ -82,6 +82,13 @@ class WebPage extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="transparency",
      *      in="formData",
      *      description=" flag (0,1) should the HTML be shown with a transparent background?",
@@ -152,6 +159,7 @@ class WebPage extends ModuleWidget
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('scaling', $this->getSanitizer()->getInt('scaling'));

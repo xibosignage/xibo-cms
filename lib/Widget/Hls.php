@@ -114,6 +114,13 @@ class Hls extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="uri",
      *      in="formData",
      *      description="URL to HLS video stream",
@@ -147,6 +154,7 @@ class Hls extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
         $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
 

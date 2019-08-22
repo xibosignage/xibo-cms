@@ -205,6 +205,7 @@ class Layout extends Base
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
             'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
+            'users' => $this->userFactory->query(),
             'modules' => array_map(function($element) use ($moduleFactory) { 
                     $module = $moduleFactory->createForInstall($element->class);
                     $module->setModule($element);
@@ -214,7 +215,6 @@ class Layout extends Base
 
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
-        //$this->getState()->template = 'layout-designer-page-old';
         $this->getState()->setData($data);
     }
 
@@ -274,6 +274,8 @@ class Layout extends Base
         $description = $this->getSanitizer()->getString('description');
         $templateId = $this->getSanitizer()->getInt('layoutId');
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
+        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+
         $template = null;
 
         if ($templateId != 0) {
@@ -303,6 +305,9 @@ class Layout extends Base
         else {
             $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
         }
+
+        // Set layout enableStat flag
+        $layout->enableStat = $enableStat;
 
         // Save
         $layout->save();
@@ -400,6 +405,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="Flag indicating whether the Layout stat is enabled",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -436,6 +448,7 @@ class Layout extends Base
         $layout->description = $this->getSanitizer()->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $layout->retired = $this->getSanitizer()->getCheckbox('retired');
+        $layout->enableStat = $this->getSanitizer()->getCheckbox('enableStat');
 
         $tags = $this->getSanitizer()->getString('tags');
         $tagsArray = explode(',', $tags);
@@ -777,6 +790,83 @@ class Layout extends Base
     }
 
     /**
+     * Set Enable Stats Collection of a layout
+     * @param int $layoutId
+     *
+     * @SWG\Put(
+     *  path="/layout/setenablestat/{layoutId}",
+     *  operationId="layoutSetEnableStat",
+     *  tags={"layout"},
+     *  summary="Enable Stats Collection",
+     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="Flag indicating whether the Layout stat is enabled",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws XiboException
+     */
+    function setEnableStat($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        // Make sure we're not a draft
+        if ($layout->isChild())
+            throw new InvalidArgumentException(__('Cannot modify Layout from its Draft'), 'layoutId');
+
+        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+
+        $layout->enableStat = $enableStat;
+        $layout->save(['saveTags' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('For Layout %s Enable Stats Collection is set to %s'), $layout->layout, ($layout->enableStat == 1) ? __('On') : __('Off'))
+        ]);
+    }
+
+    /**
+     * Set Enable Stat Form
+     * @param int $layoutId
+     * @throws XiboException
+     */
+    public function setEnableStatForm($layoutId)
+    {
+        $layout = $this->layoutFactory->getById($layoutId);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+
+        $data = [
+            'layout' => $layout,
+            'help' => $this->getHelp()->link('Layout', 'EnableStat')
+        ];
+
+        $this->getState()->template = 'layout-form-setenablestat';
+        $this->getState()->setData($data);
+    }
+
+    /**
      * Shows the Layout Grid
      *
      * @SWG\Get(
@@ -1030,6 +1120,23 @@ class Layout extends Base
                     $layout->statusDescription = __('This Layout is invalid and should not be scheduled');
             }
 
+            switch ($layout->enableStat) {
+
+                case 1:
+                    $layout->enableStatDescription = __('This Layout has enable stat collection set to ON');
+                    break;
+
+                default:
+                    $layout->enableStatDescription = __('This Layout has enable stat collection set to OFF');
+            }
+
+            // Published status, draft with set publishedDate
+            $layout->publishedStatusFuture = __('Publishing %s');
+            $layout->publishedStatusFailed = __('Publish failed ');
+
+            // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
+            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
+
             // Add some buttons for this row
             if ($this->getUser()->checkEditable($layout)) {
                 // Design Button
@@ -1084,12 +1191,13 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Schedule Now
-            $layout->buttons[] = array(
-                'id' => 'layout_button_schedulenow',
-                'url' => $this->urlFor('schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
-                'text' => __('Schedule Now')
-            );
-
+            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_schedulenow',
+                    'url' => $this->urlFor('schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'text' => __('Schedule Now')
+                );
+            }
             // Assign to Campaign
             if ($this->getUser()->routeViewable('/campaign')) {
                 $layout->buttons[] = array(
@@ -1159,6 +1267,22 @@ class Layout extends Base
                     );
                 }
 
+                // Set Enable Stat
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_setenablestat',
+                    'url' => $this->urlFor('layout.setenablestat.form', ['id' => $layout->layoutId]),
+                    'text' => __('Enable stats collection?'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.setenablestat', ['id' => $layout->layoutId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'layout_button_setenablestat'),
+                        array('name' => 'text', 'value' => __('Enable stats collection?')),
+                        array('name' => 'rowtitle', 'value' => $layout->layout),
+                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                    )
+                );
+
                 $layout->buttons[] = ['divider' => true];
 
                 if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
@@ -1217,6 +1341,20 @@ class Layout extends Base
         // Get the layout
         $layout = $this->layoutFactory->getById($layoutId);
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $layout->tags));
+        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
@@ -1224,6 +1362,7 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
+            'tags' => $tags,
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
     }
@@ -1346,14 +1485,28 @@ class Layout extends Base
             throw new InvalidArgumentException('Cannot copy a Draft Layout', 'layoutId');
 
         // Load the layout for Copy
-        $layout->load();
+        $layout->load(['loadTags' => false]);
         $originalLayout = $layout;
 
         // Clone
         $layout = clone $layout;
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $layout->tags));
+        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
+        $layout->replaceTags($this->tagFactory->tagsFromString($tags));
         $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
@@ -1871,7 +2024,7 @@ class Layout extends Base
         }
 
         $layout->schemaVersion = Environment::$XLF_VERSION;
-        $layout->save(['validate' => false, 'notify' => $scaleContent]);
+        $layout->save(['validate' => false, 'notify' => $scaleContent, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -2100,6 +2253,20 @@ class Layout extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="publishNow",
+     *      in="formData",
+     *      description="Flag, indicating whether to publish layout now",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="publishDate",
+     *      in="formData",
+     *      description="The date/time at which layout should be published",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -2113,27 +2280,44 @@ class Layout extends Base
     public function publish($layoutId)
     {
         $layout = $this->layoutFactory->getById($layoutId);
+        $publishDate = $this->getSanitizer()->getDate('publishDate');
+        $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
+
+        // if we have publish date update it in database
+        if (isset($publishDate) && !$publishNow) {
+            $layout->setPublishedDate($publishDate);
+        }
 
         // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
         // parent.
-        $draft = $this->layoutFactory->getByParentId($layoutId);
-        $draft->publishDraft();
-        $draft->load();
+        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  $this->getDate()->getLocalDate(null, 'U')) ) {
+            $draft = $this->layoutFactory->getByParentId($layoutId);
+            $draft->publishDraft();
+            $draft->load();
 
-        // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-        // error message
-        $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+            // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+            // error message
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 200,
-            'message' => sprintf(__('Published %s'), $draft->layout),
-            'data' => $draft
-        ]);
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => sprintf(__('Published %s'), $draft->layout),
+                'data' => $draft
+            ]);
+        } else {
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 200,
+                'message' => sprintf(__('Layout will be published on %s'), $publishDate),
+                'data' => $layout
+            ]);
+        }
     }
 
     /**

@@ -71,6 +71,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  */
 $app->get('/about', '\Xibo\Controller\Login:About')->name('about');
 $app->get('/clock', '\Xibo\Controller\Clock:clock')->name('clock');
+$app->post('/tfa', '\Xibo\Controller\Login:twoFactorAuthValidate')->name('tfa.auth.validate');
 
 /**
  * Schedule
@@ -115,6 +116,7 @@ $app->put('/layout/publish/:id', '\Xibo\Controller\Layout:publish')->name('layou
 $app->put('/layout/discard/:id', '\Xibo\Controller\Layout:discard')->name('layout.discard');
 $app->put('/layout/retire/:id', '\Xibo\Controller\Layout:retire')->name('layout.retire');
 $app->put('/layout/unretire/:id', '\Xibo\Controller\Layout:unretire')->name('layout.unretire');
+$app->put('/layout/setenablestat/:id', '\Xibo\Controller\Layout:setEnableStat')->name('layout.setenablestat');
 $app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->name('layout.status');
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
@@ -144,6 +146,8 @@ $app->post('/playlist', '\Xibo\Controller\Playlist:add')->name('playlist.add');
 $app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edit');
 $app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
 $app->post('/playlist/copy/:id', '\Xibo\Controller\Playlist:copy')->name('playlist.copy');
+$app->put('/playlist/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStat')->name('playlist.setenablestat');
+
 // Widgets Order
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
 $app->post('/playlist/order/:id', '\Xibo\Controller\Playlist:order')->name('playlist.order');
@@ -215,9 +219,11 @@ $app->get('/library/usage/layouts/:id', '\Xibo\Controller\Library:usageLayouts')
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
+$app->put('/library/setenablestat/:id', '\Xibo\Controller\Library:setEnableStat')->name('library.setenablestat');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
 $app->delete('/library/:id', '\Xibo\Controller\Library:delete')->name('library.delete');
 $app->post('/library/copy/:id', '\Xibo\Controller\Library:copy')->name('library.copy');
+$app->get('/library/:id/isused', '\Xibo\Controller\Library:isUsed')->name('library.isused');
 // Tagging
 $app->post('/library/:id/tag', '\Xibo\Controller\Library:tag')->name('library.tag');
 $app->post('/library/:id/untag', '\Xibo\Controller\Library:untag')->name('library.untag');
@@ -266,6 +272,7 @@ $app->post('/displaygroup/:id/action/changeLayout', '\Xibo\Controller\DisplayGro
 $app->post('/displaygroup/:id/action/overlayLayout', '\Xibo\Controller\DisplayGroup:overlayLayout')->name('displayGroup.action.overlayLayout');
 $app->post('/displaygroup/:id/action/revertToSchedule', '\Xibo\Controller\DisplayGroup:revertToSchedule')->name('displayGroup.action.revertToSchedule');
 $app->post('/displaygroup/:id/action/command', '\Xibo\Controller\DisplayGroup:command')->name('displayGroup.action.command');
+$app->post('/displaygroup/:id/copy', '\Xibo\Controller\DisplayGroup:copy')->name('displayGroup.copy');
 
 /**
  * Display Profile
@@ -351,7 +358,11 @@ $app->put('/user/pref', '\Xibo\Controller\User:prefEditFromForm');
 $app->get('/user/me', '\Xibo\Controller\User:myDetails')->name('user.me');
 $app->get('/user', '\Xibo\Controller\User:grid')->name('user.search');
 $app->post('/user', '\Xibo\Controller\User:add')->name('user.add');
-$app->put('/user/password/change', '\Xibo\Controller\User:changePassword')->name('user.change.password');
+$app->put('/user/profile/edit', '\Xibo\Controller\User:editProfile')->name('user.edit.profile');
+$app->get('/user/profile/setup', '\Xibo\Controller\User:tfaSetup')->name('user.setup.profile');
+$app->post('/user/profile/validate', '\Xibo\Controller\User:tfaValidate')->name('user.validate.profile');
+$app->get('/user/profile/recoveryGenerate', '\Xibo\Controller\User:tfaRecoveryGenerate')->name('user.recovery.generate.profile');
+$app->get('/user/profile/recoveryShow', '\Xibo\Controller\User:tfaRecoveryShow')->name('user.recovery.show.profile');
 $app->put('/user/password/forceChange', '\Xibo\Controller\User:forceChangePassword')->name('user.force.change.password');
 $app->put('/user/:id', '\Xibo\Controller\User:edit')->name('user.edit');
 $app->delete('/user/:id', '\Xibo\Controller\User:delete')->name('user.delete');
@@ -480,6 +491,33 @@ $app->delete('/task/:id', '\Xibo\Controller\Task:delete')->name('task.delete');
 $app->post('/task/:id/run', '\Xibo\Controller\Task:runNow')->name('task.runNow');
 
 /**
+ * Report schedule
+ * @SWG\Tag(
+ *  name="report",
+ *  description="Report schedule"
+ * )
+ */
+
+$app->get('/report/reportschedule', '\Xibo\Controller\Report:reportScheduleGrid')->name('reportschedule.search');
+$app->post('/report/reportschedule', '\Xibo\Controller\Report:reportScheduleAdd')->name('reportschedule.add');
+$app->put('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleEdit')->name('reportschedule.edit');
+$app->delete('/report/reportschedule/:id', '\Xibo\Controller\Report:reportScheduleDelete')->name('reportschedule.delete');
+$app->post('/report/reportschedule/:id/deletesavedreport', '\Xibo\Controller\Report:reportScheduleDeleteAllSavedReport')->name('reportschedule.deleteall');
+$app->post('/report/reportschedule/:id/toggleactive', '\Xibo\Controller\Report:reportScheduleToggleActive')->name('reportschedule.toggleactive');
+$app->post('/report/reportschedule/:id/reset', '\Xibo\Controller\Report:reportScheduleReset')->name('reportschedule.reset');
+
+//
+// Saved reports
+//
+$app->get('/report/savedreport', '\Xibo\Controller\Report:savedReportGrid')->name('savedreport.search');
+$app->delete('/report/savedreport/:id', '\Xibo\Controller\Report:savedReportDelete')->name('savedreport.delete');
+
+//
+// Ad hoc report
+//
+$app->get('/report/data/:name', '\Xibo\Controller\Report:getReportData')->name('report.data');
+
+/**
  * Player Versions
  * @SWG\Tag(
  *  name="version",
@@ -495,3 +533,18 @@ $app->get('/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSsspInstall')-
 $app->get('/sssp_dl.wgt', '\Xibo\Controller\PlayerSoftware:getSsspInstallDownload')->name('playersoftware.sssp.install.download');
 $app->get('/playersoftware/:nonce/sssp_config.xml', '\Xibo\Controller\PlayerSoftware:getSssp')->name('playersoftware.sssp');
 $app->get('/playersoftware/:nonce/sssp_dl.wgt', '\Xibo\Controller\PlayerSoftware:getVersionFile')->name('playersoftware.version.file');
+
+
+/**
+ * Tags
+ * @SWG\Tag(
+ *  name="tags",
+ *  description="Tags"
+ * )
+ */
+$app->get('/tag', '\Xibo\Controller\Tag:grid')->name('tag.search');
+$app->post('/tag', '\Xibo\Controller\Tag:add')->name('tag.add');
+$app->put('/tag/:id', '\Xibo\Controller\Tag:edit')->name('tag.edit');
+$app->delete('/tag/:id', '\Xibo\Controller\Tag:delete')->name('tag.delete');
+$app->get('/tag/name', '\Xibo\Controller\Tag:loadTagOptions')->name('tag.getByName');
+

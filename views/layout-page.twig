@@ -22,12 +22,18 @@
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter">
+                                    {% set title %}{% trans "ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title) }}
+
                                     {% set title %}{% trans "Name" %}{% endset %}
                                     {{ inline.input("layout", title) }}
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                                     {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                                    {% set title %}{% trans "Exact match?" %}{% endset %}
+                                    {{ inline.checkbox("exactTags", title) }}
 
                                     {% set attributes = [
                                     { name: "data-allow-clear", value: "true" },
@@ -87,6 +93,7 @@
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Valid?" %}</th>
+                                <th>{% trans "Stats?" %}</th>
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Modified" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
@@ -158,7 +165,26 @@
                         "data": "layout",
                         "render": dataTableSpacingPreformatted
                     },
-                    {"data": "publishedStatus"},
+                    {
+                        "name": "publishedStatus",
+                        "data": function (data, type) {
+                            if (data.publishedDate != null) {
+                                let now = moment();
+                                let published = moment(data.publishedDate);
+                                let differenceMinutes = published.diff(now, 'minutes');
+                                let momentDifference = moment(now).to(published);
+
+                                if (differenceMinutes < -5) {
+                                    return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
+                                } else {
+                                    return data.publishedStatus.concat(" - ", data.publishedStatusFuture.replace('%s', momentDifference));
+                                }
+                            } else {
+                                return data.publishedStatus;
+                            }
+
+                        }
+                    },
                     {
                         "name": "description",
                         "data": null,
@@ -205,6 +231,19 @@
                                 icon = "fa-exclamation";
 
                             return "<span class='fa " + icon + "' title='" + (data.statusDescription) + ((data.statusMessage == null) ? "" : " - " + (data.statusMessage)) + "'></span>";
+                        }
+                    },
+                    {
+                        "name": "enableStat",
+                        "data": function (data) {
+
+                            var icon = "";
+                            if (data.enableStat == 1)
+                                icon = "fa-check";
+                            else
+                                icon = "fa-times";
+
+                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
                         }
                     },
                     {
@@ -391,6 +430,18 @@
                 dataType:"json",
                 success: XiboSubmitResponse
             });
+        }
+
+        function setEnableStatMultiSelectFormOpen(dialog) {
+            var $input = $('<input type=checkbox id="enableStat" name="enableStat"> {% trans %} Enable Stats Collection? {% endtrans %} </input>');
+            var $helpText = $('<span class="help-block">Check to enable the collection of Proof of Play statistics for the selected items. </span>');
+
+            $input.on('change', function() {
+                dialog.data().commitData = {enableStat: $(this).val()};
+            });
+
+            $(dialog).find('.modal-body').append($input);
+            $(dialog).find('.modal-body').append($helpText);
         }
 
     </script>

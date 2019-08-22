@@ -304,7 +304,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Authenticate this request...
@@ -475,7 +475,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...
@@ -565,7 +565,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
 
         // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth())
+        if (!$this->checkBandwidth($this->display->displayId))
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
 
         // Auth this request...

@@ -73,7 +73,7 @@ class CsrfGuard extends Middleware
         /* @var \Xibo\Helper\Session $session */
 
         if (!$session->get($this->key)) {
-            $session->set($this->key, sha1(serialize($_SERVER) . rand(0, 0xffffffff)));
+            $session->set($this->key, bin2hex(random_bytes(20)));
         }
 
         $token = $session->get($this->key);

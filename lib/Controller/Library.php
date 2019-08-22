@@ -316,6 +316,14 @@ class Library extends Base
     }
 
     /**
+     * @return TagFactory
+     */
+    public function getTagFactory()
+    {
+        return $this->tagFactory;
+    }
+
+    /**
      * Displays the page logic
      */
     function displayPage()
@@ -324,10 +332,87 @@ class Library extends Base
         $this->getState()->template = 'library-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1]),
+            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
             'groups' => $this->userGroupFactory->query(),
-            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1]))
+            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
         ]);
+    }
+
+    /**
+     * Set Enable Stats Collection of a media
+     * @param int $mediaId
+     *
+     * @SWG\Put(
+     *  path="/library/setenablestat/{mediaId}",
+     *  operationId="mediaSetEnableStat",
+     *  tags={"library"},
+     *  summary="Enable Stats Collection",
+     *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a media.",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option to enable the collection of Media Proof of Play statistics",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws XiboException
+     */
+    public function setEnableStat($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $enableStat = $this->getSanitizer()->getString('enableStat');
+
+        $media->enableStat = $enableStat;
+        $media->save(['saveTags' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('For Media %s Enable Stats Collection is set to %s'), $media->name, __($media->enableStat))
+        ]);
+    }
+
+    /**
+     * Set Enable Stat Form
+     * @param int $mediaId
+     * @throws XiboException
+     */
+    public function setEnableStatForm($mediaId)
+    {
+
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        $data = [
+            'media' => $media,
+            'help' => $this->getHelp()->link('Layout', 'EnableStat')
+        ];
+
+        $this->getState()->template = 'library-form-setenablestat';
+        $this->getState()->setData($data);
     }
 
     /**
@@ -437,7 +522,8 @@ class Library extends Base
             'fileSize' => $this->getSanitizer()->getString('fileSize'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'assignable' => $this->getSanitizer()->getInt('assignable'),
-            'notPlayerSoftware' => 1
+            'notPlayerSoftware' => 1,
+            'notSavedReport' => 1
         ]));
 
         // Add some additional row content
@@ -463,6 +549,21 @@ class Library extends Base
                 break;
 
             $media->includeProperty('buttons');
+
+            switch ($media->enableStat) {
+
+                case 'On':
+                    $media->enableStatDescription = __('This Media has enable stat collection set to ON');
+                    break;
+
+                case 'Off':
+                    $media->enableStatDescription = __('This Media has enable stat collection set to OFF');
+                    break;
+
+                default:
+                    $media->enableStatDescription = __('This Media has enable stat collection set to INHERIT');
+            }
+
             $media->buttons = array();
 
             // Buttons
@@ -515,6 +616,22 @@ class Library extends Base
                 'linkType' => '_self', 'external' => true,
                 'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
+            );
+
+            // Set Enable Stat
+            $media->buttons[] = array(
+                'id' => 'library_button_setenablestat',
+                'url' => $this->urlFor('library.setenablestat.form', ['id' => $media->mediaId]),
+                'text' => __('Enable stats collection?'),
+                'multi-select' => true,
+                'dataAttributes' => array(
+                    array('name' => 'commit-url', 'value' => $this->urlFor('library.setenablestat', ['id' => $media->mediaId])),
+                    array('name' => 'commit-method', 'value' => 'put'),
+                    array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                    array('name' => 'text', 'value' => __('Enable stats collection?')),
+                    array('name' => 'rowtitle', 'value' => $media->name),
+                    ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                )
             );
 
             $media->buttons[] = ['divider' => true];
@@ -729,11 +846,26 @@ class Library extends Base
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $media->tags));
+        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
-            'help' => $this->getHelp()->link('Library', 'Edit')
+            'help' => $this->getHelp()->link('Library', 'Edit'),
+            'tags' => $tags
         ]);
     }
 
@@ -795,6 +927,7 @@ class Library extends Base
      *      @SWG\Schema(ref="#/definitions/Media")
      *  )
      * )
+     * @throws InvalidArgumentException
      */
     public function edit($mediaId)
     {
@@ -810,9 +943,10 @@ class Library extends Base
         $media->duration = $this->getSanitizer()->getInt('duration');
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $media->enableStat = $this->getSanitizer()->getString('enableStat');
 
         // Should we update the media in all layouts?
-        if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1) {
+        if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;
@@ -1215,7 +1349,7 @@ class Library extends Base
                     $media->expires = 0;
                     $media->moduleSystemFile = true;
                     $media->isSaveRequired = true;
-                    $media->save();
+                    $media->save(['saveTags' => false]);
 
                     // We can remove the temp file
                     @unlink($tempUrl);
@@ -1371,6 +1505,7 @@ class Library extends Base
      *
      * @param $mediaId
      * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
      */
     public function tag($mediaId)
     {
@@ -1646,10 +1781,25 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $media->tags));
+        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy')
+            'help' => $this->getHelp()->link('Media', 'Copy'),
+            'tags' => $tags
         ]);
     }
 
@@ -1719,6 +1869,11 @@ class Library extends Base
         // Set the Owner to user making the Copy
         $media->setOwner($this->getUser()->userId);
 
+        // Set from global setting
+        if ($media->enableStat == null) {
+            $media->enableStat = $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+        }
+
         // Save the new Media
         $media->save();
 
@@ -1729,5 +1884,41 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+    }
+
+
+    /**
+     * @SWG\Get(
+     *  path="/library/{mediaId}/isused/",
+     *  operationId="mediaIsUsed",
+     *  tags={"library"},
+     *  summary="Media usage check",
+     *  description="Checks if a Media is being used",
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $mediaId
+     */
+    public function isUsed($mediaId)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($mediaId);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+
+        // Check Permissions
+        if (!$this->getUser()->checkViewable($media))
+            throw new AccessDeniedException();
+
+        // Get count, being the number of times the media needs to appear to be true ( or use the default 0)
+        $count = $this->getSanitizer()->getInt('count', 0);
+
+        // Check and return result
+        $this->getState()->setData([
+            'isUsed' => $media->isUsed($count)
+        ]);
+        
     }
 }

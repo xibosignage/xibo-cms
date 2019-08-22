@@ -58,6 +58,20 @@ Cypress.Commands.add('getAccessToken', function() {
     });
 });
 
+Cypress.Commands.add('tutorialClose', function() {
+
+    var csrf_token = Cypress.$('meta[name="token"]').attr('content');
+
+    // Make the ajax request to hide the user welcome tutorial
+    Cypress.$.ajax({
+        url: '/user/welcome',
+        type: 'PUT',
+        headers: {
+            'X-XSRF-TOKEN': csrf_token
+        }
+    });
+});
+
 Cypress.Commands.add('formRequest', (method, url, formData) => {
 
     return new Promise(function(resolve, reject) {
@@ -294,5 +308,41 @@ Cypress.Commands.add('deletePlaylist', function(id) {
         headers: {
             Authorization: 'Bearer ' + Cypress.env('accessToken')
         }
+    });
+});
+
+// Campaign
+Cypress.Commands.add('createCampaign', function(name) {
+
+    cy.request({
+        method: 'POST',
+        url: '/api/campaign',
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        },
+        body: {
+            name: name
+        }
+    }).then((res) => {
+        return res.body.campaignId;
+    });
+});
+
+// Display Group
+Cypress.Commands.add('createDisplaygroup', function(name) {
+
+    cy.request({
+        method: 'POST',
+        url: '/api/displaygroup',
+        form: true,
+        headers: {
+            Authorization: 'Bearer ' + Cypress.env('accessToken')
+        },
+        body: {
+            displayGroup: name
+        }
+    }).then((res) => {
+        return res.body.displaygroupId;
     });
 });

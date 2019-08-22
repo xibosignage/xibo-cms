@@ -86,6 +86,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->checkLibraryUsage();
 
         $this->checkOverRequestedFiles();
+
+        $this->publishLayouts();
     }
 
     /**
@@ -349,6 +351,72 @@ class MaintenanceRegularTask implements TaskInterface
             } catch (XiboException $xiboException) {
                 $this->log->error('Maintenance cannot update Playlist ' . $playlist->playlistId . ', ' . $xiboException->getMessage());
             }
+        }
+
+        $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;
+    }
+
+    /**
+     * Publish layouts with set publishedDate
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws XiboException
+     */
+    private function publishLayouts()
+    {
+        $this->runMessage .= '## ' . __('Publishing layouts with set publish dates') . PHP_EOL;
+
+        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1]);
+
+        // check if we have any layouts with set publish date
+        if (count($layouts) > 0) {
+
+            foreach ($layouts as $layout) {
+
+                // check if the layout should be published now according to the date
+                if ($this->date->parse($layout->publishedDate)->format('U') < $this->date->getLocalDate(null, 'U')) {
+                    try {
+                        // check if draft is valid
+                        if ($layout->status === 4 && isset($layout->statusMessage)) {
+                            throw new XiboException(__($layout->statusMessage));
+                        } else {
+                            // publish the layout
+                            $draft = $this->layoutFactory->getByParentId($layout->layoutId);
+                            $draft->publishDraft();
+                            $draft->load();
+                            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+
+                            $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
+                        }
+                    } catch (XiboException $e) {
+                        $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' Failed with message: ' . $e->getMessage());
+
+                        // create a notification
+                        $subject = __(sprintf('Error publishing layout ID %d', $layout->layoutId));
+                        $date = $this->date->parse();
+
+                        if (count($this->notificationFactory->getBySubjectAndDate($subject,
+                                $this->date->getLocalDate($date->startOfDay(), 'U'),
+                                $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+
+                            $body = __(sprintf('Publishing layout ID %d failed. With message %s', $layout->layoutId,
+                                $e->getMessage()));
+
+                            $notification = $this->notificationFactory->createSystemNotification(
+                                $subject,
+                                $body,
+                                $this->date->parse()
+                            );
+                            $notification->save();
+
+                            $this->log->critical($subject);
+                        }
+                    }
+                } else {
+                    $this->log->debug('Layouts with published date were found, they are set to publish later than current time');
+                }
+            }
+        } else {
+            $this->log->debug('No layouts to publish.');
         }
 
         $this->runMessage .= ' - Done' . PHP_EOL . PHP_EOL;

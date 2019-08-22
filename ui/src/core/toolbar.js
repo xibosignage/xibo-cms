@@ -609,6 +609,7 @@ Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
 Toolbar.prototype.createNewTab = function() {
 
     let moduleListFiltered = [];
+    let usersListFiltered = [];
 
     // Filter module list to create the types for the filter
     modulesList.forEach(element => {
@@ -618,6 +619,13 @@ Toolbar.prototype.createNewTab = function() {
                 name: element.name
             });
         }
+    });
+
+    usersList.forEach(element => {
+        usersListFiltered.push({
+            userId: element.userId.toString(),
+            name: element.userName
+        });
     });
 
     this.menuItems.push({
@@ -638,6 +646,10 @@ Toolbar.prototype.createNewTab = function() {
                 name: toolbarTrans.searchFilters.type,
                 values: moduleListFiltered
             },
+            owner: {
+                name: toolbarTrans.searchFilters.owner,
+                values: usersListFiltered
+        },
         },
         content: []
     });
@@ -754,6 +766,18 @@ Toolbar.prototype.setupJumpList = function(jumpListContainer) {
                     start: 0,
                     length: 10
                 };
+
+                // Tags
+                if(query.layout != undefined) {
+                    var tags = query.layout.match(/\[([^}]+)\]/);
+                    if(tags != null) {
+                        // Add tags to search
+                        query.tags = tags[1];
+
+                        // Replace tags in the query text
+                        query.layout = query.layout.replace(tags[0], '');
+                    }
+                }
 
                 // Set the start parameter based on the page number
                 if(params.page != null) {
@@ -935,6 +959,7 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
 Toolbar.prototype.mediaContentCreate = function(menu) {
 
     const self = this;
+    const app = getXiboApp();
 
     // Get search window Jquery object
     const $searchContent = self.DOMObject.find('#content-' + menu + '.search-content');
@@ -971,6 +996,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             {"data": "mediaId"},
             {"data": "name"},
             {"data": "mediaType"},
+            {"data": "ownerId"},
             {
                 "sortable": false,
                 "data": dataTableCreateTags
@@ -1027,6 +1053,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         self.menuItems[menu].filters.name.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
         self.menuItems[menu].filters.tag.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
         self.menuItems[menu].filters.type.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
+        self.menuItems[menu].filters.owner.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-owner-' + menu).val();
 
         // Update tab name
         self.updateTabNames();
@@ -1107,6 +1134,9 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         // Add text to form
         self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
     });
+
+    // Initialize tooltips
+    app.common.reloadTooltips(self.DOMObject);
 
     // Deselect previous selections
     self.deselectCardsAndDropZones();

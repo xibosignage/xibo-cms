@@ -19,6 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
  
- /* This file is added to the default theme preview, and it's
-  * supposed to be replaced by the white label html-preview.css file 
-  */ 
+/* This file is included after the core Layout Preview CSS, replace 
+ * this with a theme to override Layout Preview CSS.
+ */

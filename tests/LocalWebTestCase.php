@@ -174,6 +174,13 @@ class LocalWebTestCase extends WebTestCase
         // Provide the same config
         $container->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
 
+        // Register the date service
+        $container->singleton('dateService', function() {
+            $date = new \Xibo\Service\DateServiceGregorian();
+            $date->setLocale(Translate::GetLocale(2));
+            return $date;
+        });
+        
         Storage::setStorage($container);
 
         $container->configService->setDependencies($container->store, '/');

@@ -2877,6 +2877,74 @@
                 }
             }
         },
+        "/displaygroup/{displayGroupId}/copy": {
+            "post": {
+                "tags": [
+                    "displaygroup"
+                ],
+                "summary": "Copy Display Group",
+                "description": "Copy an existing Display Group",
+                "operationId": "displayGroupCopy",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayGroup",
+                        "in": "formData",
+                        "description": "The name for the copy",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "The description for the copy",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "copyMembers",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy all display and display group members",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "copyAssignments",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy all layout and media assignments",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "copyTags",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy all tags",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DisplayGroup"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/displayprofile": {
             "get": {
                 "tags": [
@@ -3274,6 +3342,13 @@
                         "description": "A flag indicating whether this Layout is retired.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "Flag indicating whether the Layout stat is enabled",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3399,6 +3474,37 @@
                         "name": "layoutId",
                         "in": "path",
                         "description": "The Layout ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/layout/setenablestat/{layoutId}": {
+            "put": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Enable Stats Collection",
+                "description": "Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Layout.",
+                "operationId": "layoutSetEnableStat",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "description": "The Layout ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "Flag indicating whether the Layout stat is enabled",
                         "required": true,
                         "type": "integer"
                     }
@@ -3607,6 +3713,20 @@
                         "description": "The Layout ID",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "publishNow",
+                        "in": "formData",
+                        "description": "Flag, indicating whether to publish layout now",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "publishDate",
+                        "in": "formData",
+                        "description": "The date/time at which layout should be published",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3642,6 +3762,37 @@
                         "schema": {
                             "$ref": "#/definitions/Layout"
                         }
+                    }
+                }
+            }
+        },
+        "/library/setenablestat/{mediaId}": {
+            "put": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Enable Stats Collection",
+                "description": "Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a media.",
+                "operationId": "mediaSetEnableStat",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option to enable the collection of Media Proof of Play statistics",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -4102,6 +4253,21 @@
                 }
             }
         },
+        "/library/{mediaId}/isused/": {
+            "get": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Media usage check",
+                "description": "Checks if a Media is being used",
+                "operationId": "mediaIsUsed",
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/about": {
             "get": {
                 "tags": [
@@ -4345,6 +4511,13 @@
                         "description": "The To Date",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "deleteOnExpiry",
+                        "in": "formData",
+                        "description": "Delete this Widget when it expires?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4661,6 +4834,76 @@
             }
         },
         "/playlist": {
+            "get": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Search Playlists",
+                "description": "Search for Playlists viewable by this user",
+                "operationId": "playlistSearch",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "formData",
+                        "description": "Filter by Playlist Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Filter by partial Playlist name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "formData",
+                        "description": "Filter by user Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Filter by tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "ownerUserGroupId",
+                        "in": "formData",
+                        "description": "Filter by users in this UserGroupId",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "formData",
+                        "description": "Embed related data such as regions, widgets, permissions, tags",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Playlist"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "playlist"
@@ -4948,6 +5191,37 @@
                         "schema": {
                             "$ref": "#/definitions/Playlist"
                         }
+                    }
+                }
+            }
+        },
+        "/playlist/setenablestat/{playlistId}": {
+            "put": {
+                "tags": [
+                    "Playlist"
+                ],
+                "summary": "Enable Stats Collection",
+                "description": "Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
+                "operationId": "playlistSetEnableStat",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -5759,6 +6033,13 @@
                         "items": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "campaignId",
+                        "in": "formData",
+                        "description": "An optional Campaign Id to filter",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5768,6 +6049,157 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/StatisticsData"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tag": {
+            "get": {
+                "tags": [
+                    "tag"
+                ],
+                "summary": "Search Tags",
+                "description": "Search for Tags viewable by this user",
+                "operationId": "tagSearch",
+                "parameters": [
+                    {
+                        "name": "tagId",
+                        "in": "formData",
+                        "description": "Filter by Tag Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tag",
+                        "in": "formData",
+                        "description": "Filter by partial Tag",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTag",
+                        "in": "formData",
+                        "description": "Filter by exact Tag",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isSystem",
+                        "in": "formData",
+                        "description": "Filter by isSystem flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "Filter by isRequired flag",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "haveOptions",
+                        "in": "formData",
+                        "description": "Set to 1 to show only results that have options set",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Tag"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "tag"
+                ],
+                "summary": "Add a new Tag",
+                "description": "Add a new Tag",
+                "operationId": "tagAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Tag name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "A flag indicating whether value selection on assignment is required",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "options",
+                        "in": "formData",
+                        "description": "A comma separated string of Tag options",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Tag"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tag/{tagId}": {
+            "put": {
+                "tags": [
+                    "tag"
+                ],
+                "summary": "Edit existing Tag",
+                "description": "Edit existing Tag",
+                "operationId": "tagEdit",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Tag name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "A flag indicating whether value selection on assignment is required",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "options",
+                        "in": "formData",
+                        "description": "A comma separated string of Tag options",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     }
@@ -6791,6 +7223,13 @@
                         "description": "Edit only - Flag (0, 1) Should the audio loop (only for duration > 0 )?",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -6886,6 +7325,13 @@
                         "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "updateInterval",
@@ -7024,6 +7470,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "themeId",
                         "in": "formData",
                         "description": "Flag (0 , 1) for Analogue clock the light and dark theme",
@@ -7116,6 +7569,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "base",
@@ -7308,6 +7768,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "dataSetId",
@@ -7526,6 +7993,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "updateInterval",
                         "in": "formData",
                         "description": "Update interval in minutes",
@@ -7662,6 +8136,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "transparency",
                         "in": "formData",
                         "description": "Flag (0,1) - Should the HTML be shown with transparent background? - not available on Windows Clients",
@@ -7747,6 +8228,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "useDisplayLocation",
@@ -7916,6 +8404,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "zoom",
                         "in": "formData",
                         "description": "How far should the map be zoomed in? The higher the number the closer the zoom, 1 represents entire globe",
@@ -7987,6 +8482,13 @@
                         "description": "The Widget Duration",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "uri",
@@ -8067,6 +8569,13 @@
                         "description": "Edit only - Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8142,6 +8651,13 @@
                         "description": "Should the video expand over the top of existing content and show in full screen?",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8187,6 +8703,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "age",
@@ -8281,6 +8804,13 @@
                         "description": "Edit Only - The Widget Duration",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8326,6 +8856,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "windowsCommand",
@@ -8413,6 +8950,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "items",
@@ -8596,6 +9140,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "effect",
                         "in": "formData",
                         "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
@@ -8688,6 +9239,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "uri",
@@ -8908,6 +9466,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "searchTerm",
@@ -9137,6 +9702,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "searchTerm",
                         "in": "formData",
                         "description": "Twitter search term, you can test your search term in twitter.com search box first",
@@ -9329,6 +9901,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "showFullScreen",
                         "in": "formData",
                         "description": "Edit only - Should the video expand over the top of existing content and show in full screen?",
@@ -9395,6 +9974,13 @@
                         "description": "Should the video expand over the top of existing content and show in full screen?",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -9440,6 +10026,13 @@
                         "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "transparency",
@@ -9561,11 +10154,23 @@
                 "display": {
                     "type": "string"
                 },
+                "displayId": {
+                    "type": "integer"
+                },
                 "layout": {
                     "type": "string"
                 },
+                "layoutId": {
+                    "type": "integer"
+                },
                 "media": {
                     "type": "string"
+                },
+                "mediaId": {
+                    "type": "integer"
+                },
+                "widgetId": {
+                    "type": "integer"
                 },
                 "numberPlays": {
                     "type": "integer"
@@ -9577,6 +10182,12 @@
                     "type": "string"
                 },
                 "maxEnd": {
+                    "type": "string"
+                },
+                "statDate": {
+                    "type": "string"
+                },
+                "tag": {
                     "type": "string"
                 }
             }
@@ -10094,6 +10705,10 @@
                 },
                 "overrideConfig": {
                     "description": "The configuration options that will overwrite Display Profile Config"
+                },
+                "bandwidthLimit": {
+                    "description": "The display bandwidth limit",
+                    "type": "integer"
                 }
             }
         },
@@ -10137,6 +10752,10 @@
                     "items": {
                         "$ref": "#/definitions/Tag"
                     }
+                },
+                "bandwidthLimit": {
+                    "description": "The display bandwidth limit",
+                    "type": "integer"
                 }
             }
         },
@@ -10224,6 +10843,10 @@
                     "description": "The Published Status (Published, Draft or Pending Approval",
                     "type": "string"
                 },
+                "publishedDate": {
+                    "description": "The Published Date",
+                    "type": "string"
+                },
                 "backgroundImageId": {
                     "description": "The id of the image media set as the background",
                     "type": "integer"
@@ -10285,6 +10908,10 @@
                 "statusMessage": {
                     "description": "A status message detailing any errors with the layout",
                     "type": "string"
+                },
+                "enableStat": {
+                    "description": "Flag indicating whether the Layout stat is enabled",
+                    "type": "integer"
                 }
             }
         },
@@ -10423,6 +11050,10 @@
                 },
                 "modifiedDt": {
                     "description": "The datetime the Media was last modified",
+                    "type": "string"
+                },
+                "enableStat": {
+                    "description": "The option to enable the collection of Media Proof of Play statistics",
                     "type": "string"
                 }
             }
@@ -10706,6 +11337,10 @@
                     "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.",
                     "type": "integer"
                 },
+                "enableStat": {
+                    "description": "The option to enable the collection of Playlist Proof of Play statistics",
+                    "type": "string"
+                },
                 "tags": {
                     "description": "An array of Tags",
                     "type": "array",
@@ -10790,7 +11425,8 @@
                     "type": "integer"
                 },
                 "regionPlaylist": {
-                    "description": "This Regions Playlist - null if getPlaylist() has not been called."
+                    "description": "This Regions Playlist - null if getPlaylist() has not been called.",
+                    "$ref": "#/definitions/Playlist"
                 }
             }
         },
@@ -10807,6 +11443,18 @@
                 "value": {
                     "description": "The option value",
                     "type": "string"
+                }
+            }
+        },
+        "ReportSchedule": {
+            "properties": {
+                "owner": {
+                    "description": "The username of the User that owns this report schedule",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The ID of the User that owns this report schedule",
+                    "type": "integer"
                 }
             }
         },
@@ -10851,6 +11499,54 @@
                 "userId": {
                     "description": "The userId who owns this Resolution",
                     "type": "integer"
+                }
+            }
+        },
+        "SavedReport": {
+            "properties": {
+                "savedReportId": {
+                    "description": "Saved report ID",
+                    "type": "integer"
+                },
+                "saveAs": {
+                    "description": "Saved report name As",
+                    "type": "string"
+                },
+                "reportScheduleId": {
+                    "description": "Report schedule Id of the saved report",
+                    "type": "integer"
+                },
+                "reportScheduleName": {
+                    "description": "Report schedule name of the saved report",
+                    "type": "string"
+                },
+                "reportName": {
+                    "description": "Report name",
+                    "type": "string"
+                },
+                "generatedOn": {
+                    "description": "Saved report generated on",
+                    "type": "string"
+                },
+                "owner": {
+                    "description": "The username of the User that owns this saved report",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The ID of the User that owns this saved report",
+                    "type": "integer"
+                },
+                "mediaId": {
+                    "description": "Media Id",
+                    "type": "integer"
+                },
+                "originalFileName": {
+                    "description": "Original name of the uploaded installer file",
+                    "type": "string"
+                },
+                "storedAs": {
+                    "description": "Stored As",
+                    "type": "string"
                 }
             }
         },
@@ -10970,40 +11666,59 @@
                     "description": "The Tag Name",
                     "type": "string"
                 },
-                "layoutIds": {
-                    "description": "An array of layoutIDs with this Tag",
+                "isSystem": {
+                    "description": "Flag, whether the tag is a system tag",
+                    "type": "integer"
+                },
+                "isRequired": {
+                    "description": "Flag, whether the tag requires additional values",
+                    "type": "integer"
+                },
+                "options": {
+                    "description": "An array of options assigned to this Tag",
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
-                "playlistIds": {
-                    "description": "An array of playlistIDs with this Tag",
+                "layouts": {
+                    "description": "An array of layoutID and values pairs with this Tag",
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
-                "campaignIds": {
-                    "description": "An array of campaignIDs with this Tag",
+                "playlists": {
+                    "description": "An array of playlistIDs and values with this Tag",
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
-                "mediaIds": {
-                    "description": "An array of mediaIds with this Tag",
+                "campaigns": {
+                    "description": "An array of campaignIDs and values with this Tag",
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
                 },
-                "displayGroupIds": {
-                    "description": "An array of displayGroupIds with this Tag",
+                "medias": {
+                    "description": "An array of mediaIds and values with this Tag",
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "type": "string"
                     }
+                },
+                "displayGroups": {
+                    "description": "An array of displayGroupIds and values with this Tag",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "value": {
+                    "description": "The Tag Value",
+                    "type": "string"
                 }
             }
         },
@@ -11178,6 +11893,21 @@
                 "isDisplayNotification": {
                     "description": "Does this Group receive system notifications.",
                     "type": "integer"
+                },
+                "twoFactorTypeId": {
+                    "description": "The two factor type id",
+                    "type": "integer"
+                },
+                "twoFactorSecret": {
+                    "description": "Two Factor authorisation shared secret for this user",
+                    "type": "string"
+                },
+                "twoFactorRecoveryCodes": {
+                    "description": "Two Factor authorisation recovery codes",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -11525,8 +12255,16 @@
             "description": "Tasks"
         },
         {
+            "name": "report",
+            "description": "Report schedule"
+        },
+        {
             "name": "version",
             "description": "Player Versions"
+        },
+        {
+            "name": "tags",
+            "description": "Tags"
         }
     ],
     "externalDocs": {

@@ -15,6 +15,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\TimeSeriesStoreInterface;
 
 /**
  * Class TaskTrait
@@ -33,6 +34,9 @@ trait TaskTrait
 
     /** @var  StorageServiceInterface */
     private $store;
+
+    /** @var  TimeSeriesStoreInterface */
+    private $timeSeriesStore;
 
     /** @var  PoolInterface */
     private $pool;
@@ -97,6 +101,13 @@ trait TaskTrait
     public function setStore($store)
     {
         $this->store = $store;
+        return $this;
+    }
+
+    /** @inheritdoc */
+    public function setTimeSeriesStore($timeSeriesStore)
+    {
+        $this->timeSeriesStore = $timeSeriesStore;
         return $this;
     }
 

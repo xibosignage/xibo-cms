@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -36,6 +37,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -117,6 +119,9 @@ class Module extends Base
 
     /** @var DataSetFactory */
     private $dataSetFactory;
+
+    /** @var PlayerVersionFactory  */
+    private $playerVersionFactory;
 
     /**
      * Set common dependencies.
@@ -644,6 +649,7 @@ class Module extends Base
         $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         $moduleName = $module->getName();
+        $widgetMedia = $module->widget->mediaIds;
 
         // Inject the Current User
         $module->setUser($this->getUser());
@@ -653,6 +659,20 @@ class Module extends Base
 
         // Call Widget Delete
         $module->widget->delete();
+
+         // Delete Media?
+        if ($this->getSanitizer()->getInt('deleteMedia', 0) == 1) {
+            foreach ($widgetMedia as $mediaId) {
+                $media = $this->mediaFactory->getById($mediaId);
+
+                // Check we have permissions to delete
+                if (!$this->getUser()->checkDeleteable($media))
+                    throw new AccessDeniedException();
+
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+                $media->delete();
+            }
+        }
 
         // Successful
         $this->getState()->hydrate([
@@ -1183,7 +1203,8 @@ class Module extends Base
         $this->getState()->setData([
             'module' => $module,
             'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : $this->getDate()->getLocalDate($module->widget->fromDt),
-            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : $this->getDate()->getLocalDate($module->widget->toDt)
+            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : $this->getDate()->getLocalDate($module->widget->toDt),
+            'deleteOnExpiry' => $module->getOption('deleteOnExpiry', 0)
         ]);
     }
 
@@ -1214,6 +1235,13 @@ class Module extends Base
      *      in="formData",
      *      description="The To Date",
      *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="deleteOnExpiry",
+     *      in="formData",
+     *      description="Delete this Widget when it expires?",
+     *      type="integer",
      *      required=false
      *  ),
      *  @SWG\Response(
@@ -1263,9 +1291,12 @@ class Module extends Base
             $widget->toDt = Widget::$DATE_MAX;
         }
 
+        // Delete on expiry?
+        $widget->setOptionValue('deleteOnExpiry', 'attrib', ($this->getSanitizer()->getCheckbox('deleteOnExpiry') ? 1 : 0));
+
         // Save
         $widget->save([
-            'saveWidgetOptions' => false,
+            'saveWidgetOptions' => true,
             'saveWidgetAudio' => false,
             'saveWidgetMedia' => false,
             'notify' => true,

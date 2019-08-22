@@ -1,3 +1,23 @@
+{#
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
@@ -25,8 +45,11 @@
                                     {{ inline.input("name", title) }}
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                                     {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                                    {% set title %}{% trans "Exact match?" %}{% endset %}
+                                    {{ inline.checkbox("exactTags", title) }}
 
                                     {% set attributes = [
                                     { name: "data-live-search", value: "true" },
@@ -68,6 +91,7 @@
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Modified" %}</th>
+                                <th>{% trans "Stats?" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -161,8 +185,11 @@
                             if (type !== "display" && type !== "export")
                                 return data;
 
-                            if (row.requiresDurationUpdate === 1)
+                            if (row.requiresDurationUpdate === 1) {
                                 return '<span class="fa fa-clock-o" title="{{ "Changes have been made and we are recalculating this Playlists duration" }}"></span>';
+                            } else if (row.requiresDurationUpdate !== 0) {
+                                return moment().startOf("day").seconds(data).format("H:mm:ss") + ' <span class="fa fa-clock-o" title="{{ "This duration will be upaded at " }}' + moment(row.requiresDurationUpdate, "X").format(jsDateFormat) + '"></span>';
+                            }
 
                             return moment().startOf("day").seconds(data).format("H:mm:ss");
                         }
@@ -187,6 +214,21 @@
                         "data": "modifiedDt",
                         "render": dataTableDateFromIso,
                         "visible": false
+                    },
+                    {
+                        "name": "enableStat",
+                        "data": function (data) {
+
+                            var icon = "";
+                            if (data.enableStat == 'On')
+                                icon = "fa-check";
+                            else if (data.enableStat == 'Off')
+                                icon = "fa-times";
+                            else
+                                icon = "fa-level-down";
+
+                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
+                        }
                     },
                     {
                         "orderable": false,
@@ -241,7 +283,7 @@
                 if (mediaTable != null) {
                     mediaTable.destroy();
                     mediaTable = null;
-                    $("#media tbody").empty();
+                    $("#playlistLibraryMedia tbody").empty();
                 }
 
                 return;
@@ -250,7 +292,7 @@
             if (mediaTable != null) {
                 mediaTable.ajax.reload();
             } else {
-                mediaTable = $("#media").DataTable({
+                mediaTable = $("#playlistLibraryMedia").DataTable({
                     "language": dataTablesLanguage,
                     serverSide: true,
                     stateSave: true,
@@ -268,6 +310,7 @@
                         {"data": "mediaId"},
                         {"data": "name"},
                         {"data": "mediaType"},
+                        {"data": dataTableCreateTags},
                         {
                             "name": "duration",
                             "data": function (data, type) {
@@ -281,7 +324,23 @@
                 });
 
                 mediaTable.on('processing.dt', dataTableProcessing);
+                mediaTable.on('draw', { form: $(".playlistForm") }, dataTableCreateTagEvents);
             }
+        }
+
+        function setEnableStatMultiSelectFormOpen(dialog) {
+
+            var $select = $('<select id="enableStat" name="enableStat" class="form-control">' +
+                '<option value="Off">{% trans %} Off {% endtrans %}</option>' +
+                '<option value="On">{% trans %} On {% endtrans %}</option>' +
+                '<option value="Inherit">{% trans %} Inherit {% endtrans %}</option>' +
+                '</select>');
+
+            $select.on('change', function() {
+                dialog.data().commitData = {enableStat: $(this).val()};
+            }).trigger('change');
+
+            $(dialog).find('.modal-body').append($select);
         }
     </script>
 

@@ -43,6 +43,19 @@
                         {% set title %}{% trans "Duration" %}{% endset %}
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
                     </div>
 
                     <div class="tab-pane" id="effectTab">
@@ -140,6 +153,7 @@
                                             <option value="Clock|HH:mm">Clock|HH:mm</option>
                                             <option value="Clock|DD/MM/YYYY">Clock|DD/MM/YYYY</option>
                                             <option value="Date">Date</option>
+                                            <option value="Date|DD/MMMM/YYYY">Date|DD/MMMM/YYYY</option>
                                         </select>
                                     </div>
                                 </div>

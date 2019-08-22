@@ -124,6 +124,7 @@ class Calendar extends ModuleWidget
         $this->setOption('useEventTimezone', $this->getSanitizer()->getCheckbox('useEventTimezone'));
         $this->setOption('useCalendarTimezone', $this->getSanitizer()->getCheckbox('useCalendarTimezone'));
         $this->setOption('windowsFormatCalendar', $this->getSanitizer()->getCheckbox('windowsFormatCalendar'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();
@@ -454,6 +455,17 @@ class Calendar extends ModuleWidget
                 case '[EndDate]':
                     $replace = $endDt->format($dateFormat);
                     break;
+            }
+
+            // custom date formats
+            if (strpos($sub, '[StartDate|') !== false) {
+                $format = str_replace('[', '', str_replace(']', '', str_replace('[StartDate|', '[', $sub)));
+                $replace = $startDt->format($format);
+            }
+
+            if (strpos($sub, '[EndDate|') !== false) {
+                $format = str_replace('[', '', str_replace(']', '', str_replace('[EndDate|', '[', $sub)));
+                $replace = $endDt->format($format);
             }
 
             // Substitute the replacement we have found (it might be '')

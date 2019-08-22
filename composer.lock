@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e481e1a7693b64c899d3500393960559",
+    "content-hash": "02707c1122050bc7767d3d215498fee9",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -105,16 +105,16 @@
         },
         {
             "name": "apereo/phpcas",
-            "version": "1.3.6",
+            "version": "1.3.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/apereo/phpCAS.git",
-                "reference": "7972833e84f6ee5fa41f1479eab5d855109627f5"
+                "reference": "b5b29102c3a42f570c4a3e852f3cf67cae6d6082"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/apereo/phpCAS/zipball/7972833e84f6ee5fa41f1479eab5d855109627f5",
-                "reference": "7972833e84f6ee5fa41f1479eab5d855109627f5",
+                "url": "https://api.github.com/repos/apereo/phpCAS/zipball/b5b29102c3a42f570c4a3e852f3cf67cae6d6082",
+                "reference": "b5b29102c3a42f570c4a3e852f3cf67cae6d6082",
                 "shasum": ""
             },
             "require": {
@@ -156,7 +156,7 @@
                 "cas",
                 "jasig"
             ],
-            "time": "2018-10-25T20:22:09+00:00"
+            "time": "2019-04-22T19:48:16+00:00"
         },
         {
             "name": "doctrine/inflector",
@@ -1191,16 +1191,16 @@
         },
         {
             "name": "intervention/imagecache",
-            "version": "2.3.3",
+            "version": "2.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Intervention/imagecache.git",
-                "reference": "7936b90e695daee1aafbd25221815352ef97bcbc"
+                "reference": "fce486614cb67584637a383c1d09be893f1e6076"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Intervention/imagecache/zipball/7936b90e695daee1aafbd25221815352ef97bcbc",
-                "reference": "7936b90e695daee1aafbd25221815352ef97bcbc",
+                "url": "https://api.github.com/repos/Intervention/imagecache/zipball/fce486614cb67584637a383c1d09be893f1e6076",
+                "reference": "fce486614cb67584637a383c1d09be893f1e6076",
                 "shasum": ""
             },
             "require": {
@@ -1208,6 +1208,7 @@
                 "illuminate/filesystem": "~4|~5",
                 "intervention/image": "dev-master|~2,>=2.2.0",
                 "jeremeamia/superclosure": "~1|~2",
+                "nesbot/carbon": "^1.26.3 || ^2.0",
                 "php": ">=5.3.0"
             },
             "require-dev": {
@@ -1240,7 +1241,7 @@
                 "imagick",
                 "laravel"
             ],
-            "time": "2015-09-22T15:22:47+00:00"
+            "time": "2019-04-22T10:36:48+00:00"
         },
         {
             "name": "james-heinrich/getid3",
@@ -1666,6 +1667,71 @@
             "time": "2018-06-23T16:27:31+00:00"
         },
         {
+            "name": "mongodb/mongodb",
+            "version": "1.4.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/mongodb/mongo-php-library.git",
+                "reference": "bd148eab0493e38354e45e2cd7db59b90fdcad79"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/bd148eab0493e38354e45e2cd7db59b90fdcad79",
+                "reference": "bd148eab0493e38354e45e2cd7db59b90fdcad79",
+                "shasum": ""
+            },
+            "require": {
+                "ext-hash": "*",
+                "ext-json": "*",
+                "ext-mongodb": "^1.5.0",
+                "php": ">=5.5"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^4.8.36 || ^6.4"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MongoDB\\": "src/"
+                },
+                "files": [
+                    "src/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Jeremy Mikola",
+                    "email": "jmikola@gmail.com"
+                },
+                {
+                    "name": "Derick Rethans",
+                    "email": "github@derickrethans.nl"
+                },
+                {
+                    "name": "Katherine Walker",
+                    "email": "katherine.walker@mongodb.com"
+                }
+            ],
+            "description": "MongoDB driver library",
+            "homepage": "https://jira.mongodb.org/browse/PHPLIB",
+            "keywords": [
+                "database",
+                "driver",
+                "mongodb",
+                "persistence"
+            ],
+            "time": "2018-07-18T14:33:41+00:00"
+        },
+        {
             "name": "monolog/monolog",
             "version": "1.24.0",
             "source": {
@@ -1789,16 +1855,16 @@
         },
         {
             "name": "nesbot/carbon",
-            "version": "1.36.2",
+            "version": "1.37.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/briannesbitt/Carbon.git",
-                "reference": "cd324b98bc30290f233dd0e75e6ce49f7ab2a6c9"
+                "reference": "5be4fdf97076a685b23efdedfc2b73ad0c5eab70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/cd324b98bc30290f233dd0e75e6ce49f7ab2a6c9",
-                "reference": "cd324b98bc30290f233dd0e75e6ce49f7ab2a6c9",
+                "url": "https://api.github.com/repos/briannesbitt/Carbon/zipball/5be4fdf97076a685b23efdedfc2b73ad0c5eab70",
+                "reference": "5be4fdf97076a685b23efdedfc2b73ad0c5eab70",
                 "shasum": ""
             },
             "require": {
@@ -1843,7 +1909,7 @@
                 "datetime",
                 "time"
             ],
-            "time": "2018-12-28T10:07:33+00:00"
+            "time": "2019-04-19T10:27:42+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -2719,6 +2785,57 @@
                 "xmldsig"
             ],
             "time": "2018-11-15T11:59:02+00:00"
+        },
+        {
+            "name": "robthree/twofactorauth",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RobThree/TwoFactorAuth.git",
+                "reference": "401fc076523ffd50116f1fd90d12ee496d5fc16e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RobThree/TwoFactorAuth/zipball/401fc076523ffd50116f1fd90d12ee496d5fc16e",
+                "reference": "401fc076523ffd50116f1fd90d12ee496d5fc16e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "@stable"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "RobThree\\Auth\\": "lib"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rob Janssen",
+                    "homepage": "http://robiii.me",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Two Factor Authentication",
+            "homepage": "https://github.com/RobThree/TwoFactorAuth",
+            "keywords": [
+                "Authentication",
+                "MFA",
+                "Multi Factor Authentication",
+                "Two Factor Authentication",
+                "authenticator",
+                "authy",
+                "php",
+                "tfa"
+            ],
+            "time": "2019-04-29T10:08:22+00:00"
         },
         {
             "name": "sallar/jdatetime",
@@ -3680,16 +3797,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v1.38.4",
+            "version": "v1.41.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "7732e9e7017d751313811bd118de61302e9c8b35"
+                "reference": "575cd5028362da591facde1ef5d7b94553c375c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/7732e9e7017d751313811bd118de61302e9c8b35",
-                "reference": "7732e9e7017d751313811bd118de61302e9c8b35",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/575cd5028362da591facde1ef5d7b94553c375c9",
+                "reference": "575cd5028362da591facde1ef5d7b94553c375c9",
                 "shasum": ""
             },
             "require": {
@@ -3704,7 +3821,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.38-dev"
+                    "dev-master": "1.41-dev"
                 }
             },
             "autoload": {
@@ -3742,20 +3859,20 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2019-03-23T14:27:19+00:00"
+            "time": "2019-05-14T11:59:08+00:00"
         },
         {
             "name": "xibosignage/oauth2-xibo-cms",
-            "version": "v2.0-beta.4",
+            "version": "dev-feature/2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
-                "reference": "8e6ddb4be070257233c225f8829b8117f9d978c3"
+                "reference": "a619d731959ee62a67e2838f4c82214ae3e234e3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/8e6ddb4be070257233c225f8829b8117f9d978c3",
-                "reference": "8e6ddb4be070257233c225f8829b8117f9d978c3",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/a619d731959ee62a67e2838f4c82214ae3e234e3",
+                "reference": "a619d731959ee62a67e2838f4c82214ae3e234e3",
                 "shasum": ""
             },
             "require": {
@@ -3797,7 +3914,7 @@
                 "xibo",
                 "xibo cms"
             ],
-            "time": "2019-02-12T14:29:57+00:00"
+            "time": "2019-02-20T13:21:52+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -4174,16 +4291,16 @@
         },
         {
             "name": "phpdocumentor/reflection-docblock",
-            "version": "4.3.0",
+            "version": "4.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "94fd0001232e47129dd3504189fa1c7225010d08"
+                "reference": "bdd9f737ebc2a01c06ea7ff4308ec6697db9b53c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/94fd0001232e47129dd3504189fa1c7225010d08",
-                "reference": "94fd0001232e47129dd3504189fa1c7225010d08",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/bdd9f737ebc2a01c06ea7ff4308ec6697db9b53c",
+                "reference": "bdd9f737ebc2a01c06ea7ff4308ec6697db9b53c",
                 "shasum": ""
             },
             "require": {
@@ -4221,7 +4338,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2017-11-30T07:14:17+00:00"
+            "time": "2019-04-30T17:48:53+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -4777,6 +4894,7 @@
                 "mock",
                 "xunit"
             ],
+            "abandoned": true,
             "time": "2017-06-30T09:13:00+00:00"
         },
         {
@@ -5396,16 +5514,16 @@
         },
         {
             "name": "zircote/swagger-php",
-            "version": "2.0.13",
+            "version": "2.0.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/zircote/swagger-php.git",
-                "reference": "8b42fdc3d8c5a5e0d1f8d344aa359822c9f085e0"
+                "reference": "f2a00f26796e5cd08fd812275ba2db3d1e807663"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zircote/swagger-php/zipball/8b42fdc3d8c5a5e0d1f8d344aa359822c9f085e0",
-                "reference": "8b42fdc3d8c5a5e0d1f8d344aa359822c9f085e0",
+                "url": "https://api.github.com/repos/zircote/swagger-php/zipball/f2a00f26796e5cd08fd812275ba2db3d1e807663",
+                "reference": "f2a00f26796e5cd08fd812275ba2db3d1e807663",
                 "shasum": ""
             },
             "require": {
@@ -5432,7 +5550,7 @@
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "Apache2"
+                "Apache-2.0"
             ],
             "authors": [
                 {
@@ -5454,7 +5572,7 @@
                 "rest",
                 "service discovery"
             ],
-            "time": "2017-12-01T09:22:05+00:00"
+            "time": "2019-05-17T10:10:34+00:00"
         }
     ],
     "aliases": [],
@@ -5462,7 +5580,9 @@
     "stability-flags": {
         "sallar/jdatetime": 20,
         "onelogin/php-saml": 20,
-        "infostars/picofeed": 20
+        "infostars/picofeed": 20,
+        "xibosignage/oauth2-xibo-cms": 20,
+        "robthree/twofactorauth": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
@@ -5475,6 +5595,7 @@
     "platform-dev": [],
     "platform-overrides": {
         "php": "7",
-        "ext-zmq": "1"
+        "ext-zmq": "1",
+        "ext-mongodb": "1.5.0"
     }
 }

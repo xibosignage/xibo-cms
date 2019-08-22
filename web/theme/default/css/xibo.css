@@ -218,6 +218,14 @@ ul#LayoutAssignSortable {
     display: inline-block;
 }
 
+#LayoutAssign {
+    background-color: #a6b3cd;
+}
+
+.layoutAssignFilterOptions {
+    padding: 10px;
+}
+
 #LayoutAssignSortable .li-sortable {
     padding: 5px;
     margin: 5px;
@@ -891,10 +899,25 @@ ul li.active.tab-design:hover a {
     height: auto;
 }
 
+.btn-tag {
+    background-color: #5bc0de;
+    border-color: #46b8da;
+    color:white;
+    margin:2px;
+    font-weight: 700;
+    border-radius: 10px;
+}
+
+.btn-tag:hover {
+    background-color: lightblue;
+}
+
 .bootstrap-tagsinput .tag {
     margin-right: 0;
     background-color: #5bc0de;
     border-color: #46b8da;
+    font-weight: 700;
+    border-radius: 10px;
 }
 
 /*
@@ -940,4 +963,29 @@ ul li.active.tab-design:hover a {
 
 .layout-designer-right-pane .select2-container--bootstrap {
     display: inline-block;
+}
+
+/*
+ * Prrof of play report dropdown
+ */
+.proof-of-play-report-div {
+    padding-right: 2px;
+}
+
+.proof-of-play-report-btn {
+    height: 43px;
+}
+
+
+/*
+ * Display settings
+ */
+.override-input {
+    position: relative !important;
+}
+
+.override-input button.button-close-override {
+    position: absolute;
+    right: -16px;
+    top: 8px;
 }

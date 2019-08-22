@@ -174,6 +174,13 @@ class DataSetTicker extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="dataSetId",
      *      in="formData",
      *      description="Required for Step 1. Create ticker Widget using provided dataSetId of an existing dataSet",
@@ -364,6 +371,7 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('name', $this->getSanitizer()->getString('name'));
             $this->setOption('effect', $this->getSanitizer()->getString('effect'));
             $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
+            $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
             $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
             $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
             $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));

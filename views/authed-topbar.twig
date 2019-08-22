@@ -166,13 +166,17 @@
             {% if currentUser.routeViewable("/task") %}
                 <li><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
+
+            {% if currentUser.isSuperAdmin() %}
+                <li><a href="{{ urlFor("tag.view") }}">{% trans "Tags" %}</a></li>
+            {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
             </ul>
         </li>
         {% endif %}
     {% endif %}
 
-    {% if currentUser.routeViewable("/stats") %}
+    {% if currentUser.routeViewable("/stats") or currentUser.routeViewable("/report")  %}
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Reporting" %} <span class="caret"></span></a>
         <ul class="dropdown-menu">
@@ -186,6 +190,14 @@
 
             {% if currentUser.routeViewable("/stats") %}
                 <li><a href="{{ urlFor("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/report") %}
+                <li class="sidebar-list"><a href="{{ urlFor("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.routeViewable("/report") %}
+                <li class="sidebar-list"><a href="{{ urlFor("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
             {% endif %}
         </ul>
     </li>

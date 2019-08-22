@@ -519,6 +519,8 @@ class Display extends Base
                 $display->includeProperty('overrideConfig');
             }
 
+            $display->bandwidthLimitFormatted = ByteFormatter::format($display->bandwidthLimit * 1024);
+
             // Current layout from cache
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $display->getCurrentLayoutId($this->pool);
@@ -640,10 +642,10 @@ class Display extends Base
             }
 
             // Schedule Now
-            if ($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) {
+            if (($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor('schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor('schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }
@@ -754,6 +756,20 @@ class Display extends Base
         // We have permission - load
         $display->load();
 
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $display->tags));
+        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
@@ -807,7 +823,8 @@ class Display extends Base
             'timeZones' => $timeZones,
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
-            'versions' => $playerVersions
+            'versions' => $playerVersions,
+            'tags' => $tags
         ]);
     }
 
@@ -1033,6 +1050,8 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
+        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit');
+
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
@@ -1452,8 +1471,8 @@ class Display extends Base
                     // Alerts enabled for this display
                     // Display just gone offline, or always alert
                     // Fields for email
-                    $subject = sprintf(__("Email Alert for Display %s"), $display->display);
-                    $body = sprintf(__("Display %s with ID %d was last seen at %s."), $display->display, $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
+                    $subject = sprintf(__("Alert for Display %s"), $display->display);
+                    $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
                     // Add to system
                     $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());

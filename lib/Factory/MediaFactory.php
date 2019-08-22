@@ -442,17 +442,6 @@ class MediaFactory extends BaseFactory
     }
 
     /**
-     * Get Media by LayoutId
-     * @param int $layoutId
-     * @param int $widgetId
-     * @return array[Media]
-     */
-    public function getByLayoutAndWidget($layoutId, $widgetId)
-    {
-        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'widgetId' => $widgetId]);
-    }
-
-    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return Media[]
@@ -499,9 +488,11 @@ class MediaFactory extends BaseFactory
                `media`.apiRef,
                `media`.createdDt,
                `media`.modifiedDt,
+               `media`.enableStat,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
+        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaId GROUP BY lktagmedia.mediaId) AS tagValues, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
@@ -540,6 +531,10 @@ class MediaFactory extends BaseFactory
             $body .= ' AND media.type <> \'playersoftware\' ';
         }
 
+        if ($this->getSanitizer()->getInt('notSavedReport', $filterBy) == 1) {
+            $body .= ' AND media.type <> \'savedreport\' ';
+        }
+
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
@@ -551,6 +546,7 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND media.type <> \'genericfile\'
                 AND media.type <> \'playersoftware\'
+                AND media.type <> \'savedreport\'
                 AND media.type <> \'font\'
             ';
         }
@@ -559,6 +555,7 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND (media.type = \'genericfile\'
                 OR media.type = \'playersoftware\'
+                OR media.type = \'savedreport\'
                 OR media.type = \'font\')
             ';
         }
@@ -573,6 +570,7 @@ class MediaFactory extends BaseFactory
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
                 AND media.type <> \'playersoftware\'
+                AND media.type <> \'savedreport\'
             ';
 
             // DataSets with library images
@@ -716,22 +714,9 @@ class MediaFactory extends BaseFactory
                     INNER JOIN `lktagmedia`
                     ON `lktagmedia`.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 

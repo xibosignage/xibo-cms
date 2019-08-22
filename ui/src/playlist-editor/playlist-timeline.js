@@ -14,9 +14,8 @@ let PlaylistTimeline = function(container) {
 
 /**
  * Render Timeline and the layout
- * @param {Object} layout - the layout object to be rendered
  */
-PlaylistTimeline.prototype.render = function(layout) {
+PlaylistTimeline.prototype.render = function() {
 
     // Render timeline template
     const html = timelineTemplate(pE.playlist);
@@ -25,9 +24,11 @@ PlaylistTimeline.prototype.render = function(layout) {
     this.DOMObject.html(html);
 
     // Enable select for each widget
-    this.DOMObject.find('.playlist-widget.selectable:not(.ui-sortable)').click(function(e) {
+    this.DOMObject.find('.playlist-widget.selectable').click(function(e) {
         e.stopPropagation();
-        pE.selectObject($(this));
+        if(!$(this).hasClass('to-be-saved')) {
+            pE.selectObject($(this));
+        }
     });
 
     this.DOMObject.find('.playlist-widget').droppable({
@@ -78,6 +79,9 @@ PlaylistTimeline.prototype.render = function(layout) {
             saveOrderFunc.cancel();
         },
         stop: function(event, ui) {
+            // Mark target as "to be saved"
+            $(ui.item).addClass('to-be-saved');
+
             pE.timeline.DOMObject.find('#unsaved').show();
             saveOrderFunc();
         }

@@ -53,9 +53,10 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int|null $userId
+     * @param int $bandwidthLimit
      * @return DisplayGroup
      */
-    public function create($userId = null)
+    public function create($userId = null, $bandwidthLimit = 0)
     {
         $displayGroup = $this->createEmpty();
 
@@ -64,6 +65,7 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         $displayGroup->userId = $userId;
+        $displayGroup->bandwidthLimit = $bandwidthLimit;
 
         return $displayGroup;
     }
@@ -148,6 +150,16 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * @param string $tag
+     * @return DisplayGroup[]
+     * @throws NotFoundException
+     */
+    public function getByTag($tag)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1, 'isDisplaySpecific' => 1]);
+    }
+
+    /**
      * Get Relationship Tree
      * @param $displayGroupId
      * @return DisplayGroup[]
@@ -212,6 +224,7 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
+                `displaygroup`.bandwidthLimit,
                 `displaygroup`.userId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 
@@ -220,7 +233,15 @@ class DisplayGroupFactory extends BaseFactory
                       ON lktagdisplaygroup.tagId = tag.tagId 
                    WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
                   GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags 
+                ) AS tags,
+                (
+                  SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
+                    FROM tag 
+                      INNER JOIN lktagdisplaygroup 
+                      ON lktagdisplaygroup.tagId = tag.tagId 
+                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                  GROUP BY lktagdisplaygroup.displayGroupId
+                ) AS tagValues  
         ';
 
         $body = '
@@ -326,22 +347,9 @@ class DisplayGroupFactory extends BaseFactory
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 

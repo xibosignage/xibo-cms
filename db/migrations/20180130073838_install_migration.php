@@ -856,7 +856,7 @@ class InstallMigration extends AbstractMigration
                 ['name' => 'Daily Maintenance', 'class' => '\Xibo\XTR\MaintenanceDailyTask', 'status' => 2, 'options' => '[]', 'schedule' => '0 0 * * * *', 'isActive' => 1, 'configFile' => '/tasks/maintenance-daily.task'],
                 ['name' => 'Regular Maintenance', 'class' => '\Xibo\XTR\MaintenanceRegularTask', 'status' => 2, 'options' => '[]', 'schedule' =>  '*/5 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/maintenance-regular.task'],
                 ['name' => 'Email Notifications', 'class' => '\Xibo\XTR\EmailNotificationsTask', 'status' => 2, 'options' => '[]', 'schedule' =>  '*/5 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/email-notifications.task'],
-                ['name' => 'Stats Archive', 'class' => '\Xibo\XTR\StatsArchiveTask', 'status' => 2, 'options' => '{"periodSizeInDays":"7","maxPeriods":"4"}', 'schedule' =>  '0 0 * * Mon', 'isActive' => 0, 'configFile' => '/tasks/stats-archiver.task'],
+                ['name' => 'Stats Archive', 'class' => '\Xibo\XTR\StatsArchiveTask', 'status' => 2, 'options' => '{"periodSizeInDays":"7","maxPeriods":"4", "archiveStats":"Off"}', 'schedule' =>  '0 0 * * Mon', 'isActive' => 1, 'configFile' => '/tasks/stats-archiver.task'],
                 ['name' => 'Remove old Notifications', 'class' =>  '\Xibo\XTR\NotificationTidyTask', 'status' => 2, 'options' => '{"maxAgeDays":"7","systemOnly":"1","readOnly":"0"}',  'schedule' => '15 0 * * *', 'isActive' => 1, 'configFile' => '/tasks/notification-tidy.task'],
                 ['name' => 'Fetch Remote DataSets', 'class' =>  '\Xibo\XTR\RemoteDataSetFetchTask', 'status' => 2, 'options' => '[]',  'schedule' => '30 * * * * *', 'isActive' => 1, 'configFile' => '/tasks/remote-dataset.task'],
                 ['name' => 'Drop Player Cache', 'class' => '\Xibo\XTR\DropPlayerCacheTask', 'options' => '[]', 'schedule' => '0 0 1 1 *', 'isActive' => '0', 'configFile' => '/tasks/drop-player-cache.task'],
@@ -1214,23 +1214,23 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
         // Add modules
         $this->execute('
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
-  (1, \'Image\', \'Image\', 1, 0, \'Images. PNG, JPG, BMP, GIF\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Image\', 10),
-  (2, \'Video\', \'Video\', 1, 0, \'Videos - support varies depending on the client hardware you are using.\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Video\', 0),
-  (3, \'Flash\', \'Flash\', 1, 0, \'Flash\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Flash\', 10),
-  (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Powerpoint. PPT, PPS\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\PowerPoint\', 10),
-  (5, \'Webpage\', \'Webpage\', 1, 1, \'Webpages.\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\WebPage\', 60),
-  (6, \'Ticker\', \'Ticker\', 1, 1, \'RSS Ticker.\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Ticker\', 5),
-  (7, \'Text\', \'Text\', 1, 1, \'Text. With Directional Controls.\', \'forms/text.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Text\', 5),
-  (8, \'Embedded\', \'Embedded\', 1, 1, \'Embedded HTML\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Embedded\', 60),
-  (11, \'datasetview\', \'Data Set\', 1, 1, \'A view on a DataSet\', \'forms/datasetview.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\DataSetView\', 60),
-  (12, \'shellcommand\', \'Shell Command\', 1, 1, \'Execute a shell command on the client\', \'forms/shellcommand.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\ShellCommand\', 3),
-  (13, \'localvideo\', \'Local Video\', 1, 1, \'Play a video locally stored on the client\', \'forms/video.gif\', 1, NULL, 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\LocalVideo\', 60),
+  (1, \'Image\', \'Image\', 1, 0, \'Upload Image files to assign to Layouts\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Image\', 10),
+  (2, \'Video\', \'Video\', 1, 0, \'Upload Video files to assign to Layouts\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Video\', 0),
+  (3, \'Flash\', \'Flash\', 1, 0, \'Upload SWF files to assign to Layouts\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Flash\', 10),
+  (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Upload a PowerPoint file to assign to Layouts\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\PowerPoint\', 10),
+  (5, \'Webpage\', \'Webpage\', 1, 1, \'Embed a Webpage\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\WebPage\', 60),
+  (6, \'Ticker\', \'Ticker\', 1, 1, \'Display dynamic feed content\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Ticker\', 5),
+  (7, \'Text\', \'Text\', 1, 1, \'Add Text directly to a Layout\', \'forms/text.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Text\', 5),
+  (8, \'Embedded\', \'Embedded\', 1, 1, \'Embed HTML and JavaScript\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Embedded\', 60),
+  (11, \'datasetview\', \'Data Set\', 1, 1, \'Organise and display DataSet data in a tabular format\', \'forms/datasetview.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\DataSetView\', 60),
+  (12, \'shellcommand\', \'Shell Command\', 1, 1, \'Instruct a Display to execute a command using the operating system shell\', \'forms/shellcommand.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\ShellCommand\', 3),
+  (13, \'localvideo\', \'Local Video\', 1, 1, \'Display Video that only exists on the Display by providing a local file path or URL\', \'forms/video.gif\', 1, NULL, 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\LocalVideo\', 60),
   (14, \'genericfile\', \'Generic File\', 1, 0, \'A generic file to be stored in the library\', \'forms/library.gif\', 1, \'apk,ipk,js,html,htm\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\GenericFile\', 10),
-  (15, \'clock\', \'Clock\', 1, 1, \'\', \'forms/library.gif\', 1, NULL, 1, 1, \'html\', \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Clock\', 5),
+  (15, \'clock\', \'Clock\', 1, 1, \'Assign a type of Clock or a Countdown\', \'forms/library.gif\', 1, NULL, 1, 1, \'html\', \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Clock\', 5),
   (16, \'font\', \'Font\', 1, 0, \'A font to use in other Modules\', \'forms/library.gif\', 1, \'ttf,otf,eot,svg,woff\', 0, 0, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Font\', 10),
-  (17, \'audio\', \'Audio\', 1, 0, \'Audio - support varies depending on the client hardware\', \'forms/video.gif\', 1, \'mp3,wav\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Audio\', 0),
-  (18, \'pdf\', \'PDF\', 1, 0, \'PDF document viewer\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\Pdf\', 60),
-  (19, \'notificationview\', \'Notification\', 1, 1, \'Display Notifications from the Notification Centre\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\NotificationView\', 10);        
+  (17, \'audio\', \'Audio\', 1, 0, \'Upload Audio files to assign to Layouts\', \'forms/video.gif\', 1, \'mp3,wav\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Audio\', 0),
+  (18, \'pdf\', \'PDF\', 1, 0, \'Upload PDF files to assign to Layouts\', \'forms/pdf.gif\', 1, \'pdf\', 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\Pdf\', 60),
+  (19, \'notificationview\', \'Notification\', 1, 1, \'Display messages created in the Notification Drawer of the CMS\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\NotificationView\', 10);        
         ');
     }
 }

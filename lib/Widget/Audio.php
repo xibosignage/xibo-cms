@@ -64,6 +64,13 @@ class Audio extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -83,6 +90,7 @@ class Audio extends ModuleWidget
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setOption('name', $this->getSanitizer()->getString('name'));
         $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
 
         // Only loop if the duration is > 0
         if ($this->getUseDuration() == 0 || $this->getDuration() == 0) {

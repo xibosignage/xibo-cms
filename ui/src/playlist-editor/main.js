@@ -26,6 +26,7 @@ const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const dropZoneTemplate = require('../templates/drop-zone.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
+const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -325,54 +326,108 @@ pE.deleteSelectedObject = function() {
  */
 pE.deleteObject = function(objectType, objectId) {
 
-    if(objectType === 'widget') {
+    const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
 
-        bootbox.confirm({
-            className: 'second-dialog',
+        bootbox.hideAll();
+
+        const htmlContent = deleteElementModalContentTemplate({
+            mainMessage: deleteMenuTrans.mainMessage.replace('%obj%', objectType),
+            hasMedia: hasMedia,
+            showDeleteFromLibrary: showDeleteFromLibrary,
+            trans: deleteMenuTrans
+        });
+
+        bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
-            message: editorsTrans.deleteConfirm,
+            message: htmlContent,
             buttons: {
-                confirm: {
-                    label: editorsTrans.yes,
-                    className: 'btn-danger'
-                },
                 cancel: {
                     label: editorsTrans.no,
                     className: 'btn-default'
-                }
-            },
-            callback: function(result) {
-                if(result) {
+                },
+                confirm: {
+                    label: editorsTrans.yes,
+                    className: 'btn-danger',
+                    callback: function() {
 
-                    pE.common.showLoadingScreen();
+                        // Empty options object
+                        let options = null;
 
-                    // Delete element from the layout
-                    pE.playlist.deleteElement(objectType, objectId).then((res) => { // Success
-
-                        pE.common.hideLoadingScreen();
-
-                        // Behavior if successful 
-                        toastr.success(res.message);
-                        pE.reloadData();
-                    }).catch((error) => { // Fail/error
-
-                        pE.common.hideLoadingScreen();
-
-                        // Show error returned or custom message to the user
-                        let errorMessage = '';
-
-                        if(typeof error == 'string') {
-                            errorMessage = error;
-                        } else {
-                            errorMessage = error.errorThrown;
+                        // If delete media is checked, pass that as a param for delete
+                        if($(this).find('input#deleteMedia').is(':checked')) {
+                            options = {
+                                deleteMedia: 1
+                            };
                         }
 
-                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-                    });
+                        pE.common.showLoadingScreen('deleteObject');
+
+                        // Delete element from the layout
+                        pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
+
+                            pE.common.hideLoadingScreen('deleteObject');
+
+                            // Behavior if successful 
+                            toastr.success(res.message);
+                            pE.reloadData();
+                        }).catch((error) => { // Fail/error
+
+                            pE.common.hideLoadingScreen('deleteObject');
+
+                            // Show error returned or custom message to the user
+                            let errorMessage = '';
+
+                            if(typeof error == 'string') {
+                                errorMessage = error;
+                            } else {
+                                errorMessage = error.errorThrown;
+                            }
+
+                            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+                        });
+
+                    }
                 }
             }
         }).attr('data-test', 'deleteObjectModal');
+    };
 
+    if(objectType === 'widget') {
+
+        const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + objectId);
+
+        if(widgetToDelete.mediaIds.length == 0) {
+            createDeleteModal(objectType, objectId);
+        } else {
+            pE.common.showLoadingScreen('checkMediaIsUsed');
+
+            const linkToAPI = urlsForApi.media.isUsed;
+            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+            // Request with count as being 2, for the published layout and draft
+            $.get(requestPath + '?count=1')
+                .done(function(res) {
+                    if(res.success) {
+                        createDeleteModal(objectType, objectId, true, !res.data.isUsed);
+                    } else {
+                        if(res.login) {
+                            window.location.href = window.location.href;
+                            location.reload(false);
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    }
+
+                    pE.common.hideLoadingScreen('checkMediaIsUsed');
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+
+                    pE.common.hideLoadingScreen('checkMediaIsUsed');
+
+                    // Output error to console
+                    console.error(jqXHR, textStatus, errorThrown);
+                });
+        }
     }
 };
 
@@ -577,6 +632,12 @@ pE.showLocalLoadingScreen = function() {
  * Clear Temporary Data ( Cleaning cached variables )
  */
 pE.clearTemporaryData = function() {
+
+    // Fix for remaining ckeditor elements or colorpickers
+    pE.editorDiv.find('.colorpicker-element').colorpicker('destroy');
+
+    // Hide open tooltips
+    pE.editorDiv.find('[data-toggle="tooltip"]').tooltip('hide');
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();

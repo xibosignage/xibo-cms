@@ -230,7 +230,10 @@ class UserFactory extends BaseFactory
                 IFNULL(group.libraryQuota, 0) AS libraryQuota,
                 `group`.isSystemNotification,
                 `group`.isDisplayNotification, 
-                `user`.isPasswordChangeRequired
+                `user`.isPasswordChangeRequired,
+                `user`.twoFactorTypeId,
+                `user`.twoFactorSecret,
+                `user`.twoFactorRecoveryCodes
             ';
 
         $body = '

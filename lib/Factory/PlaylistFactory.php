@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -179,6 +180,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.filterMediaName,
                 `playlist`.filterMediaTags,
                 `playlist`.requiresDurationUpdate,
+                `playlist`.enableStat,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
                   FROM tag 
@@ -187,6 +189,15 @@ class PlaylistFactory extends BaseFactory
                  WHERE lktagplaylist.playlistId = playlist.playlistId 
                 GROUP BY lktagplaylist.playlistId
                 ) AS tags,
+                
+                (
+                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
+                  FROM tag 
+                    INNER JOIN lktagplaylist 
+                    ON lktagplaylist.tagId = tag.tagId 
+                 WHERE lktagplaylist.playlistId = playlist.playlistId 
+                GROUP BY lktagplaylist.playlistId
+                ) AS tagValues,
                 
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -237,8 +248,17 @@ class PlaylistFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
-            $body .= ' AND `playlist`.requiresDurationUpdate = :requiresDurationUpdate ';
-            $params['requiresDurationUpdate'] = $this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy);
+            // Either 1, or 0
+            if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) == 1) {
+                // Not 0 and behind now.
+                $body .= ' AND `playlist`.requiresDurationUpdate <= :requiresDurationUpdate ';
+                $body .= ' AND `playlist`.requiresDurationUpdate <> 0 ';
+                $params['requiresDurationUpdate'] = time();
+            } else {
+                // Ahead of now means we don't need to update yet, or we are set to 0 and we never update
+                $body .= ' AND (`playlist`.requiresDurationUpdate > :requiresDurationUpdate OR `playlist`.requiresDurationUpdate = 0)';
+                $params['requiresDurationUpdate'] = time();
+            }
         }
 
         if ($this->getSanitizer()->getInt('isDynamic', $filterBy) !== null) {
@@ -315,22 +335,9 @@ class PlaylistFactory extends BaseFactory
                     INNER JOIN lktagplaylist
                     ON lktagplaylist.tagId = tag.tagId
                 ";
-                $i = 0;
-                foreach (explode(',', $tagFilter) as $tag) {
-                    $i++;
 
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
+                $tags = explode(',', $tagFilter);
+                $this->tagFilter($tags, $operator, $body, $params);
             }
         }
 

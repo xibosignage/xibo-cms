@@ -27,12 +27,18 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "ID" %}{% endset %}
+                            {{ inline.number("mediaId", title) }}
+
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("media", title) }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                             {{ inline.inputWithTags("tags", title, null, helpText) }}
+
+                            {% set title %}{% trans "Exact match?" %}{% endset %}
+                            {{ inline.checkbox("exactTags", title) }}
 
                             {% set attributes = [
                                 { name: "data-allow-clear", value: "true" },
@@ -74,6 +80,7 @@
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Revised" %}</th>
                                 <th>{% trans "File Name" %}</th>
+                                <th>{% trans "Stats?" %}</th>
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Modified" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
@@ -173,6 +180,21 @@
                     },
                     {"data": "revised", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "fileName"},
+                    {
+                        "name": "enableStat",
+                        "data": function (data) {
+
+                            var icon = "";
+                            if (data.enableStat == 'On')
+                                icon = "fa-check";
+                            else if (data.enableStat == 'Off')
+                                icon = "fa-times";
+                            else
+                                icon = "fa-level-down";
+
+                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
+                        }
+                    },
                     {
                         "data": "createdDt",
                         "render": dataTableDateFromIso,
@@ -439,6 +461,16 @@
 
             usageTableLayouts.on('draw', dataTableDraw);
             usageTableLayouts.on('processing.dt', dataTableProcessing);
+
+            // Tidy up timepickers on modal close
+            if(dialog.hasClass('modal')) {
+                dialog.on("hide.bs.modal", function(e) {
+                    if(e.namespace === 'bs.modal') {
+                            // Remove colour pickers
+                            dialog.find("#mediaEventDateLink").datetimepicker('remove');
+                    }
+                });
+            }
         }
 
         function setDefaultMultiSelectFormOpen(dialog) {
@@ -450,5 +482,21 @@
             });
             $(dialog).find('.modal-body').append($input);
         }
+
+        function setEnableStatMultiSelectFormOpen(dialog) {
+
+            var $select = $('<select id="enableStat" name="enableStat" class="form-control">' +
+                '<option value="Off">{% trans %} Off {% endtrans %}</option>' +
+                '<option value="On">{% trans %} On {% endtrans %}</option>' +
+                '<option value="Inherit">{% trans %} Inherit {% endtrans %}</option>' +
+                '</select>');
+
+            $select.on('change', function() {
+                dialog.data().commitData = {enableStat: $(this).val()};
+            }).trigger('change');
+
+            $(dialog).find('.modal-body').append($select);
+        }
+
     </script>
 {% endblock %}

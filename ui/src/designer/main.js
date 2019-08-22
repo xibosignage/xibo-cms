@@ -26,6 +26,7 @@ const designerMainTemplate = require('../templates/designer.hbs');
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
+const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
 
 // Include modules
 const Layout = require('../designer/layout.js');
@@ -180,7 +181,7 @@ $(document).ready(function() {
                             class: 'btn-info',
                             action: lD.showScheduleScreen,
                             inactiveCheck: function() {
-                                return (lD.layout.editable == true);
+                                return (lD.layout.editable == true || lD.layout.scheduleNowPermission == false);
                             },
                             inactiveCheckClass: 'hidden',
                         },
@@ -532,9 +533,12 @@ lD.publishLayout = function() {
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
+    const serializedData = $('#layoutPublishForm').serialize();
+
     $.ajax({
         url: requestPath,
-        type: linkToAPI.type
+        type: linkToAPI.type,
+        data: serializedData
     }).done(function(res) {
 
         lD.common.hideLoadingScreen();
@@ -573,11 +577,11 @@ lD.welcomeScreen = function() {
 
     // Turn on read only mode
     lD.readOnlyMode = true;
-    
+
     bootbox.dialog({
         message: layoutDesignerTrans.welcomeModalMessage,
         className: "welcome-screen-modal",
-        closeButton: false, 
+        closeButton: false,
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
@@ -602,7 +606,7 @@ lD.welcomeScreen = function() {
                     lD.enterReadOnlyMode();
                 }
             }
-            
+
         }
     }).attr('data-test', 'welcomeModal');
 };
@@ -720,29 +724,10 @@ lD.showCheckoutScreen = function() {
 };
 
 /**
- * Layout checkout screen
+ * Layout publish screen
  */
 lD.showPublishScreen = function() {
-
-    bootbox.dialog({
-        title: layoutDesignerTrans.publishTitle + ' ' + lD.layout.name,
-        message: layoutDesignerTrans.publishMessage,
-        buttons: {
-            done: {
-                label: layoutDesignerTrans.publishTitle,
-                className: "btn-primary",
-                callback: function(res) {
-
-                    $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
-
-                    lD.publishLayout();
-
-                    // Prevent the modal to close ( close only when chekout layout resolves )
-                    return false;
-                }
-            }
-        }
-    }).attr('data-test', 'publishModal');
+    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')", "lD.publishLayout();");
 };
 
 /**
@@ -762,7 +747,9 @@ lD.showSaveTemplateScreen = function() {
 /**
  * Load form from the API
  */
-lD.loadFormFromAPI = function(type, id = null) {
+lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActionCallback = null) {
+
+    const self = this;
 
     // Load form the API
     const linkToAPI = urlsForApi.layout[type];
@@ -798,7 +785,7 @@ lD.loadFormFromAPI = function(type, id = null) {
                     if(button != 'Cancel') {
                         let buttonType = 'btn-default';
 
-                        if(button === 'Save') {
+                        if(button === 'Save' || button === 'Publish') {
                             buttonType = 'btn-primary';
                         }
 
@@ -809,7 +796,12 @@ lD.loadFormFromAPI = function(type, id = null) {
                             className: buttonType,
                             callback: function(result) {
                                 // Call global function by the function name
-                                eval(url);
+                                if (mainActionCallback != null) {
+                                    eval(mainActionCallback);
+                                } else {
+                                    eval(url);
+                                }
+
                                 return false;
                             }
                         };
@@ -834,6 +826,11 @@ lD.loadFormFromAPI = function(type, id = null) {
 
             // Call Xibo Init for this form
             XiboInitialise('#' + dialog.attr('id'));
+
+            if (apiFormCallback != null) {
+                eval(apiFormCallback);
+            }
+
         } else {
 
             // Login Form needed?
@@ -900,7 +897,15 @@ lD.undoLastAction = function() {
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
-    lD.deleteObject(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type+'Id']);
+    if(lD.selectedObject.type === 'region') {
+        lD.deleteObject(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type+'Id']);
+    } else if(lD.selectedObject.type === 'widget') {
+        lD.deleteObject(
+            lD.selectedObject.type,
+            lD.selectedObject[lD.selectedObject.type + 'Id'],
+            lD.layout.regions[lD.selectedObject.regionId].regionId
+        );
+    }
 };
 
 /**
@@ -910,70 +915,128 @@ lD.deleteSelectedObject = function() {
 lD.deleteDraggedObject = function(draggable) {
     const objectType = draggable.data('type');
     let objectId = null;
+    let objectAuxId = null;
 
     if(objectType === 'region') {
         objectId = lD.layout.regions[draggable.attr('id')].regionId;
     } else if(objectType === 'widget') {
         objectId = lD.layout.regions[draggable.data('widgetRegion')].widgets[draggable.data('widgetId')].widgetId;
+        objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
     }
 
-    lD.deleteObject(objectType, objectId);
+    lD.deleteObject(objectType, objectId, objectAuxId);
 };
 
 /**
  * Delete object
  * @param {object} objectToDelete - menu to load content for
  */
-lD.deleteObject = function(objectType, objectId) {
+lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
 
-    bootbox.hideAll();
+    const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
 
-    if(objectType === 'region' || objectType === 'widget') {
+        bootbox.hideAll();
 
-        bootbox.confirm({
+        const htmlContent = deleteElementModalContentTemplate({
+            mainMessage: deleteMenuTrans.mainMessage.replace('%obj%', objectType),
+            hasMedia: hasMedia,
+            showDeleteFromLibrary: showDeleteFromLibrary,
+            trans: deleteMenuTrans
+        });
+
+        bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
-            message: editorsTrans.deleteConfirm,
+            message: htmlContent,
             buttons: {
-                confirm: {
-                    label: editorsTrans.yes,
-                    className: 'btn-danger'
-                },
                 cancel: {
                     label: editorsTrans.no,
                     className: 'btn-default'
-                }
-            },
-            callback: function(result) {
-                if(result) {
+                },
+                confirm: {
+                    label: editorsTrans.yes,
+                    className: 'btn-danger',
+                    callback: function() {
 
-                    lD.common.showLoadingScreen('deleteObject');
+                        // Empty options object
+                        let options = null;
 
-                    // Delete element from the layout
-                    lD.layout.deleteElement(objectType, objectId).then((res) => { // Success
-
-                        lD.common.hideLoadingScreen('deleteObject');
-
-                        // Behavior if successful 
-                        toastr.success(res.message);
-                        lD.reloadData(lD.layout);
-                    }).catch((error) => { // Fail/error
-
-                        lD.common.hideLoadingScreen('deleteObject');
-
-                        // Show error returned or custom message to the user
-                        let errorMessage = '';
-
-                        if(typeof error == 'string') {
-                            errorMessage = error;
-                        } else {
-                            errorMessage = error.errorThrown;
+                        // If delete media is checked, pass that as a param for delete
+                        if($(this).find('input#deleteMedia').is(':checked')) {
+                            options = {
+                                deleteMedia: 1
+                            };
                         }
 
-                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-                    });
+                        lD.common.showLoadingScreen('deleteObject');
+
+                        // Delete element from the layout
+                        lD.layout.deleteElement(objectType, objectId, options).then((res) => { // Success
+
+                            lD.common.hideLoadingScreen('deleteObject');
+
+                            // Behavior if successful
+                            toastr.success(res.message);
+                            lD.reloadData(lD.layout);
+                        }).catch((error) => { // Fail/error
+
+                            lD.common.hideLoadingScreen('deleteObject');
+
+                            // Show error returned or custom message to the user
+                            let errorMessage = '';
+
+                            if(typeof error == 'string') {
+                                errorMessage = error;
+                            } else {
+                                errorMessage = error.errorThrown;
+                            }
+
+                            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+                        });
+
+                    }
                 }
             }
         }).attr('data-test', 'deleteObjectModal');
+    };
+
+    if(objectType === 'region') {
+        createDeleteModal(objectType, objectId);
+    } else if(objectType === 'widget') {
+
+        const widgetToDelete = lD.getElementByTypeAndId('widget', 'widget_' + objectAuxId + '_' + objectId, 'region_' + objectAuxId);
+
+        if(widgetToDelete.mediaIds.length == 0) {
+            createDeleteModal(objectType, objectId);
+        } else {
+            lD.common.showLoadingScreen('checkMediaIsUsed');
+
+            const linkToAPI = urlsForApi.media.isUsed;
+            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+            // Request with count as being 2, for the published layout and draft
+            $.get(requestPath + '?count=1')
+                .done(function(res) {
+                    if(res.success) {
+                        createDeleteModal(objectType, objectId, true, !res.data.isUsed);
+                    } else {
+                        if(res.login) {
+                            window.location.href = window.location.href;
+                            location.reload(false);
+                        } else {
+                            toastr.error(res.message);
+                        }
+                    }
+
+                    lD.common.hideLoadingScreen('checkMediaIsUsed');
+
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+
+                    lD.common.hideLoadingScreen('checkMediaIsUsed');
+
+                    // Output error to console
+                    console.error(jqXHR, textStatus, errorThrown);
+                });
+        }
     }
 };
 
@@ -1356,6 +1419,12 @@ lD.clearTemporaryData = function() {
     $('.colorpicker').remove();
     $('.cke').remove();
 
+    // Fix for remaining ckeditor elements or colorpickers
+    lD.designerDiv.find('.colorpicker-element').colorpicker('destroy');
+
+    // Hide open tooltips
+    lD.designerDiv.find('[data-toggle="tooltip"]').tooltip('hide');
+
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
 };
@@ -1466,7 +1535,12 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
-            lD.deleteObject(objType, layoutObject[objType + 'Id']);
+            let regionIdAux = '';
+            if(objRegionId != null) {
+                regionIdAux= objRegionId.split('region_')[1]
+            }
+
+            lD.deleteObject(objType, layoutObject[objType + 'Id'], regionIdAux);
         } else if(target.data('action') == 'Move') {
             // Move widget in the timeline
             lD.timeline.moveWidgetInRegion(layoutObject.regionId, layoutObject.id, target.data('actionType'));
