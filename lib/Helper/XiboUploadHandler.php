@@ -286,6 +286,24 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                // Orientation of the image
+                if ($file->width > $file->height) {
+                    $orientation = 'landscape';
+                } else {
+                    $orientation = 'portrait';
+                }
+
+                // Media released set to 0
+                if ($orientation == 'landscape') {
+                    if ($file->height > 1080 || $file->width > 1920) {
+                        $media->released = 0;
+                    }
+                } else {
+                    if ($file->height > 1920 || $file->width > 1080) {
+                        $media->released = 0;
+                    }
+                }
+
                 // Save
                 $media->save();
 

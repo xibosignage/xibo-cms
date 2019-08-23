@@ -14,6 +14,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Service\ImageProcessingServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 
@@ -37,6 +38,9 @@ trait TaskTrait
 
     /** @var  TimeSeriesStoreInterface */
     private $timeSeriesStore;
+
+    /** @var  ImageProcessingServiceInterface */
+    private $imageProcessingService;
 
     /** @var  PoolInterface */
     private $pool;
@@ -108,6 +112,13 @@ trait TaskTrait
     public function setTimeSeriesStore($timeSeriesStore)
     {
         $this->timeSeriesStore = $timeSeriesStore;
+        return $this;
+    }
+
+    /** @inheritdoc */
+    public function setImageProcessingService($imageProcessingService)
+    {
+        $this->imageProcessingService = $imageProcessingService;
         return $this;
     }
 

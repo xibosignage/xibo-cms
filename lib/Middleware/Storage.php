@@ -25,6 +25,7 @@ namespace Xibo\Middleware;
 
 use Slim\Helper\Set;
 use Slim\Middleware;
+use Xibo\Service\ImageProcessingService;
 use Xibo\Service\LogService;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\MySqlTimeSeriesStore;
@@ -85,6 +86,15 @@ class Storage extends Middleware
         // Register the database service
         $container->singleton('store', function($container) {
             return (new PdoStorageService($container->logService))->setConnection();
+        });
+
+        // Register the image processing service
+        $container->singleton('imageProcessingService', function($container) {
+            return (new ImageProcessingService())
+                ->setDependencies(
+                    $container->logService,
+                    $container->dateService
+                );
         });
 
         // Register the statistics database service

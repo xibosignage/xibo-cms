@@ -35,6 +35,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Service\ImageProcessingServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\XTR\TaskInterface;
@@ -50,6 +51,9 @@ class Task extends Base
 
     /** @var  StorageServiceInterface */
     private $store;
+
+    /** @var  ImageProcessingServiceInterface */
+    private $imageProcessingService;
 
     /** @var  TimeSeriesStoreInterface */
     private $timeSeriesStore;
@@ -98,8 +102,9 @@ class Task extends Base
      * @param MediaFactory $mediaFactory
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
+     * @param ImageProcessingServiceInterface $imageProcessingService
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, $imageProcessingService)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->taskFactory = $taskFactory;
@@ -113,6 +118,7 @@ class Task extends Base
         $this->mediaFactory = $mediaFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
+        $this->imageProcessingService = $imageProcessingService;
     }
 
     /**
@@ -362,6 +368,7 @@ class Task extends Base
                 ->setPool($this->pool)
                 ->setStore($this->store)
                 ->setTimeSeriesStore($this->timeSeriesStore)
+                ->setImageProcessingService($this->imageProcessingService)
                 ->setFactories($this->getApp()->container)
                 ->setTask($task)
                 ->run();

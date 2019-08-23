@@ -1028,7 +1028,8 @@ class State extends Middleware
                 $container->displayFactory,
                 $container->mediaFactory,
                 $container->notificationFactory,
-                $container->userNotificationFactory
+                $container->userNotificationFactory,
+                $container->imageProcessingService
             );
         });
 

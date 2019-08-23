@@ -858,12 +858,34 @@ class Media implements \JsonSerializable
         // Set to valid
         $this->valid = 1;
 
+        $filePath = $libraryFolder . $this->storedAs;
+        list($img_width, $img_height) = @getimagesize($filePath);
+
+        // Orientation of the image
+        if ($img_width > $img_height) {
+            $orientation = 'landscape';
+        } else {
+            $orientation = 'portrait';
+        }
+
+        // Media released set to 0
+        if ($orientation == 'landscape') {
+            if ($img_height > 1080 || $img_width > 1920) {
+                $this->released = 0;
+            }
+        } else {
+            if ($img_height > 1920 || $img_width > 1080) {
+                $this->released = 0;
+            }
+        }
+
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
+            'released' => $this->released,
             'mediaId' => $this->mediaId
         ]);
     }
