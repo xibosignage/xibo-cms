@@ -26,6 +26,7 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\ImageProcessingServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 
 /**
@@ -39,6 +40,9 @@ class ImageProcessingTask implements TaskInterface
     /** @var DateServiceInterface */
     private $date;
 
+    /** @var ImageProcessingServiceInterface */
+    private $imageProcessingService;
+
     /** @var MediaFactory */
     private $mediaFactory;
 
@@ -47,6 +51,7 @@ class ImageProcessingTask implements TaskInterface
     {
         $this->date = $container->get('dateService');
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->imageProcessingService = $container->get('imageProcessingService');
         return $this;
     }
 

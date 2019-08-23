@@ -15,7 +15,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
-use Xibo\Service\ImageProcessingServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 
@@ -68,12 +67,6 @@ interface TaskInterface
      * @return $this
      */
     public function setTimeSeriesStore($timeSeriesStore);
-
-    /**
-     * @param ImageProcessingServiceInterface $imageProcessingService
-     * @return $this
-     */
-    public function setImageProcessingService($imageProcessingService);
 
     /**
      * @param PoolInterface $pool

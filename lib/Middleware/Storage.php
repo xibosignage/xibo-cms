@@ -88,15 +88,6 @@ class Storage extends Middleware
             return (new PdoStorageService($container->logService))->setConnection();
         });
 
-        // Register the image processing service
-        $container->singleton('imageProcessingService', function($container) {
-            return (new ImageProcessingService())
-                ->setDependencies(
-                    $container->logService,
-                    $container->dateService
-                );
-        });
-
         // Register the statistics database service
         $container->singleton('timeSeriesStore', function($container) {
             if ($container->configService->timeSeriesStore == null) {

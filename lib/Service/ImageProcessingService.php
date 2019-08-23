@@ -65,12 +65,14 @@ class ImageProcessingService implements ImageProcessingServiceInterface
     /** @inheritdoc */
     public function resizeImage($filePath, $width, $height)
     {
-
         try {
             Img::configure(array('driver' => 'gd'));
             $img = Img::make($filePath);
-            $img->resize($width, $height);
+            $img->resize($width, $height, function ($constraint)  {
+                $constraint->aspectRatio();
+            });
             $img->save($filePath);
+            $img->destroy();
 
         } catch (NotReadableException $notReadableException) {
             $this->log->error('Image not readable: ' . $notReadableException->getMessage());
