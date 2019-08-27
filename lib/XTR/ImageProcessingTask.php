@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\XTR;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
@@ -92,7 +93,12 @@ class ImageProcessingTask implements TaskInterface
             // Work out the MD5
             $image->md5 = md5_file($libraryLocation . $image->storedAs);
             $image->released = 1;
-            $image->save();
+
+            try {
+                $image->save();
+            } catch (\Exception $error) {
+                $this->log->error($error);
+            }
         }
     }
 }

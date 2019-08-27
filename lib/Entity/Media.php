@@ -861,20 +861,19 @@ class Media implements \JsonSerializable
         $filePath = $libraryFolder . $this->storedAs;
         list($img_width, $img_height) = @getimagesize($filePath);
 
-        // Orientation of the image
-        if ($img_width > $img_height) {
-            $orientation = 'landscape';
-        } else {
-            $orientation = 'portrait';
-        }
+        // Media released set to 0 for large size images
+        if ($img_width > $img_height) { // 'landscape';
 
-        // Media released set to 0
-        if ($orientation == 'landscape') {
-            if ($img_height > 1080 || $img_width > 1920) {
+            if ($img_width <= 1920 && $img_height <= 1080 ) {
+                $this->released = 1;
+            } elseif ($img_height > 1080 || $img_width > 1920) {
                 $this->released = 0;
             }
-        } else {
-            if ($img_height > 1920 || $img_width > 1080) {
+        } else { // 'portrait';
+
+            if ($img_width <= 1080 && $img_height <= 1920 ) {
+                $this->released = 1;
+            } elseif ($img_height > 1920 || $img_width > 1080) {
                 $this->released = 0;
             }
         }
