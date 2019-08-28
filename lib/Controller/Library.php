@@ -558,11 +558,11 @@ class Library extends Base
                     break;
 
                 case 2:
-                    $media->releasedDescription = __('This image is too big and should be replaced');
+                    $media->releasedDescription = __('The uploaded image is too large and cannot be processed, please use another image.');
                     break;
 
                 default:
-                    $media->releasedDescription = __('This image is pending conversion');
+                    $media->releasedDescription = __('This image will be resized according to set thresholds and limits.');
             }
 
             switch ($media->enableStat) {

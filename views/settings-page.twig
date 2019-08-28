@@ -147,8 +147,8 @@
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("DEFAULT_RESIZE_THRESHOLD") %}
-                                    {% set title %}{% trans "Default resize threshold (longest side)" %}{% endset %}
-                                    {% set helpText %}{% trans "Default duration for in and out transitions" %}{% endset %}
+                                    {% set title %}{% trans "Resize Threshold" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum dimensions to be considered when an image is resized, based on the longest side" %}{% endset %}
 
                                     {% if theme.isSettingEditable("DEFAULT_RESIZE_THRESHOLD") %}
                                         {{ forms.number("DEFAULT_RESIZE_THRESHOLD", title, theme.getSetting("DEFAULT_RESIZE_THRESHOLD", 0), helpText) }}
@@ -158,8 +158,8 @@
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("DEFAULT_RESIZE_LIMIT") %}
-                                    {% set title %}{% trans "Default resize limit (longest side)" %}{% endset %}
-                                    {% set helpText %}{% trans "Default duration for in and out transitions" %}{% endset %}
+                                    {% set title %}{% trans "Resize Limit" %}{% endset %}
+                                    {% set helpText %}{% trans "Images that exceed the resize limit, based on the longest side, will not be processed" %}{% endset %}
 
                                     {% if theme.isSettingEditable("DEFAULT_RESIZE_LIMIT") %}
                                         {{ forms.number("DEFAULT_RESIZE_LIMIT", title, theme.getSetting("DEFAULT_RESIZE_LIMIT", 0), helpText) }}

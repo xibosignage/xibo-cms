@@ -866,10 +866,7 @@ class Media implements \JsonSerializable
 
         // Media released set to 0 for large size images
         // if image size is greater than 8000 X 8000 then we flag that image as too big
-        if (
-            ($resize_threshold > $resize_limit) ||
-            ($img_width > $resize_limit || $img_height > $resize_limit)
-        ){
+        if ($img_width > $resize_limit || $img_height > $resize_limit) {
             $this->released = 2;
         } elseif ($img_width > $img_height) { // 'landscape';
 

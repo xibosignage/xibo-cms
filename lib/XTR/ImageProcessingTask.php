@@ -74,25 +74,11 @@ class ImageProcessingTask implements TaskInterface
     {
         $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
 
-        try {
-
-            // Set the memory limit to 512M
-            $memory_limit = ini_get('memory_limit');
-            if ($memory_limit <= '256M') {
-                ini_set('memory_limit','512M');
-            }
-
-        } catch (\Exception $error) {
-            // Server doesnot support 512M memory
-            throw new \InvalidArgumentException(__('Server can not support 512M memory', $error));
-        }
-
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $resize_threshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
 
         // Get list of Images
         foreach ($images as $media) {
-
 
             $filePath = $libraryLocation . $media->storedAs;
             list($img_width, $img_height) = @getimagesize($filePath);

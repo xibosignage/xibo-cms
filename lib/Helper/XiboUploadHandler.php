@@ -291,10 +291,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Media released set to 0 or flag for large size images
                 // if image size is greater than 8000 X 8000 then we flag that image as too big
-                if (
-                    ($resize_threshold > $resize_limit) ||
-                    ($file->width > $resize_limit || $file->height > $resize_limit)
-                ) {
+                if ($file->width > $resize_limit || $file->height > $resize_limit) {
                     $media->released = 2; // flag that image as too big
                 } elseif ($file->width > $file->height) { // 'landscape';
 
