@@ -1302,7 +1302,6 @@ class Schedule implements \JsonSerializable
 
         // Load the display groups
         $this->load();
-        $this->setCampaignFactory($this->campaignFactory);
 
         $displayGroupList = '';
 

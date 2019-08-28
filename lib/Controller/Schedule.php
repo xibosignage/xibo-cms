@@ -662,8 +662,6 @@ class Schedule extends Base
         ]);
     }
 
-
-
     /**
      * Model to use for supplying key/value pairs to arrays
      * @SWG\Definition(
@@ -1010,29 +1008,6 @@ class Schedule extends Base
             'reminders' => $scheduleReminders
         ]);
     }
-
-    /**
-     * Model to use for supplying key/value pairs to arrays
-     * @SWG\Definition(
-     *  definition="ScheduleReminderArray",
-     *  @SWG\Property(
-     *      property="reminder_value",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="reminder_type",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="reminder_option",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="reminder_isEmailHidden",
-     *      type="integer"
-     *  )
-     * )
-     */
 
     /**
      * Edits an event
@@ -1488,7 +1463,7 @@ class Schedule extends Base
      * @param  \Xibo\Entity\Schedule $schedule
      *
      */
-    function saveReminder($schedule, $scheduleReminder)
+    private function saveReminder($schedule, $scheduleReminder)
     {
         // if someone changes from custom to always
         // we should keep the definitions, but make sure they don't get executed in the task

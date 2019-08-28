@@ -73,9 +73,6 @@ class ScheduleReminderTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Schedule reminder') . PHP_EOL . PHP_EOL;
 
-        // Long running task
-        set_time_limit(0);
-
         $this->runScheduleReminder();
     }
 
@@ -213,7 +210,7 @@ class ScheduleReminderTask implements TaskInterface
         }
     }
 
-    function createNotification($subject, $body, $reminder, $schedule, $releaseDt = null) {
+    private function createNotification($subject, $body, $reminder, $schedule, $releaseDt = null) {
 
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $subject;
