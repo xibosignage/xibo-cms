@@ -32,21 +32,10 @@ describe('Layout Designer (Empty)', function() {
 
         });
 
-        /* Disabled for testing speed reasons
-            afterEach(function() {
-                // Remove the created layout
-                cy.deleteLayout(this.testLayoutId);
-            });
-        */
-
-
         it('goes into draft mode when checked out', function() {
 
-            // Click message to open the modal
-            cy.get('#read-only-message').click();
-
             // Get the done button from the checkout modal
-            cy.get('[data-test="checkoutModal"] button[data-bb-handler="checkout"]').click();
+            cy.get('[data-test="welcomeModal"] button[data-bb-handler="checkout"]').click();
 
             // Check if campaign is deleted in toast message
             cy.contains('Checked out ' + layoutTempName);
