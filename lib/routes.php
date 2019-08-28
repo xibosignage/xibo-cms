@@ -218,7 +218,7 @@ $app->get('/library/usage/:id', '\Xibo\Controller\Library:usage')->name('library
 $app->get('/library/usage/layouts/:id', '\Xibo\Controller\Library:usageLayouts')->name('library.usage.layouts');
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
-$app->post('/library/uploadURL', '\Xibo\Controller\Library:uploadFromURL')->name('library.uploadFromURL');
+$app->post('/library/uploadUrl', '\Xibo\Controller\Library:uploadFromUrl')->name('library.uploadFromUrl');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->put('/library/setenablestat/:id', '\Xibo\Controller\Library:setEnableStat')->name('library.setenablestat');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');

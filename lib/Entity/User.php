@@ -261,8 +261,11 @@ class User implements \JsonSerializable
      */
     public $twoFactorRecoveryCodes = [];
 
+    /**
+     * @SWG\Property(description="Should we show content added by standard users in relevant grids (1) or content added by the DOOH user? (2). Super admins have an option to change this in their User profile. ")
+     * @var int
+     */
     public $showContentFrom = 1;
-
 
     /**
      * @var UserOption[]

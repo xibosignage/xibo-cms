@@ -187,11 +187,11 @@ class LibraryTest extends LocalWebTestCase
         $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
     }
 
-    public function testUploadFromURL()
+    public function testUploadFromUrl()
     {
         shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/rss/image1.jpg ' . PROJECT_ROOT . '/web');
 
-        $response = $this->getEntityProvider()->post('/library/uploadURL?envelope=1', [
+        $response = $this->getEntityProvider()->post('/library/uploadUrl?envelope=1', [
             'url' => 'http://localhost/image1.jpg'
         ]);
 
@@ -210,11 +210,11 @@ class LibraryTest extends LocalWebTestCase
         shell_exec('rm -r ' . PROJECT_ROOT . '/web/image1.jpg');
     }
 
-    public function testUploadFromURLWithType()
+    public function testUploadFromUrlWithType()
     {
         shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/rss/image2.jpg ' . PROJECT_ROOT . '/web');
 
-        $response = $this->getEntityProvider()->post('/library/uploadURL?envelope=1', [
+        $response = $this->getEntityProvider()->post('/library/uploadUrl?envelope=1', [
             'url' =>  'http://localhost/image2.jpg',
             'type' => 'image'
         ]);
@@ -234,11 +234,11 @@ class LibraryTest extends LocalWebTestCase
         shell_exec('rm -r ' . PROJECT_ROOT . '/web/image2.jpg');
     }
 
-    public function testUploadFromURLWithTypeAndName()
+    public function testUploadFromUrlWithTypeAndName()
     {
         shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/HLH264.mp4 ' . PROJECT_ROOT . '/web');
 
-        $response = $this->getEntityProvider()->post('/library/uploadURL?envelope=1', [
+        $response = $this->getEntityProvider()->post('/library/uploadUrl?envelope=1', [
             'url' =>  'http://localhost/HLH264.mp4',
             'type' => 'video',
             'optionalName' => 'PHPUNIT URL upload video'

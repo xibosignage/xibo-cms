@@ -1945,9 +1945,9 @@ class Library extends Base
         
     }
 
-    public function uploadFromURLForm()
+    public function uploadFromUrlForm()
     {
-        $this->getState()->template = 'library-form-uploadFromURL';
+        $this->getState()->template = 'library-form-uploadFromUrl';
 
         $this->getState()->setData([
             'uploadSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize())
@@ -1958,8 +1958,8 @@ class Library extends Base
      * Upload Media via URL
      *
      * @SWG\Post(
-     *  path="/library/uploadURL",
-     *  operationId="uploadURL",
+     *  path="/library/uploadUrl",
+     *  operationId="uploadFromUrl",
      *  tags={"library"},
      *  summary="Upload Media from URL",
      *  description="Upload Media to CMS library from an external URL",
@@ -2001,7 +2001,7 @@ class Library extends Base
      * @throws NotFoundException
      * @throws ConfigurationException
      */
-    public function uploadFromURL()
+    public function uploadFromUrl()
     {
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
