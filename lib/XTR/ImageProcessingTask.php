@@ -74,28 +74,43 @@ class ImageProcessingTask implements TaskInterface
     {
         $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
 
+        try {
+
+            // Set the memory limit to 512M
+            $memory_limit = ini_get('memory_limit');
+            if ($memory_limit <= '256M') {
+                ini_set('memory_limit','512M');
+            }
+
+        } catch (\Exception $error) {
+            // Server doesnot support 512M memory
+            throw new \InvalidArgumentException(__('Server can not support 512M memory', $error));
+        }
+
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        $resize_threshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+
         // Get list of Images
-        foreach ($images as $image) {
+        foreach ($images as $media) {
 
-            $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
-            $filePath = $libraryLocation . $image->storedAs;
+            $filePath = $libraryLocation . $media->storedAs;
             list($img_width, $img_height) = @getimagesize($filePath);
 
             // Orientation of the image
             if ($img_width > $img_height) { // 'landscape';
-                $this->imageProcessingService->resizeImage($filePath, 1920, 1080);
+                $this->imageProcessingService->resizeImage($filePath, $resize_threshold, 1080);
             } else { // 'portrait';
-                $this->imageProcessingService->resizeImage($filePath, 1080, 1920);
+                $this->imageProcessingService->resizeImage($filePath, 1080, $resize_threshold);
             }
-            
+
             // Release image and save
             // Work out the MD5
-            $image->md5 = md5_file($libraryLocation . $image->storedAs);
-            $image->released = 1;
+            $media->md5 = md5_file($libraryLocation . $media->storedAs);
+            $media->released = 1;
 
             try {
-                $image->save();
+                $media->save();
             } catch (\Exception $error) {
                 $this->log->error($error);
             }

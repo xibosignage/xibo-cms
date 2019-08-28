@@ -554,7 +554,7 @@ class Library extends Base
             switch ($media->released) {
 
                 case 1:
-                    $media->releasedDescription = __('');
+                    $media->releasedDescription = '';
                     break;
 
                 case 2:

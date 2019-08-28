@@ -286,22 +286,28 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                $resize_threshold = $controller->getConfig()->getSetting('DEFAULT_RESIZE_THRESHOLD');
+                $resize_limit = $controller->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT');
+
                 // Media released set to 0 or flag for large size images
                 // if image size is greater than 8000 X 8000 then we flag that image as too big
-                if ($file->width > 8000 || $file->height > 8000) {
-                    $media->released = 2;
+                if (
+                    ($resize_threshold > $resize_limit) ||
+                    ($file->width > $resize_limit || $file->height > $resize_limit)
+                ) {
+                    $media->released = 2; // flag that image as too big
                 } elseif ($file->width > $file->height) { // 'landscape';
 
-                    if ($file->width <= 1920 && $file->height <= 1080 ) {
+                    if ($file->width <= $resize_threshold && $file->height <= 1080 ) {
                         $media->released = 1;
-                    } elseif ($file->height > 1080 || $file->width > 1920) {
+                    } elseif ($file->height > 1080 || $file->width > $resize_threshold) {
                         $media->released = 0;
                     }
                 } else { // 'portrait';
 
-                    if ($file->width <= 1080 && $file->height <= 1920 ) {
+                    if ($file->width <= 1080 && $file->height <= $resize_threshold ) {
                         $media->released = 1;
-                    } elseif ($file->height > 1920 || $file->width > 1080) {
+                    } elseif ($file->height > $resize_threshold || $file->width > 1080) {
                         $media->released = 0;
                     }
                 }
