@@ -22,7 +22,6 @@ describe('Playlists Admin', function () {
         // Filter for the created playlist
         cy.get('#Filter input[name="name"]')
             .type('Cypress Test Playlist ' + testRun);
-<<<<<<< HEAD
 
         // Should have the added playlist
         cy.get('#playlists tbody tr').should('have.length', 1);
@@ -71,12 +70,6 @@ describe('Playlists Admin', function () {
             // Modal should contain one successful delete at least
             cy.get('.modal-body').contains(': Success');
         });
-=======
-
-        // Should have the added playlist
-        cy.get('#playlists tbody tr').should('have.length', 1);
-        cy.get('#playlists tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Playlist ' + testRun);
->>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
     });
 
 });
