@@ -551,6 +551,20 @@ class Library extends Base
 
             $media->includeProperty('buttons');
 
+            switch ($media->released) {
+
+                case 1:
+                    $media->releasedDescription = __('');
+                    break;
+
+                case 2:
+                    $media->releasedDescription = __('This image is too big and should be replaced');
+                    break;
+
+                default:
+                    $media->releasedDescription = __('This image is pending conversion');
+            }
+
             switch ($media->enableStat) {
 
                 case 'On':

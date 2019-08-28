@@ -482,7 +482,7 @@ class Soap
                 UNION ALL
                 SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
                   FROM `media`
-                 WHERE `media`.mediaID IN (
+                 WHERE `media`.released = 1 AND `media`.mediaID IN (
                     SELECT backgroundImageId
                       FROM `layout`
                      WHERE layoutId IN (%s)

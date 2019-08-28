@@ -862,7 +862,10 @@ class Media implements \JsonSerializable
         list($img_width, $img_height) = @getimagesize($filePath);
 
         // Media released set to 0 for large size images
-        if ($img_width > $img_height) { // 'landscape';
+        // if image size is greater than 8000 X 8000 then we flag that image as too big
+        if ($img_width > 8000 || $img_height > 8000) {
+            $this->released = 2;
+        } elseif ($img_width > $img_height) { // 'landscape';
 
             if ($img_width <= 1920 && $img_height <= 1080 ) {
                 $this->released = 1;

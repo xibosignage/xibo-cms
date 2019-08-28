@@ -79,6 +79,7 @@
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Revised" %}</th>
+                                <th>{% trans "Released" %}</th>
                                 <th>{% trans "File Name" %}</th>
                                 <th>{% trans "Stats?" %}</th>
                                 <th>{% trans "Created" %}</th>
@@ -179,6 +180,25 @@
                         "render": dataTableCreatePermissions
                     },
                     {"data": "revised", "render": dataTableTickCrossColumn, "visible": false},
+                    {
+                        "name": "released",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.released;
+
+                            var icon = "";
+                            if (data.released == 1)
+                                icon = "fa-check";
+                            else if (data.released == 0)
+                                icon = "fa-cogs";
+                            else if (data.released == 2)
+                                icon = "fa-times";
+
+
+                            return "<span class='fa " + icon + "' title='" + (data.releasedDescription) + "'></span>";
+                        },
+                        "visible": false
+                    },
                     {"data": "fileName"},
                     {
                         "name": "enableStat",

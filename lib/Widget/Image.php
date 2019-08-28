@@ -257,6 +257,14 @@ class Image extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
+        if ($this->getMedia()->released == 0) {
+            $this->statusMessage = __('%s is pending conversion', $this->getMedia()->name);
+            return self::$STATUS_INVALID;
+        } elseif ($this->getMedia()->released == 2) {
+            $this->statusMessage = __('%s is too large, please replace it', $this->getMedia()->name);
+            return self::$STATUS_INVALID;
+        }
+
         if (!v::intType()->min(1, true)->validate($this->getDuration()))
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
 

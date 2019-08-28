@@ -286,8 +286,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
-                // Media released set to 0 for large size images
-                if ($file->width > $file->height) { // 'landscape';
+                // Media released set to 0 or flag for large size images
+                // if image size is greater than 8000 X 8000 then we flag that image as too big
+                if ($file->width > 8000 || $file->height > 8000) {
+                    $media->released = 2;
+                } elseif ($file->width > $file->height) { // 'landscape';
 
                     if ($file->width <= 1920 && $file->height <= 1080 ) {
                         $media->released = 1;
