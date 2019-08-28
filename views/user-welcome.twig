@@ -122,7 +122,7 @@
                     orphan: true,
                     placement: "auto",
                     title: "",
-                    content: "{% trans "This is the layout designer screen where you will add and configure content. By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
+                    content: "{% trans "This is the layout designer screen where you will add and configure content." %}",
                     onShown: function (tour) {
                         if ($(".form-error").length === 1) {
                             tour.goTo(5);
@@ -131,15 +131,14 @@
                     delay: 5000,
                     template: next_template
                 }, { // 8
-                    element: '#read-only-message',
-                    reflex: true,
-                    placement: "top",
+                    element: '.welcome-screen-modal .modal-dialog',
+                    placement: "bottom",
                     title: "",
-                    content: "{% trans "Open the checkout form by clicking on this message." %}",
-                    template: no_nav_template,
+                    content: "{% trans "By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
+                    template: next_template,
                     delay: 500
                 }, {
-                    element: '.bootbox button[data-bb-handler="checkout"]',
+                    element: '.welcome-screen-modal button[data-bb-handler="checkout"]',
                     reflex: true,
                     placement: "bottom",
                     title: "",
@@ -185,13 +184,7 @@
                     placement: "top",
                     delay: 100,
                     backdrop: true,
-                    template: next_template,
-                    onShown: function (tour) {
-                        // If we don't have checked  out the layout yet, got to the checkout step
-                        if ($('#read-only-message').is(":visible")) {
-                            tour.goTo(8);
-                        }
-                    }
+                    template: next_template
                 }, {
                     title: "",
                     content: "{% trans "Let's start by opening the Navigator edit mode. Click on the edit button." %}",
@@ -465,11 +458,42 @@
                     content: "{% trans "This is the layout designer screen where you will add and configure content. By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
                     template: next_template
                 }, {
+                    element: '#layout-editor-toolbar #actionsSubmenu',
+                    reflex: true,
+                    placement: "top",
+                    title: "",
+                    content: "{% trans "Click to open the Actions sub-menu!" %}",
+                    template: no_nav_template,
+                    delay:  200,
+                    onShown: function (tour) {
+                        // If we don't have checked  out the layout yet, got to the checkout step
+                        if (!$('#read-only-message').is(":visible")) { //TODO: Change this to the new checkout
+                            tour.goTo(5);
+                        }
+                    }
+                }, {
+                    element: '#layout-editor-toolbar #actionsSubmenu #checkoutLayout',
+                    reflex: true,
+                    placement: "left",
+                    title: "",
+                    content: "{% trans "Open the checkout form by clicking on this option!" %}",
+                    template: no_nav_template,
+                    delay:  200,
+                }, 
+                {
+                    element: '.bootbox button[data-bb-handler="checkout"]',
+                    reflex: true,
+                    placement: "bottom",
+                    title: "",
+                    content: "{% trans "Press <b>Checkout</b>." %}",
+                    template: no_nav_template,
+                    delay: 200
+                }, { // 4
                     title: "",
                     content: "{% trans "This is the <b>Preview</b> window, that shows previews for layouts, regions and widgets." %}",
                     element: "#layout-viewer",
                     placement: "bottom",
-                    delay: 100,
+                    delay: {show: 1500, hide: 100},
                     backdrop: true,
                     template: next_template
                 }, {
@@ -488,16 +512,18 @@
                     delay: 100,
                     backdrop: true,
                     template: next_template
-                }, {
+                }, { 
                     title: "",
                     content: "{% trans "Let's open the Navigator edit mode. Click on the edit button." %}",
                     element: "#layout-navigator #edit-btn",
                     placement: "top",
                     reflex: true,
+                    delay: 500,
                     template: no_nav_template
                 }, {
                     container: '#layout-navigator-edit',
                     orphan: true,
+                    delay: 500,
                     placement: "auto",
                     title: "",
                     content: "{% trans "This is the Navigator edit mode, where you can edit regions and change their properties." %}",

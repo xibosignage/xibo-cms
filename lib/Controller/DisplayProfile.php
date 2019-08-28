@@ -376,7 +376,7 @@ class DisplayProfile extends Base
             if ($this->getSanitizer()->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
                 $command->commandString = $this->getSanitizer()->getString('commandString_' . $command->commandId);
-                $command->validationString = $this->getSanitizer()->getString('validationString_' . $command->commandId, '');
+                $command->validationString = $this->getSanitizer()->getString('validationString_' . $command->commandId, null);
                 $displayProfile->assignCommand($command);
             } else {
                 $displayProfile->unassignCommand($command);

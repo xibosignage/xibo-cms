@@ -91,7 +91,7 @@ class Text extends ModuleWidget
      *  @SWG\Parameter(
      *      name="enableStat",
      *      in="formData",
-     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
      *      type="string",
      *      required=false
      *   ),

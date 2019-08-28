@@ -8,6 +8,7 @@ describe('Dashboard', function() {
 
         cy.visit('/statusdashboard');
 
+
         cy.url().should('include', 'dashboard');
 
         // Check for the dashboard elements
@@ -24,6 +25,8 @@ describe('Dashboard', function() {
 
         cy.visit('/statusdashboard');
 
+        cy.visit('/statusdashboard');
+
         // Open user dropdown menu
         cy.get('.dropdown-toggle img.nav-avatar').click();
 
@@ -33,6 +36,8 @@ describe('Dashboard', function() {
         cy.get('.popover.tour').contains('Welcome to the Xibo CMS!');
 
         // Click to disable welcome tour
+        cy.visit('/statusdashboard');
+
         cy.get('button[data-role="end"]').click();
         cy.wait('@disableTour');
 

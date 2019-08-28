@@ -19,11 +19,32 @@ describe('Layout Designer (Populated)', function() {
         });
     */
 
+<<<<<<< HEAD
     // Open widget form, change the name and duration, save, and see the name change result
     it('changes and saves widget properties', () => {
         // Create and alias for reload widget
         cy.server();
         cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
+=======
+        it('should prevent a layout edit action, and show a toast message', function() {
+
+            // Click button to go to view mode
+            cy.get('.welcome-screen-modal button[data-bb-handler="view"]').click();
+
+            // Choose the first widget in the timeline and select it
+            cy.get('#layout-timeline .designer-region:first-child .designer-widget:first-child').click({force: true});
+
+            // Should contain widget options form
+            cy.get('#properties-panel-container').contains('Edit Image');
+
+            // The save button should not be visible
+            cy.get('#properties-panel-container [data-action="save"]').should('not.exist');
+        });
+
+    });
+
+    context('Populated layout (draft)', function() {
+>>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
 
         // Select the first widget from the first region on timeline ( image )
         cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
@@ -144,7 +165,23 @@ describe('Layout Designer (Populated)', function() {
 
     it('should add a audio clip to a widget, and adds a link to open the form in the timeline', () => {
 
+<<<<<<< HEAD
         cy.populateLibraryWithMedia();
+=======
+            cy.get('#properties-panel #select2-backgroundImageId-container').click();
+
+            // Select the last image option available ( avoid result and message "options")
+            cy.get('.select2-container .select2-results .select2-results__option:not(.select2-results__option--load-more):not(.loading-results):not(.select2-results__message):first').click();
+
+            // Save form
+            cy.get('#properties-panel button[data-action="save"]').click();
+
+            cy.wait('@reloadLayout');
+
+            // Change background image
+            cy.get('#properties-panel #select2-backgroundImageId-container').should('have.attr', 'title').then((title) => {
+                cy.get('#properties-panel #select2-backgroundImageId-container').click();
+>>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
 
         // Create and alias for reload layout
         cy.server();
@@ -380,8 +417,19 @@ describe('Layout Designer (Populated)', function() {
             // Check if the page redirected to the layout designer with the new published layout
             cy.url().should('include', '/layout/designer/' + res.response.body.data.layoutId);
 
+<<<<<<< HEAD
             // Check if the read only message appears
             cy.get('#read-only-message').should('exist');
+=======
+            // Get the id from the published layout and check if the designer reloaded to the Read Only Mode of that layout
+            cy.wait('@layoutPublish').then((res) => {
+                // Check if the page redirected to the layout designer with the new published layout
+                cy.url().should('include', '/layout/designer/' + res.response.body.data.layoutId);
+
+                // Check if the read only message appears
+                cy.get('.welcome-screen-modal').should('exist');
+            });
+>>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
         });
     });
 });

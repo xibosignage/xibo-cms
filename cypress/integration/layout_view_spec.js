@@ -25,6 +25,12 @@ describe('Layout View', function() {
     });
 
     it('searches and delete existing layout', function() {
+<<<<<<< HEAD
+=======
+
+        cy.server();
+        cy.route('DELETE', '/layout/*').as('deleteLayout');
+>>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
 
         // Create random name
         let uuid = Cypress._.random(0, 1e10);
@@ -32,9 +38,12 @@ describe('Layout View', function() {
         // Create a new layout and go to the layout's designer page, then load toolbar prefs
         cy.createLayout(uuid).as('testLayoutId').then((res) => {
 
+<<<<<<< HEAD
             cy.server();
             cy.route('/layout?draw=2&*').as('layoutGridLoad');
 
+=======
+>>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
             cy.visit('/layout/view');
 
             // Filter for the created layout
@@ -42,6 +51,10 @@ describe('Layout View', function() {
                 .type(uuid);
 
             // Wait for the layout grid reload
+<<<<<<< HEAD
+=======
+            cy.route('/layout?draw=2&*').as('layoutGridLoad');
+>>>>>>> 725b35f23dd9cf0788662e379882b18976616a40
             cy.wait('@layoutGridLoad');
 
             // Click on the first row element to open the designer

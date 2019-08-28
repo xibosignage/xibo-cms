@@ -120,12 +120,12 @@
 
                 <div class="tab-pane" id="troubleshooting">
 
-                    {% set title = "CTRL Key required to access Client Information Screen?"|trans %}
-                    {% set helpText = "Should the client information screen require the CTRL key?"|trans %}
+                    {% set title = "CTRL Key required to access Player Information Screen?"|trans %}
+                    {% set helpText = "Should the Player information screen require the CTRL key?"|trans %}
                     {{ forms.checkbox("clientInfomationCtrlKey", title, displayProfile.getSetting("clientInfomationCtrlKey"), helpText) }}
 
-                    {% set title = "Key for Client Information Screen"|trans %}
-                    {% set helpText = "Which key should activate the client information screen? A single character."|trans %}
+                    {% set title = "Key for Player Information Screen"|trans %}
+                    {% set helpText = "Which key should activate the Player information screen? A single character."|trans %}
                     {{ forms.input("clientInformationKeyCode", title, displayProfile.getSetting("clientInformationKeyCode"), helpText) }}
 
                     {% set title = "Log Level"|trans %}
@@ -151,7 +151,7 @@
                     {{ forms.checkbox("showInTaskbar", title, displayProfile.getSetting("showInTaskbar"), helpText) }}
 
                     {% set title = "Cursor Start Position"|trans %}
-                    {% set helpText = "The position of the cursor when the client starts up."|trans %}
+                    {% set helpText = "The position of the cursor when the Player starts up."|trans %}
                     {% set options = [
                         { id: "Unchanged", value: "Unchanged"|trans },
                         { id: "Top Left", value: "Top Left"|trans },
@@ -179,7 +179,7 @@
 
                     {% if theme.getSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1 %}
                         {% set title = "Notify current layout"|trans %}
-                        {% set helpText = "When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
+                        {% set helpText = "When enabled the Player will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
                         {{ forms.checkbox("sendCurrentLayoutAsStatusUpdate", title, displayProfile.getSetting("sendCurrentLayoutAsStatusUpdate"), helpText) }}
                     {% endif %}
 
@@ -188,11 +188,11 @@
                     {{ forms.checkbox("expireModifiedLayouts", title, displayProfile.getSetting("expireModifiedLayouts"), helpText) }}
 
                     {% set title = "Maximum concurrent downloads"|trans %}
-                    {% set helpText = "The maximum number of concurrent downloads the client will attempt."|trans %}
+                    {% set helpText = "The maximum number of concurrent downloads the Player will attempt."|trans %}
                     {{ forms.number("maxConcurrentDownloads", title, displayProfile.getSetting("maxConcurrentDownloads"), helpText) }}
 
                     {% set title = "Shell Command Allow List"|trans %}
-                    {% set helpText = "Which shell commands should the client execute?"|trans %}
+                    {% set helpText = "Which shell commands should the Player execute?"|trans %}
                     {{ forms.input("shellCommandAllowList", title, displayProfile.getSetting("shellCommandAllowList"), helpText) }}
 
                     {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}

@@ -188,8 +188,8 @@ class StatsMigrationTask implements TaskInterface
             $count = 0;
             $stats = $this->store->getConnection()->prepare('
                 SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
-                  FROM stat_archive 
-                 WHERE statId < :watermark 
+                  FROM stat_archive
+                 WHERE statId < :watermark
                 ORDER BY statId DESC LIMIT :limit
             ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
@@ -237,7 +237,10 @@ class StatsMigrationTask implements TaskInterface
 
             $temp = [];
 
+            $statIgnoredCount = 0;
             foreach ($stats->fetchAll() as $stat) {
+
+                $watermark = $stat['statId'];
 
                 $columns = 'type, statDate, scheduleId, displayId, campaignId, layoutId, mediaId, widgetId, `start`, `end`, tag, duration, `count`';
                 $values = ':type, :statDate, :scheduleId, :displayId, :campaignId, :layoutId, :mediaId, :widgetId, :start, :end, :tag, :duration, :count';
@@ -253,6 +256,8 @@ class StatsMigrationTask implements TaskInterface
                             $temp[$stat['layoutId']] = $campaignId;
                         }
                     } catch (NotFoundException $error) {
+                        $statIgnoredCount+= 1;
+                        $count = $count - 1;
                         continue;
                     }
                 } else {
@@ -275,12 +280,14 @@ class StatsMigrationTask implements TaskInterface
                     'count' => isset($stat['count']) ? (int) $stat['count'] : 1,
                 ];
 
-                $watermark = $stat['statId'];
-
                 // Do the insert
                 $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
                 $this->store->commitIfNecessary();
 
+            }
+
+            if ($statIgnoredCount > 0) {
+                $this->appendRunMessage($statIgnoredCount. ' stat(s) were ignored while migrating');
             }
 
             // Give SQL time to recover
@@ -413,8 +420,8 @@ class StatsMigrationTask implements TaskInterface
             $count = 0;
             $stats = $this->store->getConnection()->prepare('
                 SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
-                  FROM stat_archive 
-                 WHERE statId < :watermark 
+                  FROM stat_archive
+                 WHERE statId < :watermark
                 ORDER BY statId DESC LIMIT :limit
             ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
@@ -450,8 +457,10 @@ class StatsMigrationTask implements TaskInterface
             $statDataMongo = [];
             $temp = [];
 
+            $statIgnoredCount = 0;
             foreach ($stats->fetchAll() as $stat) {
 
+                $watermark = $stat['statId'];
                 $entry = [];
 
                 // Get campaignId
@@ -465,6 +474,8 @@ class StatsMigrationTask implements TaskInterface
                             $temp[$stat['layoutId']] = $campaignId;
                         }
                     } catch (NotFoundException $error) {
+                        $statIgnoredCount+= 1;
+                        $count = $count - 1;
                         continue;
                     }
                 } else {
@@ -490,8 +501,10 @@ class StatsMigrationTask implements TaskInterface
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
                 $statDataMongo[] = $entry;
+            }
 
-                $watermark = $stat['statId'];
+            if ($statIgnoredCount > 0) {
+                $this->appendRunMessage($statIgnoredCount. ' stat(s) were ignored while migrating');
             }
 
             // Do the insert in chunk
@@ -504,8 +517,11 @@ class StatsMigrationTask implements TaskInterface
 
             // Give Mongo time to recover
             if ($watermark > 0) {
-                $this->appendRunMessage('- '. $count. ' rows migrated.');
-                $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
+
+                if(count($statDataMongo) > 0 ) {
+                    $this->appendRunMessage('- '. $count. ' rows migrated.');
+                    $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
+                }
                 sleep($options['pauseBetweenLoops']);
             }
         }

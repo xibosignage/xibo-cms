@@ -62,11 +62,27 @@
                 {% set noneMessage %}{% trans "None" %}{% endset %}
                 {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
                 {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}
+                
+                <div class="text-center">
+                    <div id="bg_not_found_icon">
+                        <i class="fa bg_not_found_icon fa-2x"></i>
+                        <span>{% trans "No Background Image" %}</span>
+                    </div>
+            
+                    <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
+                </div>
 
-                {% set title %}{% trans "Add a new background image?" %}{% endset %}
-                {{ forms.button(title, "", "", "background-image-fields background-image-add-button", "backgroundAddButton") }}
+                <div class="row background-image-fields background-image-add-button text-center">
+                    <div class="col-xs-12">
+                        <button id="backgroundAddButton" class="btn btn-default" type=""><i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                            {% trans "Add a new background image?" %}
+                        </button>
+                    </div>
+                </div>
 
-                <div id="layoutEditFormBackgroundUpload"></div>
+                <div class="form-group">
+                    <div id="layoutEditFormBackgroundUpload" style="display: none;"></div>
+                </div>
 
                 {% set title %}{% trans "Resolution" %}{% endset %}
                 {% set helpText %}{% trans "Change the resolution" %}{% endset %}
@@ -75,15 +91,6 @@
                 {% set title %}{% trans "Layer" %}{% endset %}
                 {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
                 {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
-
-                <div class="col-md-offset-2">
-                    <div id="bg_not_found_icon">
-                        <i class="fa bg_not_found_icon fa-2x"></i>
-                        <span>{% trans "No Background Image" %}</span>
-                    </div>
-            
-                    <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
-                </div>
             </form>
         </div>
     </div>

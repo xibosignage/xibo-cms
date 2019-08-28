@@ -89,12 +89,47 @@ class ReportScheduleTask implements TaskInterface
         foreach($reportSchedules as $reportSchedule) {
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
-
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+            $now = time();
 
-            if ($nextRunDt <= time())
-            {
+            if ($nextRunDt <= $now) {
 
+                $fourHoursInSeconds = 4 * 3600;
+                $threeHoursInSeconds = 3 * 3600;
+                $twoHoursInSeconds = 2 * 3600;
+                $oneHourInSeconds = 1 * 3600;
+
+                $diffFromNow = $now - $nextRunDt;
+
+                $range = 100;
+                $random = rand(1, $range);
+                if ($diffFromNow < $oneHourInSeconds) {
+
+                    // don't run the report
+                    if ($random <= 70 ) { // 70% chance of skipping
+                        continue;
+                    }
+                } elseif ($diffFromNow < $twoHoursInSeconds) {
+
+                    // don't run the report
+                    if ($random <= 50 ) { // 50% chance of skipping
+                        continue;
+                    }
+                } elseif ($diffFromNow < $threeHoursInSeconds) {
+
+                    // don't run the report
+                    if ($random <= 40 ) { // 40% chance of skipping
+                        continue;
+                    }
+                } elseif ($diffFromNow < $fourHoursInSeconds) {
+
+                    // don't run the report
+                    if ($random <= 25 ) { // 25% chance of skipping
+                        continue;
+                    }
+                }
+
+                // execute the report
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();

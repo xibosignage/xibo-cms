@@ -21,14 +21,16 @@
  */
 
 namespace Xibo\Entity;
+use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Respect\Validation\Validator as v;
 
 /**
  * Class ReportSchedule
  * @package Xibo\Entity
+ *
+ * @SWG\Definition()
  */
 class ReportSchedule implements \JsonSerializable
 {
