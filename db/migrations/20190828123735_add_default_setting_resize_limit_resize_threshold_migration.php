@@ -35,7 +35,7 @@ class AddDefaultSettingResizeLimitResizeThresholdMigration extends AbstractMigra
             $this->table('setting')->insert([
                 [
                     'setting' => 'DEFAULT_RESIZE_LIMIT',
-                    'value' => 1920,
+                    'value' => 6000,
                     'userSee' => 1,
                     'userChange' => 1
                 ]
@@ -47,7 +47,7 @@ class AddDefaultSettingResizeLimitResizeThresholdMigration extends AbstractMigra
             $this->table('setting')->insert([
                 [
                     'setting' => 'DEFAULT_RESIZE_THRESHOLD',
-                    'value' => 6000,
+                    'value' => 1920,
                     'userSee' => 1,
                     'userChange' => 1
                 ]
