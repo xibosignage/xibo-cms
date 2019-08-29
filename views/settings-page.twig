@@ -145,6 +145,28 @@
                                         {{ forms.disabled("DEFAULT_TRANSITION_DURATION", title, theme.getSetting("DEFAULT_TRANSITION_DURATION", 0), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_RESIZE_THRESHOLD") %}
+                                    {% set title %}{% trans "Resize Threshold" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum dimensions to be considered when an image is resized, based on the longest side" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_RESIZE_THRESHOLD") %}
+                                        {{ forms.number("DEFAULT_RESIZE_THRESHOLD", title, theme.getSetting("DEFAULT_RESIZE_THRESHOLD", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_RESIZE_THRESHOLD", title, theme.getSetting("DEFAULT_RESIZE_THRESHOLD", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_RESIZE_LIMIT") %}
+                                    {% set title %}{% trans "Resize Limit" %}{% endset %}
+                                    {% set helpText %}{% trans "Images that exceed the resize limit, based on the longest side, will not be processed" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_RESIZE_LIMIT") %}
+                                        {{ forms.number("DEFAULT_RESIZE_LIMIT", title, theme.getSetting("DEFAULT_RESIZE_LIMIT", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_RESIZE_LIMIT", title, theme.getSetting("DEFAULT_RESIZE_LIMIT", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_displays">
                                 <h3 class="section-heading">{% trans "Displays" %}</h3>

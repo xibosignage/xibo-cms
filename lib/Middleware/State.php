@@ -36,6 +36,7 @@ use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\HelpService;
+use Xibo\Service\ImageProcessingService;
 use Xibo\Service\ModuleService;
 use Xibo\Service\ReportService;
 use Xibo\Service\SanitizeService;
@@ -170,6 +171,15 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->savedReportFactory
             );
+        });
+
+        // Register the image processing service
+        $app->container->singleton('imageProcessingService', function($container) {
+            $imageProcessingService = new ImageProcessingService();
+            $imageProcessingService->setDependencies(
+                $container->logService
+            );
+            return $imageProcessingService;
         });
 
         // Register Controllers with DI
@@ -941,7 +951,8 @@ class State extends Middleware
                 $container->displayFactory,
                 $container->layoutFactory,
                 $container->mediaFactory,
-                $container->dayPartFactory
+                $container->dayPartFactory,
+                $container->scheduleReminderFactory
             );
         });
 
@@ -1510,7 +1521,20 @@ class State extends Middleware
                 $container->pool,
                 $container->dateService,
                 $container->displayGroupFactory,
-                $container->dayPartFactory
+                $container->dayPartFactory,
+                $container->userFactory,
+                $container->scheduleReminderFactory
+            );
+        });
+
+        $container->singleton('scheduleReminderFactory', function($container) {
+            return new \Xibo\Factory\ScheduleReminderFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->configService
             );
         });
 

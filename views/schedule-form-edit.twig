@@ -19,7 +19,7 @@
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("schedule.delete.form", {id: event.eventId}) }}")
-    {% trans "Save" %}, $("#scheduleEditForm").submit()
+    {% trans "Save" %}, beforeSubmitScheduleForm($("#scheduleEditForm"))
 {% endblock %}
 
 {% block formHtml %}
@@ -28,6 +28,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+                <li class="reminders"><a href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
@@ -181,6 +182,10 @@
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "Provide a date and time to end the Repeat for this Event. Leave empty to Repeat indefinitely." %}{% endset %}
                         {{ forms.dateTime("recurrenceRange", title, event.recurrenceRange, helpText, "repeat-control-group", "", "") }}
+                    </div>
+
+                    <div class="tab-pane" id="reminders">
+                        <div id="reminderFields" data-reminders="{{ reminders|json_encode }}"></div>
                     </div>
                 </div>
             </form>
