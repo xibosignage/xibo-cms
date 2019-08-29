@@ -27,8 +27,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
+use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -37,6 +39,7 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Widget\SubPlaylist;
 
 /**
  * Class LayoutFactory
@@ -178,7 +181,8 @@ class LayoutFactory extends BaseFactory
             $this->campaignFactory,
             $this,
             $this->mediaFactory,
-            $this->moduleFactory
+            $this->moduleFactory,
+            $this->playlistFactory
         );
     }
 
@@ -644,6 +648,288 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * @param $layoutJson
+     * @param null $layout
+     * @param null $playlistJson
+     * @param null $nestedPlaylistJson
+     * @return array
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Exception\DuplicateEntityException
+     */
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson)
+    {
+        $this->getLog()->debug('Loading Layout by JSON');
+
+        // New Layout
+        if ($layout == null)
+            $layout = $this->createEmpty();
+
+        if ($playlistJson == null) {
+            throw new InvalidArgumentException(__('playlist.json not found in the archive'), 'playlistJson');
+        }
+
+        $playlists = [];
+        $oldIds = [];
+        $newIds = [];
+        $widgets = [];
+        // Get a list of modules for us to use
+        $modules = $this->moduleFactory->get();
+
+        $layout->schemaVersion = (int)$layoutJson['layoutDefinitions']['schemaVersion'];
+        $layout->width = $layoutJson['layoutDefinitions']['width'];
+        $layout->height = $layoutJson['layoutDefinitions']['height'];
+        $layout->backgroundColor = $layoutJson['layoutDefinitions']['backgroundColor'];
+        $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
+
+        if ($nestedPlaylistJson != null) {
+            $this->getLog()->debug('Layout import, creating nested Playlists from JSON, there are ' . count($nestedPlaylistJson) . ' Playlists to create');
+
+            // create all nested Playlists, save their widgets to key=>value array
+            foreach ($nestedPlaylistJson as $nestedPlaylist) {
+                $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($nestedPlaylist);
+
+                $oldIds[] = $newPlaylist->playlistId;
+                $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
+                $newPlaylist->playlistId = null;
+                $newPlaylist->widgets = [];
+
+                // try to save with the name from import, if it already exists add "imported -"  to the name
+                try {
+                    $newPlaylist->save();
+                } catch (DuplicateEntityException $e) {
+                    $newPlaylist->name = 'imported - ' . $newPlaylist->name;
+                    $newPlaylist->save();
+                }
+
+                $newIds[] = $newPlaylist->playlistId;
+            }
+
+            $combined = array_combine($oldIds, $newIds);
+
+            // this function will go through all widgets assigned to the nested Playlists, create the widgets, adjust the Ids and return an array of Playlists
+            // then the Playlists array is used later on to adjust mediaIds if needed
+            $playlists = $this->createNestedPlaylistWidgets($widgets, $combined, $playlists);
+
+            $this->getLog()->debug('Finished creating nested playlists there are ' . count($playlists) . ' Playlists created');
+        }
+
+        // Populate Region Nodes
+        foreach ($layoutJson['layoutDefinitions']['regions'] as $regionJson) {
+            $this->getLog()->debug('Found Region ' . json_encode($regionJson));
+
+            // Get the ownerId
+            $regionOwnerId = $regionJson['ownerId'];
+            if ($regionOwnerId == null)
+                $regionOwnerId = $layout->ownerId;
+
+            // Create the region
+            $region = $this->regionFactory->create(
+                $regionOwnerId,
+                $regionJson['name'],
+                (double)$regionJson['width'],
+                (double)$regionJson['height'],
+                (double)$regionJson['top'],
+                (double)$regionJson['left'],
+                (int)$regionJson['zIndex']
+            );
+
+            // Use the regionId locally to parse the rest of the JSON
+            $region->tempId = $regionJson['tempId'];
+
+            // Set the region name if empty
+            if ($region->name == '')
+                $region->name = count($layout->regions) + 1;
+
+            // Populate Playlists
+            $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
+
+            // Get all widgets
+            foreach ($regionJson['regionPlaylist']['widgets'] as $mediaNode) {
+
+                $mediaOwnerId = $mediaNode['ownerId'];
+                if ($mediaOwnerId == null) {
+                    $mediaOwnerId = $regionOwnerId;
+                }
+
+                $widget = $this->widgetFactory->createEmpty();
+                $widget->type = $mediaNode['type'];
+                $widget->ownerId = $mediaOwnerId;
+                $widget->duration = $mediaNode['duration'];
+                $widget->useDuration = $mediaNode['useDuration'];
+                $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
+                $widgetId = $mediaNode['widgetId'];
+
+                // Widget from/to dates.
+                $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
+                $widget->toDt = ($mediaNode['toDt'] === '') ? Widget::$DATE_MAX : $mediaNode['toDt'];
+
+                // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
+                $widget->fromDt = ($widget->fromDt === Widget::$DATE_MIN) ? Widget::$DATE_MIN : $this->getDate()->parse($widget->fromDt)->format('U');
+                $widget->toDt = ($widget->toDt === Widget::$DATE_MAX) ? Widget::$DATE_MAX : $this->getDate()->parse($widget->toDt)->format('U');
+
+                $this->getLog()->debug('Adding Widget to object model. ' . $widget);
+
+                // Does this module type exist?
+                if (!array_key_exists($widget->type, $modules)) {
+                    $this->getLog()->error('Module Type [%s] in imported Layout does not exist. Allowable types: %s', $widget->type, json_encode(array_keys($modules)));
+                    continue;
+                }
+
+                $module = $modules[$widget->type];
+                /* @var \Xibo\Entity\Module $module */
+
+                //
+                // Get all widget options
+                //
+                foreach ($mediaNode['widgetOptions'] as $optionsNode) {
+
+                    if ($optionsNode['option'] == 'subPlaylistOptions') {
+                        $subPlaylistOptions = json_decode($optionsNode['value']);
+                    }
+
+                    if ($optionsNode['option'] == 'subPlaylistIds') {
+                        $layoutSubPlaylistId = json_decode($optionsNode['value']);
+                    }
+
+                    $widgetOption = $this->widgetOptionFactory->createEmpty();
+                    $widgetOption->type = $optionsNode['type'];
+                    $widgetOption->option = $optionsNode['option'];
+                    $widgetOption->value = $optionsNode['value'];
+
+                    $widget->widgetOptions[] = $widgetOption;
+
+                    // Convert the module type of known legacy widgets
+                    if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
+                        $widget->type = 'datasetticker';
+                        $module = $modules[$widget->type];
+                    }
+                }
+
+                //
+                // Get the MediaId associated with this widget
+                //
+                if ($module->regionSpecific == 0) {
+                    $this->getLog()->debug('Library Widget, getting mediaId');
+
+                    $this->getLog()->debug('Assigning mediaId %d', $widget->tempId);
+                    $widget->assignMedia($widget->tempId);
+                }
+
+                //
+                // Audio
+                //
+                foreach ($mediaNode['audio'] as $audioNode) {
+                    if ($audioNode == []) {
+                        continue;
+                    }
+
+                    $audioMediaId = implode(',', $audioNode);
+
+                    $widgetAudio = $this->widgetAudioFactory->createEmpty();
+                    $widgetAudio->mediaId = $audioMediaId;
+                    $widgetAudio->volume = $mediaNode['volume'];;
+                    $widgetAudio->loop = $mediaNode['loop'];;
+
+                    $widget->assignAudio($widgetAudio);
+                }
+
+                // subplaylist widgets with Playlists
+                if ($widget->type == 'subplaylist') {
+
+                    $layoutSubPlaylistIds = [];
+                    $subPlaylistOptionsUpdated = [];
+                    $widgets = [];
+                    $this->getLog()->debug('Layout import, creating layout Playlists from JSON, there are ' . count($playlistJson) . ' Playlists to create');
+
+                    foreach ($playlistJson as $playlistDetail) {
+
+                        $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
+                        if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
+                            $oldIds[] = $newPlaylist->playlistId;
+                            $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
+                            $newPlaylist->playlistId = null;
+                            $newPlaylist->widgets = [];
+
+                            // try to save with the name from import, if it already exists add "imported - "  to the name
+                            try {
+                                $newPlaylist->save();
+                            } catch (DuplicateEntityException $e) {
+                                $newPlaylist->name = 'imported - ' . $newPlaylist->name;
+                                $newPlaylist->save();
+                            }
+
+                            $newIds[] = $newPlaylist->playlistId;
+                        }
+                    }
+
+                    $oldAssignedIds = $layoutSubPlaylistId;
+                    $combined = array_combine($oldIds, $newIds);
+
+                    $playlists = $this->createNestedPlaylistWidgets($widgets, $combined, $playlists);
+
+                    foreach ($combined as $old => $new) {
+                        if (in_array($old, $oldAssignedIds)) {
+                            $layoutSubPlaylistIds[] = $new;
+                        }
+                    }
+
+                    $widget->setOptionValue('subPlaylistIds', 'attrib', json_encode($layoutSubPlaylistIds));
+
+                    foreach ($layoutSubPlaylistIds as $value) {
+
+                        foreach ($subPlaylistOptions as $playlistId => $options) {
+
+                            foreach ($options as $optionName => $optionValue) {
+                                if ($optionName == 'subPlaylistIdSpots') {
+                                    $spots = $optionValue;
+                                } elseif ($optionName == 'subPlaylistIdSpotLength') {
+                                    $spotsLength = $optionValue;
+                                } elseif ($optionName == 'subPlaylistIdSpotFill') {
+                                    $spotFill = $optionValue;
+                                }
+                            }
+                        }
+
+                        $subPlaylistOptionsUpdated[$value] = [
+                            'subPlaylistIdSpots' => isset($spots) ? $spots : '',
+                            'subPlaylistIdSpotLength' => isset($spotsLength) ? $spotsLength : '',
+                            'subPlaylistIdSpotFill' => isset($spotFill) ? $spotFill : ''
+                        ];
+                    }
+
+                    $widget->setOptionValue('subPlaylistOptions', 'attrib', json_encode($subPlaylistOptionsUpdated));
+                }
+
+                // Add the widget to the regionPlaylist
+                $playlist->assignWidget($widget);
+            }
+
+            // Assign Playlist to the Region
+            $region->regionPlaylist = $playlist;
+
+            // Assign the region to the Layout
+            $layout->regions[] = $region;
+        }
+
+        $this->getLog()->debug('Finished loading layout - there are %d regions.', count($layout->regions));
+
+        // Load any existing tags
+        if (!is_array($layout->tags))
+            $layout->tags = $this->tagFactory->tagsFromString($layout->tags);
+
+        foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
+            if ($tagNode == [])
+                continue;
+
+            $layout->tags[] = $this->tagFactory->tagFromString($tagNode['tag']);
+        }
+
+        // The parsed, finished layout
+        return [$layout, $playlists];
+    }
+
+    /**
      * Create Layout from ZIP File
      * @param string $zipFile
      * @param string $layoutName
@@ -669,14 +955,32 @@ class LayoutFactory extends BaseFactory
 
         // Open the Zip file
         $zip = new \ZipArchive();
-        if (!$zip->open($zipFile))
+        if (!$zip->open($zipFile)) {
             throw new \InvalidArgumentException(__('Unable to open ZIP'));
+        }
 
         // Get the layout details
         $layoutDetails = json_decode($zip->getFromName('layout.json'), true);
 
+        // Get the Playlist details
+        $playlistDetails = $zip->getFromName('playlist.json');
+        $nestedPlaylistDetails = $zip->getFromName('nestedPlaylist.json');
+
         // Construct the Layout
-        $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
+        if ($playlistDetails !== false) {
+            $playlistDetails = json_decode(($playlistDetails), true);
+
+            if ($nestedPlaylistDetails !== false) {
+                $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
+            }
+
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails);
+            $layout = $jsonResults[0];
+            $playlists = $jsonResults[1];
+
+        } else {
+            $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
+        }
 
         $this->getLog()->debug('Layout Loaded: ' . $layout);
         // Ensure width and height are integer type for resolution validation purpose xibosignage/xibo#1648
@@ -767,8 +1071,9 @@ class LayoutFactory extends BaseFactory
             }
 
             // Open a file pointer to stream into
-            if (!$temporaryFileStream = fopen($temporaryFileName, 'w'))
+            if (!$temporaryFileStream = fopen($temporaryFileName, 'w')) {
                 throw new InvalidArgumentException(__('Cannot save media file from ZIP file'), 'temp');
+            }
 
             // Loop over the file and write into the stream
             while (!feof($fileStream)) {
@@ -816,10 +1121,10 @@ class LayoutFactory extends BaseFactory
                 $layout->backgroundImageId = $newMediaId;
             } else if ($isFont) {
                 // Just raise a flag to say that we've added some fonts to the library
-                if ($newMedia)
+                if ($newMedia) {
                     $fontsAdded = true;
-            }
-            else {
+                }
+            } else {
                 // Go through all widgets and replace if necessary
                 // Keep the keys the same? Doesn't matter
                 foreach ($widgets as $widget) {
@@ -853,6 +1158,58 @@ class LayoutFactory extends BaseFactory
 
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
+                    }
+                }
+            }
+
+            // Playlists with media widgets
+            // We will iterate through all Playlists we've created during layout import here and replace any mediaIds if needed
+            if (isset($playlists) && $playlistDetails !== false) {
+                foreach ($playlists as $playlist) {
+                    /** @var $playlist Playlist */
+                    foreach ($playlist->widgets as $widget) {
+                        $audioIds = $widget->getAudioIds();
+
+                        if (in_array($oldMediaId, $widget->mediaIds)) {
+
+                            $this->getLog()->debug('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+
+                            // Are we an audio record?
+                            if (in_array($oldMediaId, $audioIds)) {
+                                // Swap the mediaId on the audio record
+                                foreach ($widget->audio as $widgetAudio) {
+                                    if ($widgetAudio->mediaId == $oldMediaId) {
+                                        $widgetAudio->mediaId = $newMediaId;
+                                        break;
+                                    }
+                                }
+
+                            } else {
+                                // Non audio
+                                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
+                            }
+
+                            // Always manage the assignments
+                            // Unassign the old ID
+                            $widget->unassignMedia($oldMediaId);
+
+                            // Assign the new ID
+                            $widget->assignMedia($newMediaId);
+                            $widget->save();
+
+                            if (!in_array($widget, $playlist->widgets)) {
+                                $playlist->assignWidget($widget);
+                                $playlist->requiresDurationUpdate = 1;
+                                $playlist->save();
+                            }
+                        }
+
+                        // add Playlist widgetsto the $widgets (which already has all widgets from layout regionPlaylists)
+                        // this will be needed if any Playlist has widgets with dataSets
+                        if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
+                            $widgets[] = $widget;
+                            $playlistWidgets[] = $widget;
+                        }
                     }
                 }
             }
@@ -1014,7 +1371,7 @@ class LayoutFactory extends BaseFactory
                                     $template = str_replace('|' . $column->priorDatasetColumnId . ']', '|' . $column->dataSetColumnId . ']', $template);
                                 }
 
-                                $widget->setOptionValue('template', 'raw', $template);
+                                $widget->setOptionValue('template', 'cdata', $template);
 
                                 $this->getLog()->debug('Replaced columns with %s', $template);
                             } else if ($widget->type == 'chart') {
@@ -1045,6 +1402,11 @@ class LayoutFactory extends BaseFactory
                                 $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
                             }
                         }
+
+                        // save widgets with dataSets on Playlists, widgets directly on the layout are saved later on.
+                        if (isset($playlistWidgets) && in_array($widget, $playlistWidgets)) {
+                            $widget->save();
+                        }
                     }
                 }
             }
@@ -1071,6 +1433,134 @@ class LayoutFactory extends BaseFactory
         }
 
         return $layout;
+    }
+
+    /**
+     * Create widgets in nested Playlists and handle their closure table
+     *
+     * @param $widgets array An array of playlist widgets with old playlistId as key
+     * @param $combined array An array of key and value pairs with oldPlaylistId => newPlaylistId
+     * @param $playlists array An array of Playlist objects
+     * @return array An array of Playlist objects with widgets
+     * @throws NotFoundException
+     */
+    public function createNestedPlaylistWidgets($widgets, $combined, &$playlists)
+    {
+        foreach ($widgets as $playlistId => $widgetsDetails ) {
+
+            foreach ($combined as $old => $new) {
+                if ($old == $playlistId) {
+                    $playlistId = $new;
+                }
+            }
+
+            $playlist = $this->playlistFactory->getById($playlistId);
+
+            foreach ($widgetsDetails as $widgetsDetail) {
+
+                $modules = $this->moduleFactory->get();
+                $playlistWidget = $this->widgetFactory->createEmpty();
+                $playlistWidget->playlistId = $playlistId;
+                $playlistWidget->widgetId = null;
+                $playlistWidget->type = $widgetsDetail['type'];
+                $playlistWidget->ownerId = $widgetsDetail['ownerId'];
+                $playlistWidget->displayOrder = $widgetsDetail['displayOrder'];
+                $playlistWidget->duration = $widgetsDetail['duration'];
+                $playlistWidget->useDuration = $widgetsDetail['useDuration'];
+                $playlistWidget->calculatedDuration = $widgetsDetail['calculatedDuration'];
+                $playlistWidget->fromDt = $widgetsDetail['fromDt'];
+                $playlistWidget->toDt = $widgetsDetail['toDt'];
+                $playlistWidget->tempId = $widgetsDetail['tempId'];
+                $playlistWidget->mediaIds = $widgetsDetail['mediaIds'];
+                $playlistWidget->widgetOptions = [];
+
+                $nestedSubPlaylistOptions = [];
+                $nestedSubPlaylistId = [];
+
+                foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
+                    if ($playlistWidget->type == 'subplaylist') {
+
+                        if ($widgetOptionE['option'] == 'subPlaylistOptions') {
+                            $nestedSubPlaylistOptions = json_decode($widgetOptionE['value']);
+                        }
+
+                        if ($widgetOptionE['option'] == 'subPlaylistIds') {
+                            $nestedSubPlaylistId = json_decode($widgetOptionE['value']);
+                        }
+                    }
+
+                    $widgetOption = $this->widgetOptionFactory->createEmpty();
+                    $widgetOption->type = $widgetOptionE['type'];
+                    $widgetOption->option = $widgetOptionE['option'];
+                    $widgetOption->value = $widgetOptionE['value'];
+
+                    $playlistWidget->widgetOptions[] = $widgetOption;
+                }
+
+                $module = $modules[$playlistWidget->type];
+                $subPlaylistIds = [];
+                $nestedPlaylistOptionsUpdated = [];
+
+                if ($playlistWidget->type == 'subplaylist') {
+                    $oldAssignedIds = $nestedSubPlaylistId;
+
+                    foreach ($combined as $old => $new) {
+                        if (in_array($old, $oldAssignedIds)) {
+                            $subPlaylistIds[] = $new;
+                        }
+                    }
+
+                    $playlistWidget->setOptionValue('subPlaylistIds', 'attrib', json_encode($subPlaylistIds));
+
+                    foreach ($subPlaylistIds as $value) {
+
+                        foreach ($nestedSubPlaylistOptions as $playlistId => $options) {
+
+                                foreach ($options as $optionName => $optionValue) {
+                                    if ($optionName == 'subPlaylistIdSpots') {
+                                        $spots = $optionValue;
+                                    } elseif ($optionName == 'subPlaylistIdSpotLength') {
+                                        $spotsLength = $optionValue;
+                                    } elseif ($optionName == 'subPlaylistIdSpotFill') {
+                                        $spotFill = $optionValue;
+                                    }
+                                }
+
+                        }
+
+                        $nestedPlaylistOptionsUpdated[$value] = [
+                            'subPlaylistIdSpots' => isset($spots) ? $spots : '',
+                            'subPlaylistIdSpotLength' => isset($spotsLength) ? $spotsLength : '',
+                            'subPlaylistIdSpotFill' => isset($spotFill) ? $spotFill : ''
+                        ];
+
+                        $this->getStore()->insert('
+                                                INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                                                SELECT p.parentId, c.childId, p.depth + c.depth + 1
+                                                  FROM lkplaylistplaylist p, lkplaylistplaylist c
+                                                 WHERE p.childId = :parentId AND c.parentId = :childId
+                                            ', [
+                            'parentId' => $playlist->playlistId,
+                            'childId' => $value
+                        ]);
+                    }
+                    $playlistWidget->setOptionValue('subPlaylistOptions', 'attrib', json_encode($nestedPlaylistOptionsUpdated));
+                }
+
+                $playlist->assignWidget($playlistWidget);
+                $playlist->requiresDurationUpdate = 1;
+
+                // save non-media based widget, we can't save media based widgets here as we don't have updated mediaId yet.
+                if ($module->regionSpecific == 1) {
+                    $playlistWidget->save();
+                }
+            }
+
+            $playlists[] = $playlist;
+            $this->getLog()->debug('Finished creating Playlist added the following Playlist ' . json_encode($playlist));
+        }
+
+        return $playlists;
     }
 
     /**

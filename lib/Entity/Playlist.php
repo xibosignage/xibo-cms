@@ -788,11 +788,12 @@ class Playlist implements \JsonSerializable
     /**
      * Expand this Playlists widgets according to any sub-playlists that are present
      * @param int $parentWidgetId this tracks the top level widgetId
+     * @param bool $expandSubplaylists
      * @return Widget[]
-     * @throws NotFoundException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
-    public function expandWidgets($parentWidgetId = 0)
+    public function expandWidgets($parentWidgetId = 0, $expandSubplaylists = true)
     {
         $this->load();
 
@@ -814,11 +815,13 @@ class Playlist implements \JsonSerializable
             if ($widget->type !== 'subplaylist') {
                 $widgets[] = $widget;
             } else {
-                /** @var SubPlaylist $module */
-                $module = $this->moduleFactory->createWithWidget($widget);
-                $module->isValid();
+                if ($expandSubplaylists === true) {
+                    /** @var SubPlaylist $module */
+                    $module = $this->moduleFactory->createWithWidget($widget);
+                    $module->isValid();
 
-                $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
+                    $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
+                }
             }
         }
 
@@ -927,5 +930,57 @@ class Playlist implements \JsonSerializable
             'newParentId' => $newParentId,
             'parentId' => $this->playlistId
         ]);
+    }
+
+    public function generatePlaylistMapping($widgets, $parentId, &$playlistMappings, &$count, &$nestedPlaylistDefinitions, &$dataSetIds, &$dataSets, $dataSetFactory, $includeData)
+    {
+            foreach ($widgets as $playlistWidget) {
+
+                if ($playlistWidget->type == 'subplaylist') {
+
+                    $nestedPlaylistIds = json_decode($playlistWidget->getOptionValue('subPlaylistIds', []), true);
+                    foreach ($nestedPlaylistIds as $nestedPlaylistId) {
+                        $nestedPlaylist = $this->playlistFactory->getById($nestedPlaylistId);
+                        $nestedPlaylist->load();
+                        $this->getLog()->debug('playlist mappings parent id ' . $parentId);
+                        $nestedPlaylistDefinitions[$nestedPlaylist->playlistId] = $nestedPlaylist;
+
+                        $playlistMappings[$parentId][$nestedPlaylist->playlistId] = [
+                            'parentId' => $parentId,
+                            'playlist' => $nestedPlaylist->name,
+                            'playlistId' => $nestedPlaylist->playlistId
+                        ];
+
+                        $count++;
+
+                        $this->generatePlaylistMapping($nestedPlaylist->widgets, $nestedPlaylist->playlistId, $playlistMappings, $count, $nestedPlaylistDefinitions,$dataSetIds, $dataSets, $dataSetFactory, $includeData);
+                    }
+                }
+
+                // if we have any widgets that use DataSets we want the dataSetId and data added
+                if ($playlistWidget->type == 'datasetview' || $playlistWidget->type == 'datasetticker' || $playlistWidget->type == 'chart') {
+                    $dataSetId = $playlistWidget->getOptionValue('dataSetId', 0);
+
+                    if ($dataSetId != 0) {
+
+                        if (in_array($dataSetId, $dataSetIds))
+                            continue;
+
+                        // Export the structure for this dataSet
+                        $dataSet = $dataSetFactory->getById($dataSetId);
+                        $dataSet->load();
+
+                        // Are we also looking to export the data?
+                        if ($includeData) {
+                            $dataSet->data = $dataSet->getData([], ['includeFormulaColumns' => false]);
+                        }
+
+                        $dataSetIds[] = $dataSet->dataSetId;
+                        $dataSets[] = $dataSet;
+                    }
+                }
+            }
+
+            return $playlistMappings;
     }
 }
