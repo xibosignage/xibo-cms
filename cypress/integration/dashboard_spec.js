@@ -19,9 +19,9 @@ describe('Dashboard', function() {
     });
 
     it('should show the welcome tutorial, and then disable it', function() {
-
         cy.server();
-        cy.route('PUT', 'welcome').as('disableTour');
+        cy.route('POST', '/user/welcome').as('showTour');
+        cy.route('PUT', '/user/welcome').as('disableTour');
 
         cy.visit('/statusdashboard');
 
@@ -30,6 +30,8 @@ describe('Dashboard', function() {
 
         // Click Reshow welcome
         cy.get('#reshowWelcomeMenuItem').click();
+
+        cy.wait('@showTour');
 
         cy.get('.popover.tour').contains('Welcome to the Xibo CMS!');
 
