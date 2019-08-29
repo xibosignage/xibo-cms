@@ -114,7 +114,7 @@ class PlaylistReorderTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Checkout
-        $layout = $this->getDraft($this->layout);
+        $layout = $this->checkout($this->layout);
 
         // Edit region
         $this->client->post('/playlist/order/' . $layout->regions[0]->regionPlaylist->playlistId, [

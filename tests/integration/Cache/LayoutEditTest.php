@@ -100,7 +100,7 @@ class LayoutEditTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
         // Checkout this Layout
-        $layout = $this->getDraft($this->layout);
+        $layout = $this->checkout($this->layout);
 
         // Validate the display status after we've checked out
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected after checkout');
