@@ -47,7 +47,7 @@ class PlaylistReorderTest extends LocalWebTestCase
         $this->layout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Add a couple of text widgets to the region
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
@@ -114,7 +114,7 @@ class PlaylistReorderTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Checkout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Edit region
         $this->client->post('/playlist/order/' . $layout->regions[0]->regionPlaylist->playlistId, [

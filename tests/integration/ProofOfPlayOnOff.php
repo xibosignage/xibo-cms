@@ -62,8 +62,8 @@ class ProofOfPlayOnOff extends LocalWebTestCase
         // Create a Layout
         $this->layout = $this->createLayout();
 
-        // Checkout
-        $layout = $this->checkout($this->layout);
+        // get draft Layout
+        $layout = $this->getDraft($this->layout);
 
         // Create another Layout with stat enabled
         $this->layout2 = (new XiboLayout($this->getEntityProvider()))->create(

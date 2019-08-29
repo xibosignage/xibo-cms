@@ -493,7 +493,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         // Add region to our layout with data from regionSuccessCases
         $this->client->post('/region/' . $layout->layoutId, [
@@ -538,7 +538,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         # Add region to our layout with datafrom regionFailureCases
         $response = $this->client->post('/region/' . $layout->layoutId, [
@@ -580,7 +580,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
@@ -614,7 +614,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
@@ -638,7 +638,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200, 670, 100, 100);
 
@@ -742,7 +742,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         # Create Two known regions and add them to that layout
         $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);
@@ -784,7 +784,7 @@ class LayoutTest extends LocalWebTestCase
     {
         // Create a Layout and Checkout
         $layout = $this->createLayout();
-        $layout = $this->checkout($layout);
+        $layout = $this->getDraft($layout);
 
         # Create Two known regions and add them to that layout
         $region1 = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,670,75,125);

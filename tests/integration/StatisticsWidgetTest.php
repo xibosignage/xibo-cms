@@ -64,7 +64,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $this->displaySetLicensed($this->display);
 
         // Checkout our Layout and add some Widgets to it.
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Create and assign new text widget
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);

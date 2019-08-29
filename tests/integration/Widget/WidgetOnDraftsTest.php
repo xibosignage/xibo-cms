@@ -75,7 +75,7 @@ class WidgetOnDraftsTest extends LocalWebTestCase
     public function testEditDraft()
     {
         // Checkout the Layout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Get my Playlist
         $playlistId = $layout->regions[0]->regionPlaylist->playlistId;

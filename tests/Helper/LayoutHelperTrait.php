@@ -243,4 +243,11 @@ trait LayoutHelperTrait
 
         return $layout;
     }
+
+    protected function getDraft($layout)
+    {
+        $draft = (new XiboLayout($this->getEntityProvider()))->get(['parentId' => $layout->layoutId, 'showDrafts' => 1, 'embed' => 'regions,playlists,widgets']);
+
+        return $draft[0];
+    }
 }
