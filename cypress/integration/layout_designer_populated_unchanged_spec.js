@@ -45,11 +45,12 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
+        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').click();
         cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').click();
 
         // Drag region to layout to add it
         cy.dragToElement(
-            '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="region"] .drag-area',
+            '#layout-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="region"] .drag-area',
             '#layout-navigator [data-type="layout"]'
         ).then(() => {
 

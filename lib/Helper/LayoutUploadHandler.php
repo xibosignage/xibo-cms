@@ -58,6 +58,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             );
 
             $layout->save();
+            $layout->managePlaylistClosureTable($layout);
 
             @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 

@@ -151,11 +151,12 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
+        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
         cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
-            '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+            '#layout-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
             '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
         ).then(() => {
 
@@ -184,11 +185,12 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
+        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
         cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
-            '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
+            '#layout-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
             '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
         ).then(() => {
 

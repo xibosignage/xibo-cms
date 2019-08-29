@@ -352,6 +352,9 @@ class Layout extends Base
 
         $this->getLog()->debug('Layout Added');
 
+        // automatically checkout the new layout for edit
+        $this->checkout($layout->layoutId);
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,

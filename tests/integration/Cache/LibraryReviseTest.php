@@ -56,7 +56,7 @@ class LibraryReviseTest extends LocalWebTestCase
         $this->layout = $this->createLayout(1);
 
         // Checkout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Add it to the Layout
         (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist->playlistId);

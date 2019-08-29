@@ -53,7 +53,7 @@ class WidgetAddTest extends LocalWebTestCase
         $this->publishedLayout = $this->createLayout();
 
         // Checkout
-        $this->layout = $this->checkout($this->publishedLayout);
+        $this->layout = $this->getDraft($this->publishedLayout);
     }
 
     public function tearDown()

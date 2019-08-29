@@ -22,11 +22,9 @@ describe('Layout Designer (Empty)', function() {
 
         beforeEach(function() {
 
-            // Create random name
-            layoutTempName = Cypress._.random(0, 1e8);
+            // Import a layout and go to the Layout's designer page - we need a Layout in a Published state
+            cy.importLayout('../assets/export_test_layout.zip').as('testLayoutId').then((res) => {
 
-            // Create a new layout and go to the layout's designer page
-            cy.createLayout(layoutTempName).as('testLayoutId').then((res) => {
                 cy.goToLayoutAndLoadPrefs(res);
             });
 
@@ -59,8 +57,6 @@ describe('Layout Designer (Empty)', function() {
 
             // Create a new layout and go to the layout's designer page, then load toolbar prefs
             cy.createLayout(uuid).as('testLayoutId').then((res) => {
-    
-                cy.checkoutLayout(res);
 
                 cy.goToLayoutAndLoadPrefs(res);
             });
@@ -218,11 +214,12 @@ describe('Layout Designer (Empty)', function() {
             cy.populateLibraryWithMedia();
 
             // Open toolbar Widgets tab
+            cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
             cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
 
-            cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"]').should('be.visible').then(() => {
+            cy.get('#layout-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"]').should('be.visible').then(() => {
                 cy.dragToElement(
-                    '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+                    '#layout-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
                     '#layout-navigator [data-type="region"]:first-child'
                 ).then(() => {
                     cy.get('[data-test="uploadFormModal"]').contains('Upload media');
