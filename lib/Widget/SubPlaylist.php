@@ -352,7 +352,7 @@ class SubPlaylist extends ModuleWidget
                 $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
 
                 if ($subPlaylistWidgetEnableStat == 'Inherit') {
-                    $subPlaylistWidget->setOptionValue('enableStat', 'attr', $playlistEnableStat);
+                    $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
                     $subPlaylistWidget->save();
                     $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
                 }

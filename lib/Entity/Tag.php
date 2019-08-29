@@ -64,37 +64,37 @@ class Tag implements \JsonSerializable
     public $isRequired = 0;
 
     /**
-     * @SWG\Property(description="An array of options assigned to this Tag")
+     * @SWG\Property(description="An array of options assigned to this Tag", @SWG\Items(type="string"))
      * @var array
      */
     public $options;
 
     /**
-     * @SWG\Property(description="An array of layoutID and values pairs with this Tag")
+     * @SWG\Property(description="An array of layoutID and values pairs with this Tag", @SWG\Items(type="string"))
      * @var array
      */
     public $layouts = [];
 
     /**
-     * @SWG\Property(description="An array of playlistIDs and values with this Tag")
+     * @SWG\Property(description="An array of playlistIDs and values with this Tag", @SWG\Items(type="string"))
      * @var array
      */
     public $playlists = [];
     
     /**
-     * @SWG\Property(description="An array of campaignIDs and values with this Tag")
+     * @SWG\Property(description="An array of campaignIDs and values with this Tag", @SWG\Items(type="string"))
      * @var array
      */
     public $campaigns = [];
 
     /**
-     * @SWG\Property(description="An array of mediaIds and values with this Tag")
+     * @SWG\Property(description="An array of mediaIds and values with this Tag", @SWG\Items(type="string"))
      * @var array
      */
     public $medias = [];
 
     /**
-     * @SWG\Property(description="An array of displayGroupIds and values with this Tag")
+     * @SWG\Property(description="An array of displayGroupIds and values with this Tag", @SWG\Items(type="string"))
      * @var array
      */
     public $displayGroups = [];

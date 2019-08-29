@@ -736,6 +736,21 @@ class Soap
             return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
+        if ($this->display->isAuditing()) {
+            $this->getLog()->debug($requiredFilesXml->saveXML());
+        }
+
+        // Return the results of requiredFiles()
+        $requiredFilesXml->formatOutput = true;
+        $output = $requiredFilesXml->saveXML();
+
+        // Cache
+        $cache->set($output);
+
+        // RF cache expires every 4 hours
+        $cache->expiresAfter(3600*4);
+        $this->getPool()->saveDeferred($cache);
+
         // Remove any required files that remain in the array of rfIds
         $rfIds = array_values(array_diff($rfIds, $newRfIds));
         if (count($rfIds) > 0) {
@@ -755,20 +770,6 @@ class Soap
 
         // Phone Home?
         $this->phoneHome();
-
-        if ($this->display->isAuditing())
-            $this->getLog()->debug($requiredFilesXml->saveXML());
-
-        // Return the results of requiredFiles()
-        $requiredFilesXml->formatOutput = true;
-        $output = $requiredFilesXml->saveXML();
-
-        // Cache
-        $cache->set($output);
-
-        // RF cache expires every 4 hours
-        $cache->expiresAfter(3600*4);
-        $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));

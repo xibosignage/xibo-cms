@@ -24,7 +24,6 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 
 /**
  * Class Image
@@ -117,7 +116,7 @@ class Image extends ModuleWidget
      *  @SWG\Parameter(
      *      name="enableStat",
      *      in="formData",
-     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics,
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
      *      type="string",
      *      required=false
      *   ),

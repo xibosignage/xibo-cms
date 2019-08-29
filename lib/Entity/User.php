@@ -256,7 +256,7 @@ class User implements \JsonSerializable
     public $twoFactorSecret;
 
     /**
-     * @SWG\Property(description="Two Factor authorisation recovery codes")
+     * @SWG\Property(description="Two Factor authorisation recovery codes", @SWG\Items(type="string"))
      * @var array
      */
     public $twoFactorRecoveryCodes = [];

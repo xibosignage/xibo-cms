@@ -62,8 +62,15 @@
 
 @layout-status-popover-message-bg-color: #e05050;
 
-#toast-container #read-only-message {
-    width: 420px;
+@media (min-width: 768px) {
+    .welcome-screen-modal .modal-dialog {
+        width: 600px;
+    }
+}
+
+#read-only-message {
+    margin: 0 2px 8px 12px;
+    padding: 10px;
 }
 
 // CSS
@@ -166,7 +173,7 @@
 
 #layout-editor #layout-timeline #regions-container {
     overflow: auto;
-    min-height: 20vh;
+    min-height: 18vh;
     max-height: 24vh;
 }
 
@@ -253,6 +260,9 @@
     padding: 3px;
     margin: 4px 0;
     .border-radius(4px);
+    display: box;
+    display: -webkit-box;
+    display: -moz-box;
 }
 
 #layout-editor #layout-timeline .designer-region:not(.editable) {
@@ -282,7 +292,6 @@
 
 #layout-editor #layout-timeline .designer-widget {
     position: relative;
-    float: left;
     background: @timeline-widget-bg-color;
     color: @timeline-widget-fg-color;
     font-weight: bold;
@@ -384,7 +393,6 @@
     .set-transparent-color(background; @timeline-ghost-bg-color; 60%);
     color: @timeline-ghost-fg-color;
     font-weight: bold;
-    float: left;
     display: flex;
     height: 100%;
 }
@@ -413,7 +421,6 @@
     color: @timeline-ghost-fg-color;
     padding: 0 4px;
     font-weight: bold;
-    float: left;
     .set-transparent-color(background; #f3f3f3; 50%);
     height: 80%;
     margin-top: 0.25em;
@@ -598,6 +605,7 @@
 #layout-editor #layout-viewer-navbar {
 
     background: darken(@layout-main-bg-color, 10%);
+    height: 45px;
     
     .viewer-navbar {
         background: @viewer-navbar-bg-colour;
@@ -725,7 +733,7 @@
 
 #layout-editor #properties-panel-container {
     background: @designer-module-bg-color;
-    min-height: 50vh;
+    height: calc(45vh + 49px);
     position: relative;
 }
 
@@ -736,17 +744,17 @@
 
 #layout-editor #properties-panel-container.properties-layout {
     .border-radius(4px);
-    border: 3px solid @layout-main-bg-color;
+    border: 2px solid @layout-main-bg-color;
 }
 
 #layout-editor #properties-panel-container.properties-region {
     .border-radius(4px);
-    border: 3px solid @region-main-bg-color;
+    border: 2px solid @region-main-bg-color;
 }
 
 #layout-editor #properties-panel-container.properties-widget {
     .border-radius(4px);
-    border: 3px solid @widget-main-bg-color;
+    border: 2px solid @widget-main-bg-color;
 }
 
 #layout-editor #properties-panel-container .form-title {
@@ -773,20 +781,27 @@
 
 #layout-editor #properties-panel-container .form-container {
 
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: calc(45vh - 22px);
+
+    /*
+        .row > .nav + div form {
+        height: calc(46vh - 72px);
+    }
+    */
+
     .row > div {
         padding: 5px;
         margin: 0;
     }
 
-    form {
-        overflow-x: hidden;
-        overflow-y: auto;
+    .row > div > form {
         margin-right: -5px;
         padding-right: 5px;
-        height: 40vh;
         
         .row > div  {
-            padding: 5px;
+            padding: 4px 8px;
         }
         /* width */
         &::-webkit-scrollbar {
@@ -816,8 +831,8 @@
 
     }
 
-    .row > .nav + div form {
-        height: 36vh;
+    table td span.label {
+        white-space: inherit;
     }
 }
 
@@ -965,11 +980,11 @@
 #layout-editor #layout-timeline .designer-region .designer-region-overlay {
     display: none;
     z-index: 2;
-    width: calc(100% + 6px);
-    height: calc(100% + 6px);
-    left: -3px;
-    top: -3px;
-    position: relative;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
     .border-radius(4px);
 
     .info {

@@ -1,21 +1,29 @@
-describe('Dashboard', function () {
+describe('Dashboard', function() {
 
-    beforeEach(function () {
-        cy.login().then(function() {
-            cy.visit('/');
-        });
+    beforeEach(function() {
+        cy.login();
     });
 
     it('should be at the dashboard page', function() {
 
+        cy.visit('/statusdashboard');
+
+
         cy.url().should('include', 'dashboard');
 
-        cy.contains('xibo_admin');
-
-        cy.contains('Dashboard');
+        // Check for the dashboard elements
+        cy.contains('Bandwidth Usage');
+        cy.contains('Library Usage');
+        cy.contains('Display Activity');
+        cy.contains('Latest News');
     });
 
-    it('should show the welcome tutorial', function() {
+    it('should show the welcome tutorial, and then disable it', function() {
+
+        cy.server();
+        cy.route('PUT', 'welcome').as('disableTour');
+
+        cy.visit('/statusdashboard');
 
         // Open user dropdown menu
         cy.get('.dropdown-toggle img.nav-avatar').click();
@@ -24,14 +32,13 @@ describe('Dashboard', function () {
         cy.get('#reshowWelcomeMenuItem').click();
 
         cy.get('.popover.tour').contains('Welcome to the Xibo CMS!');
-    });
 
-    it('should dismiss the welcome tutorial', function() {
-
-        cy.contains('Welcome to the Xibo CMS!');
+        // Click to disable welcome tour
         cy.get('button[data-role="end"]').click();
+        cy.wait('@disableTour');
 
-        cy.visit('/').then(() => {
+        cy.visit('/statusdashboard').then(() => {
+            cy.wait(500);
             cy.get('.popover.tour').should('not.be.visible');
         });
     });

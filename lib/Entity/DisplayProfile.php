@@ -183,13 +183,16 @@ class DisplayProfile implements \JsonSerializable
     {
         $this->load();
 
-        // Get the setting from default
-        $default = $this->getSetting($setting, null, true);
         $found = false;
 
+        // Get the setting from default
         // Which object do we operate on.
         if ($ownConfig) {
             $config = $this->config;
+            $default = $this->getSetting($setting, null, true);
+        } else {
+            // we are editing Display object, as such we want the $default to come from display profile assigned to our display
+            $default = $this->getSetting($setting, null, false);
         }
 
         // Check to see if we have this setting already

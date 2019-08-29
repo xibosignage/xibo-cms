@@ -455,108 +455,53 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $options = array_merge([
             'maxAttempts' => 10,
             'statsDeleteSleep' => 3,
-            'limit' => 10000,
+            'limit' => 1000,
         ], $options);
 
-        $toDt = $maxage->format(DATE_ISO8601);
+        // we dont use $options['limit'] anymore.
+        // we delete all the records at once based on filter criteria (no-limit approach)
+
+        $toDt = new UTCDateTime($maxage->format('U')*1000);
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
-        $i = 0;
         $rows = 1;
-
         $count = 0;
-        while ($rows > 0) {
 
-            $i++;
+        if ($fromDt != null) {
 
-            if ($fromDt != null) {
+            $start = new UTCDateTime($fromDt->format('U')*1000);
+            $filter =  [
+                'start' => ['$lte' => $toDt],
+                'end' => ['$gt' => $start]
+            ];
 
-                $start = $fromDt->format(DATE_ISO8601);
-                $match =  [
-                    '$match' => [
-                        '$expr' => [
-                            '$and' => [
-                                [
-                                    '$lte' => [
-                                        '$start', [
-                                            '$dateFromString' => [
-                                                'dateString' => $toDt
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                [
-                                    '$gt' => [
-                                        '$end', [
-                                            '$dateFromString' => [
-                                                'dateString' => $start
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                            ]
-                        ]
-                    ]
-                ];
-            } else {
-                $match =  [
-                    '$match' => [
-                        '$expr' => [
-                            '$and' => [
-                                [
-                                    '$lte' => [
-                                        '$start', [
-                                            '$dateFromString' => [
-                                                'dateString' => $toDt
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                            ]
-                        ]
-                    ]
-                ];
-            }
+        } else {
 
-            try{
-                $findResult = $collection->aggregate(
-                    [
-                        $match
-                    ],
-                    ['limit' => $options['limit']]
-                )->toArray();
-
-            } catch (\MongoDB\Exception\RuntimeException $e) {
-                $this->log->error($e->getMessage());
-            }
-
-            $idsArray = array_map(function ($res) { return $res['_id']; }, $findResult);
-
-            try {
-                $deleteResult = $collection->deleteMany([
-                    '_id' => ['$in' => $idsArray]
-                ]);
-
-            } catch (\MongoDB\Exception\RuntimeException $e) {
-                $this->log->error($e->getMessage());
-                throw new \RuntimeException('Stats cannot be deleted.');
-            }
-
-            $rows = $deleteResult->getDeletedCount();
-            $count += $rows;
-
-            // Give MongoDB time to recover
-            if ($rows > 0) {
-                $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
-                sleep($options['statsDeleteSleep']);
-            }
-
-            // Break if we've exceeded the maximum attempts.
-            if ($options['maxAttempts'] > -1 && $i >= $options['maxAttempts']) {
-                break;
-            }
+            $filter =  [
+                'start' => ['$lte' => $toDt]
+            ];
         }
+
+        try {
+            $deleteResult = $collection->deleteMany(
+                $filter
+            );
+            $rows = $deleteResult->getDeletedCount();
+
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+
+        $count += $rows;
+
+        // Give MongoDB time to recover
+        if ($rows > 0) {
+            $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
+            sleep($options['statsDeleteSleep']);
+        }
+
 
         return $count;
 

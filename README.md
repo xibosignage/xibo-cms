@@ -120,6 +120,7 @@ P: `password`
 To parse the translations:
 
 ```bash
+rm -R ./cache
 docker-compose exec web sh -c "cd /var/www/cms; php bin/locale.php"
 ```
 
