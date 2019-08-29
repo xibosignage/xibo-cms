@@ -718,7 +718,7 @@
                         <input class="form-control" name="reminder_value[]" type="number" value="{{ value }}" />
                     </label>
                 </div>
-                <div class="col-sm-3">
+                <div class="col-sm-2">
                     <label for="reminder_type[]">
                         <select class="form-control" name="reminder_type[]">
                             <option value="1" {{#eq type 1}}selected{{/eq}}>{% endraw %}{% trans "Minute" %}{% raw %}</option>
@@ -739,9 +739,10 @@
                         </select>
                     </label>
                 </div>
-                <div class="col-sm-2">
+                <div class="col-sm-3">
                     <label for="reminder_isEmail[]">
                         <input type="checkbox" name="reminder_isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
+                        {% endraw %}{% trans "Notify by email?" %}{% raw %}
                         <input type="hidden" name="reminder_isEmailHidden[]" />
                     </label>
                 </div>
