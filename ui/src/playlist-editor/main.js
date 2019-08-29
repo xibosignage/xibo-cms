@@ -633,6 +633,12 @@ pE.showLocalLoadingScreen = function() {
  */
 pE.clearTemporaryData = function() {
 
+    // Fix for remaining ckeditor elements or colorpickers
+    pE.editorDiv.find('.colorpicker-element').colorpicker('destroy');
+
+    // Hide open tooltips
+    pE.editorDiv.find('[data-toggle="tooltip"]').tooltip('hide');
+
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
 };

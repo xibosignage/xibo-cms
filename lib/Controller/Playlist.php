@@ -329,7 +329,7 @@ class Playlist extends Base
                     'dataAttributes' => array(
                         array('name' => 'commit-url', 'value' => $this->urlFor('playlist.setenablestat', ['id' => $playlist->playlistId])),
                         array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                        array('name' => 'id', 'value' => 'playlist_button_setenablestat'),
                         array('name' => 'text', 'value' => __('Enable stats collection?')),
                         array('name' => 'rowtitle', 'value' => $playlist->name),
                         ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']

@@ -21,6 +21,16 @@
 
         // Set up the colour selectors
         $(this).find("#backgroundColor").colorpicker().attr('autocomplete', 'off');
+
+        // Tidy up colorpickers on modal close
+        if($(this).hasClass('modal')) {
+            $(this).on("hide.bs.modal", function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    $(this).find("#backgroundColor").colorpicker('destroy');
+                }
+            });
+        }
     }
 
     // Runs before form submit

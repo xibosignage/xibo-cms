@@ -27,6 +27,7 @@ define('BLACKLIST_SINGLE', "Single");
 use Jenssegers\Date\Date;
 use Slim\Log;
 use Stash\Interfaces\PoolInterface;
+use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Schedule;
@@ -304,6 +305,7 @@ class Soap
 
         // Check the cache
         $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
+        $cache->setInvalidationMethod(Invalidation::OLD);
 
         $output = $cache->get();
 
@@ -323,6 +325,10 @@ class Soap
 
             return $output;
         }
+
+        // We need to regenerate
+        // Lock the cache
+        $cache->lock(120);
 
         // Generate a new nonce for this player and store it in the cache.
         $playerNonce = Random::generateString(32);
@@ -458,7 +464,7 @@ class Soap
                     ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                 WHERE lkdisplaydg.DisplayID = :displayId
+                 WHERE lkdisplaydg.DisplayID = :displayId AND media.released = 1
                 UNION ALL
                 SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                   FROM region
@@ -472,11 +478,11 @@ class Soap
                     ON widget.widgetId = lkwidgetmedia.widgetId
                     INNER JOIN media
                     ON media.mediaId = lkwidgetmedia.mediaId
-                 WHERE region.layoutId IN (%s)
+                 WHERE region.layoutId IN (%s) AND media.released = 1
                 UNION ALL
                 SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
                   FROM `media`
-                 WHERE `media`.mediaID IN (
+                 WHERE `media`.released = 1 AND `media`.mediaID IN (
                     SELECT backgroundImageId
                       FROM `layout`
                      WHERE layoutId IN (%s)
@@ -801,6 +807,7 @@ class Soap
 
         // Check the cache
         $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
+        $cache->setInvalidationMethod(Invalidation::OLD);
 
         $output = $cache->get();
 
@@ -812,6 +819,10 @@ class Soap
 
             return $output;
         }
+
+        // We need to regenerate
+        // Lock the cache
+        $cache->lock(120);
 
         // Generate the Schedule XML
         $scheduleXml = new \DOMDocument("1.0");

@@ -551,6 +551,20 @@ class Library extends Base
 
             $media->includeProperty('buttons');
 
+            switch ($media->released) {
+
+                case 1:
+                    $media->releasedDescription = '';
+                    break;
+
+                case 2:
+                    $media->releasedDescription = __('The uploaded image is too large and cannot be processed, please use another image.');
+                    break;
+
+                default:
+                    $media->releasedDescription = __('This image will be resized according to set thresholds and limits.');
+            }
+
             switch ($media->enableStat) {
 
                 case 'On':

@@ -214,22 +214,11 @@ class StatsArchiveTask implements TaskInterface
             $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
             $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
 
-            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-
-                $options = [
-                    'maxAttempts' => $maxAttempts,
-                    'statsDeleteSleep' => $statsDeleteSleep,
-                    'limit' => 1000 // Mongo cannot hold large arrays of ids
-                ];
-
-            } else {
-
-                $options = [
-                    'maxAttempts' => $maxAttempts,
-                    'statsDeleteSleep' => $statsDeleteSleep,
-                    'limit' => 10000
-                ];
-            }
+            $options = [
+                'maxAttempts' => $maxAttempts,
+                'statsDeleteSleep' => $statsDeleteSleep,
+                'limit' => 10000 // Note: for mongo we dont use $options['limit'] anymore
+            ];
 
             try {
                 $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);

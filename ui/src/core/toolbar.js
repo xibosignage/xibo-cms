@@ -609,6 +609,7 @@ Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
 Toolbar.prototype.createNewTab = function() {
 
     let moduleListFiltered = [];
+    let usersListFiltered = [];
 
     // Filter module list to create the types for the filter
     modulesList.forEach(element => {
@@ -618,6 +619,13 @@ Toolbar.prototype.createNewTab = function() {
                 name: element.name
             });
         }
+    });
+
+    usersList.forEach(element => {
+        usersListFiltered.push({
+            userId: element.userId.toString(),
+            name: element.userName
+        });
     });
 
     this.menuItems.push({
@@ -638,6 +646,10 @@ Toolbar.prototype.createNewTab = function() {
                 name: toolbarTrans.searchFilters.type,
                 values: moduleListFiltered
             },
+            owner: {
+                name: toolbarTrans.searchFilters.owner,
+                values: usersListFiltered
+        },
         },
         content: []
     });
@@ -947,6 +959,7 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
 Toolbar.prototype.mediaContentCreate = function(menu) {
 
     const self = this;
+    const app = getXiboApp();
 
     // Get search window Jquery object
     const $searchContent = self.DOMObject.find('#content-' + menu + '.search-content');
@@ -960,6 +973,9 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
 
     // Append template to the search main div
     self.DOMObject.find('#media-search-container-' + menu).html(html);
+
+    // Set paging max to 5
+    $.fn.DataTable.ext.pager.numbers_length = 5;
 
     var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
         "language": dataTablesLanguage,
@@ -980,6 +996,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             {"data": "mediaId"},
             {"data": "name"},
             {"data": "mediaType"},
+            {"data": "ownerId"},
             {
                 "sortable": false,
                 "data": dataTableCreateTags
@@ -1036,6 +1053,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         self.menuItems[menu].filters.name.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
         self.menuItems[menu].filters.tag.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
         self.menuItems[menu].filters.type.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
+        self.menuItems[menu].filters.owner.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-owner-' + menu).val();
 
         // Update tab name
         self.updateTabNames();
@@ -1057,7 +1075,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             handle: '.drag-handle'
         })
         .resizable({
-            minWidth: 580
+            minWidth: 640
         }).on('resizestart',
             function() {
                 self.tablePositionUpdate($searchContent);
@@ -1117,6 +1135,9 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
     });
 
+    // Initialize tooltips
+    app.common.reloadTooltips(self.DOMObject);
+
     // Deselect previous selections
     self.deselectCardsAndDropZones();
 };
@@ -1125,7 +1146,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
  * Update tab height
  */
 Toolbar.prototype.tablePositionUpdate = function(container) {
-
+    
     // Calculate table container height
     const tableContainerHeight = container.find('.form-inline').height() + container.find('.dataTables_wrapper').height();
 

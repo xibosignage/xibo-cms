@@ -277,8 +277,10 @@ $(document).ready(function() {
 
                     const $timePicker = $('#timePicker');
                     
+                    let momentNow = moment().tz(timezone);
+                    
                     $timePicker.slider({
-                        value: (moment().hour() * 60) + moment().minute(),
+                        value: (momentNow.hour() * 60) + momentNow.minute(),
                         tooltip: 'always',
                         formatter: function(value) {
                             return moment().startOf("day").minute(value).format(jsTimeFormat);

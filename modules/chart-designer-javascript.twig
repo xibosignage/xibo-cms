@@ -196,16 +196,28 @@
 
         // Fill the font colour in with a complimentary colour (if it isn't already filled in)
         var $fontInput = $("#fontColor", dialog);
+        let mainObjectBGColor = (formHelpers.mainObject !== undefined) ? formHelpers.mainObject.backgroundColor : formHelpers.defaultBackgroundColor;
 
         if ($fontInput.val() == "") {
             // Choose a complementary color
-            var color = $c.complement(formHelpers.mainObject.backgroundColor);
+            var color = $c.complement(mainObjectBGColor);
 
             $fontInput.val(color);
         }
 
         // Set up the colour selectors
         $("#backgroundColor", dialog).colorpicker({format: "hex"});
+
         $fontInput.colorpicker({format: "hex"});
+
+        // Tidy up colorpickers on modal close
+        if(dialog.hasClass('modal')) {
+            dialog.on("hide.bs.modal", function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    dialog.find(".colorpicker-element").colorpicker('destroy');
+                }
+            });
+        }
     }
 </script>

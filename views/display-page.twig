@@ -155,7 +155,7 @@
                                 <th>{% trans "Bandwidth Limit" %}</th>
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
-                                <th></th>
+                                <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -467,6 +467,20 @@
                     
                     // Add values to the override array
                     $.each(parsedValues, function(name, value){
+
+                        if(name == 'keylock') {
+                            $.each(value, function(keylockName, keylockValue){
+                                if(keylockName == 'local') {
+                                    keylockName = 'keylockLocal';
+                                }
+
+                                if(keylockName == 'remote') {
+                                    keylockName = 'keylockRemote';
+                                }
+
+                                override.push({name: keylockName, value: keylockValue})
+                            });
+                        }
                         // Convert boolean and numbers to string
                         value = (['boolean','number'].includes(typeof value)) ? value.toString() : value;
 
@@ -477,6 +491,8 @@
 
             // Method to create a new input field based on the hidden form
             const createInputField = function(target, inputName, newValue = null) {
+                
+                let select2FixFlag = false;
 
                 // Grab input field from hidden table
                 let $inputFields = $settings.find('#' + inputName);
@@ -491,14 +507,21 @@
                     // Time inputs
                     $inputFields = $inputFields.parent().find('input');
                 } else if($inputFields.length == 1 && $inputFields.hasClass('select2-hidden-accessible')) {
-                    // Select2 inputs
-                    // Fix for select 2 modal
-                    makePagedSelect($inputFields, $inputFields.parents('.modal:first'));
-
-                    // Get both fields
-                    $inputFields = $inputFields.parent().find('.select2-hidden-accessible, .select2');
+                    select2FixFlag = true;
+                    // Destroy select2 before copying
+                    $inputFields.select2('destroy');
                 }
 
+                // Save old field before cloning
+                $inputFieldsOld = $inputFields;
+
+                // Clone input fields ( to be able to reuse the originals )
+                $inputFields = $inputFields.clone(true);
+
+                if(select2FixFlag) {
+                    // Restore old field to a select2
+                    makePagedSelect($inputFieldsOld);
+                }
                 // Add input field to the target
                 $(target).html($inputFields);
 
@@ -529,6 +552,12 @@
                     }
                 }
 
+                // Reload select 2 with new value
+                if(select2FixFlag) {
+                    // Restore select2 after value set
+                    makePagedSelect($inputFields);
+                }
+
                 // If there's a multiselect, set the value of the dropdown ( it's not kept on cloning ) and hide it
                 $(target).find('.multiSelect').val(inputName).hide();
 
@@ -551,6 +580,28 @@
                 // Fixes for slider
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+
+                let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                    e.stopPropagation();
+                    restoreInputField(target, inputName);
+                 });
+                $(target).append($newButton);
+            };
+
+
+            // Method to restore the input field to the edit button
+            const restoreInputField = function(target, inputName) {
+
+                $(target).html('<button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button>');
+
+                // Handlers for field edit
+                $(target).off().click(function() {
+                    if(!$(this).data('editing')) {
+                        createInputField($(this), inputName);
+                    }
+                });
+
+                $(target).attr('data-editing', 'false');
             };
 
             // Build table
@@ -612,7 +663,7 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
                 var overrideEl = override.find((x) => { return x.name === over; });

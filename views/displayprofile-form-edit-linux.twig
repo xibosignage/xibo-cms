@@ -150,7 +150,7 @@
 
                     {% set title = "Shell Command Allow List"|trans %}
                     {% set helpText = "Which shell commands should the client execute?"|trans %}
-                    {{ forms.number("shellCommandAllowList", title, displayProfile.getSetting("shellCommandAllowList"), helpText) }}
+                    {{ forms.input("shellCommandAllowList", title, displayProfile.getSetting("shellCommandAllowList"), helpText) }}
 
                     {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}
                         {% set title = "Screen shot interval"|trans %}

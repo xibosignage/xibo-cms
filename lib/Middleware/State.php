@@ -36,6 +36,7 @@ use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\HelpService;
+use Xibo\Service\ImageProcessingService;
 use Xibo\Service\ModuleService;
 use Xibo\Service\ReportService;
 use Xibo\Service\SanitizeService;
@@ -170,6 +171,15 @@ class State extends Middleware
                 $container->sanitizerService,
                 $container->savedReportFactory
             );
+        });
+
+        // Register the image processing service
+        $app->container->singleton('imageProcessingService', function($container) {
+            $imageProcessingService = new ImageProcessingService();
+            $imageProcessingService->setDependencies(
+                $container->logService
+            );
+            return $imageProcessingService;
         });
 
         // Register Controllers with DI
@@ -1105,7 +1115,8 @@ class State extends Middleware
                 $container->sessionFactory,
                 $container->displayGroupFactory,
                 $container->widgetFactory,
-                $container->playerVersionFactory
+                $container->playerVersionFactory,
+                $container->playlistFactory
             );
         });
 

@@ -95,6 +95,8 @@ class DataSetData extends Base
      *      description="successful operation"
      *  )
      * )
+     *
+     * @throws \Xibo\Exception\XiboException
      */
     public function grid($dataSetId)
     {
@@ -134,6 +136,9 @@ class DataSetData extends Base
         // Output the count of records for paging purposes
         if ($dataSet->countLast() != 0)
             $this->getState()->recordsTotal = $dataSet->countLast();
+
+        // Set this dataSet as being active
+        $dataSet->setActive();
     }
 
     /**

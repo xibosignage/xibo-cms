@@ -204,7 +204,7 @@ class Region implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->name . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
+        return md5($this->name . $this->ownerId . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
     }
 
     /**

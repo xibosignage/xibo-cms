@@ -24,8 +24,8 @@ namespace Xibo\Storage;
 
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -99,13 +99,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $this->campaignFactory = $campaignFactory;
 
         try {
-            $this->client = new Client('mongodb://'.$this->config['host'].':'. $this->config['port'],
-                [
-                    'username' => $this->config['username'],
-                    'password' => $this->config['password']
-                ]);
+            $uri = isset($this->config['uri']) ? $this->config['uri'] : 'mongodb://' . $this->config['host'] . ':' . $this->config['port'];
+            $this->client = new Client($uri, [
+                'username' => $this->config['username'],
+                'password' => $this->config['password']
+            ], (array_key_exists('driverOptions', $this->config) ? $this->config['driverOptions'] : []));
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
+            $this->log->critical($e->getMessage());
         }
 
         return $this;
@@ -458,115 +458,50 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             'limit' => 1000,
         ], $options);
 
-        // https://stackoverflow.com/questions/10014181/how-to-delete-documents-by-query-efficiently-in-mongo
-        // we will delete 1000 records per transaction (while loop)
+        // we dont use $options['limit'] anymore.
+        // we delete all the records at once based on filter criteria (no-limit approach)
 
-        $toDt = $maxage->format(DATE_ISO8601);
+        $toDt = new UTCDateTime($maxage->format('U')*1000);
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
-        $i = 0;
         $rows = 1;
-
         $count = 0;
-        while ($rows > 0) {
-            $i++;
 
-            if ($fromDt != null) {
+        if ($fromDt != null) {
 
-                $start = $fromDt->format(DATE_ISO8601);
-                $match =  [
-                    '$match' => [
-                        '$expr' => [
-                            '$and' => [
-                                [
-                                    '$lte' => [
-                                        '$start', [
-                                            '$dateFromString' => [
-                                                'dateString' => $toDt
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                                [
-                                    '$gt' => [
-                                        '$end', [
-                                            '$dateFromString' => [
-                                                'dateString' => $start
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                            ]
-                        ]
-                    ]
-                ];
-            } else {
-                $match =  [
-                    '$match' => [
-                        '$expr' => [
-                            '$and' => [
-                                [
-                                    '$lte' => [
-                                        '$start', [
-                                            '$dateFromString' => [
-                                                'dateString' => $toDt
-                                            ]
-                                        ]
-                                    ]
-                                ],
-                            ]
-                        ]
-                    ]
-                ];
-            }
+            $start = new UTCDateTime($fromDt->format('U')*1000);
+            $filter =  [
+                'start' => ['$lte' => $toDt],
+                'end' => ['$gt' => $start]
+            ];
 
-            try {
-                $findResult = $collection->aggregate([
-                    $match,
-                    [
-                        '$project' => [
-                            '_id' => 1
-                        ]
-                    ],
-                    [
-                        '$limit' => $options['limit']
-                    ]
+        } else {
 
-                ])->toArray();
-
-            } catch (\MongoDB\Exception\RuntimeException $e) {
-                $this->log->error($e->getMessage());
-            }
-
-            $idsArray = array_map(function ($res) { return $res['_id']; }, $findResult);
-
-            try {
-                    $deleteResult = $collection->deleteMany([
-                        '_id' => ['$in' => $idsArray]
-                    ]);
-
-                    $rows = $deleteResult->getDeletedCount();
-
-            } catch (\MongoDB\Exception\RuntimeException $e) {
-                $this->log->error($e->getMessage());
-                throw new \RuntimeException('Stats cannot be deleted.');
-            }
-
-
-            $count += $rows;
-
-            // Give MongoDB time to recover
-            if ($rows > 0) {
-                $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
-                sleep($options['statsDeleteSleep']);
-            }
-
-            // Break if we've exceeded the maximum attempts.
-            if ($options['maxAttempts'] > -1 && $i >= $options['maxAttempts']) {
-                break;
-            }
+            $filter =  [
+                'start' => ['$lte' => $toDt]
+            ];
         }
+
+        try {
+            $deleteResult = $collection->deleteMany(
+                $filter
+            );
+            $rows = $deleteResult->getDeletedCount();
+
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+
+        $count += $rows;
+
+        // Give MongoDB time to recover
+        if ($rows > 0) {
+            $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
+            sleep($options['statsDeleteSleep']);
+        }
+
 
         return $count;
 

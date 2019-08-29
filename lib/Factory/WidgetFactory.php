@@ -268,6 +268,15 @@ class WidgetFactory extends BaseFactory
             ON `playlist`.playlistId = `widget`.playlistId
         ';
 
+        if ($this->getSanitizer()->getInt('showWidgetsFrom', $filterBy) === 1) {
+            $body .= '
+                    INNER JOIN `region`
+                        ON `region`.regionId = `playlist`.regionId
+                    INNER JOIN `layout`
+                        ON `layout`.layoutId = `region`.layoutId
+            ';
+        }
+
         if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
             $body .= '
                 INNER JOIN `lkwidgetmedia`
@@ -278,6 +287,14 @@ class WidgetFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
+
+        if ($this->getSanitizer()->getInt('showWidgetsFrom', $filterBy) === 1) {
+            $body .= ' AND layout.parentId IS NOT NULL ';
+        }
+
+        if ($this->getSanitizer()->getInt('showWidgetsFrom', $filterBy) === 2) {
+            $body .= ' AND playlist.regionId IS NULL ';
+        }
 
         // Permissions
         $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
@@ -334,6 +351,12 @@ class WidgetFactory extends BaseFactory
                  WHERE media.name LIKE :media
             )';
             $params['media'] = '%' . $this->getSanitizer()->getString('media', $filterBy) . '%';
+        }
+
+        // Playlist Like
+        if ($this->getSanitizer()->getString('playlist', $filterBy) != '') {
+            $terms = explode(',', $this->getSanitizer()->getString('playlist', $filterBy));
+            $this->nameFilter('playlist', 'name', $terms, $body, $params);
         }
 
         // Sorting?

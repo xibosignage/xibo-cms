@@ -92,7 +92,7 @@
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Modified" %}</th>
                                 <th>{% trans "Stats?" %}</th>
-                                <th></th>
+                                <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -283,7 +283,7 @@
                 if (mediaTable != null) {
                     mediaTable.destroy();
                     mediaTable = null;
-                    $("#media tbody").empty();
+                    $("#playlistLibraryMedia tbody").empty();
                 }
 
                 return;
@@ -292,7 +292,7 @@
             if (mediaTable != null) {
                 mediaTable.ajax.reload();
             } else {
-                mediaTable = $("#media").DataTable({
+                mediaTable = $("#playlistLibraryMedia").DataTable({
                     "language": dataTablesLanguage,
                     serverSide: true,
                     stateSave: true,
@@ -310,6 +310,7 @@
                         {"data": "mediaId"},
                         {"data": "name"},
                         {"data": "mediaType"},
+                        {"data": dataTableCreateTags},
                         {
                             "name": "duration",
                             "data": function (data, type) {
@@ -323,7 +324,23 @@
                 });
 
                 mediaTable.on('processing.dt', dataTableProcessing);
+                mediaTable.on('draw', { form: $(".playlistForm") }, dataTableCreateTagEvents);
             }
+        }
+
+        function setEnableStatMultiSelectFormOpen(dialog) {
+
+            var $select = $('<select id="enableStat" name="enableStat" class="form-control">' +
+                '<option value="Off">{% trans %} Off {% endtrans %}</option>' +
+                '<option value="On">{% trans %} On {% endtrans %}</option>' +
+                '<option value="Inherit">{% trans %} Inherit {% endtrans %}</option>' +
+                '</select>');
+
+            $select.on('change', function() {
+                dialog.data().commitData = {enableStat: $(this).val()};
+            }).trigger('change');
+
+            $(dialog).find('.modal-body').append($select);
         }
     </script>
 

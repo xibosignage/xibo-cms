@@ -273,6 +273,7 @@ class Playlist implements \JsonSerializable
      */
     public function setOwner($ownerId)
     {
+        $this->load();
         $this->ownerId = $ownerId;
 
         foreach ($this->widgets as $widget) {
@@ -705,6 +706,7 @@ class Playlist implements \JsonSerializable
         $sql = '
             UPDATE `playlist` SET 
                 `name` = :name, 
+                `ownerId` = :ownerId,
                 `regionId` = :regionId, 
                 `modifiedDt` = :modifiedDt, 
                 `duration` = :duration,
@@ -719,6 +721,7 @@ class Playlist implements \JsonSerializable
         $this->getStore()->update($sql, array(
             'playlistId' => $this->playlistId,
             'name' => $this->name,
+            'ownerId' => $this->ownerId,
             'regionId' => $this->regionId == 0 ? null : $this->regionId,
             'duration' => $this->duration,
             'isDynamic' => $this->isDynamic,
@@ -766,6 +769,7 @@ class Playlist implements \JsonSerializable
      * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[]
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function expandWidgets($parentWidgetId = 0)
     {
@@ -791,6 +795,8 @@ class Playlist implements \JsonSerializable
             } else {
                 /** @var SubPlaylist $module */
                 $module = $this->moduleFactory->createWithWidget($widget);
+                $module->isValid();
+
                 $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
             }
         }

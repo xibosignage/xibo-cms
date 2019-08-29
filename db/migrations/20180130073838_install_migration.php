@@ -524,7 +524,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('dataSet', 'string', ['limit' => 50])
             ->addColumn('description', 'string', ['limit' => 254, 'null' => true])
             ->addColumn('userId', 'integer')
-            ->addColumn('lastDataEdit', 'integer')
+            ->addColumn('lastDataEdit', 'integer', ['default' => 0])
             ->addColumn('code', 'string', ['limit' => 50, 'null' => true])
             ->addColumn('isLookup', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('isRemote', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
@@ -635,11 +635,11 @@ class InstallMigration extends AbstractMigration
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
-        $linkCommandDisplayProfile = $this->table('lkcommanddisplayprofile', ['id' => false, ['primary_key' => ['commandId', 'displayProfileId']]]);
+        $linkCommandDisplayProfile = $this->table('lkcommanddisplayprofile', ['id' => false, 'primary_key' => ['commandId', 'displayProfileId']]);
         $linkCommandDisplayProfile->addColumn('commandId', 'integer')
             ->addColumn('displayProfileId', 'integer')
             ->addColumn('commandString', 'string', ['limit' => 1000])
-            ->addColumn('validationString', 'string', ['limit' => 1000])
+            ->addColumn('validationString', 'string', ['limit' => 1000, 'null' => true])
             ->addForeignKey('commandId', 'command', 'commandId')
             ->addForeignKey('displayProfileId', 'displayprofile', 'displayProfileId')
             ->save();
