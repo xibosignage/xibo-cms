@@ -648,6 +648,10 @@ class MediaFactory extends BaseFactory
             $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
         }
 
+        if ($this->getSanitizer()->getInt('imageProcessing', $filterBy) !== null) {
+            $body .= 'AND ( media.type = \'image\' OR (media.type = \'module\' AND media.moduleSystemFile = 0) ) ';
+        }
+
         if ($this->getSanitizer()->getString('storedAs', $filterBy) != '') {
             $body .= 'AND media.storedAs = :storedAs ';
             $params['storedAs'] = $this->getSanitizer()->getString('storedAs', $filterBy);
@@ -662,6 +666,11 @@ class MediaFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
             $body .= ' AND media.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
             $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('released', $filterBy) !== null) {
+            $body .= " AND media.released = :released ";
+            $params['released'] = $this->getSanitizer()->getInt('released', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 1)

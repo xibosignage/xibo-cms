@@ -12,6 +12,8 @@
 
 namespace Xibo\Helper;
 use stdClass;
+use Intervention\Image\ImageManagerStatic as Img;
+use Intervention\Image\Exception\NotReadableException;
 
 class BlueImpUploadHandler
 {
@@ -641,6 +643,8 @@ class BlueImpUploadHandler
                 if (is_int($img_width)) {
                     $this->handle_image_file($file_path, $file);
                 }
+                $file->width = $img_width;
+                $file->height = $img_height;
                 $this->handle_form_data($file, $index);
             } else {
                 $file->size = $file_size;

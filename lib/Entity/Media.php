@@ -872,12 +872,39 @@ class Media implements \JsonSerializable
         // Set to valid
         $this->valid = 1;
 
+        $filePath = $libraryFolder . $this->storedAs;
+        list($imgWidth, $imgHeight) = @getimagesize($filePath);
+
+        $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+        $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
+
+        // Media released set to 0 for large size images
+        // if image size is greater than 8000 X 8000 then we flag that image as too big
+        if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
+            $this->released = 2;
+        } elseif ($imgWidth > $imgHeight) { // 'landscape';
+
+            if ($imgWidth <= $resizeThreshold) {
+                $this->released = 1;
+            } else {
+                $this->released = 0;
+            }
+        } else { // 'portrait';
+
+            if ($imgHeight <= $resizeThreshold) {
+                $this->released = 1;
+            } else {
+                $this->released = 0;
+            }
+        }
+
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
+            'released' => $this->released,
             'mediaId' => $this->mediaId
         ]);
     }
