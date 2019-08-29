@@ -150,7 +150,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     $widgetMediaId = $widget->getPrimaryMediaId();
 
                     if (!in_array($widgetMediaId, $mediaIds)) {
-                        $widget->delete();
+                        $playlist->deleteWidget($widget);
                     } else {
                         // It's present in the array, so pop it off
                         $mediaIds = array_diff($mediaIds, [$widgetMediaId]);
