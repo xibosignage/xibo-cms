@@ -137,7 +137,9 @@ class DayPart extends Base
     {
         $filter = [
             'dayPartId' => $this->getSanitizer()->getInt('dayPartId'),
-            'name' => $this->getSanitizer()->getString('name')
+            'name' => $this->getSanitizer()->getString('name'),
+            'isAlways' => $this->getSanitizer()->getInt('isAlways'),
+            'isCustom' => $this->getSanitizer()->getInt('isCustom')
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));

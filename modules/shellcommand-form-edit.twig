@@ -71,7 +71,7 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        {% set title %}{% trans "Command" %}{% endset %}
+                        {% set title %}{% trans "Stored Command" %}{% endset %}
                         {% set helpText %}{% trans "Pick a command" %}{% endset %}
                         {{ forms.dropdown("commandCode", "single", title, module.getOption("commandCode"), [{code:"", command: ""}]|merge(commands), "code", "command", helpText) }}
                         
@@ -88,8 +88,12 @@
                         {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText, "non-command-fields") }}
 
                         {% set title %}{% trans "webOS Command" %}{% endset %}
-                        {% set helpText %}{% trans "Enter a webOS Command Line compatible command. Supported from R12 onward" %}{% endset %}
-                        {{ forms.hidden("webosCommand", title, module.getOption('webosCommand'), helpText, "non-command-fields") }}
+                        {% set helpText %}{% trans "Enter a webOS Command Line compatible command." %}{% endset %}
+                        {{ forms.input("webosCommand", title, module.getOption('webosCommand'), helpText, "non-command-fields") }}
+
+                        {% set title %}{% trans "Tizen Command" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a Tizen Command Line compatible command." %}{% endset %}
+                        {{ forms.input("tizenCommand", title, module.getOption('tizenCommand'), helpText, "non-command-fields") }}
                     </div>
                 </div> 
             </form>

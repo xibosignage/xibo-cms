@@ -20,8 +20,12 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Mimey\MimeTypes;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -48,6 +52,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Environment;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -545,6 +550,11 @@ class Library extends Base
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
 
+            // Media expiry
+            $media->mediaExpiresIn = __('Expires %s');
+            $media->mediaExpiryFailed = __('Expired ');
+            $media->mediaNoExpiryDate = __('Never');
+
             if ($this->isApi())
                 break;
 
@@ -860,12 +870,15 @@ class Library extends Base
             }
         }
 
+        $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
+
         $this->getState()->template = 'library-form-edit';
         $this->getState()->setData([
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $tags
+            'tags' => $tags,
+            'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
         ]);
     }
 
@@ -944,6 +957,15 @@ class Library extends Base
         $media->retired = $this->getSanitizer()->getCheckbox('retired');
         $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
         $media->enableStat = $this->getSanitizer()->getString('enableStat');
+
+        if ($this->getSanitizer()->getDate('expires') != null ) {
+
+            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
+                $media->expires = $this->getSanitizer()->getDate('expires')->format('U');
+            } else {
+                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
+            }
+        }
 
         // Should we update the media in all layouts?
         if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
@@ -1920,5 +1942,202 @@ class Library extends Base
             'isUsed' => $media->isUsed($count)
         ]);
         
+    }
+
+    public function uploadFromUrlForm()
+    {
+        $this->getState()->template = 'library-form-uploadFromUrl';
+
+        $this->getState()->setData([
+            'uploadSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize())
+        ]);
+    }
+
+    /**
+     * Upload Media via URL
+     *
+     * @SWG\Post(
+     *  path="/library/uploadUrl",
+     *  operationId="uploadFromUrl",
+     *  tags={"library"},
+     *  summary="Upload Media from URL",
+     *  description="Upload Media to CMS library from an external URL",
+     *  @SWG\Parameter(
+     *      name="url",
+     *      in="formData",
+     *      description="The URL to the media",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of the media, image, video etc",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="optionalName",
+     *      in="formData",
+     *      description="An optional name for this media file, if left empty it will default to the file name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Media"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @throws InvalidArgumentException
+     * @throws LibraryFullException
+     * @throws NotFoundException
+     * @throws ConfigurationException
+     */
+    public function uploadFromUrl()
+    {
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        self::ensureLibraryExists($libraryFolder);
+
+        $url = $this->getSanitizer()->getString('url');
+        $type = $this->getSanitizer()->getString('type');
+        $optionalName = $this->getSanitizer()->getString('optionalName');
+
+        // Validate the URL
+        if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
+        }
+
+        $librarySizeLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $librarySizeLimitMB = round(($librarySizeLimit / 1024) / 1024, 2);
+
+        if ($librarySizeLimit > 0 && $this->libraryUsage() > $librarySizeLimit) {
+            throw new InvalidArgumentException(sprintf(__('Your library is full. Library Limit: %s MB'), $librarySizeLimitMB), 'libraryLimit');
+        }
+
+        // remote file size
+        $size = $this->getRemoteFileSize($url);
+
+        if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
+            throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
+        }
+
+        $this->getUser()->isQuotaFullByUser();
+
+        // if the type is not provided (web ui), get the extension from pathinfo/Guzzle and try to find correct module for the media
+        if (!isset($type)) {
+            $ext = $this->getRemoteFileExtension($url);
+            $module = $this->getModuleFactory()->getByExtension($ext);
+            $module = $this->getModuleFactory()->create($module->type);
+        } else {
+            // we have the type in request (API) double check that the module type exists
+            // we are also getting extension here from pathinfo / the Content-Type header via Guzzle, depending on the URL we may need it in saveFile in Media entity
+            $ext = $this->getRemoteFileExtension($url);
+            $module = $this->getModuleFactory()->create($type);
+        }
+
+        // if we were provided with optional Media name set it here, otherwise get it from pathinfo
+        if (isset($optionalName)) {
+            $name = $optionalName;
+        } else {
+            // get the media name from pathinfo
+            $name = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_FILENAME);
+        }
+
+        // double check that provided Module Type and Extension are valid
+        $moduleCheck = $this->getModuleFactory()->query(null, ['extension' => $ext, 'type' => $module->getModuleType()]);
+
+        if (count($moduleCheck) <= 0) {
+            throw new NotFoundException(sprintf(__('Invalid Module type or extension. Module type %s does not allow for %s extension'), $module->getModuleType(), $ext));
+        }
+
+        // add our media to queueDownload and process the downloads
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext]);
+        $this->mediaFactory->processDownloads(function($media) {
+            // Success
+            $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+        });
+
+        // get our uploaded media
+        $media = $this->mediaFactory->getByName($name);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Media upload from URL was successful')),
+            'id' => $media->mediaId,
+            'data' => $media
+        ]);
+    }
+
+    /**
+     * @param $url
+     * @return int
+     * @throws InvalidArgumentException
+     */
+    private function getRemoteFileSize($url)
+    {
+        $size = -1;
+        $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+
+        try {
+            $head = $guzzle->head($url);
+            $contentLength = $head->getHeader('Content-Length');
+
+            foreach ($contentLength as $value) {
+                $size = $value;
+            }
+
+        } catch (RequestException $e) {
+            $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
+            throw new InvalidArgumentException(('File not found'), 'url');
+        }
+
+        if ($size <= 0) {
+            throw new InvalidArgumentException(('Cannot determine the file size'), 'size');
+        }
+
+        return (int)$size;
+    }
+
+    /**
+     * @param $url
+     * @return string
+     * @throws InvalidArgumentException
+     */
+    private function getRemoteFileExtension($url)
+    {
+        // first try to get the extension from pathinfo
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+
+        // failing that get the extension from Content-Type header via Guzzle
+         if ($extension == '') {
+             $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+             $head = $guzzle->head($url);
+             $contentType = $head->getHeader('Content-Type');
+
+             foreach ($contentType as $value) {
+                 $extension = $value;
+             }
+
+             // get the extension corresponding to the mime type
+             $mimeTypes = new MimeTypes();
+             $extension = $mimeTypes->getExtension($extension);
+         }
+
+         // if we could not determine the file extension at this point, throw an error
+        if ($extension == '') {
+            throw new InvalidArgumentException(('Cannot determine the file extension'), 'extension');
+        }
+
+        return $extension;
     }
 }

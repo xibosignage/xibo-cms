@@ -600,9 +600,9 @@ class Layout implements \JsonSerializable
 
             if ($options['audit']) {
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout]);
+                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
                 } else {
-                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout]);
+                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
                 }
             }
 
@@ -610,10 +610,13 @@ class Layout implements \JsonSerializable
             $this->update($options);
 
             if ($options['audit']) {
+                $change = $this->getChangedProperties();
+                $change['campaignId'][] = $this->campaignId;
+
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Updated');
+                    $this->audit($this->layoutId, 'Updated', $change);
                 } else {
-                    $this->audit($this->layoutId, 'Updated Draft');
+                    $this->audit($this->layoutId, 'Updated Draft', $change);
                 }
             }
 
@@ -1488,8 +1491,10 @@ class Layout implements \JsonSerializable
                 $options['notify'] = false;
             }
 
-            if ($this->status === 4 && $options['exceptionOnError'])
+            if ($this->status === 4 && $options['exceptionOnError']) {
+                $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
                 throw new InvalidArgumentException(__('There is an error with this Layout: %s', implode(',', $this->getStatusMessage())), 'status');
+            }
 
             $this->save([
                 'saveRegions' => true,

@@ -688,6 +688,19 @@ class Widget implements \JsonSerializable
 
         $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. ' . json_encode($options, JSON_PRETTY_PRINT));
 
+        // if we are auditing get layout specific campaignId
+        if ($options['audit']) {
+            $campaignId = 0;
+            $layoutId = 0;
+            $sql = 'SELECT campaign.campaignId, layout.layoutId FROM playlist INNER JOIN region ON playlist.regionId = region.regionId INNER JOIN layout ON region.layoutId = layout.layoutId INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND playlist.playlistId = :playlistId ;';
+            $params = ['playlistId' => $this->playlistId];
+            $results = $this->store->select($sql, $params);
+            foreach ($results as $row) {
+                $campaignId = $row['campaignId'];
+                $layoutId = $row['layoutId'];
+            }
+        }
+
         // Add/Edit
         $isNew = false;
         if ($this->widgetId == null || $this->widgetId == 0) {
@@ -747,6 +760,9 @@ class Widget implements \JsonSerializable
         if ($options['audit']) {
             if ($isNew) {
                 $changedProperties = null;
+                if ($campaignId != 0 && $layoutId != 0) {
+                    $this->audit($this->widgetId, 'Added', ['widgetId' => $this->widgetId, 'type' => $this->type, 'layoutId' => $layoutId, 'campaignId' => $campaignId]);
+                }
             } else {
                 $changedProperties = $this->getChangedProperties();
                 $changedItems = [];
@@ -754,13 +770,26 @@ class Widget implements \JsonSerializable
                 foreach ($this->widgetOptions as $widgetOption) {
                     $itemsProperties = $widgetOption->getChangedProperties();
 
+                    // for widget options what we get from getChangedProperities is an array with value as key and changed value as value
+                    // we want to override the key in the returned array, so that we get a clear option name that was changed
+                    if (array_key_exists('value', $itemsProperties)) {
+                        $itemsProperties[$widgetOption->option] = $itemsProperties['value'];
+                        unset($itemsProperties['value']);
+                    }
+
                     if (count($itemsProperties) > 0) {
                         $changedItems[] = $itemsProperties;
                     }
                 }
 
                 if (count($changedItems) > 0) {
-                    $changedProperties['widgetOptions'] = $changedItems;
+                    $changedProperties['widgetOptions'] = json_encode($changedItems, JSON_PRETTY_PRINT);
+                }
+
+                // if we are editing a widget assigned to a regionPlaylist add the layout specific campaignId to the audit log
+                if ($campaignId != 0 && $layoutId != 0) {
+                    $changedProperties['campaignId'][] = $campaignId;
+                    $changedProperties['layoutId'][] = $layoutId;
                 }
             }
 
@@ -820,7 +849,7 @@ class Widget implements \JsonSerializable
         $this->getLog()->debug('Delete Widget Complete');
 
         // Audit
-        $this->audit($this->widgetId, 'Deleted');
+        $this->audit($this->widgetId, 'Deleted', ['widgetId' => $this->widgetId, 'playlistId' => $this->playlistId]);
     }
 
     /**

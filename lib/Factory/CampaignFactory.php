@@ -187,6 +187,8 @@ class CampaignFactory extends BaseFactory
               ON lkcampaignlayout.CampaignID = campaign.CampaignID
               LEFT OUTER JOIN `layout`
               ON lkcampaignlayout.LayoutID = layout.LayoutID
+              INNER JOIN `user`
+              ON user.userId = campaign.userId 
            WHERE 1 = 1
         ';
 
@@ -282,6 +284,14 @@ class CampaignFactory extends BaseFactory
             }
         }
 
+        $user = $this->getUser();
+
+        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
+            $body .= ' AND user.userTypeId = 4 ';
+        } else {
+            $body .= ' AND user.userTypeId <> 4 ';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -311,7 +321,7 @@ class CampaignFactory extends BaseFactory
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
             if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
-                $body .= ' AND retired = :retired ';
+                $body .= ' AND layout.retired = :retired ';
             }
 
             $results = $this->getStore()->select('SELECT COUNT(DISTINCT campaign.campaignId) AS total ' . $body, $params);

@@ -261,6 +261,11 @@ class User implements \JsonSerializable
      */
     public $twoFactorRecoveryCodes = [];
 
+    /**
+     * @SWG\Property(description="Should we show content added by standard users in relevant grids (1) or content added by the DOOH user? (2). Super admins have an option to change this in their User profile. ")
+     * @var int
+     */
+    public $showContentFrom = 1;
 
     /**
      * @var UserOption[]
@@ -942,6 +947,7 @@ class User implements \JsonSerializable
                   `twoFactorTypeId` = :twoFactorTypeId,
                   `twoFactorSecret` = :twoFactorSecret,
                   `twoFactorRecoveryCodes` = :twoFactorRecoveryCodes,
+                  `showContentFrom` = :showContentFrom,
                   `firstName` = :firstName,
                   `lastName` = :lastName,
                   `phone` = :phone,
@@ -965,6 +971,7 @@ class User implements \JsonSerializable
             'twoFactorTypeId' => $this->twoFactorTypeId,
             'twoFactorSecret' => $this->twoFactorSecret,
             'twoFactorRecoveryCodes' => ($this->twoFactorRecoveryCodes == '') ? null : json_encode($this->twoFactorRecoveryCodes),
+            'showContentFrom' => $this->showContentFrom,
             'firstName' => $this->firstName,
             'lastName' => $this->lastName,
             'phone' => $this->phone,
@@ -1220,7 +1227,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
             return true;
 
         // Group Admins
@@ -1249,7 +1256,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
             return true;
 
         // Group Admins

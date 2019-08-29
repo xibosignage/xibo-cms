@@ -508,6 +508,19 @@ class Playlist implements \JsonSerializable
             $this->validate();
         }
 
+        // if we are auditing and editing a regionPlaylist then get layout specific campaignId
+        if ($options['auditPlaylist'] && $this->regionId != null) {
+            $campaignId = 0;
+            $layoutId = 0;
+            $sql = 'SELECT campaign.campaignId, layout.layoutId FROM region INNER JOIN layout ON region.layoutId = layout.layoutId INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND region.regionId = :regionId ;';
+            $params = ['regionId' => $this->regionId];
+            $results = $this->store->select($sql, $params);
+            foreach ($results as $row) {
+                $campaignId = $row['campaignId'];
+                $layoutId = $row['layoutId'];
+            }
+        }
+
         if ($this->playlistId == null || $this->playlistId == 0) {
             $this->add();
         } else if ($this->hash != $this->hash()) {
@@ -573,7 +586,15 @@ class Playlist implements \JsonSerializable
 
         // Audit
         if ($options['auditPlaylist']) {
-            $this->audit($this->playlistId, 'Saved');
+            $change = $this->getChangedProperties();
+
+            // if we are editing a regionPlaylist then add the layout specific campaignId to the audit log.
+            if ($this->regionId != null) {
+                $change['campaignId'][] = $campaignId;
+                $change['layoutId'][] = $layoutId;
+            }
+
+            $this->audit($this->playlistId, 'Saved', $change);
         }
     }
 
@@ -660,7 +681,7 @@ class Playlist implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `playlist` WHERE playlistId = :playlistId', array('playlistId' => $this->playlistId));
 
         // Audit
-        $this->audit($this->playlistId, 'Deleted');
+        $this->audit($this->playlistId, 'Deleted', ['playlistId' => $this->playlistId, 'regionId' => $this->regionId]);
     }
 
     /**

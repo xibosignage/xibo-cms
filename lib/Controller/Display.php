@@ -22,12 +22,14 @@
 namespace Xibo\Controller;
 
 use Intervention\Image\ImageManagerStatic as Img;
+use Jenssegers\Date\Date;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -75,6 +77,11 @@ class Display extends Base
      * @var PlayerActionServiceInterface
      */
     private $playerAction;
+
+    /**
+     * @var DayPartFactory
+     */
+    private $dayPartFactory;
 
     /**
      * @var DisplayFactory
@@ -154,8 +161,9 @@ class Display extends Base
      * @param NotificationFactory $notificationFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -175,6 +183,7 @@ class Display extends Base
         $this->notificationFactory = $notificationFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -492,7 +501,8 @@ class Display extends Base
             'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
             'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
-            'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null
+            'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null,
+            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers')
         ];
 
         // Get a list of displays
@@ -525,11 +535,21 @@ class Display extends Base
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $display->getCurrentLayoutId($this->pool);
 
-            if ($this->isApi())
+            if ($this->isApi()) {
                 continue;
+            }
+
+            // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
+            $displayProfileName = '';
+            try {
+                $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
+                $displayProfileName = $defaultDisplayProfile->name;
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('No default Display Profile set for Display type ' . $display->clientType);
+            }
 
             // Add in the display profile information
-            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? __('Default') : $displayProfiles[$display->displayProfileId];
+            $display->displayProfile = (!array_key_exists($display->displayProfileId, $displayProfiles)) ? $displayProfileName . __(' (Default)') : $displayProfiles[$display->displayProfileId];
 
             $display->includeProperty('buttons');
 
@@ -794,6 +814,11 @@ class Display extends Base
         $profileVersionId = $display->getDisplayProfile()->getSetting('versionMediaId');
         $playerVersions = [];
 
+        // Daypart - Operating Hours
+        $dayPartId = $display->getSetting('dayPartId', null,['displayOnly' => true]);
+        $profileDayPartId = $display->getDisplayProfile()->getSetting('dayPartId');
+        $dayparts = [];
+
         // Get the Player Version for this display profile type
         if ($versionId !== null) {
             try {
@@ -803,12 +828,27 @@ class Display extends Base
             }
         }
 
-        // Get the Player Version for this display profile type
         if ($versionId !== $profileVersionId) {
             try {
                 $playerVersions[] = $this->playerVersionFactory->getByMediaId($profileVersionId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown versionId set on Display Profile for displayId ' . $display->displayId);
+            }
+        }
+
+        if ($dayPartId !== null) {
+            try {
+                $dayparts[] = $this->dayPartFactory->getById($dayPartId);
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
+            }
+        }
+
+        if ($dayPartId !== $profileDayPartId) {
+            try {
+                $dayparts[] = $this->dayPartFactory->getById($profileDayPartId);
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
             }
         }
 
@@ -824,7 +864,8 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $tags
+            'tags' => $tags,
+            'dayParts' => $dayparts
         ]);
     }
 
@@ -1466,23 +1507,73 @@ class Display extends Base
                     $event->save();
                 }
 
+                $dayPartId = $display->getSetting('dayPartId', null,['displayOverride' => true]);
+                $operatingHours = true;
+
+                if ($dayPartId !== null) {
+                    try {
+                        $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+                        $startTimeArray = explode(':', $dayPart->startTime);
+                        $startTime = Date::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+
+                        $endTimeArray = explode(':', $dayPart->endTime);
+                        $endTime = Date::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+
+                        $now = Date::now();
+
+                        // exceptions
+                        foreach ($dayPart->exceptions as $exception) {
+
+                            // check if we are on exception day and if so override the start and endtime accordingly
+                            if ($exception['day'] == Date::now()->format('D')) {
+
+                                $exceptionsStartTime = explode(':', $exception['start']);
+                                $startTime = Date::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+
+                                $exceptionsEndTime = explode(':', $exception['end']);
+                                $endTime = Date::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                            }
+                        }
+
+                        // check if we are inside the operating hours for this display - we use that flag to decide if we need to create a notification and send an email.
+                        if (($now >= $startTime && $now <= $endTime)) {
+                            $operatingHours = true;
+                        } else {
+                            $operatingHours = false;
+                        }
+
+                    } catch (NotFoundException $e) {
+                        $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
+                    }
+                }
+
                 // Should we create a notification
                 if ($emailAlerts && $display->emailAlert == 1 && ($displayOffline || $alwaysAlert)) {
                     // Alerts enabled for this display
                     // Display just gone offline, or always alert
                     // Fields for email
-                    $subject = sprintf(__("Alert for Display %s"), $display->display);
-                    $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId, $this->getDate()->getLocalDate($display->lastAccessed));
 
-                    // Add to system
-                    $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                    // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
+                    if ($operatingHours) {
+                        $subject = sprintf(__("Alert for Display %s"), $display->display);
+                        $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId,
+                            $this->getDate()->getLocalDate($display->lastAccessed));
 
-                    // Add in any displayNotificationGroups, with permissions
-                    foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
-                        $notification->assignUserGroup($group);
+                        // Add to system
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body,
+                            $this->getDate()->parse());
+
+                        // Add in any displayNotificationGroups, with permissions
+                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
+                            $notification->assignUserGroup($group);
+                        }
+
+                        $notification->save();
+                    } else {
+                        $this->getLog()->info('Not sending email down alert for Display - ' . $display->display . ' we are outside of its operating hours');
                     }
 
-                    $notification->save();
                 } else if ($displayOffline) {
                     $this->getLog()->info('Not sending an email for offline display - emailAlert = ' . $display->emailAlert . ', alwaysAlert = ' . $alwaysAlert);
                 }

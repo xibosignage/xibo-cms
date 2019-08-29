@@ -156,8 +156,8 @@ class DayPartFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $body .= ' AND `daypart`.name = :name ';
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+            $this->nameFilter('daypart', 'name', $terms, $body, $params);
         }
 
         // Sorting?
