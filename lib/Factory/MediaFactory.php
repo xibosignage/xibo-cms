@@ -634,7 +634,7 @@ class MediaFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('imageProcessing', $filterBy) !== null) {
-            $body .= 'AND ( media.type = \'image\' OR media.type = \'module\' ) ';
+            $body .= 'AND ( media.type = \'image\' OR media.type = \'module\' AND media.moduleSystemFile = 0 ) ';
         }
 
         if ($this->getSanitizer()->getString('storedAs', $filterBy) != '') {

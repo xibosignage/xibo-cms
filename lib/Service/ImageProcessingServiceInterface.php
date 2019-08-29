@@ -22,7 +22,6 @@
 
 namespace Xibo\Service;
 
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -39,9 +38,8 @@ interface ImageProcessingServiceInterface
     /**
      * Set Image Processing Dependencies
      * @param LogServiceInterface $logger
-     * @param DateServiceInterface $date
      */
-    public function setDependencies($logger, $date);
+    public function setDependencies($logger);
 
     /**
      * Resize Image

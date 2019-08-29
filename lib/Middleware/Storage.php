@@ -25,7 +25,6 @@ namespace Xibo\Middleware;
 
 use Slim\Helper\Set;
 use Slim\Middleware;
-use Xibo\Service\ImageProcessingService;
 use Xibo\Service\LogService;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\MySqlTimeSeriesStore;

@@ -177,8 +177,7 @@ class State extends Middleware
         $app->container->singleton('imageProcessingService', function($container) {
             $imageProcessingService = new ImageProcessingService();
             $imageProcessingService->setDependencies(
-                $container->logService,
-                $container->dateService
+                $container->logService
             );
             return $imageProcessingService;
         });

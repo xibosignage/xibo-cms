@@ -859,27 +859,27 @@ class Media implements \JsonSerializable
         $this->valid = 1;
 
         $filePath = $libraryFolder . $this->storedAs;
-        list($img_width, $img_height) = @getimagesize($filePath);
+        list($imgWidth, $imgHeight) = @getimagesize($filePath);
 
-        $resize_threshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
-        $resize_limit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
+        $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+        $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
 
         // Media released set to 0 for large size images
         // if image size is greater than 8000 X 8000 then we flag that image as too big
-        if ($img_width > $resize_limit || $img_height > $resize_limit) {
+        if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
             $this->released = 2;
-        } elseif ($img_width > $img_height) { // 'landscape';
+        } elseif ($imgWidth > $imgHeight) { // 'landscape';
 
-            if ($img_width <= $resize_threshold && $img_height <= 1080 ) {
+            if ($imgWidth <= $resizeThreshold) {
                 $this->released = 1;
-            } elseif ($img_height > 1080 || $img_width > $resize_threshold) {
+            } else {
                 $this->released = 0;
             }
         } else { // 'portrait';
 
-            if ($img_width <= 1080 && $img_height <= $resize_threshold ) {
+            if ($imgHeight <= $resizeThreshold) {
                 $this->released = 1;
-            } elseif ($img_height > $resize_threshold || $img_width > 1080) {
+            } else {
                 $this->released = 0;
             }
         }

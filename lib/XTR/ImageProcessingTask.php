@@ -21,14 +21,9 @@
  */
 
 namespace Xibo\XTR;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ReportScheduleFactory;
-use Xibo\Factory\SavedReportFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ImageProcessingServiceInterface;
-use Xibo\Service\ReportServiceInterface;
 
 /**
  * Class ImageProcessingTask
@@ -75,19 +70,19 @@ class ImageProcessingTask implements TaskInterface
         $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
 
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-        $resize_threshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+        $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
 
         // Get list of Images
         foreach ($images as $media) {
 
             $filePath = $libraryLocation . $media->storedAs;
-            list($img_width, $img_height) = @getimagesize($filePath);
+            list($imgWidth, $imgHeight) = @getimagesize($filePath);
 
             // Orientation of the image
-            if ($img_width > $img_height) { // 'landscape';
-                $this->imageProcessingService->resizeImage($filePath, $resize_threshold, 1080);
+            if ($imgWidth > $imgHeight) { // 'landscape';
+                $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, 1080);
             } else { // 'portrait';
-                $this->imageProcessingService->resizeImage($filePath, 1080, $resize_threshold);
+                $this->imageProcessingService->resizeImage($filePath, 1080, $resizeThreshold);
             }
 
             // Release image and save

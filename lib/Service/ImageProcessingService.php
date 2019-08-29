@@ -36,14 +36,6 @@ class ImageProcessingService implements ImageProcessingServiceInterface
     /** @var LogServiceInterface */
     private $log;
 
-    /** @var DateServiceInterface */
-    private $dateService;
-
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
-
     /**
      * @inheritdoc
      */
@@ -55,10 +47,9 @@ class ImageProcessingService implements ImageProcessingServiceInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date)
+    public function setDependencies($log)
     {
         $this->log = $log;
-        $this->dateService = $date;
         return $this;
     }
 
