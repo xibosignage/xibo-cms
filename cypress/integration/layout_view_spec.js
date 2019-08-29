@@ -11,7 +11,7 @@ describe('Layout View', function() {
         cy.get('a[href="/layout/form/add"]').click();
 
         // Create random name
-        const uuid = Cypress._.random(0, 1e10);
+        let uuid = Cypress._.random(0, 1e10);
 
         // Save id as an alias
         cy.wrap(uuid).as('layout_view_test_layout');
@@ -21,19 +21,19 @@ describe('Layout View', function() {
 
         cy.get('.modal-dialog').contains('Save').click();
 
-        cy.get('#layout-editor');
+        cy.url().should('include', '/layout/designer');
     });
 
     it('searches and delete existing layout', function() {
 
-        cy.server();
-        cy.route('DELETE', '/layout/*').as('deleteLayout');
-
         // Create random name
-        const uuid = Cypress._.random(0, 1e10);
+        let uuid = Cypress._.random(0, 1e10);
 
         // Create a new layout and go to the layout's designer page, then load toolbar prefs
         cy.createLayout(uuid).as('testLayoutId').then((res) => {
+
+            cy.server();
+            cy.route('/layout?draw=2&*').as('layoutGridLoad');
 
             cy.visit('/layout/view');
 
@@ -42,7 +42,6 @@ describe('Layout View', function() {
                 .type(uuid);
 
             // Wait for the layout grid reload
-            cy.route('/layout?draw=2&*').as('layoutGridLoad');
             cy.wait('@layoutGridLoad');
 
             // Click on the first row element to open the designer
@@ -52,9 +51,6 @@ describe('Layout View', function() {
 
             // Delete test layout
             cy.get('.bootbox .save-button').click();
-
-            // Wait for the widget to save
-            cy.wait('@deleteLayout');
 
             // Check if layout is deleted in toast message
             cy.get('.toast').contains('Deleted ' + uuid);
