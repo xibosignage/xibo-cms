@@ -183,13 +183,16 @@ class DisplayProfile implements \JsonSerializable
     {
         $this->load();
 
-        // Get the setting from default
-        $default = $this->getSetting($setting, null, true);
         $found = false;
 
+        // Get the setting from default
         // Which object do we operate on.
         if ($ownConfig) {
             $config = $this->config;
+            $default = $this->getSetting($setting, null, true);
+        } else {
+            // we are editing Display object, as such we want the $default to come from display profile assigned to our display
+            $default = $this->getSetting($setting, null, false);
         }
 
         // Check to see if we have this setting already
@@ -513,6 +516,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'collectInterval', 'default' => 300, 'type' => 'int'],
                 ['name' => 'downloadStartWindow', 'default' => '00:00', 'type' => 'string'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00', 'type' => 'string'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null, 'type' => 'string'],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -570,6 +574,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200)],
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'webViewPluginState', 'default' => 'DEMAND'],
                 ['name' => 'hardwareAccelerateWebViewMode', 'default' => '2'],
                 ['name' => 'timeSyncFromCms', 'default' => 0],
@@ -581,6 +586,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -605,6 +611,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -625,6 +632,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],

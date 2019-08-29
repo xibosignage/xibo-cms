@@ -353,10 +353,45 @@ class DisplayGroupFactory extends BaseFactory
             }
         }
 
+        if ($this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy) !== null) {
+            $members = [];
+            foreach ($this->getStore()->select($select . $body, $params) as $row) {
+                $displayGroupId = $this->getSanitizer()->int($row['displayGroupId']);
+                $parentId = $this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy);
+
+                if ($this->getStore()->exists('SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `childId` = :childId AND `depth` = 1',
+                    [
+                        'parentId' => $parentId,
+                        'childId' => $displayGroupId
+                    ]
+                )) {
+                    $members[] = $displayGroupId;
+                }
+            }
+        }
+
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+
+        if (isset($members) && $members != []) {
+            $sqlOrderMembers = 'ORDER BY FIELD(displaygroup.displayGroupId,' . implode(',', $members) . ')';
+
+            foreach ($sortOrder as $sort) {
+                if ($sort == '`member`') {
+                    $order .= $sqlOrderMembers;
+                    continue;
+                }
+
+                if ($sort == '`member` DESC') {
+                    $order .= $sqlOrderMembers . ' DESC';
+                    continue;
+                }
+            }
+        }
+
+        if (is_array($sortOrder) && ($sortOrder != ['`member`'] && $sortOrder != ['`member` DESC'] )) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

@@ -668,12 +668,12 @@ class Media implements \JsonSerializable
             }
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($this->expires == 0 && count($widget->mediaIds) <= 0) {
+            if ($this->mediaType != 'module' && count($widget->mediaIds) <= 0) {
                 $widget->setChildObjectDepencencies($this->playlistFactory);
                 $widget->delete();
-            }
-            else
+            } else {
                 $widget->save(['saveWidgetOptions' => false]);
+            }
         }
 
         foreach ($this->displayGroups as $displayGroup) {
@@ -755,7 +755,8 @@ class Media implements \JsonSerializable
                 released = :released,
                 apiRef = :apiRef,
                 modifiedDt = :modifiedDt,
-                `enableStat` = :enableStat
+                `enableStat` = :enableStat,
+                expires = :expires
            WHERE mediaId = :mediaId
         ';
 
@@ -771,7 +772,8 @@ class Media implements \JsonSerializable
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId,
             'modifiedDt' => date('Y-m-d H:i:s'),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'expires' => $this->expires
         ];
 
         $this->getStore()->update($sql, $params);
@@ -802,6 +804,18 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId;
         } else {
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
+        }
+
+        if(isset($this->urlDownload) && $this->urlDownload === true) {
+
+            // for upload via URL, handle cases where URL do not have specified extension in url
+            // we either have a long string after lastPeriod or nothing
+
+            if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
+                $saveName = $this->mediaId . '.' . $this->extension;
+            }
+
+            $this->storedAs = $saveName;
         }
 
         $this->getLog()->debug('saveFile for "' . $this->name . '" [' . $this->mediaId . '] with storedAs = "'

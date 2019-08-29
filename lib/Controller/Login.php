@@ -112,6 +112,12 @@ class Login extends Base
                 try {
                     $user = $this->userFactory->getById($validated['userId']);
 
+                    // Dooh user
+                    if ($user->userTypeId === 4) {
+                        $this->getLog()->error('Cannot log in as this User type');
+                        $this->getApp()->flashNow('login_message', __('Invalid User Type'));
+                    }
+
                     // Log in this user
                     $user->touch(true);
 
@@ -189,6 +195,11 @@ class Login extends Base
                 /* @var User $user */
                 $user = $this->userFactory->getByName($username);
 
+                // Dooh user
+                if ($user->userTypeId === 4) {
+                    throw new AccessDeniedException('Invalid User Type');
+                }
+
                 // Check password
                 $user->checkPassword($password);
 
@@ -228,7 +239,11 @@ class Login extends Base
         }
         catch (\Xibo\Exception\AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
-            $this->getApp()->flash('login_message', __('Username or Password incorrect'));
+            if ($user->userTypeId != 4) {
+                $this->getApp()->flash('login_message', __('Username or Password incorrect'));
+            } else {
+                $this->getApp()->flash('login_message', __($e->getMessage()));
+            }
             $this->getApp()->flash('priorRoute', $priorRoute);
         }
         catch (\Xibo\Exception\FormExpiredException $e) {

@@ -199,8 +199,23 @@ class MediaFactory extends BaseFactory
      */
     public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
-        $media = $this->createModuleFile($name, $uri);
-        $media->isRemote = true;
+        // Determine the save name
+        if (!isset($requestOptions['fileType'])) {
+            $media = $this->createModuleFile($name, $uri);
+            $media->isRemote = true;
+        } else {
+            $media = $this->createEmpty();
+            $media->name = $name;
+            $media->fileName = $uri;
+            $media->ownerId = $this->getUserFactory()->getUser()->userId;
+            $media->mediaType = $requestOptions['fileType'];
+            $media->duration = $requestOptions['duration'];
+            $media->moduleSystemFile = 0;
+            $media->isRemote = false;
+            $media->urlDownload = true;
+            $media->extension = $requestOptions['extension'];
+            $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+        }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
 
@@ -599,7 +614,7 @@ class MediaFactory extends BaseFactory
                     $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
                     $heading = $this->getSanitizer()->getString('heading', $dataSet);
 
-                    $body .= ' SELECT ' . $heading . ' AS mediaId FROM `dataset_' . $dataSetId . '`';
+                    $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
                 }
 
                 $body .= ') ';
@@ -669,7 +684,7 @@ class MediaFactory extends BaseFactory
             $body .= ' 
                 AND media.expires < :expires 
                 AND IFNULL(media.expires, 0) <> 0 
-                AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
+                AND ( media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`) OR media.type <> \'module\')
             ';
             $params['expires'] = $this->getSanitizer()->getInt('expires', $filterBy);
         }
@@ -745,6 +760,14 @@ class MediaFactory extends BaseFactory
             $params['duration'] = $duration['variable'];
         }
 
+        $user = $this->getUser();
+
+        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
+            $body .= ' AND user.userTypeId = 4 ';
+        } else {
+            $body .= ' AND user.userTypeId <> 4 ';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -761,7 +784,7 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited'
+                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires'
                 ]
             ]);
         }

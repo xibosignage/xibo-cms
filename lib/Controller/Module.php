@@ -185,7 +185,13 @@ class Module extends Base
      */
     public function grid()
     {
-        $modules = $this->moduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $filter = [
+            'name' => $this->getSanitizer()->getString('name'),
+            'extension' => $this->getSanitizer()->getString('extension'),
+            'moduleId' => $this->getSanitizer()->getInt('moduleId')
+        ];
+
+        $modules = $this->moduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
@@ -1027,6 +1033,7 @@ class Module extends Base
         ];
 
         $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter)));
+        $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
     }
 
     /**

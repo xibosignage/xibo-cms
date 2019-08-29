@@ -91,6 +91,21 @@
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
                     {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
 
+                    {% set title = "Day Part"|trans %}
+                    {% set helpText = "Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours"|trans %}
+                    {% set attributes = [
+                        { name: "data-width", value: "300px" },
+                        { name: "data-allow-clear", value: "true" },
+                        { name: "data-placeholder--id", value: null },
+                        { name: "data-placeholder--value", value: "" },
+                        { name: "data-search-url", value: urlFor("daypart.search") },
+                        { name: "data-search-term", value: "name" },
+                        { name: "data-id-property", value: "dayPartId" },
+                        { name: "data-text-property", value: "name" },
+                        { name: "data-filter-options", value: '{"isAlways":"0", "isCustom":"0"}' }
+                    ] %}
+                    {{ forms.dropdown("dayPartId", "single", title, displayProfile.getSetting("dayPartId"), [{dayPartId:null, name:""}]|merge(dayParts), "dayPartId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+
                 </div>
 
                 <div class="tab-pane" id="location">
@@ -136,7 +151,7 @@
 
                     {% if theme.getSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1 %}
                         {% set title = "Notify current layout"|trans %}
-                        {% set helpText = "When enabled the client will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
+                        {% set helpText = "When enabled the Player will send the current layout to the CMS each time it changes. Warning: This is bandwidth intensive and should be disabled unless on a LAN."|trans %}
                         {{ forms.checkbox("sendCurrentLayoutAsStatusUpdate", title, displayProfile.getSetting("sendCurrentLayoutAsStatusUpdate"), helpText) }}
                     {% endif %}
 
@@ -145,11 +160,11 @@
                     {{ forms.checkbox("expireModifiedLayouts", title, displayProfile.getSetting("expireModifiedLayouts"), helpText) }}
 
                     {% set title = "Maximum concurrent downloads"|trans %}
-                    {% set helpText = "The maximum number of concurrent downloads the client will attempt."|trans %}
+                    {% set helpText = "The maximum number of concurrent downloads the Player will attempt."|trans %}
                     {{ forms.number("maxConcurrentDownloads", title, displayProfile.getSetting("maxConcurrentDownloads"), helpText) }}
 
                     {% set title = "Shell Command Allow List"|trans %}
-                    {% set helpText = "Which shell commands should the client execute?"|trans %}
+                    {% set helpText = "Which shell commands should the Player execute?"|trans %}
                     {{ forms.input("shellCommandAllowList", title, displayProfile.getSetting("shellCommandAllowList"), helpText) }}
 
                     {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}

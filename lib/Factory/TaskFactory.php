@@ -99,32 +99,40 @@ class TaskFactory extends BaseFactory
 
         $entries = array();
         $params = array();
-        $sql = '
+        $select = '
           SELECT `taskId`, `name`, `status`, `pid`, `configFile`, `class`, `options`, `schedule`, 
               `lastRunDt`, `lastRunStatus`, `lastRunMessage`, `lastRunDuration`, `lastRunExitCode`,
               `isActive`, `runNow`, `lastRunStartDt`
-            FROM `task` 
-           WHERE 1 = 1 
         ';
+
+        $body = ' FROM `task` 
+           WHERE 1 = 1 ';
 
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
-            $sql .= ' AND `name` = :name ';
+            $body .= ' AND `name` = :name ';
         }
 
         if ($this->getSanitizer()->getString('class', $filterBy) != null) {
             $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
-            $sql .= ' AND `class` = :class ';
+            $body .= ' AND `class` = :class ';
         }
 
         if ($this->getSanitizer()->getInt('taskId', $filterBy) !== null) {
             $params['taskId'] = $this->getSanitizer()->getString('taskId', $filterBy);
-            $sql .= ' AND `taskId` = :taskId ';
+            $body .= ' AND `taskId` = :taskId ';
         }
 
         // Sorting?
-        $sql .= 'ORDER BY ' . implode(',', $sortOrder);
+        $body .= 'ORDER BY ' . implode(',', $sortOrder);
 
+        // Paging
+        $limit = '';
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $task = $this->create()->hydrate($row, [
@@ -139,6 +147,12 @@ class TaskFactory extends BaseFactory
                 $task->options = [];
 
             $entries[] = $task;
+        }
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
         }
 
         return $entries;

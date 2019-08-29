@@ -3,11 +3,19 @@
 /bin/mkdir -p /var/www/backup/db
 age=86401
 
+MYSQL_BACKUP_ENABLED=
 MYSQL_USER= 
 MYSQL_PASSWORD= 
 MYSQL_HOST= 
-MYSQL_PORT= 
+MYSQL_PORT=
 MYSQL_DATABASE= 
+
+# Is this enabled?
+if [ "$MYSQL_BACKUP_ENABLED" == "false" ]
+then
+  echo "Backup not enabled"
+  exit 0
+fi
 
 # See if there is an existing backup, and if so, get its age
 if [ -e /var/www/backup/db/latest.sql.gz ]

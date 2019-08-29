@@ -574,7 +574,7 @@ function media(parent, id, xml, options, preload) {
     if (self.render == "html" || self.mediaType == "ticker") {
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
-        if (self.options['durationisperitem'] == '1') {
+        if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
             jQuery.ajax({
                 url: tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight,

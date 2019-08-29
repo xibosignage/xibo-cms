@@ -133,7 +133,7 @@
 
 
                         {% set title %}{% trans "Use the Global Timeout?" %}{% endset %}
-                        {% set helpText %}{% trans "Should this display be tested against the global time out or the client collection interval?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this display be tested against the global time out or the Player collection interval?" %}{% endset %}
                         {{ forms.checkbox("alertTimeout", title, display.alertTimeout, helpText) }}
                     </div>
                     <div class="tab-pane" id="wol">
@@ -189,7 +189,7 @@
                         {{ forms.dropdown("incSchedule", "single", title, display.incSchedule, options, "id", "value", helpText) }}
 
                         {% set title %}{% trans "Auditing until" %}{% endset %}
-                        {% set helpText %}{% trans "Collect auditing from this client. Should only be used if there is a problem with the display." %}{% endset %}
+                        {% set helpText %}{% trans "Collect auditing from this Player. Should only be used if there is a problem with the display." %}{% endset %}
                         {% if display.isAuditing() %}
                             {% set auditing = display.auditingUntilIso %}
                         {% else %}

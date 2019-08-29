@@ -736,6 +736,21 @@ class Soap
             return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
         }
 
+        if ($this->display->isAuditing()) {
+            $this->getLog()->debug($requiredFilesXml->saveXML());
+        }
+
+        // Return the results of requiredFiles()
+        $requiredFilesXml->formatOutput = true;
+        $output = $requiredFilesXml->saveXML();
+
+        // Cache
+        $cache->set($output);
+
+        // RF cache expires every 4 hours
+        $cache->expiresAfter(3600*4);
+        $this->getPool()->saveDeferred($cache);
+
         // Remove any required files that remain in the array of rfIds
         $rfIds = array_values(array_diff($rfIds, $newRfIds));
         if (count($rfIds) > 0) {
@@ -755,20 +770,6 @@ class Soap
 
         // Phone Home?
         $this->phoneHome();
-
-        if ($this->display->isAuditing())
-            $this->getLog()->debug($requiredFilesXml->saveXML());
-
-        // Return the results of requiredFiles()
-        $requiredFilesXml->formatOutput = true;
-        $output = $requiredFilesXml->saveXML();
-
-        // Cache
-        $cache->set($output);
-
-        // RF cache expires every 4 hours
-        $cache->expiresAfter(3600*4);
-        $this->getPool()->saveDeferred($cache);
 
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
@@ -1824,6 +1825,7 @@ class Soap
     /**
      * Alert Display Up
      * @throws \phpmailerException
+     * @throws NotFoundException
      */
     protected function alertDisplayUp()
     {
@@ -1836,29 +1838,78 @@ class Soap
             // Log display up
             $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
 
+            $dayPartId = $this->display->getSetting('dayPartId', null,['displayOverride' => true]);
+
+            $operatingHours = true;
+
+            if ($dayPartId !== null) {
+                try {
+                    $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+                    $startTimeArray = explode(':', $dayPart->startTime);
+                    $startTime = Date::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+
+                    $endTimeArray = explode(':', $dayPart->endTime);
+                    $endTime = Date::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+
+                    $now = Date::now();
+
+                    // exceptions
+                    foreach ($dayPart->exceptions as $exception) {
+
+                        // check if we are on exception day and if so override the startTime and endTime accordingly
+                        if ($exception['day'] == Date::now()->format('D')) {
+                            $exceptionsStartTime = explode(':', $exception['start']);
+                            $startTime = Date::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+
+                            $exceptionsEndTime = explode(':', $exception['end']);
+                            $endTime = Date::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                        }
+                    }
+
+                    // check if we are inside the operating hours for this display - we use that flag to decide if we need to create a notification and send an email.
+                    if (($now >= $startTime && $now <= $endTime)) {
+                        $operatingHours = true;
+                    } else {
+                        $operatingHours = false;
+                    }
+
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $this->display->displayId);
+                }
+            }
+
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
                 && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
 
-                $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
-                $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId, $this->getDate()->parse());
+                // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
+                if ($operatingHours) {
+                    $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
+                    $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId,
+                        $this->getDate()->parse());
 
-                // Create a notification assigned to system wide user groups
-                try {
-                    $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                    // Create a notification assigned to system wide user groups
+                    try {
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body,
+                            $this->getDate()->parse());
 
-                    // Add in any displayNotificationGroups, with permissions
-                    foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
-                        $notification->assignUserGroup($group);
+                        // Add in any displayNotificationGroups, with permissions
+                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
+                            $notification->assignUserGroup($group);
+                        }
+
+                        $notification->save();
+
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s',
+                            $this->display->display, $subject, $body);
                     }
-
-                    $notification->save();
-
-                } catch (\Exception $e) {
-                    $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
+                } else {
+                    $this->getLog()->info('Not sending recovery email for Display - ' . $this->display->display . ' we are outside of its operating hours');
                 }
             } else {
-                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS'));
+                $this->getLog()->debug(sprintf('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS')));
             }
         }
     }

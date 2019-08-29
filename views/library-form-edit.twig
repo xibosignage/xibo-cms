@@ -49,6 +49,10 @@
                         <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
                     </div>
 
+                    {% set title %}{% trans "Expiry date" %}{% endset %}
+                    {% set helpText %}{% trans "Select the date and time after which this media should be removed from the CMS - it will be removed from any existing widgets as well" %}{% endset %}
+                    {{ forms.dateTime("expires", title, expiryDate, helpText) }}
+
                     {% set title %}{% trans "Retire this media?" %}{% endset %}
                     {% set helpText %}{% trans "Retired media remains on existing Layouts but is not available to assign to new Layouts." %}{% endset %}
                     {{ forms.checkbox("retired", title, media.retired, helpText) }}

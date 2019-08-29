@@ -40,6 +40,7 @@ $app->get('/', function () use ($app) {
 // Dashboards
 $app->get('/statusdashboard', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
 $app->get('/statusdashboard/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
+$app->get('/statusdashboard/displayGroups', '\Xibo\Controller\StatusDashboard:displayGroups')->name('statusdashboard.displayGroups');
 $app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
 $app->get('/mediamanager', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 $app->get('/mediamanager/data', '\Xibo\Controller\MediaManager:grid')->name('mediamanager.search');
@@ -147,6 +148,7 @@ $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('librar
 $app->get('/library/form/edit/:id', '\Xibo\Controller\Library:editForm')->name('library.edit.form');
 $app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->name('library.delete.form');
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
+$app->get('/library/form/uploadUrl', '\Xibo\Controller\Library:uploadFromUrlForm')->name('library.uploadUrl.form');
 $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 $app->get('/library/fontlist', '\Xibo\Controller\Library:fontList')->name('library.font.list');
@@ -291,6 +293,7 @@ $app->get('/maintenance/form/tidy', '\Xibo\Controller\Maintenance:tidyLibraryFor
 $app->get('/application/view', '\Xibo\Controller\Applications:displayPage')->name('application.view');
 $app->get('/application/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('application.view.activity');
 $app->get('/application/form/add', '\Xibo\Controller\Applications:addForm')->name('application.add.form');
+$app->get('/application/form/addDooh', '\Xibo\Controller\Applications:addDoohForm')->name('application.addDooh.form');
 $app->get('/application/form/edit/:id', '\Xibo\Controller\Applications:editForm')->name('application.edit.form');
 $app->get('/application/form/delete/:id', '\Xibo\Controller\Applications:deleteForm')->name('application.delete.form');
 $app->get('/application/authorize', '\Xibo\Controller\Applications:authorizeRequest')->name('application.authorize.request');

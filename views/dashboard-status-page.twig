@@ -155,10 +155,141 @@
             </div>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-desktop"></i>
+                    {% trans "Display Status" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <canvas id="displayStatusChart" style="clear:both;" height="230"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-cloud-download"></i>
+                    {% trans "Display Content Status" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <canvas id="displayContentChart" style="clear:both;" width="350" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row hidden" id="displayGroupStatusChartRow">
+
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-desktop"></i>
+                    {% trans "Display Groups Status" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <canvas id="displayGroupStatusChart" style="clear:both;" height="230"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="widget">
+                <div class="widget-title">
+                    <i class="fa fa-desktop"></i>
+                    {% trans "Display Groups Content Status" %}
+                    <div class="clearfix"></div>
+                </div>
+                <div class="widget-body medium no-padding">
+                    <canvas id="displayGroupContentStatusChart" style="clear:both;" width="350" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="widget hidden" id="displaysGridTable">
+        <div class="widget-title">{% trans "Displays" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGridView">
+                <div class="XiboFilter well hidden">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="filter-general">
+
+                                    {% set title %}{% trans "Display Group" %}{% endset %}
+                                    {{ inline.hidden("displayGroupId", title) }}
+
+                                    {% set title %}{% trans "Content Status" %}{% endset %}
+                                    {{ inline.hidden("mediaInventoryStatus", title) }}
+
+                                    {% set title %}{% trans "Online Status" %}{% endset %}
+                                    {{ inline.hidden("loggedIn", title) }}
+
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="displaysGrid" class="table table-striped" style="width: 100%;">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Display" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th>{% trans "Authorised?" %}</th>
+                            <th>{% trans "Current Layout" %}</th>
+                            <th>{% trans "Storage Available" %}</th>
+                            <th>{% trans "Storage Total" %}</th>
+                            <th>{% trans "Storage Free %" %}</th>
+                            <th>{% trans "Description" %}</th>
+                            <th>{% trans "Tags" %}</th>
+                            <th>{% trans "Default Layout" %}</th>
+                            <th>{% trans "Interleave Default" %}</th>
+                            <th>{% trans "Email Alert" %}</th>
+                            <th>{% trans "Logged In" %}</th>
+                            <th>{% trans "Last Accessed" %}</th>
+                            <th>{% trans "Display Profile" %}</th>
+                            <th>{% trans "Version" %}</th>
+                            <th>{% trans "Device Name" %}</th>
+                            <th>{% trans "IP Address" %}</th>
+                            <th>{% trans "Mac Address" %}</th>
+                            <th>{% trans "Timezone" %}</th>
+                            <th>{% trans "Screen shot?" %}</th>
+                            <th>{% trans "Thumbnail" %}</th>
+                            <th>{% trans "Last Command" %}</th>
+                            <th>{% trans "XMR Registered" %}</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        let displayGroupStatusChart = null;
+        let displayGroupContentStatusChart = null;
+
+        let displayGroupId = null;
+        let loggedInStatus = null;
+        let mediaInventoryStatus = null;
+
+        let displayGroupIdsContent = [];
+        let displayGroupIdsStatus = [];
 
         // Create our chart
         var bandwidthChart = new Chart($("#bandwidthChart"), {
@@ -297,5 +428,433 @@
             $(".displays-count").html(total);
             $displaysComment.html((total > 0) ? $displaysComment.data().titlePlural : $displaysComment.data().title)
         });
+
+        var displayData = {{ displayStatus|raw }};
+
+        var displayStatusChart = new Chart($("#displayStatusChart"), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: displayData,
+                    backgroundColor: ["rgb(0,255,0)", "rgb(255,0,0)"]
+                }],
+                labels: ["Online", "Offline"]
+            },
+            options: {
+                maintainAspectRatio: false
+            }
+        });
+
+        var displayMediaStatusData = {{ displayMediaStatus|raw }};
+
+        var displayContentChart = new Chart($("#displayContentChart"), {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: displayMediaStatusData,
+                    backgroundColor: ["rgb(0,255,0)", "rgb(255,0,0)"]
+                }],
+                labels: ["Up to Date", "Not up to date"]
+            },
+            options: {
+                maintainAspectRatio: false
+            }
+        });
+
+        $("#displayStatusChart").click(function(evt){
+                var activePoints = displayStatusChart.getElementsAtEvent(evt);
+
+                if (activePoints[0]) {
+                    var chartData = activePoints[0]['_chart'].config.data;
+                    var index = activePoints[0]['_index'];
+
+                    var label = chartData.labels[index];
+
+                    if (label == "Online") {
+                        loggedInStatus = 1;
+                    } else {
+                        loggedInStatus = 0;
+                    }
+
+                    if (displayGroupStatusChart !== undefined && displayGroupStatusChart !== null) {
+                        displayGroupStatusChart.destroy();
+                    }
+
+                    $.ajax({
+                        type: "get",
+                        url: "{{ urlFor("statusdashboard.displayGroups") }}",
+                        data: {
+                            status: label
+                        },
+                        success: function (result) {
+                            if (result.success === true) {
+
+                                var displayGroupNames = JSON.parse(result.data.displayGroupNames);
+                                var displaysAssigned = JSON.parse(result.data.displayGroupMembers);
+                                displayGroupIdsStatus = JSON.parse(result.data.displayGroupIds);
+
+                                var coloursDG = [];
+
+                                for(var i = 0; i < displayGroupNames.length; i++) {
+                                    coloursDG.push($c.rand());
+                                }
+
+                                displayGroupStatusChart = new Chart($("#displayGroupStatusChart"), {
+                                    type: 'doughnut',
+                                    data: {
+                                        datasets: [{
+                                            data: displaysAssigned,
+                                            backgroundColor: coloursDG
+                                        }],
+                                        labels: displayGroupNames
+                                    },
+                                    options: {
+                                        maintainAspectRatio: false,
+                                        title: {
+                                            display: true,
+                                            text: label
+                                        }
+                                    }
+                                });
+
+                                $("#displayGroupStatusChartRow").removeClass('hidden');
+                            }
+                        }
+                    });
+                }
+            }
+        );
+
+        $("#displayContentChart").click(function(evt){
+                var activePoints = displayContentChart.getElementsAtEvent(evt);
+
+                if (activePoints[0]) {
+                    var chartData = activePoints[0]['_chart'].config.data;
+                    var index = activePoints[0]['_index'];
+
+                    var label = chartData.labels[index];
+
+                    if (label == "Up to Date") {
+                        mediaInventoryStatus = 1;
+                    } else {
+                        mediaInventoryStatus = -1;
+                    }
+
+                    if (displayGroupContentStatusChart !== undefined && displayGroupContentStatusChart !== null) {
+                        displayGroupContentStatusChart.destroy();
+                    }
+
+                    $.ajax({
+                        type: "get",
+                        url: "{{ urlFor("statusdashboard.displayGroups") }}",
+                        data: {
+                            inventoryStatus: label
+                        },
+                        success: function (result) {
+                            if (result.success === true) {
+
+                                var displayGroupNames = JSON.parse(result.data.displayGroupNames);
+                                var displaysAssigned = JSON.parse(result.data.displayGroupMembers);
+                                displayGroupIdsContent = JSON.parse(result.data.displayGroupIds);
+
+                                var coloursDG = [];
+
+                                for(var i = 0; i < displayGroupNames.length; i++) {
+                                    coloursDG.push($c.rand());
+                                }
+
+                                displayGroupContentStatusChart = new Chart($("#displayGroupContentStatusChart"), {
+                                    type: 'doughnut',
+                                    data: {
+                                        datasets: [{
+                                            data: displaysAssigned,
+                                            backgroundColor: coloursDG
+                                        }],
+                                        labels: displayGroupNames
+                                    },
+                                    options: {
+                                        maintainAspectRatio: false,
+                                        title: {
+                                            display: true,
+                                            text: label
+                                        }
+                                    }
+                                });
+
+                                $("#displayGroupStatusChartRow").removeClass('hidden');
+                            }
+                        }
+                    });
+                }
+            }
+        );
+
+        $("#displayGroupStatusChart").click(function(evt) {
+                var activePoints = displayGroupStatusChart.getElementsAtEvent(evt);
+
+                $('#displayGroupId').val("");
+                $('#mediaInventoryStatus').val("");
+                $('#loggedIn').val("");
+                if (activePoints[0]) {
+                    var chartData = activePoints[0]['_chart'].config.data;
+                    var index = activePoints[0]['_index'];
+
+                    displayGroupId = displayGroupIdsStatus[index];
+
+                    $('#displayGroupId').val(displayGroupId);
+                    $('#loggedIn').val(loggedInStatus);
+                    table2.ajax.reload();
+
+                    $("#displaysGridTable").removeClass('hidden');
+                }
+            }
+        );
+
+        $("#displayGroupContentStatusChart").click(function(evt){
+                var activePoints = displayGroupContentStatusChart.getElementsAtEvent(evt);
+
+                if (activePoints[0]) {
+                    $('#displayGroupId').val("");
+                    $('#mediaInventoryStatus').val("");
+                    $('#loggedIn').val("");
+
+                    var chartData = activePoints[0]['_chart'].config.data;
+                    var index = activePoints[0]['_index'];
+
+                    displayGroupId = displayGroupIdsContent[index];
+
+                    $('#displayGroupId').val(displayGroupId);
+                    $('#mediaInventoryStatus').val(mediaInventoryStatus);
+                    table2.ajax.reload();
+
+                    $("#displaysGridTable").removeClass('hidden');
+                }
+            }
+        );
+
+        let table2 = $("#displaysGrid").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true, stateDuration: 0,
+            stateLoadCallback: function (settings, callback) {
+                var data = {};
+                $.ajax({
+                    type: "GET",
+                    async: false,
+                    url: "{{ urlFor("user.pref") }}?preference=displaysGrid",
+                    dataType: 'json',
+                    success: function (json) {
+                        try {
+                            if (json.success) {
+                                data = JSON.parse(json.data.value);
+                            }
+                        } catch (e) {
+                            // Do nothing
+                        }
+                    }
+                });
+                return data;
+            },
+            stateSaveCallback: function (settings, data) {
+                $.ajax({
+                    type: "POST",
+                    url: "{{ urlFor("user.pref") }}",
+                    data: {
+                        preference: [{
+                            option: "displaysGrid",
+                            value: JSON.stringify(data)
+                        }]
+                    }
+                });
+            },
+            filter: false,
+            searchDelay: 3000,
+            order: [[1, "asc"]],
+            ajax: {
+                "url": "{{ urlFor("display.search") }}",
+                "data": function (dataToSend) {
+                    //make a new object so as not to destroy the input.
+                    var data = {};
+                    data.draw = dataToSend.draw;
+                    data.length = dataToSend.length;
+                    data.start = dataToSend.start;
+                    data.order = dataToSend.order;
+                    data.columns = [];
+
+                    $.each(dataToSend.columns, function (index, e) {
+                        var col = {};
+                        col.data = e.data;
+                        if (e.name != null && e.name != "")
+                            col.name = e.name;
+                        data.columns.push(col);
+                    });
+
+                    $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+
+                    return data;
+                }
+            },
+            createdRow: function (row, data, index) {
+                if (data.mediaInventoryStatus === 1) {
+                    $(row).addClass('success');
+                } else if (data.mediaInventoryStatus === 1) {
+                    $(row).addClass('danger');
+                } else {
+                    $(row).addClass('warning');
+                }
+            },
+            "columns": [
+                {"data": "displayId"},
+                {
+                    "name": "display",
+                    "data": function (data, type) {
+                        if (type != "display")
+                            return data.display;
+
+                        if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
+                            var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
+                            return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
+                        }
+                        else {
+                            return data.display;
+                        }
+                    }
+                },
+                {
+                    "data": "mediaInventoryStatus",
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-check";
+                        else if (data == 2)
+                            icon = "fa-times";
+                        else
+                            icon = "fa-cloud-download";
+
+                        return "<span class='fa " + icon + "' title='" + (row.statusDescription) + "'></span>";
+                    }
+                },
+                {"data": "licensed", "render": dataTableTickCrossColumn},
+                {"data": "currentLayout", "visible": false, "sortable": false},
+                {
+                    "data": "storageAvailableSpace",
+                    "visible": false,
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        return row.storageAvailableSpaceFormatted;
+                    }
+                },
+                {
+                    "data": "storageTotalSpace",
+                    "visible": false,
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        return row.storageTotalSpaceFormatted;
+                    }
+                },
+                {"data": "storagePercentage", "visible": false, "sortable": false},
+                {"data": "description", "visible": false},
+                {
+                    "name": "tags",
+                    "sortable": false,
+                    "visible": false,
+                    "data": dataTableCreateTags
+                },
+                {"data": "defaultLayout", "visible": false},
+                {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
+                {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
+                {"data": "loggedIn", "render": dataTableTickCrossColumn},
+                {"data": "lastAccessed", "render": dataTableDateFromUnix},
+                {
+                    "name": "displayProfileId",
+                    "data": function (data, type) {
+                        return data.displayProfile;
+                    },
+                    "visible": false
+                },
+                {
+                    "name": "clientSort",
+                    "data": function (data) {
+                        return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                    },
+                    "visible": false
+                },
+                {"data": "deviceName", "visible": false},
+                {"data": "clientAddress", "visible": false},
+                {"data": "macAddress"},
+                {"data": "timeZone", "visible": false},
+                {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
+                {
+                    "name": "thumbnail",
+                    "orderable": false,
+                    "data": function (data, type) {
+                        if (type != "display")
+                            return data.thumbnail;
+
+                        if (data.thumbnail != "") {
+                            return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                        }
+                        else {
+                            return "";
+                        }
+                    },
+                    "visible": false
+                },
+                {
+                    "data": "lastCommandSuccess",
+                    "render": function (data, type, row) {
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data == 1)
+                            icon = "fa-check";
+                        else if (data == 0)
+                            icon = "fa-times";
+                        else
+                            icon = "fa-question";
+
+                        return "<span class='fa " + icon + "'></span>";
+                    },
+                    "visible": false
+                },
+                {
+                    "data": "xmrChannel",
+                    "render": function (data, type, row) {
+                        if (type === "export") {
+                            return (data !== null && data !== "") ? 1 : 0;
+                        }
+
+                        if (type != "display")
+                            return data;
+
+                        var icon = "";
+                        if (data != null && data != "")
+                            icon = "fa-check";
+                        else
+                            icon = "fa-times";
+
+                        return "<span class='fa " + icon + "'></span>";
+                    },
+                    "visible": false
+                },
+                {
+                    "orderable": false,
+                    "data": dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table2.on('draw', dataTableDraw);
+        table2.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+        table2.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.col-sm-6').eq(1));
     </script>
 {% endblock %}

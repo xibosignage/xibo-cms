@@ -91,7 +91,7 @@ class Soap5 extends Soap4
                 // It is not licensed
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
-                $displayElement->setAttribute('message', 'Display is awaiting licensing approval from an Administrator.');
+                $displayElement->setAttribute('message', 'Display is Registered and awaiting Authorisation from an Administrator in the CMS');
 
             } else {
                 // It is licensed
@@ -280,7 +280,7 @@ class Soap5 extends Soap4
             $displayElement->setAttribute('status', 1);
             $displayElement->setAttribute('code', 'ADDED');
             if ($display->licensed == 0)
-                $displayElement->setAttribute('message', 'Display added and is awaiting licensing approval from an Administrator.');
+                $displayElement->setAttribute('message', 'Display is now Registered and awaiting Authorisation from an Administrator in the CMS');
             else
                 $displayElement->setAttribute('message', 'Display is active and ready to start.');
         }

@@ -359,16 +359,18 @@ class LayoutFactory extends BaseFactory
      * Get by CampaignId
      * @param int $campaignId
      * @param bool $permissionsCheck Should we check permissions?
+     * @param bool $includeDrafts Should we include draft Layouts in the results?
      * @return Layout[]
      * @throws NotFoundException
      */
-    public function getByCampaignId($campaignId, $permissionsCheck = true)
+    public function getByCampaignId($campaignId, $permissionsCheck = true, $includeDrafts = false)
     {
         return $this->query(['displayOrder'], [
             'campaignId' => $campaignId,
             'excludeTemplates' => -1,
             'retired' => -1,
-            'disableUserCheck' => $permissionsCheck ? 0 : 1
+            'disableUserCheck' => $permissionsCheck ? 0 : 1,
+            'showDrafts' => $includeDrafts ? 1 : 0
         ]);
     }
 
@@ -1059,7 +1061,7 @@ class LayoutFactory extends BaseFactory
         // We need one final pass through all widgets on the layout so that we can set the durations properly.
         foreach ($layout->getWidgets() as $widget) {
             $module = $this->moduleFactory->createWithWidget($widget);
-            $widget->calculateDuration($module);
+            $widget->calculateDuration($module, true);
 
             // Get global stat setting of widget to set to on/off/inherit
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
@@ -1358,6 +1360,14 @@ class LayoutFactory extends BaseFactory
         // publishedDate
         if ($this->getSanitizer()->getInt('havePublishDate', -1, $filterBy) != -1) {
             $body .= " AND `layout`.publishedDate IS NOT NULL ";
+        }
+
+        $user = $this->getUser();
+
+        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
+            $body .= ' AND user.userTypeId = 4 ';
+        } else {
+            $body .= ' AND user.userTypeId <> 4 ';
         }
 
         // Sorting?

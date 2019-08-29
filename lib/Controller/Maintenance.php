@@ -282,7 +282,7 @@ class Maintenance extends Base
             $type = $this->getSanitizer()->getString('type', $row);
 
             // Ignore any module files or fonts
-            if ($type == 'module' || $type == 'font' || ($type == 'genericfile' && $tidyGenericFiles != 1))
+            if ($type == 'module' || $type == 'font' || $type == 'playersoftware' || ($type == 'genericfile' && $tidyGenericFiles != 1))
                 continue;
 
             // Collect media revisions that aren't used

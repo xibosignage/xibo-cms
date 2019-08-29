@@ -342,6 +342,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="customHeaders",
+     *      in="formData",
+     *      description="Comma separated string of custom HTTP headers",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="refreshRate",
      *      in="formData",
      *      description="How often in seconds should this remote DataSet be refreshed",
@@ -414,6 +421,7 @@ class DataSet extends Base
             $dataSet->authentication = $this->getSanitizer()->getString('authentication');
             $dataSet->username = $this->getSanitizer()->getString('username');
             $dataSet->password = $this->getSanitizer()->getString('password');
+            $dataSet->customHeaders = $this->getSanitizer()->getString('customHeaders');
             $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
             $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
             $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
@@ -555,6 +563,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="customHeaders",
+     *      in="formData",
+     *      description="Comma separated string of custom HTTP headers",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="refreshRate",
      *      in="formData",
      *      description="How often in seconds should this remote DataSet be refreshed",
@@ -624,6 +639,7 @@ class DataSet extends Base
             $dataSet->authentication = $this->getSanitizer()->getString('authentication');
             $dataSet->username = $this->getSanitizer()->getString('username');
             $dataSet->password = $this->getSanitizer()->getString('password');
+            $dataSet->customHeaders = $this->getSanitizer()->getString('customHeaders');
             $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
             $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
             $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');

@@ -11,7 +11,9 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-    <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ urlFor("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</a></li>
+
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
             <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
         {% endif %}
@@ -84,6 +86,7 @@
                                 <th>{% trans "Stats?" %}</th>
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Modified" %}</th>
+                                <th>{% trans "Expires" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -224,6 +227,26 @@
                         "data": "modifiedDt",
                         "render": dataTableDateFromIso,
                         "visible": false
+                    },
+                    {
+                        "name": "expires",
+                        "data": function (data, type) {
+                            if (data.expires != null && data.expires != 0) {
+                                let now = moment();
+                                let expiresIn = moment.unix(data.expires);
+                                let differenceMinutes = expiresIn.diff(now, 'minutes');
+                                let momentDifference = moment(now).to(expiresIn);
+
+                                if (differenceMinutes < -10 ) {
+                                    return data.mediaExpiryFailed;
+                                } else {
+                                    return data.mediaExpiresIn.replace('%s', momentDifference);
+                                }
+                            } else {
+                                return data.mediaNoExpiryDate;
+                            }
+
+                        }
                     },
                     {
                         "orderable": false,

@@ -284,8 +284,9 @@ class User extends Base
             $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
             $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
 
-            if ($this->isApi())
+            if ($this->isApi()) {
                 break;
+            }
 
             $user->includeProperty('buttons');
             $user->homePage = __($user->homePage);
@@ -985,6 +986,14 @@ class User extends Base
         $code = $this->getSanitizer()->getString('code');
         $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
 
+        if ($user->isSuperAdmin()) {
+            $user->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
+        }
+
+        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
         }
@@ -1423,7 +1432,7 @@ class User extends Base
                 }
             };
 
-            foreach ($this->layoutFactory->getByCampaignId($object->campaignId) as $layout) {
+            foreach ($this->layoutFactory->getByCampaignId($object->campaignId, true, true) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
                 $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
