@@ -80,9 +80,9 @@ class ImageProcessingTask implements TaskInterface
 
             // Orientation of the image
             if ($imgWidth > $imgHeight) { // 'landscape';
-                $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, 1080);
+                $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, null);
             } else { // 'portrait';
-                $this->imageProcessingService->resizeImage($filePath, 1080, $resizeThreshold);
+                $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
             }
 
             // Release image and save
