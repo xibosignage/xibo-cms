@@ -951,7 +951,8 @@ class State extends Middleware
                 $container->displayFactory,
                 $container->layoutFactory,
                 $container->mediaFactory,
-                $container->dayPartFactory
+                $container->dayPartFactory,
+                $container->scheduleReminderFactory
             );
         });
 
@@ -1520,7 +1521,20 @@ class State extends Middleware
                 $container->pool,
                 $container->dateService,
                 $container->displayGroupFactory,
-                $container->dayPartFactory
+                $container->dayPartFactory,
+                $container->userFactory,
+                $container->scheduleReminderFactory
+            );
+        });
+
+        $container->singleton('scheduleReminderFactory', function($container) {
+            return new \Xibo\Factory\ScheduleReminderFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService,
+                $container->user,
+                $container->userFactory,
+                $container->configService
             );
         });
 

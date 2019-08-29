@@ -707,6 +707,63 @@
             <% }); %>
             
         </script>
-        
-    {% endraw %}
+
+
+        <script type="text/x-handlebars-template" id="reminderEventTemplate">
+            <div class="form-group">
+                <input class="form-control" name="reminder_scheduleReminderId[]" type="hidden" value="{{ scheduleReminderId }}" />
+
+                <div class="col-sm-2">
+                    <label for="reminder_value[]">
+                        <input class="form-control" name="reminder_value[]" type="number" value="{{ value }}" />
+                    </label>
+                </div>
+                <div class="col-sm-3">
+                    <label for="reminder_type[]">
+                        <select class="form-control" name="reminder_type[]">
+                            <option value="1" {{#eq type 1}}selected{{/eq}}>{% endraw %}{% trans "Minute" %}{% raw %}</option>
+                            <option value="2" {{#eq type 2}}selected{{/eq}}>{% endraw %}{% trans "Hour" %}{% raw %}</option>
+                            <option value="3" {{#eq type 3}}selected{{/eq}}>{% endraw %}{% trans "Day" %}{% raw %}</option>
+                            <option value="4" {{#eq type 4}}selected{{/eq}}>{% endraw %}{% trans "Week" %}{% raw %}</option>
+                            <option value="5" {{#eq type 5}}selected{{/eq}}>{% endraw %}{% trans "Month" %}{% raw %}</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-3">
+                    <label for="reminder_option[]">
+                        <select class="form-control" name="reminder_option[]">
+                            <option value="1" {{#eq option 1}}selected{{/eq}}>{% endraw %}{% trans "Before schedule starts" %}{% raw %}</option>
+                            <option value="2" {{#eq option 2}}selected{{/eq}}>{% endraw %}{% trans "After schedule starts" %}{% raw %}</option>
+                            <option value="3" {{#eq option 3}}selected{{/eq}}>{% endraw %}{% trans "Before schedule ends" %}{% raw %}</option>
+                            <option value="4" {{#eq option 4}}selected{{/eq}}>{% endraw %}{% trans "After schedule ends" %}{% raw %}</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="col-sm-2">
+                    <label for="reminder_isEmail[]">
+                        <input type="checkbox" name="reminder_isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
+                        <input type="hidden" name="reminder_isEmailHidden[]" />
+                    </label>
+                </div>
+                <div class="col-sm-2">
+                    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                </div>
+            </div>
+        </script>
+
+        {% endraw %}
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        // Equals helper for the templates below
+        Handlebars.registerHelper('eq', function(v1, v2, opts) {
+            if (v1 === v2) {
+                return opts.fn(this);
+            } else {
+                return opts.inverse(this);
+            }
+        });
+    </script>
+
 {% endblock %}
