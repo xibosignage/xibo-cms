@@ -932,6 +932,28 @@ class Playlist implements \JsonSerializable
         ]);
     }
 
+    /**
+     * Recursive function, that goes through all widgets on nested Playlists.
+     *
+     * generates nestedPlaylistDefinitions with Playlist ID as the key - later saved as nestedPlaylist.json on export
+     * generates playlistMappings which contains all relations between playlists (parent/child) - later saved as playlistMappings.json on export
+     * Adds dataSets data to $dataSets parameter - later saved as dataSet.json on export
+     *
+     * playlistMappings, nestedPLaylistDefinitions, dataSets and dataSetIds are passed by reference.
+     *
+     *
+     * @param $widgets array An array of widgets assigned to the Playlist
+     * @param $parentId int Playlist Id of the Playlist that is a parent to our current Playlist
+     * @param $playlistMappings array An array of Playlists with ParentId and PlaylistId as keys
+     * @param $count
+     * @param $nestedPlaylistDefinitions array An array of Playlists including widdgets with playlistId as the key
+     * @param $dataSetIds array Array of dataSetIds
+     * @param $dataSets array Array of dataSets with dataSets from widgets on the layout level and nested Playlists
+     * @param $dataSetFactory
+     * @param $includeData bool Flag indicating whether we should include DataSet data in the export
+     * @return mixed
+     * @throws NotFoundException
+     */
     public function generatePlaylistMapping($widgets, $parentId, &$playlistMappings, &$count, &$nestedPlaylistDefinitions, &$dataSetIds, &$dataSets, $dataSetFactory, $includeData)
     {
             foreach ($widgets as $playlistWidget) {

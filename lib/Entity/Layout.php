@@ -1457,8 +1457,8 @@ class Layout implements \JsonSerializable
                     $playlist->expandWidgets(0, false);
                     $playlistDefinitions[$playlist->playlistId] = $playlist;
 
-                    // we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
-                    $playlistMappings = $playlist->generatePlaylistMapping($playlist->widgets, $playlist->playlistId,$playlistMappings, $count, $nestedPlaylistDefinitions, $dataSetIds, $dataSets, $dataSetFactory, $options['includeData']);
+                    // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
+                    $playlist->generatePlaylistMapping($playlist->widgets, $playlist->playlistId,$playlistMappings, $count, $nestedPlaylistDefinitions, $dataSetIds, $dataSets, $dataSetFactory, $options['includeData']);
                 }
             }
         }
