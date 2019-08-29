@@ -975,6 +975,7 @@ class Playlist implements \JsonSerializable
 
                         $count++;
 
+                        // this is a recursive function, we need to go through all levels of nested Playlists.
                         $this->generatePlaylistMapping($nestedPlaylist->widgets, $nestedPlaylist->playlistId, $playlistMappings, $count, $nestedPlaylistDefinitions,$dataSetIds, $dataSets, $dataSetFactory, $includeData);
                     }
                 }
