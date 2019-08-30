@@ -30,7 +30,6 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -396,6 +395,34 @@ class Playlist implements \JsonSerializable
 
         $widget->displayOrder = count($this->widgets) + 1;
         $this->widgets[] = $widget;
+    }
+
+    /**
+     * Delete a Widget
+     * @param Widget $widget
+     * @param array $options Delete Options
+     * @return $this
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
+    public function deleteWidget($widget, $options = [])
+    {
+        $this->load();
+
+        if ($widget->playlistId != $this->playlistId) {
+            throw new InvalidArgumentException(__('Cannot delete a Widget that isn\'t assigned to me'), 'playlistId');
+        }
+
+        // Delete
+        $widget->delete($options);
+
+        // Remove the Deleted Widget from our Widgets
+        $this->widgets = array_udiff($this->widgets, [$widget], function($a, $b) {
+            /* @var \Xibo\Entity\Widget $a */
+            /* @var \Xibo\Entity\Widget $b */
+            return $a->widgetId - $b->widgetId;
+        });
+
+        return $this;
     }
 
     /**
