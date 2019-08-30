@@ -143,11 +143,12 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
+        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
         cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
-            '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+            '#playlist-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
             '#timeline-container [data-type="widget"]:first-child'
         ).then(() => {
 
@@ -174,11 +175,12 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         
         // Open toolbar Tools tab
+        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
         cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
         // Open the expiry form
         cy.dragToElement(
-            '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
+            '#playlist-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
             '#timeline-container [data-type="widget"]:first-child'
         ).then(() => {
 
@@ -240,11 +242,12 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
+        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
         cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
 
 
         // Activate the Add button
-        cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .add-area').invoke('show').click();
+        cy.get('#playlist-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="transitionIn"] .add-area').invoke('show').click();
 
             // Click on the widget to add
         cy.get('#timeline-container [data-type="widget"]:nth-child(2)').click();

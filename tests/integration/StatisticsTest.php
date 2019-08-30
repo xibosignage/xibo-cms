@@ -123,7 +123,7 @@ class StatisticsTest extends LocalWebTestCase
     public function testProof()
     {
         // Checkout layout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         $hardwareId = $this->display->license;
 

@@ -96,7 +96,7 @@
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
                     {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
 
-                    {% set title = "Day Part"|trans %}
+                    {% set title = "Operating Hours"|trans %}
                     {% set helpText = "Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours"|trans %}
                     {% set attributes = [
                         { name: "data-width", value: "300px" },

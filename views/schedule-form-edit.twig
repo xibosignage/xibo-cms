@@ -185,6 +185,8 @@
                     </div>
 
                     <div class="tab-pane" id="reminders">
+                        {% set message %}{% trans "Use the form fields below to create a set of reminders for this event. New fields can be added by clicking on the + icon at the end of the row. Use the tick box to receive a notification by email alternatively reminders will be shown in the message center." %}{% endset %}
+                        {{ forms.message(message) }}
                         <div id="reminderFields" data-reminders="{{ reminders|json_encode }}"></div>
                     </div>
                 </div>

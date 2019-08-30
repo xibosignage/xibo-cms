@@ -33,6 +33,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -314,6 +315,9 @@ class Layout implements \JsonSerializable
      */
     private $moduleFactory;
 
+    /** @var PlaylistFactory */
+    private $playlistFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -329,7 +333,7 @@ class Layout implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
      */
-    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
+    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -343,6 +347,7 @@ class Layout implements \JsonSerializable
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->moduleFactory = $moduleFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     public function __clone()
@@ -1332,7 +1337,8 @@ class Layout implements \JsonSerializable
         $zip->addFromString('layout.json', json_encode([
             'layout' => $this->layout,
             'description' => $this->description,
-            'regions' => $regionMapping
+            'regions' => $regionMapping,
+            'layoutDefinitions' => $this
         ]));
 
         // Add the layout XLF
@@ -1414,6 +1420,11 @@ class Layout implements \JsonSerializable
         $dataSetIds = [];
         $dataSets = [];
 
+        // Playlists
+        $playlistMappings = [];
+        $playlistDefinitions = [];
+        $nestedPlaylistDefinitions = [];
+
         foreach ($this->getWidgets() as $widget) {
             /** @var Widget $widget */
             if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
@@ -1436,11 +1447,41 @@ class Layout implements \JsonSerializable
                     $dataSetIds[] = $dataSet->dataSetId;
                     $dataSets[] = $dataSet;
                 }
+            }   elseif ($widget->type == 'subplaylist') {
+                $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', []), true);
+
+                foreach ($playlistIds as $playlistId) {
+                    $count = 1;
+                    $playlist = $this->playlistFactory->getById($playlistId);
+                    $playlist->load();
+                    $playlist->expandWidgets(0, false);
+                    $playlistDefinitions[$playlist->playlistId] = $playlist;
+
+                    // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
+                    $playlist->generatePlaylistMapping($playlist->widgets, $playlist->playlistId,$playlistMappings, $count, $nestedPlaylistDefinitions, $dataSetIds, $dataSets, $dataSetFactory, $options['includeData']);
+                }
             }
         }
 
         // Add the mappings file to the ZIP
-        $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+        if ($dataSets != []) {
+            $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+        }
+
+        // Add the Playlist definitions to the ZIP
+        if ($playlistDefinitions != []) {
+            $zip->addFromString('playlist.json', json_encode($playlistDefinitions, JSON_PRETTY_PRINT));
+        }
+
+        // Add the nested Playlist definitions to the ZIP
+        if ($nestedPlaylistDefinitions != []) {
+            $zip->addFromString('nestedPlaylist.json', json_encode($nestedPlaylistDefinitions, JSON_PRETTY_PRINT));
+        }
+
+        // Add Playlist mappings file to the ZIP
+        if ($playlistMappings != []) {
+            $zip->addFromString('playlistMappings.json', json_encode($playlistMappings, JSON_PRETTY_PRINT));
+        }
 
         $zip->close();
     }
@@ -1792,6 +1833,59 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
+        }
+    }
+
+    /**
+     * Handle the Playlist closure table for specified Layout object
+     *
+     * @param $layout
+     * @throws InvalidArgumentException
+     */
+    public function managePlaylistClosureTable($layout)
+    {
+
+        // we only need to set the closure table records for the playlists assigned directly to the regionPlaylist here
+        // all other relations between Playlists themselves are handled on import before layout is created
+        // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level.
+        foreach ($layout->getWidgets() as $widget) {
+            if ($widget->type == 'subplaylist') {
+                $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
+                $assignedPlaylists = implode(',', $assignedPlaylists);
+
+                foreach ($layout->regions as $region) {
+                    $regionPlaylist = $region->regionPlaylist;
+
+                    if ($widget->playlistId == $regionPlaylist->playlistId) {
+                        $parentId = $regionPlaylist->playlistId;
+                        $child[] = $assignedPlaylists;
+                    }
+                }
+            }
+        }
+
+        if (isset($parentId) && isset($child)) {
+            foreach ($child as $childId) {
+
+                $this->getLog()->debug('Manage closure table for parent ' . $parentId . ' and child ' . $childId);
+
+                if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [
+                    'parentId' => $parentId,
+                    'childId' => $childId
+                ])) {
+                    throw new InvalidArgumentException(__('Cannot add the same SubPlaylist twice.'), 'playlistId');
+                }
+
+                $this->getStore()->insert('
+                        INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                        SELECT p.parentId, c.childId, p.depth + c.depth + 1
+                          FROM lkplaylistplaylist p, lkplaylistplaylist c
+                         WHERE p.childId = :parentId AND c.parentId = :childId
+                    ', [
+                    'parentId' => $parentId,
+                    'childId' => $childId
+                ]);
+            }
         }
     }
 }

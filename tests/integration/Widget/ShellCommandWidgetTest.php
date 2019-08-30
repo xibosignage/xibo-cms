@@ -58,7 +58,7 @@ class ShellCommandWidgetTest extends LocalWebTestCase
         $this->publishedLayout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->publishedLayout);
+        $layout = $this->getDraft($this->publishedLayout);
 
         // Create a Widget for us to edit.
         $response = $this->getEntityProvider()->post('/playlist/widget/shellcommand/' . $layout->regions[0]->regionPlaylist->playlistId);
