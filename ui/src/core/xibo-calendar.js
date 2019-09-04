@@ -75,14 +75,15 @@ $(document).ready(function() {
 
                 if (this.options.view != 'agenda') {
 
-                    // Append display groups
-                    var displayGroups = $('#DisplayList').serialize();
+                    // Append display groups and layouts
+                    var displayGroupsAndLayouts = $('#DisplayList, #campaignId').serialize();
                     
                     var url = calendarOptions.eventSource;
                     
-                    if (displayGroups != '')
-                        url += '?' + displayGroups;
-                        
+                    if(displayGroupsAndLayouts != '') {
+                        url += '?' + displayGroupsAndLayouts;
+                    }
+
                     events = [];
                     
                     // Populate the events array via AJAX
@@ -316,7 +317,7 @@ $(document).ready(function() {
         calendar = $('#Calendar').calendar(options);
 
         // Set up our display selector control
-        $('#DisplayList').on('change', function(){
+        $('#DisplayList, #campaignId').on('change', function(){
             setTimeout(calendar.view(), 1000);
         });
         
