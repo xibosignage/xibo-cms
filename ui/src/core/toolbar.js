@@ -987,7 +987,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         "order": [[1, "asc"]],
         "filter": false,
         ajax: {
-            url: librarySearchUrl + '?assignable=1',
+            url: librarySearchUrl + '?assignable=1&retired=0',
             "data": function(d) {
                 $.extend(d, self.DOMObject.find('#media-search-container-' + menu).find("form").serializeObject());
             }
