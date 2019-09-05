@@ -217,10 +217,17 @@ $(document).ready(function() {
                     lD.designerDiv.find('#properties-panel')
                 );
 
-
                 if(res.data[0].publishedStatusId != 2) {
-                    // Enter welcome screen
-                    lD.welcomeScreen();
+
+                    var url = new URL(window.location.href);
+
+                    if(url.searchParams.get('vM') == '1') {
+                        // Enter view mode
+                        lD.enterReadOnlyMode();
+                    } else {
+                        // Enter welcome screen
+                        lD.welcomeScreen();
+                    }
                 }
 
                 // Setup helpers
@@ -548,7 +555,7 @@ lD.publishLayout = function() {
             toastr.success(res.message);
 
             // Redirect to the new published layout ( read only mode )
-            window.location.href = urlsForApi.layout.designer.url.replace(':id', res.data.layoutId);
+            window.location.href = urlsForApi.layout.designer.url.replace(':id', res.data.layoutId) + '?vM=1';
         } else {
 
             // Login Form needed?
