@@ -381,7 +381,6 @@ var setupScheduleForm = function(dialog) {
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({
-        dropdownParent: $(dialog),
         ajax: {
             url: $campaignSelect.data("searchUrl"),
             dataType: "json",
@@ -470,7 +469,6 @@ var setupScheduleForm = function(dialog) {
 
     var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
     $displaySelect.select2({
-        dropdownParent: $(dialog),
         ajax: {
             url: $displaySelect.data("searchUrl"),
             dataType: "json",
