@@ -135,6 +135,13 @@
                                     {{ forms.checkbox("LIBRARY_MEDIA_DELETEOLDVER_CHECKB", title, theme.getSetting("LIBRARY_MEDIA_DELETEOLDVER_CHECKB"), helpText, "", "", not theme.isSettingEditable("LIBRARY_MEDIA_UPDATEINALL_CHECKB")) }}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("DEFAULT_CASCADE_PERMISSION_CHECKB") %}
+                                    {% set title %}{% trans "Default for \"Cascade permissions to all items underneath this one.\" checkbox. Shown when editing Permissions." %}{% endset %}
+                                    {% set helpText %}{% trans "Default the checkbox for \"Cascade permissions to all items underneath this one.\" when assigning permisions to content" %}{% endset %}
+
+                                    {{ forms.checkbox("DEFAULT_CASCADE_PERMISSION_CHECKB", title, theme.getSetting("DEFAULT_CASCADE_PERMISSION_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_CASCADE_PERMISSION_CHECKB")) }}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("DEFAULT_TRANSITION_DURATION") %}
                                     {% set title %}{% trans "Default Transition duration" %}{% endset %}
                                     {% set helpText %}{% trans "Default duration for in and out transitions" %}{% endset %}
