@@ -217,6 +217,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DEFAULT_CASCADE_PERMISSION_CHECKB', $this->getSanitizer()->getCheckbox('DEFAULT_CASCADE_PERMISSION_CHECKB'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB')) {
+            $this->getConfig()->changeSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB', $this->getSanitizer()->getCheckbox('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_DURATION')) {
             $this->getConfig()->changeSetting('DEFAULT_TRANSITION_DURATION', $this->getSanitizer()->getInt('DEFAULT_TRANSITION_DURATION'));
         }

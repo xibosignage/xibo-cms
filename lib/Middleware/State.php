@@ -1442,6 +1442,7 @@ class State extends Middleware
             return new \Xibo\Factory\PlaylistFactory(
                 $container->store,
                 $container->logService,
+                $container->configService,
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,
