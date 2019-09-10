@@ -383,7 +383,7 @@ describe('Layout Designer (Populated)', function() {
             cy.url().should('include', '/layout/designer/' + res.response.body.data.layoutId);
 
             // Check if the read only message appears
-            cy.get('.welcome-screen-modal').should('exist');
+            cy.get('#read-only-message').should('exist');
         });
     });
 });
