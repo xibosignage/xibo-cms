@@ -1,10 +1,24 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 
 {% extends "form-base.twig" %}
@@ -62,14 +76,14 @@
         <div class="col-md-12">
             <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.transition.edit", {type: type, id: module.widget.widgetId}) }}">
                 {% if type == "in" %}
-                    {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.in) %}
-                    {% set trans = module.getOption("transIn") %}
+                    {% set transitionsWithEmpty = [{code: "", transition: ""}]|merge(transitions.in) %}
+                    {% set trans = module.getOption("transIn", transitions.defaultTransitionIn) %}
                     {% set transDuration = module.getOption("transInDuration", transitions.defaultTransitionDuration) %}
                     {% set transDirection = module.getOption("transInDirection") %}
                     {% set helpText %}{% trans "What transition should be applied when this item starts?" %}{% endset %}
                 {% elseif type == "out" %}
                     {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.out) %}
-                    {% set trans = module.getOption("transOut") %}
+                    {% set trans = module.getOption("transOut", transitions.defaultTransitionOut) %}
                     {% set transDuration = module.getOption("transOutDuration", transitions.defaultTransitionDuration) %}
                     {% set transDirection = module.getOption("transOutDirection") %}
                     {% set helpText %}{% trans "What transition should be applied when this item finishes?" %}{% endset %}
@@ -83,7 +97,7 @@
 
                 {% set title %}{% trans "Duration" %}{% endset %}
                 {% set helpText %}{% trans "The duration for this transition, in milliseconds." %}{% endset %}
-                {{ forms.number("transitionDuration", title, transDuration, helpText, "", "transition-group") }}
+                {{ forms.number("transitionDuration", title, transDuration, helpText) }}
 
                 {% set title %}{% trans "Direction" %}{% endset %}
                 {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}

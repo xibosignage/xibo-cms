@@ -149,6 +149,44 @@
                                     {{ forms.checkbox("DEFAULT_CASCADE_PERMISSION_CHECKB", title, theme.getSetting("DEFAULT_CASCADE_PERMISSION_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_CASCADE_PERMISSION_CHECKB")) }}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("DEFAULT_TRANSITION_IN") %}
+                                    {% set title %}{% trans "Default Transition In" %}{% endset %}
+                                    {% set helpText %}{% trans "Default Transition In that should be applied to widgets" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_TRANSITION_IN") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: urlFor("transition.search") },
+                                            { name: "data-search-term", value: "transition" },
+                                            { name: "data-id-property", value: "code" },
+                                            { name: "data-text-property", value: "transition" },
+                                            { name: "data-filter-options", value: '{"availableAsIn":"1"}' },
+                                        ] %}
+                                        {{ forms.dropdown("DEFAULT_TRANSITION_IN", "single", title, theme.getSetting("DEFAULT_TRANSITION_IN"), [defaultTransitionIn], "code", "transition", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_TRANSITION_IN", title, theme.getSetting("DEFAULT_TRANSITION_IN"), "") }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_TRANSITION_OUT") %}
+                                    {% set title %}{% trans "Default Transition Out" %}{% endset %}
+                                    {% set helpText %}{% trans "Default Transition Out that should be applied to widgets" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_TRANSITION_OUT") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: urlFor("transition.search") },
+                                            { name: "data-search-term", value: "transition" },
+                                            { name: "data-id-property", value: "code" },
+                                            { name: "data-text-property", value: "transition" },
+                                            { name: "data-filter-options", value: '{"availableAsOut":"1"}' },
+                                        ] %}
+                                        {{ forms.dropdown("DEFAULT_TRANSITION_OUT", "single", title, theme.getSetting("DEFAULT_TRANSITION_OUT"), [defaultTransitionOut], "code", "transition", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_TRANSITION_OUT", title, theme.getSetting("DEFAULT_TRANSITION_OUT"), "") }}
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("DEFAULT_TRANSITION_DURATION") %}
                                     {% set title %}{% trans "Default Transition duration" %}{% endset %}
                                     {% set helpText %}{% trans "Default duration for in and out transitions" %}{% endset %}
