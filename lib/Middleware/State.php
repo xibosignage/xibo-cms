@@ -675,7 +675,8 @@ class State extends Middleware
                 $container->tagFactory,
                 $container->mediaFactory,
                 $container->dataSetFactory,
-                $container->campaignFactory
+                $container->campaignFactory,
+                $container->displayGroupFactory
             );
         });
 
