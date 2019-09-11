@@ -125,7 +125,7 @@ $(document).ready(function() {
 
                             $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                         })
-                        .fail(function() {
+                        .fail(function(res) {
                             $('#calendar-progress').removeClass('fa fa-cog fa-spin');
 
                             if (done != undefined)
@@ -133,7 +133,8 @@ $(document).ready(function() {
                             
                             calendar._render();
 
-                            toastr.error(translate.error);
+                            toastr.error(translations.failure);
+                            console.error(res);
                         });
                 } else {
                     

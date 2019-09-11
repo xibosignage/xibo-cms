@@ -202,6 +202,7 @@ class Schedule extends Base
         $this->setNoOutput();
 
         $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
+        $campaignId = $this->getSanitizer()->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
         $start = $this->getDate()->parse($this->getSanitizer()->getString('from', 1000) / 1000, 'U');
         $end = $this->getDate()->parse($this->getSanitizer()->getString('to', 1000) / 1000, 'U');
@@ -248,6 +249,10 @@ class Schedule extends Base
             'futureSchedulesTo' => $end->format('U'),
             'displayGroupIds' => $displayGroupIds
         ];
+
+        if ($campaignId != null) {
+            $filter['campaignId'] = $campaignId;
+        }
 
         foreach ($this->scheduleFactory->query('FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
