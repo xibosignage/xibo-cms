@@ -450,6 +450,59 @@
             makePagedSelect($select, dialog);
         }
 
+        function setMoveCmsMultiSelectFormOpen(dialog) {
+            console.log('Multi-select form opened for move CMS');
+
+            let $message = $(
+                '<div class="col-sm-12 alert alert-info">' +
+                    "<p>{% trans 'Please note that once the new CMS Address and Key are authenticated in this form, Display will attempt to register with the new CMS Instance, if successful, Display will stop communicating with this CMS Instance.' %}</p>" +
+                '</div>'
+            );
+
+            $(dialog).find('.modal-body').append($message);
+
+            let $cmsAddress =   $(
+                '<div class="form-group">' +
+                    '<label class="col-sm-2 control-label" for="newCmsAddress" accesskey="">New CMS Address</label>' +
+                    '<div class="col-sm-10">' +
+                        '<input class="form-control" name="newCmsAddress" type="text" id="newCmsAddress" value="">' +
+                        '<span class="help-block">{% trans "Full URL to the new CMS, including https:// "%}</span>' +
+                    '</div>' +
+                '</div>'
+            );
+
+            let $cmsKey = $(
+                '<div class="form-group">' +
+                    '<label class="col-sm-2 control-label" for="newCmsKey" accesskey="">New CMS Key</label>' +
+                    '<div class="col-sm-10">' +
+                        '<input class="form-control" name="newCmsKey" type="text" id="newCmsKey" value="">' +
+                        '<span class="help-block">{% trans "CMS Secret Key associated with the provided new CMS Address"%}</span>' +
+                    '</div>' +
+                '</div>'
+            );
+
+            let $authenticationCode =   $(
+                '<div class="form-group">' +
+                    '<label class="col-sm-2 control-label" for="twoFactorCode" accesskey="">Two Factor Code</label>' +
+                    '<div class="col-sm-10">' +
+                        '<input class="form-control" name="twoFactorCode" type="text" id="twoFactorCode" value="">' +
+                        '<span class="help-block">{% trans "Please enter your Two Factor authentication code"%}</span>' +
+                    '</div>' +
+                '</div>'
+            );
+
+            $(dialog).find('.modal-body').append($cmsAddress, $cmsKey, $authenticationCode);
+
+            $('#twoFactorCode, #newCmsAddress, #newCmsKey').on('change', function() {
+
+                dialog.data().commitData = {
+                        newCmsAddress: $('#newCmsAddress').val(),
+                        newCmsKey: $('#newCmsKey').val(),
+                        twoFactorCode: $('#twoFactorCode').val()
+                    };
+            });
+        }
+
         function displayEditFormOpen(dialog) {
 
             // Setup display profile form
