@@ -981,6 +981,9 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
 
                             lD.common.hideLoadingScreen('deleteObject');
 
+                            // Reset timeline zoom
+                            lD.timeline.resetZoom();
+                            
                             // Behavior if successful
                             toastr.success(res.message);
                             lD.reloadData(lD.layout);
