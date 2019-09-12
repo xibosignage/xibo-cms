@@ -130,19 +130,23 @@ class Soap3 extends Soap
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Authenticate this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Receiver', "This display client is not licensed");
+        }
 
-        if ($this->display->isAuditing())
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
+
+        if ($this->display->isAuditing()) {
             $this->getLog()->debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
+        }
 
         $file = null;
 
