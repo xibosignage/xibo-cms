@@ -310,6 +310,7 @@ class SubPlaylist extends ModuleWidget
      * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[] $widgets
      * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function getSubPlaylistResolvedWidgets($parentWidgetId = 0)
     {
@@ -340,21 +341,25 @@ class SubPlaylist extends ModuleWidget
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
-            $playlistEnableStat = $playlist->enableStat;
 
-            if (($playlistEnableStat === null) || ($playlistEnableStat === "")) {
-                $playlistEnableStat = $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
-            }
+            // Handle proof of play settings
+            // -----------------------------
+            // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit alter that option
+            // in memory for this widget.
+            // this is not a saved change, we assess this every time
+            $playlistEnableStat = empty($playlist->enableStat)
+                ? $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT')
+                : $playlist->enableStat;
 
-            // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit, then change that option according to the Playlist enableStat value.
             foreach ($expanded as $subPlaylistWidget) {
 
-                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat',
+                    $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
+                );
 
                 if ($subPlaylistWidgetEnableStat == 'Inherit') {
-                    $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
-                    $subPlaylistWidget->save();
                     $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
+                    $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
                 }
             }
 
