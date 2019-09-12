@@ -37,15 +37,42 @@
                     {% trans "Add Event" %}
                 </button>
             </div>
-            <div class="xibo-calendar-controls dropdown pull-right">
+
+            <button id="campaignClear" title="{% trans "Clear Campaign/Layout" %}" class="btn btn-link btn-xs pull-right hidden">
+                <i class="fa fa-times"></i>
+            </button>
+            
+            <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
+
+                {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                {% set attributes = [
+                    { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
+                    { name: "data-trans-campaigns", value:  "Campaigns"|trans },
+                    { name: "data-trans-layouts", value:  "Layouts"|trans }
+                ] %}
+
+                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        
+                <select name="campaignId" id="campaignId" class="form-control"
+                    data-search-url= "{{ urlFor("schedule.campaign.search") }}"
+                    data-trans-campaigns= "{% trans "Campaigns" %}"
+                    data-trans-layouts= "{% trans "Layouts" %}"
+                    data-width="150px"
+                    data-placeholder="{% trans "Layout / Campaign" %}"
+                    >
+                </select>
+            </div>
+
+            <div class="xibo-calendar-controls dropdown pull-right" style="margin-left: 5px">
                 {% if -1 in selectedDisplayGroupIds %}
                     {% set allSelected = "selected" %}
                 {% else %}
                     {% set allSelected = "" %}
                 {% endif %}
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                        data-width="200px"
-                        data-placeholder="{% trans "Select Displays" %}" multiple>
+                        data-width="150px"
+                        data-placeholder="{% trans "Displays" %}" multiple>
                     <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
                     <optgroup label="{% trans "Groups" %}">
                         {% for group in groups %}
@@ -765,6 +792,114 @@
                 return opts.inverse(this);
             }
         });
+
+        // Init campaign select2
+        $(function() {
+            // Select lists
+            var dialog = 'body';
+            var $campaignSelect = $('.xibo-calendar-controls #campaignId');
+            var $campaignSelectClear = $('#campaignClear');
+
+            $campaignSelect.select2({
+                dropdownParent: $(dialog),
+                ajax: {
+                    url: $campaignSelect.data("searchUrl"),
+                    dataType: "json",
+                    placeholder: 'This is my placeholder',
+                    allowClear: true,
+                    data: function(params) {
+
+                        var query = {
+                            isLayoutSpecific: -1,
+                            retired: 0,
+                            totalDuration: 0,
+                            name: params.term,
+                            start: 0,
+                            length: 10,
+                            columns: [
+                                {
+                                    "data": "isLayoutSpecific"
+                                },
+                                {
+                                    "data": "campaign"
+                                }
+                            ],
+                            order: [
+                                {
+                                    "column": 0,
+                                    "dir": "asc"
+                                },
+                                {
+                                    "column": 1,
+                                    "dir": "asc"
+                                }
+                            ]
+                        };
+
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+
+                        return query;
+                    },
+                    processResults: function(data, params) {
+
+                        var results = [];
+                        var campaigns = [];
+                        var layouts = [];
+
+                        $.each(data.data, function(index, element) {
+                            if (element.isLayoutSpecific === 1) {
+                                layouts.push({
+                                    "id": element.campaignId,
+                                    "text": element.campaign
+                                });
+                            } else {
+                                campaigns.push({
+                                    "id": element.campaignId,
+                                    "text": element.campaign
+                                });
+                            }
+                        });
+
+                        if (campaigns.length > 0) {
+                            results.push({
+                                "text": $campaignSelect.data('transCampaigns'),
+                                "children": campaigns
+                            })
+                        }
+
+                        if (layouts.length > 0) {
+                            results.push({
+                                "text": $campaignSelect.data('transLayouts'),
+                                "children": layouts
+                            })
+                        }
+
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Handle clear button
+            $campaignSelectClear.click(() => {
+                $campaignSelect.val(null).trigger('change');
+            });
+
+            $campaignSelect.on('change', () =>{
+                // Show or hide the clear button
+                $campaignSelectClear.toggleClass('hidden', ( $campaignSelect.val() == null ));
+            });
+    });
     </script>
 
 {% endblock %}
