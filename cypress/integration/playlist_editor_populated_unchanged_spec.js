@@ -37,7 +37,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
     it('creates a new tab in the toolbar and searches for items', () => {
 
         cy.server();
-        cy.route('/library?assignable=1&draw=2&*').as('mediaLoad');
+        cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
 
         cy.populateLibraryWithMedia();
 
@@ -82,7 +82,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
-        cy.route('/library?assignable=1&draw=2&*').as('mediaLoad');
+        cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
 
         // Open a new tab
         cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();

@@ -184,7 +184,7 @@ describe('Layout Designer (Empty)', function() {
             // Create and alias for reload Layout
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
-            cy.route('/library?assignable=1&draw=2&*').as('mediaLoad');
+            cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
             
             // Open a new tab
             cy.get('#layout-editor-toolbar #btn-menu-new-tab').click();
