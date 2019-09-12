@@ -536,9 +536,10 @@ class Playlist implements \JsonSerializable
         }
 
         // if we are auditing and editing a regionPlaylist then get layout specific campaignId
+        $campaignId = 0;
+        $layoutId = 0;
+
         if ($options['auditPlaylist'] && $this->regionId != null) {
-            $campaignId = 0;
-            $layoutId = 0;
             $sql = 'SELECT campaign.campaignId, layout.layoutId FROM region INNER JOIN layout ON region.layoutId = layout.layoutId INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND region.regionId = :regionId ;';
             $params = ['regionId' => $this->regionId];
             $results = $this->store->select($sql, $params);
@@ -862,6 +863,7 @@ class Playlist implements \JsonSerializable
      *  a sub-playlist and update their durations also (cascade upward)
      * @return $this
      * @throws NotFoundException
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function updateDuration()
     {
