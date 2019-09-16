@@ -620,59 +620,6 @@ class Playlist implements \JsonSerializable
             }
         }
 
-        // Layout auto Publish
-        if ($this->regionId != null && $this->config->getSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') == 1) {
-
-            $layoutCurrentPublishedDateString = null;
-            $layoutIdToUpdate = null;
-
-            // we do not have LayoutFactory, therefore we do a quick SQL query to get the parentId of the layout we're editing
-            $sql = 'SELECT parentId FROM layout WHERE layoutId = :layoutId ;';
-            $params = ['layoutId' => $layoutId];
-            $results = $this->store->select($sql, $params);
-
-            foreach ($results as $row) {
-                $layoutIdToUpdate = $row['parentId'];
-            }
-
-            // now that we have parentId, get the Published Date of the parent of the layout we're currently editing
-            $sql = 'SELECT publishedDate FROM layout WHERE layoutId = :layoutId ;';
-            $params = ['layoutId' => $layoutIdToUpdate];
-            $results = $this->store->select($sql, $params);
-            
-            foreach ($results as $row) {
-                $layoutCurrentPublishedDateString = $row['publishedDate'];
-            }
-
-            if ($layoutIdToUpdate != null) {
-                $date = $this->dateService->parse();
-                $layoutCurrentPublishedDate = $this->dateService->parse($layoutCurrentPublishedDateString);
-                $newPublishDateString = $this->dateService->getLocalDate($date->addMinutes(30), 'Y-m-d H:i:s');
-                $newPublishDate = $this->dateService->parse($newPublishDateString);
-
-
-                if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
-
-                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in this case.
-                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min from now, do not update');
-
-                } elseif ($layoutCurrentPublishedDateString != null &&  $layoutCurrentPublishedDate->format('U') < $this->dateService->getLocalDate($date->subMinutes(5), 'U')) {
-
-                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the Regular Maintenance to build it, we don't want to update the publishedDate here.
-                    $this->getLog()->debug('Layout should be built by Regular Maintenance');
-
-                } else {
-                    // we have edited a Widget or regionPlaylist, add the Published Date to the parent layout.
-                    $this->getStore()->update('UPDATE `layout` SET publishedDate = :publishedDate WHERE layoutId = :layoutId',
-                        [
-                            'layoutId' => $layoutIdToUpdate,
-                            'publishedDate' => $newPublishDateString
-                        ]);
-                    $this->getLog()->debug('Playlist changes - Layout set to automatically Publish on ' . $newPublishDateString);
-                }
-            }
-        }
-
         // Audit
         if ($options['auditPlaylist']) {
             $change = $this->getChangedProperties();
