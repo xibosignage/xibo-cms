@@ -1656,20 +1656,20 @@ class LayoutFactory extends BaseFactory
 
         if ($this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy) !== null) {
             $displayGroupIds = [];
+            $displayId = null;
 
             // get the displayId if we were provided with display specific displayGroup in the filter
-            $dbh = $this->getStore()->getConnection();
-            $sth = $dbh->prepare('SELECT display.displayId FROM display INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1');
-            $sth->execute(['displayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy)]);
+            $sql = 'SELECT display.displayId FROM display INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1';
 
-            $displayId = $sth->fetchColumn(0);
+            foreach ($this->getStore()->select($sql, ['displayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy)]) as $row) {
+                $displayId = $row['displayId'];
+            }
 
             // if we have displayId, get all displayGroups to which the display is a member of
-            if ($displayId !== false) {
-                $sth2 = $dbh->prepare('SELECT displayGroupId FROM lkdisplaydg WHERE displayId =' . $displayId);
-                $sth2->execute();
+            if ($displayId !== null) {
+                $sql = 'SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId';
 
-                foreach ($sth2->fetchAll() as $row) {
+                foreach ($this->getStore()->select($sql, ['displayId' => $displayId]) as $row) {
                     $displayGroupIds[] = $this->getSanitizer()->int($row['displayGroupId']);
                 }
             }
@@ -1681,9 +1681,11 @@ class LayoutFactory extends BaseFactory
 
             // get events for the selected displayGroup / Display and all displayGroups the display is member of
             $body .= '
-            INNER JOIN `lkscheduledisplaygroup` ON lkscheduledisplaygroup.displayGroupId IN ( ' . implode(',', $displayGroupIds) . ' )
-            INNER JOIN schedule ON schedule.eventId = lkscheduledisplaygroup.eventId
-            ';
+                      INNER JOIN `lkscheduledisplaygroup` 
+                        ON lkscheduledisplaygroup.displayGroupId IN ( ' . implode(',', $displayGroupIds) . ' )
+                      INNER JOIN schedule 
+                        ON schedule.eventId = lkscheduledisplaygroup.eventId
+             ';
         }
 
         // MediaID
@@ -1893,19 +1895,19 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy) !== null) {
-            
+
+            $date = $this->getDate()->parse()->format('U');
+
             // for filter by displayGroup, we need to add some additional filters in WHERE clause to show only relevant Layouts at the time the Layout grid is viewed
             $body .= ' AND campaign.campaignId = schedule.campaignId 
-                       AND ( schedule.fromDt < UNIX_TIMESTAMP(NOW()) OR schedule.fromDt = 0 )
-                       AND schedule.toDt > UNIX_TIMESTAMP(NOW()) 
-                     ';
+                       AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $date;
         }
 
         // Sorting?
         $order = '';
 
         if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
         }
 
         $limit = '';
