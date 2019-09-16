@@ -130,7 +130,13 @@ class Report extends Base
             $reportSchedule->includeProperty('buttons');
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
-            $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+
+            if ($reportSchedule->lastRunDt == 0) {
+                $nextRunDt = $this->getDate()->parse()->format('U');
+            } else {
+                $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+            }
+
             $reportSchedule->nextRunDt = $nextRunDt;
 
             // Ad hoc report name
