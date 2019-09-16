@@ -184,6 +184,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('installWithLoadedLinkLibraries', $this->getSanitizer()->getCheckbox('installWithLoadedLinkLibraries'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -307,6 +311,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'linux':
@@ -394,6 +402,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'lg':
@@ -457,6 +469,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('mediaInventoryTimer')) {
                     $displayProfile->setSetting('mediaInventoryTimer', $this->getSanitizer()->getInt('mediaInventoryTimer'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('timers')) {

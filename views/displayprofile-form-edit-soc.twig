@@ -132,6 +132,10 @@
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
                     {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
 
+                    {% set title = "Force HTTPS?"|trans %}
+                    {% set helpText = "Should Displays be forced to use HTTPS connection to the CMS?"|trans %}
+                    {{ forms.checkbox("forceHttps", title, displayProfile.getSetting("forceHttps"), helpText) }}
+
                     {% set title = "Operating Hours"|trans %}
                     {% set helpText = "Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours"|trans %}
                     {% set attributes = [
