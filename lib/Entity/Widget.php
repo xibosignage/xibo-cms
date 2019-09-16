@@ -882,9 +882,9 @@ class Widget implements \JsonSerializable
             ]);
         }
 
-        // Should we notify the Layout
-        // TODO: question whether we will ever do this anymore? A draft layout wouldn't ever be built, and we'd mark the parent Layout
-        // as status = 3 when we checked it in
+        // Notify Layout
+        // We do this for draft and published versions of the Layout to keep the Layout Status fresh and the modified
+        // date updated.
         if ($options['notify']) {
             // Notify the Layout
             $this->getStore()->update('
