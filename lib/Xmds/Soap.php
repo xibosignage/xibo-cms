@@ -1510,7 +1510,7 @@ class Soap
 
                     if (!in_array($layoutId, $layoutIdsNotFound)) {
                         $layoutIdsNotFound[] = $layoutId;
-                        $this->getLog()->info('Layout not found. Layout Id: '. $layoutId);
+                        $this->getLog()->error('Layout not found. Layout Id: '. $layoutId);
                     }
 
                     continue;
