@@ -23,10 +23,13 @@ namespace Xibo\Controller;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
+use RobThree\Auth\TwoFactorAuth;
 use Stash\Interfaces\PoolInterface;
+use Respect\Validation\Validator as v;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
@@ -738,8 +741,9 @@ class Display extends Base
 
             if ($this->getUser()->checkEditable($display)) {
 
-                if ($this->getUser()->checkPermissionsModifyable($display))
+                if ($this->getUser()->checkPermissionsModifyable($display)) {
                     $display->buttons[] = ['divider' => true];
+                }
 
                 // Wake On LAN
                 $display->buttons[] = array(
@@ -753,6 +757,23 @@ class Display extends Base
                     'url' => $this->urlFor('displayGroup.command.form', ['id' => $display->displayGroupId]),
                     'text' => __('Send Command')
                 );
+
+                $display->buttons[] = ['divider' => true];
+
+                $display->buttons[] = [
+                    'id' => 'display_button_move_cms',
+                    'url' => $this->urlFor('display.moveCms.form', ['id' => $display->displayId]),
+                    'text' => __('Move CMS'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor('display.moveCms', ['id' => $display->displayId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'display_button_move_cms'],
+                        ['name' => 'text', 'value' => __('Move CMS')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
+                    ]
+                ];
             }
         }
 
@@ -1720,5 +1741,89 @@ class Display extends Base
             'message' => sprintf(__('Default Layout with name %s set for %s'), $layout->layout, $display->display),
             'id' => $display->displayId
         ]);
+    }
+
+    /**
+     * @param $displayId
+     * @throws NotFoundException
+     */
+    public function moveCmsForm($displayId)
+    {
+        if ($this->getUser()->twoFactorTypeId != 2) {
+            throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
+        }
+
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-moveCms';
+        $this->getState()->setData([
+            'display' => $display,
+            'newCmsAddress' => $display->newCmsAddress,
+            'newCmsKey' => $display->newCmsKey
+        ]);
+
+    }
+
+    /**
+     * @param $displayId
+     * @throws NotFoundException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws InvalidArgumentException
+     * @throws XiboException
+     */
+    public function moveCms($displayId)
+    {
+        if ($this->getUser()->twoFactorTypeId != 2) {
+            throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
+        }
+
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        // Two Factor Auth
+        $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
+        $appName = $this->getConfig()->getThemeConfig('app_name');
+
+        if ($issuerSettings !== '') {
+            $issuer = $issuerSettings;
+        } else {
+            $issuer = $appName;
+        }
+
+        $authenticationCode = $this->getSanitizer()->getString('twoFactorCode', '');
+
+        $tfa = new TwoFactorAuth($issuer);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+
+        if ($result) {
+
+            // get the new CMS Address and Key from the form.
+            $newCmsAddress = $this->getSanitizer()->getString('newCmsAddress');
+            $newCmsKey = $this->getSanitizer()->getString('newCmsKey');
+
+            // validate the URL
+            if (!v::url()->notEmpty()->validate(urldecode($newCmsAddress)) || !filter_var($newCmsAddress, FILTER_VALIDATE_URL)) {
+                throw new InvalidArgumentException(__('Provided CMS URL is invalid'), 'newCmsUrl');
+            }
+
+            if ($newCmsKey == '') {
+                throw new InvalidArgumentException(__('Provided CMS Key is invalid'), 'newCmsKey');
+            }
+
+            // we are successfully authenticated, get new CMS address and Key and save the Display record.
+            $display->newCmsAddress = $newCmsAddress;
+            $display->newCmsKey = $newCmsKey;
+            $display->save();
+
+        } else {
+            throw new InvalidArgumentException(__('Invalid Two Factor Authentication Code'), 'twoFactorCode');
+        }
     }
 }

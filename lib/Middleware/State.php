@@ -675,7 +675,8 @@ class State extends Middleware
                 $container->tagFactory,
                 $container->mediaFactory,
                 $container->dataSetFactory,
-                $container->campaignFactory
+                $container->campaignFactory,
+                $container->displayGroupFactory
             );
         });
 
@@ -980,7 +981,8 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->layoutFactory,
-                $container->userGroupFactory
+                $container->userGroupFactory,
+                $container->transitionFactory
             );
         });
 
@@ -1441,6 +1443,7 @@ class State extends Middleware
             return new \Xibo\Factory\PlaylistFactory(
                 $container->store,
                 $container->logService,
+                $container->configService,
                 $container->sanitizerService,
                 $container->user,
                 $container->userFactory,

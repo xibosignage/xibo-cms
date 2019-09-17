@@ -216,7 +216,9 @@ class DisplayFactory extends BaseFactory
                   `display`.lastCommandSuccess, 
                   `display`.deviceName, 
                   `display`.timeZone,
-                  `display`.overrideConfig
+                  `display`.overrideConfig,
+                  `display`.newCmsAddress,
+                  `display`.newCmsKey
               ';
 
         if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1) {

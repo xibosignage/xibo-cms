@@ -33,6 +33,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -106,6 +107,9 @@ class Layout extends Base
     /** @var  CampaignFactory */
     private $campaignFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -127,7 +131,7 @@ class Layout extends Base
      * @param DataSetFactory $dataSetFactory
      * @param CampaignFactory $campaignFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -142,6 +146,7 @@ class Layout extends Base
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -169,7 +174,8 @@ class Layout extends Base
         $this->getState()->template = 'layout-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query()
+            'groups' => $this->userGroupFactory->query(),
+            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1])
         ]);
     }
 
@@ -444,8 +450,9 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException(__('Cannot edit Layout properties on a Draft'), 'layoutId');
+        }
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
@@ -998,6 +1005,7 @@ class Layout extends Base
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
+            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId')
         ]));
 
         foreach ($layouts as $layout) {

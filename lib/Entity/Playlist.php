@@ -30,6 +30,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -185,22 +186,30 @@ class Playlist implements \JsonSerializable
 
     /** @var ModuleFactory */
     private $moduleFactory;
+
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
     //</editor-fold>
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
+
      */
-    public function __construct($store, $log, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
+        $this->config = $config;
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;

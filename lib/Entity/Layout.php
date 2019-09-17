@@ -1508,6 +1508,30 @@ class Layout implements \JsonSerializable
 
             $this->load(['loadPlaylists' => true]);
 
+            // Layout auto Publish
+            if ($this->config->getSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') == 1 && $this->isChild()) {
+
+                // we are editing a draft layout, the published date is set on the original layout, therefore we need our parent.
+                $parent = $this->layoutFactory->loadById($this->parentId);
+
+                $layoutCurrentPublishedDate = $this->date->parse($parent->publishedDate);
+                $newPublishDateString = $this->date->getLocalDate($this->date->parse()->addMinutes(30), 'Y-m-d H:i:s');
+                $newPublishDate = $this->date->parse($newPublishDateString);
+
+                if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
+                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in this case.
+                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min from now, do not update');
+
+                }  elseif ($parent->publishedDate != null &&  $layoutCurrentPublishedDate->format('U') < $this->date->getLocalDate($this->date->parse()->subMinutes(5), 'U')) {
+                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the Regular Maintenance to build it before that happens
+                    $this->getLog()->debug('Layout should be built by Regular Maintenance');
+
+                } else {
+                    $parent->setPublishedDate($newPublishDateString);
+                    $this->getLog()->debug('Layout set to automatically Publish on ' . $newPublishDateString);
+                }
+            }
+
             // Assume error
             $this->status = 4;
 
