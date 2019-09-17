@@ -1454,6 +1454,8 @@ class Soap
         $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
 
+        $layoutIdsNotFound = [];
+
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
             // Make sure we don't consider any text nodes
@@ -1493,7 +1495,11 @@ class Soap
                 try {
                     // Handle the splash screen
                     if ($layoutId == 'splash') {
-                        $this->getLog()->error('Splash Screen Statistic Ignored');
+                        if (!in_array($layoutId, $layoutIdsNotFound)) {
+                            $layoutIdsNotFound[] = $layoutId;
+                            $this->getLog()->info('Splash Screen Statistic Ignored');
+                        }
+
                         continue;
                     }
 
@@ -1501,7 +1507,12 @@ class Soap
                     $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
 
                 } catch (XiboException $error) {
-                    $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
+
+                    if (!in_array($layoutId, $layoutIdsNotFound)) {
+                        $layoutIdsNotFound[] = $layoutId;
+                        $this->getLog()->error('Layout not found. Layout Id: '. $layoutId);
+                    }
+
                     continue;
                 }
             }
