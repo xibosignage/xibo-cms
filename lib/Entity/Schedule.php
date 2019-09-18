@@ -52,6 +52,7 @@ class Schedule implements \JsonSerializable
     public static $LAYOUT_EVENT = 1;
     public static $COMMAND_EVENT = 2;
     public static $OVERLAY_EVENT = 3;
+    public static $INTERRUPT_EVENT = 4;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -239,6 +240,12 @@ class Schedule implements \JsonSerializable
      * @var int
      */
     public $syncTimezone;
+
+    /**
+     * @SWG\Property(description="Percentage (0-100) of each full hour that is scheduled that this Layout should occupy")
+     * @var int
+     */
+    public $shareOfVoice;
 
     /**
      * @var ScheduleEvent[]
@@ -481,7 +488,7 @@ class Schedule implements \JsonSerializable
 
         $this->getLog()->debug('EventTypeId: %d. DayPartId: %d, CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->dayPartId, $this->campaignId, $this->commandId);
 
-        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT) {
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT || $this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
@@ -493,6 +500,17 @@ class Schedule implements \JsonSerializable
             }
 
             $this->commandId = null;
+
+            // additional validation for Interrupt Layout event type
+            if ($this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
+
+                if (!v::intType()->notEmpty()->validate($this->shareOfVoice) || !v::min(0)->validate($this->shareOfVoice) || !v::max(100)->validate($this->shareOfVoice)) {
+                    throw new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 100'), 'shareOfVoice');
+                }
+
+                $this->displayOrder = 0;
+                $this->isPriority = 0;
+            }
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
@@ -643,8 +661,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -661,7 +679,8 @@ class Schedule implements \JsonSerializable
             'recurrenceMonthlyRepeatsOn' => ($this->recurrenceMonthlyRepeatsOn == null) ? 0 : $this->recurrenceMonthlyRepeatsOn,
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
-            'syncEvent' => $this->syncEvent
+            'syncEvent' => $this->syncEvent,
+            'shareOfVoice' => $this->shareOfVoice
         ]);
     }
 
@@ -687,7 +706,8 @@ class Schedule implements \JsonSerializable
             `recurrenceMonthlyRepeatsOn` = :recurrenceMonthlyRepeatsOn,
             `dayPartId` = :dayPartId,
             `syncTimezone` = :syncTimezone,
-            `syncEvent` = :syncEvent
+            `syncEvent` = :syncEvent,
+            `shareOfVoice` = :shareOfVoice
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -706,6 +726,7 @@ class Schedule implements \JsonSerializable
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
+            'shareOfVoice' => $this->shareOfVoice,
             'eventId' => $this->eventId
         ]);
     }

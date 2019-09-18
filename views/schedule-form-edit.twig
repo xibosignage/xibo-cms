@@ -44,12 +44,19 @@
                         {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
                         {% set commandEventType %}{% trans "Command" %}{% endset %}
                         {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
+                        {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
                         {% set eventTypes = [
-                        {id: 1, label: layoutEventType},
-                        {id: 2, label: commandEventType},
-                        {id: 3, label: overlayEventType}
+                            {id: 1, label: layoutEventType},
+                            {id: 2, label: commandEventType},
+                            {id: 3, label: overlayEventType},
+                            {id: 4, label: interruptEventType}
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
+
+                        <div class="interrupt-control">
+                            {% set message = "Please note, if there are existing interrupt layout events scheduled to this Display with recurring options, make sure there are no overlaps between them. Otherwise Player will show only the first interrupt layout event."|trans %}
+                            {{ forms.message(message, "alert alert-info") }}
+                        </div>
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
@@ -96,6 +103,10 @@
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
+                        {% set title %}{% trans "Share of Voice" %}{% endset %}
+                        {% set helpText %}{% trans "What % (0-100) of each full hour that is scheduled, should this Layout occupy?" %}{% endset %}
+                        {{ forms.number("shareOfVoice", title, event.shareOfVoice, helpText, "interrupt-control") }}
+
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
@@ -109,11 +120,11 @@
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, event.displayOrder, helpText) }}
+                        {{ forms.number("displayOrder", title, event.displayOrder, helpText, 'displayOrder-control') }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
-                        {{ forms.number("isPriority", title, event.isPriority, helpText) }}
+                        {{ forms.number("isPriority", title, event.isPriority, helpText, 'priority-control') }}
 
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}

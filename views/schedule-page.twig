@@ -91,6 +91,7 @@
                     <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
                     <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
+                    <li class="event-interrupt"><span class="fa fa-exclamation"></span> {% trans "Interrupt" %}</li>
                 </ul>
             </div>
         </div>
@@ -222,8 +223,13 @@
                     eventIcon = "fa-bullseye";
                     }
 
-                    if (event.event.eventTypeId == 2)
-                    eventIcon = "fa-wrench";
+                    if (event.event.eventTypeId == 2) {
+                        eventIcon = "fa-wrench";
+                    }
+
+                    if (event.event.eventTypeId == 4) {
+                        eventIcon = "fa-exclamation";
+                    }
 
                     if (!event.editable) {
                     event.url = null;
@@ -309,8 +315,13 @@
                     eventIcon = "fa-bullseye";
                     }
 
-                    if (event.event.eventTypeId == 2)
-                    eventIcon = "fa-wrench";
+                    if (event.event.eventTypeId == 2) {
+                        eventIcon = "fa-wrench";
+                    }
+
+                    if (event.event.eventTypeId == 4) {
+                        eventIcon = "fa-exclamation";
+                    }
 
                     if (!event.editable) {
                     event.url = null;
@@ -387,6 +398,10 @@
             if (event.event.isPriority == 1) {
             eventClass = "event-important";
             eventIcon = "fa-bullseye";
+            }
+
+            if (event.event.eventTypeId == 4) {
+                eventIcon = "fa-exclamation";
             }
 
             if (!event.editable) {
@@ -514,6 +529,7 @@
                                             <div class="col-lg-9">
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
                                             </div>
                                             <div class="col-lg-3">
                                                 <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
@@ -539,7 +555,9 @@
                                 {% endraw %}{% trans "Layouts" %}{% raw %}</span>
                             <% } else if (layouts.type == 3) { %>
                                 {% endraw %}{% trans "Overlay Layouts" %}{% raw %}
-                            <% } %> 
+                            <% } else if (layouts.type == 4) { %>
+                                {% endraw %}{% trans "Interrupt Layouts" %}{% raw %}
+                            <% } %>
                         </th>
                     </tr>
                     {% endraw %}

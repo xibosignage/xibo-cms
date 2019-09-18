@@ -208,6 +208,7 @@ class ScheduleFactory extends BaseFactory
                 `schedule`.commandId,
                 schedule.syncTimezone,
                 schedule.syncEvent,
+                schedule.shareOfVoice,
                 `campaign`.campaign,
                 `command`.command,
                 `lkscheduledisplaygroup`.displayGroupId,
@@ -302,6 +303,7 @@ class ScheduleFactory extends BaseFactory
             `schedule`.dayPartId,
             `schedule`.syncTimezone,
             `schedule`.syncEvent,
+            `schedule`.shareOfVoice,
             `daypart`.isAlways,
             `daypart`.isCustom
           FROM `schedule`

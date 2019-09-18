@@ -378,6 +378,26 @@ $(document).ready(function() {
  */
 var setupScheduleForm = function(dialog) {
 
+    var $eventTypeId = $('#eventTypeId').val();
+    var $layoutSpecific = -1;
+
+    if ($eventTypeId == 4) {
+        $layoutSpecific = 1;
+    } else {
+        $layoutSpecific = -1;
+    }
+
+    $('#eventTypeId').change(function() {
+        $eventTypeId = $('#eventTypeId').val();
+        console.log($eventTypeId);
+
+        if ($eventTypeId == 4) {
+            $layoutSpecific = 1;
+        } else {
+            $layoutSpecific = -1;
+        }
+    });
+
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({
@@ -387,7 +407,7 @@ var setupScheduleForm = function(dialog) {
             dataType: "json",
             data: function(params) {
                 var query = {
-                    isLayoutSpecific: -1,
+                    isLayoutSpecific: $layoutSpecific,
                     retired: 0,
                     totalDuration: 0,
                     name: params.term,
@@ -439,7 +459,7 @@ var setupScheduleForm = function(dialog) {
                     }
                 });
 
-                if (campaigns.length > 0) {
+                if (campaigns.length > 0 && $eventTypeId != 4) {
                     results.push({
                         "text": $campaignSelect.data('transCampaigns'),
                         "children": campaigns
@@ -713,6 +733,10 @@ var processScheduleFormElements = function(el) {
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
+            var priorityControlDisplay = (fieldVal == 4) ? "none" : "block";
+            var displayOrderControlDisplay = (fieldVal == 4) ? "none" : "block";
+            var interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
+
 
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
@@ -721,6 +745,9 @@ var processScheduleFormElements = function(el) {
             $(".command-control").css('display', commandControlDisplay);
             $(".preview-button-container").css('display', previewControlDisplay);
             $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
+            $(".priority-control").css('display', priorityControlDisplay);
+            $(".displayOrder-control").css('display', displayOrderControlDisplay);
+            $(".interrupt-control").css('display', interruptControlDisplay);
 
             // Depending on the event type selected we either want to filter in or filter out the
             // campaigns.
