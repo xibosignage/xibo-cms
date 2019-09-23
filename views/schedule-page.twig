@@ -38,10 +38,6 @@
                 </button>
             </div>
 
-            <button id="campaignClear" title="{% trans "Clear Campaign/Layout" %}" class="btn btn-link btn-xs pull-right hidden">
-                <i class="fa fa-times"></i>
-            </button>
-            
             <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
 
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
@@ -58,6 +54,8 @@
                     data-search-url= "{{ urlFor("schedule.campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
+                    data-allow-clear="true"
+                    title="{% trans "Layout / Campaign" %}"
                     data-width="150px"
                     data-placeholder="{% trans "Layout / Campaign" %}"
                     >
@@ -798,7 +796,6 @@
             // Select lists
             var dialog = 'body';
             var $campaignSelect = $('.xibo-calendar-controls #campaignId');
-            var $campaignSelectClear = $('#campaignClear');
 
             $campaignSelect.select2({
                 dropdownParent: $(dialog),
@@ -889,17 +886,7 @@
                     }
                 }
             });
-
-            // Handle clear button
-            $campaignSelectClear.click(() => {
-                $campaignSelect.val(null).trigger('change');
-            });
-
-            $campaignSelect.on('change', () =>{
-                // Show or hide the clear button
-                $campaignSelectClear.toggleClass('hidden', ( $campaignSelect.val() == null ));
-            });
-    });
+        });
     </script>
 
 {% endblock %}
