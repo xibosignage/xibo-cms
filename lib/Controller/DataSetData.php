@@ -125,13 +125,21 @@ class DataSetData extends Base
         // Work out the limits
         $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', $filter)]);
 
+        try {
+            $data = $dataSet->getData([
+                'order' => $sorting,
+                'start' => $filter['start'],
+                'size' => $filter['length'],
+                'filter' => $filter['filter']
+            ]);
+        } catch (\Exception $e) {
+            $data = ['exception' => __('Error getting dataSet data, failed with following message: ') . $e->getMessage()];
+            $this->getLog()->error('Error getting dataSet data, failed with following message: ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
+        }
+
         $this->getState()->template = 'grid';
-        $this->getState()->setData($dataSet->getData([
-            'order' => $sorting,
-            'start' => $filter['start'],
-            'size' => $filter['length'],
-            'filter' => $filter['filter']
-        ]));
+        $this->getState()->setData($data);
 
         // Output the count of records for paging purposes
         if ($dataSet->countLast() != 0)
