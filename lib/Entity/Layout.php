@@ -1096,7 +1096,7 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
                 }
 
-                if ($widget->toDt != null || $widget->fromDt === Widget::$DATE_MAX) {
+                if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
                     $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
                 }
 
