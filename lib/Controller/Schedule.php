@@ -904,12 +904,12 @@ class Schedule extends Base
         }
 
         // interrupt layout
-        if ($schedule->eventTypeId == 4) {
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
 
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
 
             if ($campaign->isLayoutSpecific == 0) {
-                throw new InvalidArgumentException(__('Cannot select a campaign for this event type.'), 'campaignId');
+                throw new InvalidArgumentException(__('Cannot select a Campaign for this event type.'), 'campaignId');
             }
 
             foreach ($this->layoutFactory->getByCampaignId($schedule->campaignId) as $layout) {
@@ -922,12 +922,12 @@ class Schedule extends Base
             }
 
             foreach($schedule->displayGroups as $displayGroup) {
-                $events = $this->scheduleFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+                $events = $this->scheduleFactory->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroup->displayGroupId], 'fromDt' => $schedule->fromDt, 'toDt' => $schedule->toDt]);
 
                 foreach ($events as $event) {
                     /** @var $event \Xibo\Entity\Schedule */
-                    if ($event->eventTypeId == 4) {
-                        $this->getLog()->debug('we have another interrupt layout scheduled to display group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
+                    if ($event->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+                        $this->getLog()->debug('we have another interrupt Layout scheduled to Display Group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
                         $existingEventFromDt = $event->fromDt;
                         $existingEventToDt =  $event->toDt;
 
@@ -1279,12 +1279,12 @@ class Schedule extends Base
         }
 
         // interrupt layout
-        if ($schedule->eventTypeId == 4) {
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
 
             $campaign = $this->campaignFactory->getById($schedule->campaignId);
 
             if ($campaign->isLayoutSpecific == 0) {
-                throw new InvalidArgumentException(__('Cannot select a campaign for this event type.'), 'campaignId');
+                throw new InvalidArgumentException(__('Cannot select a Campaign for this event type.'), 'campaignId');
             }
 
             foreach ($this->layoutFactory->getByCampaignId($schedule->campaignId) as $layout) {
@@ -1297,12 +1297,12 @@ class Schedule extends Base
             }
 
             foreach($schedule->displayGroups as $displayGroup) {
-                $events = $this->scheduleFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+                $events = $this->scheduleFactory->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroup->displayGroupId], 'fromDt' => $schedule->fromDt, 'toDt' => $schedule->toDt]);
 
                 foreach ($events as $event) {
                     /** @var $event \Xibo\Entity\Schedule */
-                    if ($event->eventTypeId == 4 && $event->eventId != $schedule->eventId) {
-                        $this->getLog()->debug('we have another interrupt layout scheduled to display group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
+                    if ($event->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT && $event->eventId != $schedule->eventId) {
+                        $this->getLog()->debug('we have another interrupt Layout scheduled to Display Group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
                         $existingEventFromDt = $event->fromDt;
                         $existingEventToDt =  $event->toDt;
 

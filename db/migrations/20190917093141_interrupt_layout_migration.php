@@ -29,10 +29,10 @@ class InterruptLayoutMigration extends AbstractMigration
     {
         $scheduleTable = $this->table('schedule');
 
-        // Add a two new columns to Display table, newCmsAddress and newCmsKey
+        // Add a new column to Schedule table - shareOfVoice
         if (!$scheduleTable->hasColumn('shareOfVoice')) {
             $scheduleTable
-                ->addColumn('shareOfVoice', 'integer', ['limit' => 100, 'default' => null, 'null' => true])
+                ->addColumn('shareOfVoice', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => null, 'null' => true])
                 ->save();
         }
     }
