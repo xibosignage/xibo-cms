@@ -133,8 +133,8 @@ class DataSetData extends Base
                 'filter' => $filter['filter']
             ]);
         } catch (\Exception $e) {
-            $data = ['exception' => __('Error getting dataSet data, failed with following message: ') . $e->getMessage()];
-            $this->getLog()->error('Error getting dataSet data, failed with following message: ' . $e->getMessage());
+            $data = ['exception' => __('Error getting DataSet data, failed with following message: ') . $e->getMessage()];
+            $this->getLog()->error('Error getting DataSet data, failed with following message: ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
         }
 
