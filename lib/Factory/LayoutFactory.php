@@ -513,10 +513,25 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
 
+                $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
+                $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
+                $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
+                $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
+
                 // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
                 // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-                $widget->fromDt = ($widget->fromDt === Widget::$DATE_MIN || ( $this->getDate()->parse($widget->fromDt)->format('U') > $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U') && $this->getDate()->parse($widget->fromDt)->format('U') < $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U')) ) ? Widget::$DATE_MIN : $this->getDate()->parse($widget->fromDt)->format('U');
-                $widget->toDt = ($widget->toDt === Widget::$DATE_MAX || ( $this->getDate()->parse($widget->toDt)->format('U') > $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U') && $this->getDate()->parse($widget->toDt)->format('U') < $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U')) ) ? Widget::$DATE_MAX : $this->getDate()->parse($widget->toDt)->format('U');
+
+                if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear) ) {
+                    $widget->fromDt = Widget::$DATE_MIN;
+                } else {
+                    $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+                }
+
+                if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear) ) {
+                    $widget->toDt = Widget::$DATE_MAX;
+                } else {
+                    $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+                }
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
