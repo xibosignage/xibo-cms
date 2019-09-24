@@ -95,6 +95,8 @@ $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedul
  */
 $app->get('/notification', '\Xibo\Controller\Notification:grid')->name('notification.search');
 $app->post('/notification', '\Xibo\Controller\Notification:add')->name('notification.add');
+$app->map('/notification/attachment', '\Xibo\Controller\Notification:addAttachment')->via('HEAD');
+$app->post('/notification/attachment', '\Xibo\Controller\Notification:addAttachment')->name('notification.addattachment');
 $app->put('/notification/:id', '\Xibo\Controller\Notification:edit')->name('notification.edit');
 $app->delete('/notification/:id', '\Xibo\Controller\Notification:delete')->name('notification.delete');
 

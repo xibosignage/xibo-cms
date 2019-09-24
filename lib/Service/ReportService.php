@@ -282,4 +282,32 @@ class ReportService implements ReportServiceInterface
         // Retrieve the result array
         return $object->getResults($filterCriteria);
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function getReportEmailTemplate($reportName)
+    {
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        // Set Report Schedule form data
+        return $object->getReportEmailTemplate();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getReportChartScript($savedreportId, $reportName)
+    {
+        $results = $this->getSavedReportResults($savedreportId, $reportName);
+
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        // Set Report Schedule form data
+        return $object->getReportChartScript($results);
+    }
 }

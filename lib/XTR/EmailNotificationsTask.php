@@ -73,6 +73,11 @@ class EmailNotificationsTask implements TaskInterface
                 $mail->Encoding = 'base64';
                 $mail->From = $msgFrom;
 
+                // Add attachment
+                if ($notification->filename != null) {
+                    $mail->addAttachment($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename, 'saved_report.pdf');
+                }
+
                 if ($msgFromName != null)
                     $mail->FromName = $msgFromName;
 

@@ -44,6 +44,18 @@ interface ReportInterface
     public function getReportForm();
 
     /**
+     * Return the twig file name of the report email template
+     * @return string
+     */
+    public function getReportEmailTemplate();
+
+    /**
+     * Return the twig file name of the report email template
+     * @return string
+     */
+    public function getReportChartScript($results);
+
+    /**
      * Populate form title and hidden fields
      * @return array
      */

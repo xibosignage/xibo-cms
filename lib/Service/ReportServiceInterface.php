@@ -108,4 +108,19 @@ interface ReportServiceInterface
      * @return array
      */
     public function runReport($reportName, $filterCriteria, $userId);
+
+    /**
+     * Get report email template twig file name
+     * @param string $reportName
+     * @return string
+     */
+    public function getReportEmailTemplate($reportName);
+
+    /**
+     * Get chart script
+     * @param int $savedreportId
+     * @param string $reportName
+     * @return array
+     */
+    public function getReportChartScript($savedreportId, $reportName);
 }
