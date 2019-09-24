@@ -41,8 +41,6 @@ services:
 
   quickchart:
     image: ianw/quickchart
-    ports:
-    - "3400:3400"
 
 networks:
   default:
