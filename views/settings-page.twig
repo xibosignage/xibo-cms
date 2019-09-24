@@ -401,6 +401,17 @@
                                     {% endif %}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("QUICK_CHART_URL") %}
+                                    {% set title %}{% trans "Quick Chart URL" %}{% endset %}
+                                    {% set helpText %}{% trans "Quick Chart URL for reporting and 2FA." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("QUICK_CHART_URL") %}
+                                        {{ forms.input("QUICK_CHART_URL", title, theme.getSetting("QUICK_CHART_URL", "https://quickchart.io"), helpText, "required") }}
+                                    {% else %}
+                                        {{ forms.disabled("QUICK_CHART_URL", title, theme.getSetting("QUICK_CHART_URL", "https://quickchart.io"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("PHONE_HOME") %}
                                     {% set title %}{% trans "Allow usage tracking?" %}{% endset %}
                                     {% set helpText %}{% trans "Should the CMS send anonymous statistics to help improve the software?" %}{% endset %}
