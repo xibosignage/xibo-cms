@@ -97,6 +97,14 @@ class Notification implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="Attachment filename"
+     * )
+     * @var string
+     */
+    public $filename;
+
+    /**
+     * @SWG\Property(
      *  description="User Group Notifications associated with this notification"
      * )
      * @var UserGroup[]
@@ -248,8 +256,8 @@ class Notification implements \JsonSerializable
     {
         $this->notificationId = $this->getStore()->insert('
             INSERT INTO `notification`
-              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `isSystem`, `userId`)
-              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :isSystem, :userId)
+              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `isSystem`, `userId`, `filename`)
+              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :isSystem, :userId, :filename)
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
@@ -258,7 +266,8 @@ class Notification implements \JsonSerializable
             'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
             'isSystem' => $this->isSystem,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'filename' => $this->filename
         ]);
     }
 
@@ -275,7 +284,8 @@ class Notification implements \JsonSerializable
                 `isEmail` = :isEmail,
                 `isInterrupt` = :isInterrupt,
                 `isSystem` = :isSystem,
-                `userId` = :userId
+                `userId` = :userId,
+                `filename` = :filename
               WHERE `notificationId` = :notificationId
         ', [
             'subject' => $this->subject,
@@ -286,6 +296,7 @@ class Notification implements \JsonSerializable
             'isInterrupt' => $this->isInterrupt,
             'isSystem' => $this->isSystem,
             'userId' => $this->userId,
+            'filename' => $this->filename,
             'notificationId' => $this->notificationId
         ]);
     }

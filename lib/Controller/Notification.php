@@ -15,6 +15,8 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\DisplayNotifyService;
@@ -382,6 +384,34 @@ class Notification extends Base
      *  )
      * )
      */
+    public function addAttachment()
+    {
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+
+        $options = array(
+            'userId' => $this->getUser()->userId,
+            'controller' => $this,
+            'upload_dir' => $libraryFolder . 'attachment/',
+            'download_via_php' => true,
+            'script_url' => $this->urlFor('notification.add'),
+            'upload_url' => $this->urlFor('notification.add'),
+            'image_versions' => array(),
+            'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
+        );
+
+        // Output handled by UploadHandler
+        $this->setNoOutput(true);
+
+        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        new AttachmentUploadHandler($options);
+    }
+
     public function add()
     {
         $notification = $this->notificationFactory->createEmpty();
@@ -389,6 +419,7 @@ class Notification extends Base
         $notification->body = $this->getSanitizer()->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
         $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt');
+        $notification->filename = $this->getSanitizer()->getString('attachedFilename');
 
         if ($notification->releaseDt !== null)
             $notification->releaseDt = $notification->releaseDt->format('U');
