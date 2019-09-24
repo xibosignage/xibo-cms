@@ -85,6 +85,21 @@ class NotificationTidyTask implements TaskInterface
 
         $this->store->update($sql, $params);
 
+        // Remove the attached file
+        $sql = 'SELECT filename  FROM `notification` ' . $where;
+
+        foreach ($this->store->select($sql, $params) as $row) {
+            $filename = $row['filename'];
+
+            /*Delete the attachment*/
+            if (!empty($filename)) {
+                // Library location
+                $attachmentLocation = $this->config->getSetting('LIBRARY_LOCATION'). 'attachment/';
+                if (file_exists($attachmentLocation . $filename))
+                    unlink($attachmentLocation . $filename);
+            }
+        }
+
         // Delete from notification
         $sql = 'DELETE FROM `notification` ' . $where;
 
