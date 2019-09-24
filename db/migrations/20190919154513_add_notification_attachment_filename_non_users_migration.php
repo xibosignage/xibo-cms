@@ -35,6 +35,7 @@ class AddNotificationAttachmentFilenameNonUsersMigration extends AbstractMigrati
         $table = $this->table('notification');
         $table
             ->addColumn('filename', 'string', ['limit' => 1000, 'null' => true])
+            ->addColumn('nonusers', 'string', ['limit' => 1000, 'null' => true])
             ->save();
     }
 }

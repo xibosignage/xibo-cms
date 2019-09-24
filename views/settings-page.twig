@@ -403,7 +403,7 @@
 
                                 {% if theme.isSettingVisible("QUICK_CHART_URL") %}
                                     {% set title %}{% trans "Quick Chart URL" %}{% endset %}
-                                    {% set helpText %}{% trans "Quick Chart URL for reporting and 2FA." %}{% endset %}
+                                    {% set helpText %}{% trans "Enter the URL to a Quick Chart service. This is used to draw charts in emailed reports and for showing a QR code during two factor authentication." %}{% endset %}
 
                                     {% if theme.isSettingEditable("QUICK_CHART_URL") %}
                                         {{ forms.input("QUICK_CHART_URL", title, theme.getSetting("QUICK_CHART_URL", "https://quickchart.io"), helpText, "required") }}

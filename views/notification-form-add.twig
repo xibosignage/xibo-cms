@@ -71,6 +71,9 @@
                         ] %}
                         {{ forms.dropdown("userGroupIds[]", "dropdownmulti", title, "", {group: userGroups, user: users}, "groupId", "group", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
+                        {% set title %}{% trans "Non users" %}{% endset %}
+                        {% set helpText %}{% trans "Additional emails separated by a comma." %}{% endset %}
+                        {{ forms.inputWithTags("nonusers", title, "", helpText) }}
 
                         {% set title %}{% trans "Displays" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}

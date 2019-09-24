@@ -84,6 +84,11 @@ class EmailNotificationsTask implements TaskInterface
                 $mail->Subject = $notification->subject;
                 $mail->addAddress($notification->email);
 
+                $addresses = explode(',', $notification->nonusers);
+                foreach ($addresses as $address) {
+                    $mail->AddAddress($address);
+                }
+
                 // Body
                 $mail->isHTML(true);
                 $mail->AltBody = $notification->body;

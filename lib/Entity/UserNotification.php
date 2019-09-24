@@ -111,6 +111,11 @@ class UserNotification implements \JsonSerializable
     public $filename;
 
     /**
+     * @var string
+     */
+    public $nonusers;
+
+    /**
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log

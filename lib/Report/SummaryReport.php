@@ -201,6 +201,7 @@ class SummaryReport implements ReportInterface
         }
 
         $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $this->getSanitizer()->getString('nonusers');
 
         // Return
         return [

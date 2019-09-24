@@ -50,7 +50,7 @@ interface ReportInterface
     public function getReportEmailTemplate();
 
     /**
-     * Return the twig file name of the report email template
+     * Get chart script
      * @return string
      */
     public function getReportChartScript($results);

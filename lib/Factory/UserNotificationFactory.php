@@ -139,6 +139,7 @@ class UserNotificationFactory extends BaseFactory
              `notification`.isInterrupt,
              `notification`.isSystem,
              `notification`.filename,
+             `notification`.nonusers,
              `user`.email
         ';
 
