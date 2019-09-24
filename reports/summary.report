@@ -3,6 +3,7 @@
   "description": "Chart: Summary by Layout, Media or Event",
   "class": "\\Xibo\\Report\\SummaryReport",
   "type": "Chart",
+  "output_type": "chart",
   "color":"red",
   "fa_icon": "fa-bar-chart"
 }
