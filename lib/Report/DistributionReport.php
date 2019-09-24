@@ -99,6 +99,22 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        $labels = str_replace('"', "'", $results['chartData']['labels']);
+        $countData = str_replace('"', "'", $results['chartData']['countData']);
+        $durationData = str_replace('"', "'", $results['chartData']['durationData']);
+
+        return "{type:'bar',data:{labels:".$labels.", datasets:[{label:'Total duration',data:".$durationData."},{ label: 'Total count', borderColor: 'green', data: ".$countData.", type:'line', fill: 'false'}]}}";
+    }
+
+    /** @inheritdoc */
+    public function getReportEmailTemplate()
+    {
+        return 'distribution-email-template.twig';
+    }
+
+    /** @inheritdoc */
     public function getReportForm()
     {
         return [
@@ -197,6 +213,8 @@ class DistributionReport implements ReportInterface
             $filterCriteria['reportFilter'] = 'lastyear';
             $filterCriteria['groupByFilter'] = $groupByFilter;
         }
+
+        $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
 
         // Return
         return [

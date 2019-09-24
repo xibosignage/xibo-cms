@@ -85,6 +85,9 @@
                 {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
                 {{ forms.input("name", title, "", helpText, "", "required") }}
 
+                {% set title %}{% trans "Should an email be sent?" %}{% endset %}
+                {{ forms.checkbox("sendEmail", title, sendEmail) }}
+
             </form>
         </div>
     </div>
