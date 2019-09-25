@@ -78,7 +78,11 @@ class DynamicPlaylistSyncTask implements TaskInterface
         // If we're in the error state, then always run, otherwise check the dates we modified various triggers
         if ($this->getTask()->lastRunStatus !== Task::$STATUS_ERROR) {
             // Run a little query to get the last modified date from the media table
-            $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `media` WHERE `type` <> \'module\';', [])[0]['modifiedDt'];
+            $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `media` WHERE 
+                `type` <> \'module\'
+                AND `type` <> \'genericfile\'
+                AND `type` <> \'playersoftware\'
+                AND `type` <> \'font\';', [])[0]['modifiedDt'];
             $lastPlaylistUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `playlist`;', [])[0]['modifiedDt'];
 
             if (empty($lastMediaUpdate) && empty($lastPlaylistUpdate)) {
@@ -192,24 +196,28 @@ class DynamicPlaylistSyncTask implements TaskInterface
         // Create a module
         $module = $this->moduleFactory->create($media->mediaType);
 
-        // Determine the duration
-        $mediaDuration = ($media->duration == 0) ? $module->determineDuration() : $media->duration;
+        if ($module->getModule()->assignable == 1) {
 
-        // Create a widget
-        $widget = $this->widgetFactory->create($playlist->getOwnerId(), $playlist->playlistId, $media->mediaType, $mediaDuration);
-        $widget->assignMedia($media->mediaId);
-        $widget->displayOrder = $displayOrder;
+            // Determine the duration
+            $mediaDuration = ($media->duration == 0) ? $module->determineDuration() : $media->duration;
 
-        // Assign the widget to the module
-        $module->setWidget($widget);
+            // Create a widget
+            $widget = $this->widgetFactory->create($playlist->getOwnerId(), $playlist->playlistId, $media->mediaType,
+                $mediaDuration);
+            $widget->assignMedia($media->mediaId);
+            $widget->displayOrder = $displayOrder;
 
-        // Set default options (this sets options on the widget)
-        $module->setDefaultWidgetOptions();
+            // Assign the widget to the module
+            $module->setWidget($widget);
 
-        // Calculate the duration
-        $widget->calculateDuration($module);
+            // Set default options (this sets options on the widget)
+            $module->setDefaultWidgetOptions();
 
-        // Assign the widget to the playlist
-        $playlist->assignWidget($widget);
+            // Calculate the duration
+            $widget->calculateDuration($module);
+
+            // Assign the widget to the playlist
+            $playlist->assignWidget($widget);
+        }
     }
 }
