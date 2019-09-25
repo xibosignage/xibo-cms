@@ -177,6 +177,10 @@ class DataSetColumn implements \JsonSerializable
         if (!v::stringType()->alnum()->validate($this->heading) || strtolower($this->heading) == 'id')
             throw new InvalidArgumentException(__('Please provide an alternative column heading %s can not be used.', $this->heading), 'heading');
 
+        if ($this->dataSetColumnTypeId == 2 && $this->formula == '') {
+            throw new InvalidArgumentException(__('Please enter a valid formula'), 'formula');
+        }
+
         // Make sure this column name is unique
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);
 
@@ -233,6 +237,17 @@ class DataSetColumn implements \JsonSerializable
 
             if ($sth->fetch())
                 throw new InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'), 'listcontent');
+        }
+
+        // if formula dataSetType is set and formula is not empty, try to execute the SQL to validate it - we're ignoring client side formulas here.
+        if ($this->dataSetColumnTypeId == 2 && $this->formula != '' && substr($this->formula, 0, 1) !== '$') {
+           try {
+               $formula = str_replace('[DisplayId]', 0, $this->formula);
+               $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', []);
+           } catch (\Exception $e) {
+               $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
+               throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');
+           }
         }
     }
 
