@@ -15,6 +15,8 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\DisplayNotifyService;
@@ -311,6 +313,37 @@ class Notification extends Base
     }
 
     /**
+     * Add attachment
+     */
+    public function addAttachment()
+    {
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+
+        $options = array(
+            'userId' => $this->getUser()->userId,
+            'controller' => $this,
+            'upload_dir' => $libraryFolder . 'attachment/',
+            'download_via_php' => true,
+            'script_url' => $this->urlFor('notification.add'),
+            'upload_url' => $this->urlFor('notification.add'),
+            'image_versions' => array(),
+            'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
+        );
+
+        // Output handled by UploadHandler
+        $this->setNoOutput(true);
+
+        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        new AttachmentUploadHandler($options);
+    }
+
+    /**
      * Add Notification
      *
      * @SWG\Post(
@@ -389,6 +422,7 @@ class Notification extends Base
         $notification->body = $this->getSanitizer()->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
         $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt');
+        $notification->filename = $this->getSanitizer()->getString('attachedFilename');
 
         if ($notification->releaseDt !== null)
             $notification->releaseDt = $notification->releaseDt->format('U');
@@ -398,6 +432,7 @@ class Notification extends Base
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
         $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
+        $notification->nonusers = $this->getSanitizer()->getString('nonusers');
 
         // Displays and Users to link
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
@@ -515,6 +550,7 @@ class Notification extends Base
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
         $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
+        $notification->nonusers = $this->getSanitizer()->getString('nonusers');
 
         // Clear existing assignments
         $notification->displayGroups = [];
@@ -576,6 +612,14 @@ class Notification extends Base
             throw new AccessDeniedException();
 
         $notification->delete();
+
+        /*Delete the attachment*/
+        if (!empty($notification->filename)) {
+            // Library location
+            $attachmentLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/';
+            if (file_exists($attachmentLocation . $notification->filename))
+                unlink($attachmentLocation . $notification->filename);
+        }
 
         // Return
         $this->getState()->hydrate([

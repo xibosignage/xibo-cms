@@ -110,6 +110,18 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return null;
+    }
+
+    /** @inheritdoc */
+    public function getReportEmailTemplate()
+    {
+        return 'proofofplay-email-template.twig';
+    }
+
+    /** @inheritdoc */
     public function getReportForm()
     {
         return [
@@ -189,6 +201,9 @@ class ProofOfPlay implements ReportInterface
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
         }
+
+        $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $this->getSanitizer()->getString('nonusers');
 
         // Return
         return [

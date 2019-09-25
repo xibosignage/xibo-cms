@@ -118,16 +118,5 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#notifications_wrapper').find('.col-sm-6').eq(1));
 
-        function notificationFormOpen(dialog) {
-            // Conjure up a text editor
-            CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
-
-            // Make sure when we close the dialog we also destroy the editor
-            dialog.on("hide.bs.modal", function(event) {
-                if (event.target.className == "bootbox modal in" && CKEDITOR.instances["body"] != undefined) {
-                    CKEDITOR.instances["body"].destroy();
-                }
-            });
-        }
     </script>
 {% endblock %}

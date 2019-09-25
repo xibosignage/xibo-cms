@@ -353,6 +353,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('HELP_BASE', $this->getSanitizer()->getString('HELP_BASE'));
         }
 
+        if ($this->getConfig()->isSettingEditable('QUICK_CHART_URL')) {
+            $this->getConfig()->changeSetting('QUICK_CHART_URL', $this->getSanitizer()->getString('QUICK_CHART_URL'));
+        }
+
         if ($this->getConfig()->isSettingEditable('PHONE_HOME')) {
             $this->getConfig()->changeSetting('PHONE_HOME', $this->getSanitizer()->getCheckbox('PHONE_HOME'));
         }

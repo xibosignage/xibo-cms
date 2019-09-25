@@ -136,6 +136,8 @@ class NotificationFactory extends BaseFactory
             `notification`.isEmail,
             `notification`.isInterrupt,
             `notification`.isSystem,
+            `notification`.filename,
+            `notification`.nonusers,
             `notification`.userId ';
 
         $body = ' FROM `notification` ';

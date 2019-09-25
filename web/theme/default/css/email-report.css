@@ -1,0 +1,77 @@
+/*
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+body {
+    color: #333333 !important;
+    margin-bottom: 60px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+}
+.header {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.small {
+    font-size: 85%;
+}
+
+.logo {
+    height: 60px;
+    margin-left: 15px;
+    margin-bottom: 15px;
+}
+
+.saved-report-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.saved-report-table td, .saved-report-table th {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.saved-report-table tr:nth-child(even){background-color: #f2f2f2;}
+
+.saved-report-table tr:hover {background-color: #ddd;}
+
+.saved-report-table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #273759;
+    color: white;
+}
+
+.clear {
+    clear:both;
+}
+
+.right {
+    float: right;
+}
+
+.left {
+    float: left;
+}
