@@ -108,10 +108,10 @@ class ReportScheduleTask implements TaskInterface
             if ($nextRunDt <= $now) {
 
                 // random run of report schedules
-//                $skip = $this->skipReportRun($now, $nextRunDt);
-//                if ($skip == true) {
-//                    continue;
-//                }
+                $skip = $this->skipReportRun($now, $nextRunDt);
+                if ($skip == true) {
+                    continue;
+                }
 
                 // execute the report
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
@@ -252,7 +252,8 @@ class ReportScheduleTask implements TaskInterface
                 $notification->save();
             }
         } catch (\Exception $error) {
-            $this->log->error('Report PDF could not be created and notifiction is not saved.');
+            $this->log->error('Report PDF could not be created and notification is not saved.');
+            $this->runMessage .= ' - Report PDF could not be created and notification is not saved.' . PHP_EOL . PHP_EOL;
         }
 
     }

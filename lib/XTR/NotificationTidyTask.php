@@ -95,8 +95,9 @@ class NotificationTidyTask implements TaskInterface
             if (!empty($filename)) {
                 // Library location
                 $attachmentLocation = $this->config->getSetting('LIBRARY_LOCATION'). 'attachment/';
-                if (file_exists($attachmentLocation . $filename))
+                if (file_exists($attachmentLocation . $filename)) {
                     unlink($attachmentLocation . $filename);
+                }
             }
         }
 
