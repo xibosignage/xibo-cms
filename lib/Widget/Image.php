@@ -187,6 +187,11 @@ class Image extends ModuleWidget
 
         // Preview or download?
         if ($preview) {
+
+            // Disable any buffering to prevent OOM errors.
+            @ob_end_clean();
+            @ob_end_flush();
+
             // Preview (we output the file to the browser with image headers)
             try {
                 // should we use a cache?
@@ -194,7 +199,7 @@ class Image extends ModuleWidget
                     // Not cached, or cache not required, lets load it again
                     Img::configure(array('driver' => 'gd'));
 
-                    $this->getLog()->debug('Preview Requested with Width and Height %d x %d', $width, $height);
+                    $this->getLog()->debug('Preview Requested with Width and Height '. $width . ' x ' . $height);
                     $this->getLog()->debug('Loading ' . $filePath);
 
                     // Load the image
@@ -246,8 +251,7 @@ class Image extends ModuleWidget
 
                 echo $img->response();
             }
-        }
-        else {
+        } else {
             // Download the file
             $this->download();
         }
