@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -844,6 +845,7 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $customDayPart->dayPartId);
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
 
         // Workaround for cases where we're supplied 0 as the dayPartId (legacy custom dayPart)
         if ($schedule->dayPartId === 0)
@@ -904,6 +906,57 @@ class Schedule extends Base
             }
 
             $this->getLog()->debug('Processed times are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
+        }
+
+        // interrupt layout
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+
+            $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            if ($campaign->isLayoutSpecific == 0) {
+                throw new InvalidArgumentException(__('Cannot select a Campaign for this event type.'), 'campaignId');
+            }
+
+            foreach ($this->layoutFactory->getByCampaignId($schedule->campaignId) as $layout) {
+                $layoutDuration = $layout->duration;
+                $shareInSeconds = ($schedule->shareOfVoice * 3600) / 100;
+
+                if ($layoutDuration > $shareInSeconds) {
+                    throw new InvalidArgumentException(__('Layout duration is longer than share of voice in the hour period'), 'shareOfVoice');
+                }
+            }
+
+            foreach($schedule->displayGroups as $displayGroup) {
+                $events = $this->scheduleFactory->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroup->displayGroupId], 'fromDt' => $schedule->fromDt, 'toDt' => $schedule->toDt]);
+
+                foreach ($events as $event) {
+                    /** @var $event \Xibo\Entity\Schedule */
+                    if ($event->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+                        $this->getLog()->debug('we have another interrupt Layout scheduled to Display Group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
+                        $existingEventFromDt = $event->fromDt;
+                        $existingEventToDt =  $event->toDt;
+
+                        // check if we are adding event with always Daypart, if so, set the from and to dates (without this condition from and to would be null for always Daypart)
+                        if ($schedule->isAlwaysDayPart()) {
+                            $schedule->fromDt = \Xibo\Entity\Schedule::$DATE_MIN;
+                            $schedule->toDt = \Xibo\Entity\Schedule::$DATE_MAX;
+                        }
+
+                        // without recurrence
+                        if ($schedule->fromDt >= $existingEventFromDt && $schedule->fromDt <= $existingEventToDt) {
+                            throw new InvalidArgumentException(__('The event has start date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
+                        }
+
+                        if ($schedule->toDt >= $existingEventFromDt && $schedule->toDt <= $existingEventToDt) {
+                            throw new InvalidArgumentException(__('The event has end date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
+                        }
+
+                        if ($schedule->fromDt <= $existingEventFromDt && $schedule->toDt >= $existingEventToDt) {
+                            throw new InvalidArgumentException(__('The event date overlaps another active interrupt layout event ID ' . $event->eventId), 'fromDt');
+                        }
+                    }
+                }
+            }
         }
 
         // Ready to do the add
@@ -1182,6 +1235,7 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1227,6 +1281,57 @@ class Schedule extends Base
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
+        }
+
+        // interrupt layout
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+
+            $campaign = $this->campaignFactory->getById($schedule->campaignId);
+
+            if ($campaign->isLayoutSpecific == 0) {
+                throw new InvalidArgumentException(__('Cannot select a Campaign for this event type.'), 'campaignId');
+            }
+
+            foreach ($this->layoutFactory->getByCampaignId($schedule->campaignId) as $layout) {
+                $layoutDuration = $layout->duration;
+                $shareInSeconds = ($schedule->shareOfVoice * 3600) / 100;
+
+                if ($layoutDuration > $shareInSeconds) {
+                    throw new InvalidArgumentException(__('Layout duration is longer than share of voice in the hour period'), 'shareOfVoice');
+                }
+            }
+
+            foreach($schedule->displayGroups as $displayGroup) {
+                $events = $this->scheduleFactory->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroup->displayGroupId], 'fromDt' => $schedule->fromDt, 'toDt' => $schedule->toDt]);
+
+                foreach ($events as $event) {
+                    /** @var $event \Xibo\Entity\Schedule */
+                    if ($event->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT && $event->eventId != $schedule->eventId) {
+                        $this->getLog()->debug('we have another interrupt Layout scheduled to Display Group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
+                        $existingEventFromDt = $event->fromDt;
+                        $existingEventToDt =  $event->toDt;
+
+                        // check if we are adding event with always Daypart, if so, set the from and to dates (without this condition from and to would be null for always Daypart)
+                        if ($schedule->isAlwaysDayPart()) {
+                            $schedule->fromDt = \Xibo\Entity\Schedule::$DATE_MIN;
+                            $schedule->toDt = \Xibo\Entity\Schedule::$DATE_MAX;
+                        }
+
+                        // without recurrence
+                        if ($schedule->fromDt >= $existingEventFromDt && $schedule->fromDt <= $existingEventToDt) {
+                            throw new InvalidArgumentException(__('The event has start date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
+                        }
+
+                        if ($schedule->toDt >= $existingEventFromDt && $schedule->toDt <= $existingEventToDt) {
+                            throw new InvalidArgumentException(__('The event has end date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
+                        }
+
+                        if ($schedule->fromDt <= $existingEventFromDt && $schedule->toDt >= $existingEventToDt) {
+                            throw new InvalidArgumentException(__('The event date overlaps another active interrupt layout event ID ' . $event->eventId), 'fromDt');
+                        }
+                    }
+                }
+            }
         }
 
         // Ready to do the add

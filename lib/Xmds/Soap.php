@@ -420,7 +420,7 @@ class Soap
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 $layoutId = $this->getSanitizer()->int($row['layoutId']);
-                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT)) {
+                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT)) {
                     $layouts[] = $layoutId;
                 }
             }
@@ -1029,13 +1029,32 @@ class Soap
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
+                    } else if ($eventTypeId == Schedule::$INTERRUPT_EVENT) {
+
+                        // Check the layout status
+                        // https://github.com/xibosignage/xibo/issues/743
+                        if (intval($row['status']) > 3) {
+                            $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                            continue;
+                        }
+
+                        $interrupt = $scheduleXml->createElement('interrupt');
+                        $interrupt->setAttribute("file", $layoutId);
+                        $interrupt->setAttribute("fromdt", $fromDt);
+                        $interrupt->setAttribute("todt", $toDt);
+                        $interrupt->setAttribute("scheduleid", $scheduleId);
+                        $interrupt->setAttribute("shareOfVoice", $row['shareOfVoice']);
+
+                        // Add to the layout node list
+                        $layoutElements->appendChild($interrupt);
                     }
                 }
             }
 
             // Add the overlay nodes if we had any
-            if ($overlayNodes != null)
+            if ($overlayNodes != null) {
                 $layoutElements->appendChild($overlayNodes);
+            }
 
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
