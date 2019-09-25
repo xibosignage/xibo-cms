@@ -30,6 +30,7 @@ use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
@@ -274,8 +275,17 @@ class DataSetRss extends Base
     {
         $dataSet = $this->dataSetFactory->getById($dataSetId);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
+
+        if ($this->getSanitizer()->getString('title') == '') {
+            throw new InvalidArgumentException(__('Please enter title'), 'title');
+        }
+
+        if ($this->getSanitizer()->getString('author') == '') {
+            throw new InvalidArgumentException(__('Please enter author name'), 'author');
+        }
 
         // Create RSS
         $feed = $this->dataSetRssFactory->createEmpty();
@@ -474,8 +484,17 @@ class DataSetRss extends Base
     {
         $dataSet = $this->dataSetFactory->getById($dataSetId);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
+
+        if ($this->getSanitizer()->getString('title') == '') {
+            throw new InvalidArgumentException(__('Please enter title'), 'title');
+        }
+
+        if ($this->getSanitizer()->getString('author') == '') {
+            throw new InvalidArgumentException(__('Please enter author name'), 'author');
+        }
 
         $feed = $this->dataSetRssFactory->getById($rssId);
         $feed->title = $this->getSanitizer()->getString('title');

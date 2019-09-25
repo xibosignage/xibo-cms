@@ -474,7 +474,7 @@ class Playlist extends Base
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter]);
+            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1]);
 
             if (count($media) > 0) {
                 $widgets = [];
@@ -1038,8 +1038,10 @@ class Playlist extends Base
             $module->setDefaultWidgetOptions();
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.
-            if ($duration !== null || $this->getSanitizer()->getCheckbox('useDuration') == 1)
+            if ($duration !== null || $this->getSanitizer()->getCheckbox('useDuration') == 1) {
                 $widget->useDuration = 1;
+                $widget->duration = $itemDuration;
+            }
 
             // Calculate the duration
             $widget->calculateDuration($module);
