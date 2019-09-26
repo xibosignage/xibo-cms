@@ -250,7 +250,7 @@ class LayoutProofOfPlayXMLMediaOffWidgetInheritTest extends LocalWebTestCase
         $this->assertContains('<layout width="1920" height="1080" bgcolor="#000" schemaVersion="3" enableStat="0">', $xmlString );
 
         // Layout Off, Media Off, Widget Inherit, Output => [0, 'Off', 'Inherit', 0],
-        $this->assertContains('<media id="'.$this->widgetId.'" type="video" render="native" duration="0" useDuration="1" fromDt="1970-01-01 01:00:00" toDt="2038-01-19 03:14:07" enableStat="0" fileId="'.$this->media->mediaId.'">', $xmlString );
+        $this->assertContains('<media id="'.$this->widgetId.'" type="video" render="native" duration="10" useDuration="1" fromDt="1970-01-01 01:00:00" toDt="2038-01-19 03:14:07" enableStat="0" fileId="'.$this->media->mediaId.'">', $xmlString );
 
     }
 
@@ -278,7 +278,7 @@ class LayoutProofOfPlayXMLMediaOffWidgetInheritTest extends LocalWebTestCase
         $this->assertContains('<layout width="1920" height="1080" bgcolor="#000" schemaVersion="3" enableStat="1">', $xmlString );
 
         // Layout On, Media Off, Widget Inherit, Output => [1, 'Off', 'Inherit', 0],
-        $this->assertContains('<media id="'.$this->widgetId2.'" type="video" render="native" duration="0" useDuration="1" fromDt="1970-01-01 01:00:00" toDt="2038-01-19 03:14:07" enableStat="0" fileId="'.$this->media->mediaId.'">', $xmlString );
+        $this->assertContains('<media id="'.$this->widgetId2.'" type="video" render="native" duration="10" useDuration="1" fromDt="1970-01-01 01:00:00" toDt="2038-01-19 03:14:07" enableStat="0" fileId="'.$this->media->mediaId.'">', $xmlString );
 
     }
 

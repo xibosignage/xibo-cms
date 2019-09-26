@@ -51,6 +51,7 @@ use Xibo\Factory\UserTypeFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Random;
+use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -1083,7 +1084,7 @@ class User extends Base
             $issuer = $appName;
         }
 
-        $tfa = new TwoFactorAuth($issuer);
+        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider());
 
         // create two factor secret and store it in user record
         if (!isset($user->twoFactorSecret)) {
@@ -1094,7 +1095,7 @@ class User extends Base
         }
 
         // generate the QR code to scan, we only show it at first set up and only for Google auth
-        $qRUrl = $tfa->getQRCodeImageAsDataUri($user->userName, $secret);
+        $qRUrl = $tfa->getQRCodeImageAsDataUri($user->userName, $secret, 150);
 
         $this->getState()->setData([
             'qRUrl' => $qRUrl
@@ -1391,7 +1392,7 @@ class User extends Base
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save(['notify' => false]);
+                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
             }

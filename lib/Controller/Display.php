@@ -23,9 +23,9 @@ namespace Xibo\Controller;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
+use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Stash\Interfaces\PoolInterface;
-use Respect\Validation\Validator as v;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -1335,8 +1335,9 @@ class Display extends Base
         header("Expires: 0");
 
         // Disable any buffering to prevent OOM errors.
-        @ob_end_clean();
-        @ob_end_flush();
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
 
         echo $img->response();
     }

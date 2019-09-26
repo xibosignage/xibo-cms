@@ -228,7 +228,8 @@ class DisplayGroup extends Base
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific'),
-            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers')
+            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
+            'userId' => $this->getSanitizer()->getInt('userId')
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);

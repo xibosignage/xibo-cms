@@ -140,6 +140,9 @@ function Layout(id, options, preload, layoutPreview) {
         playLog(10, "debug", "Parsing Layout " + self.id, false);
         self.containerName = "L" + self.id + "-" + nextId();
         
+        // Set max z-index var
+        self.regionMaxZIndex = 0;
+        
         /* Create a hidden div to show the layout in */
         var screen = $('#screen_' + self.id) ;
         screen.append('<div id="' + self.containerName  + '"></div>');
@@ -436,8 +439,14 @@ function Region(parent, id, xml, options, preload) {
     $("#" + self.containerName).css("left", self.offsetX + "px");
     $("#" + self.containerName).css("top", self.offsetY + "px");
 
-    if (self.zIndex != null)
+    if (self.zIndex != null) {
         $("#" + self.containerName).css("z-index", self.zIndex);
+
+        // Set new layout max z-index value
+        if(parseInt(self.zIndex) > self.layout.regionMaxZIndex) {
+            self.layout.regionMaxZIndex = parseInt(self.zIndex);
+        }
+    }
 
     playLog(4, "debug", "Created region " + self.id, false);
     playLog(7, "debug", "Render will be (" + self.sWidth + "x" + self.sHeight + ") pixels");
@@ -542,9 +551,6 @@ function media(parent, id, xml, options, preload) {
         }
     };
     
-    self.divWidth = self.region.sWidth;
-    self.divHeight = self.region.sHeight;
-    
     /* Build Media Options */
     self.duration = $(self.xml).attr('duration');
     self.lkid = $(self.xml).attr('lkid');
@@ -555,6 +561,17 @@ function media(parent, id, xml, options, preload) {
         self.options[this.nodeName.toLowerCase()] = $(this).text();
     });
     
+    // Show in fullscreen?
+    if(self.options.showfullscreen === "1") {
+        // Set dimensions as the layout ones
+        self.divWidth = self.region.layout.sWidth;
+        self.divHeight = self.region.layout.sHeight;
+    } else {
+        // Set dimensions as the region ones
+        self.divWidth = self.region.sWidth;
+        self.divHeight = self.region.sHeight;
+    }
+
     $("#" + self.region.containerName).append('<div id="' + self.containerName + '"></div>');
 
     /* Scale the Content Container */
@@ -566,8 +583,13 @@ function media(parent, id, xml, options, preload) {
     media.css("background-size", "contain");
     media.css("background-repeat", "no-repeat");
     media.css("background-position", "center");
-    /* media.css("left", self.offsetX + "px");
-    media.css("top", self.offsetY + "px"); */
+
+    // If fullscreen, set position offset to origin ( negative of the region offset ) and set z-index over other elements
+    if(self.options.showfullscreen === "1") {
+        media.css("left", -self.region.offsetX + "px");
+        media.css("top", -self.region.offsetY + "px");
+        media.css("z-index", self.region.layout.regionMaxZIndex + 1);
+    }
 
     var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=true&raw=true&scale_override=' + self.region.layout.scaleFactor;
     
@@ -608,6 +630,11 @@ function media(parent, id, xml, options, preload) {
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
         self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
+        
+        // Stretch video?
+        if(self.options['scaletype'] == 'stretch') {
+            self.iframe.css("object-fit", "fill");
+        }
     }
      else if(self.mediaType == "audio") {
         preload.addFiles(tmpUrl);
