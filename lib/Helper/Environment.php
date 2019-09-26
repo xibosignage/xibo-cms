@@ -55,10 +55,13 @@ class Environment
     {
         if (self::$_migration_status === null) {
             // Use a Phinx text wrapper to work out what the current status is
+            // make sure this does not output anything to our output buffer
+            ob_start();
             $phinx = new TextWrapper(new PhinxApplication(), ['configuration' => PROJECT_ROOT . '/phinx.php']);
             $phinx->getStatus();
 
             self::$_migration_status = $phinx->getExitCode();
+            ob_end_clean();
         }
 
         return self::$_migration_status;

@@ -188,9 +188,10 @@ class Image extends ModuleWidget
         // Preview or download?
         if ($preview) {
 
-            // Disable any buffering to prevent OOM errors.
-            @ob_end_clean();
-            @ob_end_flush();
+            // We expect the preview to load, manipulate and output a thumbnail (even on error).
+            // therefore we need to end output buffering and wipe any output so far.
+            // NB: we shouldn't need to do this as we aren't expecting anything to ouput before us - but just in case.
+            ob_end_clean();
 
             // Preview (we output the file to the browser with image headers)
             try {
