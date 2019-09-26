@@ -190,8 +190,10 @@ class Image extends ModuleWidget
 
             // We expect the preview to load, manipulate and output a thumbnail (even on error).
             // therefore we need to end output buffering and wipe any output so far.
-            // NB: we shouldn't need to do this as we aren't expecting anything to ouput before us - but just in case.
-            ob_end_clean();
+            // this means that we do not buffer the image output into memory
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
 
             // Preview (we output the file to the browser with image headers)
             try {
