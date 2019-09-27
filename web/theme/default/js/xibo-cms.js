@@ -1437,7 +1437,7 @@ function XiboSwapDialog(formUrl) {
 
 function XiboRefreshAllGrids() {
     // We should refresh the grids (this is a global refresh)
-    $(" .XiboGrid table").each(function() {
+    $(" .XiboGrid table.dataTable").each(function() {
         // Render
         $(this).DataTable().ajax.reload(null, false);
     });

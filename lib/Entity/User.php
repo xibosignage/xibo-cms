@@ -649,13 +649,14 @@ class User implements \JsonSerializable
         }
         foreach ($this->events as $event) {
             /* @var Schedule $event */
+            $event->load();
             $event->setOwner($user->getOwnerId());
             $event->setDisplayFactory($this->displayFactory);
             $event->save(['generate' => false]);
         }
         foreach ($this->layouts as $layout) {
             /* @var Layout $layout */
-            $layout->setOwner($user->getOwnerId());
+            $layout->setOwner($user->getOwnerId(), true);
             $layout->save();
         }
         foreach ($this->campaigns as $campaign) {

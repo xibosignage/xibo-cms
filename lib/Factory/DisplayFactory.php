@@ -297,7 +297,7 @@ class DisplayFactory extends BaseFactory
             foreach (explode(',', $this->getSanitizer()->getString('display', $filterBy)) as $term) {
 
                 // convert into a space delimited array
-                $names = explode(' ', $term);
+                $names = array_filter(explode(' ', $term));
 
                 $i = 0;
                 foreach ($names as $searchName) {

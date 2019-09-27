@@ -393,6 +393,15 @@ class Layout extends Base
     function edit($layoutId)
     {
         $layout = $this->layoutFactory->getById($layoutId);
+        $isTemplate = false;
+
+        // check if we're dealing with the template
+        $currentTags = explode(',', $layout->tags);
+        foreach ($currentTags as $tag) {
+            if ($tag === 'template') {
+                $isTemplate = true;
+            }
+        }
 
         // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout))
@@ -414,6 +423,17 @@ class Layout extends Base
             $saveRegions = true;
             $layout->width = $resolution->width;
             $layout->height = $resolution->height;
+        }
+
+        $tags = $this->getSanitizer()->getString('tags');
+        $tagsArray = explode(',', $tags);
+
+        if (!$isTemplate) {
+            foreach ($tagsArray as $tag) {
+                if ($tag === 'template') {
+                    throw new InvalidArgumentException('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.', 'tags');
+                }
+            }
         }
 
         // Save
