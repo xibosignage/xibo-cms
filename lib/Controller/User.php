@@ -1077,6 +1077,7 @@ class User extends Base
 
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
+        $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL', 'https://quickchart.io');
 
         if ($issuerSettings !== '') {
             $issuer = $issuerSettings;
@@ -1084,7 +1085,7 @@ class User extends Base
             $issuer = $appName;
         }
 
-        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider());
+        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider($quickChartUrl));
 
         // create two factor secret and store it in user record
         if (!isset($user->twoFactorSecret)) {
