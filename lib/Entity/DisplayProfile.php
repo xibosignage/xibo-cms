@@ -420,11 +420,16 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Delete
+     * @throws InvalidArgumentException
      */
     public function delete()
     {
         $this->commands = [];
         $this->manageAssignments();
+
+        if ($this->getStore()->exists('SELECT displayId FROM display WHERE displayProfileId = :displayProfileId', ['displayProfileId' => $this->displayProfileId]) ) {
+            throw new InvalidArgumentException(__('This Display Profile is currently assigned to one or more Displays'), 'displayProfileId');
+        }
 
         $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
     }
