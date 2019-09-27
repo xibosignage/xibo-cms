@@ -290,7 +290,7 @@
                             { val: 'true', text: trueText }
                         ] %}
 
-                        {% if lockOptions.usblock is defined and lockOptions.usblock is not null %}
+                        {% if lockOptions.usblock is defined and lockOptions.usblock is not null and displayProfile.type == "lg" %}
                             {% if lockOptions.usblock == true  %}
                                 {% set usblockValue = 'true' %}
                             {% else %}
@@ -310,7 +310,10 @@
                             {% set osdlockValue = 'empty' %}
                         {% endif %}
 
-                        {{ forms.dropdown("usblock", "single", usblockTitle, usblockValue, options, "val", "text", usblockHelp) }}
+                        {% if displayProfile.type == "lg" %}
+                            {{ forms.dropdown("usblock", "single", usblockTitle, usblockValue, options, "val", "text", usblockHelp) }}
+                        {% endif %}
+
                         {{ forms.dropdown("osdlock", "single", osdlockTitle, osdlockValue, options, "val", "text", osdlockHelp) }}
 
                         {# keylock (local and remote) #}
