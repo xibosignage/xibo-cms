@@ -281,6 +281,7 @@ class Layout extends Base
         $templateId = $this->getSanitizer()->getInt('layoutId');
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
         $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+        $autoApplyTransitions = $this->getSanitizer()->getCheckbox('autoApplyTransitions');
 
         $template = null;
 
@@ -314,6 +315,9 @@ class Layout extends Base
 
         // Set layout enableStat flag
         $layout->enableStat = $enableStat;
+
+        // Set auto apply transitions flag
+        $layout->autoApplyTransitions = $autoApplyTransitions;
 
         // Save
         $layout->save();
@@ -556,6 +560,7 @@ class Layout extends Base
         $layout->backgroundColor = $this->getSanitizer()->getString('backgroundColor');
         $layout->backgroundImageId = $this->getSanitizer()->getInt('backgroundImageId');
         $layout->backgroundzIndex = $this->getSanitizer()->getInt('backgroundzIndex');
+        $layout->autoApplyTransitions = $this->getSanitizer()->getCheckbox('autoApplyTransitions');
 
         // Resolution
         $saveRegions = false;
@@ -1037,6 +1042,24 @@ class Layout extends Base
 
                     // Add widget module type name
                     $widget->moduleName = $module->getModuleName();
+
+                    // apply default transitions to a dynamic parameters on widget object.
+                    if ($layout->autoApplyTransitions == 1) {
+                        $widgetTransIn = $widget->getOptionValue('transIn', $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN'));
+                        $widgetTransOut = $widget->getOptionValue('transOut', $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT'));
+                        $widgetTransInDuration = $widget->getOptionValue('transInDuration', $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION'));
+                        $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION'));
+                    } else {
+                        $widgetTransIn = $widget->getOptionValue('transIn', null);
+                        $widgetTransOut = $widget->getOptionValue('transOut', null);
+                        $widgetTransInDuration = $widget->getOptionValue('transInDuration', null);
+                        $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', null);
+                    }
+
+                    $widget->transitionIn = $widgetTransIn;
+                    $widget->transitionOut = $widgetTransOut;
+                    $widget->transitionDurationIn = $widgetTransInDuration;
+                    $widget->transitionDurationOut = $widgetTransOutDuration;
 
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
@@ -2165,6 +2188,7 @@ class Layout extends Base
         $draft->parentId = $layout->layoutId;
         $draft->campaignId = $layout->campaignId;
         $draft->publishedStatusId = 2; // Draft
+        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
         $draft->tags = [];

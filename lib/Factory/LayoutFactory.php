@@ -782,9 +782,25 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
                 $widget->toDt = ($mediaNode['toDt'] === '') ? Widget::$DATE_MAX : $mediaNode['toDt'];
 
+                $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
+                $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
+                $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
+                $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
+
                 // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-                $widget->fromDt = ($widget->fromDt === Widget::$DATE_MIN) ? Widget::$DATE_MIN : $this->getDate()->parse($widget->fromDt)->format('U');
-                $widget->toDt = ($widget->toDt === Widget::$DATE_MAX) ? Widget::$DATE_MAX : $this->getDate()->parse($widget->toDt)->format('U');
+                // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
+
+                if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear) ) {
+                    $widget->fromDt = Widget::$DATE_MIN;
+                } else {
+                    $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+                }
+
+                if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear) ) {
+                    $widget->toDt = Widget::$DATE_MAX;
+                } else {
+                    $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+                }
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -1622,6 +1638,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.publishedStatusId, ";
         $select .= "        `status`.status AS publishedStatus, ";
         $select .= "        layout.publishedDate, ";
+        $select .= "        layout.autoApplyTransitions, ";
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1965,6 +1982,7 @@ class LayoutFactory extends BaseFactory
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
             $layout->publishedDate = $this->getSanitizer()->string($row['publishedDate']);
+            $layout->autoApplyTransitions = $this->getSanitizer()->int($row['autoApplyTransitions']);
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

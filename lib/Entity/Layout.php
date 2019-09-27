@@ -233,6 +233,14 @@ class Layout implements \JsonSerializable
      */
     public $enableStat;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating whether the default transitions should be applied to this Layout"
+     * )
+     */
+    public $autoApplyTransitions;
+
     // Child items
     /** @var Region[]  */
     public $regions = [];
@@ -966,6 +974,8 @@ class Layout implements \JsonSerializable
     /**
      * Export the Layout as its XLF
      * @return string
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     public function toXlf()
@@ -1193,6 +1203,19 @@ class Layout implements \JsonSerializable
 
                         $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
                     }
+                }
+
+                // automatically set the transitions on the layout xml, we are not saving widgets here to avoid deadlock issues.
+                if ($this->autoApplyTransitions == 1) {
+                    $widgetTransIn = $widget->getOptionValue('transIn', $this->config->getSetting('DEFAULT_TRANSITION_IN'));
+                    $widgetTransOut = $widget->getOptionValue('transOut', $this->config->getSetting('DEFAULT_TRANSITION_OUT'));
+                    $widgetTransInDuration = $widget->getOptionValue('transInDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+                    $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+
+                    $widget->setOptionValue('transIn', 'attrib', $widgetTransIn);
+                    $widget->setOptionValue('transInDuration', 'attrib', $widgetTransInDuration);
+                    $widget->setOptionValue('transOut', 'attrib', $widgetTransOut);
+                    $widget->setOptionValue('transOutDuration', 'attrib', $widgetTransOutDuration);
                 }
 
                 // Set enable stat collection flag
@@ -1493,6 +1516,8 @@ class Layout implements \JsonSerializable
      * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     public function xlfToDisk($options = [])
@@ -1738,8 +1763,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
 
         $time = $this->date->getLocalDate();
 
@@ -1757,7 +1782,8 @@ class Layout implements \JsonSerializable
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'parentId' => ($this->parentId == null) ? null : $this->parentId,
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'autoApplyTransitions' => ($this->autoApplyTransitions == null) ? 0 : $this->autoApplyTransitions
         ));
 
         // Add a Campaign
@@ -1828,7 +1854,8 @@ class Layout implements \JsonSerializable
               `userId` = :userId,
               `schemaVersion` = :schemaVersion,
               `statusMessage` = :statusMessage,
-              enableStat = :enableStat
+              enableStat = :enableStat,
+              autoApplyTransitions = :autoApplyTransitions
          WHERE layoutID = :layoutid
         ';
 
@@ -1851,7 +1878,8 @@ class Layout implements \JsonSerializable
             'userId' => $this->ownerId,
             'schemaVersion' => $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'autoApplyTransitions' => $this->autoApplyTransitions
         ));
 
         // Update the Campaign

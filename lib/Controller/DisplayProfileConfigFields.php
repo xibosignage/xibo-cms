@@ -207,6 +207,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('statsEnabled')) {
                     $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
@@ -330,6 +334,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
                     $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
@@ -425,6 +433,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
