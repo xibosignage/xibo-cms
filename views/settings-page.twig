@@ -198,6 +198,12 @@
                                     {% endif %}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("DEFAULT_TRANSITION_AUTO_APPLY") %}
+                                    {% set title %}{% trans "Default value for \"Automatically apply Transitions?.\" checkbox on Layout add form" %}{% endset %}
+
+                                    {{ forms.checkbox("DEFAULT_TRANSITION_AUTO_APPLY", title, theme.getSetting("DEFAULT_TRANSITION_AUTO_APPLY"), "", "", "", not theme.isSettingEditable("DEFAULT_TRANSITION_AUTO_APPLY")) }}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("DEFAULT_RESIZE_THRESHOLD") %}
                                     {% set title %}{% trans "Resize Threshold" %}{% endset %}
                                     {% set helpText %}{% trans "The maximum dimensions to be considered when an image is resized, based on the longest side" %}{% endset %}

@@ -707,9 +707,6 @@ class Module extends Base
             'transitions' => [
                 'in' => $this->transitionFactory->getEnabledByType('in'),
                 'out' => $this->transitionFactory->getEnabledByType('out'),
-                'defaultTransitionDuration' => $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION'),
-                'defaultTransitionIn' => $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN'),
-                'defaultTransitionOut' => $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT'),
                 'compassPoints' => array(
                     array('id' => 'N', 'name' => __('North')),
                     array('id' => 'NE', 'name' => __('North East')),

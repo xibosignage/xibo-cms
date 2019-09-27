@@ -1622,6 +1622,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.publishedStatusId, ";
         $select .= "        `status`.status AS publishedStatus, ";
         $select .= "        layout.publishedDate, ";
+        $select .= "        layout.autoApplyTransitions, ";
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1965,6 +1966,7 @@ class LayoutFactory extends BaseFactory
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
             $layout->publishedDate = $this->getSanitizer()->string($row['publishedDate']);
+            $layout->autoApplyTransitions = $this->getSanitizer()->int($row['autoApplyTransitions']);
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

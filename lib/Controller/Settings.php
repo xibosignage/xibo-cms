@@ -255,6 +255,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DEFAULT_TRANSITION_DURATION', $this->getSanitizer()->getInt('DEFAULT_TRANSITION_DURATION'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_AUTO_APPLY')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_AUTO_APPLY', $this->getSanitizer()->getCheckbox('DEFAULT_TRANSITION_AUTO_APPLY'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_RESIZE_THRESHOLD')) {
             $this->getConfig()->changeSetting('DEFAULT_RESIZE_THRESHOLD', $this->getSanitizer()->getInt('DEFAULT_RESIZE_THRESHOLD'));
         }

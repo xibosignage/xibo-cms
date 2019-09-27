@@ -80,6 +80,10 @@
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Layout. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
                         {{ forms.checkbox("enableStat", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), helpText) }}
+
+                        {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
+                        {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Layout." %}{% endset %}
+                        {{ forms.checkbox("autoApplyTransitions", title, theme.getSetting("DEFAULT_TRANSITION_AUTO_APPLY"), helpText) }}
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
