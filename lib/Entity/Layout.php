@@ -723,7 +723,7 @@ class Layout implements \JsonSerializable
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
                 $campaign->setChildObjectDependencies($this->layoutFactory);
-                $campaign->unassignLayout($this);
+                $campaign->unassignLayout($this, true);
                 $campaign->save(['validate' => false]);
             }
 
