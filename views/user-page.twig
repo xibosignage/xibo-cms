@@ -48,6 +48,7 @@
                                 <th>{% trans "Last Login" %}</th>
                                 <th>{% trans "Logged In?" %}</th>
                                 <th>{% trans "Retired?" %}</th>
+                                <th>{% trans "Two Factor" %}</th>
                                 <th>{% trans "First Name" %}</th>
                                 <th>{% trans "Last Name" %}</th>
                                 <th>{% trans "Phone" %}</th>
@@ -134,6 +135,24 @@
                     {
                         "data": "retired",
                         "render": dataTableTickCrossColumn
+                    },
+                    {
+                        "data": "twoFactorTypeId",
+                        "visible": false,
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var icon = "";
+                            if (data == 1)
+                                icon = "fa-envelope";
+                            else if (data == 2)
+                                icon = "fa-google";
+                            else
+                                icon = "fa-times";
+
+                            return "<span class='fa " + icon + "' title='" + (row.twoFactorDescription) + "'></span>";
+                        }
                     },
                     {"data": "firstName", "visible": false},
                     {"data": "lastName", "visible": false},
