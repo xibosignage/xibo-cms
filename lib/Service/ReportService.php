@@ -112,6 +112,11 @@ class ReportService implements ReportServiceInterface
 
         $this->log->debug('Reports found in total: '.count($reports));
 
+        // Sort list of reports by their order
+        usort($reports, function ($a, $b) {
+            return $a->sort_order - $b->sort_order;
+        });
+
         return $reports;
     }
 

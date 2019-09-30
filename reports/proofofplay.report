@@ -5,5 +5,7 @@
   "type": "Report",
   "output_type": "table",
   "color":"blue",
-  "fa_icon": "fa-th"
+  "fa_icon": "fa-th",
+  "sort_order": 1,
+  "hidden": 0
 }
