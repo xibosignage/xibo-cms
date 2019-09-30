@@ -126,10 +126,12 @@
             {% for group in optionGroups %}
                 {% if hasGroups %}
                     <optgroup label="{{ group.label }}">
-                    {% set options = attribute(options, group.label) %}
+                    {% set tempOptions = attribute(options, group.id) %}
+                {% else %}
+                    {% set tempOptions = options %}
                 {% endif %}
 
-                {% for option in options %}
+                {% for option in tempOptions %}
 
                     {% set itemOptionId = attribute(option, optionId) %}
                     {% set itemOptionValue = attribute(option, optionValue) %}
@@ -222,4 +224,3 @@
         </div>
     </div>
 {% endmacro %}
-
