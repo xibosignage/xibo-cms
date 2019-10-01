@@ -1030,7 +1030,7 @@ class User implements \JsonSerializable
     {
         $sql = 'UPDATE `user` SET lastAccessed = :time ';
 
-        if ($forcePasswordChange && DBVERSION >= 143) {
+        if ($forcePasswordChange) {
             $sql .= ' , isPasswordChangeRequired = 1 ';
         }
 
