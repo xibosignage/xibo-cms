@@ -379,6 +379,7 @@ class User implements \JsonSerializable
         $this->userOptionFactory = $userOptionFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->excludeProperty('twoFactorSecret');
+        $this->excludeProperty('twoFactorRecoveryCodes');
     }
 
     /**
