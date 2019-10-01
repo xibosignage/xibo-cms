@@ -10,6 +10,7 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
@@ -326,7 +327,7 @@ class Notification extends Base
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'upload_dir' => $libraryFolder . 'attachment/',
+            'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor('notification.add'),
             'upload_url' => $this->urlFor('notification.add'),
@@ -422,7 +423,6 @@ class Notification extends Base
         $notification->body = $this->getSanitizer()->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
         $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt');
-        $notification->filename = $this->getSanitizer()->getString('attachedFilename');
 
         if ($notification->releaseDt !== null)
             $notification->releaseDt = $notification->releaseDt->format('U');
@@ -445,6 +445,41 @@ class Notification extends Base
         foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
             $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
         }
+
+        $notification->save();
+
+        $attachedFilename = $this->getSanitizer()->getString('attachedFilename');
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        $saveName = $notification->notificationId .'_' .$attachedFilename;
+
+        if (!empty($attachedFilename)) {
+
+            // Move the file into the library
+            // Try to move the file first
+            $from = $libraryFolder . 'temp/' . $attachedFilename;
+            $to = $libraryFolder . 'attachment/' .  $saveName;
+
+            $moved = rename($from, $to);
+
+            if (!$moved) {
+                $this->getLog()->info('Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.');
+
+                // Copy
+                $moved = copy($from, $to);
+
+                // Delete
+                if (!@unlink($from)) {
+                    $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+                }
+            }
+
+            if (!$moved)
+                throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
+        }
+
+        $notification->filename = $saveName;
+        $notification->originalFileName = $attachedFilename;
 
         $notification->save();
 
