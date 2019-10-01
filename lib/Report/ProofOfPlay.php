@@ -1040,6 +1040,7 @@ class ProofOfPlay implements ReportInterface
             ],
         ];
 
+        // Task run
         if ($length == -1) {
             $query = [
                 $match,
@@ -1054,7 +1055,7 @@ class ProofOfPlay implements ReportInterface
 
             ];
 
-        } else {
+        } else { // Frontend
             $query = [
                 $match,
                 $project,
@@ -1086,8 +1087,12 @@ class ProofOfPlay implements ReportInterface
         $totalStats = 0;
         $rows = [];
         if (count($result) > 0) {
-            // Get total for pagination
-            $totalCount = $result[0]['totalCount'];
+            
+            if ($length == -1) { // Task run
+                $totalCount = [];
+            } else { // Get total for pagination in UI (grid)
+                $totalCount = $result[0]['totalCount'];
+            }
 
             if (count($totalCount) > 0) {
                 $totalStats = $totalCount[0]['totals'];
