@@ -5077,19 +5077,19 @@
                 ],
                 "summary": "Playlist Widget Search",
                 "description": "Search widgets on a Playlist",
-                "operationId": "playlistSearch",
+                "operationId": "playlistWidgetSearch",
                 "parameters": [
                     {
                         "name": "playlistId",
                         "in": "formData",
                         "description": "The Playlist ID to Search",
-                        "required": true,
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "widgetId",
                         "in": "formData",
-                        "description": "The widget ID to Search",
+                        "description": "The Widget ID to Search",
                         "required": false,
                         "type": "integer"
                     }
