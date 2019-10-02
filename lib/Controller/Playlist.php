@@ -853,7 +853,7 @@ class Playlist extends Base
      *
      * @SWG\Get(
      *  path="/playlist/widget",
-     *  operationId="playlistSearch",
+     *  operationId="playlistWidgetSearch",
      *  tags={"playlist"},
      *  summary="Playlist Widget Search",
      *  description="Search widgets on a Playlist",
@@ -862,12 +862,12 @@ class Playlist extends Base
      *      in="formData",
      *      description="The Playlist ID to Search",
      *      type="integer",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="formData",
-     *      description="The widget ID to Search",
+     *      description="The Widget ID to Search",
      *      type="integer",
      *      required=false
      *   ),
