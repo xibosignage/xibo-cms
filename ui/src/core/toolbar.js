@@ -482,10 +482,16 @@ Toolbar.prototype.render = function() {
                 self.deselectCardsAndDropZones();
 
                 $('.custom-overlay').show();
+                
+                // Fix for the navigator region z-index
+                $('#layout-editor #layout-navigator .layout').css('z-index', 'initial');
             },
             stop: function() {
                 // Hide designer overlay
                 $('.custom-overlay').hide();
+                
+                // Fix for the navigator region z-index
+                $('#layout-editor #layout-navigator .layout').css('z-index', 0);
             }
         });
 
@@ -869,6 +875,9 @@ Toolbar.prototype.selectCard = function(card) {
             // Save selected card data
             this.selectedCard = card;
 
+            // Fix for the navigator region z-index
+            $('#layout-editor #layout-navigator .layout').css('z-index', 'initial');
+
             // Show designer overlay
             $('.custom-overlay').show().unbind().click(() => {
                 this.deselectCardsAndDropZones();
@@ -906,6 +915,9 @@ Toolbar.prototype.selectMedia = function(media, data) {
             subType: data.mediaType
         });
 
+        // Fix for the navigator region z-index
+        $('#layout-editor #layout-navigator .layout').css('z-index', 'initial');
+        
         // Show designer overlay
         $('.custom-overlay').show().unbind().click(() => {
             this.deselectCardsAndDropZones();
@@ -929,6 +941,9 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 
     // Remove drop class from droppable elements
     $('.ui-droppable').removeClass('ui-droppable-active');
+
+    // Fix for the navigator region z-index
+    $('#layout-editor #layout-navigator .layout').css('z-index', 0);
 
     // Hide designer overlay
     $('.custom-overlay').hide().unbind();

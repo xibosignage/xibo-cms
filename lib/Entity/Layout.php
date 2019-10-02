@@ -723,7 +723,7 @@ class Layout implements \JsonSerializable
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
                 $campaign->setChildObjectDependencies($this->layoutFactory);
-                $campaign->unassignLayout($this);
+                $campaign->unassignLayout($this, true);
                 $campaign->save(['validate' => false]);
             }
 
@@ -782,15 +782,18 @@ class Layout implements \JsonSerializable
             'userId' => $this->ownerId,
             'layoutExact' => $this->layout,
             'notLayoutId' => ($this->parentId !== null) ? $this->parentId : $this->layoutId,
-            'disableUserCheck' => 1
+            'disableUserCheck' => 1,
+            'excludeTemplates' => -1
         ]);
 
-        if (count($duplicates) > 0)
-            throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+        if (count($duplicates) > 0) {
+            throw new DuplicateEntityException(sprintf(__("You already own a Layout called '%s'. Please choose another name."), $this->layout));
+        }
 
         // Check zindex is positive
-        if ($this->backgroundzIndex < 0)
+        if ($this->backgroundzIndex < 0) {
             throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'backgroundzIndex');
+        }
     }
 
     /**
@@ -1096,7 +1099,7 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
                 }
 
-                if ($widget->toDt != null || $widget->fromDt === Widget::$DATE_MAX) {
+                if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
                     $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
                 }
 

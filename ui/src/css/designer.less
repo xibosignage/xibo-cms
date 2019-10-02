@@ -273,7 +273,6 @@
     color: white;
     font-weight: bold;
     padding: 10px;
-    position: absolute;
 }
 
 #layout-editor #layout-timeline #timeline-container {
@@ -476,6 +475,7 @@
 
 #layout-editor #layout-viewer .viewer-element {
     position:relative;
+    z-index: 0;
 }
 
 #layout-editor #layout-viewer .viewer-element .module-preview-icon {
@@ -854,6 +854,7 @@
 
 #layout-editor #layout-navigator .layout {
     .box-shadow(inset 0 0 4px 0px @navigator-shadow-colour);
+    z-index: 0;
 }
 
 #layout-editor #layout-navigator .designer-region {
@@ -980,11 +981,11 @@
 #layout-editor #layout-timeline .designer-region .designer-region-overlay {
     display: none;
     z-index: 2;
-    width: calc(100% + 6px);
-    height: calc(100% + 6px);
-    left: -3px;
-    top: -3px;
-    position: relative;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
     .border-radius(4px);
 
     .info {

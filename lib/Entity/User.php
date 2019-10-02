@@ -379,6 +379,7 @@ class User implements \JsonSerializable
         $this->userOptionFactory = $userOptionFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->excludeProperty('twoFactorSecret');
+        $this->excludeProperty('twoFactorRecoveryCodes');
     }
 
     /**
@@ -691,6 +692,7 @@ class User implements \JsonSerializable
     /**
      * Reassign all
      * @param User $user
+     * @throws XiboException
      */
     public function reassignAllTo($user)
     {
@@ -728,7 +730,10 @@ class User implements \JsonSerializable
             $playlist->setOwner($user->getOwnerId());
             $playlist->save(['saveTags' => false]);
         }
-
+        foreach($this->displayGroupFactory->getByOwnerId($this->userId) as $displayGroup) {
+            $displayGroup->setOwner($user->getOwnerId());
+            $displayGroup->save(['saveTags' => false, 'manageDynamicDisplayLinks' => false]);
+        }
 
         // Reassign resolutions
         $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
@@ -822,6 +827,9 @@ class User implements \JsonSerializable
 
     /**
      * Delete User
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
      */
     public function delete()
     {
@@ -878,6 +886,12 @@ class User implements \JsonSerializable
         foreach ($this->playlists as $playlist) {
             /* @var Playlist $playlist */
             $playlist->delete();
+        }
+
+        // Display Groups owned by this user
+        foreach($this->displayGroupFactory->getByOwnerId($this->userId) as $displayGroup) {
+            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $displayGroup->delete();
         }
 
         // Delete user specific entities
@@ -1016,7 +1030,7 @@ class User implements \JsonSerializable
     {
         $sql = 'UPDATE `user` SET lastAccessed = :time ';
 
-        if ($forcePasswordChange && DBVERSION >= 143) {
+        if ($forcePasswordChange) {
             $sql .= ' , isPasswordChangeRequired = 1 ';
         }
 

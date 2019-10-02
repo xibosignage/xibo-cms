@@ -474,7 +474,7 @@ class Playlist extends Base
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter]);
+            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1]);
 
             if (count($media) > 0) {
                 $widgets = [];
@@ -853,7 +853,7 @@ class Playlist extends Base
      *
      * @SWG\Get(
      *  path="/playlist/widget",
-     *  operationId="playlistSearch",
+     *  operationId="playlistWidgetSearch",
      *  tags={"playlist"},
      *  summary="Playlist Widget Search",
      *  description="Search widgets on a Playlist",
@@ -862,12 +862,12 @@ class Playlist extends Base
      *      in="formData",
      *      description="The Playlist ID to Search",
      *      type="integer",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="formData",
-     *      description="The widget ID to Search",
+     *      description="The Widget ID to Search",
      *      type="integer",
      *      required=false
      *   ),
@@ -1038,8 +1038,10 @@ class Playlist extends Base
             $module->setDefaultWidgetOptions();
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.
-            if ($duration !== null || $this->getSanitizer()->getCheckbox('useDuration') == 1)
+            if ($duration !== null || $this->getSanitizer()->getCheckbox('useDuration') == 1) {
                 $widget->useDuration = 1;
+                $widget->duration = $itemDuration;
+            }
 
             // Calculate the duration
             $widget->calculateDuration($module);

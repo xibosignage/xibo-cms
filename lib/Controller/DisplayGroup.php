@@ -227,7 +227,8 @@ class DisplayGroup extends Base
             'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific')
+            'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific'),
+            'userId' => $this->getSanitizer()->getInt('userId')
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);

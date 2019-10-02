@@ -204,6 +204,16 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Get by OwnerId
+     * @param int $ownerId
+     * @return DisplayGroup[]
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['userId' => $ownerId, 'isDisplaySpecific' => 0]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
@@ -279,6 +289,11 @@ class DisplayGroupFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('parentId', $filterBy) !== null) {
             $body .= ' AND `displaygroup`.displayGroupId IN (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
             $params['parentId'] = $this->getSanitizer()->getInt('parentId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND `displaygroup`.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('isDisplaySpecific', 0, $filterBy) != -1) {

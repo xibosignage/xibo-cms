@@ -67,6 +67,7 @@ class DisplayProfile extends Base
      * @param PoolInterface $pool
      * @param DisplayProfileFactory $displayProfileFactory
      * @param CommandFactory $commandFactory
+     * @param PlayerVersionFactory $playerVersionFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory)
     {
@@ -446,8 +447,9 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+        }
 
         $displayProfile->delete();
 

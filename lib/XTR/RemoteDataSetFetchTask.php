@@ -100,8 +100,8 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                     // Getting the dependant DataSet to process the current DataSet on
                     $dependant = null;
-                    if ($dataSet->runsAfter != $dataSet->dataSetId) {
-                        $dependant = $this->dataSetFactory->getById($dataSet->dataSetId);
+                    if ($dataSet->runsAfter != null && $dataSet->runsAfter != $dataSet->dataSetId) {
+                        $dependant = $this->dataSetFactory->getById($dataSet->runsAfter);
                     }
 
                     $this->log->debug('Fetch and process ' . $dataSet->dataSet);

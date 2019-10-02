@@ -253,6 +253,9 @@ describe('Layout Designer (Empty)', function() {
 
         it('should delete an existing region from within the navigator edit', () => {
 
+            cy.server();
+            cy.route('/layout?layoutId=*').as('reloadLayout');
+
             // Open navigator edit
             cy.get('#layout-navigator #edit-btn').click();
 
@@ -265,8 +268,7 @@ describe('Layout Designer (Empty)', function() {
             // Confirm modal
             cy.get('[data-test="deleteRegionModal"]').should('be.visible').find('button[data-bb-handler="confirm"]').click();
 
-            // Close the navigator edit
-            cy.get('#layout-navigator-edit #close-btn').click({force: true});
+            cy.wait('@reloadLayout');
 
             // Check if there are no regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('not.be.visible');

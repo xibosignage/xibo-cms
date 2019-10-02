@@ -127,7 +127,7 @@ class Soap5 extends Soap4
                         || strtolower($arrayItem['name']) == 'updateendwindow'
                     ) {
                         // Split by :
-                        $timeParts = explode(':', $arrayItem['value']);
+                        $timeParts = explode(':', $value);
                         $value = $timeParts[0] . ':' . $timeParts[1];
                     }
 

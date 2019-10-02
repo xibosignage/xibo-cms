@@ -51,6 +51,7 @@ use Xibo\Factory\UserTypeFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Random;
+use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -284,8 +285,22 @@ class User extends Base
             $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
             $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
 
+            // Set some text for the display status
+            switch ($user->twoFactorTypeId) {
+                case 1:
+                    $user->twoFactorDescription = __('Email');
+                    break;
+
+                case 2:
+                    $user->twoFactorDescription = __('Google Authenticator');
+                    break;
+
+                default:
+                    $user->twoFactorDescription = __('Disabled');
+            }
+
             if ($this->isApi())
-                break;
+                continue;
 
             $user->includeProperty('buttons');
             $user->homePage = __($user->homePage);
@@ -1006,6 +1021,11 @@ class User extends Base
             throw new InvalidArgumentException(__('Please provide valid email address'), 'email');
         }
 
+        // if we are setting up email two factor auth, check if the sending email address is entered in CMS Settings.
+        if ($user->twoFactorTypeId === 1 && $this->getConfig()->getSetting('mail_from') == '') {
+            throw new InvalidArgumentException(__('Please provide valid sending email address in CMS Settings on Network tab'), 'mail_from');
+        }
+
         // if we have a new password provided, update the user record
         if ($newPassword != null && $newPassword == $retypeNewPassword) {
             $user->setNewPassword($newPassword, $oldPassword);
@@ -1074,7 +1094,7 @@ class User extends Base
             $issuer = $appName;
         }
 
-        $tfa = new TwoFactorAuth($issuer);
+        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider());
 
         // create two factor secret and store it in user record
         if (!isset($user->twoFactorSecret)) {
@@ -1085,7 +1105,7 @@ class User extends Base
         }
 
         // generate the QR code to scan, we only show it at first set up and only for Google auth
-        $qRUrl = $tfa->getQRCodeImageAsDataUri($user->userName, $secret);
+        $qRUrl = $tfa->getQRCodeImageAsDataUri($user->userName, $secret, 150);
 
         $this->getState()->setData([
             'qRUrl' => $qRUrl
@@ -1382,7 +1402,7 @@ class User extends Base
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save(['notify' => false]);
+                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
             }

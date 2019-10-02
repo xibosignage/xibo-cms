@@ -303,7 +303,7 @@
                     ajax: {
                         "url": "{{ urlFor("library.search") }}",
                         "data": function (d) {
-                            $.extend(d, {media: nameFilter, tags: tagFilter});
+                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable:1});
                         }
                     },
                     "columns": [
