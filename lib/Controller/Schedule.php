@@ -210,7 +210,7 @@ class Schedule extends Base
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
-        if (count($displayGroupIds) <= 0) {
+        if (count($displayGroupIds) <= 0 && empty($campaignId)) {
             $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
             return;
         }
