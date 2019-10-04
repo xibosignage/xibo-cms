@@ -81,6 +81,7 @@ $app->get('/drawer/notification/interrupt/:id', '\Xibo\Controller\Notification:i
 $app->get('/notification/form/add', '\Xibo\Controller\Notification:addForm')->name('notification.add.form');
 $app->get('/notification/form/edit/:id', '\Xibo\Controller\Notification:editForm')->name('notification.edit.form');
 $app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:deleteForm')->name('notification.delete.form');
+$app->get('/notification/export/:id', '\Xibo\Controller\Notification:exportAttachment')->name('notification.exportattachment');
 
 //
 // layouts

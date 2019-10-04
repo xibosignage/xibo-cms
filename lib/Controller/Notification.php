@@ -662,4 +662,22 @@ class Notification extends Base
             'message' => sprintf(__('Deleted %s'), $notification->subject)
         ]);
     }
+
+    public function exportAttachment($notificationId)
+    {
+        $notification = $this->notificationFactory->getById($notificationId);
+
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename;
+
+        // Return the file with PHP
+        $this->setNoOutput(true);
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+        header('Content-Length: ' . filesize($fileName));
+
+        // Disable any buffering to prevent OOM errors.
+        ob_end_flush();
+        readfile($fileName);
+        exit;    }
 }
