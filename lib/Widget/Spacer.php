@@ -72,6 +72,58 @@ class Spacer extends ModuleWidget
         return 'spacer-designer-javascript';
     }
 
+    /**
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}?spacer",
+     *  operationId="WidgetSpacerEdit",
+     *  tags={"widget"},
+     *  summary="Edit a Spacer Widget",
+     *  description="Edit Spacer Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The WidgetId to Edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Select only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
     public function edit()
     {
         // Set the properties specific to this module
@@ -88,7 +140,7 @@ class Spacer extends ModuleWidget
      */
     public function isValid()
     {
-        // this is empty hmtl, always valid
+        // this is empty html, always valid
         return 1;
     }
 
@@ -98,5 +150,12 @@ class Spacer extends ModuleWidget
         // Construct the response HTML
         $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
         return $this->finaliseGetResource();
+    }
+
+    /** @inheritdoc */
+    public function getCacheDuration()
+    {
+        // We have a long cache interval because we don't depend on any external data.
+        return 86400 * 365;
     }
 }

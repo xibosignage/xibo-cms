@@ -127,7 +127,7 @@ class Stocks extends AlphaVantageBase
      *  operationId="WidgetStocksEdit",
      *  tags={"widget"},
      *  summary="Edit a Stocks Widget",
-     *  description="Edit a new Stocks Widget",
+     *  description="Edit a new Stocks Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

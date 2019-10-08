@@ -52,7 +52,14 @@ class WebPage extends ModuleWidget
      *  operationId="WidgetWebpageEdit",
      *  tags={"widget"},
      *  summary="Edit a Web page Widget",
-     *  description="Edit a Web page Widget",
+     *  description="Edit a Web page Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  @SWG\Parameter(
+     *      name="Content-Type",
+     *      in="header",
+     *      description="application/x-www-form-urlencoded",
+     *      type="string",
+     *      required=true
+     *   ),
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

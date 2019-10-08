@@ -84,7 +84,7 @@ class Hls extends ModuleWidget
      *  operationId="WidgetHlsEdit",
      *  tags={"widget"},
      *  summary="Edit a HLS Widget",
-     *  description="Edit HLS Widget",
+     *  description="Edit HLS Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -102,7 +102,7 @@ class Hls extends ModuleWidget
      *  @SWG\Parameter(
      *      name="useDuration",
      *      in="formData",
-     *      description="Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+     *      description="Select only if you will provide duration parameter as well",
      *      type="integer",
      *      required=false
      *  ),
