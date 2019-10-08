@@ -1404,9 +1404,7 @@ abstract class ModuleWidget implements ModuleInterface
 
         if ( $modifiedDt->greaterThan($cachedDt)
                 || $cachedDt->addSeconds($cacheDuration)->lessThan($now)
-                || !file_exists($cachePath . $cacheFile)
-                || (file_exists($cachePath . $cacheFile) && !file_get_contents($cachePath . $cacheFile))
-        ) {
+                || !file_exists($cachePath . $cacheFile) ) {
 
             $this->getLog()->debug('We will need to regenerate');
 
@@ -1429,7 +1427,7 @@ abstract class ModuleWidget implements ModuleInterface
 
                     // Generate the resource
                     $resource = $this->getResource($displayId);
-$this->getLog()->info('WIDGET GETRESOURCE ' . json_encode($resource));
+
                     // If the resource is false, then don't cache it for as long (most likely an error)
                     if ($resource === false)
                         throw new XiboException('GetResource generated FALSE');
