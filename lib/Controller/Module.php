@@ -1310,6 +1310,13 @@ class Module extends Base
             'audit' => true
         ]);
 
+        if ($this->isApi()) {
+            $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
+            $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
+            $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
+            $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+        }
+
         // Successful
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited Expiry')),

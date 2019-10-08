@@ -539,6 +539,10 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi()) {
+                $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
+                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+                $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
+                $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
             }
 
@@ -1145,6 +1149,11 @@ class Display extends Base
 
         $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
+
+        if ($this->isApi()) {
+            $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
+            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+        }
 
         // Return
         $this->getState()->hydrate([
