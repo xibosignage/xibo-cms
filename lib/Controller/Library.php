@@ -903,7 +903,6 @@ class Library extends Base
 
     /**
      * Edit Media
-     * @param int $mediaId
      *
      * @SWG\Put(
      *  path="/library/{mediaId}",
@@ -959,7 +958,14 @@ class Library extends Base
      *      @SWG\Schema(ref="#/definitions/Media")
      *  )
      * )
+     *
+     * @param int $mediaId
+     *
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function edit($mediaId)
     {
@@ -984,6 +990,8 @@ class Library extends Base
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
             }
+        } else {
+            $media->expires = 0;
         }
 
         // Should we update the media in all layouts?
