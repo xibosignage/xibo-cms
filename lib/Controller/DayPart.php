@@ -355,10 +355,10 @@ class DayPart extends Base
      *
      * @SWG\Put(
      *  path="/daypart/{dayPartId}",
-     *  operationId="dayPartAdd",
+     *  operationId="dayPartEdit",
      *  tags={"dayPart"},
-     *  summary="Daypart Add",
-     *  description="Add a Daypart",
+     *  summary="Daypart Edit",
+     *  description="Edit a Daypart",
      *  @SWG\Parameter(
      *      name="dayPartId",
      *      in="path",
