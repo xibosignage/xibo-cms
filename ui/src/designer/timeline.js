@@ -428,7 +428,7 @@ Timeline.prototype.render = function(layout) {
                 self.beingSorted = true;
 
                 // Hide the trash container
-                lD.toolbar.DOMObject.find('#trashContainer').removeClass('active');
+                lD.topbar.DOMObject.find('#trashContainer').removeClass('active');
 
                 // Get element width and timeline zoom/scale
                 let zoom = self.DOMObject.find('#regions').data('zoom') / 100;

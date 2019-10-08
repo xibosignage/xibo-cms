@@ -2,7 +2,6 @@
 
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
-const ToolbarLayoutJumpList = require('../templates/toolbar-layout-jump-list.hbs');
 const ToolbarMediaSearchTemplate = require('../templates/toolbar-media-search.hbs');
 
 const toolsList = [
@@ -48,10 +47,20 @@ const toolsList = [
 
 const defaultMenuItems = [
     {
+        name: 'library',
+        itemName: toolbarTrans.menuItems.libraryName,
+        itemIcon: 'library_books',
+        itemTitle: toolbarTrans.menuItems.libraryTitle,
+        tool: true,
+        page: 0,
+        content: [],
+        state: ''
+    },
+    {
         name: 'tools',
         itemName: toolbarTrans.menuItems.toolsName,
+        itemIcon: 'brush',
         itemTitle: toolbarTrans.menuItems.toolsTitle,
-        tool: true,
         page: 0,
         content: [],
         state: ''
@@ -60,6 +69,7 @@ const defaultMenuItems = [
         name: 'widgets',
         itemName: toolbarTrans.menuItems.widgetsName,
         itemTitle: toolbarTrans.menuItems.widgetsTitle,
+        itemIcon: 'widgets',
         page: 0,
         content: [],
         state: '',
@@ -70,31 +80,20 @@ const defaultMenuItems = [
 /**
  * Bottom toolbar contructor
  * @param {object} container - the container to render the navigator to
- * @param {object[]} [customMainButtons] - customized main bar buttons
- * @param {object[]} [customDropdownButtons] - customized dropdown buttons
  * @param {object} [customActions] - customized actions
+ * @param {boolean=} [showOptions] - show options menu
  */
-let Toolbar = function(container, customMainButtons = null, customDropdownButtons = null, customActions = {}, jumpList = {}) {
+let Toolbar = function(container, customActions = {}, showOptions = false) {
 
     this.DOMObject = container;
     this.openedMenu = -1;
 
     // Number of tabs that are fixed ( not removable and always defaulted )
-    this.fixedTabs = 2;
+    this.fixedTabs = 3;
 
     this.menuItems = defaultMenuItems;
 
-    // Layout jumplist
-    this.jumpList = jumpList;
-
-    // Custom main buttons
-    this.customMainButtons = customMainButtons;
-
-    // Custom dropdown buttons
-    this.customDropdownButtons = customDropdownButtons;
-
-    // Custom actions
-    this.customActions = customActions;
+    this.libraryTabs = [];
 
     this.contentDimentions = {
         width: 90 // In percentage
@@ -108,8 +107,14 @@ let Toolbar = function(container, customMainButtons = null, customDropdownButton
 
     this.selectedCard = {};
 
+    // Custom actions
+    this.customActions = customActions;
+
     // Flag to mark if the toolbar has been rendered at least one time
     this.firstRun = true;
+
+    // Options menu
+    this.showOptions = showOptions;
 
     // Refresh opened menu and clear selections on window resize
     const self = this;
@@ -120,7 +125,7 @@ let Toolbar = function(container, customMainButtons = null, customDropdownButton
 
             // If there was a opened menu in the toolbar, open that tab
             if(self.openedMenu != -1) {
-                self.openTab(self.openedMenu, true);
+                self.openMenu(self.openedMenu, true);
             }
         }
     }, 250));
@@ -130,6 +135,8 @@ let Toolbar = function(container, customMainButtons = null, customDropdownButton
  * Load user preferences
  */
 Toolbar.prototype.loadPrefs = function() {
+
+    console.log('loadPrefs');
 
     // Load using the API
     const linkToAPI = urlsForApi.user.getPref;
@@ -148,7 +155,7 @@ Toolbar.prototype.loadPrefs = function() {
             let loadedData = JSON.parse(res.data.value);
 
             // Populate the toolbar with the returned data
-            self.menuItems = (jQuery.isEmptyObject(loadedData.menuItems)) ? defaultMenuItems : defaultMenuItems.concat(loadedData.menuItems);
+            self.libraryTabs = (loadedData.libraryTabs != undefined) ? loadedData.libraryTabs : [];
             self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
 
             // Tooltip options
@@ -156,13 +163,12 @@ Toolbar.prototype.loadPrefs = function() {
 
             // If there was a opened menu, load content for that one
             if(self.openedMenu != -1) {
-                self.openTab(self.openedMenu, true);
+                self.openMenu(self.openedMenu, true);
             } else {
                 // Render to reflect the loaded toolbar
                 self.render();
             }
         } else {
-
             // Login Form needed?
             if(res.login) {
 
@@ -195,28 +201,30 @@ Toolbar.prototype.loadPrefs = function() {
  */
 Toolbar.prototype.savePrefs = function(clearPrefs = false) {
 
+    console.log('savePrefs:' + clearPrefs);
+
     const app = getXiboApp();
 
     // Save only some of the tab menu data
-    let menuItemsToSave = [];
+    let libraryTabsToSave = [];
     let openedMenu = this.openedMenu;
     let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
 
     if(clearPrefs) {
-        menuItemsToSave = {};
+        libraryTabsToSave = {};
         openedMenu = -1;
         displayTooltips = 1;
     } else {
-        for(let index = this.fixedTabs;index < this.menuItems.length;index++) {
+        for(let index = 0;index < this.libraryTabs.length;index++) {
 
             // Make a copy of the current element
-            let elementCopy = Object.assign({}, this.menuItems[index]);
+            let elementCopy = Object.assign({}, this.libraryTabs[index]);
 
             // Remove content and set page to 0
             elementCopy.content = [];
             elementCopy.page = 0;
 
-            menuItemsToSave.push(elementCopy);
+            libraryTabsToSave.push(elementCopy);
         }
     }
 
@@ -225,7 +233,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
             {
                 option: 'toolbar',
                 value: JSON.stringify({
-                    menuItems: menuItemsToSave,
+                    libraryTabs: libraryTabsToSave,
                     openedMenu: openedMenu,
                     displayTooltips: displayTooltips
                 })
@@ -279,6 +287,8 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
  */
 Toolbar.prototype.render = function() {
 
+    console.log('TB: Render');
+
     // Load preferences when the toolbar is rendered for the first time
     if(this.firstRun) {
         // Mark toolbar as loaded
@@ -295,7 +305,7 @@ Toolbar.prototype.render = function() {
     this.selectedCard = {};
 
     // Get toolbar trans
-    let newToolbarTrans = toolbarTrans;
+    let newToolbarTrans = Object.assign({}, toolbarTrans);
 
     // Check if trash bin is active
     let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
@@ -322,35 +332,37 @@ Toolbar.prototype.render = function() {
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
-        tabsCount: (this.menuItems.length > this.fixedTabs),
-        customMainButtons: this.customMainButtons,
-        customDropdownButtons: this.customDropdownButtons,
+        libraryTabs: this.libraryTabs,
+        tabsCount: (this.libraryTabs.length > 0),
         displayTooltips: app.common.displayTooltips,
         trashActive: trashBinActive,
         undoActive: undoActive,
-        trans: newToolbarTrans
+        trans: newToolbarTrans,
+        showOptions: self.showOptions
     });
 
     // Append layout html to the main div
     this.DOMObject.html(html);
-
     // If read only mode is enabled
     if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
+        // Hide edit mode fields
         this.DOMObject.find('.hide-on-read-only').hide();
+        
+        // Create the read only alert message
+        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-toggle="tooltip" data-placement="bottom" title="' + layoutDesignerTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
+
+        // Prepend the element to the bottom toolbar's content
+        $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.showCheckoutScreen);
     } else {
 
-        // Handle tabs
+        // Handle menus
         for(let i = 0;i < this.menuItems.length;i++) {
 
             const toolbar = self;
             const index = i;
 
             this.DOMObject.find('#btn-menu-' + index).click(function() {
-                toolbar.openTab(index);
-            });
-
-            this.DOMObject.find('#close-btn-menu-' + index).click(function() {
-                toolbar.deleteTab(index);
+                toolbar.openMenu(index);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
@@ -365,6 +377,11 @@ Toolbar.prototype.render = function() {
 
         }
 
+        // Handle tabs
+        for(let i = 0;i < this.libraryTabs.length;i++) {
+            console.log('TODO tabs');
+        }
+
         // Create new tab
         this.DOMObject.find('#btn-menu-new-tab').click(function() {
             self.createNewTab();
@@ -376,12 +393,12 @@ Toolbar.prototype.render = function() {
         });
 
         // Delete object
-        this.DOMObject.find('#trashContainer').click(
+        this.DOMObject.find('#trashContainer.active').click(
             this.customActions.deleteSelectedObjectAction
         );
 
         // Delete object
-        this.DOMObject.find('#undoContainer').click(
+        this.DOMObject.find('#undoContainer.active').click(
             app.undoLastAction
         );
     }
@@ -404,60 +421,6 @@ Toolbar.prototype.render = function() {
 
         return buttonInactive;
     };
-
-    // Handle custom main buttons
-    if(this.customMainButtons != null) {
-        for(let index = 0;index < this.customMainButtons.length;index++) {
-            setButtonActionAndState(this.customMainButtons[index]);
-        }
-    }
-
-    // Handle custom dropwdown buttons
-    if(this.customDropdownButtons != null) {
-
-        let activeDropdown = false;
-
-        for(let index = 0;index < this.customDropdownButtons.length;index++) {
-            let buttonInactive = setButtonActionAndState(this.customDropdownButtons[index]);
-
-            if(!buttonInactive) {
-                activeDropdown = true;
-            }
-        }
-
-        self.DOMObject.find('.dropdown.navbar-submenu:not(.navbar-submenu-options)').toggle(activeDropdown);
-    }
-
-    // Set layout jumpList if exists
-    if(!$.isEmptyObject(this.jumpList) && $('#layoutJumpList').length == 0) {
-        this.setupJumpList($("#layoutJumpListContainer"));
-    }
-
-    // Options menu
-    self.DOMObject.find('.navbar-submenu-options-container').off().click(function(e) {
-        e.stopPropagation();
-    });
-
-    // Toggle tooltips
-    self.DOMObject.find('#displayTooltips').off().click(function() {
-
-        app.common.displayTooltips = $('#displayTooltips').prop('checked');
-
-        if(app.common.displayTooltips) {
-            toastr.success(editorsTrans.tooltipsEnabled);
-        } else {
-            toastr.error(editorsTrans.tooltipsDisabled);
-        }
-
-        app.refreshDesigner();
-    });
-
-    // Reset tour
-    if(typeof app.resetTour === 'function') {
-        self.DOMObject.find('#resetTour').removeClass('hidden').off().click(function() {
-            app.resetTour();
-        });
-    }
 
     // If in edit mode
     if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
@@ -504,8 +467,33 @@ Toolbar.prototype.render = function() {
         }
     }
 
-    // Update tab name
-    this.updateTabNames();
+    // Options menu
+    if(self.showOptions) {
+        self.DOMObject.find('.navbar-submenu-options-container').off().click(function(e) {
+            e.stopPropagation();
+        });
+
+        // Toggle tooltips
+        self.DOMObject.find('#displayTooltips').off().click(function() {
+
+            app.common.displayTooltips = $('#displayTooltips').prop('checked');
+
+            if(app.common.displayTooltips) {
+                toastr.success(editorsTrans.tooltipsEnabled);
+            } else {
+                toastr.error(editorsTrans.tooltipsDisabled);
+            }
+
+            app.refreshDesigner();
+        });
+
+        // Reset tour
+        if(typeof app.resetTour === 'function') {
+            self.DOMObject.find('#resetTour').removeClass('hidden').off().click(function() {
+                app.resetTour();
+            });
+        }
+    }
 };
 
 /**
@@ -514,32 +502,23 @@ Toolbar.prototype.render = function() {
  */
 Toolbar.prototype.loadContent = function(menu = -1) {
 
+    console.log('loadContent: ' + menu);
+
     const app = getXiboApp();
-    const self = this;
 
-    if(menu < this.fixedTabs) { // Fixed Tabs
-
+    if(this.menuItems[menu] === 'library') {
+        console.log('Open library window');
+    } else if(this.menuItems[menu] === 'tools') {
+        this.menuItems[menu].content = toolsList;
+    } else if(this.menuItems[menu] === 'widgets') {
         // Calculate pagination
         const pagination = this.calculatePagination(menu);
 
         // Enable/Disable page down pagination button according to the page to display
         this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
 
-        switch(menu) {
-            // Tools
-            case 0:
-                this.menuItems[menu].content = toolsList;
-                break;
+        this.menuItems[menu].content = modulesList;
 
-            // Widgets
-            case 1:
-                this.menuItems[menu].content = modulesList;
-                break;
-
-            default:
-                this.menuItems[menu].content = [];
-                break;
-        }
 
         for(let index = 0;index < this.menuItems[menu].content.length;index++) {
             const element = this.menuItems[menu].content[index];
@@ -569,7 +548,9 @@ Toolbar.prototype.loadContent = function(menu = -1) {
  * @param {number} menu - menu to open index, -1 by default and to toggle
  * @param {bool} forceOpen - force tab open ( even if opened before )
  */
-Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
+Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
+
+    console.log('openMenu: ' + menu);
 
     // Deselect previous selections
     this.deselectCardsAndDropZones();
@@ -601,239 +582,6 @@ Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
 
     // Render toolbar
     this.render();
-};
-
-/**
- * Create new tab
- */
-Toolbar.prototype.createNewTab = function() {
-
-    let moduleListFiltered = [];
-    let usersListFiltered = [];
-
-    // Filter module list to create the types for the filter
-    modulesList.forEach(element => {
-        if(element.assignable == 1 && element.regionSpecific == 0) {
-            moduleListFiltered.push({
-                type: element.type,
-                name: element.name
-            });
-        }
-    });
-
-    usersList.forEach(element => {
-        usersListFiltered.push({
-            userId: element.userId.toString(),
-            name: element.userName
-        });
-    });
-
-    this.menuItems.push({
-        name: 'search',
-        search: true,
-        page: 0,
-        query: '',
-        filters: {
-            name: {
-                name: toolbarTrans.searchFilters.name,
-                value: ''
-            },
-            tag: {
-                name: toolbarTrans.searchFilters.tag,
-                value: ''
-            },
-            type: {
-                name: toolbarTrans.searchFilters.type,
-                values: moduleListFiltered
-            },
-            owner: {
-                name: toolbarTrans.searchFilters.owner,
-                values: usersListFiltered
-        },
-        },
-        content: []
-    });
-
-    this.openTab(this.menuItems.length - 1);
-};
-
-/**
- * Delete tab
- * @param {number} menu
- */
-Toolbar.prototype.deleteTab = function(menu) {
-
-    // Remove menu option from the array
-    this.menuItems.splice(menu, 1);
-
-    if(this.openedMenu == menu) {
-        // Deselect menu if we're closing the selected one
-        this.openedMenu = -1;
-    } else if(this.openedMenu < menu) {
-        // If the deleted menu is lower than the selected, update the selected index
-        this.openedMenu -= 1;
-    }
-
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    // Save user preferences
-    this.savePrefs();
-    this.render();
-};
-
-/**
- * Delete all tabs
- */
-Toolbar.prototype.deleteAllTabs = function() {
-
-    for(let index = this.menuItems.length - 1;index >= this.fixedTabs;index--) {
-        this.menuItems.splice(index, 1);
-    }
-
-    if(this.openedMenu >= this.fixedTabs) {
-        this.openedMenu = -1;
-    }
-
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    // Save user preferences
-    this.savePrefs();
-    this.render();
-};
-
-/**
- * Calculate pagination
- * @param {number} menu
- */
-Toolbar.prototype.calculatePagination = function(menu) {
-
-    // Get page and number of elements
-    const currentPage = this.menuItems[menu].page;
-
-    // Calculate width
-    const containerWidth = this.DOMObject.find('.toolbar-content').width() * (this.contentDimentions.width / 100);
-
-    // Calculate number of elements to display
-    const elementsToDisplay = Math.floor(containerWidth / (this.cardDimensions.width + this.cardDimensions.margin));
-
-    // Space used
-    const usedSpace = elementsToDisplay * (this.cardDimensions.width + this.cardDimensions.margin);
-
-    // Remaining space to be filled ( without the right margin )
-    const remainingSpace = containerWidth - usedSpace - this.cardDimensions.margin;
-
-    // New calculated width
-    if(remainingSpace < this.cardDimensions.width) {
-        this.cardCalculatedWidth = this.cardDimensions.width + (remainingSpace / elementsToDisplay);
-    } else {
-        this.cardCalculatedWidth = this.cardDimensions.width;
-    }
-
-    this.menuItems[menu].contentWidth = this.contentDimentions.width;
-
-    return {
-        start: currentPage * elementsToDisplay,
-        length: elementsToDisplay
-    };
-};
-
-/**
-* Setup layout jumplist
-* @param {object} jumpListContainer
-*/
-Toolbar.prototype.setupJumpList = function(jumpListContainer) {
-
-    const html = ToolbarLayoutJumpList(this.jumpList);
-    const self = this;
-
-    // Append layout html to the main div
-    jumpListContainer.html(html);
-
-    jumpListContainer.show();
-
-    const jumpList = jumpListContainer.find('#layoutJumpList');
-
-    jumpList.select2({
-        ajax: {
-            url: jumpList.data().url,
-            dataType: "json",
-            data: function(params) {
-
-                var query = {
-                    layout: params.term,
-                    start: 0,
-                    length: 10
-                };
-
-                // Tags
-                if(query.layout != undefined) {
-                    var tags = query.layout.match(/\[([^}]+)\]/);
-                    if(tags != null) {
-                        // Add tags to search
-                        query.tags = tags[1];
-
-                        // Replace tags in the query text
-                        query.layout = query.layout.replace(tags[0], '');
-                    }
-                }
-
-                // Set the start parameter based on the page number
-                if(params.page != null) {
-                    query.start = (params.page - 1) * 10;
-                }
-
-                // Find out what is inside the search box for this list, and save it (so we can replay it when the list
-                // is opened again)
-                if(params.term !== undefined) {
-                    localStorage.liveSearchPlaceholder = params.term;
-                }
-
-                return query;
-            },
-            processResults: function(data, params) {
-                var results = [];
-
-                $.each(data.data, function(index, element) {
-                    results.push({
-                        "id": element.layoutId,
-                        "text": element.layout
-                    });
-                });
-
-                var page = params.page || 1;
-                page = (page > 1) ? page - 1 : page;
-
-                return {
-                    results: results,
-                    pagination: {
-                        more: (page * 10 < data.recordsTotal)
-                    }
-                };
-            },
-            delay: 250
-        }
-    });
-
-    jumpList.on("select2:select", function(e) {
-        // OPTIMIZE: Maybe use the layout load without reloading page
-        //self.jumpList.callback(e.params.data.id);
-
-        // Go to the Layout we've selected.
-        window.location = jumpList.data().designerUrl.replace(":id", e.params.data.id);
-    }).on("select2:opening", function(e) {
-        // Set the search box according to the saved value (if we have one)
-
-        if(localStorage.liveSearchPlaceholder != null && localStorage.liveSearchPlaceholder !== "") {
-            var $search = jumpList.data("select2").dropdown.$search;
-            $search.val(localStorage.liveSearchPlaceholder);
-
-            setTimeout(function() {
-                $search.trigger("input");
-            }, 100);
-        }
-    });
 };
 
 /**
@@ -921,6 +669,8 @@ Toolbar.prototype.selectMedia = function(media, data) {
  */
 Toolbar.prototype.deselectCardsAndDropZones = function() {
 
+    console.log('TB: deselectCardsAndDropZones');
+
     // Deselect other cards
     this.DOMObject.find('.toolbar-card.card-selected').removeClass('card-selected');
 
@@ -935,6 +685,149 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 
     // Deselect card
     this.selectedCard = {};
+};
+
+//TODO: vvvv Library window!!! vvvv
+
+/**
+ * Open tab
+ * @param {number} menu - menu to open index, -1 by default and to toggle
+ * @param {bool} forceOpen - force tab open ( even if opened before )
+ */
+Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
+
+    console.log('TB:openTab: ' + menu);
+
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    // Open specific menu
+    if(menu != -1) {
+        let active = (forceOpen) ? false : (this.menuItems[menu].state == 'active');
+
+        // Close all menus
+        for(let index = this.menuItems.length - 1;index >= 0;index--) {
+            this.menuItems[index].state = '';
+        }
+
+        if(active) {
+            this.openedMenu = -1;
+        } else {
+            this.openedMenu = menu;
+
+            // If menu is the default/widget/tools, load content
+            if(menu > -1) {
+                this.loadContent(menu);
+                return; // To avoid double save and render
+            }
+        }
+    }
+
+    // Save user preferences
+    this.savePrefs();
+
+    // Render toolbar
+    this.render();
+};
+
+/**
+ * Create new tab
+ */
+Toolbar.prototype.createNewTab = function() {
+
+    let moduleListFiltered = [];
+    let usersListFiltered = [];
+
+    // Filter module list to create the types for the filter
+    modulesList.forEach(element => {
+        if(element.assignable == 1 && element.regionSpecific == 0) {
+            moduleListFiltered.push({
+                type: element.type,
+                name: element.name
+            });
+        }
+    });
+
+    usersList.forEach(element => {
+        usersListFiltered.push({
+            userId: element.userId.toString(),
+            name: element.userName
+        });
+    });
+
+    this.menuItems.push({
+        name: 'search',
+        search: true,
+        page: 0,
+        query: '',
+        filters: {
+            name: {
+                name: toolbarTrans.searchFilters.name,
+                value: ''
+            },
+            tag: {
+                name: toolbarTrans.searchFilters.tag,
+                value: ''
+            },
+            type: {
+                name: toolbarTrans.searchFilters.type,
+                values: moduleListFiltered
+            },
+            owner: {
+                name: toolbarTrans.searchFilters.owner,
+                values: usersListFiltered
+        },
+        },
+        content: []
+    });
+
+    this.openMenu(this.menuItems.length - 1);
+};
+
+/**
+ * Delete tab
+ * @param {number} menu
+ */
+Toolbar.prototype.deleteTab = function(menu) {
+
+    // Remove menu option from the array
+    this.menuItems.splice(menu, 1);
+
+    if(this.openedMenu == menu) {
+        // Deselect menu if we're closing the selected one
+        this.openedMenu = -1;
+    } else if(this.openedMenu < menu) {
+        // If the deleted menu is lower than the selected, update the selected index
+        this.openedMenu -= 1;
+    }
+
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    // Save user preferences
+    this.savePrefs();
+    this.render();
+};
+
+/**
+ * Delete all tabs
+ */
+Toolbar.prototype.deleteAllTabs = function() {
+
+    for(let index = this.menuItems.length - 1;index >= this.fixedTabs;index--) {
+        this.menuItems.splice(index, 1);
+    }
+
+    if(this.openedMenu >= this.fixedTabs) {
+        this.openedMenu = -1;
+    }
+
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    // Save user preferences
+    this.savePrefs();
+    this.render();
 };
 
 /**
@@ -1051,8 +944,6 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         self.menuItems[menu].filters.type.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
         self.menuItems[menu].filters.owner.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-owner-' + menu).val();
 
-        // Update tab name
-        self.updateTabNames();
         self.savePrefs();
 
         // Deselect previous selections
@@ -1126,7 +1017,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
     });
 
     $searchContent.find('.btn-window-minimize').click(function() {
-        self.openTab($(this).data('menu'));
+        self.openMenu($(this).data('menu'));
     });
 
     // Initialize tagsinput

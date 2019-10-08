@@ -1,66 +1,97 @@
 // Import
-@import "mixins.less";
-@import "common.less";
-@import "toolbar.less";
+@import "mixins";
+@import "common";
+@import "topbar";
+
+// Colours
+$designer-colour-layout: $xibo-color-light-blue;
+$designer-colour-region: $xibo-color-orange;
+$designer-colour-widget: $xibo-color-green; 
 
 // Variables
-@designer-module-bg-color: #f3f3f3;
-@designer-module-border-color: #222;
+$designer-module-bg-color: $xibo-color-white;
+$designer-module-border-color: $xibo-color-black;
 
-@designer-primary-color: #30426a;
-@designer-secondary-color: #337ab7;
-@designer-z-index-select: 10;
+$designer-primary-color: $xibo-color-primary;
+$designer-secondary-color: $xibo-color-secondary;
+$designer-z-index-select: 10;
 
-@layout-main-bg-color: #30426a;
-@layout-main-fg-color: #ffffff;
-@layout-hover-color: lighten(@layout-main-bg-color, 20%);
-@layout-selected-color: lighten(@layout-main-bg-color, 10%);
+$layout-main-bg-color: $xibo-color-light-blue;
+$layout-main-fg-color: $xibo-color-black;
+$layout-hover-color: lighten($layout-main-bg-color, 20%);
+$layout-selected-color: lighten($layout-main-bg-color, 10%);
 
-@region-main-bg-color: #f27400;
-@region-main-fg-color: #ffffff;
-@region-hover-color: lighten(@region-main-bg-color, 30%);
-@region-selected-color: lighten(@region-main-bg-color, 20%);
+$region-main-bg-color: $xibo-color-orange;
+$region-main-fg-color: $xibo-color-black;
+$region-hover-color: lighten($region-main-bg-color, 30%);
+$region-selected-color: lighten($region-main-bg-color, 20%);
 
-@widget-main-bg-color: #6fb91b;
-@widget-main-fg-color: #2e2e2e;
-@widget-hover-color: lighten(@widget-main-bg-color, 20%);
-@widget-selected-color: lighten(@widget-main-bg-color, 10%);
+$widget-main-bg-color: $xibo-color-green;
+$widget-main-fg-color: $xibo-color-black;
+$widget-hover-color: lighten($widget-main-bg-color, 20%);
+$widget-selected-color: lighten($widget-main-bg-color, 10%);
 
-@timeline-widget-bg-color: #f1f1f1;
-@timeline-widget-fg-color: #333;
-@timeline-widget-fg-color2: #555;
-@timeline-widget-border-color: #868686;
-@timeline-widget-to-sort-bg-color: #d2d82b;
+$timeline-widget-bg-color: $xibo-color-white;
+$timeline-widget-fg-color: $xibo-color-black;
+$timeline-widget-fg-color2: darken($xibo-color-gray, 30%);
+$timeline-widget-border-color: $xibo-color-gray;
+$timeline-widget-to-sort-bg-color: $xibo-color-yellow;
 
-@timeline-ghost-bg-color: #c5c5c5;
-@timeline-ghost-fg-color: #fff;
+$timeline-ghost-bg-color: $xibo-color-gray;
+$timeline-ghost-fg-color: $xibo-color-white;
 
-@timeline-transition-in-bg-color: #0b3e1c;
-@timeline-transition-out-bg-color: #3e0b0b;
-@timeline-transition-in-fg-color: #64e01c;
-@timeline-transition-out-fg-color: #ec3737;
+$timeline-transition-in-bg-color: darken($xibo-color-green, 30%);
+$timeline-transition-out-bg-color: darken($xibo-color-red, 30%);
+$timeline-transition-in-fg-color: $xibo-color-green;
+$timeline-transition-out-fg-color: $xibo-color-red;
 
-@top-btn-fg-colour: #c4e3fe;
-@top-btn-hover-fg-colour: #f3f9fe;
+$top-btn-fg-colour: $xibo-color-light-blue;
+$top-btn-hover-fg-colour: lighten($xibo-color-light-blue, 20%);
 
-@viewer-player-bg-colour: #111;
-@viewer-preview-text-colour: #bbb;
-@viewer-preview-text-shadow-colour: #666;
-@viewer-navbar-bg-colour: #444;
-@viewer-inline-editor-shadow: red;
-@viewer-inline-editor-overlay-fg-colour: #f9f9f9;
-@viewer-inline-editor-overlay-bg-colour: #337ab7;
+$viewer-player-bg-colour: $xibo-color-black;
+$viewer-preview-text-colour: darken($xibo-color-white, 30%);
+$viewer-preview-text-shadow-colour: darken($xibo-color-white, 60%);
+$viewer-navbar-bg-colour: $xibo-color-gray;
+$viewer-inline-editor-shadow: $xibo-color-red;
+$viewer-inline-editor-overlay-fg-colour: $xibo-color-white;
+$viewer-inline-editor-overlay-bg-colour: $xibo-color-secondary;
 
-@navigator-shadow-colour: #ddd;
-@navigator-non-editable-shadow-colour: grey;
+$navigator-shadow-colour: $xibo-color-white;
+$navigator-non-editable-shadow-colour: $xibo-color-gray;
 
-@designer-overlay-z-index: 1050;
+$designer-overlay-z-index: 1050;
 
-@padding-navigator: 5px;
+$padding-navigator: 5px;
 
-@unsuccess-message-bg-color: #b3360e;
+$unsuccess-message-bg-color: darken($xibo-color-red, 30%);
+$layout-status-popover-message-bg-color: $xibo-color-red;
 
-@layout-status-popover-message-bg-color: #e05050;
+#read-only-message {
+    margin: 5px 5%;
+    padding: 10px;
+    width: 90%;
+    line-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// CSS
+#layout-editor  {
+    overflow: hidden;
+    margin: 25px -15px 0 -15px;
+}
+
+#layout-editor-main {
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-top: 10px;
+    height: calc(100vh - 140px);
+}
+
+#layout-editor .container-designer {
+    margin: 0 16px;
+}
 
 @media (min-width: 768px) {
     .welcome-screen-modal .modal-dialog {
@@ -68,37 +99,27 @@
     }
 }
 
-#read-only-message {
-    margin: 0 2px 8px 12px;
-    padding: 10px;
-}
+@media (max-width: 768px) {
+    #layout-editor-main {
+        padding-top: 15px;
+    }
 
-// CSS
-#layout-editor  {
-    min-height: 85vh;
-    padding-bottom: 110px;
-    overflow: hidden;
-}
-
-#layout-editor .container-designer {
-    margin: 0;
-}
-
-#page-wrapper #layout-editor .container-designer {
-    margin-left: 10px;
+    #layout-editor  {
+        margin-top: 40px;
+    }
 }
 
 #layout-editor .top-btn {
     top: 10px;
     position: absolute;
     font-size: 25px;
-    .set-transparent-color(color; @top-btn-fg-colour; 65%);
-    text-shadow: 0px 0px 5px #2e2e2e;
+    @include set-transparent-color(color, $top-btn-fg-colour, 65%);
+    text-shadow: 0px 0px 5px $xibo-color-black;
     z-index: 1;
     cursor: pointer;
 
     &:hover {
-        color: @top-btn-hover-fg-colour;
+        color: $top-btn-hover-fg-colour;
     }
 
     &.top-right-btn {
@@ -130,19 +151,19 @@
     font-size: 20px;
     overflow: hidden;
     font-weight: bold;
-    .set-transparent-color(color; #fff; 50%);
+    @include set-transparent-color(color, $xibo-color-white, 50%);
     top: 50%;
     transform: translateY(-50%);
 }
 
 /* Layout timeline */
 #layout-editor #layout-timeline {
-    background: @designer-primary-color;
+    background: $designer-primary-color;
     padding: 5px;
     min-height: 25vh;
     overflow-y: auto;
-    .border-radius(4px);
-    border: 2px solid @designer-module-border-color;
+    @include border-radius(4px);
+    border: 2px solid $designer-module-border-color;
 }
 
 /* width */
@@ -153,22 +174,22 @@
 
 /* Track */
 #layout-editor #layout-timeline #regions-container::-webkit-scrollbar-track {
-    .box-shadow(inset 0 0 5px grey);
+    @include box-shadow(inset 0 0 5px $xibo-color-gray);
 }
  
 /* Handle */
 #layout-editor #layout-timeline #regions-container::-webkit-scrollbar-thumb {
-    background: @designer-secondary-color;
-    .border-radius(4px);
+    background: $designer-secondary-color;
+    @include border-radius(4px);
 }
 
 /* Handle on hover */
 #layout-editor #layout-timeline #regions-container::-webkit-scrollbar-thumb:hover {
-    background: lighten(@designer-secondary-color, 20%);
+    background: lighten($designer-secondary-color, 20%);
 }
 
 #layout-editor #layout-timeline #regions-container::-webkit-scrollbar-corner {
-    .box-shadow(inset 0 0 5px grey);
+    @include box-shadow(inset 0 0 5px $xibo-color-gray);
 }
 
 #layout-editor #layout-timeline #regions-container {
@@ -178,13 +199,12 @@
 }
 
 #layout-editor #layout-timeline #controls-container .label {
-
     font-size: 13px;
     margin-bottom: 4px;
 
     &.label-custom {
         width: 45px;
-        background-color: @designer-secondary-color;
+        background-color: $designer-secondary-color;
     }
 
     &#zoom {
@@ -192,8 +212,8 @@
     }
 
     &.label-time {
-        background: #f7f7f7;
-        color: #333;
+        background: $xibo-color-white;
+        color: $xibo-color-black;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -202,7 +222,7 @@
 }
 
 #layout-editor #layout-timeline #controls-container .layout-info {
-    color: #f7f7f7;
+    color: $xibo-color-white;
     position: absolute; 
 
     &.left {
@@ -227,7 +247,7 @@
     }
 
     .popover {
-        color: #333;
+        color: $xibo-color-black;
         min-width: 250px;
         
         .popover-title {
@@ -242,9 +262,9 @@
 
         .popover-content .status-message {
             padding: 6px;
-            margin: 0px -1px 3px -1px;  
-            background: @layout-status-popover-message-bg-color;
-            color: #eee;
+            margin: 0px -1px 3px -1px;
+            background: $layout-status-popover-message-bg-color;
+            color: $xibo-color-white;
         }
 
         .popover-content .status-title {
@@ -255,22 +275,22 @@
 }
 
 #layout-editor #layout-timeline .designer-region {
-    background: @region-main-bg-color;
+    background: $region-main-bg-color;
     height: 48px;
     padding: 3px;
     margin: 4px 0;
-    .border-radius(4px);
+    @include border-radius(4px);
     display: box;
     display: -webkit-box;
     display: -moz-box;
 }
 
 #layout-editor #layout-timeline .designer-region:not(.editable) {
-    .box-shadow(inset 0 0 6px 4px grey);
+    @include box-shadow(inset 0 0 6px 4px $xibo-color-gray);
 }
 
 #layout-editor #layout-timeline .designer-region .message {
-    color: white;
+    color: $xibo-color-white;
     font-weight: bold;
     padding: 10px;
 }
@@ -286,27 +306,27 @@
     text-align: right;
     font-weight: bold;
     margin-bottom: 4px;
-    color: @region-main-fg-color;
+    color: $region-main-fg-color;
 }
 
 #layout-editor #layout-timeline .designer-widget {
     position: relative;
-    background: @timeline-widget-bg-color;
-    color: @timeline-widget-fg-color;
+    background: $timeline-widget-bg-color;
+    color: $timeline-widget-fg-color;
     font-weight: bold;
     height: 100%;
-    border: 1px solid @timeline-widget-border-color;
+    border: 1px solid $timeline-widget-border-color;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     padding: 0 4px;
-    .border-radius(4px);
+    @include border-radius(4px);
 }
 
 #layout-editor #layout-timeline .designer-widget .widgetLabel {
     float: left;
     height: inherit;
-    color: @designer-module-bg-color;
+    color: $designer-module-bg-color;
     min-width: 20px;
     height: 100%;
     text-align: center;
@@ -316,7 +336,7 @@
 
 #layout-editor #layout-timeline .designer-widget .widgetName {
     font-style: italic;
-    color: @timeline-widget-fg-color;
+    color: $timeline-widget-fg-color;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -343,7 +363,7 @@
     height: 30%;
     opacity: 0.3;
     font-size: 9px;
-    color: white;
+    color: $xibo-color-white;
 }
 
 #layout-editor #layout-timeline .designer-widget .widget-transition:hover {
@@ -355,23 +375,23 @@
 
 #layout-editor #layout-timeline .designer-widget .widget-transition-container.transition-in {
     left: 0;
-    border-right: @timeline-transition-in-fg-color solid 2px;
+    border-right: $timeline-transition-in-fg-color solid 2px;
 }
 
 #layout-editor #layout-timeline .designer-widget .widget-transition-container.transition-out {
     right: 0;
-    border-left: @timeline-transition-out-fg-color solid 2px;
+    border-left: $timeline-transition-out-fg-color solid 2px;
 }
 
 #layout-editor #layout-timeline .designer-widget .widget-transition.transition-in {
-    background: @timeline-transition-in-bg-color;
+    background: $timeline-transition-in-bg-color;
     border-radius: 80% 0 0 0;
     text-align: right;
     padding-right: 5px;
 }
 
 #layout-editor #layout-timeline .designer-widget .widget-transition.transition-out {
-    background: @timeline-transition-out-bg-color;
+    background: $timeline-transition-out-bg-color;
     border-radius: 0 80% 0 0;
     text-align: left;
     padding-left: 5px;
@@ -381,16 +401,16 @@
     float: right;
     cursor: pointer;
     padding: 2px;
-    color: @widget-main-fg-color;
+    color: $widget-main-fg-color;
 }
 
 #layout-editor #layout-timeline .designer-widget i.editProperty:hover {
-    color: lighten(@widget-main-fg-color, 20%);
+    color: lighten($widget-main-fg-color, 20%);
 }
 
 #layout-editor #layout-timeline .designer-widget-ghost {
-    .set-transparent-color(background; @timeline-ghost-bg-color; 60%);
-    color: @timeline-ghost-fg-color;
+    @include set-transparent-color(background, $timeline-ghost-bg-color, 60%);
+    color: $timeline-ghost-fg-color;
     font-weight: bold;
     display: flex;
     height: 100%;
@@ -398,11 +418,11 @@
 
 #layout-editor #layout-timeline .designer-widget-ghost .widgetName,
 #layout-editor #layout-timeline .designer-widget-ghost .widgetSubType {
-    color: @timeline-ghost-fg-color;
+    color: $timeline-ghost-fg-color;
 }
 
 #layout-editor #layout-timeline .designer-widget-sortable-highlight {
-    background: #d2d82b;
+    background: $xibo-color-yellow;
     float: left;
     width: 20px;
     height: 100%;
@@ -411,16 +431,16 @@
 
 
 #layout-editor #layout-timeline .ghost-padding {
-    .set-transparent-color(background; #111111; 20%);
+    @include set-transparent-color(background, $xibo-color-black, 20%);
     float: left;
     height: 100%;
 }
 
 #layout-editor #layout-timeline .widgetExtension {
-    color: @timeline-ghost-fg-color;
+    color: $timeline-ghost-fg-color;
     padding: 0 4px;
     font-weight: bold;
-    .set-transparent-color(background; #f3f3f3; 50%);
+    @include set-transparent-color(background, $xibo-color-white, 50%);
     height: 80%;
     margin-top: 0.25em;
     overflow: hidden;
@@ -430,9 +450,9 @@
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    .border-radius(4px);
-    border: 2px solid @designer-module-border-color;
-    background: #111;
+    @include border-radius(4px);
+    border: 2px solid $designer-module-border-color;
+    background: $xibo-color-black;
 }
 
 #layout-editor #layout-viewer {
@@ -444,12 +464,12 @@
 }
 
 #layout-editor .layout-viewer-border {
-    .set-transparent-color(background; #000; 90%);
+    @include set-transparent-color(background, $xibo-color-black, 90%);
     position: absolute;
 }
 
 #layout-editor #layout-viewer-container.fullscreen {
-    .set-transparent-color(background-color; #000; 90%);
+    @include set-transparent-color(background-color, $xibo-color-black, 90%);
     position: fixed;
     z-index: 1050;
     left: 0;
@@ -459,12 +479,12 @@
  
     #layout-viewer {
         position: fixed; /* Stay in place */
-        z-index: @designer-overlay-z-index; /* Sit on top */
+        z-index: $designer-overlay-z-index; /* Sit on top */
         left: 0;
         top: 5%;
         width: 100%;
         height: 90%;
-        .set-transparent-color(background-color; #000; 90%);
+        @include set-transparent-color(background-color, $xibo-color-black, 90%);
 
         .top-btn {
             position: fixed;
@@ -487,21 +507,21 @@
 }
 
 #layout-editor #layout-viewer #viewer-preview iframe {
-    .user-select-none();
+    @include user-select-none();
 }
 
 #layout-editor #layout-viewer {
-    background: @viewer-player-bg-colour;
+    background: $viewer-player-bg-colour;
 }
 
 #layout-editor #layout-viewer #viewer-preview {
-    color: @viewer-preview-text-colour;
-    text-shadow: 0px 0px 2px @viewer-preview-text-shadow-colour;
+    color: $viewer-preview-text-colour;
+    text-shadow: 0px 0px 2px $viewer-preview-text-shadow-colour;
 }
 
 #layout-editor #layout-viewer .layout-player {
-    background: @viewer-player-bg-colour;
-    .box-shadow(0 0 4px 0px #ccc);
+    background: $viewer-player-bg-colour;
+    @include box-shadow(0 0 4px 0px $xibo-color-gray);
 }
 
 #layout-editor #layout-viewer .play-btn-container {
@@ -510,7 +530,7 @@
     display: table;
     height: 100%;
     text-align: center;
-    .set-transparent-color(background; @viewer-player-bg-colour; 20%);
+    @include set-transparent-color(background, $viewer-player-bg-colour, 20%);
 }
 
 #layout-editor #layout-viewer .designer-region {
@@ -519,8 +539,8 @@
         font-size: 2em;
     }
 
-    .set-transparent-color(background; white; 30%);
-    .box-shadow(0 0 4px 0px #444);
+    @include set-transparent-color(background, $xibo-color-white, 30%);
+    @include box-shadow(0 0 4px 0px $xibo-color-black);
 
     .loading-icon {
         font-size: inherit;
@@ -544,7 +564,7 @@
 
     .preview-paging {
         position: absolute;
-        color: white;
+        color: $xibo-color-white;
         display: none;
         position: absolute;
         min-width: 100%;
@@ -552,7 +572,7 @@
         height: 20px;
         bottom: 0;
         z-index: 2;
-        .set-transparent-color(background; black; 50%);
+        @include set-transparent-color(background, $xibo-color-black, 50%);
         opacity: 0.2;
         padding: 0 4px;
         white-space: nowrap;
@@ -583,16 +603,16 @@
         display: none;
         cursor: pointer;
         padding: 2px 3px;
-        color: rgb(184, 184, 184);
+        color: $xibo-color-gray;
 
         &:hover {
-            color: white;
+            color: $xibo-color-white;
         }
     }
     
     &:hover {
-        .set-transparent-color(background; white; 50%);
-        .box-shadow(0 0 4px 2px #444);
+        @include set-transparent-color(background, $xibo-color-white, 50%);
+        @include box-shadow(0 0 4px 2px $xibo-color-black);
 
         .preview-paging.active {
             opacity: 0.9;
@@ -603,15 +623,15 @@
 /* Viewer navbar */
 #layout-editor #layout-viewer-navbar {
 
-    background: darken(@layout-main-bg-color, 10%);
+    background: darken($layout-main-bg-color, 10%);
     height: 45px;
     
     .viewer-navbar {
-        background: @viewer-navbar-bg-colour;
+        background: $viewer-navbar-bg-colour;
         height: 42px;
         padding: 6px 3px;
         overflow: auto;
-        .border-radius(0 0 2px 2px);
+        @include border-radius(0 0 2px 2px);
     }
 }
 
@@ -655,15 +675,15 @@
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar.designer-layout {
-    background: darken(@designer-secondary-color, 10%);
+    background: darken($designer-secondary-color, 10%);
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar.designer-region {
-    background: darken(@region-main-bg-color, 10%);
+    background: darken($region-main-bg-color, 10%);
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar.designer-widget {
-    background: darken(@widget-main-bg-color, 10%);
+    background: darken($widget-main-bg-color, 10%);
 }
 
 #layout-editor #layout-viewer-navbar .viewer-navbar .info {
@@ -674,7 +694,7 @@
 /* Viewer inline editor */
 #layout-editor #inline-editor {
     height: inherit;
-    .box-shadow(inset @viewer-inline-editor-shadow 0px 0px 10px 0px);
+    @include box-shadow(inset $viewer-inline-editor-shadow 0px 0px 10px 0px);
 }
 
 /* Inline Editor Overlay */
@@ -684,11 +704,11 @@
     cursor: pointer;
     width: 100%;
     height: 100%; 
-    .set-transparent-color(background; @viewer-inline-editor-overlay-bg-colour; 20%);
-    .box-shadow(inset @viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
+    @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 20%);
+    @include box-shadow(inset $viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
 
     &:hover {
-        .set-transparent-color(background; @viewer-inline-editor-overlay-bg-colour; 50%);
+        @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 50%);
     }
 
     .edit-btn-container {
@@ -698,13 +718,13 @@
 
         #edit-btn {
             font-size: 60px;
-            text-shadow: 0px 0px 5px #2e2e2e;
-            .set-transparent-color(color; @viewer-inline-editor-overlay-fg-colour; 80%);
+            text-shadow: 0px 0px 5px $xibo-color-black;
+            @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 80%);
             vertical-align: middle;
             display: table-cell;
             
             &:hover {
-                .set-transparent-color(color; @viewer-inline-editor-overlay-fg-colour; 90%);
+                @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 90%);
             }
         }
     }
@@ -725,13 +745,13 @@
     text-align: center;
     font-weight: bold;
     font-size: 1.2em;
-    color: white;
+    color: $xibo-color-white;
     padding: 30px;
-    background-color: @unsuccess-message-bg-color;
+    background-color: $unsuccess-message-bg-color;
 }
 
 #layout-editor #properties-panel-container {
-    background: @designer-module-bg-color;
+    background: $designer-module-bg-color;
     height: calc(45vh + 49px);
     position: relative;
 }
@@ -742,40 +762,40 @@
 }
 
 #layout-editor #properties-panel-container.properties-layout {
-    .border-radius(4px);
-    border: 2px solid @layout-main-bg-color;
+    @include border-radius(4px);
+    border: 2px solid $layout-main-bg-color;
 }
 
 #layout-editor #properties-panel-container.properties-region {
-    .border-radius(4px);
-    border: 2px solid @region-main-bg-color;
+    @include border-radius(4px);
+    border: 2px solid $region-main-bg-color;
 }
 
 #layout-editor #properties-panel-container.properties-widget {
-    .border-radius(4px);
-    border: 2px solid @widget-main-bg-color;
+    @include border-radius(4px);
+    border: 2px solid $widget-main-bg-color;
 }
 
 #layout-editor #properties-panel-container .form-title {
     text-align: center;
     font-weight: bold;
     font-size: 1.2em;
-    color: white;
+    color: $xibo-color-white;
 }
 
 #layout-editor #properties-panel-container .form-title-layout {
-    color: @layout-main-fg-color;
-    background: @layout-main-bg-color;
+    color: $layout-main-fg-color;
+    background: $layout-main-bg-color;
 }
 
 #layout-editor #properties-panel-container .form-title-region {
-    color: @region-main-fg-color;
-    background: @region-main-bg-color;
+    color: $region-main-fg-color;
+    background: $region-main-bg-color;
 }
 
 #layout-editor #properties-panel-container .form-title-widget {
-    color: @widget-main-fg-color;
-    background: @widget-main-bg-color;
+    color: $widget-main-fg-color;
+    background: $widget-main-bg-color;
 }
 
 #layout-editor #properties-panel-container .form-container {
@@ -810,22 +830,22 @@
 
         /* Track */
         &::-webkit-scrollbar-track {
-            .box-shadow(inset 0 0 5px grey);
+            @include box-shadow(inset 0 0 5px $xibo-color-gray);
         }
         
         /* Handle */
         &::-webkit-scrollbar-thumb {
-            background: @designer-secondary-color;
-            .border-radius(4px);
+            background: $designer-secondary-color;
+            @include border-radius(4px);
         }
 
         /* Handle on hover */
         &::-webkit-scrollbar-thumb:hover {
-            background: lighten(@designer-secondary-color, 20%);
+            background: lighten($designer-secondary-color, 20%);
         }
 
         &::-webkit-scrollbar-corner {
-            .box-shadow(inset 0 0 5px grey);
+            @include box-shadow(inset 0 0 5px $xibo-color-gray);
         }
 
     }
@@ -844,35 +864,35 @@
 
 /* Layout Navigator */
 #layout-editor #layout-navigator {
-    background: @designer-primary-color;
+    background: $designer-primary-color;
     min-height: 25vh;
-    padding: @padding-navigator;
-    .border-radius(4px);
-    border: 2px solid @designer-module-border-color;
+    padding: $padding-navigator;
+    @include border-radius(4px);
+    border: 2px solid $designer-module-border-color;
 }
 
 #layout-editor #layout-navigator .layout {
-    .box-shadow(inset 0 0 4px 0px @navigator-shadow-colour);
+    @include box-shadow(inset 0 0 4px 0px $navigator-shadow-colour);
 }
 
 #layout-editor #layout-navigator .designer-region {
-    .box-shadow(inset 0 0 4px 1px @navigator-shadow-colour);
+    @include box-shadow(inset 0 0 4px 1px $navigator-shadow-colour);
 }
 
 #layout-editor #layout-navigator .designer-region:not(.editable) {
-    .box-shadow(inset 0 0 4px 2px @navigator-non-editable-shadow-colour);
+    @include box-shadow(inset 0 0 4px 2px $navigator-non-editable-shadow-colour);
 }
 
 #layout-editor #layout-navigator-edit .layout {
-    .box-shadow(inset 0 0 5px 0px @navigator-shadow-colour);
+    @include box-shadow(inset 0 0 5px 0px $navigator-shadow-colour);
 }
 
 #layout-editor #layout-navigator-edit .designer-region {
-    .box-shadow(inset 0 0 10px 2px @navigator-shadow-colour);
+    @include box-shadow(inset 0 0 10px 2px $navigator-shadow-colour);
 }
 
 #layout-editor #layout-navigator-edit .designer-region:not(.editable) {
-    .box-shadow(inset 0 0 10px 2px @navigator-non-editable-shadow-colour);
+    @include box-shadow(inset 0 0 10px 2px $navigator-non-editable-shadow-colour);
 }
 
 #layout-editor #layout-navigator-edit {
@@ -880,7 +900,7 @@
     /* Hidden by default */
     position: fixed;
     /* Stay in place */
-    z-index: @designer-overlay-z-index;
+    z-index: $designer-overlay-z-index;
     /* Sit on top */
     left: 0;
     top: 0;
@@ -890,9 +910,7 @@
     /* Full height */
     overflow: auto;
     /* Enable scroll if needed */
-    .set-transparent-color(background-color;
-    #000;
-    90%);
+    @include set-transparent-color(background-color, $xibo-color-black, 90%);
 }
 
 #layout-editor .layout-navigator-edit-element {
@@ -900,7 +918,7 @@
 }
 
 #layout-editor #layout-navigator-edit-content {
-    background: black;
+    background: $xibo-color-black;
     width: 94vw;
     height: 87vh;
     margin-left: 3vw;
@@ -913,7 +931,7 @@
 }
 
 #layout-editor #layout-navigator-properties-panel {
-    background: grey;
+    background: $xibo-color-gray;
     width: 30vw;
     height: 87vh;
     margin-top: 3vh;
@@ -949,8 +967,8 @@
 
     .navbar {
         padding: 7px;
-        background: @designer-secondary-color;
-        .border-radius(0 0 4px 4px);
+        background: $designer-secondary-color;
+        @include border-radius(0 0 4px 4px);
         left: 3vw;
         width: 94vw;
     }
@@ -969,11 +987,11 @@
 
 /* Layout object selection */
 #layout-editor .selectable {
-    .user-select-none();
+    @include user-select-none();
 }
 
 #layout-editor .designer-region.selectable:hover {
-    background: @region-hover-color !important;
+    background: $region-hover-color !important;
 }
 
 #layout-editor #layout-timeline .designer-region .designer-region-overlay {
@@ -984,7 +1002,7 @@
     left: 0;
     top: 0;
     position: absolute;
-    .border-radius(4px);
+    @include border-radius(4px);
 
     .info {
         position: absolute;
@@ -996,27 +1014,27 @@
 }
 
 #layout-editor #layout-timeline .designer-widget.selectable:hover {
-    background: @widget-hover-color !important;
+    background: $widget-hover-color !important;
 }
 
 #layout-editor .selected-region {
-    background: @region-selected-color !important;
+    background: $region-selected-color !important;
 }
 
 #layout-editor #layout-navigator .designer-region.selected-widget,
 #layout-editor .designer-widget.selected-widget {
-    background: @widget-selected-color !important;
+    background: $widget-selected-color !important;
 }
 
 #layout-editor  #layout-timeline .designer-widget.ui-droppable-active {
-    .z-index-set(@designer-z-index-select);
-    .background-stripes(45deg; @widget-hover-color; lighten(@widget-hover-color, 10%); 10px; 4px);
+    @include z-index-set($designer-z-index-select);
+    @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
     visibility: visible;
 }
 
 #layout-editor #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,
 #layout-editor #layout-timeline .designer-widget.ui-droppable-active:hover {
-    .background-stripes(45deg; darken(@widget-hover-color, 10%); @widget-hover-color; 10px; 4px);
+    @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
 }
 
 #layout-editor  #layout-timeline .designer-widget.ui-droppable-active * {
@@ -1024,36 +1042,36 @@
 }
 
 #layout-editor  #layout-timeline .designer-widget.invalid-widget {
-    .box-shadow(inset 0px 0px 10px 3px red);
+    @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
 }
 
 #layout-editor  #layout-timeline .designer-region.to-sort .designer-widget {
-    background: @timeline-widget-to-sort-bg-color !important;
+    background: $timeline-widget-to-sort-bg-color !important;
 }
 
 #layout-editor #layout-timeline .designer-region.ui-droppable-active {
-    .z-index-set(@designer-z-index-select);
+    @include z-index-set($designer-z-index-select);
 
     .designer-region-overlay {
-        .background-stripes(45deg; @region-hover-color; lighten(@region-hover-color, 10%); 10px; 4px);
+        @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 10%), 10px, 4px);
         display: block;
         opacity: 0.75;
     }
 
     &.ui-droppable-hover, &:hover {
         .designer-region-overlay {
-            .background-stripes(45deg; darken(@region-hover-color, 10%); @region-hover-color; 10px; 4px);
+            @include background-stripes(45deg, darken($region-hover-color, 10%), $region-hover-color, 10px, 4px);
         }
     }
 }
 
 #layout-editor #layout-navigator .designer-region.ui-droppable-active {
-    .z-index-set(@designer-z-index-select);
-    .background-stripes(45deg; @region-hover-color; lighten(@region-hover-color, 10%); 10px; 4px);
+    @include z-index-set($designer-z-index-select);
+    @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 10%), 10px, 4px);
 
     &.ui-droppable-hover,
     &:hover {
-        .background-stripes(45deg; darken(@region-hover-color, 10%); @region-hover-color; 10px; 4px);
+        @include background-stripes(45deg, darken($region-hover-color, 10%), $region-hover-color, 10px, 4px);
     }
 
     * {
@@ -1062,13 +1080,13 @@
 }
 
 #layout-editor  #layout-navigator .layout.ui-droppable-active {
-    .z-index-set(@designer-z-index-select);
-    .background-stripes(45deg; @layout-hover-color; lighten(@layout-hover-color, 10%); 10px; 4px);
+    @include z-index-set($designer-z-index-select);
+    @include background-stripes(45deg, $layout-hover-color, lighten($layout-hover-color, 10%), 10px, 4px);
 }
 
 #layout-editor  #layout-navigator .layout.ui-droppable-active.ui-droppable-hover,
 #layout-editor  #layout-navigator .layout.ui-droppable-active:hover {
-    .background-stripes(45deg; darken(@layout-hover-color, 10%); @layout-hover-color; 10px; 4px);
+    @include background-stripes(45deg, darken($layout-hover-color, 10%), $layout-hover-color, 10px, 4px);
 }
 
 #layout-editor  #layout-navigator .layout.ui-droppable-active * {
@@ -1076,11 +1094,11 @@
 }
 
 #layout-editor .ui-droppable-active {
-    .box-shadow(inset 0 0 2px #fff);
+    @include box-shadow(inset 0 0 2px $xibo-color-white);
 }
 
 #layout-editor .ui-droppable-hover {
-    .box-shadow(inset 0 0 4px #313131);
+    @include box-shadow(inset 0 0 4px #313131);
 }
 
 
@@ -1097,7 +1115,7 @@
     top: 50%;
     transform: translateY(-50%);
     font-size: 75px;
-    color: #ffffff;
+    color: $xibo-color-white;
     z-index: 0;
 }
 
@@ -1110,9 +1128,4 @@
 /* Select2 width fix */
 #layout-editor .select2-container {
     width: auto !important;
-}
-
-#layout-editor #layoutJumpListContainer {
-    min-width: 120px;
-    margin: 8px;
 }

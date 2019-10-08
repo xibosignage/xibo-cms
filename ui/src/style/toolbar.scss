@@ -1,36 +1,39 @@
-@import (less) "~font-awesome/css/font-awesome.min.css";
+// Import
+@import "common";
 
 // Variables
-@toolbar-main-color: #337ab7;
-@toolbar-green: #5ac063;
-@toolbar-light-green: #29e73a;
-@toolbar-dark-blue: #3a71df;
-@toolbar-card-color: #5f75a5;
-@toolbar-content-bg-color: #f3f3f3;
-@toolbar-disabled-color: #888;
-@toolbar-tab-bg-color: #4084be;
-@toolbar-tab-fg-color: #ffffff;
-@toolbar-tab-hover-color: #87b1d5;
-@toolbar-tab-border-color: #337ab7;
-@toolbar-tab-min-width: 80px; 
-@toolbar-z-index: 1040;
-@bin-bg-color: #e05050;
-@bin-fg-color: #ddd;
-@bin-bg-color-hover: #d92626;
+$toolbar-tab-min-width: 80px; 
+$toolbar-z-index: 1040;
 
-@undo-bg-color: #f0ad4e;
-@undo-fg-color: #ddd;
-@undo-bg-color-hover: #ec971f;
+// Colours
+$toolbar-main-color: $xibo-color-secondary;
+$toolbar-secondary-color: $xibo-color-primary;
+$toolbar-green: darken($xibo-color-green, 20%);
+$toolbar-light-green: $xibo-color-green;
+$toolbar-dark-blue: $xibo-color-primary;
+$toolbar-card-color: $xibo-color-primary;
+$toolbar-content-bg-color: $xibo-color-white;
+$toolbar-disabled-color: $xibo-color-gray;
+
+$toolbar-tab-bg-color: $xibo-color-primary;
+$toolbar-tab-fg-color: $xibo-color-white;
+$toolbar-tab-hover-color: $xibo-color-light-blue;
+$toolbar-tab-border-color: $xibo-color-secondary;
+
+$bin-bg-color: $xibo-color-red;
+$bin-fg-color: $xibo-color-white;
+$bin-bg-color-hover: darken($xibo-color-red, 20%);
+
+$undo-bg-color: $xibo-color-orange;
+$undo-fg-color: $xibo-color-white;
+$undo-bg-color-hover: darken($xibo-color-orange, 20%);
 
 // CSS
-.sidebar-footer {
-    height: 50px;
-    padding-top: 4px;
-}
-
 .editor-toolbar nav {
-    z-index: @toolbar-z-index;
+    background: $toolbar-main-color;
+    z-index: $toolbar-z-index;
     margin-left: 0;
+    min-height: 40px;
     border: none;
 }
 
@@ -46,7 +49,6 @@
 }
 
 .editor-toolbar .container-toolbar {
-    background: @toolbar-main-color;
     padding: 0 15px;
 }
 
@@ -54,44 +56,48 @@
     margin: 8px 3px;
 }
 
-.editor-toolbar .container-toolbar .navbar-peak-button {
-    margin-left: 5px;
-    width: 60px;
+.editor-toolbar .container-toolbar .navbar-peek-button {
+    width: 50px;
     text-align: center;
-    font-size: 20px;
-    padding: 10px;
+    font-size: 24px;
+    padding: 5px 10px;
     line-height: 30px;
-    display: none;
+    @include set-transparent-color(background, $toolbar-disabled-color, 30%);
+    color: lighten($toolbar-disabled-color, 30%);
+    opacity: 0.4;
+    cursor: unset;
 
     &.active {
-        display: block;
-    }
+        cursor: pointer;
+        opacity: 1;
 
-    &.navbar-bin {
-        background: @bin-bg-color;
-        color: @bin-fg-color;
-    }
+        &.navbar-bin {
+            background: $bin-bg-color;
+            color: $bin-fg-color;
+        }
 
-    &.navbar-bin:hover {
-        background: @bin-bg-color-hover !important;
-    }
+        &.navbar-bin:hover {
+            background: $bin-bg-color-hover !important;
+        }
 
-    &.navbar-undo {
-        background: @undo-bg-color;
-        color: @undo-fg-color;
-    }
+        &.navbar-undo {
+            background: $undo-bg-color;
+            color: $undo-fg-color;
+        }
 
-    &.navbar-undo:hover {
-        background: @undo-bg-color-hover !important;
+        &.navbar-undo:hover {
+            background: $undo-bg-color-hover !important;
+        }
     }
 }
 
+
 .editor-toolbar .container-toolbar .navbar-right {
-    padding: 0 15px;
+    padding-right: 15px;
 }
 
 .editor-toolbar .toolbar-content {
-    background: @toolbar-content-bg-color;
+    background: $toolbar-content-bg-color;
 }
 
 .editor-toolbar .toolbar-pane-content {
@@ -102,8 +108,8 @@
 
 .editor-toolbar .search-content {
     width: 50%;
-    background: rgb(239, 239, 239);
-    border: 4px solid #1c65a3;
+    background: $xibo-color-white;
+    border: 4px solid $xibo-color-blue;
     opacity: 0.95;
     position: fixed;
     bottom: 50px;
@@ -119,20 +125,20 @@
     }
 
     .media-search-controls {
-        color: white;
+        color: $xibo-color-white;
         font-size: 16px;
         font-weight: bold;
         padding: 4px;
 
         i.fa {
             cursor: pointer;
-            color: @toolbar-tab-hover-color;
+            color: $toolbar-tab-hover-color;
             font-size: 20px;
             &:hover {
-                color: @toolbar-tab-fg-color;
+                color: $toolbar-tab-fg-color;
 
                 &.btn-window-close {
-                    color: @bin-bg-color;
+                    color: $bin-bg-color;
                 }
                 
             }
@@ -155,11 +161,11 @@
         }
 
         tr.media-selected {
-            background-color: @toolbar-tab-hover-color;
+            background-color: $toolbar-tab-hover-color;
         }
         
         .assignItem {
-            color: @toolbar-main-color;
+            color: $toolbar-main-color;
             font-size: 16px;
         }
 
@@ -181,7 +187,7 @@
 }
 
 .editor-toolbar .toolbar-pane form {
-    background: #1c65a3;
+    background: $xibo-color-blue;
     padding: 5px 5px;
 }
 
@@ -189,11 +195,11 @@
 .editor-toolbar .toolbar-content button.pagination-btn {
     width: 5%;
     height: 90px;
-    .border-radius(0);
+    @include border-radius(0);
 }
 
 .editor-toolbar .toolbar-content button.pagination-btn[disabled] {
-    background: @toolbar-disabled-color;
+    background: $toolbar-disabled-color;
 }
 
 .editor-toolbar .toolbar-content button.pagination-btn[disabled]:hover {
@@ -211,13 +217,13 @@
 /* Toolbar - card */
 .editor-toolbar .toolbar-content .toolbar-card {
     display: inline-block;
-    background: @toolbar-card-color;
-    color: white;
+    background: $toolbar-card-color;
+    color: $xibo-color-white;
     text-align: center;
     height: 70px;
     font-size: 12px;
     position: relative;
-    .border-radius(4px);
+    @include border-radius(4px);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .card-title {
@@ -240,15 +246,15 @@
     width: inherit;
     height: 30px;    
     padding: 3px 0;
-    .border-radius(4px 4px 0 0);
-    .set-transparent-color(background-color; #252525; 70%);
+    @include border-radius(4px 4px 0 0);
+    @include set-transparent-color(background-color, $xibo-color-black, 70%);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card.card-selected .add-area {
     display: block;
     height: 80px;
-    .set-transparent-color(background-color; @toolbar-light-green; 90%);
-    .border-radius(4px);
+    @include set-transparent-color(background-color, $toolbar-light-green, 90%);
+    @include border-radius(4px);
     padding-top: 21px;
     font-size: 22px;
 }
@@ -262,8 +268,8 @@
     cursor: move;
     padding: 13px 0;
     z-index: inherit;
-    .border-radius(0 0 4px 4px);
-    .set-transparent-color(background-color; #595959; 70%);
+    @include border-radius(0 0 4px 4px);
+    @include set-transparent-color(background-color, $xibo-color-gray, 70%);
     
 }
 
@@ -282,15 +288,15 @@
 }
 
 .editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .add-area:hover {
-    .set-transparent-color(background-color; @toolbar-green; 70%);
+    @include set-transparent-color(background-color, $toolbar-green, 70%);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card:not(.card-selected):hover .add-area:active {
-    .box-shadow(inset 0 0 10px #fff);
+    @include box-shadow(inset 0 0 10px $xibo-color-white);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card:hover .drag-area:hover {
-    .set-transparent-color(background-color; @toolbar-dark-blue; 70%);
+    @include set-transparent-color(background-color, $toolbar-dark-blue, 70%);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .media-tags {
@@ -300,8 +306,8 @@
     width: 90%;
     left: 5%;
     opacity: 0.9;
-    background-color: darken(@toolbar-card-color, 20%);
-    .border-radius(4px 4px 0 0);
+    background-color: darken($toolbar-card-color, 20%);
+    @include border-radius(4px 4px 0 0);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .media-tags:hover {
@@ -309,14 +315,14 @@
     z-index: 2;
     width: 96%;
     left: 2%;
-    background-color: darken(@toolbar-card-color, 40%);
+    background-color: darken($toolbar-card-color, 40%);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .media-tags:not(.expanded):hover {
     width: 100%;
     left: 0;
     min-width: fit-content;
-    .border-radius(4px);
+    @include border-radius(4px);
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .media-tags-label {
@@ -357,89 +363,58 @@
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .media-tags .toggle-tags span i {
-    &:extend(.fa-angle-up all);
+    @extend .fa-angle-up;
 }
 
 .editor-toolbar .toolbar-content .toolbar-card .media-tags:hover .toggle-tags span i {
-    &:extend(.fa-angle-down all);
+    @extend .fa-angle-down;
 }
 
 /* Toolbar - buttons */
 .editor-toolbar a {
-    color: white;
+    color: $xibo-color-white;
     cursor: pointer;
 }
 
 .editor-toolbar .navbar-buttons a.active {
-    background: white;
+    background: $xibo-color-white;
     color: #444;
 }
 
-.editor-toolbar .btn-menu-tab {
-    background-color: @toolbar-tab-bg-color;
-    color: @toolbar-tab-fg-color;
-    border-style: solid;
-    border-color: @toolbar-tab-border-color;
-    border-width: 0 1px 0 0;
-    min-width: @toolbar-tab-min-width;
-    text-align: center;
-}
-
-.editor-toolbar .btn-menu-tab:hover {
-    background: @toolbar-tab-hover-color !important;
-}
-
 .editor-toolbar .navbar-submenu-container {
-    background: @toolbar-main-color;    
-}
-
-.editor-toolbar .navbar-submenu.open .dropdown-toggle {
-    background: white !important;
-    color: #444;    
+    background: $toolbar-tab-fg-color;
+    padding: 2px;
+    border: none;
 }
 
 .editor-toolbar .navbar-submenu a:hover {
-    color: @toolbar-card-color;
+    color: $toolbar-card-color;
 }
 
 .editor-toolbar .navbar-submenu-item {
-    color: @toolbar-tab-fg-color;    
+    color: $toolbar-tab-fg-color;    
     padding: 4px;
     cursor: pointer;
 }
 
-.editor-toolbar .navbar-submenu-item-options {
-    width: 100%;
-    background-color: @toolbar-tab-bg-color;
+.editor-toolbar .btn-menu-tool {
+    color: $xibo-color-white;
+    width: 50px;
+    text-align: center;
+    font-size: 24px;
+    padding: 5px 10px;
+    line-height: 30px;
+    max-height: 40px;
+
+    .material-icons {
+        font-size: 26px;
+        line-height: 30px;
+    }
 
     &:hover {
-        background-color: darken(@toolbar-tab-bg-color, 10%);
+        color: $xibo-color-blue;
+        background: $xibo-color-white;
     }
-}
-
-.editor-toolbar .btn-menu-tool {
-    color: lightgray;
-    border-style: solid;
-    border-color: @toolbar-tab-border-color;
-    border-width: 0 1px 0 0;
-    margin-left: 0 !important;
-}
-
-.editor-toolbar .btn-menu-tool:hover {
-    color: white;
-    background: transparent;
-}
-
-.editor-toolbar .btn-menu-tool-delete {
-    padding-left: 8px;
-    padding-right: 8px;
-    background: @bin-bg-color;
-    color: @bin-fg-color;
-}
-
-.editor-toolbar .btn-menu-tool-delete:hover {
-    color: white;
-    background-color: @bin-bg-color-hover !important;
 }
 
 .editor-toolbar .navbar-buttons a .close-tab-button {
@@ -455,7 +430,7 @@
 }
 
 .editor-toolbar .navbar-buttons a:hover .close-tab-button:hover {
-    color: #c92121 !important;
+    color: $xibo-color-red !important;
 }
 
 .editor-toolbar .bootstrap-tagsinput {
@@ -466,19 +441,43 @@
     font-size: 95%;
 }
 
+.editor-toolbar .navbar-submenu {
+    & > a {
+        padding: 10px;
+        line-height: 20px;
 
-.editor-toolbar .navbar-submenu-options {
-    #optionsContainer {
-        padding: 10px 15px;
-    }
-
-    .navbar-submenu-options-container {
-        label {
-            margin: 0;
+        &#optionsContainer {
+            width: 50px;
+            text-align: center;
+            font-size: 24px;
+            padding: 5px 10px;
+            line-height: 30px;
         }
 
-        .slider:not(.scaled-slider) {
-            width: 100% !important;
+        color: $xibo-color-white;
+
+        &:hover, &:focus {
+            color: $toolbar-main-color;
+        }
+    }
+
+    &.open > a {
+        color: $toolbar-main-color;
+    }
+
+    .navbar-submenu-item-options {
+        width: 100%;
+        background-color: $toolbar-main-color;
+        font-weight: normal;
+        margin: 0;
+
+        i {
+            padding: 1px;
+            margin-top: 4px;
+        }
+
+        &:hover {
+            background-color: darken($toolbar-main-color, 10%);
         }
     }
 }

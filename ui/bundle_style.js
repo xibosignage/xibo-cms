@@ -1,6 +1,9 @@
 //--- NPM packages style ---
 import './public_path';
 
+// Import material design base style
+require('./src/style/bundle.scss');
+
 // bootstrap
 require('bootstrap/dist/css/bootstrap.min.css');
 
