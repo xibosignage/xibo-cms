@@ -57,7 +57,7 @@ class InstallSavedReportsAndSpacerModulesMigration extends AbstractMigration
                 'schemaVersion' => 1,
                 'previewEnabled' => 0,
                 'assignable' => 1,
-                'render_as' => 'hmtl',
+                'render_as' => 'html',
                 'class' => 'Xibo\Widget\Spacer',
                 'defaultDuration' => 60,
                 'validExtensions' => null,
