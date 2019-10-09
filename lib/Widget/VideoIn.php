@@ -74,7 +74,7 @@ class VideoIn extends ModuleWidget
      *  operationId="WidgetVideoInEdit",
      *  tags={"widget"},
      *  summary="Edit a Video In Widget",
-     *  description="Edit a Video In Widget",
+     *  description="Edit a Video In Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

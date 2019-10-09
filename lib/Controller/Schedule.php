@@ -373,7 +373,7 @@ class Schedule extends Base
      *
      * @SWG\Get(
      *  path="/schedule/{displayGroupId}/events",
-     *  operationId="scheduleCalendarData",
+     *  operationId="scheduleCalendarDataDisplayGroup",
      *  tags={"schedule"},
      *  @SWG\Parameter(
      *      name="displayGroupId",

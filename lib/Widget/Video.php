@@ -52,12 +52,20 @@ class Video extends ModuleWidget
 
     /**
      * Edit a Video Widget
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/playlist/widget/video/{playlistId}",
      *  operationId="WidgetVideoEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing video on a layout",
-     *  description="Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation",
+     *  description="Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation.
+                    This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID",
+     *      type="integer",
+     *      required=true
+     *  ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
