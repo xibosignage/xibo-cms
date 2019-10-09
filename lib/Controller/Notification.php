@@ -679,5 +679,6 @@ class Notification extends Base
         // Disable any buffering to prevent OOM errors.
         ob_end_flush();
         readfile($fileName);
-        exit;    }
+        exit;
+    }
 }
