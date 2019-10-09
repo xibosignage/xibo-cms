@@ -92,7 +92,7 @@
 
                     <div class="tab-pane" id="attachment">
                         <div class="row">
-                            {{ notification.filename }}
+                            <p><a href="{{ urlFor("notification.exportattachment", {id: notification.notificationId}) }}">{{ notification.originalFileName }}</a> </p>
                         </div>
                     </div>
                 </div>

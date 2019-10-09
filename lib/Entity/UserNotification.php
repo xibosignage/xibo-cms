@@ -113,6 +113,11 @@ class UserNotification implements \JsonSerializable
     /**
      * @var string
      */
+    public $originalFileName;
+
+    /**
+     * @var string
+     */
     public $nonusers;
 
     /**

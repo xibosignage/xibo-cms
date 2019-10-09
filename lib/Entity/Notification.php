@@ -105,6 +105,14 @@ class Notification implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="Attachment originalFileName"
+     * )
+     * @var string
+     */
+    public $originalFileName;
+
+    /**
+     * @SWG\Property(
      *  description="Additional email addresses to which a saved report will be sent"
      * )
      * @var string
@@ -264,8 +272,8 @@ class Notification implements \JsonSerializable
     {
         $this->notificationId = $this->getStore()->insert('
             INSERT INTO `notification`
-              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `isSystem`, `userId`, `filename`, `nonusers`)
-              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :isSystem, :userId, :filename, :nonusers)
+              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `isSystem`, `userId`, `filename`, `originalFileName`, `nonusers`)
+              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :isSystem, :userId, :filename, :originalFileName, :nonusers)
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
@@ -276,6 +284,7 @@ class Notification implements \JsonSerializable
             'isSystem' => $this->isSystem,
             'userId' => $this->userId,
             'filename' => $this->filename,
+            'originalFileName' => $this->originalFileName,
             'nonusers' => $this->nonusers
         ]);
     }
@@ -295,6 +304,7 @@ class Notification implements \JsonSerializable
                 `isSystem` = :isSystem,
                 `userId` = :userId,
                 `filename` = :filename,
+                `originalFileName` = :originalFileName,
                 `nonusers` = :nonusers
               WHERE `notificationId` = :notificationId
         ', [
@@ -307,6 +317,7 @@ class Notification implements \JsonSerializable
             'isSystem' => $this->isSystem,
             'userId' => $this->userId,
             'filename' => $this->filename,
+            'originalFileName' => $this->originalFileName,
             'nonusers' => $this->nonusers,
             'notificationId' => $this->notificationId
         ]);

@@ -26,6 +26,7 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Slim\View;
@@ -52,6 +53,9 @@ class ReportScheduleTask implements TaskInterface
     /** @var SavedReportFactory */
     private $savedReportFactory;
 
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /** @var UserFactory */
     private $userFactory;
 
@@ -72,6 +76,7 @@ class ReportScheduleTask implements TaskInterface
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->reportService = $container->get('reportService');
         $this->notificationFactory = $container->get('notificationFactory');
@@ -250,7 +255,13 @@ class ReportScheduleTask implements TaskInterface
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner
                     $notification->filename = 'filename-'.$media->mediaId.'.pdf';
+                    $notification->originalFileName = 'saved_report.pdf';
                     $notification->nonusers = $nonusers;
+
+                    // Get user group to create user notification
+                    $notificationUser = $this->userFactory->getById($savedReport->userId);
+                    $notification->assignUserGroup($this->userGroupFactory->getById($notificationUser->groupId));
+
                     $notification->save();
                 }
             } catch (\Exception $error) {

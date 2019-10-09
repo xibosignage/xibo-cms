@@ -137,6 +137,7 @@ class NotificationFactory extends BaseFactory
             `notification`.isInterrupt,
             `notification`.isSystem,
             `notification`.filename,
+            `notification`.originalFileName,
             `notification`.nonusers,
             `notification`.userId ';
 
