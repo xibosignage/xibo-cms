@@ -139,12 +139,12 @@ class DataSetTicker extends ModuleWidget
     /**
      * Edit
      *
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/playlist/widget/{widgetId}?dataSetTicker",
-     *  operationId="WidgetTickerEdit",
+     *  operationId="WidgetDataSetTickerEdit",
      *  tags={"widget"},
-     *  summary="Edit a ticker Widget",
-     *  description="Edit a ticker Widget",
+     *  summary="Edit a dataSet ticker Widget",
+     *  description="Edit a dataSet ticker Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -152,6 +152,13 @@ class DataSetTicker extends ModuleWidget
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="step",
+     *      in="formData",
+     *      description="The Step Number being edited",
+     *      type="integer",
+     *      required=false
+     *  ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",

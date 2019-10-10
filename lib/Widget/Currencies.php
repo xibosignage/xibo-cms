@@ -127,7 +127,7 @@ class Currencies extends AlphaVantageBase
      *  operationId="widgetCurrenciesEdit",
      *  tags={"widget"},
      *  summary="Edit a Currencies Widget",
-     *  description="Edit a new Currencies Widget",
+     *  description="Edit a new Currencies Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

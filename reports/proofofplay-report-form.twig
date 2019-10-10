@@ -37,9 +37,11 @@
         </button>
         <ul class="dropdown-menu">
             {% for report in defaults.availableReports %}
-                <li>
-                    <a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                </li>
+                {% if report.hidden == 0 %}
+                    <li>
+                        <a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                    </li>
+                {% endif %}
             {% endfor %}
         </ul>
     </div>

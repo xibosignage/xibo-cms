@@ -137,7 +137,7 @@
 
                                 {% if theme.isSettingVisible("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB") %}
                                     {% set title %}{% trans "Should Layouts be automatically Published?" %}{% endset %}
-                                    {% set helpText %}{% trans "When enabled Layout will be set to be Published in 30 min since the last change was made to it" %}{% endset %}
+                                    {% set helpText %}{% trans "When enabled draft Layouts will be automatically published 30 minutes after the last edit" %}{% endset %}
 
                                     {{ forms.checkbox("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB", title, theme.getSetting("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB")) }}
                                 {% endif %}

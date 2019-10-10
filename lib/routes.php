@@ -37,8 +37,10 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *
  * @SWG\Info(
  *  title="Xibo API",
- *  description="Xibo CMS API",
- *  version="2.0",
+ *  description="Xibo CMS API.
+       Using HTTP formData requests.
+       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
+ *  version="2.2",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -525,8 +527,7 @@ $app->get('/report/data/:name', '\Xibo\Controller\Report:getReportData')->name('
 /**
  * Player Versions
  * @SWG\Tag(
- *  name="version",
- *  description="Player Versions"
+ *  name="Player Software",
  * )
  */
 $app->get('/playersoftware', '\Xibo\Controller\PlayerSoftware:grid')->name('playersoftware.search');

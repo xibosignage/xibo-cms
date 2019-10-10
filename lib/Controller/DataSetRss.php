@@ -211,7 +211,7 @@ class DataSetRss extends Base
      *
      * @SWG\Post(
      *  path="/dataset/{dataSetId}/rss",
-     *  operationId="dataSetColumnAdd",
+     *  operationId="dataSetRssAdd",
      *  tags={"dataset"},
      *  summary="Add RSS",
      *  description="Add a RSS to a DataSet",
@@ -411,7 +411,7 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @SWG\Put(
-     *  path="/dataset/{dataSetId}/rss/{$rssId}",
+     *  path="/dataset/{dataSetId}/rss/{rssId}",
      *  operationId="dataSetRssEdit",
      *  tags={"dataset"},
      *  summary="Edit Rss",

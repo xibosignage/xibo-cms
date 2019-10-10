@@ -81,6 +81,7 @@ $app->get('/drawer/notification/interrupt/:id', '\Xibo\Controller\Notification:i
 $app->get('/notification/form/add', '\Xibo\Controller\Notification:addForm')->name('notification.add.form');
 $app->get('/notification/form/edit/:id', '\Xibo\Controller\Notification:editForm')->name('notification.edit.form');
 $app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:deleteForm')->name('notification.delete.form');
+$app->get('/notification/export/:id', '\Xibo\Controller\Notification:exportAttachment')->name('notification.exportattachment');
 
 //
 // layouts
@@ -401,6 +402,7 @@ $app->get('/report/reportschedule/form/reset/:id', '\Xibo\Controller\Report:rese
 //
 $app->get('/report/savedreport/view', '\Xibo\Controller\Report:displaySavedReportPage')->name('savedreport.view');
 $app->get('/report/savedreport/:id/report/:name/open', '\Xibo\Controller\Report:savedReportOpen')->name('savedreport.open');
+$app->get('/report/savedreport/:id/report/:name/export', '\Xibo\Controller\Report:savedReportExport')->name('savedreport.export');
 $app->get('/report/savedreport/form/delete/:id', '\Xibo\Controller\Report:deleteSavedReportForm')->name('savedreport.delete.form');
 
 //

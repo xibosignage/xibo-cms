@@ -46,7 +46,7 @@ class NotificationView extends ModuleWidget
      *  operationId="WidgetNotificationEdit",
      *  tags={"widget"},
      *  summary="Edit a Notification Widget",
-     *  description="Edit a Notification Widget",
+     *  description="Edit a Notification Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
