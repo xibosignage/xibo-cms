@@ -693,14 +693,14 @@ class Soap
                             $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
 
                             // Append this item to required files
-                            $resource_file = $requiredFilesXml->createElement("file");
-                            $resource_file->setAttribute('type', 'resource');
-                            $resource_file->setAttribute('id', $widget->widgetId);
-                            $resource_file->setAttribute('layoutid', $layoutId);
-                            $resource_file->setAttribute('regionid', $region->regionId);
-                            $resource_file->setAttribute('mediaid', $widget->widgetId);
-                            $resource_file->setAttribute('updated', $updatedDt->format('U'));
-                            $fileElements->appendChild($resource_file);
+                            $resourceFile = $requiredFilesXml->createElement("file");
+                            $resourceFile->setAttribute('type', 'resource');
+                            $resourceFile->setAttribute('id', $widget->widgetId);
+                            $resourceFile->setAttribute('layoutid', $layoutId);
+                            $resourceFile->setAttribute('regionid', $region->regionId);
+                            $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                            $resourceFile->setAttribute('updated', $updatedDt->format('U'));
+                            $fileElements->appendChild($resourceFile);
                         }
                     }
                 }
