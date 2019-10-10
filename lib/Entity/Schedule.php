@@ -744,6 +744,10 @@ class Schedule implements \JsonSerializable
         // Request month cache
         while ($fromDt < $toDt) {
 
+            // Empty scheduleEvents as we are looping thorugh each month
+            // we dont want to save previous month events
+            $this->scheduleEvents = [];
+
             // Events for the month.
             $this->generateMonth($fromDt, $eventStart, $eventEnd);
 
@@ -841,6 +845,11 @@ class Schedule implements \JsonSerializable
             /** @var Date $start */
             $start = $lastWatermark->copy();
             $end = $start->copy()->addSeconds($eventDuration);
+
+            if (($start <= $generateToDt) && ($end >= $generateFromDt)) {
+                $this->addDetail($start->format('U'), $end->format('U'));
+                $this->getLog()->debug('The event start/end is inside the month' );
+            }
         }
 
         // range should be the smallest of the recurrence range and the generate window todt
@@ -998,7 +1007,7 @@ class Schedule implements \JsonSerializable
             if ($this->recurrenceType == 'Week' && !empty($this->recurrenceRepeatsOn))
                 continue;
 
-            if ($start >= $generateFromDt) {
+            if (($start <= $generateToDt) && ($end >= $generateFromDt)) {
                 if ($this->eventTypeId == self::$COMMAND_EVENT)
                     $this->addDetail($start->format('U'), null);
                 else {
