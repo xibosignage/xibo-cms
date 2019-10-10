@@ -584,7 +584,7 @@ trait DisplayProfileConfigFields
                 // Options object to be converted to a JSON string
                 $lockOptions = (object)[];
 
-                if ($usblock != 'empty') {
+                if ($usblock != 'empty' && $displayProfile->type == 'lg') {
                     $lockOptions->usblock = $usblock === 'true' ? true : false;
                 }
 

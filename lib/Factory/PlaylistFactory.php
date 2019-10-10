@@ -143,7 +143,7 @@ class PlaylistFactory extends BaseFactory
      */
     public function getByOwnerId($ownerId)
     {
-        return $this->query(null, array('userId' => $ownerId));
+        return $this->query(null, ['userId' => $ownerId, 'regionSpecific' => 0]);
     }
 
     /**

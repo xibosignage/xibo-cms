@@ -468,8 +468,9 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
 
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+        }
 
         $displayProfile->delete();
 
