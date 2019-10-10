@@ -301,13 +301,15 @@ class Region implements \JsonSerializable
     }
 
     /**
+     * @param array $options
      * @return Playlist
      * @throws NotFoundException
      */
-    public function getPlaylist()
+    public function getPlaylist($options = [])
     {
-        if ($this->regionPlaylist === null)
-            $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load();
+        if ($this->regionPlaylist === null) {
+            $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load($options);
+        }
 
         return $this->regionPlaylist;
     }
@@ -336,7 +338,7 @@ class Region implements \JsonSerializable
 
         // Load the Playlist?
         if ($options['loadPlaylists']) {
-            $this->getPlaylist();
+            $this->getPlaylist($options);
         }
 
         $this->hash = $this->hash();

@@ -285,8 +285,22 @@ class User extends Base
             $user->loggedIn = $this->sessionFactory->getActiveSessionsForUser($user->userId);
             $this->getLog()->debug('Logged in status for user ID ' . $user->userId . ' with name ' . $user->userName . ' is ' . $user->loggedIn);
 
+            // Set some text for the display status
+            switch ($user->twoFactorTypeId) {
+                case 1:
+                    $user->twoFactorDescription = __('Email');
+                    break;
+
+                case 2:
+                    $user->twoFactorDescription = __('Google Authenticator');
+                    break;
+
+                default:
+                    $user->twoFactorDescription = __('Disabled');
+            }
+
             if ($this->isApi()) {
-                break;
+                continue;
             }
 
             $user->includeProperty('buttons');
@@ -1014,6 +1028,11 @@ class User extends Base
         // if we are setting up email two factor auth, check if the email is entered on the form as well
         if ($user->twoFactorTypeId === 1 && $user->email == '') {
             throw new InvalidArgumentException(__('Please provide valid email address'), 'email');
+        }
+
+        // if we are setting up email two factor auth, check if the sending email address is entered in CMS Settings.
+        if ($user->twoFactorTypeId === 1 && $this->getConfig()->getSetting('mail_from') == '') {
+            throw new InvalidArgumentException(__('Please provide valid sending email address in CMS Settings on Network tab'), 'mail_from');
         }
 
         // if we have a new password provided, update the user record

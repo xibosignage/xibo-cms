@@ -23,7 +23,7 @@
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
-                        <form class="form-inline">
+                        <form class="form-inline" onsubmit="return false">
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("dataSet", title) }}
                         </form>

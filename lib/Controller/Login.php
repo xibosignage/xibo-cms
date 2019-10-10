@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\UserFactory;
@@ -465,6 +466,10 @@ class Login extends Base
                 $issuer = $issuerSettings;
             } else {
                 $issuer = $appName;
+            }
+
+            if ($mailFrom == '') {
+                throw new InvalidArgumentException(__('Sending email address in CMS Settings is not configured'), 'mail_from');
             }
 
             $tfa = new TwoFactorAuth($issuer);
