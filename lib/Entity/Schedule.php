@@ -53,6 +53,7 @@ class Schedule implements \JsonSerializable
     public static $COMMAND_EVENT = 2;
     public static $OVERLAY_EVENT = 3;
     public static $INTERRUPT_EVENT = 4;
+    public static $CAMPAIGN_EVENT = 5;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -496,6 +497,7 @@ class Schedule implements \JsonSerializable
             || $this->eventTypeId == Schedule::$OVERLAY_EVENT
             || $this->eventTypeId == Schedule::$INTERRUPT_EVENT
         ) {
+        //if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$CAMPAIGN_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT || $this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');

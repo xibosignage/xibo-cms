@@ -382,21 +382,77 @@ var setupScheduleForm = function(dialog) {
 
     var $eventTypeId = $('#eventTypeId').val();
     var $layoutSpecific = -1;
+    var $layoutControl = $(".layout-control");
 
-    if ($eventTypeId == 4) {
+    if ($eventTypeId == 1) {
+
+        // Load Layouts only
         $layoutSpecific = 1;
+
+        // Change Label and Helptext when Layout event type is selected
+        $layoutControl.children("label").text('Layout');
+        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+    } else if ($eventTypeId == 4) {
+
+        // Load Layouts only
+        $layoutSpecific = 1;
+
+        // Change Label and Helptext when Layout event type is selected
+        $layoutControl.children("label").text('Layout');
+        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+    } else if ($eventTypeId == 5) {
+
+        // Load Campaigns only
+        $layoutSpecific = 0;
+
+        // Change Label and Helptext when Campaign event type is selected
+        $layoutControl.children("label").text('Campaign');
+        $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+
     } else {
+
+        // Load both Layouts and Campaigns
         $layoutSpecific = -1;
+
     }
 
     $('#eventTypeId').change(function() {
         $eventTypeId = $('#eventTypeId').val();
-        console.log($eventTypeId);
 
-        if ($eventTypeId == 4) {
+        if ($eventTypeId == 1) {
+
+            // Load Layouts only
             $layoutSpecific = 1;
+
+            // Change Label and Helptext when Layout event type is selected
+            $layoutControl.children("label").text('Layout');
+            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+        } else if ($eventTypeId == 4) {
+
+            // Load Layouts only
+            $layoutSpecific = 1;
+
+            // Change Label and Helptext when Layout event type is selected
+            $layoutControl.children("label").text('Layout');
+            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+        } else if ($eventTypeId == 5) {
+
+            // Load Campaigns only
+            $layoutSpecific = 0;
+
+            // Change Label and Helptext when Campaign event type is selected
+            $layoutControl.children("label").text('Campaign');
+            $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+
         } else {
+
+            // Load both Layouts and Campaigns
             $layoutSpecific = -1;
+
         }
     });
 
