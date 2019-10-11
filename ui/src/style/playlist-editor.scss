@@ -29,7 +29,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     display: block;
     z-index: $playlist-editor-z-index-background;
     overflow: auto;
-    @include set-transparent-color(background, $xibo-color-black, 60%);
+    @include set-transparent-color(background, $xibo-color-black, 0.6);
 }
 
 .editor-modal-dialog {

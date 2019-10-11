@@ -1,8 +1,11 @@
 //--- NPM packages style ---
 import './public_path';
 
-// Import material design base style
-require('./src/style/bundle.scss');
+// Material icons
+require('material-design-icons/iconfont/material-icons.css');
+
+// font-awesome
+require('@fortawesome/fontawesome-free/css/all.min.css');
 
 // bootstrap
 require('bootstrap/dist/css/bootstrap.min.css');

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cypress:open": "cypress open",
-    "build": "webpack --mode=development"
+    "build": "webpack"
   },
   "directories": {
     "lib": "lib",
@@ -24,6 +24,7 @@
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
     "@babel/plugin-transform-parameters": "^7.4.4",
+    "@fortawesome/fontawesome-free": "^5.11.2",
     "cypress": "^3.4.1"
   },
   "dependencies": {
@@ -73,7 +74,7 @@
     "jquery-validation": "~1.17.0",
     "less": "^3.10.3",
     "less-loader": "^4.1.0",
-    "material-icons": "^0.3.1",
+    "material-design-icons": "^3.0.1",
     "moment": "~2.20.1",
     "moment-jalaali": "~0.7.2",
     "moment-timezone": "^0.5.26",

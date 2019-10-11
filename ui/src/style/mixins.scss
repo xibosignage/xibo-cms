@@ -22,7 +22,7 @@
 
 @mixin set-transparent-color($property, $color, $opacity) {
     #{$property}: $color;
-    #{$property}: fade($color, $opacity);
+    #{$property}: rgba($color, $opacity);
 }
 
 @mixin background-stripes($angle, $main-line-color, $secondary-line-color, $main-line-thickness, $secondary-line-thickness) {

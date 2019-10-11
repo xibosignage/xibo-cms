@@ -113,7 +113,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     top: 10px;
     position: absolute;
     font-size: 25px;
-    @include set-transparent-color(color, $top-btn-fg-colour, 65%);
+    @include set-transparent-color(color, $top-btn-fg-colour, 0.65);
     text-shadow: 0px 0px 5px $xibo-color-black;
     z-index: 1;
     cursor: pointer;
@@ -151,7 +151,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     font-size: 20px;
     overflow: hidden;
     font-weight: bold;
-    @include set-transparent-color(color, $xibo-color-white, 50%);
+    @include set-transparent-color(color, $xibo-color-white, 0.5);
     top: 50%;
     transform: translateY(-50%);
 }
@@ -409,7 +409,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 }
 
 #layout-editor #layout-timeline .designer-widget-ghost {
-    @include set-transparent-color(background, $timeline-ghost-bg-color, 60%);
+    @include set-transparent-color(background, $timeline-ghost-bg-color, 0.6);
     color: $timeline-ghost-fg-color;
     font-weight: bold;
     display: flex;
@@ -431,7 +431,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 
 #layout-editor #layout-timeline .ghost-padding {
-    @include set-transparent-color(background, $xibo-color-black, 20%);
+    @include set-transparent-color(background, $xibo-color-black, 0.2);
     float: left;
     height: 100%;
 }
@@ -440,7 +440,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     color: $timeline-ghost-fg-color;
     padding: 0 4px;
     font-weight: bold;
-    @include set-transparent-color(background, $xibo-color-white, 50%);
+    @include set-transparent-color(background, $xibo-color-white, 0.5);
     height: 80%;
     margin-top: 0.25em;
     overflow: hidden;
@@ -464,12 +464,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 }
 
 #layout-editor .layout-viewer-border {
-    @include set-transparent-color(background, $xibo-color-black, 90%);
+    @include set-transparent-color(background, $xibo-color-black, 0.9);
     position: absolute;
 }
 
 #layout-editor #layout-viewer-container.fullscreen {
-    @include set-transparent-color(background-color, $xibo-color-black, 90%);
+    @include set-transparent-color(background-color, $xibo-color-black, 0.9);
     position: fixed;
     z-index: 1050;
     left: 0;
@@ -484,7 +484,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         top: 5%;
         width: 100%;
         height: 90%;
-        @include set-transparent-color(background-color, $xibo-color-black, 90%);
+        @include set-transparent-color(background-color, $xibo-color-black, 0.9);
 
         .top-btn {
             position: fixed;
@@ -530,7 +530,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     display: table;
     height: 100%;
     text-align: center;
-    @include set-transparent-color(background, $viewer-player-bg-colour, 20%);
+    @include set-transparent-color(background, $viewer-player-bg-colour, 0.2);
 }
 
 #layout-editor #layout-viewer .designer-region {
@@ -539,7 +539,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         font-size: 2em;
     }
 
-    @include set-transparent-color(background, $xibo-color-white, 30%);
+    @include set-transparent-color(background, $xibo-color-white, 0.3);
     @include box-shadow(0 0 4px 0px $xibo-color-black);
 
     .loading-icon {
@@ -572,7 +572,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         height: 20px;
         bottom: 0;
         z-index: 2;
-        @include set-transparent-color(background, $xibo-color-black, 50%);
+        @include set-transparent-color(background, $xibo-color-black, 0.5);
         opacity: 0.2;
         padding: 0 4px;
         white-space: nowrap;
@@ -611,7 +611,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
     
     &:hover {
-        @include set-transparent-color(background, $xibo-color-white, 50%);
+        @include set-transparent-color(background, $xibo-color-white, 0.5);
         @include box-shadow(0 0 4px 2px $xibo-color-black);
 
         .preview-paging.active {
@@ -704,11 +704,11 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     cursor: pointer;
     width: 100%;
     height: 100%; 
-    @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 20%);
+    @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 0.2);
     @include box-shadow(inset $viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
 
     &:hover {
-        @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 50%);
+        @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 0.5);
     }
 
     .edit-btn-container {
@@ -719,12 +719,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         #edit-btn {
             font-size: 60px;
             text-shadow: 0px 0px 5px $xibo-color-black;
-            @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 80%);
+            @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.8);
             vertical-align: middle;
             display: table-cell;
             
             &:hover {
-                @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 90%);
+                @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.9);
             }
         }
     }
@@ -910,7 +910,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     /* Full height */
     overflow: auto;
     /* Enable scroll if needed */
-    @include set-transparent-color(background-color, $xibo-color-black, 90%);
+    @include set-transparent-color(background-color, $xibo-color-black, 0.9);
 }
 
 #layout-editor .layout-navigator-edit-element {

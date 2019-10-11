@@ -12,7 +12,59 @@
         </div>
 
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav navbar-right">               
+            {{!-- Menu buttons --}}
+            <ul class="nav navbar-nav navbar-buttons hide-on-read-only">
+                {{#each menuItems}}
+                    <li>
+                        <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-toggle="tooltip" title="{{itemTitle}}"
+                            data-test="toolbarTabs">
+                            <i class="fas fa-{{itemIcon}}"></i>
+                        </a>
+                    </li>
+                {{/each}}
+            </ul>
+
+            <div class="nav navbar-nav toolbar-menu-content hide-on-read-only">
+                {{!-- Menu items/tabs --}}
+                {{#each menuItems}}
+                    <div id="content-{{@index}}" class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}search-content{{/if}}">
+                        {{#if search}}
+                            {{!-- Show search container --}}
+                            <div id="media-search-container-{{@index}}" class="media-search-container"></div>
+                        {{else if content}}
+                            {{!-- Show content if exists --}}
+                            {{#if paging}}
+                                <button id="pag-btn-left-{{@index}}" {{pagBtnLeftDisabled}}
+                                    class="btn btn-primary pagination-btn pag-btn-left">
+                                    <i class="fa fa-arrow-left"></i>
+                                </button>
+                            {{/if}}
+
+                            <div class="toolbar-pane-content">
+                                {{!-- Show content elements if not marked as hidden --}}
+                                {{#each content}}
+                                    {{!-- Load cards according to type searchItem/Widget --}}
+                                    {{#if ../tool}}
+                                        {{> toolbar-card-tool trans=../../trans}}
+                                    {{else}}
+                                        {{> toolbar-card trans=../../trans}}
+                                    {{/if}}
+                                {{/each}}
+                            </div>
+
+                            {{#if paging}}
+                                <button id="pag-btn-right-{{@index}}" {{pagBtnRightDisabled}}
+                                    class="btn btn-primary pagination-btn pag-btn-right">
+                                    <i class="fa fa-arrow-right"></i>
+                                </button>
+                            {{/if}}
+                        {{/if}}
+                    </div>
+                {{/each}}
+            </div>
+
+            {{!-- Right buttons --}}
+            <ul class="nav navbar-nav navbar-right">
                 <li>
                     <a id="undoContainer" data-toggle="tooltip" data-placement="top" title="{{trans.undoActiveTitle}}"
                         class="navbar-peek-button tooltip-always-on navbar-undo {{#if undoActive}}active{{/if}}">
@@ -31,7 +83,7 @@
                 {{#if showOptions}}
                     <li class="dropdown navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-placement="top"
                         title="{{trans.options}}">
-                        <a id="optionsContainer" href="#" class="dropdown-toggle btn-menu-tool" data-toggle="dropdown" role="button" aria-haspopup="true"
+                        <a id="optionsContainer" href="#" class="dropdown-toggle btn-menu-option" data-toggle="dropdown" role="button" aria-haspopup="true"
                             aria-expanded="false">
                             <i class="fa fa-cog"></i>
                         </a>
@@ -56,18 +108,6 @@
                         </ul>
                     </li>
                 {{/if}}
-            </ul>
-
-            {{!-- Menu buttons --}}
-            <ul class="nav navbar-nav navbar-buttons hide-on-read-only">
-                {{#each menuItems}}
-                    <li>
-                        <a id="btn-menu-{{@index}}" class="btn-menu-tool {{state}}" data-toggle="tooltip" title="{{itemTitle}}"
-                            data-test="toolbarTabs">
-                            <i class="material-icons">{{itemIcon}}</i>
-                        </a>
-                    </li>
-                {{/each}}
             </ul>
         </div>
     </div>

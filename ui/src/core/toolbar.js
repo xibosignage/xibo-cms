@@ -49,9 +49,8 @@ const defaultMenuItems = [
     {
         name: 'library',
         itemName: toolbarTrans.menuItems.libraryName,
-        itemIcon: 'library_books',
+        itemIcon: 'photo-video',
         itemTitle: toolbarTrans.menuItems.libraryTitle,
-        tool: true,
         page: 0,
         content: [],
         state: ''
@@ -59,9 +58,10 @@ const defaultMenuItems = [
     {
         name: 'tools',
         itemName: toolbarTrans.menuItems.toolsName,
-        itemIcon: 'brush',
+        itemIcon: 'tools',
         itemTitle: toolbarTrans.menuItems.toolsTitle,
         page: 0,
+        tool: true,
         content: [],
         state: ''
     },
@@ -69,9 +69,10 @@ const defaultMenuItems = [
         name: 'widgets',
         itemName: toolbarTrans.menuItems.widgetsName,
         itemTitle: toolbarTrans.menuItems.widgetsTitle,
-        itemIcon: 'widgets',
+        itemIcon: 'th-large',
         page: 0,
         content: [],
+        paging: true,
         state: '',
         oneClickAdd: ['playlist']
     }
@@ -97,12 +98,6 @@ let Toolbar = function(container, customActions = {}, showOptions = false) {
 
     this.contentDimentions = {
         width: 90 // In percentage
-    };
-
-    this.cardDimensions = {
-        width: 100, // In pixels
-        height: 80, // In pixels
-        margin: 4 // In pixels
     };
 
     this.selectedCard = {};
@@ -135,9 +130,6 @@ let Toolbar = function(container, customActions = {}, showOptions = false) {
  * Load user preferences
  */
 Toolbar.prototype.loadPrefs = function() {
-
-    console.log('loadPrefs');
-
     // Load using the API
     const linkToAPI = urlsForApi.user.getPref;
 
@@ -200,9 +192,6 @@ Toolbar.prototype.loadPrefs = function() {
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
 Toolbar.prototype.savePrefs = function(clearPrefs = false) {
-
-    console.log('savePrefs:' + clearPrefs);
-
     const app = getXiboApp();
 
     // Save only some of the tab menu data
@@ -286,9 +275,6 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
  * Render toolbar
  */
 Toolbar.prototype.render = function() {
-
-    console.log('TB: Render');
-
     // Load preferences when the toolbar is rendered for the first time
     if(this.firstRun) {
         // Mark toolbar as loaded
@@ -379,7 +365,7 @@ Toolbar.prototype.render = function() {
 
         // Handle tabs
         for(let i = 0;i < this.libraryTabs.length;i++) {
-            console.log('TODO tabs');
+            console.log('TODO: tab system');
         }
 
         // Create new tab
@@ -425,31 +411,42 @@ Toolbar.prototype.render = function() {
     // If in edit mode
     if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
         // Set cards width/margin and draggable properties
-        this.DOMObject.find('.toolbar-card').width(
-            this.cardCalculatedWidth
-        ).height(
-            this.cardDimensions.height
-        ).css(
-            'margin-left', this.cardDimensions.margin
-        ).draggable({
-            cursor: 'crosshair',
-            handle: '.drag-area',
-            cursorAt: {
-                top: (this.cardDimensions.height + this.cardDimensions.margin) / 2,
-                left: (this.cardDimensions.width + this.cardDimensions.margin) / 2
-            },
-            opacity: 0.3,
-            helper: 'clone',
-            start: function() {
-                // Deselect previous selections
-                self.deselectCardsAndDropZones();
+        this.DOMObject.find('.toolbar-card').each(function() {
+            
+            $(this).draggable({
+                cursor: 'crosshair',
+                handle: '.drag-area',
+                cursorAt: {
+                    top: ($(this).height() + ($(this).outerWidth(true) - $(this).outerWidth()) / 2) / 2,
+                    left: ($(this).width() + ($(this).outerWidth(true) - $(this).outerWidth()) / 2) / 2
+                },
+                opacity: 0.3,
+                helper: 'clone',
+                start: function() {
+                    // Deselect previous selections
+                    self.deselectCardsAndDropZones();
 
-                $('.custom-overlay').show();
-            },
-            stop: function() {
-                // Hide designer overlay
-                $('.custom-overlay').hide();
-            }
+                    // Show overlay
+                    $('.custom-overlay').show();
+
+                    // Mark card as being dragged
+                    $(this).addClass('card-dragged');
+
+                    // Mark content as selected
+                    $(this).parent('.toolbar-pane-content').addClass('selected');
+                },
+                stop: function() {
+
+                    // Hide overlay
+                    $('.custom-overlay').hide();
+
+                    // Remove card class as being dragged
+                    $(this).removeClass('card-dragged');
+
+                    // Mark content as unselected
+                    $(this).parent('.toolbar-pane-content').removeClass('selected');
+                }
+            });
         });
 
         // Select card clicking in the Add button
@@ -501,21 +498,24 @@ Toolbar.prototype.render = function() {
  * @param {number} menu - menu to load content for
  */
 Toolbar.prototype.loadContent = function(menu = -1) {
-
-    console.log('loadContent: ' + menu);
-
     const app = getXiboApp();
 
-    if(this.menuItems[menu] === 'library') {
-        console.log('Open library window');
-    } else if(this.menuItems[menu] === 'tools') {
+    // Make menu state to be active
+    this.menuItems[menu].state = 'active';
+
+    if(this.menuItems[menu].name === 'tools') {
         this.menuItems[menu].content = toolsList;
-    } else if(this.menuItems[menu] === 'widgets') {
+    } else if(this.menuItems[menu].name === 'library') {
+        console.log('Open library window');
+    } else if(this.menuItems[menu].name === 'widgets') {
+
+        console.log('Widgets Render!!!');
+
         // Calculate pagination
-        const pagination = this.calculatePagination(menu);
+        //const pagination = this.calculatePagination(menu);
 
         // Enable/Disable page down pagination button according to the page to display
-        this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
+        //this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
 
         this.menuItems[menu].content = modulesList;
 
@@ -527,16 +527,12 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             element.maxSizeMessage = libraryUpload.maxSizeMessage;
 
             // Hide element if it's outside the "to display" region or is a hideOn this app
-            element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length)) || (element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1);
+            //element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length)) || (element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1);
         }
 
         // Enable/Disable page up pagination button according to the page to display and total elements
-        this.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= this.menuItems[menu].content.length) ? 'disabled' : '';
-
+        //this.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= this.menuItems[menu].content.length) ? 'disabled' : '';
     }
-
-    // Make menu state to be active
-    this.menuItems[menu].state = 'active';
 
     // Save user preferences and render
     this.savePrefs();
@@ -549,9 +545,6 @@ Toolbar.prototype.loadContent = function(menu = -1) {
  * @param {bool} forceOpen - force tab open ( even if opened before )
  */
 Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
-
-    console.log('openMenu: ' + menu);
-
     // Deselect previous selections
     this.deselectCardsAndDropZones();
 
@@ -564,7 +557,7 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
             this.menuItems[index].state = '';
         }
 
-        if(active) {
+        if(active){
             this.openedMenu = -1;
         } else {
             this.openedMenu = menu;
@@ -610,9 +603,9 @@ Toolbar.prototype.selectCard = function(card) {
             app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
 
         } else {
-
             // Select new card
             $(card).addClass('card-selected');
+            $(card).parent('.toolbar-pane-content').addClass('selected');
 
             // Save selected card data
             this.selectedCard = card;
@@ -646,6 +639,7 @@ Toolbar.prototype.selectMedia = function(media, data) {
     if(!alreadySelected) {
         // Select row in the table
         $(media).addClass('media-selected');
+        $(media).parent('.toolbar-pane-content').addClass('selected');
 
         // Create temp object to simulate a card and use it as the selected card
         this.selectedCard = $('<div drop-to="region">').data({
@@ -668,14 +662,14 @@ Toolbar.prototype.selectMedia = function(media, data) {
  * Deselect all the cards and remove the overlay on the drop zones
  */
 Toolbar.prototype.deselectCardsAndDropZones = function() {
-
-    console.log('TB: deselectCardsAndDropZones');
-
     // Deselect other cards
     this.DOMObject.find('.toolbar-card.card-selected').removeClass('card-selected');
 
     // Deselect other media
     this.DOMObject.find('.media-table tr.media-selected').removeClass('media-selected');
+
+    // Remove content selected class
+    this.DOMObject.find('.toolbar-pane-content.selected').removeClass('selected');
 
     // Remove drop class from droppable elements
     $('.ui-droppable').removeClass('ui-droppable-active');
@@ -695,9 +689,6 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
  * @param {bool} forceOpen - force tab open ( even if opened before )
  */
 Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
-
-    console.log('TB:openTab: ' + menu);
-
     // Deselect previous selections
     this.deselectCardsAndDropZones();
 

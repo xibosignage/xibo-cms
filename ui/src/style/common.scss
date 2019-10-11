@@ -2,6 +2,7 @@
 @import "mixins";
 $fa-font-path: "~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
 
 // Colour palette
 $xibo-color-primary: #30426a;
@@ -181,7 +182,7 @@ $loading-overlay-z-index: 2000;
 
 /* Modules icons */
 .module-icon-audio {
-    @extend .fa-file-sound-o;
+    @extend .fa-file-audio;
 }
 
 .module-icon-calendar {
