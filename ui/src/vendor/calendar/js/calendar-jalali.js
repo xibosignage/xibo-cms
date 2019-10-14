@@ -1516,7 +1516,7 @@ if(!String.prototype.formatNum) {
                 return true;
             }
             // Convert to a local date, without the timezone
-            var event_start = moment(moment(this.start / 1000, "X").tz ? moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(this.start / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
+            var event_start = moment().tz ? moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(this.start / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             var event_end = this.end || this.start;
             event_end = moment().tz ? moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(event_end / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             //console.log("ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
