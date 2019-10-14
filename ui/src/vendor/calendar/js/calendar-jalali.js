@@ -954,7 +954,7 @@ if(!String.prototype.formatNum) {
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
 					eventFromDt: moment(event.fromDt, "X").tz ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
@@ -1518,7 +1518,7 @@ if(!String.prototype.formatNum) {
             // Convert to a local date, without the timezone
             var event_start = moment(moment(this.start / 1000, "X").tz ? moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(this.start / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             var event_end = this.end || this.start;
-            event_end = moment(moment(event_end / 1000, "X").tz ? moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(event_end / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
+            event_end = moment().tz ? moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(event_end / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             //console.log("ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
             if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
 
