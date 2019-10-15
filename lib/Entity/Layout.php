@@ -968,7 +968,7 @@ class Layout implements \JsonSerializable
 
         // Keep track of whether this layout has an empty region
         $layoutHasEmptyRegion = false;
-        $layoutCountRegionsWithMinDuration = 0;
+        $layoutCountRegionsWithDuration = 0;
 
         $document = new \DOMDocument();
         $layoutNode = $document->createElement('layout');
@@ -1043,6 +1043,13 @@ class Layout implements \JsonSerializable
                 $layoutHasEmptyRegion = true;
             }
 
+            // Work out if we have any "lead regions", those are Widgets with a duration
+            foreach ($widgets as $widget) {
+                if ($widget->useDuration == 1 || $countWidgets > 1 || $regionLoop == 1 || $widget->type == 'video') {
+                    $layoutCountRegionsWithDuration++;
+                }
+            }
+
             foreach ($widgets as $widget) {
                 /* @var Widget $widget */
                 $module = $this->moduleFactory->createWithWidget($widget, $region);
@@ -1064,12 +1071,15 @@ class Layout implements \JsonSerializable
                 // the only time we want to override this, is if we want it set to the Minimum Duration for the XLF
                 $widgetDuration = $widget->calculatedDuration;
 
-                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && count($this->regions) > $layoutCountRegionsWithMinDuration + 1) {
-                    // We have a widget without a specified duration in a region on its own and the region isn't set to
-                    // loop.
-                    // Reset to the minimum duration
+                // Is this Widget one that does not have a duration of its own?
+                // Assuming we have at least 1 region with a set duration, then we ought to
+                // Reset to the minimum duration
+                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && $widget->type != 'video'
+                    && $layoutCountRegionsWithDuration >= 1
+                ) {
+                    // Make sure this Widget expires immediately so that the other Regions can be the leaders when
+                    // it comes to expiring the Layout
                     $widgetDuration = Widget::$widgetMinDuration;
-                    $layoutCountRegionsWithMinDuration++;
                 }
 
                 // Region duration
