@@ -114,6 +114,11 @@ class ReportService implements ReportServiceInterface
 
         // Sort list of reports by their order
         usort($reports, function ($a, $b) {
+
+            if (empty($a->sort_order) || empty($b->sort_order)) {
+                return 0;
+            }
+
             return $a->sort_order - $b->sort_order;
         });
 
