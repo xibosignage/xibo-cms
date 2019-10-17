@@ -248,6 +248,7 @@ $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScr
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
 $app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');
+$app->post('/display/addViaCode', '\Xibo\Controller\Display:addViaCode')->name('display.addViaCode');
 
 /**
  * Display Groups

@@ -168,6 +168,7 @@ $app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wakeOnLanForm')->na
 $app->get('/display/form/authorise/:id', '\Xibo\Controller\Display:authoriseForm')->name('display.authorise.form');
 $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLayoutForm')->name('display.defaultlayout.form');
 $app->get('/display/form/moveCms/:id', '\Xibo\Controller\Display:moveCmsForm')->name('display.moveCms.form');
+$app->get('/display/form/addViaCode', '\Xibo\Controller\Display:addViaCodeForm')->name('display.addViaCode.form');
 
 //
 // user
