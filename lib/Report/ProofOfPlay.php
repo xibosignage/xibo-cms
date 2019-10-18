@@ -541,7 +541,7 @@ class ProofOfPlay implements ReportInterface
     {
 
         $fromDt = $fromDt->format('U');
-        $toDt = $toDt->startOfDay()->addDay()->format('U'); // added a day
+        $toDt = $toDt->format('U');
 
         // Media on Layouts Ran
         $select = '
@@ -851,7 +851,7 @@ class ProofOfPlay implements ReportInterface
     {
 
         $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-        $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
+        $toDt = new UTCDateTime($toDt->format('U')*1000);
 
         // Filters the documents to pass only the documents that
         // match the specified condition(s) to the next pipeline stage.
