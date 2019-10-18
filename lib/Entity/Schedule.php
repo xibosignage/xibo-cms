@@ -481,7 +481,7 @@ class Schedule implements \JsonSerializable
         if($this->recurrenceType == 'Minute') {
 
             if (empty($this->recurrenceRange)) {
-                throw new InvalidArgumentException(__('You must provide a date and time to end the Repeat'), 'recurrenceRange');
+                throw new InvalidArgumentException(__(' An end time is needed for an event that has its repeating interval set to Minute.'), 'recurrenceRange');
             }
 
             $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
@@ -489,20 +489,20 @@ class Schedule implements \JsonSerializable
             if ($distance > $twelveHoursInSeconds) {
                 // Recurrence range cannot be more than 12 hours
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($twelveHoursInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(__('The date and time to end the Repeat for this Event cannot exceed '.$exceedLimit), 'recurrenceRange');
+                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Minute.', $exceedLimit)), 'recurrenceRange');
             }
 
         } elseif ($this->recurrenceType == 'Hour') {
 
             if (empty($this->recurrenceRange)) {
-                throw new InvalidArgumentException(__('You must provide a date and time to end the Repeat'), 'recurrenceRange');
+                throw new InvalidArgumentException(__(' An end time is needed for an event that has its repeating interval set to Hour'), 'recurrenceRange');
             }
             $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
 
             if ($distance > $oneWeekInSeconds) {
                 // Recurrence range cannot be more than 1 week
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(__('The date and time to end the Repeat for this Event cannot exceed '.$exceedLimit), 'recurrenceRange');
+                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Hour.', $exceedLimit)), 'recurrenceRange');
             }
         }
     }
@@ -846,7 +846,7 @@ class Schedule implements \JsonSerializable
             $start = $lastWatermark->copy();
             $end = $start->copy()->addSeconds($eventDuration);
 
-            if (($start <= $generateToDt) && ($end >= $generateFromDt)) {
+            if ($start <= $generateToDt && $end >= $generateFromDt) {
                 $this->addDetail($start->format('U'), $end->format('U'));
                 $this->getLog()->debug('The event start/end is inside the month' );
             }
@@ -1007,7 +1007,7 @@ class Schedule implements \JsonSerializable
             if ($this->recurrenceType == 'Week' && !empty($this->recurrenceRepeatsOn))
                 continue;
 
-            if (($start <= $generateToDt) && ($end >= $generateFromDt)) {
+            if ($start <= $generateToDt && $end >= $generateFromDt) {
                 if ($this->eventTypeId == self::$COMMAND_EVENT)
                     $this->addDetail($start->format('U'), null);
                 else {

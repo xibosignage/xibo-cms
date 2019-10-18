@@ -541,7 +541,7 @@ class ProofOfPlay implements ReportInterface
     {
 
         $fromDt = $fromDt->format('U');
-        $toDt = $toDt->format('U'); // added a day
+        $toDt = $toDt->format('U');
 
         // Media on Layouts Ran
         $select = '
