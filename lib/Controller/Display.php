@@ -1861,6 +1861,9 @@ class Display extends Base
         $guzzle = new Client();
 
         try {
+            // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
+            // The Player will then call the service with the same code to retrieve the CMS details.
+            // On success, the details will be removed from the Authentication Service.
             $request = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
                 $this->getConfig()->getGuzzleProxy([
                     'form_params' => [
