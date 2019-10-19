@@ -1044,8 +1044,9 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
+        }
 
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
@@ -1061,6 +1062,13 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
+
+        // if we are editing Layout/Campaign event that was set with Always daypart and change it to Command event type
+        // the daypartId will remain as always, which will then cause the event to "disappear" from calendar
+        // https://github.com/xibosignage/xibo/issues/1982
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
+            $schedule->dayPartId = $this->dayPartFactory->getCustomDayPart()->dayPartId;
+        }
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
