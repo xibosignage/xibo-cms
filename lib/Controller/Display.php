@@ -769,13 +769,13 @@ class Display extends Base
                 $display->buttons[] = [
                     'id' => 'display_button_move_cms',
                     'url' => $this->urlFor('display.moveCms.form', ['id' => $display->displayId]),
-                    'text' => __('Move CMS'),
+                    'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor('display.moveCms', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
-                        ['name' => 'text', 'value' => __('Move CMS')],
+                        ['name' => 'text', 'value' => __('Transfer to another CMS')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
