@@ -43,7 +43,7 @@ class Spacer extends ModuleWidget
             $module->name = 'Spacer';
             $module->type = 'spacer';
             $module->class = 'Xibo\Widget\Spacer';
-            $module->description = 'A module for making region empty for the duration';
+            $module->description = 'Make a Region empty for a specified duration';
             $module->enabled = 1;
             $module->previewEnabled = 0;
             $module->assignable = 1;
