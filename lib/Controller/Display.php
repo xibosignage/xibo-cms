@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
@@ -47,6 +48,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
@@ -1834,6 +1836,51 @@ class Display extends Base
 
         } else {
             throw new InvalidArgumentException(__('Invalid Two Factor Authentication Code'), 'twoFactorCode');
+        }
+    }
+
+    public function addViaCodeForm()
+    {
+        $this->getState()->template = 'display-form-addViaCode';
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function addViaCode()
+    {
+        $user_code = $this->getSanitizer()->getString('user_code');
+        $cmsAddress = (new HttpsDetect())->getUrl();
+        $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
+
+        if ($user_code == '') {
+            throw new InvalidArgumentException('Code cannot be empty', 'code');
+        }
+
+        $guzzle = new Client();
+
+        try {
+            // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
+            // The Player will then call the service with the same code to retrieve the CMS details.
+            // On success, the details will be removed from the Authentication Service.
+            $request = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
+                $this->getConfig()->getGuzzleProxy([
+                    'form_params' => [
+                        'user_code' => $user_code,
+                        'cmsAddress' => $cmsAddress,
+                        'cmsKey' => $cmsKey,
+                    ]
+                ]));
+
+            $data = json_decode($request->getBody(), true);
+
+            $this->getState()->hydrate([
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            $this->getLog()->debug($e->getMessage());
+            throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
         }
     }
 }
