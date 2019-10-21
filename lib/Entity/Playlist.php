@@ -884,6 +884,7 @@ class Playlist implements \JsonSerializable
         ]);
 
         $duration = 0;
+        $removedWidget = false;
 
         // What is the next time we need to update this Playlist (0 is never)
         $nextUpdate = 0;
@@ -901,6 +902,8 @@ class Playlist implements \JsonSerializable
                         'forceNotifyPlaylists' => false,
                         'notifyDisplays' => false
                     ]);
+
+                    $removedWidget = true;
                 }
 
                 // Do not assess it
@@ -933,6 +936,10 @@ class Playlist implements \JsonSerializable
         $this->requiresDurationUpdate = $nextUpdate;
 
         $this->save(['saveTags' => false, 'saveWidgets' => false]);
+
+        if ($removedWidget) {
+            $this->notifyLayouts();
+        }
 
         if ($delta !== 0) {
             // Use the closure table to update all parent playlists (including this one).

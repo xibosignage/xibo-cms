@@ -193,6 +193,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->unassignMedia($oldMedia->mediaId);
                             $widget->assignMedia($media->mediaId);
 
+                            // calculate duration
+                            $module->setWidget($widget);
+                            $widget->calculateDuration($module);
+
                             // Raise an event for this media item
                             $controller->getDispatcher()->dispatch(LibraryReplaceWidgetEvent::$NAME, new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia));
 
@@ -358,10 +362,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
-                // Calculate the widget duration for new uploaded media widgets
-                $widget->calculateDuration($module);
                 // Assign media
                 $widget->assignMedia($media->mediaId);
+                // Calculate the widget duration for new uploaded media widgets
+                $widget->calculateDuration($module);
 
                 // Assign the new widget to the playlist
                 $playlist->assignWidget($widget);
