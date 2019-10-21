@@ -733,9 +733,7 @@ var processScheduleFormElements = function(el) {
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
-            var priorityControlDisplay = (fieldVal == 4) ? "none" : "block";
-            var displayOrderControlDisplay = (fieldVal == 4) ? "none" : "block";
-            var interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
+            let interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
 
 
             $(".layout-control").css('display', layoutControlDisplay);
@@ -745,8 +743,6 @@ var processScheduleFormElements = function(el) {
             $(".command-control").css('display', commandControlDisplay);
             $(".preview-button-container").css('display', previewControlDisplay);
             $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
-            $(".priority-control").css('display', priorityControlDisplay);
-            $(".displayOrder-control").css('display', displayOrderControlDisplay);
             $(".interrupt-control").css('display', interruptControlDisplay);
 
             // Depending on the event type selected we either want to filter in or filter out the

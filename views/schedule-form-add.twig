@@ -66,7 +66,7 @@
                         {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "id", "label", helpText) }}
 
                         <div class="interrupt-control">
-                            {% set message = "Please note, if there are existing interrupt layout events scheduled to this Display with recurring options, make sure there are no overlaps between them. Otherwise Player will show only the first interrupt layout event."|trans %}
+                            {% set message = "Only one Interrupt Layout will show at the same time. If the Schedule for a Player resolves to more than one, then the Interrupt shown will depend on Priority and Display Order."|trans %}
                             {{ forms.message(message, "alert alert-info") }}
                         </div>
 
@@ -116,7 +116,7 @@
                         {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Share of Voice" %}{% endset %}
-                        {% set helpText %}{% trans "What % (0-100) of each full hour that is scheduled, should this Layout occupy?" %}{% endset %}
+                        {% set helpText %}{% trans "The percentage of time this Layout should be shown." %}{% endset %}
                         {{ forms.number("shareOfVoice", title, 0, helpText, "interrupt-control") }}
 
                         <div class="form-group preview-button-container">

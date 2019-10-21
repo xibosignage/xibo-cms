@@ -483,12 +483,19 @@ class Schedule implements \JsonSerializable
      */
     public function validate()
     {
-        if (count($this->displayGroups) <= 0)
+        if (count($this->displayGroups) <= 0) {
             throw new InvalidArgumentException(__('No display groups selected'), 'displayGroups');
+        }
 
-        $this->getLog()->debug('EventTypeId: %d. DayPartId: %d, CampaignId: %d, CommandId: %d', $this->eventTypeId, $this->dayPartId, $this->campaignId, $this->commandId);
+        $this->getLog()->debug('EventTypeId: ' . $this->eventTypeId
+            . '. DayPartId: ' . $this->dayPartId
+            . ', CampaignId: ' . $this->campaignId
+            . ', CommandId: ' . $this->commandId);
 
-        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT || $this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT
+            || $this->eventTypeId == Schedule::$OVERLAY_EVENT
+            || $this->eventTypeId == Schedule::$INTERRUPT_EVENT
+        ) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
@@ -504,12 +511,10 @@ class Schedule implements \JsonSerializable
             // additional validation for Interrupt Layout event type
             if ($this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
 
-                if (!v::intType()->notEmpty()->validate($this->shareOfVoice) || !v::min(0)->validate($this->shareOfVoice) || !v::max(100)->validate($this->shareOfVoice)) {
+                if (!v::intType()->notEmpty()->validate($this->shareOfVoice) || !v::min(0)->validate($this->shareOfVoice)
+                    || !v::max(100)->validate($this->shareOfVoice)) {
                     throw new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 100'), 'shareOfVoice');
                 }
-
-                $this->displayOrder = 0;
-                $this->isPriority = 0;
             }
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
