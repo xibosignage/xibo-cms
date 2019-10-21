@@ -586,7 +586,7 @@ function dataTableDateFromUnix(data, type, row) {
     if (data == null || data == 0)
         return "";
 
-    return moment(data, "X").tz(timezone).format(jsDateFormat);
+    return moment(data, "X").tz ? moment(data, "X").tz(timezone).format(jsDateFormat) : moment(data, "X").format(jsDateFormat);
 }
 
 function dataTableSpacingPreformatted(data, type, row) {
