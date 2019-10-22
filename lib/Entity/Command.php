@@ -12,6 +12,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -82,6 +83,12 @@ class Command implements \JsonSerializable
     public $validationString;
 
     /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this Command")
+     * @var string
+     */
+    public $groupsWithPermissions;
+
+    /**
      * Display Profiles using this command
      * @var array[DisplayProfile]
      */
@@ -93,13 +100,19 @@ class Command implements \JsonSerializable
     private $displayProfileFactory;
 
     /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->permissionFactory = $permissionFactory;
     }
 
     /**
