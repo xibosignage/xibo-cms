@@ -180,6 +180,7 @@ $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search'
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
 $app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
+$app->post('/campaign/:id/copy', '\Xibo\Controller\Campaign:copy')->name('campaign.copy');
 
 // We use POST requests so that we can support multiple records
 $app->post('/campaign/layout/assign/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');

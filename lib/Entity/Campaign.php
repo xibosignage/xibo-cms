@@ -159,6 +159,11 @@ class Campaign implements \JsonSerializable
         return $this;
     }
 
+    public function __clone()
+    {
+        $this->campaignId = null;
+    }
+
     /**
      * @return string
      */
