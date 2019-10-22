@@ -39,6 +39,16 @@
         <div class="col-md-12">
             <form id="displayAddViaCodeForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("display.addViaCode") }}">
 
+                <div class="alert alert-info">
+                    {% set message = "After submitting this form with valid code, your CMS Address and Key will be sent and stored in the temporary storage in our Authentication Service."|trans %}
+                    {{ forms.message(message) }}
+                    {% set message2 = "The Player linked to the submitted code, will make regular calls to our Authentication Service to retrive the CMS details and configure itself with them.
+                     Your details are removed from the temporary storage once the Player is configured"|trans %}
+                    {{ forms.message(message2) }}
+                    {% set message3 = "Please note that your CMS needs to make a successful call to our Authentication Service for this feature to work."|trans %}
+                    {{ forms.message(message3) }}
+                </div>
+
                 {% set title %}{% trans "Code" %}{% endset %}
                 {% set helpText %}{% trans "Please provide the code displayed on the Player screen" %}{% endset %}
                 {{ forms.input("user_code", title, "", helpText) }}

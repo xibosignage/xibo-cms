@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-22 11:48+0100\n"
+"POT-Creation-Date: 2019-10-02 16:31+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1422,26 +1422,26 @@ msgstr ""
 #: cache/32/32b23920e06c013c05b5af31bd259577cbf9910b703de8aab26a3b7b6ac2cfb7.php:606
 #: cache/92/9215030fe5e95721ce09434754d2a95c05272f9a379686a0f3d9979fced45ea0.php:65
 #: cache/07/070c39201c77b4eeaa0abd4525fca453c3d483972bc3ff52cb12213b65c61217.php:138
-#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:941
+#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:944
 #: cache/34/345d9743119fb38bfbd4854ee88291a79f01e87a5ff133fcb776610a1ecf31b4.php:48
 #: cache/9f/9f7cd27f04ccb7224d7455bf1d952499a8ee23799e82f349cea835c2c5ca2af4.php:49
 #: cache/c2/c2cde08ba9daf161613632376e29afe63269dba73989041fcafa0ec2744cc1bb.php:214
 #: cache/9e/9e80694544f482388921194b603c015c6ae3c278b2da6ea08b3928ebb0bec828.php:73
 #: cache/2f/2f0628725548017483d639098cee4f0dd0eefebfeee575bbaa709bb0740deac1.php:56
-#: lib/Controller/DisplayGroup.php:285 lib/Controller/DisplayGroup.php:291
+#: lib/Controller/DisplayGroup.php:286 lib/Controller/DisplayGroup.php:292
 #: lib/Controller/Template.php:167 lib/Controller/Template.php:173
 #: lib/Controller/Library.php:591 lib/Controller/Library.php:597
 #: lib/Controller/Help.php:88 lib/Controller/DataSetColumn.php:156
-#: lib/Controller/Applications.php:144 lib/Controller/DisplayProfile.php:189
+#: lib/Controller/Applications.php:144 lib/Controller/DisplayProfile.php:190
 #: lib/Controller/DayPart.php:168 lib/Controller/DayPart.php:174
-#: lib/Controller/User.php:308 lib/Controller/Campaign.php:229
+#: lib/Controller/User.php:323 lib/Controller/Campaign.php:229
 #: lib/Controller/Campaign.php:235 lib/Controller/Notification.php:182
 #: lib/Controller/Playlist.php:348 lib/Controller/Playlist.php:354
 #: lib/Controller/Tag.php:230 lib/Controller/Tag.php:236
 #: lib/Controller/Report.php:218 lib/Controller/Report.php:224
 #: lib/Controller/Report.php:580 lib/Controller/Report.php:586
 #: lib/Controller/UserGroup.php:157 lib/Controller/Command.php:130
-#: lib/Controller/Command.php:136 lib/Controller/DataSetRss.php:165
+#: lib/Controller/Command.php:136 lib/Controller/DataSetRss.php:166
 #: lib/Controller/Layout.php:1258 lib/Controller/Layout.php:1264
 #: lib/Controller/DataSet.php:231 lib/Controller/Display.php:592
 #: lib/Controller/PlayerSoftware.php:172 lib/Controller/Task.php:164
@@ -1825,7 +1825,7 @@ msgstr ""
 #: cache/bb/bba762a1e8d08631fe5bddec8bb082b556e035b980440ebd688cd6fdc0c3846d.php:168
 #: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:294
 #: cache/f1/f10b902b47419795b5021774cacbfde1d5c1821fcb5de3842b15974c19ec5af8.php:91
-#: lib/Controller/DisplayGroup.php:322 lib/Controller/Template.php:187
+#: lib/Controller/DisplayGroup.php:323 lib/Controller/Template.php:187
 #: lib/Controller/Library.php:609 lib/Controller/DayPart.php:190
 #: lib/Controller/Campaign.php:249 lib/Controller/Playlist.php:368
 #: lib/Controller/Layout.php:1310 lib/Controller/DataSet.php:243
@@ -4494,6 +4494,7 @@ msgstr ""
 #: cache/b3/b3f1de73356ed53f388c014a0e4180f39191058876a981981ac7adfb2de532bb.php:154
 #: cache/31/3177bd4639e9b45311c1a64d9b082bd32fb70459d544f1e65d70c9fa13917158.php:146
 #: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:139
+#: lib/Controller/User.php:291
 msgid "Email"
 msgstr ""
 
@@ -4585,7 +4586,7 @@ msgstr ""
 
 #: cache/0d/0d2bcb6b9b2994b82487ae1e73081b21552d888d80dbee6f6321d15eb669a5c1.php:280
 #: cache/31/3177bd4639e9b45311c1a64d9b082bd32fb70459d544f1e65d70c9fa13917158.php:244
-#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:159
+#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:163
 msgid "First Name"
 msgstr ""
 
@@ -4596,7 +4597,7 @@ msgstr ""
 
 #: cache/0d/0d2bcb6b9b2994b82487ae1e73081b21552d888d80dbee6f6321d15eb669a5c1.php:295
 #: cache/31/3177bd4639e9b45311c1a64d9b082bd32fb70459d544f1e65d70c9fa13917158.php:259
-#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:163
+#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:167
 msgid "Last Name"
 msgstr ""
 
@@ -4979,7 +4980,7 @@ msgid "Please repeat the new Password."
 msgstr ""
 
 #: cache/b3/b3f1de73356ed53f388c014a0e4180f39191058876a981981ac7adfb2de532bb.php:169
-#: lib/Controller/Login.php:488
+#: lib/Controller/Login.php:493
 msgid "Two Factor Authentication"
 msgstr ""
 
@@ -5084,7 +5085,7 @@ msgstr ""
 #: cache/d2/d2501ef02452ab82f542f8518d9778e19683e046ab4e36e71f7178894e704f3e.php:444
 #: cache/e2/e2464a365506c594506167a232375aa6c95ecd1f580d1077b517e247f87ea285.php:97
 #: cache/a1/a13d4d8f3d72236c13a07c61981324196defd2e821f63edaa6e585892056240d.php:117
-#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:191
+#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:195
 #: cache/70/7012d521e642eb1d1c5bc8edff9ae27d51cc9bce228400a744343d1b612a3efd.php:133
 #: cache/43/434d6f28d4a273347e28c31d31a9b8e7c843f38f6fbd07fc105e7938eee4d673.php:132
 #: cache/a9/a9876561eb83495adf829194e6ac52d41dfa565171ad83bc354173a3eb5ae2af.php:201
@@ -5338,7 +5339,7 @@ msgstr ""
 #: cache/97/973aa6a86cd0fce18e4eb3bd96188efc40429c2daae02908f086a4dbd4818997.php:296
 #: cache/a1/a13d4d8f3d72236c13a07c61981324196defd2e821f63edaa6e585892056240d.php:73
 #: cache/d3/d3ebe46d7f7c9c13cbe8b836d7851cc4cae7079448ee3fd2df5db4ca966db152.php:393
-#: lib/Controller/User.php:319
+#: lib/Controller/User.php:334
 msgid "User Groups"
 msgstr ""
 
@@ -5938,7 +5939,7 @@ msgstr ""
 
 #: cache/49/49898e6f5b4413ebbafd8c6588db2d40329238dfd8009dcc45d251e1d5301086.php:100
 #: cache/07/070c39201c77b4eeaa0abd4525fca453c3d483972bc3ff52cb12213b65c61217.php:130
-#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:933
+#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:936
 #: cache/c2/c2cde08ba9daf161613632376e29afe63269dba73989041fcafa0ec2744cc1bb.php:117
 msgid "View"
 msgstr ""
@@ -6081,8 +6082,8 @@ msgstr ""
 #: cache/ef/ef39cb7327135579108cb6800801d8ccbdabfa8d7503aca1b260f4b427b0451b.php:69
 #: cache/e1/e1a1059d721e6752ef0c2c06822a298dd15c3451d8a942f564a5167169f455ce.php:63
 #: cache/94/940f9b174eba68a2c87dfa9e8a936a80f86d3d38b7a548b6a45c99e687921108.php:69
-#: lib/Controller/DisplayGroup.php:276 lib/Controller/Template.php:157
-#: lib/Controller/Library.php:582 lib/Controller/DisplayProfile.php:182
+#: lib/Controller/DisplayGroup.php:277 lib/Controller/Template.php:157
+#: lib/Controller/Library.php:582 lib/Controller/DisplayProfile.php:183
 #: lib/Controller/Playlist.php:320 lib/Controller/UserGroup.php:166
 #: lib/Controller/Layout.php:1226 lib/Controller/DataSet.php:212
 msgid "Copy"
@@ -6914,18 +6915,18 @@ msgid "Permissions for %entity%"
 msgstr ""
 
 #: cache/07/070c39201c77b4eeaa0abd4525fca453c3d483972bc3ff52cb12213b65c61217.php:134
-#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:937
+#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:940
 #: cache/28/28e8cebbeeb7c6996deb9852021ee8208dc6eaf60e00a63568363daf0084fae2.php:47
-#: lib/Controller/DisplayGroup.php:270 lib/Controller/Template.php:150
+#: lib/Controller/DisplayGroup.php:271 lib/Controller/Template.php:150
 #: lib/Controller/Library.php:575 lib/Controller/Help.php:81
 #: lib/Controller/DataSetColumn.php:148 lib/Controller/Applications.php:137
-#: lib/Controller/DisplayProfile.php:176 lib/Controller/DayPart.php:161
-#: lib/Controller/User.php:299 lib/Controller/Campaign.php:218
+#: lib/Controller/DisplayProfile.php:177 lib/Controller/DayPart.php:161
+#: lib/Controller/User.php:314 lib/Controller/Campaign.php:218
 #: lib/Controller/Notification.php:175 lib/Controller/Playlist.php:313
 #: lib/Controller/MediaManager.php:171 lib/Controller/Tag.php:223
 #: lib/Controller/Report.php:200 lib/Controller/Transition.php:84
 #: lib/Controller/UserGroup.php:149 lib/Controller/Command.php:123
-#: lib/Controller/DataSetRss.php:157 lib/Controller/Layout.php:1219
+#: lib/Controller/DataSetRss.php:158 lib/Controller/Layout.php:1219
 #: lib/Controller/DataSet.php:222 lib/Controller/Display.php:583
 #: lib/Controller/PlayerSoftware.php:163 lib/Controller/Task.php:157
 #: lib/Controller/Module.php:202 lib/Controller/Resolution.php:134
@@ -7055,7 +7056,7 @@ msgstr ""
 msgid "This module is compatibile only with webOS player"
 msgstr ""
 
-#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:929
+#: cache/a5/a5ee678da403ba6e881115cdfe4230e80efd2db3f8cf7b3756fe8b0242d5dc97.php:932
 msgid "Group"
 msgstr ""
 
@@ -7082,27 +7083,31 @@ msgstr ""
 msgid "Last Login"
 msgstr ""
 
-#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:167
-msgid "Phone"
+#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:159
+msgid "Two Factor"
 msgstr ""
 
 #: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:171
-msgid "Ref 1"
+msgid "Phone"
 msgstr ""
 
 #: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:175
-msgid "Ref 2"
+msgid "Ref 1"
 msgstr ""
 
 #: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:179
-msgid "Ref 3"
+msgid "Ref 2"
 msgstr ""
 
 #: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:183
-msgid "Ref 4"
+msgid "Ref 3"
 msgstr ""
 
 #: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:187
+msgid "Ref 4"
+msgstr ""
+
+#: cache/fd/fddc32435ac59cc77b20bfa1a365508096b721d19999ecc496311d76c0eac506.php:191
 msgid "Ref 5"
 msgstr ""
 
@@ -8172,7 +8177,7 @@ msgid "How should images be scaled by default?"
 msgstr ""
 
 #: cache/64/643ec8655e73b5c05d8594461c07a76d338529a78fe3a820432ef4cbeafe3c0c.php:48
-#: lib/Controller/DisplayGroup.php:332 lib/Controller/Display.php:734
+#: lib/Controller/DisplayGroup.php:333 lib/Controller/Display.php:734
 msgid "Send Command"
 msgstr ""
 
@@ -8523,7 +8528,7 @@ msgid ""
 msgstr ""
 
 #: cache/f6/f620be086b1a95d896cd1fe3a54f768f663916294fe07babafe36b78e1039475.php:48
-#: lib/Controller/DisplayGroup.php:338 lib/Controller/Display.php:688
+#: lib/Controller/DisplayGroup.php:339 lib/Controller/Display.php:688
 #: lib/Controller/Display.php:694
 msgid "Collect Now"
 msgstr ""
@@ -9482,7 +9487,7 @@ msgstr ""
 #: cache/14/147f5eb91908d582b808e4e77b8e8ce0e8f1f34e64790cf5168b5a339fa10e0a.php:83
 #: cache/c2/c2cde08ba9daf161613632376e29afe63269dba73989041fcafa0ec2744cc1bb.php:195
 #: cache/5e/5e1c4f24ad64277c869070039bc426c6bf69b74dbbd6fb678b0f5c237e0b3199.php:190
-#: lib/Entity/Layout.php:1286 lib/Controller/Region.php:668
+#: lib/Entity/Layout.php:1289 lib/Controller/Region.php:668
 msgid "Empty Region"
 msgstr ""
 
@@ -11754,29 +11759,29 @@ msgstr ""
 msgid "True"
 msgstr ""
 
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:664
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:671
 msgid "Keylock (local)"
 msgstr ""
 
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:669
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:679
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:676
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:686
 msgid ""
 "Set the allowed key input for the monitor; Allow All, Block All, Power Only."
 msgstr ""
 
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:674
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:681
 msgid "Keylock (remote)"
 msgstr ""
 
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:684
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:691
 msgid "Allow All"
 msgstr ""
 
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:689
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:696
 msgid "Block All"
 msgstr ""
 
-#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:694
+#: cache/ed/edd28235b9bf70951465a746301ab1270c19d3af215bdf45aa85215096e21cb6.php:701
 msgid "Power Only"
 msgstr ""
 
@@ -13673,29 +13678,37 @@ msgstr ""
 msgid "Please provide an alternative column heading %s can not be used."
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:185
+#: lib/Entity/DataSetColumn.php:181
+msgid "Please enter a valid formula"
+msgstr ""
+
+#: lib/Entity/DataSetColumn.php:189
 msgid "A column already exists with this name, please choose another"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:192
+#: lib/Entity/DataSetColumn.php:196
 msgid "Provided Data Type doesn't exist"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:200
+#: lib/Entity/DataSetColumn.php:204
 msgid "Remote field is required when the column type is set to Remote"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:203
+#: lib/Entity/DataSetColumn.php:207
 msgid "Provided DataSet Column Type doesn't exist"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:235
+#: lib/Entity/DataSetColumn.php:239
 msgid ""
 "New list content value is invalid as it does not include values for existing "
 "data"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:346
+#: lib/Entity/DataSetColumn.php:249
+msgid "Provided formula is invalid"
+msgstr ""
+
+#: lib/Entity/DataSetColumn.php:361
 msgid "Existing data is incompatible with your new configuration"
 msgstr ""
 
@@ -13703,20 +13716,24 @@ msgstr ""
 msgid "Access to this route is denied for this scope"
 msgstr ""
 
-#: lib/Entity/DisplayProfile.php:372 lib/Entity/ReportSchedule.php:108
+#: lib/Entity/DisplayProfile.php:373 lib/Entity/ReportSchedule.php:108
 msgid "Missing name"
 msgstr ""
 
-#: lib/Entity/DisplayProfile.php:375
+#: lib/Entity/DisplayProfile.php:376
 msgid "Missing type"
 msgstr ""
 
-#: lib/Entity/DisplayProfile.php:379
+#: lib/Entity/DisplayProfile.php:380
 msgid "Concurrent downloads must be a positive number"
 msgstr ""
 
-#: lib/Entity/DisplayProfile.php:399
+#: lib/Entity/DisplayProfile.php:400
 msgid "Only 1 default per display type is allowed."
+msgstr ""
+
+#: lib/Entity/DisplayProfile.php:431
+msgid "This Display Profile is currently assigned to one or more Displays"
 msgstr ""
 
 #: lib/Entity/DayPart.php:202 lib/Entity/Campaign.php:242
@@ -13732,45 +13749,45 @@ msgstr ""
 msgid "Exception Start/End time for %s are empty or in an incorrect format"
 msgstr ""
 
-#: lib/Entity/User.php:573 lib/Controller/Login.php:328
+#: lib/Entity/User.php:574 lib/Controller/Login.php:329
 #: lib/Factory/UserFactory.php:109 lib/Factory/UserFactory.php:140
 #: lib/Factory/UserFactory.php:155
 msgid "User not found"
 msgstr ""
 
-#: lib/Entity/User.php:753
+#: lib/Entity/User.php:758
 msgid "User name must be between 1 and 50 characters."
 msgstr ""
 
-#: lib/Entity/User.php:756
+#: lib/Entity/User.php:761
 msgid "Please enter a Password."
 msgstr ""
 
-#: lib/Entity/User.php:759 lib/Entity/UserGroup.php:193
+#: lib/Entity/User.php:764 lib/Entity/UserGroup.php:193
 msgid "Library Quota must be a whole number."
 msgstr ""
 
-#: lib/Entity/User.php:762
+#: lib/Entity/User.php:767
 msgid "Please enter a valid email address or leave it empty."
 msgstr ""
 
-#: lib/Entity/User.php:768
+#: lib/Entity/User.php:773
 msgid "There is already a user with this name. Please choose another."
 msgstr ""
 
-#: lib/Entity/User.php:778
+#: lib/Entity/User.php:783
 msgid "Selected home page does not exist"
 msgstr ""
 
-#: lib/Entity/User.php:1179
+#: lib/Entity/User.php:1193
 msgid "Provided Object not under permission management"
 msgstr ""
 
-#: lib/Entity/User.php:1399
+#: lib/Entity/User.php:1413
 msgid "You have exceeded your library quota"
 msgstr ""
 
-#: lib/Entity/User.php:1416
+#: lib/Entity/User.php:1430
 msgid "Your password does not meet the required complexity"
 msgstr ""
 
@@ -13866,7 +13883,7 @@ msgstr ""
 msgid "The Region dimensions cannot be empty or negative"
 msgstr ""
 
-#: lib/Entity/Region.php:357 lib/Entity/Layout.php:793
+#: lib/Entity/Region.php:357 lib/Entity/Layout.php:795
 msgid "Layer must be 0 or a positive number"
 msgstr ""
 
@@ -13908,25 +13925,25 @@ msgstr ""
 msgid "Layout Name must be between 1 and 50 characters"
 msgstr ""
 
-#: lib/Entity/Layout.php:789
+#: lib/Entity/Layout.php:790
 #, php-format
-msgid "You already own a layout called '%s'. Please choose another name."
+msgid "You already own a Layout called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Layout.php:1319 lib/Controller/Fault.php:100
+#: lib/Entity/Layout.php:1322 lib/Controller/Fault.php:100
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
-#: lib/Entity/Layout.php:1492
+#: lib/Entity/Layout.php:1495
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:1527 lib/Entity/Layout.php:1642
+#: lib/Entity/Layout.php:1530 lib/Entity/Layout.php:1645
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:1714
+#: lib/Entity/Layout.php:1717
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -14094,7 +14111,7 @@ msgid "Error."
 msgstr ""
 
 #: lib/XTR/MaintenanceDailyTask.php:87 lib/XTR/StatsArchiveTask.php:92
-#: lib/XTR/StatsArchiveTask.php:232
+#: lib/XTR/StatsArchiveTask.php:232 lib/Controller/User.php:299
 msgid "Disabled"
 msgstr ""
 
@@ -14306,94 +14323,98 @@ msgstr ""
 msgid "Switched to Normal Mode"
 msgstr ""
 
-#: lib/Controller/Login.php:104 lib/Controller/Login.php:107
-#: lib/Controller/Login.php:151
+#: lib/Controller/Login.php:105 lib/Controller/Login.php:108
+#: lib/Controller/Login.php:152
 msgid "This link has expired."
 msgstr ""
 
-#: lib/Controller/Login.php:231
+#: lib/Controller/Login.php:232
 msgid "Username or Password incorrect"
 msgstr ""
 
-#: lib/Controller/Login.php:254
+#: lib/Controller/Login.php:255
 msgid "This feature has been disabled by your administrator"
 msgstr ""
 
-#: lib/Controller/Login.php:307
+#: lib/Controller/Login.php:308
 msgid "Password Reset"
 msgstr ""
 
-#: lib/Controller/Login.php:312
+#: lib/Controller/Login.php:313
 msgid ""
 "You are receiving this email because a password reminder was requested for "
 "your account. If you did not make this request, please report this email to "
 "your administrator immediately."
 msgstr ""
 
-#: lib/Controller/Login.php:312
+#: lib/Controller/Login.php:313
 msgid "Reset Password"
 msgstr ""
 
-#: lib/Controller/Login.php:317
+#: lib/Controller/Login.php:318
 msgid "Reminder email has been sent to your email address"
 msgstr ""
 
-#: lib/Controller/Login.php:432
+#: lib/Controller/Login.php:433
 msgid "Session has expired, please log in again"
 msgstr ""
 
-#: lib/Controller/Login.php:494
+#: lib/Controller/Login.php:457
+msgid "Sending email address in CMS Settings is not configured"
+msgstr ""
+
+#: lib/Controller/Login.php:499
 msgid ""
 "You are receiving this email because two factor email authorisation is "
 "enabled in your CMS user account. If you did not make this request, please "
 "report this email to your administrator immediately."
 msgstr ""
 
-#: lib/Controller/Login.php:500
+#: lib/Controller/Login.php:505
 msgid "Two factor code email has been sent to your email address"
 msgstr ""
 
-#: lib/Controller/Login.php:589
+#: lib/Controller/Login.php:594
 msgid "Authentication code incorrect"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:260 lib/Controller/UserGroup.php:176
+#: lib/Controller/DisplayGroup.php:261 lib/Controller/UserGroup.php:176
 msgid "Members"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:306 lib/Controller/Display.php:659
+#: lib/Controller/DisplayGroup.php:307 lib/Controller/Display.php:659
 msgid "Assign Files"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:313 lib/Controller/Display.php:666
+#: lib/Controller/DisplayGroup.php:314 lib/Controller/Display.php:666
 msgid "Assign Layouts"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:512 lib/Controller/DisplayGroup.php:2026
+#: lib/Controller/DisplayGroup.php:513 lib/Controller/DisplayGroup.php:2027
 #: lib/Controller/Help.php:167 lib/Controller/DataSetColumn.php:315
-#: lib/Controller/Applications.php:296 lib/Controller/DisplayProfile.php:264
-#: lib/Controller/DisplayProfile.php:531 lib/Controller/DayPart.php:344
-#: lib/Controller/User.php:548 lib/Controller/Campaign.php:319
+#: lib/Controller/Applications.php:296 lib/Controller/DisplayProfile.php:265
+#: lib/Controller/DisplayProfile.php:533 lib/Controller/DayPart.php:344
+#: lib/Controller/User.php:563 lib/Controller/Campaign.php:319
 #: lib/Controller/Notification.php:411 lib/Controller/Playlist.php:535
 #: lib/Controller/Tag.php:326 lib/Controller/Region.php:304
 #: lib/Controller/UserGroup.php:317 lib/Controller/Command.php:246
-#: lib/Controller/DataSetRss.php:300 lib/Controller/Layout.php:358
+#: lib/Controller/DataSetRss.php:310 lib/Controller/Layout.php:358
 #: lib/Controller/DataSet.php:443 lib/Controller/Task.php:218
 #: lib/Controller/Module.php:489 lib/Controller/Resolution.php:255
 #, php-format
 msgid "Added %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:599 lib/Controller/Library.php:967
+#: lib/Controller/DisplayGroup.php:600 lib/Controller/Library.php:967
 #: lib/Controller/Help.php:191 lib/Controller/DataSetColumn.php:474
-#: lib/Controller/Applications.php:388 lib/Controller/DisplayProfile.php:394
-#: lib/Controller/DayPart.php:449 lib/Controller/User.php:783
+#: lib/Controller/Applications.php:388 lib/Controller/DisplayProfile.php:395
+#: lib/Controller/DayPart.php:449 lib/Controller/User.php:798
 #: lib/Controller/Campaign.php:424 lib/Controller/Notification.php:532
 #: lib/Controller/Playlist.php:657 lib/Controller/Tag.php:458
 #: lib/Controller/Report.php:324 lib/Controller/Transition.php:128
 #: lib/Controller/Region.php:442 lib/Controller/Region.php:594
 #: lib/Controller/UserGroup.php:404 lib/Controller/Command.php:306
-#: lib/Controller/DataSetRss.php:500 lib/Controller/Layout.php:475
+#: lib/Controller/DataSetRss.php:519 lib/Controller/Layout.php:475
 #: lib/Controller/Layout.php:571 lib/Controller/DataSet.php:639
 #: lib/Controller/Display.php:1089 lib/Controller/PlayerSoftware.php:356
 #: lib/Controller/Task.php:267 lib/Controller/Module.php:285
@@ -14402,15 +14423,15 @@ msgstr ""
 msgid "Edited %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:643 lib/Controller/Library.php:727
+#: lib/Controller/DisplayGroup.php:644 lib/Controller/Library.php:727
 #: lib/Controller/Help.php:212 lib/Controller/DataSetColumn.php:545
-#: lib/Controller/Applications.php:410 lib/Controller/DisplayProfile.php:457
-#: lib/Controller/DayPart.php:551 lib/Controller/User.php:863
+#: lib/Controller/Applications.php:410 lib/Controller/DisplayProfile.php:459
+#: lib/Controller/DayPart.php:551 lib/Controller/User.php:878
 #: lib/Controller/Campaign.php:487 lib/Controller/Notification.php:575
 #: lib/Controller/Playlist.php:698 lib/Controller/Tag.php:551
 #: lib/Controller/Report.php:351 lib/Controller/Report.php:653
 #: lib/Controller/Region.php:491 lib/Controller/UserGroup.php:448
-#: lib/Controller/Command.php:348 lib/Controller/DataSetRss.php:578
+#: lib/Controller/Command.php:348 lib/Controller/DataSetRss.php:597
 #: lib/Controller/Layout.php:663 lib/Controller/DataSet.php:710
 #: lib/Controller/Display.php:1131 lib/Controller/PlayerSoftware.php:268
 #: lib/Controller/Task.php:298 lib/Controller/Module.php:679
@@ -14419,116 +14440,116 @@ msgstr ""
 msgid "Deleted %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:696 lib/Controller/DisplayGroup.php:797
-#: lib/Controller/DisplayGroup.php:879 lib/Controller/DisplayGroup.php:964
+#: lib/Controller/DisplayGroup.php:697 lib/Controller/DisplayGroup.php:798
+#: lib/Controller/DisplayGroup.php:880 lib/Controller/DisplayGroup.php:965
 msgid ""
 "This is a Display specific Display Group and its assignments cannot be "
 "modified."
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:704
+#: lib/Controller/DisplayGroup.php:705
 msgid "Displays cannot be manually assigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:714 lib/Controller/DisplayGroup.php:730
-#: lib/Controller/DisplayGroup.php:813
+#: lib/Controller/DisplayGroup.php:715 lib/Controller/DisplayGroup.php:731
+#: lib/Controller/DisplayGroup.php:814
 msgid "Access Denied to Display"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:751
+#: lib/Controller/DisplayGroup.php:752
 #, php-format
 msgid "Displays assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:805
+#: lib/Controller/DisplayGroup.php:806
 msgid "Displays cannot be manually unassigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:825
+#: lib/Controller/DisplayGroup.php:826
 #, php-format
 msgid "Displays unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:887
+#: lib/Controller/DisplayGroup.php:888
 msgid "DisplayGroups cannot be manually assigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:895 lib/Controller/DisplayGroup.php:907
+#: lib/Controller/DisplayGroup.php:896 lib/Controller/DisplayGroup.php:908
 #: lib/Controller/Display.php:1205 lib/Controller/Display.php:1217
 msgid "Access Denied to DisplayGroup"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:918
+#: lib/Controller/DisplayGroup.php:919
 #, php-format
 msgid "DisplayGroups assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:971
+#: lib/Controller/DisplayGroup.php:972
 msgid "DisplayGroups cannot be manually unassigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:984
+#: lib/Controller/DisplayGroup.php:985
 #, php-format
 msgid "DisplayGroups unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1078 lib/Controller/DisplayGroup.php:1089
+#: lib/Controller/DisplayGroup.php:1079 lib/Controller/DisplayGroup.php:1090
 msgid ""
 "You have selected media that you no longer have permission to use. Please "
 "reload the form."
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1100
+#: lib/Controller/DisplayGroup.php:1101
 #, php-format
 msgid "Files assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1165
+#: lib/Controller/DisplayGroup.php:1166
 #, php-format
 msgid "Files unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1260 lib/Controller/DisplayGroup.php:1271
+#: lib/Controller/DisplayGroup.php:1261 lib/Controller/DisplayGroup.php:1272
 msgid ""
 "You have selected a layout that you no longer have permission to use. Please "
 "reload the form."
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1282
+#: lib/Controller/DisplayGroup.php:1283
 #, php-format
 msgid "Layouts assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1347
+#: lib/Controller/DisplayGroup.php:1348
 #, php-format
 msgid "Layouts unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1404 lib/Controller/DisplayGroup.php:1445
-#: lib/Controller/DisplayGroup.php:1589 lib/Controller/DisplayGroup.php:1630
-#: lib/Controller/DisplayGroup.php:1762 lib/Controller/DisplayGroup.php:1840
+#: lib/Controller/DisplayGroup.php:1405 lib/Controller/DisplayGroup.php:1446
+#: lib/Controller/DisplayGroup.php:1590 lib/Controller/DisplayGroup.php:1631
+#: lib/Controller/DisplayGroup.php:1763 lib/Controller/DisplayGroup.php:1841
 #, php-format
 msgid "Command Sent to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1526 lib/Controller/DisplayGroup.php:1704
+#: lib/Controller/DisplayGroup.php:1527 lib/Controller/DisplayGroup.php:1705
 msgid "Please provide a Layout ID or Campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1536 lib/Controller/DisplayGroup.php:1714
+#: lib/Controller/DisplayGroup.php:1537 lib/Controller/DisplayGroup.php:1715
 msgid "Please provide Layout specific campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1542 lib/Controller/DisplayGroup.php:1720
+#: lib/Controller/DisplayGroup.php:1543 lib/Controller/DisplayGroup.php:1721
 msgid "Cannot find layout by campaignId"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1547 lib/Controller/DisplayGroup.php:1725
+#: lib/Controller/DisplayGroup.php:1548 lib/Controller/DisplayGroup.php:1726
 msgid "Please provide Layout id or Campaign id"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1855 lib/Controller/DisplayProfile.php:450
-#: lib/Controller/DisplayProfile.php:471 lib/Controller/DisplayProfile.php:522
+#: lib/Controller/DisplayGroup.php:1856 lib/Controller/DisplayProfile.php:451
+#: lib/Controller/DisplayProfile.php:473 lib/Controller/DisplayProfile.php:524
 msgid "You do not have permission to delete this profile"
 msgstr ""
 
@@ -14657,109 +14678,118 @@ msgstr ""
 msgid "Authorisation Parameters missing from session."
 msgstr ""
 
-#: lib/Controller/DisplayProfile.php:282 lib/Controller/DisplayProfile.php:365
-#: lib/Controller/DisplayProfile.php:411
+#: lib/Controller/DisplayProfile.php:283 lib/Controller/DisplayProfile.php:366
+#: lib/Controller/DisplayProfile.php:412
 msgid "You do not have permission to edit this profile"
 msgstr ""
 
-#: lib/Controller/User.php:330 lib/Controller/UserGroup.php:184
+#: lib/Controller/User.php:295
+msgid "Google Authenticator"
+msgstr ""
+
+#: lib/Controller/User.php:345 lib/Controller/UserGroup.php:184
 msgid "Page Security"
 msgstr ""
 
-#: lib/Controller/User.php:491 lib/Controller/User.php:875
+#: lib/Controller/User.php:506 lib/Controller/User.php:890
 msgid "Only super and group admins can create users"
 msgstr ""
 
-#: lib/Controller/User.php:531
+#: lib/Controller/User.php:546
 msgid "Invalid user group selected"
 msgstr ""
 
-#: lib/Controller/User.php:543 lib/Controller/User.php:755
+#: lib/Controller/User.php:558 lib/Controller/User.php:770
 msgid "User does not have permission for this homepage"
 msgstr ""
 
-#: lib/Controller/User.php:766 lib/Controller/User.php:994
-#: lib/Controller/User.php:1195
+#: lib/Controller/User.php:781 lib/Controller/User.php:1009
+#: lib/Controller/User.php:1215
 msgid "Passwords do not match"
 msgstr ""
 
-#: lib/Controller/User.php:854
+#: lib/Controller/User.php:869
 #, php-format
 msgid "This user cannot be deleted as it has %d child items"
 msgstr ""
 
-#: lib/Controller/User.php:1006
+#: lib/Controller/User.php:1021
 msgid "Please provide valid email address"
 msgstr ""
 
-#: lib/Controller/User.php:1022
+#: lib/Controller/User.php:1026
+msgid ""
+"Please provide valid sending email address in CMS Settings on Network tab"
+msgstr ""
+
+#: lib/Controller/User.php:1042
 msgid "Access Code is empty"
 msgstr ""
 
-#: lib/Controller/User.php:1029
+#: lib/Controller/User.php:1049
 msgid "Access Code is incorrect"
 msgstr ""
 
-#: lib/Controller/User.php:1054
+#: lib/Controller/User.php:1074
 msgid "User Profile Saved"
 msgstr ""
 
-#: lib/Controller/User.php:1192
+#: lib/Controller/User.php:1212
 msgid "Please enter the password"
 msgstr ""
 
-#: lib/Controller/User.php:1207
+#: lib/Controller/User.php:1227
 msgid "Password Changed"
 msgstr ""
 
-#: lib/Controller/User.php:1256 lib/Controller/User.php:1283
-#: lib/Controller/User.php:1365
+#: lib/Controller/User.php:1276 lib/Controller/User.php:1303
+#: lib/Controller/User.php:1385
 msgid "You do not have permission to edit these permissions."
 msgstr ""
 
-#: lib/Controller/User.php:1387
+#: lib/Controller/User.php:1407
 msgid "Cannot change owner on this Object"
 msgstr ""
 
-#: lib/Controller/User.php:1460
+#: lib/Controller/User.php:1480
 msgid "Permissions Updated"
 msgstr ""
 
-#: lib/Controller/User.php:1474
+#: lib/Controller/User.php:1494
 msgid "Permissions requested without an entity"
 msgstr ""
 
-#: lib/Controller/User.php:1477
+#: lib/Controller/User.php:1497
 msgid "Permissions form requested without an object"
 msgstr ""
 
-#: lib/Controller/User.php:1484
+#: lib/Controller/User.php:1504
 msgid "Permissions form requested with an invalid entity"
 msgstr ""
 
-#: lib/Controller/User.php:1603
+#: lib/Controller/User.php:1623
 msgid "Updated Preference"
 msgstr ""
 
-#: lib/Controller/User.php:1603 lib/Controller/User.php:1775
+#: lib/Controller/User.php:1623 lib/Controller/User.php:1795
 msgid "Updated Preferences"
 msgstr ""
 
-#: lib/Controller/User.php:1671 lib/Controller/User.php:1682
+#: lib/Controller/User.php:1691 lib/Controller/User.php:1702
 msgid "Access Denied to UserGroup"
 msgstr ""
 
-#: lib/Controller/User.php:1691
+#: lib/Controller/User.php:1711
 #, php-format
 msgid "%s assigned to User Groups"
 msgstr ""
 
-#: lib/Controller/User.php:1707
+#: lib/Controller/User.php:1727
 #, php-format
 msgid "%s has started the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:1722
+#: lib/Controller/User.php:1742
 #, php-format
 msgid "%s has seen the welcome tutorial"
 msgstr ""
@@ -14823,7 +14853,7 @@ msgstr ""
 msgid "Please enter playlist name"
 msgstr ""
 
-#: lib/Controller/Playlist.php:991 lib/Controller/Playlist.php:1146
+#: lib/Controller/Playlist.php:991 lib/Controller/Playlist.php:1148
 #: lib/Controller/Region.php:256 lib/Controller/Region.php:409
 #: lib/Controller/Region.php:484 lib/Controller/Region.php:542
 #: lib/Controller/Layout.php:544 lib/Controller/Module.php:445
@@ -14851,19 +14881,19 @@ msgstr ""
 msgid "You cannot assign file type %s to a playlist"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1080
+#: lib/Controller/Playlist.php:1082
 msgid "Media Assigned"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1155
+#: lib/Controller/Playlist.php:1157
 msgid "Cannot Save empty region playlist. Please add widgets"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1175
+#: lib/Controller/Playlist.php:1177
 msgid "Order Changed"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1230
+#: lib/Controller/Playlist.php:1232
 #, php-format
 msgid "For Playlist %s Enable Stats Collection is set to %s"
 msgstr ""
@@ -15075,6 +15105,14 @@ msgstr ""
 #: lib/Controller/UserGroup.php:873
 #, php-format
 msgid "Copied %s"
+msgstr ""
+
+#: lib/Controller/DataSetRss.php:283 lib/Controller/DataSetRss.php:492
+msgid "Please enter title"
+msgstr ""
+
+#: lib/Controller/DataSetRss.php:287 lib/Controller/DataSetRss.php:496
+msgid "Please enter author name"
 msgstr ""
 
 #: lib/Controller/Layout.php:445
@@ -15417,27 +15455,31 @@ msgstr ""
 msgid "Please provide a from/to date."
 msgstr ""
 
-#: lib/Controller/DataSetData.php:234
+#: lib/Controller/DataSetData.php:136
+msgid "Error getting DataSet data, failed with following message: "
+msgstr ""
+
+#: lib/Controller/DataSetData.php:242
 msgid "Cannot add new rows to remote dataSet"
 msgstr ""
 
-#: lib/Controller/DataSetData.php:248
+#: lib/Controller/DataSetData.php:256
 msgid "Added Row"
 msgstr ""
 
-#: lib/Controller/DataSetData.php:398
+#: lib/Controller/DataSetData.php:406
 msgid "Cannot edit data of remote columns"
 msgstr ""
 
-#: lib/Controller/DataSetData.php:405
+#: lib/Controller/DataSetData.php:413
 msgid "Edited Row"
 msgstr ""
 
-#: lib/Controller/DataSetData.php:475
+#: lib/Controller/DataSetData.php:483
 msgid "row not found"
 msgstr ""
 
-#: lib/Controller/DataSetData.php:487
+#: lib/Controller/DataSetData.php:495
 msgid "Deleted Row"
 msgstr ""
 
@@ -15676,28 +15718,28 @@ msgstr ""
 msgid "Layout does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:670 lib/Service/ReportService.php:243
+#: lib/Factory/LayoutFactory.php:686 lib/Service/ReportService.php:243
 msgid "File does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:675 lib/Service/ReportService.php:248
+#: lib/Factory/LayoutFactory.php:691 lib/Service/ReportService.php:248
 msgid "Unable to open ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:768
+#: lib/Factory/LayoutFactory.php:784
 msgid "Empty file in ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:773
+#: lib/Factory/LayoutFactory.php:789
 msgid "Cannot save media file from ZIP file"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:947
+#: lib/Factory/LayoutFactory.php:963
 #, php-format
 msgid "DataSets have different number of columns imported = %d, existing = %d"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:958
+#: lib/Factory/LayoutFactory.php:974
 msgid "DataSets have different column names"
 msgstr ""
 
@@ -15972,21 +16014,21 @@ msgstr ""
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
 
-#: lib/Xmds/Soap.php:1844
+#: lib/Xmds/Soap.php:1880
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:1845
+#: lib/Xmds/Soap.php:1881
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:1910
+#: lib/Xmds/Soap.php:1946
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
-#: lib/Xmds/Soap4.php:616
+#: lib/Xmds/Soap4.php:628
 msgid "Incorrect Screen shot Format"
 msgstr ""
 

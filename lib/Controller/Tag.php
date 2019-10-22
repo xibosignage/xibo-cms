@@ -136,7 +136,7 @@ class Tag extends Base
      * @SWG\Get(
      *  path="/tag",
      *  operationId="tagSearch",
-     *  tags={"tag"},
+     *  tags={"tags"},
      *  summary="Search Tags",
      *  description="Search for Tags viewable by this user",
      *  @SWG\Parameter(
@@ -262,7 +262,7 @@ class Tag extends Base
      * @SWG\Post(
      *  path="/tag",
      *  operationId="tagAdd",
-     *  tags={"tag"},
+     *  tags={"tags"},
      *  summary="Add a new Tag",
      *  description="Add a new Tag",
      *  @SWG\Parameter(
@@ -335,7 +335,7 @@ class Tag extends Base
      * @SWG\Put(
      *  path="/tag/{tagId}",
      *  operationId="tagEdit",
-     *  tags={"tag"},
+     *  tags={"tags"},
      *  summary="Edit existing Tag",
      *  description="Edit existing Tag",
      *  @SWG\Parameter(
@@ -479,6 +479,26 @@ class Tag extends Base
 
     /**
      * Delete Tag
+     *
+     * @SWG\Delete(
+     *  path="/tag/{tagId}",
+     *  operationId="tagDelete",
+     *  tags={"tags"},
+     *  summary="Delete Tag",
+     *  description="Delete a Tag",
+     *  @SWG\Parameter(
+     *      name="tagId",
+     *      in="path",
+     *      description="The Tag ID to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
      * @param int $tagId
      *
      * @throws \Xibo\Exception\InvalidArgumentException

@@ -853,7 +853,7 @@ class Playlist extends Base
      *
      * @SWG\Get(
      *  path="/playlist/widget",
-     *  operationId="playlistSearch",
+     *  operationId="playlistWidgetSearch",
      *  tags={"playlist"},
      *  summary="Playlist Widget Search",
      *  description="Search widgets on a Playlist",
@@ -862,12 +862,12 @@ class Playlist extends Base
      *      in="formData",
      *      description="The Playlist ID to Search",
      *      type="integer",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="formData",
-     *      description="The widget ID to Search",
+     *      description="The Widget ID to Search",
      *      type="integer",
      *      required=false
      *   ),
@@ -904,6 +904,13 @@ class Playlist extends Base
 
             // Add property for transition
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
+
+            if ($this->isApi()) {
+                $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
+                $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
+                $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
+                $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+            }
         }
 
         // Store the table rows
@@ -1186,7 +1193,7 @@ class Playlist extends Base
      * @SWG\Put(
      *  path="/playlist/setenablestat/{playlistId}",
      *  operationId="playlistSetEnableStat",
-     *  tags={"Playlist"},
+     *  tags={"playlist"},
      *  summary="Enable Stats Collection",
      *  description="Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
      *  @SWG\Parameter(

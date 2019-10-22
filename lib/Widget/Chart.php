@@ -248,7 +248,7 @@ class Chart extends ModuleWidget
      *  operationId="widgetChartEdit",
      *  tags={"widget"},
      *  summary="Edit a Chart Widget",
-     *  description="Edit a new Chart Widget to the specified playlist",
+     *  description="Edit Chart Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -273,7 +273,7 @@ class Chart extends ModuleWidget
      *  @SWG\Parameter(
      *      name="dataSetId",
      *      in="formData",
-     *      description="Create Chart Widget using provided dataSetId of an existing dataSet",
+     *      description="Required for step 1. Create Chart Widget using provided dataSetId of an existing dataSet",
      *      type="integer",
      *      required=true
      *  ),

@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "title": "Xibo API",
-        "description": "Xibo CMS API",
+        "description": "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
         "termsOfService": "http://xibo.org.uk/legal",
         "contact": {
             "email": "info@xibo.org.uk"
@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "2.0"
+        "version": "2.2"
     },
     "basePath": "/api",
     "schemes": [
@@ -527,6 +527,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "customHeaders",
+                        "in": "formData",
+                        "description": "Comma separated string of custom HTTP headers",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "refreshRate",
                         "in": "formData",
                         "description": "How often in seconds should this remote DataSet be refreshed",
@@ -668,6 +675,13 @@
                         "name": "password",
                         "in": "formData",
                         "description": "HTTP Authentication Password",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "customHeaders",
+                        "in": "formData",
+                        "description": "Comma separated string of custom HTTP headers",
                         "required": false,
                         "type": "string"
                     },
@@ -1309,7 +1323,7 @@
                 ],
                 "summary": "Add RSS",
                 "description": "Add a RSS to a DataSet",
-                "operationId": "dataSetColumnAdd",
+                "operationId": "dataSetRssAdd",
                 "parameters": [
                     {
                         "name": "dataSetId",
@@ -1370,7 +1384,7 @@
                 }
             }
         },
-        "/dataset/{dataSetId}/rss/{$rssId}": {
+        "/dataset/{dataSetId}/rss/{rssId}": {
             "put": {
                 "tags": [
                     "dataset"
@@ -1441,9 +1455,7 @@
                         "description": "successful operation"
                     }
                 }
-            }
-        },
-        "/dataset/{dataSetId}/rss/{rssId}": {
+            },
             "delete": {
                 "tags": [
                     "dataset"
@@ -1605,9 +1617,9 @@
                 "tags": [
                     "dayPart"
                 ],
-                "summary": "Daypart Add",
-                "description": "Add a Daypart",
-                "operationId": "dayPartAdd",
+                "summary": "Daypart Edit",
+                "description": "Edit a Daypart",
+                "operationId": "dayPartEdit",
                 "parameters": [
                     {
                         "name": "dayPartId",
@@ -2880,7 +2892,7 @@
         "/displaygroup/{displayGroupId}/copy": {
             "post": {
                 "tags": [
-                    "displaygroup"
+                    "displayGroup"
                 ],
                 "summary": "Copy Display Group",
                 "description": "Copy an existing Display Group",
@@ -4184,6 +4196,15 @@
                 "summary": "Get Library Item Usage Report",
                 "description": "Get the records for the library item usage report",
                 "operationId": "libraryUsageReport",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation"
@@ -4199,6 +4220,15 @@
                 "summary": "Get Library Item Usage Report for Layouts",
                 "description": "Get the records for the library item usage report for Layouts",
                 "operationId": "libraryUsageLayoutsReport",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation"
@@ -4261,9 +4291,65 @@
                 "summary": "Media usage check",
                 "description": "Checks if a Media is being used",
                 "operationId": "mediaIsUsed",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/library/uploadUrl": {
+            "post": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Upload Media from URL",
+                "description": "Upload Media to CMS library from an external URL",
+                "operationId": "uploadFromUrl",
+                "parameters": [
+                    {
+                        "name": "url",
+                        "in": "formData",
+                        "description": "The URL to the media",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "formData",
+                        "description": "The type of the media, image, video etc",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "optionalName",
+                        "in": "formData",
+                        "description": "An optional name for this media file, if left empty it will default to the file name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -4290,19 +4376,26 @@
                 }
             }
         },
-        "/playlist/widget/{widgetId}": {
-            "put": {
+        "/playlist/widget/{type}/{playlistId}": {
+            "post": {
                 "tags": [
                     "widget"
                 ],
-                "summary": "Edit a Widget",
-                "description": "Edit a Widget, please refer to individual widget Add documentation for module specific parameters",
-                "operationId": "WidgetEdit",
+                "summary": "Add a Widget to a Playlist",
+                "description": "Add a new Widget to a Playlist",
+                "operationId": "addWidget",
                 "parameters": [
                     {
-                        "name": "widgetId",
+                        "name": "type",
                         "in": "path",
-                        "description": "The widget ID to edit",
+                        "description": "The type of the Widget e.g. Image",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
                         "required": true,
                         "type": "integer"
                     }
@@ -4310,18 +4403,17 @@
                 "responses": {
                     "201": {
                         "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Widget"
-                        },
                         "headers": {
                             "Location": {
-                                "description": "Location of the edited widget",
+                                "description": "Location of the new record",
                                 "type": "string"
                             }
                         }
                     }
                 }
-            },
+            }
+        },
+        "/playlist/widget/{widgetId}": {
             "delete": {
                 "tags": [
                     "widget"
@@ -4501,14 +4593,14 @@
                     {
                         "name": "fromDt",
                         "in": "formData",
-                        "description": "The From Date",
+                        "description": "The From Date in Y-m-d H::i:s format",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "toDt",
                         "in": "formData",
-                        "description": "The To Date",
+                        "description": "The To Date in Y-m-d H::i:s format",
                         "required": false,
                         "type": "string"
                     },
@@ -5077,19 +5169,19 @@
                 ],
                 "summary": "Playlist Widget Search",
                 "description": "Search widgets on a Playlist",
-                "operationId": "playlistSearch",
+                "operationId": "playlistWidgetSearch",
                 "parameters": [
                     {
                         "name": "playlistId",
                         "in": "formData",
                         "description": "The Playlist ID to Search",
-                        "required": true,
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "widgetId",
                         "in": "formData",
-                        "description": "The widget ID to Search",
+                        "description": "The Widget ID to Search",
                         "required": false,
                         "type": "integer"
                     }
@@ -5198,7 +5290,7 @@
         "/playlist/setenablestat/{playlistId}": {
             "put": {
                 "tags": [
-                    "Playlist"
+                    "playlist"
                 ],
                 "summary": "Enable Stats Collection",
                 "description": "Set Enable Stats Collection? to use for the collection of Proof of Play statistics for a Playlist.",
@@ -5646,7 +5738,7 @@
                     "schedule"
                 ],
                 "summary": "Event List",
-                "operationId": "scheduleCalendarData",
+                "operationId": "scheduleCalendarDataDisplayGroup",
                 "parameters": [
                     {
                         "name": "displayGroupId",
@@ -5794,6 +5886,16 @@
                         "format": "array",
                         "items": {
                             "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "scheduleReminders",
+                        "in": "formData",
+                        "description": "Array of Reminders for this event",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/ScheduleReminderArray"
                         }
                     }
                 ],
@@ -5945,6 +6047,16 @@
                         "items": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "scheduleReminders",
+                        "in": "formData",
+                        "description": "Array of Reminders for this event",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/ScheduleReminderArray"
+                        }
                     }
                 ],
                 "responses": {
@@ -6058,7 +6170,7 @@
         "/tag": {
             "get": {
                 "tags": [
-                    "tag"
+                    "tags"
                 ],
                 "summary": "Search Tags",
                 "description": "Search for Tags viewable by this user",
@@ -6121,7 +6233,7 @@
             },
             "post": {
                 "tags": [
-                    "tag"
+                    "tags"
                 ],
                 "summary": "Add a new Tag",
                 "description": "Add a new Tag",
@@ -6165,7 +6277,7 @@
         "/tag/{tagId}": {
             "put": {
                 "tags": [
-                    "tag"
+                    "tags"
                 ],
                 "summary": "Edit existing Tag",
                 "description": "Edit existing Tag",
@@ -6202,6 +6314,28 @@
                                 "$ref": "#/definitions/Tag"
                             }
                         }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Delete Tag",
+                "description": "Delete a Tag",
+                "operationId": "tagDelete",
+                "parameters": [
+                    {
+                        "name": "tagId",
+                        "in": "path",
+                        "description": "The Tag ID to delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -7067,7 +7201,7 @@
                         "in": "path",
                         "description": "ID of the user group to which assign the user",
                         "required": true,
-                        "type": "string"
+                        "type": "integer"
                     },
                     {
                         "name": "userId",
@@ -7107,7 +7241,7 @@
                         "in": "path",
                         "description": "ID of the user group from which to unassign the user",
                         "required": true,
-                        "type": "string"
+                        "type": "integer"
                     },
                     {
                         "name": "userId",
@@ -7181,7 +7315,7 @@
             }
         },
         "/playlist/widget/audio/{playlistId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
@@ -7189,6 +7323,13 @@
                 "description": "Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
                 "operationId": "WidgetAudioEdit",
                 "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
                     {
                         "name": "useDuration",
                         "in": "formData",
@@ -7248,13 +7389,219 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}?calendar": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Calendar Widget",
+                "description": "Edit a Calendar Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "widgetCalendarEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "The Link for the iCal Feed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "customInterval",
+                        "in": "formData",
+                        "description": "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "The date format to apply to all dates returned",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "numItems",
+                        "in": "formData",
+                        "description": "he number of items you want to display",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsPerPage",
+                        "in": "formData",
+                        "description": "When in single mode, how many items per page should be shown",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "effect",
+                        "in": "formData",
+                        "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "itemsSideBySide",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should items be shown side by side",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useCurrentTemplate",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should current event use different template?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "excludeCurrent",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude current event from results?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "excludeAllDay",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude all day events from results?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "template",
+                        "in": "formData",
+                        "description": "Template to use",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "template_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "currentEventTemplate",
+                        "in": "formData",
+                        "description": "Template to use for current Event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "currentEventTemplate_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "noDataMessage",
+                        "in": "formData",
+                        "description": "Message to show when no notifications are available",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noDataMessage_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useEventTimezone",
+                        "in": "formData",
+                        "description": "A flag (0,1), Should we use Event Timezone?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useCalendarTimezone",
+                        "in": "formData",
+                        "description": "A flag (0,1), Should we use Calendar Timezone?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "windowsFormatCalendar",
+                        "in": "formData",
+                        "description": "Does the calendar feed come from Windows - if unsure leave unselected.",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget/{widgetId}?chart": {
             "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Edit a Chart Widget",
-                "description": "Edit a new Chart Widget to the specified playlist",
+                "description": "Edit Chart Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetChartEdit",
                 "parameters": [
                     {
@@ -7281,7 +7628,7 @@
                     {
                         "name": "dataSetId",
                         "in": "formData",
-                        "description": "Create Chart Widget using provided dataSetId of an existing dataSet",
+                        "description": "Required for step 1. Create Chart Widget using provided dataSetId of an existing dataSet",
                         "required": true,
                         "type": "integer"
                     },
@@ -7445,7 +7792,7 @@
                     "widget"
                 ],
                 "summary": "Clock Widget",
-                "description": "Edit Clock Widget",
+                "description": "Edit Clock Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetClockEdit",
                 "parameters": [
                     {
@@ -7539,7 +7886,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Currencies Widget",
-                "description": "Edit a new Currencies Widget",
+                "description": "Edit a new Currencies Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetCurrenciesEdit",
                 "parameters": [
                     {
@@ -7733,19 +8080,26 @@
             }
         },
         "/playlist/widget/{widgetId}?dataSetTicker": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
-                "summary": "Edit a ticker Widget",
-                "description": "Edit a ticker Widget",
-                "operationId": "WidgetTickerEdit",
+                "summary": "Edit a dataSet ticker Widget",
+                "description": "Edit a dataSet ticker Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "WidgetDataSetTickerEdit",
                 "parameters": [
                     {
                         "name": "widgetId",
                         "in": "path",
                         "description": "The WidgetId to Edit",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "step",
+                        "in": "formData",
+                        "description": "The Step Number being edited",
+                        "required": false,
                         "type": "integer"
                     },
                     {
@@ -7932,12 +8286,12 @@
             }
         },
         "/playlist/widget/{widgetId}?dataSetView": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Edit a dataSetView Widget",
-                "description": "Edit a new dataSetView Widget to the specified playlist",
+                "description": "Edit an existing dataSetView Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetDataSetViewEdit",
                 "parameters": [
                     {
@@ -7964,14 +8318,14 @@
                     {
                         "name": "dataSetId",
                         "in": "formData",
-                        "description": "Create dataSetView Widget using provided dataSetId of an existing dataSet",
+                        "description": "For Step 1. Create dataSetView Widget using provided dataSetId of an existing dataSet",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "dataSetColumnId",
                         "in": "formData",
-                        "description": " EDIT only - Array of dataSetColumn IDs to assign",
+                        "description": "Array of dataSetColumn IDs to assign",
                         "required": false,
                         "type": "array",
                         "items": {
@@ -7988,7 +8342,7 @@
                     {
                         "name": "useDuration",
                         "in": "formData",
-                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "description": "Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
                     },
@@ -8104,7 +8458,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Embedded Widget",
-                "description": "Edit Embedded Widget",
+                "description": "Edit Embedded Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetEmbeddedEdit",
                 "parameters": [
                     {
@@ -8198,7 +8552,7 @@
                     "widget"
                 ],
                 "summary": "Edit Weather Widget",
-                "description": "Edit Weather Widget",
+                "description": "Edit Weather Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetWeatherEdit",
                 "parameters": [
                     {
@@ -8372,7 +8726,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Google Traffic Widget",
-                "description": "Edit a Google traffic Widget",
+                "description": "Edit a Google traffic Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetGoogleTrafficEdit",
                 "parameters": [
                     {
@@ -8452,7 +8806,7 @@
                     "widget"
                 ],
                 "summary": "Edit a HLS Widget",
-                "description": "Edit HLS Widget",
+                "description": "Edit HLS Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetHlsEdit",
                 "parameters": [
                     {
@@ -8472,7 +8826,7 @@
                     {
                         "name": "useDuration",
                         "in": "formData",
-                        "description": "Edit Only - (0, 1) Select only if you will provide duration parameter as well",
+                        "description": "Select only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
                     },
@@ -8519,54 +8873,127 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}?htmlPackage": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a HtmlPackage Widget",
+                "description": "Edit HtmlPackage Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "WidgetHtmlPackageEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "nominatedFile",
+                        "in": "formData",
+                        "description": "Enter a nominated file name that player will attempt to open after extracting the .htz archive",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update Interval for this Widget",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget/image/{playlistId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Parameters for editing existing image on a layout",
-                "description": "Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation",
+                "description": "Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetImageEdit",
                 "parameters": [
                     {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
                         "name": "name",
                         "in": "formData",
-                        "description": "Edit only - Optional Widget Name",
+                        "description": "Optional Widget Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "duration",
                         "in": "formData",
-                        "description": "Edit Only - The Widget Duration",
+                        "description": "The Widget Duration",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "useDuration",
                         "in": "formData",
-                        "description": "Edit only (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "description": "Select 1 only if you will provide duration parameter as well",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "scaleTypeId",
                         "in": "formData",
-                        "description": "Edit only - Select scale type available options: center, stretch",
+                        "description": "Select scale type available options: center, stretch",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "alignId",
                         "in": "formData",
-                        "description": "Edit only - Horizontal alignment - left, center, bottom",
+                        "description": "Horizontal alignment - left, center, bottom",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "valignId",
                         "in": "formData",
-                        "description": "Edit only - Vertical alignment - top, middle, bottom",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     },
@@ -8594,13 +9021,13 @@
                 }
             }
         },
-        "/playlist/widget/{widgetId}?htmlPackage": {
-            "post": {
+        "/playlist/widget/{widgetId}?localVideo": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Edit a Local Video Widget",
-                "description": "Edit a Local Video Widget",
+                "description": "Edit a Local Video Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetLocalVideoEdit",
                 "parameters": [
                     {
@@ -8673,7 +9100,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Notification Widget",
-                "description": "Edit a Notification Widget",
+                "description": "Edit a Notification Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetNotificationEdit",
                 "parameters": [
                     {
@@ -8826,7 +9253,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Shell Command Widget",
-                "description": "Edit a Shell Command Widget",
+                "description": "Edit a Shell Command Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetShellCommandEdit",
                 "parameters": [
                     {
@@ -8914,13 +9341,65 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}?spacer": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Spacer Widget",
+                "description": "Edit Spacer Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "WidgetSpacerEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget/{widgetId}?stocks": {
             "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Edit a Stocks Widget",
-                "description": "Edit a new Stocks Widget",
+                "description": "Edit a new Stocks Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetStocksEdit",
                 "parameters": [
                     {
@@ -9077,7 +9556,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Sub-Playlist Widget",
-                "description": "Edit a new Sub-Playlist Widget",
+                "description": "Edit a new Sub-Playlist Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetSubPlaylistEdit",
                 "parameters": [
                     {
@@ -9090,9 +9569,56 @@
                     {
                         "name": "subPlaylistId",
                         "in": "formData",
-                        "description": "The sub-playlist to embed",
+                        "description": "The Playlist Ids to assign",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "arrangement",
+                        "in": "formData",
+                        "description": "Arrangement type - even, roundrobin, none",
                         "required": false,
-                        "type": "integer"
+                        "type": "string"
+                    },
+                    {
+                        "name": "remainder",
+                        "in": "formData",
+                        "description": "Reminder - drop, repeat, none",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "subPlaylistIdSpots",
+                        "in": "formData",
+                        "description": "An array with number of spots for each Playlist",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subPlaylistIdSpotLength",
+                        "in": "formData",
+                        "description": "An array with spot length for each Playlist",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "subPlaylistIdSpotFill",
+                        "in": "formData",
+                        "description": "An array of spot fill type for each Playlist - fill, repeat, pad",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -9103,12 +9629,12 @@
             }
         },
         "/playlist/widget/{widgetId}?text": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Edit a Text Widget",
-                "description": "Edit a new Text Widget",
+                "description": "Edit a new Text Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetTextEdit",
                 "parameters": [
                     {
@@ -9204,12 +9730,12 @@
             }
         },
         "/playlist/widget/{widgetId}?ticker": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Edit a ticker Widget",
-                "description": "Edit a ticker Widget",
+                "description": "Edit a ticker Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetTickerEdit",
                 "parameters": [
                     {
@@ -9436,7 +9962,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Twitter Widget",
-                "description": "Edit a Twitter Widget",
+                "description": "Edit a Twitter Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetTwitterEdit",
                 "parameters": [
                     {
@@ -9670,7 +10196,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Twitter Metro Widget",
-                "description": "Edit a Twitter Metro Widget",
+                "description": "Edit a Twitter Metro Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetTwitterMetroEdit",
                 "parameters": [
                     {
@@ -9850,14 +10376,21 @@
             }
         },
         "/playlist/widget/video/{playlistId}": {
-            "post": {
+            "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Parameters for editing existing video on a layout",
-                "description": "Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation",
+                "description": "Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation.\n                    This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetVideoEdit",
                 "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
                     {
                         "name": "name",
                         "in": "formData",
@@ -9937,7 +10470,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Video In Widget",
-                "description": "Edit a Video In Widget",
+                "description": "Edit a Video In Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetVideoInEdit",
                 "parameters": [
                     {
@@ -9996,7 +10529,7 @@
                     "widget"
                 ],
                 "summary": "Edit a Web page Widget",
-                "description": "Edit a Web page Widget",
+                "description": "Edit a Web page Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetWebpageEdit",
                 "parameters": [
                     {
@@ -10143,6 +10676,26 @@
                 },
                 "event": {
                     "$ref": "#/definitions/Schedule"
+                }
+            }
+        },
+        "ScheduleReminderArray": {
+            "properties": {
+                "reminder_value": {
+                    "description": "Model to use for supplying key/value pairs to arrays",
+                    "type": "integer"
+                },
+                "reminder_type": {
+                    "description": "Model to use for supplying key/value pairs to arrays",
+                    "type": "integer"
+                },
+                "reminder_option": {
+                    "description": "Model to use for supplying key/value pairs to arrays",
+                    "type": "integer"
+                },
+                "reminder_isEmailHidden": {
+                    "description": "Model to use for supplying key/value pairs to arrays",
+                    "type": "integer"
                 }
             }
         },
@@ -10388,6 +10941,10 @@
                 },
                 "password": {
                     "description": "Corresponding password",
+                    "type": "string"
+                },
+                "customHeaders": {
+                    "description": "Comma separated string of custom HTTP headers",
                     "type": "string"
                 },
                 "refreshRate": {
@@ -10709,6 +11266,14 @@
                 "bandwidthLimit": {
                     "description": "The display bandwidth limit",
                     "type": "integer"
+                },
+                "newCmsAddress": {
+                    "description": "The new CMS Address",
+                    "type": "string"
+                },
+                "newCmsKey": {
+                    "description": "The new CMS Key",
+                    "type": "string"
                 }
             }
         },
@@ -10911,6 +11476,10 @@
                 },
                 "enableStat": {
                     "description": "Flag indicating whether the Layout stat is enabled",
+                    "type": "integer"
+                },
+                "autoApplyTransitions": {
+                    "description": "Flag indicating whether the default transitions should be applied to this Layout",
                     "type": "integer"
                 }
             }
@@ -11166,6 +11735,18 @@
                 "userId": {
                     "description": "The Owner User Id",
                     "type": "integer"
+                },
+                "filename": {
+                    "description": "Attachment filename",
+                    "type": "string"
+                },
+                "originalFileName": {
+                    "description": "Attachment originalFileName",
+                    "type": "string"
+                },
+                "nonusers": {
+                    "description": "Additional email addresses to which a saved report will be sent",
+                    "type": "string"
                 },
                 "userGroups": {
                     "description": "User Group Notifications associated with this notification",
@@ -11541,7 +12122,7 @@
                     "type": "integer"
                 },
                 "originalFileName": {
-                    "description": "Original name of the uploaded installer file",
+                    "description": "Original name of the saved report media file",
                     "type": "string"
                 },
                 "storedAs": {
@@ -11573,6 +12154,13 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/DisplayGroup"
+                    }
+                },
+                "scheduleReminders": {
+                    "description": "Schedule Reminders assigned to this Scheduled Event.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ScheduleReminder"
                     }
                 },
                 "userId": {
@@ -11652,6 +12240,46 @@
                 },
                 "syncTimezone": {
                     "description": "Flag indicating whether the event will sync to the Display timezone",
+                    "type": "integer"
+                },
+                "shareOfVoice": {
+                    "description": "Percentage (0-100) of each full hour that is scheduled that this Layout should occupy",
+                    "type": "integer"
+                }
+            }
+        },
+        "ScheduleReminder": {
+            "properties": {
+                "scheduleReminderId": {
+                    "description": "Schedule Reminder ID",
+                    "type": "integer"
+                },
+                "eventId": {
+                    "description": "The event ID of the schedule reminder",
+                    "type": "integer"
+                },
+                "value": {
+                    "description": "An integer number to define minutes, hours etc.",
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "The type of the reminder (i.e. Minute, Hour, Day, Week, Month)",
+                    "type": "integer"
+                },
+                "option": {
+                    "description": "The options regarding sending a reminder for an event. (i.e., Before start, After start, Before end, After end)",
+                    "type": "integer"
+                },
+                "isEmail": {
+                    "description": "Email flag for schedule reminder",
+                    "type": "integer"
+                },
+                "reminderDt": {
+                    "description": "A date that indicates the reminder date",
+                    "type": "integer"
+                },
+                "lastReminderDt": {
+                    "description": "Last reminder date a reminder was sent",
                     "type": "integer"
                 }
             }
@@ -11908,6 +12536,10 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "showContentFrom": {
+                    "description": "Should we show content added by standard users in relevant grids (1) or content added by the DOOH user? (2). Super admins have an option to change this in their User profile. ",
+                    "type": "integer"
                 }
             }
         },
@@ -12051,6 +12683,22 @@
                 },
                 "toDt": {
                     "description": "Widget To Date",
+                    "type": "integer"
+                },
+                "transitionIn": {
+                    "description": "Transition Type In",
+                    "type": "integer"
+                },
+                "transitionOut": {
+                    "description": "Transition Type out",
+                    "type": "integer"
+                },
+                "transitionDurationIn": {
+                    "description": "Transition duration in",
+                    "type": "integer"
+                },
+                "transitionDurationOut": {
+                    "description": "Transition duration out",
                     "type": "integer"
                 },
                 "widgetOptions": {
@@ -12259,8 +12907,7 @@
             "description": "Report schedule"
         },
         {
-            "name": "version",
-            "description": "Player Versions"
+            "name": "Player Software"
         },
         {
             "name": "tags",

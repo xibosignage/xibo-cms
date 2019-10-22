@@ -638,12 +638,13 @@ class Soap
                     $file->setAttribute("path", $layoutId);
                 }
 
-                $fileElements->appendChild($file);
-
                 // Get the Layout Modified Date
                 $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
+                // Append layout resources before layout so they are downloaded first. 
+                // If layouts are set to expire immediately, the new layout will use the old resources if 
+                // the layout is downloaded first.
                 foreach ($layout->regions as $region) {
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
@@ -692,18 +693,21 @@ class Soap
                             $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
 
                             // Append this item to required files
-                            $file = $requiredFilesXml->createElement("file");
-                            $file->setAttribute('type', 'resource');
-                            $file->setAttribute('id', $widget->widgetId);
-                            $file->setAttribute('layoutid', $layoutId);
-                            $file->setAttribute('regionid', $region->regionId);
-                            $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $updatedDt->format('U'));
-                            $fileElements->appendChild($file);
+                            $resourceFile = $requiredFilesXml->createElement("file");
+                            $resourceFile->setAttribute('type', 'resource');
+                            $resourceFile->setAttribute('id', $widget->widgetId);
+                            $resourceFile->setAttribute('layoutid', $layoutId);
+                            $resourceFile->setAttribute('regionid', $region->regionId);
+                            $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                            $resourceFile->setAttribute('updated', $updatedDt->format('U'));
+                            $fileElements->appendChild($resourceFile);
                         }
                     }
                 }
 
+                // Append Layout
+                $fileElements->appendChild($file);
+                
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
 
@@ -955,7 +959,7 @@ class Soap
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
 
-                    if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                    if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
@@ -978,6 +982,7 @@ class Soap
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
                         $layout->setAttribute("syncEvent", $syncKey);
+                        $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
@@ -1035,24 +1040,6 @@ class Soap
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
-                    } else if ($eventTypeId == Schedule::$INTERRUPT_EVENT) {
-
-                        // Check the layout status
-                        // https://github.com/xibosignage/xibo/issues/743
-                        if (intval($row['status']) > 3) {
-                            $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
-                            continue;
-                        }
-
-                        $interrupt = $scheduleXml->createElement('interrupt');
-                        $interrupt->setAttribute("file", $layoutId);
-                        $interrupt->setAttribute("fromdt", $fromDt);
-                        $interrupt->setAttribute("todt", $toDt);
-                        $interrupt->setAttribute("scheduleid", $scheduleId);
-                        $interrupt->setAttribute("shareOfVoice", $row['shareOfVoice']);
-
-                        // Add to the layout node list
-                        $layoutElements->appendChild($interrupt);
                     }
                 }
             }

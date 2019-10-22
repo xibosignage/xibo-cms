@@ -87,7 +87,211 @@ class Calendar extends ModuleWidget
         return 'calendar-designer-javascript';
     }
 
-    /** @inheritdoc */
+    /**
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}?calendar",
+     *  operationId="widgetCalendarEdit",
+     *  tags={"widget"},
+     *  summary="Edit a Calendar Widget",
+     *  description="Edit a Calendar Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The WidgetId to Edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Select 1 only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="uri",
+     *      in="formData",
+     *      description="The Link for the iCal Feed",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="customInterval",
+     *      in="formData",
+     *      description="Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="The date format to apply to all dates returned",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="numItems",
+     *      in="formData",
+     *      description="he number of items you want to display",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="itemsPerPage",
+     *      in="formData",
+     *      description="When in single mode, how many items per page should be shown",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="effect",
+     *      in="formData",
+     *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="durationIsPerItem",
+     *      in="formData",
+     *      description="A flag (0, 1), The duration specified is per page/item, otherwise the widget duration is divided between the number of pages/items",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="itemsSideBySide",
+     *      in="formData",
+     *      description="A flag (0, 1), Should items be shown side by side",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useCurrentTemplate",
+     *      in="formData",
+     *      description="A flag (0, 1), Should current event use different template?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="excludeCurrent",
+     *      in="formData",
+     *      description="A flag (0, 1), Exclude current event from results?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="excludeAllDay",
+     *      in="formData",
+     *      description="A flag (0, 1), Exclude all day events from results?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update interval in minutes",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="template",
+     *      in="formData",
+     *      description="Template to use",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="template_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="currentEventTemplate",
+     *      in="formData",
+     *      description="Template to use for current Event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="currentEventTemplate_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noDataMessage",
+     *      in="formData",
+     *      description="Message to show when no notifications are available",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noDataMessage_advanced",
+     *      in="formData",
+     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="styleSheet",
+     *      in="formData",
+     *      description="Optional StyleSheet",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useEventTimezone",
+     *      in="formData",
+     *      description="A flag (0,1), Should we use Event Timezone?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *          *  @SWG\Parameter(
+     *      name="useCalendarTimezone",
+     *      in="formData",
+     *      description="A flag (0,1), Should we use Calendar Timezone?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *          *  @SWG\Parameter(
+     *      name="windowsFormatCalendar",
+     *      in="formData",
+     *      description="Does the calendar feed come from Windows - if unsure leave unselected.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @inheritdoc
+     */
     public function edit()
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));

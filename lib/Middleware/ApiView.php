@@ -82,7 +82,7 @@ class ApiView extends View
 
                     // Is there a next page?
                     if ($start + $size < $totalRows)
-                        $linkHeader .= '<' . $url . '?start=' . ($start + $size * 2) . '&length=' . $size . '>; rel="next", ';
+                        $linkHeader .= '<' . $url . '?start=' . ($start + $size) . '&length=' . $size . '>; rel="next", ';
 
                     // Is there a previous page?
                     if ($start > 0)

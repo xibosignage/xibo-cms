@@ -541,6 +541,10 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi()) {
+                $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
+                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+                $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
+                $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
             }
 
@@ -765,13 +769,13 @@ class Display extends Base
                 $display->buttons[] = [
                     'id' => 'display_button_move_cms',
                     'url' => $this->urlFor('display.moveCms.form', ['id' => $display->displayId]),
-                    'text' => __('Move CMS'),
+                    'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor('display.moveCms', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
-                        ['name' => 'text', 'value' => __('Move CMS')],
+                        ['name' => 'text', 'value' => __('Transfer to another CMS')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
@@ -1147,6 +1151,11 @@ class Display extends Base
 
         $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
+
+        if ($this->isApi()) {
+            $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
+            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1852,6 +1861,9 @@ class Display extends Base
         $guzzle = new Client();
 
         try {
+            // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
+            // The Player will then call the service with the same code to retrieve the CMS details.
+            // On success, the details will be removed from the Authentication Service.
             $request = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
                 $this->getConfig()->getGuzzleProxy([
                     'form_params' => [

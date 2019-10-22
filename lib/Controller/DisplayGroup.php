@@ -1870,7 +1870,7 @@ class DisplayGroup extends Base
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/copy",
      *  operationId="displayGroupCopy",
-     *  tags={"displaygroup"},
+     *  tags={"displayGroup"},
      *  summary="Copy Display Group",
      *  description="Copy an existing Display Group",
      *  @SWG\Parameter(

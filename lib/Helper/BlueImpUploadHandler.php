@@ -450,23 +450,25 @@ class BlueImpUploadHandler
             $file->error = $this->get_error_message('max_number_of_files');
             return false;
         }
-        list($img_width, $img_height) = @getimagesize($uploaded_file);
-        if (is_int($img_width)) {
-            if ($this->options['max_width'] && $img_width > $this->options['max_width']) {
-                $file->error = $this->get_error_message('max_width');
-                return false;
-            }
-            if ($this->options['max_height'] && $img_height > $this->options['max_height']) {
-                $file->error = $this->get_error_message('max_height');
-                return false;
-            }
-            if ($this->options['min_width'] && $img_width < $this->options['min_width']) {
-                $file->error = $this->get_error_message('min_width');
-                return false;
-            }
-            if ($this->options['min_height'] && $img_height < $this->options['min_height']) {
-                $file->error = $this->get_error_message('min_height');
-                return false;
+        if ($this->is_valid_image_file($uploaded_file)) {
+            list($img_width, $img_height) = @getimagesize($uploaded_file);
+            if (is_int($img_width)) {
+                if ($this->options['max_width'] && $img_width > $this->options['max_width']) {
+                    $file->error = $this->get_error_message('max_width');
+                    return false;
+                }
+                if ($this->options['max_height'] && $img_height > $this->options['max_height']) {
+                    $file->error = $this->get_error_message('max_height');
+                    return false;
+                }
+                if ($this->options['min_width'] && $img_width < $this->options['min_width']) {
+                    $file->error = $this->get_error_message('min_width');
+                    return false;
+                }
+                if ($this->options['min_height'] && $img_height < $this->options['min_height']) {
+                    $file->error = $this->get_error_message('min_height');
+                    return false;
+                }
             }
         }
         return true;
@@ -882,6 +884,10 @@ class BlueImpUploadHandler
             }
         }
         return $this->generate_response(array('success' => $success), $print_response);
+    }
+
+    protected function is_valid_image_file($file_path) {
+        return (preg_match('/\.(gif|jpe?g|png)$/i', $file_path));
     }
 
 }

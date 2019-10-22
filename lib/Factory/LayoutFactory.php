@@ -1885,18 +1885,37 @@ class LayoutFactory extends BaseFactory
         }
 
         // Show All, Used or UnUsed
+        // Used - In active schedule, scheduled in the future, directly assigned to displayGroup, default Layout.
+        // Unused - Every layout NOT matching the Used ie not in active schedule, not scheduled in the future, not directly assigned to any displayGroup, not default layout.
         if ($this->getSanitizer()->getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
             if ($this->getSanitizer()->getInt('filterLayoutStatusId', $filterBy) == 2) {
+
                 // Only show used layouts
+                $now = $this->getDate()->parse()->format('U');
+                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
+                $campaignIds = [];
+                foreach ($this->getStore()->select($sql, []) as $row) {
+                    $campaignIds[] = $row['CampaignID'];
+                }
                 $body .= ' AND ('
-                    . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                    . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) '
+                    . '      campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) 
+                             OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup)'
                     . ' ) ';
             }
             else {
                 // Only show unused layouts
-                $body .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                    . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
+                $now = $this->getDate()->parse()->format('U');
+                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
+                $campaignIds = [];
+                foreach ($this->getStore()->select($sql, []) as $row) {
+                    $campaignIds[] = $row['CampaignID'];
+                }
+
+                $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) . ' )  
+                     AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                     AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) 
+                     ';
             }
         }
 

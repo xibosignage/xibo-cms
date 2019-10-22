@@ -75,7 +75,7 @@ class EmailNotificationsTask implements TaskInterface
 
                 // Add attachment
                 if ($notification->filename != null) {
-                    $mail->addAttachment($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename, 'saved_report.pdf');
+                    $mail->addAttachment($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/' . $notification->filename, $notification->originalFileName);
                 }
 
                 if ($msgFromName != null)

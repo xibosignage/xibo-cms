@@ -41,7 +41,7 @@ class ShellCommand extends ModuleWidget
      *  operationId="WidgetShellCommandEdit",
      *  tags={"widget"},
      *  summary="Edit a Shell Command Widget",
-     *  description="Edit a Shell Command Widget",
+     *  description="Edit a Shell Command Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

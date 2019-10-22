@@ -23,18 +23,18 @@
 use Phinx\Migration\AbstractMigration;
 
 /**
- * Class AddNotificationAttachmentFilenameNonUsersMigration
+ * Class AddNotificationOriginalFilenameMigration
  */
 
-class AddNotificationAttachmentFilenameNonUsersMigration extends AbstractMigration
+class AddNotificationOriginalFilenameMigration extends AbstractMigration
 {
     /** @inheritdoc */
     public function change()
     {
         $table = $this->table('notification');
         $table
-            ->addColumn('filename', 'string', ['limit' => 1000, 'null' => true])
-            ->addColumn('nonusers', 'string', ['limit' => 1000, 'null' => true])
+            ->addColumn('originalFileName', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->save();
     }
 }
+

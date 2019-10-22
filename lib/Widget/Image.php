@@ -65,51 +65,58 @@ class Image extends ModuleWidget
 
     /**
      * Edit an Image Widget
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/playlist/widget/image/{playlistId}",
      *  operationId="WidgetImageEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing image on a layout",
-     *  description="Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation",
+     *  description="Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID",
+     *      type="integer",
+     *      required=true
+     *  ),
      *  @SWG\Parameter(
      *      name="name",
      *      in="formData",
-     *      description="Edit only - Optional Widget Name",
+     *      description="Optional Widget Name",
      *      type="string",
      *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
-     *      description="Edit Only - The Widget Duration",
+     *      description="The Widget Duration",
      *      type="integer",
      *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="useDuration",
      *      in="formData",
-     *      description="Edit only (0, 1) Select 1 only if you will provide duration parameter as well",
+     *      description="Select 1 only if you will provide duration parameter as well",
      *      type="integer",
      *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="scaleTypeId",
      *      in="formData",
-     *      description="Edit only - Select scale type available options: center, stretch",
+     *      description="Select scale type available options: center, stretch",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="alignId",
      *      in="formData",
-     *      description="Edit only - Horizontal alignment - left, center, bottom",
+     *      description="Horizontal alignment - left, center, bottom",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="valignId",
      *      in="formData",
-     *      description="Edit only - Vertical alignment - top, middle, bottom",
+     *      description="Vertical alignment - top, middle, bottom",
      *      type="string",
      *      required=false
      *   ),
