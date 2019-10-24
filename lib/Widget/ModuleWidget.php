@@ -1395,12 +1395,16 @@ abstract class ModuleWidget implements ModuleInterface
             . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
 
-        if (!file_exists($cachePath))
+        if (!file_exists($cachePath)) {
             mkdir($cachePath, 0777, true);
+        }
+
+        $cacheFileExists = file_exists($cachePath . $cacheFile);
 
         if ( $modifiedDt->greaterThan($cachedDt)
                 || $cachedDt->addSeconds($cacheDuration)->lessThan($now)
-                || !file_exists($cachePath . $cacheFile) ) {
+                || !$cacheFileExists
+                || ($cacheFileExists && !file_get_contents($cachePath . $cacheFile)) ) {
 
             $this->getLog()->debug('We will need to regenerate');
 
