@@ -104,14 +104,26 @@ $(document).ready(function() {
                             
                             // Hook up any pop-overs (for small events)
                             $('[data-toggle="popover"]').popover({
-                                trigger: "click",
+                                trigger: "manual",
                                 html: true,
                                 placement: "bottom",
                                 content: function() {
                                     return $(this).html();
                                 }
-                            })
-                            .on('shown.bs.popover', function() {
+                            }).on("mouseenter", function() {
+                                var self = this;
+
+                                // Hide all other popover
+                                $('[data-toggle="popover"]').not(this).popover("hide");
+
+                                // Show this popover
+                                $(this).popover("show");
+
+                                // Hide popover when mouse leaves it
+                                $(".popover").off("mouseleave").on("mouseleave", function() {
+                                    $(self).popover('hide');
+                                });
+                            }).on('shown.bs.popover', function() {
                                 var source = $(this);
                                 var popover = source.attr("aria-describedby");
 
