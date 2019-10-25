@@ -37,28 +37,32 @@
                     {% trans "Add Event" %}
                 </button>
             </div>
+
             <div class="xibo-calendar-controls dropdown pull-right">
-                {% if -1 in selectedDisplayGroupIds %}
-                    {% set allSelected = "selected" %}
-                {% else %}
-                    {% set allSelected = "" %}
-                {% endif %}
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                        data-width="200px"
+                        data-search-url="{{ urlFor("schedule.displayGroup.search") }}"
+                        data-trans-groups="{% trans "Groups" %}"
+                        data-trans-display="{% trans "Display" %}"
+                        data-allow-clear="true"
+                        data-width="150px"
                         data-placeholder="{% trans "Select Displays" %}" multiple>
-                    <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
-                    <optgroup label="{% trans "Groups" %}">
-                        {% for group in groups %}
-                        <option value="{{ group.displayGroupId }}" type="1" {% if group.displayGroupId in selectedDisplayGroupIds %}selected{% endif %}>{{ group.displayGroup }}</option>
-                        {% endfor %}
-                    </optgroup>
-                    <optgroup label="{% trans "Displays" %}">
-                        {% for display in displays %}
-                        <option value="{{ display.displayGroupId }}" type="0" {% if display.displayGroupId in selectedDisplayGroupIds %}selected="" {% endif %}>{{ display.displayGroup }}</option>
-                        {% endfor %}
-                    </optgroup>
+                    {% for option in displayGroups %}
+                        {% set itemOptionId = attribute(option, "displayGroupId") %}
+                        {% set itemOptionValue = attribute(option, "displayGroup") %}
+                        <option value="{{ itemOptionId }}" selected >{{ itemOptionValue }}</option>
+                    {% endfor %}
                 </select>
             </div>
+
+            <div class="xibo-calendar-controls pull-right">
+                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ urlFor("schedule.displayGroup.search") }}" 
+                    {% if displayGroupsShowAll == -1 %}
+                        checked
+                    {% endif %}
+                >
+                <label for="showAll">Show All</label>
+            </div>
+
             <div class="progress pull-right"><span id="calendar-progress"></span></div>
             <h1 class="page-header"></h1>
         </div>         
@@ -709,4 +713,104 @@
         </script>
         
     {% endraw %}
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(function() {
+            // Select display
+            var dialog = 'body';
+
+            var $displaySelect = $('#DisplayList', dialog);
+            $displaySelect.select2({
+                dropdownParent: $(dialog),
+                ajax: {
+                    url: $displaySelect.data("searchUrl"),
+                    dataType: "json",
+                    data: function(params) {
+                        var query = {
+                            isDisplaySpecific: -1,
+                            forSchedule: 1,
+                            displayGroup: params.term,
+                            start: 0,
+                            length: 10,
+                            columns: [
+                                {
+                                    "data": "isDisplaySpecific"
+                                },
+                                {
+                                    "data": "displayGroup"
+                                }
+                            ],
+                            order: [
+                                {
+                                    "column": 0,
+                                    "dir": "asc"
+                                },
+                                {
+                                    "column": 1,
+                                    "dir": "asc"
+                                }
+                            ]
+                        };
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+                        return query;
+                    },
+                    processResults: function(data, params) {
+                        var groups = [];
+                        var displays = [];
+                        $.each(data.data, function(index, element) {
+                            if (element.isDisplaySpecific === 1) {
+                                displays.push({
+                                    "id": element.displayGroupId,
+                                    "text": element.displayGroup
+                                });
+                            } else {
+                                groups.push({
+                                    "id": element.displayGroupId,
+                                    "text": element.displayGroup
+                                });
+                            }
+                        });
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+                        return {
+                            results: [
+                                {
+                                    "text": $displaySelect.data('transGroups'),
+                                    "children": groups
+                                },{
+                                    "text": $displaySelect.data('transDisplay'),
+                                    "children": displays
+                                }
+                            ],
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
+                }
+            }).on('select2:unselecting', function() {
+                // Prevent the ajax request when we deselect an option ( change will still be called )
+                var opts = $(this).data('select2').options;
+                opts.set('disabled', true);
+
+                setTimeout(function() {
+                    opts.set('disabled', false);
+                }, 100);
+            })
+            .on('change', function(e) {
+                // Refresh the calendar view
+                setTimeout(calendar.view(), 1000);
+            });
+
+            // Set up our show all selector control
+            $('#showAll', dialog).on('change', function() {
+                setTimeout(calendar.view(), 1000);
+            });
+        });
+    </script>
 {% endblock %}
