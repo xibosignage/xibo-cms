@@ -1078,9 +1078,12 @@ abstract class ModuleWidget implements ModuleInterface
         // The file path
         $libraryPath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . $media->storedAs;
 
+        // size
+        $size = filesize($libraryPath);
+
         // Set the content length
         $headers = $this->getApp()->response()->headers();
-        $headers->set('Content-Length', filesize($libraryPath));
+        $headers->set('Content-Length', $size);
 
         // Different behaviour depending on whether we are a preview or not.
         if ($isPreview) {
@@ -1114,6 +1117,16 @@ abstract class ModuleWidget implements ModuleInterface
         else {
             // Return the file with PHP
             ob_end_flush();
+
+            // add the php headers
+            // https://github.com/xibosignage/xibo/issues/1992
+            if (!$isPreview) {
+                header('Content-Type: application/octet-stream');
+                header("Content-Transfer-Encoding: Binary");
+                header('Content-disposition: attachment; filename="' . $attachmentName . '"');
+                header('Content-Length: ' . $size);
+            }
+
             readfile($libraryPath);
             exit;
         }
@@ -1395,12 +1408,16 @@ abstract class ModuleWidget implements ModuleInterface
             . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
 
-        if (!file_exists($cachePath))
+        if (!file_exists($cachePath)) {
             mkdir($cachePath, 0777, true);
+        }
+
+        $cacheFileExists = file_exists($cachePath . $cacheFile);
 
         if ( $modifiedDt->greaterThan($cachedDt)
                 || $cachedDt->addSeconds($cacheDuration)->lessThan($now)
-                || !file_exists($cachePath . $cacheFile) ) {
+                || !$cacheFileExists
+                || ($cacheFileExists && !file_get_contents($cachePath . $cacheFile)) ) {
 
             $this->getLog()->debug('We will need to regenerate');
 
