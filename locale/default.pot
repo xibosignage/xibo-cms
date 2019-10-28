@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-10-02 16:31+0100\n"
+"POT-Creation-Date: 2019-10-28 11:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -893,7 +893,7 @@ msgstr ""
 #: cache/e2/e24848932ec486517876f206ae17f7879338a1e2085f741ce83dc0afe0f1f241.php:266
 #: cache/43/434d6f28d4a273347e28c31d31a9b8e7c843f38f6fbd07fc105e7938eee4d673.php:108
 #: cache/a9/a99557aaf8ae099eeba2cf373c8687486bc786dfd9e12f66afade9068cf78f1d.php:270
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:735
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:717
 #: cache/35/35ed21c0b17cbacc51c89fb68a3ebed6ecae01f204f538e059b379ed42b5efac.php:187
 #: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:270
 msgid "Status"
@@ -919,7 +919,7 @@ msgstr ""
 #: cache/4b/4b155cd7e2ce95756ed2602b2308356288169920e32e641fe69a6dfe771641f7.php:492
 #: cache/4b/4b155cd7e2ce95756ed2602b2308356288169920e32e641fe69a6dfe771641f7.php:528
 #: cache/a9/a99557aaf8ae099eeba2cf373c8687486bc786dfd9e12f66afade9068cf78f1d.php:68
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:89
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:90
 #: cache/91/919d36ff1b8a13f5f5db11b4da4fbf6dd855f5b407863fe349f786e9fc2d77bb.php:273
 #: cache/54/54bb74e66fa9cf6965e3226446762fafca403c88fd7eadce485994381af58d1e.php:100
 #: cache/6c/6ceb47dccf4629e5c63412a533c8cfcbfaf45362e863a5dbb98f6bd4952a3ef6.php:484
@@ -1145,6 +1145,7 @@ msgstr ""
 #: cache/5f/5f1b65dd34cea0a9bd1e947a496ba23703061c6906bfe2471bd104a3603fc43b.php:237
 #: cache/a9/a99557aaf8ae099eeba2cf373c8687486bc786dfd9e12f66afade9068cf78f1d.php:262
 #: cache/a9/a9876561eb83495adf829194e6ac52d41dfa565171ad83bc354173a3eb5ae2af.php:100
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:117
 #: cache/60/60241d294d3dfd130934e1f325649b344d7a639c7ca8c03fe6ae5993426d096d.php:261
 #: cache/60/60241d294d3dfd130934e1f325649b344d7a639c7ca8c03fe6ae5993426d096d.php:349
 #: cache/12/12338b30c1e93ebd9954649cb7471a38d37e9f89d0d0cd392db1a74d774673ad.php:260
@@ -1173,7 +1174,6 @@ msgstr ""
 #: cache/af/afdc130a87c2ca31772ef1710d15df120d3e722e65f185c7806f4abc35dc8d74.php:219
 #: cache/5f/5f1b65dd34cea0a9bd1e947a496ba23703061c6906bfe2471bd104a3603fc43b.php:219
 #: cache/a9/a99557aaf8ae099eeba2cf373c8687486bc786dfd9e12f66afade9068cf78f1d.php:217
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:160
 #: cache/35/35ed21c0b17cbacc51c89fb68a3ebed6ecae01f204f538e059b379ed42b5efac.php:120
 #: cache/d3/d3ebe46d7f7c9c13cbe8b836d7851cc4cae7079448ee3fd2df5db4ca966db152.php:257
 #: cache/d3/d3ebe46d7f7c9c13cbe8b836d7851cc4cae7079448ee3fd2df5db4ca966db152.php:269
@@ -1589,8 +1589,8 @@ msgstr ""
 #: cache/8f/8fb59d57283ca6e19337572976b192c57fcd7d964cee062ac3e5d22812ff67a5.php:127
 #: cache/62/62edb8c904bbae8d3dd1c6606f5f8712f7daa29e1975a38583581c3ded1dd913.php:91
 #: cache/04/04506212a5fbc930fa9af274d53b3ac482ab14081ef186a00aa155fcceb2321e.php:132
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:842
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:885
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:824
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:867
 #: cache/21/213b23e2fabcd541a95e949291ab3f0a49a0ccdd4b8811740b5d81540239e703.php:106
 #: cache/94/940f9b174eba68a2c87dfa9e8a936a80f86d3d38b7a548b6a45c99e687921108.php:99
 #: cache/2d/2d517b34a029f0020ffe0d50df17cc7c785d61082f81eb99fca1d22e5c24d995.php:83
@@ -5223,7 +5223,7 @@ msgstr ""
 #: cache/b7/b791947157104253b7eac661d5fc95f223eada2f3a4f369b998816d5598b4cf0.php:61
 #: cache/4d/4de1d5df164c73b5c3b11ca21197b4336c60ba0ebe7a6afd6f3815bc2386b6b7.php:161
 #: cache/43/434fc790b36a1d707ead73a09dc8e23bdee3f65b6a08106efe1ca657ce120cc5.php:113
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:931
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:913
 #: cache/f7/f735c95cac659944072b94c900425b1c1d39ad2f2debb68cda740f00a6464019.php:105
 #: cache/d3/d3ebe46d7f7c9c13cbe8b836d7851cc4cae7079448ee3fd2df5db4ca966db152.php:51
 #: cache/d3/d3ebe46d7f7c9c13cbe8b836d7851cc4cae7079448ee3fd2df5db4ca966db152.php:64
@@ -5246,7 +5246,7 @@ msgid "Design"
 msgstr ""
 
 #: cache/97/973aa6a86cd0fce18e4eb3bd96188efc40429c2daae02908f086a4dbd4818997.php:79
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:874
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:856
 #: cache/12/12338b30c1e93ebd9954649cb7471a38d37e9f89d0d0cd392db1a74d774673ad.php:157
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:262
 #: cache/9e/9e80694544f482388921194b603c015c6ae3c278b2da6ea08b3928ebb0bec828.php:275
@@ -5258,7 +5258,7 @@ msgstr ""
 #: cache/97/973aa6a86cd0fce18e4eb3bd96188efc40429c2daae02908f086a4dbd4818997.php:92
 #: cache/69/69dfd4319edf05d178dc0d7744959602360f73ff529af4da4720cf4576757197.php:88
 #: cache/b7/b791947157104253b7eac661d5fc95f223eada2f3a4f369b998816d5598b4cf0.php:84
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:710
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:692
 #: cache/12/12338b30c1e93ebd9954649cb7471a38d37e9f89d0d0cd392db1a74d774673ad.php:162
 #: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:74
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:262
@@ -5304,7 +5304,7 @@ msgstr ""
 
 #: cache/97/973aa6a86cd0fce18e4eb3bd96188efc40429c2daae02908f086a4dbd4818997.php:203
 #: cache/a9/a9876561eb83495adf829194e6ac52d41dfa565171ad83bc354173a3eb5ae2af.php:67
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:831
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:813
 #: cache/35/35ed21c0b17cbacc51c89fb68a3ebed6ecae01f204f538e059b379ed42b5efac.php:124
 #: cache/d3/d3ebe46d7f7c9c13cbe8b836d7851cc4cae7079448ee3fd2df5db4ca966db152.php:282
 #: lib/Controller/Display.php:708
@@ -5584,9 +5584,9 @@ msgstr ""
 #: cache/a9/a9876561eb83495adf829194e6ac52d41dfa565171ad83bc354173a3eb5ae2af.php:80
 #: cache/a9/a9876561eb83495adf829194e6ac52d41dfa565171ad83bc354173a3eb5ae2af.php:173
 #: cache/7f/7fdd84399ae43780f561bb04ec35c78c7e4f886f225a436f956fc8370bb69bf8.php:193
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:727
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:838
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:881
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:709
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:820
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:863
 #: cache/21/21924475789f129a247b9a042d70559d1795149891265ebccd3dbc550692e2e1.php:166
 #: cache/2d/2d517b34a029f0020ffe0d50df17cc7c785d61082f81eb99fca1d22e5c24d995.php:98
 #: cache/60/60241d294d3dfd130934e1f325649b344d7a639c7ca8c03fe6ae5993426d096d.php:325
@@ -5818,7 +5818,7 @@ msgstr ""
 
 #: cache/5b/5bcb7a5f230ccb8d7489370db66d2e310fcdb01f259c9efd07491358bd80cc67.php:84
 #: cache/70/7012d521e642eb1d1c5bc8edff9ae27d51cc9bce228400a744343d1b612a3efd.php:62
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:739
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:721
 #: cache/21/21924475789f129a247b9a042d70559d1795149891265ebccd3dbc550692e2e1.php:87
 #: cache/60/60241d294d3dfd130934e1f325649b344d7a639c7ca8c03fe6ae5993426d096d.php:170
 #: cache/46/4608b0fecbc6f1b97847e6bd56ea6e6c11a1fca0508919690338c1140776d957.php:63
@@ -5828,7 +5828,7 @@ msgid "From Date"
 msgstr ""
 
 #: cache/5b/5bcb7a5f230ccb8d7489370db66d2e310fcdb01f259c9efd07491358bd80cc67.php:94
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:743
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:725
 #: cache/21/21924475789f129a247b9a042d70559d1795149891265ebccd3dbc550692e2e1.php:109
 #: cache/46/4608b0fecbc6f1b97847e6bd56ea6e6c11a1fca0508919690338c1140776d957.php:73
 #: cache/46/4608b0fecbc6f1b97847e6bd56ea6e6c11a1fca0508919690338c1140776d957.php:134
@@ -7210,7 +7210,7 @@ msgstr ""
 #: cache/09/09996894ddd8ade6cd2542cc6c4d83486e04370e1e5a2b3e2ca15ad5441e4487.php:49
 #: cache/e9/e9aad96b9d5495fe8ca63d7a61d489baf3a3818502affc0526f55875169ee818.php:190
 #: cache/64/643ec8655e73b5c05d8594461c07a76d338529a78fe3a820432ef4cbeafe3c0c.php:84
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:244
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:226
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:137
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:298
 #: cache/9e/9e80694544f482388921194b603c015c6ae3c278b2da6ea08b3928ebb0bec828.php:150
@@ -7782,7 +7782,7 @@ msgid "Never"
 msgstr ""
 
 #: cache/af/afcb60871113c17b616acbfac1aa2891b10440fadae13f49643d3c62fa0f7d3b.php:516
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:797
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:779
 #: cache/fe/fe0ae19f4bb67d80f8245ea8542ca1791a721160aa014b42db57d7931f04d305.php:507
 msgid "Always"
 msgstr ""
@@ -7883,7 +7883,7 @@ msgstr ""
 #: cache/af/afdc130a87c2ca31772ef1710d15df120d3e722e65f185c7806f4abc35dc8d74.php:232
 #: cache/5f/5f1b65dd34cea0a9bd1e947a496ba23703061c6906bfe2471bd104a3603fc43b.php:198
 #: cache/5f/5f1b65dd34cea0a9bd1e947a496ba23703061c6906bfe2471bd104a3603fc43b.php:232
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:134
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:113
 #: cache/12/12338b30c1e93ebd9954649cb7471a38d37e9f89d0d0cd392db1a74d774673ad.php:273
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:167
 #: cache/9e/9e80694544f482388921194b603c015c6ae3c278b2da6ea08b3928ebb0bec828.php:180
@@ -8415,101 +8415,95 @@ msgid ""
 "#DA7C30, #3E9651, #CC2529, #535154, #6B4C9A, #922428, #948B3D"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:51
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:52
 msgid "Year"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:55
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:56
 msgid "Month"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:59
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:60
 msgid "Week"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:63
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:64
 msgid "Day"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:67
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:68
 msgid "Agenda"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:81
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:82
 msgid "Prev"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:85
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:86
 msgid "Today"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:99
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:100
 msgid "Add Event"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:124
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:123
 msgid "Select Displays"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:130
-#: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:205
-#: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:227
-msgid "All"
-msgstr ""
-
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:220
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:202
 msgid "Always showing"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:224
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:206
 msgid "Single Display"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:228
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:210
 msgid "Multi Display"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:232
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:755
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:214
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:737
 #: cache/12/12338b30c1e93ebd9954649cb7471a38d37e9f89d0d0cd392db1a74d774673ad.php:308
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:328
 #: cache/9e/9e80694544f482388921194b603c015c6ae3c278b2da6ea08b3928ebb0bec828.php:341
 msgid "Priority"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:236
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:218
 msgid "Recurring"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:240
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:222
 msgid "View Permission Only"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:649
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:631
 msgid "Display not selected!"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:654
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:636
 msgid "No events for the chosen Display/Display Group on the selected date!"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:659
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:641
 msgid "Data request failed!"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:715
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:697
 msgid "Overlay Layouts"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:731
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:713
 msgid "Layout Name"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:747
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:729
 msgid "Layout Duration"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:751
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:733
 #: cache/12/12338b30c1e93ebd9954649cb7471a38d37e9f89d0d0cd392db1a74d774673ad.php:293
 #: cache/ff/ff2d4d0dfa0dbdc6a0ab8e53925ef618c9f072afc2b015bb12f654d950c22e6e.php:154
 #: cache/96/9641ae67f1a359c5de74b9e91e2c0126a7a54358106f07e7c3ad792e90514f6b.php:313
@@ -8517,11 +8511,11 @@ msgstr ""
 msgid "Display Order"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:759
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:741
 msgid "Visible"
 msgstr ""
 
-#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:775
+#: cache/04/043a544b05ef5a5f42cfeb47ca5f1514b7fbed6fc702689ed470a62b56eddf75.php:757
 msgid ""
 "This layout will not be shown as there are higher priority layouts scheduled "
 "at this time"
@@ -9487,7 +9481,7 @@ msgstr ""
 #: cache/14/147f5eb91908d582b808e4e77b8e8ce0e8f1f34e64790cf5168b5a339fa10e0a.php:83
 #: cache/c2/c2cde08ba9daf161613632376e29afe63269dba73989041fcafa0ec2744cc1bb.php:195
 #: cache/5e/5e1c4f24ad64277c869070039bc426c6bf69b74dbbd6fb678b0f5c237e0b3199.php:190
-#: lib/Entity/Layout.php:1289 lib/Controller/Region.php:668
+#: lib/Entity/Layout.php:1299 lib/Controller/Region.php:668
 msgid "Empty Region"
 msgstr ""
 
@@ -10614,6 +10608,11 @@ msgstr ""
 
 #: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:61
 msgid "Import"
+msgstr ""
+
+#: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:205
+#: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:227
+msgid "All"
 msgstr ""
 
 #: cache/1c/1c78b2b8e7abb7b070ec519c8cc24394477e074cb46256eb9b0bb63ab36058b0.php:208
@@ -12937,7 +12936,7 @@ msgstr ""
 msgid "You cannot replace this media with an item of a different type"
 msgstr ""
 
-#: lib/Helper/XiboUploadHandler.php:315
+#: lib/Helper/XiboUploadHandler.php:319
 msgid ""
 "Sorry this is a corrupted upload, the file size doesn't match what we're "
 "expecting."
@@ -13879,11 +13878,11 @@ msgstr ""
 msgid "Provided Tag %s, does not have defined option values"
 msgstr ""
 
-#: lib/Entity/Region.php:353
+#: lib/Entity/Region.php:355
 msgid "The Region dimensions cannot be empty or negative"
 msgstr ""
 
-#: lib/Entity/Region.php:357 lib/Entity/Layout.php:795
+#: lib/Entity/Region.php:359 lib/Entity/Layout.php:795
 msgid "Layer must be 0 or a positive number"
 msgstr ""
 
@@ -13930,20 +13929,20 @@ msgstr ""
 msgid "You already own a Layout called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Layout.php:1322 lib/Controller/Fault.php:100
+#: lib/Entity/Layout.php:1332 lib/Controller/Fault.php:100
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
-#: lib/Entity/Layout.php:1495
+#: lib/Entity/Layout.php:1505
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:1530 lib/Entity/Layout.php:1645
+#: lib/Entity/Layout.php:1540 lib/Entity/Layout.php:1655
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:1717
+#: lib/Entity/Layout.php:1727
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -14081,11 +14080,37 @@ msgstr ""
 msgid "Repeat every must be a positive number"
 msgstr ""
 
-#: lib/Entity/Schedule.php:676
+#: lib/Entity/Schedule.php:484
+msgid ""
+" An end time is needed for an event that has its repeating interval set to "
+"Minute."
+msgstr ""
+
+#: lib/Entity/Schedule.php:492
+#, php-format
+msgid ""
+"The end time for this event can only be %s in the future because of the "
+"repeating interval being Minute."
+msgstr ""
+
+#: lib/Entity/Schedule.php:498
+msgid ""
+" An end time is needed for an event that has its repeating interval set to "
+"Hour"
+msgstr ""
+
+#: lib/Entity/Schedule.php:505
+#, php-format
+msgid ""
+"The end time for this event can only be %s in the future because of the "
+"repeating interval being Hour."
+msgstr ""
+
+#: lib/Entity/Schedule.php:707
 msgid "Cache pool not available"
 msgstr ""
 
-#: lib/Entity/Schedule.php:679
+#: lib/Entity/Schedule.php:710
 msgid "Unable to generate schedule, unknown event"
 msgstr ""
 
@@ -15521,28 +15546,28 @@ msgstr ""
 msgid "Database dump failed."
 msgstr ""
 
-#: lib/Controller/Schedule.php:277 lib/Controller/Schedule.php:288
+#: lib/Controller/Schedule.php:287 lib/Controller/Schedule.php:298
 #, php-format
 msgid "%s scheduled on %s"
 msgstr ""
 
-#: lib/Controller/Schedule.php:286 lib/Controller/Schedule.php:476
+#: lib/Controller/Schedule.php:296 lib/Controller/Schedule.php:486
 msgid "Private Item"
 msgstr ""
 
-#: lib/Controller/Schedule.php:821 lib/Controller/Schedule.php:1076
+#: lib/Controller/Schedule.php:831 lib/Controller/Schedule.php:1094
 msgid "Please enter a from date"
 msgstr ""
 
-#: lib/Controller/Schedule.php:866
+#: lib/Controller/Schedule.php:876
 msgid "Added Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1117
+#: lib/Controller/Schedule.php:1135
 msgid "Edited Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1180
+#: lib/Controller/Schedule.php:1198
 msgid "Deleted Event"
 msgstr ""
 
