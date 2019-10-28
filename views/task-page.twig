@@ -126,7 +126,11 @@
                         var icon = "";
                         var title = "";
                         if (data === 1) {
-                            title = "PID: " + row.pid + " (" + moment(row.lastRunStartDt, "X").tz(timezone).format(jsDateFormat) + ")";
+                            if (moment(row.lastRunStartDt, "X").tz) {
+                                title = "PID: " + row.pid + " (" + moment(row.lastRunStartDt, "X").tz(timezone).format(jsDateFormat) + ")";
+                            } else {
+                                title = "PID: " + row.pid + " (" + moment(row.lastRunStartDt, "X").format(jsDateFormat) + ")";
+                            }
                             icon = "fa-cogs";
                         }
                         else if (data === 3) {
