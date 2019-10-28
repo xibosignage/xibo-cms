@@ -140,7 +140,9 @@
                         var eventTitle = (event.event.isAlways == 1) ? event.title : "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
                         %>
                         <div class="day-highlight dh-<%= event['class'] %>">
-                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                               data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                               class="event-item">
                                 <%= eventTitle %></a>
                         </div>
                         <% }); %>
@@ -154,7 +156,9 @@
                         <% _.each(before_time, function(event){ %>
                         <div class="day-highlight dh-<%= event['class'] %>">
                             <span class="cal-hours pull-right"><%= event.end_hour %></span>
-                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                               data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                               class="event-item">
                                 <%= event.title %></a>
                         </div>
                         <% }); %>
@@ -181,6 +185,7 @@
                     >
                     <span class="cal-hours"><%= event.start_hour %> - <%= event.end_hour %></span>
                     <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= event['class'] %>" class="event-item">
                         <%= event.title %></a>
                     </div>
@@ -194,6 +199,7 @@
                     <div class="day-highlight dh-<%= event['class'] %>">
                         <span class="cal-hours"><%= event.start_hour %></span>
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                           data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= event['class'] %>" class="event-item">
                             <%= event.title %></a>
                     </div>
@@ -265,6 +271,7 @@
                     <li>
                         <span class="pull-left event <%= event['class'] %>"></span>&nbsp;
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                           data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= eventClass %>" class="event-item">
                             <span class="fa <%= eventIcon %>"></span> <%= title %></a>
                     </li>
@@ -354,7 +361,9 @@
                     eventClass = "event-inverse";
                     }
                     %>
-                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= eventClass %>"
+                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                       data-event-class="<%= eventClass %>"
                        class="pull-left event <%= eventClass %>" data-toggle="tooltip"
                        title="<%= event.title %>"><span class="fa <%= eventIcon %>"></span></a>
                     <% }); %>
@@ -437,8 +446,8 @@
             %>
             <div class="cal-row-fluid">
                 <div class="cal-cell<%= event.days%> cal-offset<%= event.start_day %> day-highlight dh-<%= event['class'] %>">
-                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>"
-                       data-event-id="<%= event.id %>"
+                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
                        class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"></span> <%= title %></a>
                 </div>
@@ -475,7 +484,9 @@
             <small class="cal-events-num badge badge-important pull-left"><%= events.length %></small>
             <div class="hide events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
                 <% _.each(events, function(event) { %>
-                <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= event['class'] %>"
+                <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                   data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                   data-event-class="<%= event['class'] %>"
                    class="pull-left event <%= event['class'] %> event<%= event.id %>" data-toggle="tooltip"
                    title="<%= event.title %>"></a>
                 <% }); %>
@@ -730,7 +741,7 @@
             
             <!-- Schedule -->
             <span>
-                <a href="<%= schedule.link %>" class="XiboFormButton">
+                <a href="<%= schedule.link %>" class="XiboFormButton" data-event-start="<%= schedule.fromDt %>" data-event-end="<%= schedule.toDt %>">
                     {% endraw %}
                         {% trans "Schedule" %}
                     {% raw %}
@@ -800,6 +811,9 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+		// We are using this variable in xibo-calendar.js
+        var scheduleRecurrenceDeleteUrl = "{{ urlFor("schedule.recurrence.delete.form") }}";
+
         // Equals helper for the templates below
         Handlebars.registerHelper('eq', function(v1, v2, opts) {
             if (v1 === v2) {

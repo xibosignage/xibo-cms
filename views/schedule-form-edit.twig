@@ -32,7 +32,7 @@
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
+            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" data-event-id="{{ event.eventId }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
                   data-daypart-message="{{ dayPartMessage }}"
                   data-not-daypart-message="{{ notDayPartMessage }}"
                   data-add-url="{{ urlFor("schedule.add") }}"
@@ -133,6 +133,15 @@
                             {% set title %}{% trans "Synchronise this event?" %}{% endset %}
                             {% set helpText %}{% trans "When selected, all selected players will attempt to synchronise the output (Supported on Android player only)" %}{% endset %}
                             {{ forms.checkbox("syncEvent", title, event.syncEvent, helpText, "sync-schedule-control") }}
+                        {% endif %}
+
+                        {% if recurringEvent %}
+                            <div class="well text-info text-center form-error">
+                                <p>This is a recurring event</p><p>
+                                    Starting from <span class="text-warning"><b>{{ eventStart|date(jsDateFormat) }} </b></span>to<span class="text-warning"><b> {{ eventEnd|date(jsDateFormat) }}</b></span>
+                                </p>
+                                <div id="recurringInfo"></div>
+                            </div>
                         {% endif %}
 
                     </div>

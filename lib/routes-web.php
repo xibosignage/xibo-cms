@@ -66,6 +66,7 @@ $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('sche
 $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('schedule.add.form');
 $app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
+$app->get('/schedule/form/deleterecurrence/:id', '\Xibo\Controller\Schedule:deleteRecurrenceForm')->name('schedule.recurrence.delete.form');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 $app->get('/schedulenow/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedulenow.now.form');
 // Special routes for searching inside the schedule page

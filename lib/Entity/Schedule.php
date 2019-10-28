@@ -32,6 +32,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -281,6 +282,9 @@ class Schedule implements \JsonSerializable
     /** @var  ScheduleReminderFactory */
     private $scheduleReminderFactory;
 
+    /** @var  ScheduleExclusionFactory */
+    private $scheduleExclusionFactory;
+
     /**
      * @var UserFactory
      */
@@ -297,8 +301,9 @@ class Schedule implements \JsonSerializable
      * @param DayPartFactory $dayPartFactory
      * @param UserFactory $userFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
+     * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
@@ -308,6 +313,7 @@ class Schedule implements \JsonSerializable
         $this->dayPartFactory = $dayPartFactory;
         $this->userFactory = $userFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
+        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
     }
@@ -562,7 +568,7 @@ class Schedule implements \JsonSerializable
             if ($distance > $twelveHoursInSeconds) {
                 // Recurrence range cannot be more than 12 hours
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($twelveHoursInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Minute.', $exceedLimit)), 'recurrenceRange');
+                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Minute.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
             }
 
         } elseif ($this->recurrenceType == 'Hour') {
@@ -575,7 +581,7 @@ class Schedule implements \JsonSerializable
             if ($distance > $oneWeekInSeconds) {
                 // Recurrence range cannot be more than 1 week
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Hour.', $exceedLimit)), 'recurrenceRange');
+                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Hour.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
             }
         }
     }
@@ -661,6 +667,11 @@ class Schedule implements \JsonSerializable
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
 
+        // Delete schedule exclusions
+        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+        foreach ($scheduleExclusions as $exclusion) {
+            $exclusion->delete();
+        }
 
         // Delete schedule reminders
         if ($this->scheduleReminderFactory !== null) {
@@ -840,6 +851,20 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('Filtering Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT) . '. fromTimeStamp: ' . $fromTimeStamp . ', toTimeStamp: ' . $toTimeStamp);
 
             foreach ($this->scheduleEvents as $scheduleEvent) {
+
+                // Find the excluded recurring events
+                $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+
+                $exclude = false;
+                foreach ($scheduleExclusions as $k => $exclusion) {
+                    if ($scheduleEvent->fromDt == $exclusion->fromDt &&
+                        $scheduleEvent->toDt == $exclusion->toDt) {
+                        $exclude = true;
+                    }
+                }
+
+                if ($exclude)
+                    continue;
 
                 if (in_array($scheduleEvent, $events))
                     continue;

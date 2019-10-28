@@ -650,7 +650,7 @@ var setupScheduleForm = function(dialog) {
     });
 
     // Bind to the dialog submit
-    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
+    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm").submit(function(e) {
         e.preventDefault();
 
         var form = $(this);
@@ -682,10 +682,29 @@ var setupScheduleForm = function(dialog) {
 
         $(dialog).find('.modal-footer').prepend($button);
     }
+
+    var scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    // Add a button for deleting single recurring event
+    if (scheduleEditForm.length > 0) {
+        $button = $("<button>").addClass("btn btn-primary").attr("id", "scheduleRecurringDeleteButton").html(translations.deleteRecurring).on("click", function() {
+            deleteRecurringScheduledEvent(scheduleEditForm.data('eventId'), scheduleEditForm.data('eventStart'), scheduleEditForm.data('eventEnd'))
+        });
+
+        $(dialog).find('#recurringInfo').prepend($button);
+    }
     
     configReminderFields($(dialog));
 
 };
+
+var deleteRecurringScheduledEvent = function(id, eventStart, eventEnd) {
+    var url = scheduleRecurrenceDeleteUrl.replace(":id", id);
+    var data = {
+        eventStart: eventStart,
+        eventEnd: eventEnd,
+    };
+    XiboSwapDialog(url, data);
+}
 
 var beforeSubmitScheduleForm = function(form) {
 

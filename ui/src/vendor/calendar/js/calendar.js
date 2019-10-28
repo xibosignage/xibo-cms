@@ -665,6 +665,8 @@ if(!String.prototype.formatNum) {
 	Calendar.prototype._month = function(month) {
 		this._loadTemplate('year-month');
 
+		console.log('yeah-month');
+
 		var t = {cal: this};
 		var newmonth = month + 1;
 		t.data_day = this.options.position.start.getFullYear() + '-' + (newmonth < 10 ? '0' + newmonth : newmonth) + '-' + '01';
@@ -872,8 +874,8 @@ if(!String.prototype.formatNum) {
 	    }
 	    
 	    // Schedule
-		t.schedule = {link: targetEvent.link};
-		
+		t.schedule = {link: targetEvent.link, fromDt: targetEvent.fromDt * 1000, toDt: targetEvent.toDt * 1000};
+
 	    // Display groups
 		t.displayGroups = [];
 
@@ -1223,7 +1225,17 @@ if(!String.prototype.formatNum) {
 			event.preventDefault();
 			event.stopPropagation();
 
-			XiboFormRender($(this));
+            var eventStart = $(this).data("eventStart");
+            var eventEnd = $(this).data("eventEnd");
+            if (eventStart !== undefined && eventEnd !== undefined ) {
+                var data = {
+                    eventStart: eventStart,
+                    eventEnd: eventEnd,
+                };
+                XiboFormRender($(this), data);
+            } else {
+                XiboFormRender($(this));
+            }
 		});
 	};
 
