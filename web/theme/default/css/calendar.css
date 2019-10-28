@@ -19,7 +19,7 @@
  */
 
  .xibo-calendar-controls {
- 	margin-left: 20px;
+ 	margin-left: 10px;
  }
  
  
@@ -52,6 +52,17 @@
 
  .day-highlight {
  	overflow: hidden;
+ }
+
+ .day-event.day-event-small {
+    border-color: orange !important;
+    background-color: orange;
+    min-height: 20px;
+    opacity: 0.8;
+ }
+
+ .day-event.day-event-small:hover {
+    opacity: 1;
  }
  
 .agenda-table {
