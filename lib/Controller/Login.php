@@ -540,7 +540,7 @@ class Login extends Base
 
             $tfa = new TwoFactorAuth($issuer);
 
-            $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'));
+            $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'), 2);
         } elseif (isset($_POST['recoveryCode'])) {
             // get the array of recovery codes, go through them and try to match provided code
             $codes = $user->twoFactorRecoveryCodes;
