@@ -665,8 +665,6 @@ if(!String.prototype.formatNum) {
 	Calendar.prototype._month = function(month) {
 		this._loadTemplate('year-month');
 
-		console.log('yeah-month');
-
 		var t = {cal: this};
 		var newmonth = month + 1;
 		t.data_day = this.options.position.start.getFullYear() + '-' + (newmonth < 10 ? '0' + newmonth : newmonth) + '-' + '01';

@@ -499,11 +499,11 @@ class Schedule implements \JsonSerializable
             . ', CampaignId: ' . $this->campaignId
             . ', CommandId: ' . $this->commandId);
 
-        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT
-            || $this->eventTypeId == Schedule::$OVERLAY_EVENT
-            || $this->eventTypeId == Schedule::$INTERRUPT_EVENT
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
+            $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
+            $this->eventTypeId == Schedule::$OVERLAY_EVENT ||
+            $this->eventTypeId == Schedule::$INTERRUPT_EVENT
         ) {
-        //if ($this->eventTypeId == Schedule::$LAYOUT_EVENT || $this->eventTypeId == Schedule::$CAMPAIGN_EVENT || $this->eventTypeId == Schedule::$OVERLAY_EVENT || $this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId))
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
@@ -860,11 +860,13 @@ class Schedule implements \JsonSerializable
                     if ($scheduleEvent->fromDt == $exclusion->fromDt &&
                         $scheduleEvent->toDt == $exclusion->toDt) {
                         $exclude = true;
+                        continue;
                     }
                 }
 
-                if ($exclude)
+                if ($exclude) {
                     continue;
+                }
 
                 if (in_array($scheduleEvent, $events))
                     continue;

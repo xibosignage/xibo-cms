@@ -682,6 +682,9 @@ var setupScheduleForm = function(dialog) {
 
         $(dialog).find('.modal-footer').prepend($button);
     }
+    
+    // Popover
+    $(dialog).find('[data-toggle="popover"]').popover();
 
     var scheduleEditForm = $(dialog).find("#scheduleEditForm");
     // Add a button for deleting single recurring event
@@ -713,6 +716,8 @@ var beforeSubmitScheduleForm = function(form) {
     checkboxes.each(function (index) {
         $(this).parent().find('[type="hidden"]').val($(this).is(":checked") ? "1" : "0");
     });
+
+    $('[data-toggle="popover"]').popover();
 
     form.submit();
 

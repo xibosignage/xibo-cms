@@ -35,6 +35,12 @@ class ScheduleExclusion implements \JsonSerializable
     use EntityTrait;
 
     /**
+     * @SWG\Property(description="Excluded Schedule ID")
+     * @var int
+     */
+    public $scheduleExclusionId;
+
+    /**
      * @SWG\Property(description="The eventId that this Excluded Schedule applies to")
      * @var int
      */
@@ -77,8 +83,8 @@ class ScheduleExclusion implements \JsonSerializable
 
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `scheduleexclusions` WHERE `eventId` = :eventId', [
-            'eventId' => $this->eventId
+        $this->getStore()->update('DELETE FROM `scheduleexclusions` WHERE `scheduleExclusionId` = :scheduleExclusionId', [
+            'scheduleExclusionId' => $this->scheduleExclusionId
         ]);
     }
 }

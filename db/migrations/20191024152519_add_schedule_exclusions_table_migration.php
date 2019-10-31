@@ -31,7 +31,7 @@ class AddScheduleExclusionsTableMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $table = $this->table('scheduleexclusions');
+        $table = $this->table('scheduleexclusions', ['id' => 'scheduleExclusionId']);
         $table
             ->addColumn('eventId', 'integer')
             ->addColumn('fromDt', 'integer')

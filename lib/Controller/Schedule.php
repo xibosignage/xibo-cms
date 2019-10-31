@@ -989,8 +989,8 @@ class Schedule extends Base
     function editForm($eventId)
     {
         // Recurring event start/end
-        $eventStart = $this->getSanitizer()->getString('eventStart', 1000) / 1000;
-        $eventEnd = $this->getSanitizer()->getString('eventEnd', 1000) / 1000;
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000) / 1000;
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000) / 1000;
 
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
@@ -1039,14 +1039,15 @@ class Schedule extends Base
     function deleteRecurrenceForm($eventId)
     {
         // Recurring event start/end
-        $eventStart = $this->getSanitizer()->getString('eventStart', 1000);
-        $eventEnd = $this->getSanitizer()->getString('eventEnd', 1000);
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
 
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'schedule-recurrence-form-delete';
         $this->getState()->setData([
@@ -1089,8 +1090,8 @@ class Schedule extends Base
             throw new AccessDeniedException();
 
         // Recurring event start/end
-        $eventStart = $this->getSanitizer()->getString('eventStart', 1000);
-        $eventEnd = $this->getSanitizer()->getString('eventEnd', 1000);
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
         $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
 
         $this->getLog()->debug('Create a schedule exclusion record');
