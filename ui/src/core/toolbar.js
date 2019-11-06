@@ -3,6 +3,8 @@
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarMediaSearchTemplate = require('../templates/toolbar-media-search.hbs');
+const ToolbarMediaQueueTemplate = require('../templates/toolbar-media-queue.hbs');
+const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-queue-element.hbs');
 
 const toolsList = [
     {
@@ -51,8 +53,9 @@ const defaultMenuItems = [
         itemName: toolbarTrans.menuItems.libraryName,
         itemIcon: 'photo-video',
         itemTitle: toolbarTrans.menuItems.libraryTitle,
-        page: 0,
-        content: [],
+        selectedTab: 0,
+        search: true,
+        content: [], // Tabs and content
         state: ''
     },
     {
@@ -60,7 +63,6 @@ const defaultMenuItems = [
         itemName: toolbarTrans.menuItems.toolsName,
         itemIcon: 'tools',
         itemTitle: toolbarTrans.menuItems.toolsTitle,
-        page: 0,
         tool: true,
         content: [],
         state: ''
@@ -70,11 +72,11 @@ const defaultMenuItems = [
         itemName: toolbarTrans.menuItems.widgetsName,
         itemTitle: toolbarTrans.menuItems.widgetsTitle,
         itemIcon: 'th-large',
-        page: 0,
         content: [],
         paging: true,
         state: '',
-        oneClickAdd: ['playlist']
+        oneClickAdd: ['playlist'],
+        favouriteModules: []
     }
 ];
 
@@ -94,7 +96,9 @@ let Toolbar = function(container, customActions = {}, showOptions = false) {
 
     this.menuItems = defaultMenuItems;
 
-    this.libraryTabs = [];
+    this.libraryMenuIndex = 0;
+
+    this.widgetMenuIndex = 2;
 
     this.contentDimentions = {
         width: 90 // In percentage
@@ -107,6 +111,12 @@ let Toolbar = function(container, customActions = {}, showOptions = false) {
 
     // Flag to mark if the toolbar has been rendered at least one time
     this.firstRun = true;
+
+    // Use queue to add media
+    this.useQueue = true;
+
+    // Media queue
+    this.selectedQueue = {};
 
     // Options menu
     this.showOptions = showOptions;
@@ -124,6 +134,8 @@ let Toolbar = function(container, customActions = {}, showOptions = false) {
             }
         }
     }, 250));
+
+    this.customModuleList = modulesList;
 };
 
 /**
@@ -147,8 +159,13 @@ Toolbar.prototype.loadPrefs = function() {
             let loadedData = JSON.parse(res.data.value);
 
             // Populate the toolbar with the returned data
-            self.libraryTabs = (loadedData.libraryTabs != undefined) ? loadedData.libraryTabs : [];
+            self.menuItems[self.libraryMenuIndex].content = (loadedData.libraryContent != undefined) ? loadedData.libraryContent : [];
+            self.menuItems[self.libraryMenuIndex].searchPosition = loadedData.searchPosition;
+
             self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
+
+            // Load favourites
+            self.menuItems[self.widgetMenuIndex].favouriteModules = (loadedData.favouriteModules != undefined) ? loadedData.favouriteModules : [];
 
             // Tooltip options
             app.common.displayTooltips = (loadedData.displayTooltips == 1);
@@ -195,26 +212,25 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     const app = getXiboApp();
 
     // Save only some of the tab menu data
-    let libraryTabsToSave = [];
+    let libraryContent = [];
+    let searchPosition;
     let openedMenu = this.openedMenu;
     let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
+    let favouriteModules = [];
 
     if(clearPrefs) {
-        libraryTabsToSave = {};
+        libraryContent = [];
         openedMenu = -1;
         displayTooltips = 1;
     } else {
-        for(let index = 0;index < this.libraryTabs.length;index++) {
+        // Get library content
+        libraryContent = this.menuItems[this.libraryMenuIndex].content;
 
-            // Make a copy of the current element
-            let elementCopy = Object.assign({}, this.libraryTabs[index]);
+        // Get library window position
+        searchPosition = this.menuItems[this.libraryMenuIndex].searchPosition;
 
-            // Remove content and set page to 0
-            elementCopy.content = [];
-            elementCopy.page = 0;
-
-            libraryTabsToSave.push(elementCopy);
-        }
+        // Save favourite
+        favouriteModules = this.menuItems[this.widgetMenuIndex].favouriteModules;
     }
 
     let dataToSave = {
@@ -222,9 +238,11 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
             {
                 option: 'toolbar',
                 value: JSON.stringify({
-                    libraryTabs: libraryTabsToSave,
+                    libraryContent: libraryContent,
+                    searchPosition: searchPosition,
                     openedMenu: openedMenu,
-                    displayTooltips: displayTooltips
+                    displayTooltips: displayTooltips,
+                    favouriteModules: favouriteModules
                 })
             }
         ]
@@ -275,6 +293,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
  * Render toolbar
  */
 Toolbar.prototype.render = function() {
+
     // Load preferences when the toolbar is rendered for the first time
     if(this.firstRun) {
         // Mark toolbar as loaded
@@ -314,12 +333,10 @@ Toolbar.prototype.render = function() {
         }
     }
 
-    // Compile layout template with data
+    // Compile toolbar template with data
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
         menuItems: this.menuItems,
-        libraryTabs: this.libraryTabs,
-        tabsCount: (this.libraryTabs.length > 0),
         displayTooltips: app.common.displayTooltips,
         trashActive: trashBinActive,
         undoActive: undoActive,
@@ -327,8 +344,9 @@ Toolbar.prototype.render = function() {
         showOptions: self.showOptions
     });
 
-    // Append layout html to the main div
+    // Append toolbar html to the main div
     this.DOMObject.html(html);
+
     // If read only mode is enabled
     if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
         // Hide edit mode fields
@@ -346,37 +364,29 @@ Toolbar.prototype.render = function() {
 
             const toolbar = self;
             const index = i;
+            const $scrollArea = toolbar.DOMObject.find('#content-' + index + ' .toolbar-pane-content-container');
+            const scrollStepSpeed = 200;
 
             this.DOMObject.find('#btn-menu-' + index).click(function() {
                 toolbar.openMenu(index);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
-                toolbar.menuItems[index].page -= 1;
-                toolbar.loadContent(index);
+                $scrollArea.scrollLeft($scrollArea.scrollLeft() - scrollStepSpeed);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-right-' + index).click(function() {
-                toolbar.menuItems[index].page += 1;
-                toolbar.loadContent(index);
+                $scrollArea.scrollLeft($scrollArea.scrollLeft() + scrollStepSpeed);
             });
 
+            this.DOMObject.find('#content-' + index + ' #pag-btn-top-left-' + index).click(function() {
+                $scrollArea.scrollLeft(0);
+            });
+
+            this.DOMObject.find('#content-' + index + ' #pag-btn-top-right-' + index).click(function() {
+                $scrollArea.scrollLeft(9999);
+            });
         }
-
-        // Handle tabs
-        for(let i = 0;i < this.libraryTabs.length;i++) {
-            console.log('TODO: tab system');
-        }
-
-        // Create new tab
-        this.DOMObject.find('#btn-menu-new-tab').click(function() {
-            self.createNewTab();
-        });
-
-        // Close all tabs
-        this.DOMObject.find('#deleteAllTabs').click(function() {
-            self.deleteAllTabs();
-        });
 
         // Delete object
         this.DOMObject.find('#trashContainer.active').click(
@@ -415,6 +425,7 @@ Toolbar.prototype.render = function() {
             
             $(this).draggable({
                 cursor: 'crosshair',
+                appendTo: $(this).parents('.toolbar-pane:first'),
                 handle: '.drag-area',
                 cursorAt: {
                     top: ($(this).height() + ($(this).outerWidth(true) - $(this).outerWidth()) / 2) / 2,
@@ -454,14 +465,18 @@ Toolbar.prototype.render = function() {
             self.selectCard($(e.currentTarget).parent());
         });
 
+        // Select card clicking in the Add button
+        this.DOMObject.find('.toolbar-card:not(.card-selected) .btn-favourite').click((e) => {
+            this.toggleFavourite(e.currentTarget);
+        });
+
+        // If library meny is selected, open media content window
+        if(this.openedMenu != -1 && this.menuItems[this.openedMenu].name === 'library') {
+            this.mediaContentCreateWindow(this.openedMenu);
+        }
+
         // Initialize tooltips
         app.common.reloadTooltips(this.DOMObject);
-
-        // Load media content
-        if(this.openedMenu >= this.fixedTabs) {
-            // Load tab search media content
-            this.mediaContentCreate(this.openedMenu);
-        }
     }
 
     // Options menu
@@ -491,6 +506,9 @@ Toolbar.prototype.render = function() {
             });
         }
     }
+
+    // Save default tolbar nav z-index
+    this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
 };
 
 /**
@@ -505,33 +523,42 @@ Toolbar.prototype.loadContent = function(menu = -1) {
 
     if(this.menuItems[menu].name === 'tools') {
         this.menuItems[menu].content = toolsList;
-    } else if(this.menuItems[menu].name === 'library') {
-        console.log('Open library window');
     } else if(this.menuItems[menu].name === 'widgets') {
+        // Calculate scroll region width
+        var totalWidth = this.DOMObject.find('.navbar-collapse').outerWidth();
+        var widthMenuLeft = this.DOMObject.find('.toolbar-menu-left').width();
+        var widthMenuRight = this.DOMObject.find('.toolbar-menu-right').width();
 
-        console.log('Widgets Render!!!');
+        // Content width minus the left and right button areas, and the paging buttons width (20px * 4)
+        this.menuItems[menu].containerWidth = totalWidth - widthMenuLeft - widthMenuRight - 80;
 
-        // Calculate pagination
-        //const pagination = this.calculatePagination(menu);
+        // Sort by favourites
+        var favouriteModules = [];
+        var otherModules = [];
 
-        // Enable/Disable page down pagination button according to the page to display
-        //this.menuItems[menu].pagBtnLeftDisabled = (pagination.start == 0) ? 'disabled' : '';
-
-        this.menuItems[menu].content = modulesList;
-
-
-        for(let index = 0;index < this.menuItems[menu].content.length;index++) {
-            const element = this.menuItems[menu].content[index];
+        for(let index = 0;index < this.customModuleList.length;index++) {
+            const element = this.customModuleList[index];
 
             element.maxSize = libraryUpload.maxSize;
             element.maxSizeMessage = libraryUpload.maxSizeMessage;
 
-            // Hide element if it's outside the "to display" region or is a hideOn this app
-            //element.hideElement = (index < pagination.start || index >= (pagination.start + pagination.length)) || (element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1);
+            if($.inArray(element.type, this.menuItems[menu].favouriteModules) > -1) {
+                element.favourited = true;
+                favouriteModules.push(element);
+            } else {
+                element.favourited = false;
+                otherModules.push(element);
+            }
         }
 
-        // Enable/Disable page up pagination button according to the page to display and total elements
-        //this.menuItems[menu].pagBtnRightDisabled = ((pagination.start + pagination.length) >= this.menuItems[menu].content.length) ? 'disabled' : '';
+        // Add elements to menu content
+        this.menuItems[menu].content = favouriteModules.concat(otherModules);
+    }
+
+    // Check if content needs to be hidden on this editor
+    for(let index = 0;index < this.menuItems[menu].content.length;index++) {
+        const element = this.menuItems[menu].content[index];
+        element.hideElement = element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1;
     }
 
     // Save user preferences and render
@@ -637,6 +664,7 @@ Toolbar.prototype.selectMedia = function(media, data) {
     this.deselectCardsAndDropZones();
 
     if(!alreadySelected) {
+
         // Select row in the table
         $(media).addClass('media-selected');
         $(media).parent('.toolbar-pane-content').addClass('selected');
@@ -681,53 +709,15 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
     this.selectedCard = {};
 };
 
-//TODO: vvvv Library window!!! vvvv
-
-/**
- * Open tab
- * @param {number} menu - menu to open index, -1 by default and to toggle
- * @param {bool} forceOpen - force tab open ( even if opened before )
- */
-Toolbar.prototype.openTab = function(menu = -1, forceOpen = false) {
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    // Open specific menu
-    if(menu != -1) {
-        let active = (forceOpen) ? false : (this.menuItems[menu].state == 'active');
-
-        // Close all menus
-        for(let index = this.menuItems.length - 1;index >= 0;index--) {
-            this.menuItems[index].state = '';
-        }
-
-        if(active) {
-            this.openedMenu = -1;
-        } else {
-            this.openedMenu = menu;
-
-            // If menu is the default/widget/tools, load content
-            if(menu > -1) {
-                this.loadContent(menu);
-                return; // To avoid double save and render
-            }
-        }
-    }
-
-    // Save user preferences
-    this.savePrefs();
-
-    // Render toolbar
-    this.render();
-};
-
 /**
  * Create new tab
  */
-Toolbar.prototype.createNewTab = function() {
+Toolbar.prototype.createNewTab = function(menu) {
 
     let moduleListFiltered = [];
     let usersListFiltered = [];
+
+    const self = this;
 
     // Filter module list to create the types for the filter
     modulesList.forEach(element => {
@@ -746,11 +736,8 @@ Toolbar.prototype.createNewTab = function() {
         });
     });
 
-    this.menuItems.push({
-        name: 'search',
-        search: true,
-        page: 0,
-        query: '',
+    this.menuItems[menu].content.push({
+        name: toolbarTrans.tabName.replace('%tagId%', self.menuItems[menu].content.length),
         filters: {
             name: {
                 name: toolbarTrans.searchFilters.name,
@@ -767,12 +754,13 @@ Toolbar.prototype.createNewTab = function() {
             owner: {
                 name: toolbarTrans.searchFilters.owner,
                 values: usersListFiltered
-        },
-        },
-        content: []
+            },
+        }
     });
 
-    this.openMenu(this.menuItems.length - 1);
+    this.menuItems[menu].selectedTab = this.menuItems[menu].content.length - 1;
+
+    self.savePrefs();
 };
 
 /**
@@ -826,12 +814,15 @@ Toolbar.prototype.deleteAllTabs = function() {
  * @param {string} type - Type of media
  */
 Toolbar.prototype.openNewTabAndSearch = function(type) {
+    // Open library library window
+    this.openMenu(this.libraryMenuIndex);
+    
     // Create a new tab
-    this.createNewTab();
+    this.createNewTab(this.libraryMenuIndex);
 
     // Switch the selected tab's Type select box to the type we want
-    this.menuItems[this.openedMenu].filters.type.value = type;
-    this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type-' + this.openedMenu).val(type);
+    this.menuItems[this.libraryMenuIndex].content[this.menuItems[this.libraryMenuIndex].selectedTab].filters.type.value = type;
+    //this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type-' + this.openedMenu).val(type);
 
     // Search/Load Content
     this.loadContent(this.openedMenu);
@@ -840,19 +831,23 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
 /**
  * Media form callback
  */
-Toolbar.prototype.mediaContentCreate = function(menu) {
-
+Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     const self = this;
     const app = getXiboApp();
 
     // Get search window Jquery object
-    const $searchContent = self.DOMObject.find('#content-' + menu + '.search-content');
+    const $libraryWindowContent = self.DOMObject.find('#content-' + menu + '.library-content');
+
+    if(this.menuItems[menu].content.length === 0) {
+        this.createNewTab(menu);
+    }
 
     // Render template
     const html = ToolbarMediaSearchTemplate({
         menuIndex: menu,
         menuObj: this.menuItems[menu],
-        trans: toolbarTrans
+        trans: toolbarTrans,
+        closeTabs: this.menuItems[menu].content.length > 1
     });
 
     // Append template to the search main div
@@ -860,6 +855,139 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
 
     // Set paging max to 5
     $.fn.DataTable.ext.pager.numbers_length = 5;
+    
+    // Make search window to be draggable and resizable
+    $libraryWindowContent
+        .appendTo('.editor-bottom-bar > nav')
+        .draggable({
+            containment: 'window',
+            scroll: false,
+            handle: '.drag-handle'
+        })
+        .resizable({
+            minWidth: 640
+        }).off('dragstart dragstart resizestart resizestop dragstop').on('dragstart',
+            function() {
+                // Remove right sticky css
+                $(this).css('right', 'auto');
+        }).on('resizestart',
+            function() {
+                self.tablePositionUpdate($libraryWindowContent);
+            }
+        ).on('resizestop dragstop',
+            function(event, ui) {
+                // Save window positioning
+                self.menuItems[menu].searchPosition = {
+                    width: $(this).width(),
+                    height: $(this).height(),
+                    top: $(this).position().top,
+                    left: $(this).position().left
+                };
+
+                self.savePrefs();
+
+                self.tablePositionUpdate($libraryWindowContent);
+            }
+        );
+
+    // If we have set positions, set them on load
+    if(self.menuItems[menu].searchPosition != undefined) {
+        const position = self.menuItems[menu].searchPosition;
+
+        if(position.left + position.width > $(window).width()){
+            position.left = $(window).width() - position.width;
+        }
+
+        if(position.top + position.height > $(window).height()) {
+            position.top = $(window).height() - position.height;
+        }
+
+        $libraryWindowContent.width(position.width);
+        $libraryWindowContent.height(position.height);
+        $libraryWindowContent.css({top: position.top});
+        $libraryWindowContent.css({left: position.left});
+    }
+
+    // Search content window buttons handling
+    $libraryWindowContent.find('.btn-window-close').off().click(function() {
+        self.openMenu($(this).data('menu'));
+    });
+
+    $libraryWindowContent.find('.btn-window-new-tab').off().click(function() {
+        // Get menu index
+        const menu = $(this).data('menu');
+
+        // Create new tab
+        self.createNewTab(menu);
+
+        // Populate selected tab
+        self.mediaContentCreateWindow(menu);
+    });
+
+    $libraryWindowContent.find('.media-search-tab:not(.active):not(.media-tab-close)').off().click(function(ev) {
+        ev.stopPropagation();
+
+        // Get tab index
+        const tab = $(this).data('tab');
+
+        // Change selected tav
+        self.menuItems[menu].selectedTab = tab;
+
+        // Populate selected tab
+        self.mediaContentCreateWindow(menu);
+    });
+
+    $libraryWindowContent.find('.media-tab-close').off().click(function(ev) {
+        ev.stopPropagation();
+
+        // Get tab index
+        const tabToDelete = $(this).parent().data('tab');
+        let selectedTab = self.menuItems[menu].selectedTab;
+
+        // Select another tab
+        if(selectedTab >= tabToDelete && selectedTab > 0) {
+            selectedTab--;
+        }
+
+        // Delete tab and content
+        self.menuItems[menu].content.splice(tabToDelete, 1);
+        
+        // Select new tab
+        self.menuItems[menu].selectedTab = selectedTab;
+
+        // Update tab names
+        self.updateTabNames(menu);
+
+         // Populate selected tab
+        self.mediaContentCreateWindow(menu);
+    });
+
+    // Populate selected tab
+    self.mediaContentPopulateTable(menu);
+
+    // Create media queue if in backup
+    if(!$.isEmptyObject(self.selectedQueue)){
+        self.createQueue(menu);
+    }
+
+    // Initialize tooltips
+    app.common.reloadTooltips(self.DOMObject);
+
+    // Deselect previous selections
+    self.deselectCardsAndDropZones();
+};
+
+/**
+ * Media content populate table
+ */
+Toolbar.prototype.mediaContentPopulateTable = function(menu) {
+    const self = this;
+    const tabIndex = self.menuItems[0].selectedTab;
+    const tabObj = self.menuItems[menu].content[self.menuItems[0].selectedTab];
+
+    // Destroy previous table
+    self.DOMObject.find('#media-table-' + menu).DataTable().destroy();
+    self.DOMObject.find('#media-table-' + menu).empty();
 
     var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
         "language": dataTablesLanguage,
@@ -873,10 +1001,20 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         ajax: {
             url: librarySearchUrl + '?assignable=1&retired=0',
             "data": function(d) {
-                $.extend(d, self.DOMObject.find('#media-search-container-' + menu).find("form").serializeObject());
+                $.extend(d, self.DOMObject.find('#media-search-container-' + menu + ' #media-search-form-' + tabIndex).serializeObject());
             }
         },
         "columns": [
+            {
+                "sortable": false,
+                "data": function(data, type, row, meta) {
+                    if(type !== "display")
+                        return "";
+
+                    // Create a click-able span
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                }
+            },
             {"data": "mediaId"},
             {"data": "name"},
             {"data": "mediaType"},
@@ -899,16 +1037,6 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
                         return row.mediaId;
                     }
                 }
-            },
-            {
-                "sortable": false,
-                "data": function(data, type, row, meta) {
-                    if(type !== "display")
-                        return "";
-
-                    // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
-                }
             }
         ]
     });
@@ -920,99 +1048,58 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         self.DOMObject.find(".assignItem").click(function() {
             // Get the row that this is in.
             var data = mediaTable.row($(this).closest("tr")).data();
-            self.selectMedia($(this).closest('tr'), data);
+
+            if(self.useQueue) {
+                self.addToQueue(menu, data);
+            } else {
+                self.selectMedia($(this).closest('tr'), data);
+            }
         });
 
-        self.tablePositionUpdate($searchContent);
+        self.updateTabNames(menu);
+
+        self.tablePositionUpdate(self.DOMObject.find('#content-' + menu + '.library-content'));
     });
+
     mediaTable.on('processing.dt', dataTableProcessing);
 
     // Refresh the table results
-    var filterRefresh = _.debounce(function() {
+    var filterRefresh = function(mediaTable, tabObj) {
+
         // Save filter options
-        self.menuItems[menu].filters.name.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
-        self.menuItems[menu].filters.tag.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
-        self.menuItems[menu].filters.type.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-type-' + menu).val();
-        self.menuItems[menu].filters.owner.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-owner-' + menu).val();
+        tabObj.filters.name.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-name-' + tabIndex).val();
+        tabObj.filters.tag.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-tag-' + tabIndex).val();
+        tabObj.filters.type.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-type-' + tabIndex).val();
+        tabObj.filters.owner.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-owner-' + tabIndex).val();
 
         self.savePrefs();
+
+        self.updateTabNames(menu);
 
         // Deselect previous selections
         self.deselectCardsAndDropZones();
 
         // Reload table
         mediaTable.ajax.reload();
-    }, 500);
+    };
 
     // Prevent filter form submit and bind the change event to reload the table
-    self.DOMObject.find('#media-search-form-' + menu).on('submit', function(e) {
+    self.DOMObject.find('#media-search-form-' + tabIndex).on('submit', function(e) {
         e.preventDefault();
         return false;
     });
 
     // Bind seach action to refresh the results
-    self.DOMObject.find('#media-search-form-' + menu + ' select, input[type="text"]').change(filterRefresh);
-    self.DOMObject.find('#media-search-form-' + menu + ' input[type="text"]').on('input', filterRefresh);
+    self.DOMObject.find('#media-search-form-' + tabIndex + ' select, input[type="text"]').change(_.debounce(function() {
+        filterRefresh(mediaTable, tabObj);
+    }, 500));
 
-    // Make search window to be draggable and resizable
-    $searchContent
-        .appendTo('.editor-toolbar > nav')
-        .draggable({
-            containment: 'window',
-            scroll: false,
-            handle: '.drag-handle'
-        })
-        .resizable({
-            minWidth: 640
-        }).on('resizestart',
-            function() {
-                self.tablePositionUpdate($searchContent);
-            }
-        ).on('resizestop dragstop',
-            function(event, ui) {
-
-                // Save window positioning
-                self.menuItems[menu].searchPosition = {
-                    width: $(this).width(),
-                    height: $(this).height(),
-                    top: $(this).position().top,
-                    left: $(this).position().left
-                };
-                self.savePrefs();
-
-                self.tablePositionUpdate($searchContent);
-            }
-        );
-
-    // If we have set positions, set them on load
-    if(self.menuItems[menu].searchPosition != undefined) {
-        const position = self.menuItems[menu].searchPosition;
-
-        if(position.left + position.width > $(window).width()){
-            position.left = $(window).width() - position.width;
-        }
-
-        if(position.top + position.height > $(window).height()) {
-            position.top = $(window).height() - position.height;
-        }
-
-        $searchContent.width(position.width);
-        $searchContent.height(position.height);
-        $searchContent.css({top: position.top});
-        $searchContent.css({left: position.left});
-    }
-
-    // Search content window buttons handling
-    $searchContent.find('.btn-window-close').click(function() {
-        self.deleteTab($(this).data('menu'));
-    });
-
-    $searchContent.find('.btn-window-minimize').click(function() {
-        self.openMenu($(this).data('menu'));
-    });
+    self.DOMObject.find('#media-search-form-' + tabIndex + ' input[type="text"]').on('input', _.debounce(function() {
+        filterRefresh(mediaTable, tabObj);
+    }, 500));
 
     // Initialize tagsinput
-    self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput();
+    self.DOMObject.find('#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').tagsinput();
 
     self.DOMObject.find('#media-table-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
 
@@ -1020,26 +1107,22 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         var tagText = $(this).text();
 
         // Add text to form
-        self.DOMObject.find('#media-search-form-' + menu + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
+        self.DOMObject.find('#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
     });
-
-    // Initialize tooltips
-    app.common.reloadTooltips(self.DOMObject);
-
-    // Deselect previous selections
-    self.deselectCardsAndDropZones();
 };
+
 
 /**
  * Update tab height
  */
 Toolbar.prototype.tablePositionUpdate = function(container) {
-    
     // Calculate table container height
-    const tableContainerHeight = container.find('.form-inline').height() + container.find('.dataTables_wrapper').height();
+    const tableContainerHeight = container.find('.media-search-controls').height() + container.find('.media-search-form:not(.hidden)').height() + container.find('.dataTables_wrapper').height();
 
     // Set resizable min height
-    container.resizable('option', 'minHeight', tableContainerHeight);
+    if(container.resizable('instance') != undefined) {
+        container.resizable('option', 'minHeight', tableContainerHeight);
+    }
 
     // Fix height if bigger than the min
     if(container.height() < tableContainerHeight) {
@@ -1050,30 +1133,256 @@ Toolbar.prototype.tablePositionUpdate = function(container) {
 /**
  * Update tab name
  */
-Toolbar.prototype.updateTabNames = function() {
+Toolbar.prototype.updateTabNames = function(menu) {
+    for(let tab = 0;tab < this.menuItems[menu].content.length;tab++) {
 
-    for(let menu = this.fixedTabs;menu < this.menuItems.length;menu++) {
-
-        const customFilter = this.menuItems[menu].filters;
+        const tabContent = this.menuItems[menu].content[tab];
+        const customFilter = tabContent.filters;
 
         // Change tab name to reflect the search query
         if(customFilter.name.value != '' && customFilter.name.value != undefined) {
-            this.menuItems[menu].itemName = '"' + customFilter.name.value + '"';
+            tabContent.name = '"' + customFilter.name.value + '"';
         } else {
-            this.menuItems[menu].itemName = toolbarTrans.tabName.replace('%tagId%', menu);
+            tabContent.name = toolbarTrans.tabName.replace('%tagId%', tab);
         }
 
         if(customFilter.tag.value != '' && customFilter.tag.value != undefined) {
-            this.menuItems[menu].itemName += ' {' + customFilter.tag.value + '} ';
+            tabContent.name += ' {' + customFilter.tag.value + '} ';
         }
 
         if(customFilter.type.value != '' && customFilter.type.value != undefined) {
-            this.menuItems[menu].itemName += ' [' + customFilter.type.value + '] ';
+            tabContent.name += ' [' + customFilter.type.value + '] ';
         }
 
         // Change 
-        this.DOMObject.find('span.tab-name-' + menu).html(this.menuItems[menu].itemName);
+        this.DOMObject.find('#content-' + menu + ' #tab-name-' + tab).html(tabContent.name);
     }
+};
+
+/**
+ * Mark/Unmark as favourite
+ */
+Toolbar.prototype.toggleFavourite = function(target) {
+
+    let favouriteModulesArray = this.menuItems[this.widgetMenuIndex].favouriteModules;
+    let markAsFav = false;
+
+    const $card = $(target).parent('.toolbar-card[data-type="module"]');
+    const cardType = $card.data().subType;
+    const positionInArray = $.inArray(cardType, favouriteModulesArray);
+
+    // Add/remove from the fav array
+    if(positionInArray > -1) {
+        // Remove from favourites
+        favouriteModulesArray.splice(positionInArray, 1);
+    } else {
+        // Add to favourites
+        markAsFav = true;
+        favouriteModulesArray.push(cardType);
+    }
+
+    // Show notification
+    toastr.info((markAsFav) ? toolbarTrans.addedToFavourites : toolbarTrans.removedFromFavourites);
+
+    // Save user preferences
+    this.savePrefs();
+
+    // Reload toolbar widget content
+    this.loadContent(2);
+};
+
+/**
+ * Queue
+ */
+Toolbar.prototype.createQueue = function(menu, target = null) {
+    const self = this;
+
+    let html = '';
+
+    if(this.selectedQueue != undefined && !$.isEmptyObject(this.selectedQueue)) {
+        html = $(this.selectedQueue)[0].outerHTML;
+        this.selectedQueue = {};
+    } else {
+        html = ToolbarMediaQueueTemplate({
+            trans: toolbarTrans
+        });
+    }
+    // Append the queue to the library search window
+    this.DOMObject.find('#content-' + menu).append(html);
+
+    // Handle destroy queue button
+    this.DOMObject.find('#content-' + menu + ' .btn-queue-close').click(function() {
+        self.destroyQueue(menu);
+    });
+    
+    // Update queue position
+    this.updateQueue(menu);
+
+    // Add element to queue
+    if(target){
+        this.addToQueue(menu, target);
+    }
+    
+    // Make queue sortable
+    this.DOMObject.find('#content-' + menu + ' .media-add-queue-list').sortable();
+
+    // Handle buttons
+    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
+    $mediaQueue.find('.media-add-queue-buttons').on('click', '.btn.active', function() {
+
+        const buttonType = $(this).data('type');
+
+        if(buttonType == 'toRegion' || buttonType == 'toPlaylist') {
+            self.queueAddToRegionPlaylist(menu);
+        } else if(buttonType == 'selectRegion') {
+            self.queueEnableToAddMode(menu);
+        } else if(buttonType == 'cancel') {
+            self.queueEnableToAddMode(menu, false);
+        }
+    });
+
+    // Handle remove queue button
+    $mediaQueue.on('click', '.queue-element-remove', function() {
+        self.removeFromQueue(menu, $(this));
+    });
+};
+
+Toolbar.prototype.updateQueue = function(menu) {
+    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
+    const app = getXiboApp();
+
+    // Position queue
+    $mediaQueue.css('left', - $mediaQueue.outerWidth()).show();
+
+    // Update queue button status
+    $mediaQueue.find('.media-add-queue-buttons .btn').removeClass('active'); // Remove active from all buttons
+    
+    if($mediaQueue.data('toAdd')) {
+        $mediaQueue.find('.btn-queue-close').hide();
+        $mediaQueue.find('.media-add-queue-buttons button[data-type="cancel"]').addClass('active'); 
+    } else {
+        $mediaQueue.find('.btn-queue-close').show();
+
+        if(app.mainObjectType == 'playlist') {
+            $mediaQueue.find('.media-add-queue-buttons button[data-type="toPlaylist"]').addClass('active');  
+        } else if(app.selectedObject.type === 'region') {
+            $mediaQueue.find('.media-add-queue-buttons button[data-type="toRegion"]').addClass('active');  
+        } else {
+            $mediaQueue.find('.media-add-queue-buttons button[data-type="selectRegion"]').addClass('active'); 
+        }
+    }
+
+    // Save backup
+    this.selectedQueue = $mediaQueue;
+};
+
+Toolbar.prototype.destroyQueue = function(menu) {
+    // Destroy queue element
+    $(this.DOMObject.find('.media-add-queue')).remove();
+
+    // Clear media backup
+    this.selectedQueue = {};
+};
+
+Toolbar.prototype.addToQueue = function(menu, target) {
+    const self = this;
+
+    if(this.DOMObject.find('.media-add-queue').length == 0) {
+        this.createQueue(menu, target);
+    } else {
+        // Create a new element with a template
+        const newElementHTML = ToolbarMediaQueueElementTemplate({
+            target: target,
+            trans: toolbarTrans
+        });
+
+        // Add data to the new element and create a jquery object
+        const $newElement = $(newElementHTML).data(target);
+
+        // Add new element to the list
+        this.DOMObject.find('#content-' + menu + ' .media-add-queue-list').append(
+            $newElement
+        );
+
+        // Update queue position
+        this.updateQueue(menu);
+    }
+};
+
+Toolbar.prototype.removeFromQueue = function(menu, target) {
+    const $mediaList = $(target).parents('.media-add-queue-list');
+    
+    // Remove element
+    $(target).parent().remove();
+
+    // If the list is empty, remove it
+    if($mediaList.find('div').length == 0) {
+        this.destroyQueue(menu);
+    } else {
+        // Update queue position
+        this.updateQueue(menu);
+    }
+};
+
+
+Toolbar.prototype.queueEnableToAddMode = function(menu, enable = true) {
+    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
+    const self = this;
+
+    // Mark queue as add enabled/disabled
+    $mediaQueue.data('toAdd', enable);
+
+    // Show/hide table container
+    $mediaQueue.parent().find('.media-search-container').toggle(!enable);
+
+    // Enable/disable drag
+    $mediaQueue.parent().draggable(enable ? 'disable' : 'enable');
+
+    if(enable) {
+        // Show designer overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            self.queueEnableToAddMode(menu, false);
+        });
+
+        // Set droppable areas as active
+        $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
+
+        // Fix for overlay and select z-indexes
+        this.DOMObject.find('nav').css('z-index', $('.loading-overlay').css('z-index'));
+    } else {
+        self.deselectCardsAndDropZones();
+
+        // Fix for overlay and select z-indexes
+        this.DOMObject.find('nav').css('z-index', this.defaultZIndex);
+    }
+
+    // Update queue position
+    this.updateQueue(menu);
+};
+
+Toolbar.prototype.queueAddToRegionPlaylist = function(menu) {
+    const app = getXiboApp();
+
+    let mediaQueueArray = [];
+
+    this.selectedQueue.find('.queue-element').each(function() {
+        mediaQueueArray.push($(this).attr('id'));
+    });
+
+    let playlistId = null;
+
+    // Get playlist id
+    if(app.selectedObject.type == 'region') {
+        playlistId = app.getElementByTypeAndId('region', app.selectedObject.id).playlists.playlistId;
+
+        // Add media queue to playlist
+        app.addMediaToPlaylist(playlistId, mediaQueueArray);
+    } else if(app.mainObjectType == 'playlist' && app.playlist != undefined) {
+        app.playlist.addMedia(mediaQueueArray);
+    }
+
+    // Destroy queue
+    this.destroyQueue(menu);
 };
 
 module.exports = Toolbar;

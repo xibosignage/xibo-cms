@@ -320,6 +320,28 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             this.dropItemAdd(obj, card);
         }
 
+    } if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+        if(obj.data('type') == 'region') {
+            const droppableId = $(obj).attr('id');
+            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+
+            let mediaQueueArray = [];
+
+            // Get queue elements
+            this.toolbar.selectedQueue.find('.queue-element').each(function() {
+                mediaQueueArray.push($(this).attr('id'));
+            });
+
+            // Add media queue to playlist
+            this.addMediaToPlaylist(playlistId, mediaQueueArray);
+
+            // Destroy queue
+            this.toolbar.destroyQueue(this.toolbar.openedMenu);
+        }
+
+        // Deselect cards and drop zones
+        this.toolbar.deselectCardsAndDropZones();
+
     } else {
         
         // Get object properties from the DOM ( or set to layout if not defined )
@@ -460,7 +482,7 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 // If there was a opened menu in the toolbar, open that tab
                 if(lD.toolbar.openedMenu != -1) {
-                    lD.toolbar.openTab(lD.toolbar.openedMenu, true);
+                    lD.toolbar.openMenu(lD.toolbar.openedMenu, true);
                 }
 
                 // Check layout status
@@ -1073,7 +1095,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
     const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
-    
+
     if(draggableType == 'media') { // Adding media from search tab to a region
 
         // Get playlist Id
@@ -1275,19 +1297,27 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         });
     }  
 };
+
 /**
  * Add media from library to a playlist
  * @param {number} playlistId 
- * @param {number} mediaId 
+ * @param {Array.<number>} media
  */
-lD.addMediaToPlaylist = function(playlistId, mediaId) {
-
+lD.addMediaToPlaylist = function(playlistId, media) {
     // Get media Id
-    let mediaToAdd = {
-        media: [
-            mediaId
-        ]
-    };
+    let mediaToAdd = {};
+
+    if($.isArray(media)) {
+        mediaToAdd = {
+            media: media
+        };
+    } else {
+        mediaToAdd = {
+            media: [
+                media
+            ]
+        };
+    }
 
     // Check if library duration options exists and add it to the query
     if(lD.useLibraryDuration != undefined) {

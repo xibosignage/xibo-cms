@@ -114,61 +114,7 @@ Playlist.prototype.addElement = function(droppable, draggable) {
 
     // Add dragged item to region
     if(draggableType == 'media') { // Adding media from search tab to a region
-
-        // Get media Id
-        let mediaToAdd = {
-            media: [
-                $(draggable).data('mediaId')
-            ]
-        };
-
-        // Check if library duration options exists and add it to the query
-        if(pE.useLibraryDuration != undefined) {
-            mediaToAdd.useDuration = (pE.useLibraryDuration == "1");
-        }
-
-        // Show loading screen in the dropzone
-        pE.showLocalLoadingScreen();
-
-        pE.common.showLoadingScreen();
-
-        // Create change to be uploaded
-        pE.manager.addChange(
-            'addMedia',
-            'playlist', // targetType 
-            playlistId,  // targetId
-            null,  // oldValues
-            mediaToAdd, // newValues
-            {
-                updateTargetId: true,
-                updateTargetType: 'widget'
-            }
-        ).then((res) => { // Success
-
-            pE.common.hideLoadingScreen();
-
-            // The new selected object
-            pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
-
-            // Behavior if successful
-            toastr.success(res.message);
-            pE.reloadData();
-        }).catch((error) => { // Fail/error
-
-            pE.common.hideLoadingScreen();
-
-            // Show error returned or custom message to the user
-            let errorMessage = '';
-
-            if(typeof error == 'string') {
-                errorMessage = error;
-            } else {
-                errorMessage = error.errorThrown;
-            }
-
-            // Show toast message
-            toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
-        });
+        this.addMedia($(draggable).data('mediaId'));
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -288,6 +234,78 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             widget.editPermissions();
         }
     }
+};
+
+/**
+ * Add media to the playlist
+ * @param {Array.<number>} media
+ */
+Playlist.prototype.addMedia = function(media) {
+    // Get playlist Id
+    const playlistId = this.playlistId;
+
+    // Get media Id
+    let mediaToAdd = {};
+
+    if($.isArray(media)) {
+        mediaToAdd = {
+            media: media
+        };
+    } else {
+        mediaToAdd = {
+            media: [
+                media
+            ]
+        };
+    }
+
+    // Check if library duration options exists and add it to the query
+    if(pE.useLibraryDuration != undefined) {
+        mediaToAdd.useDuration = (pE.useLibraryDuration == "1");
+    }
+
+    // Show loading screen in the dropzone
+    pE.showLocalLoadingScreen();
+
+    pE.common.showLoadingScreen();
+
+    // Create change to be uploaded
+    pE.manager.addChange(
+        'addMedia',
+        'playlist', // targetType 
+        playlistId,  // targetId
+        null,  // oldValues
+        mediaToAdd, // newValues
+        {
+            updateTargetId: true,
+            updateTargetType: 'widget'
+        }
+    ).then((res) => { // Success
+
+        pE.common.hideLoadingScreen();
+
+        // The new selected object
+        pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
+
+        // Behavior if successful
+        toastr.success(res.message);
+        pE.reloadData();
+    }).catch((error) => { // Fail/error
+
+        pE.common.hideLoadingScreen();
+
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if(typeof error == 'string') {
+            errorMessage = error;
+        } else {
+            errorMessage = error.errorThrown;
+        }
+
+        // Show toast message
+        toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
+    });
 };
 
 /**

@@ -444,7 +444,7 @@ pE.refreshDesigner = function() {
 
     // If there was a opened menu in the toolbar, open that tab
     if(this.toolbar.openedMenu != -1) {
-        this.toolbar.openTab(this.toolbar.openedMenu, true);
+        this.toolbar.openMenu(this.toolbar.openedMenu, true);
     }
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
@@ -474,7 +474,7 @@ pE.refreshDesigner = function() {
         
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
-            this.toolbar.openTab(1, true);
+            this.toolbar.openMenu(2, true);
         }
     }
 

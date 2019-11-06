@@ -86,7 +86,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     overflow-x: hidden;
     overflow-y: auto;
     padding-top: 10px;
-    height: calc(100vh - 140px);
+    height: calc(100vh - 100px - #{$toolbar-height});
 }
 
 #layout-editor .container-designer {
