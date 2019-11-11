@@ -118,7 +118,11 @@ class RemoteDataSetFetchTask implements TaskInterface
                             $dataSet->saveLastClear($runTime);
                         }
 
-                        $this->dataSetFactory->processResults($dataSet, $results);
+                        if ($dataSet->sourceId === 1) {
+                            $this->dataSetFactory->processResults($dataSet, $results);
+                        } else {
+                            $this->dataSetFactory->processCsvEntries($dataSet, $results);
+                        }
 
                         // notify here
                         $dataSet->notify();
