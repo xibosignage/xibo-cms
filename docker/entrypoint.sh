@@ -203,7 +203,11 @@ then
     /bin/chmod g+s /usr/sbin/ssmtp
 
     mkdir -p /var/www/cms/library/temp
-    chown apache.apache -R /var/www/cms
+    chown apache.apache /var/www/cms/library
+    chown apache.apache /var/www/cms/library/temp
+    chown apache.apache /var/www/cms/custom
+    chown apache.apache /var/www/cms/custom/settings-custom.php
+    chown apache.apache /var/www/cms/ca-certs
 
     # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident
