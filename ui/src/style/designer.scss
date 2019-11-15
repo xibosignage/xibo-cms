@@ -85,7 +85,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 #layout-editor-main {
     overflow-x: hidden;
     overflow-y: auto;
-    padding-top: 10px;
+    padding-top: 8px;
     height: calc(100vh - 100px - #{$toolbar-height});
 }
 
@@ -159,293 +159,335 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 /* Layout timeline */
 #layout-editor #layout-timeline {
     background: $designer-primary-color;
-    padding: 5px;
-    min-height: 25vh;
+    padding: 4px;
     overflow-y: auto;
     @include border-radius(4px);
-    border: 2px solid $designer-module-border-color;
-}
 
-/* width */
-#layout-editor #layout-timeline #regions-container::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-/* Track */
-#layout-editor #layout-timeline #regions-container::-webkit-scrollbar-track {
-    @include box-shadow(inset 0 0 5px $xibo-color-gray);
-}
- 
-/* Handle */
-#layout-editor #layout-timeline #regions-container::-webkit-scrollbar-thumb {
-    background: $designer-secondary-color;
-    @include border-radius(4px);
-}
-
-/* Handle on hover */
-#layout-editor #layout-timeline #regions-container::-webkit-scrollbar-thumb:hover {
-    background: lighten($designer-secondary-color, 20%);
-}
-
-#layout-editor #layout-timeline #regions-container::-webkit-scrollbar-corner {
-    @include box-shadow(inset 0 0 5px $xibo-color-gray);
-}
-
-#layout-editor #layout-timeline #regions-container {
-    overflow: auto;
-    min-height: 18vh;
-    max-height: 24vh;
-}
-
-#layout-editor #layout-timeline #controls-container .label {
-    font-size: 13px;
-    margin-bottom: 4px;
-
-    &.label-custom {
-        width: 45px;
-        background-color: $designer-secondary-color;
+    /* Custom scrollbar */
+    /* width */
+    #regions-container::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
     }
 
-    &#zoom {
-        width: 80px;
+    /* Track */
+    #regions-container::-webkit-scrollbar-track {
+        @include box-shadow(inset 0 0 5px $xibo-color-gray);
+    }
+    
+    /* Handle */
+    #regions-container::-webkit-scrollbar-thumb {
+        background: $designer-secondary-color;
+        @include border-radius(4px);
     }
 
-    &.label-time {
-        background: $xibo-color-white;
-        color: $xibo-color-black;
+    /* Handle on hover */
+    #regions-container::-webkit-scrollbar-thumb:hover {
+        background: lighten($designer-secondary-color, 20%);
+    }
+
+    #regions-container::-webkit-scrollbar-corner {
+        @include box-shadow(inset 0 0 5px $xibo-color-gray);
+    }
+
+    /* Region Container */
+    $timeline-region-info-width: 160px;
+    $timeline-region-preview-width: 60px;
+    $timeline-timeruler-height: 24px;
+    $timeline-region-height: 48px;
+
+    #regions-container {
+        overflow: auto;
+        min-height: 14vh;
+        width: calc(100% - #{$timeline-region-info-width});
+    }
+
+    #timeruler {
+        width: 100%;
+        height: $timeline-timeruler-height;
+        background-color: $xibo-color-black;
         overflow: hidden;
-        text-overflow: ellipsis;
         white-space: nowrap;
-        width: 60px;
+        font-size: 0;
+        opacity: 0.8;
+
+        .step-margin {
+            display: inline-block;
+            height: 10px;
+        }
+
+        .step {
+            display: inline-block;
+            border-left: $xibo-color-white 2px solid;
+            height: 10px;
+            vertical-align: top;
+
+            &.labelled {
+                color: $xibo-color-white;
+                font-size: 12px;
+                height: 18px;
+                padding-left: 2px;
+                line-height: 34px;
+            }
+        }
     }
-}
 
-#layout-editor #layout-timeline #controls-container .layout-info {
-    color: $xibo-color-white;
-    position: absolute; 
-
-    &.left {
-        left: 80px;
-    }
-
-    &.right {
-        right: 80px;
-    }
-
-    .layout-info-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 140px;
+    #regions-info {
         float: left;
+        width: $timeline-region-info-width;
+        margin-top: $timeline-timeruler-height;
+
+        .designer-region-info {
+            background-color: $xibo-color-dark-blue;
+            color: $xibo-color-white;
+            height: $timeline-region-height;
+            margin: 4px 0;
+            font-size: 14px;
+
+            &.selected-region {
+                background-color: darken($color: $xibo-color-orange, $amount: 20%) !important;
+            }
+
+            .region-preview {
+                float: left;
+                width: $timeline-region-preview-width;
+                height: $timeline-region-height;
+                overflow: hidden;
+
+                .region-preview-background {
+                    position: relative;
+                    background-color: $xibo-color-really-black;
+                }
+
+                .region-preview-element {
+                    position: relative;
+                    background-color: $xibo-color-dark-orange;
+                }
+            }
+
+            .region-controls {
+                display: inline-block;
+                padding: 2px 4px;
+                line-height: 22px;
+                width: calc(#{$timeline-region-info-width} - #{$timeline-region-preview-width});
+
+                .region-label {
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+            }
+        }
     }
 
-    #layout-info-status {
-        float: left;
-        margin-right: 6px;
+    /* Controls Container */
+    #timeline-controls {
+        position: absolute;
+        font-size: 16px;
+        line-height: 20px;
+        width: $timeline-region-info-width;
+        padding: 2px 4px;
+        background-color: $xibo-color-dark-blue;
     }
 
-    .popover {
-        color: $xibo-color-black;
-        min-width: 250px;
-        
-        .popover-title {
-            padding: 4px;
+    /* Timeline buttons */
+    .designer-region-info, #timeline-controls {
+        a {
+            cursor: pointer;
+            text-decoration: none;
+            color: $xibo-color-white;
+
+            &:hover {
+                color: darken($color: $xibo-color-white, $amount: 20%);
+            }
+
+            &[disabled] {
+                color: darken($color: $xibo-color-white, $amount: 50%);
+            }
+        }
+
+        span {
+            color: $xibo-color-white;
+            font-size: 14px;
+            line-height: 17px;
+        }
+    }
+    
+    /* Designer Region */
+    .designer-region {
+        background: $region-main-bg-color;
+        height: 48px;
+        padding: 2px;
+        margin: 4px 0;
+        @include border-radius(4px);
+        display: box;
+        display: -webkit-box;
+        display: -moz-box;
+
+        &:not(.editable) {
+            @include box-shadow(inset 0 0 6px 4px $xibo-color-gray);
+        }
+
+        .message {
+            color: $xibo-color-white;
             font-weight: bold;
+            padding: 10px;
+        }
+    }
+
+    #timeline-container {
+        float: left;
+        width: 100%;
+    }
+
+    .label-region {
+        height: 40px;
+        padding: 10px 2px 0 0;
+        text-align: right;
+        font-weight: bold;
+        margin-bottom: 4px;
+        color: $region-main-fg-color;
+    }
+
+    /* Designer Widget */
+    .designer-widget {
+        position: relative;
+        background: $timeline-widget-bg-color;
+        color: $timeline-widget-fg-color;
+        font-weight: bold;
+        height: 100%;
+        border: 1px solid $timeline-widget-border-color;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 0 4px;
+        @include border-radius(4px);
+
+        .widgetLabel {
+            float: left;
+            height: inherit;
+            color: $designer-module-bg-color;
+            min-width: 20px;
+            height: 100%;
             text-align: center;
+            opacity: 0.85;
+            padding: 0 4px;
         }
 
-        .popover-content {
-            padding: 0;  
+        .widgetName {
+            font-style: italic;
+            color: $timeline-widget-fg-color;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 90%;
+            padding-left: 4px;
         }
 
-        .popover-content .status-message {
-            padding: 6px;
-            margin: 0px -1px 3px -1px;
-            background: $layout-status-popover-message-bg-color;
+        .widgetProperties {
+            float: right;
+        }
+
+        .widget-transition-container {
+            position: absolute;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .widget-transition {
+            cursor: pointer;
+            position: absolute;
+            width: 100%;
+            top: 70%;
+            height: 30%;
+            opacity: 0.3;
+            font-size: 9px;
             color: $xibo-color-white;
         }
 
-        .popover-content .status-title {
-            padding: 4px; 
-            font-weight: bold;
+        .widget-transition:hover {
+            top: 50%;
+            height: 50%;
+            opacity: 0.6;
+            font-size: 13px;
+        }
+
+        .widget-transition-container.transition-in {
+            left: 0;
+            border-right: $timeline-transition-in-fg-color solid 2px;
+        }
+
+        .widget-transition-container.transition-out {
+            right: 0;
+            border-left: $timeline-transition-out-fg-color solid 2px;
+        }
+
+        .widget-transition.transition-in {
+            background: $timeline-transition-in-bg-color;
+            border-radius: 80% 0 0 0;
+            text-align: right;
+            padding-right: 5px;
+        }
+
+        .widget-transition.transition-out {
+            background: $timeline-transition-out-bg-color;
+            border-radius: 0 80% 0 0;
+            text-align: left;
+            padding-left: 5px;
+        }
+
+        i.editProperty {
+            float: right;
+            cursor: pointer;
+            padding: 2px;
+            color: $widget-main-fg-color;
+        }
+
+        i.editProperty:hover {
+            color: lighten($widget-main-fg-color, 20%);
         }
     }
-}
-
-#layout-editor #layout-timeline .designer-region {
-    background: $region-main-bg-color;
-    height: 48px;
-    padding: 3px;
-    margin: 4px 0;
-    @include border-radius(4px);
-    display: box;
-    display: -webkit-box;
-    display: -moz-box;
-}
-
-#layout-editor #layout-timeline .designer-region:not(.editable) {
-    @include box-shadow(inset 0 0 6px 4px $xibo-color-gray);
-}
-
-#layout-editor #layout-timeline .designer-region .message {
-    color: $xibo-color-white;
-    font-weight: bold;
-    padding: 10px;
-}
-
-#layout-editor #layout-timeline #timeline-container {
-    float: left;
-    width: 100%;
-}
-
-#layout-editor #layout-timeline .label-region {
-    height: 40px;
-    padding: 10px 2px 0 0;
-    text-align: right;
-    font-weight: bold;
-    margin-bottom: 4px;
-    color: $region-main-fg-color;
-}
-
-#layout-editor #layout-timeline .designer-widget {
-    position: relative;
-    background: $timeline-widget-bg-color;
-    color: $timeline-widget-fg-color;
-    font-weight: bold;
-    height: 100%;
-    border: 1px solid $timeline-widget-border-color;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 0 4px;
-    @include border-radius(4px);
-}
-
-#layout-editor #layout-timeline .designer-widget .widgetLabel {
-    float: left;
-    height: inherit;
-    color: $designer-module-bg-color;
-    min-width: 20px;
-    height: 100%;
-    text-align: center;
-    opacity: 0.85;
-    padding: 0 4px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widgetName {
-    font-style: italic;
-    color: $timeline-widget-fg-color;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 90%;
-    padding-left: 4px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widgetProperties {
-     float: right;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition-container {
-    position: absolute;
-    height: 100%;
-    z-index: 1;
-    opacity: 0.8;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition {
-    cursor: pointer;
-    position: absolute;
-    width: 100%;
-    top: 70%;
-    height: 30%;
-    opacity: 0.3;
-    font-size: 9px;
-    color: $xibo-color-white;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition:hover {
-    top: 50%;
-    height: 50%;
-    opacity: 0.6;
-    font-size: 13px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition-container.transition-in {
-    left: 0;
-    border-right: $timeline-transition-in-fg-color solid 2px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition-container.transition-out {
-    right: 0;
-    border-left: $timeline-transition-out-fg-color solid 2px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition.transition-in {
-    background: $timeline-transition-in-bg-color;
-    border-radius: 80% 0 0 0;
-    text-align: right;
-    padding-right: 5px;
-}
-
-#layout-editor #layout-timeline .designer-widget .widget-transition.transition-out {
-    background: $timeline-transition-out-bg-color;
-    border-radius: 0 80% 0 0;
-    text-align: left;
-    padding-left: 5px;
-}
-
-#layout-editor #layout-timeline .designer-widget i.editProperty {
-    float: right;
-    cursor: pointer;
-    padding: 2px;
-    color: $widget-main-fg-color;
-}
-
-#layout-editor #layout-timeline .designer-widget i.editProperty:hover {
-    color: lighten($widget-main-fg-color, 20%);
-}
-
-#layout-editor #layout-timeline .designer-widget-ghost {
-    @include set-transparent-color(background, $timeline-ghost-bg-color, 0.6);
-    color: $timeline-ghost-fg-color;
-    font-weight: bold;
-    display: flex;
-    height: 100%;
-}
-
-#layout-editor #layout-timeline .designer-widget-ghost .widgetName,
-#layout-editor #layout-timeline .designer-widget-ghost .widgetSubType {
-    color: $timeline-ghost-fg-color;
-}
-
-#layout-editor #layout-timeline .designer-widget-sortable-highlight {
-    background: $xibo-color-yellow;
-    float: left;
-    width: 20px;
-    height: 100%;
-    border: none;
-}
 
 
-#layout-editor #layout-timeline .ghost-padding {
-    @include set-transparent-color(background, $xibo-color-black, 0.2);
-    float: left;
-    height: 100%;
-}
+    /* Designer Widget Ghost */
+    .designer-widget-ghost {
+        @include set-transparent-color(background, $timeline-ghost-bg-color, 0.6);
+        color: $timeline-ghost-fg-color;
+        font-weight: bold;
+        display: flex;
+        height: 100%;
 
-#layout-editor #layout-timeline .widgetExtension {
-    color: $timeline-ghost-fg-color;
-    padding: 0 4px;
-    font-weight: bold;
-    @include set-transparent-color(background, $xibo-color-white, 0.5);
-    height: 80%;
-    margin-top: 0.25em;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+        .widgetName, .widgetSubType {
+            color: $timeline-ghost-fg-color;
+        }    
+    }
+
+    .designer-widget-sortable-highlight {
+        background: $xibo-color-yellow;
+        float: left;
+        width: 20px;
+        height: 100%;
+        border: none;
+    }
+
+    .ghost-padding {
+        @include set-transparent-color(background, $xibo-color-black, 0.2);
+        float: left;
+        height: 100%;
+    }
+
+    .widgetExtension {
+        color: $timeline-ghost-fg-color;
+        padding: 0 4px;
+        font-weight: bold;
+        @include set-transparent-color(background, $xibo-color-white, 0.5);
+        height: 80%;
+        margin-top: 0.25em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }
 
 /* Layout Viewer */
@@ -457,6 +499,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 #layout-editor #layout-viewer {
     min-height: 45vh;
+    overflow: hidden;
 
     #inline-editor-save {
         display: none;

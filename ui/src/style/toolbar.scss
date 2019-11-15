@@ -22,7 +22,7 @@ $toolbar-green: darken($xibo-color-green, 20%);
 $toolbar-orange: $xibo-color-orange;
 $toolbar-light-green: $xibo-color-green;
 $toolbar-dark-blue: $xibo-color-primary;
-$toolbar-card-color: $xibo-color-primary;
+$toolbar-card-color: $xibo-color-secondary;
 $toolbar-menu-content-bg-color: $xibo-color-white;
 $toolbar-disabled-color: $xibo-color-gray;
 
@@ -156,7 +156,7 @@ ul.sidebar {
     .btn-window-close {
         position: absolute;
         top: 2px;
-        right: 0px;
+        right: 1px;
     }
 
     .btn-window-new-tab {
@@ -475,6 +475,7 @@ ul.sidebar {
             margin: $toolbar-widgets-card-margin;
             width: $toolbar-widgets-card-width;
             height: $toolbar-widgets-card-height;
+            background: $xibo-color-primary;
             font-size: 13px;
 
             .card-title {
@@ -610,7 +611,7 @@ ul.sidebar {
 }
 
 .editor-toolbar .navbar-submenu a:hover {
-    color: $toolbar-card-color;
+    color: $xibo-color-primary;
 }
 
 .editor-toolbar .navbar-submenu-item {

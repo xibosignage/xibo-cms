@@ -7,6 +7,8 @@ const ToolbarMediaQueueTemplate = require('../templates/toolbar-media-queue.hbs'
 const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-queue-element.hbs');
 
 const toolsList = [
+    /*
+        TODO: Region add disabled until new Region Editor ( navigator edit ) is implemented
     {
         name: toolbarTrans.tools.region.name,
         type: 'region',
@@ -15,6 +17,7 @@ const toolsList = [
         hideOn: ['playlist'],
         oneClickAdd: ['layout']
     },
+    */
     {
         name: toolbarTrans.tools.audio.name,
         type: 'audio',

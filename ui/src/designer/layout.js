@@ -304,8 +304,7 @@ Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages)
         messages: statusMessages
     };
 
-    // Update timeline ( to be removed )
-    lD.timeline.updateLayoutStatus();
+    // Update layout status
     lD.topbar.updateLayoutStatus();
 };
 

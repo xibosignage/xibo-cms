@@ -58,7 +58,6 @@ window.lD = {
     mainObjectId: '',
 
     // Navigator
-    navigator: {},
     navigatorEdit: {},
 
     // Layout
@@ -123,12 +122,6 @@ $(document).ready(function() {
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
-
-                // Initialize navigator
-                lD.navigator = new Navigator(
-                    // Small container
-                    lD.editorContainer.find('#layout-navigator')
-                );
 
                 // Initialize timeline
                 lD.timeline = new Timeline(
@@ -290,7 +283,6 @@ $(document).ready(function() {
         if(e.target === window) {
 
             // Refresh navigators and viewer
-            lD.renderContainer(lD.navigator);
             lD.renderContainer(lD.navigatorEdit);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }
@@ -320,7 +312,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             this.dropItemAdd(obj, card);
         }
 
-    } if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
             const droppableId = $(obj).attr('id');
             const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
@@ -398,8 +390,8 @@ lD.selectObject = function(obj = null, forceSelect = false) {
                         }
                     }
                 } else {
-                this.layout.regions[newSelectedId].selected = true;
-                this.selectedObject = this.layout.regions[newSelectedId];
+                    this.layout.regions[newSelectedId].selected = true;
+                    this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
                 this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
@@ -423,7 +415,6 @@ lD.refreshDesigner = function() {
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.navigator);
     this.renderContainer(this.navigatorEdit);
     this.renderContainer(this.timeline);
     this.renderContainer(this.toolbar);
@@ -433,7 +424,7 @@ lD.refreshDesigner = function() {
     // Render selected object in the following containers
     if(this.selectedObject.type == 'region') {
         this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
-        this.renderContainer(this.propertiesPanel, {});
+        this.renderContainer(this.propertiesPanel, this.selectedObject);
     } else {
         this.renderContainer(this.propertiesPanel, this.selectedObject);
     }
@@ -821,7 +812,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             // Get buttons from form
             for(var button in res.buttons) {
                 if(res.buttons.hasOwnProperty(button)) {
-                    if(button != 'Cancel') {
+                    if(button != translations.cancel) {
                         let buttonType = 'btn-default';
 
                         if(button === 'Save' || button === 'Publish') {
@@ -1090,11 +1081,17 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  * @param {object} [options.positionToAdd = null] - Position object {top, left}
  */
 lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
+    console.log('dropItemAdd');
 
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
+
+    console.log(droppableId);
+    console.log(droppableType);
+    console.log(draggableType);
+    console.log(draggableSubType);
 
     if(draggableType == 'media') { // Adding media from search tab to a region
 
