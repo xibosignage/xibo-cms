@@ -312,7 +312,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             this.dropItemAdd(obj, card);
         }
 
-    } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
             const droppableId = $(obj).attr('id');
             const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
@@ -333,7 +333,6 @@ lD.selectObject = function(obj = null, forceSelect = false) {
 
         // Deselect cards and drop zones
         this.toolbar.deselectCardsAndDropZones();
-
     } else {
         
         // Get object properties from the DOM ( or set to layout if not defined )
@@ -1081,17 +1080,10 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  * @param {object} [options.positionToAdd = null] - Position object {top, left}
  */
 lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
-    console.log('dropItemAdd');
-
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
-
-    console.log(droppableId);
-    console.log(droppableType);
-    console.log(draggableType);
-    console.log(draggableSubType);
 
     if(draggableType == 'media') { // Adding media from search tab to a region
 

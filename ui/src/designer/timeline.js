@@ -547,9 +547,8 @@ Timeline.prototype.render = function(layout) {
         console.log('TODO: Open Playlist Editor');
     });
 
-    // TODO: Edit region
+    // Select region to edit
     this.DOMObject.find('.edit-region').click(function() {
-        console.log('TODO: Edit region');
         const regionId = $(this).parents('.designer-region-info').data('region');
         lD.selectObject(self.DOMObject.find('#' + regionId), true);
     });
