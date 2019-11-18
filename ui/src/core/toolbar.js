@@ -1203,8 +1203,11 @@ Toolbar.prototype.createQueue = function(menu, target = null) {
     let html = '';
 
     if(this.selectedQueue != undefined && !$.isEmptyObject(this.selectedQueue)) {
+        // Get html from backup
         html = $(this.selectedQueue)[0].outerHTML;
-        this.selectedQueue = {};
+
+        // Remove previous queue
+        this.destroyQueue(menu);
     } else {
         html = ToolbarMediaQueueTemplate({
             trans: toolbarTrans
