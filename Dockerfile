@@ -151,7 +151,7 @@ COPY --from=composer /app /var/www/cms
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
-COPY . /var/www/cms
+COPY --chown=apache:apache . /var/www/cms
 
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
