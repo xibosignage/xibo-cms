@@ -28,6 +28,7 @@ use MongoDB\Driver\Exception\AuthenticationException;
 use MongoDB\Driver\Exception\ConnectionException;
 use MongoDB\Driver\Exception\ConnectionTimeoutException;
 use MongoDB\Driver\Exception\ExecutionTimeoutException;
+use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
@@ -541,18 +542,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $results = $cursor->toArray();
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
+        } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
-            throw new NotFoundException($e->getMessage());
-
-        }  catch (ExecutionTimeoutException $e) {
-            $this->log->error($e->getMessage());
-            throw new NotFoundException($e->getMessage());
-
-        } catch (ConnectionTimeoutException $e) {
-            $this->log->error($e->getMessage());
-            throw new NotFoundException($e->getMessage());
-
+            throw new GeneralException($e->getMessage());
         }
 
         return $results;
