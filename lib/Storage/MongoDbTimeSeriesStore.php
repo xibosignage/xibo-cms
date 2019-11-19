@@ -24,6 +24,10 @@ namespace Xibo\Storage;
 
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
+use MongoDB\Driver\Exception\AuthenticationException;
+use MongoDB\Driver\Exception\ConnectionException;
+use MongoDB\Driver\Exception\ConnectionTimeoutException;
+use MongoDB\Driver\Exception\ExecutionTimeoutException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
@@ -522,9 +526,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             'allowDiskUse' => true
         ], $options);
 
+        // Aggregate command options
+        $aggregateConfig['allowDiskUse'] = $options['allowDiskUse'];
+        if (!empty($options['maxTimeMS'])) {
+            $aggregateConfig['maxTimeMS']= $options['maxTimeMS'];
+        }
+
         $collection = $this->client->selectCollection($this->config['database'], $options['collection']);
         try {
-            $cursor = $collection->aggregate($options['query'], ['allowDiskUse' => $options['allowDiskUse']]);
+            $cursor = $collection->aggregate($options['query'], $aggregateConfig);
 
             // log query
             $this->log->debug($cursor);
@@ -533,6 +543,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new NotFoundException($e->getMessage());
+
+        }  catch (ExecutionTimeoutException $e) {
+            $this->log->error($e->getMessage());
+            throw new NotFoundException($e->getMessage());
+
+        } catch (ConnectionTimeoutException $e) {
+            $this->log->error($e->getMessage());
+            throw new NotFoundException($e->getMessage());
+
         }
 
         return $results;
