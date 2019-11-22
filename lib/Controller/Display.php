@@ -1350,7 +1350,7 @@ class Display extends Base
             ob_end_clean();
         }
 
-        echo $img->response();
+        echo $img->encode();
     }
 
     /**
