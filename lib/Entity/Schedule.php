@@ -560,7 +560,7 @@ class Schedule implements \JsonSerializable
             if ($distance > $twelveHoursInSeconds) {
                 // Recurrence range cannot be more than 12 hours
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($twelveHoursInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Minute.', $exceedLimit)), 'recurrenceRange');
+                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Minute.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
             }
 
         } elseif ($this->recurrenceType == 'Hour') {
@@ -573,7 +573,7 @@ class Schedule implements \JsonSerializable
             if ($distance > $oneWeekInSeconds) {
                 // Recurrence range cannot be more than 1 week
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Hour.', $exceedLimit)), 'recurrenceRange');
+                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Hour.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
             }
         }
     }

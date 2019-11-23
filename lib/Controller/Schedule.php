@@ -133,22 +133,32 @@ class Schedule extends Base
     {
         // We need to provide a list of displays
         $displayGroupIds = $this->session->get('displayGroupIds');
-        $groups = array();
-        $displays = array();
+        $displayGroups = [];
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
-            /* @var \Xibo\Entity\DisplayGroup $display */
-            if ($display->isDisplaySpecific == 1) {
-                $displays[] = $display;
-            } else {
-                $groups[] = $display;
+        // Boolean to check if the option show all was saved in session
+        $displayGroupsShowAll = false;
+
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1) {
+                    $displayGroupsShowAll = true;
+                    continue;
+                }
+                    
+
+                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                
+                if ($this->getUser()->checkViewable($displayGroup)) {
+                    $displayGroups[] = $displayGroup;
+                }
             }
         }
 
         $data = [
-            'selectedDisplayGroupIds' => $displayGroupIds,
-            'groups' => $groups,
-            'displays' => $displays
+            'optionGroups' => ['Group', 'Displays'],
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
+            'displayGroupsShowAll' => $displayGroupsShowAll
         ];
 
         // Render the Theme and output

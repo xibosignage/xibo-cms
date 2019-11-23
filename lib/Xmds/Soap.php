@@ -2019,10 +2019,10 @@ class Soap
 
                 return false;
 
-            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
+            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage, $displayId)) {
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
-                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit ', $this->display->displayId));
+                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit', $this->display->displayId));
                 $date = $this->dateService->parse();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
