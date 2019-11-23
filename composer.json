@@ -30,7 +30,8 @@
       "platform": {
           "php": "7",
           "ext-zmq": "1",
-          "ext-mongodb": "1.5.0"
+          "ext-mongodb": "1.5.0",
+          "ext-gd": "1"
       }
   },
 	"minimum-stability": "dev",
@@ -57,7 +58,7 @@
     "guzzlehttp/guzzle": "~6.0",
     "league/oauth2-client": "2.2.*",
     "james-heinrich/getid3": "^1.9",
-    "onelogin/php-saml": "3.0.0.x-dev",
+    "onelogin/php-saml": "3.3.x",
     "infostars/picofeed": "dev-master",
     "xibosignage/xibo-xmr": "0.*",
     "tedivm/stash": "^0.14.1",
