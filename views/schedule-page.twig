@@ -39,14 +39,7 @@
             </div>
 
             <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
-
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                {% set attributes = [
-                    { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
-                    { name: "data-trans-campaigns", value:  "Campaigns"|trans },
-                    { name: "data-trans-layouts", value:  "Layouts"|trans }
-                ] %}
-
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
@@ -62,28 +55,10 @@
                 </select>
             </div>
 
-            <div class="xibo-calendar-controls dropdown pull-right" style="margin-left: 5px">
-                {% if -1 in selectedDisplayGroupIds %}
-                    {% set allSelected = "selected" %}
-                {% else %}
-                    {% set allSelected = "" %}
-                {% endif %}
-
-            <div class="xibo-calendar-controls dropdown pull-right">
+            <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
                         data-width="150px"
-                        data-placeholder="{% trans "Displays" %}" multiple>
-                    <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
-                    <optgroup label="{% trans "Groups" %}">
-                        {% for group in groups %}
-                        <option value="{{ group.displayGroupId }}" type="1" {% if group.displayGroupId in selectedDisplayGroupIds %}selected{% endif %}>{{ group.displayGroup }}</option>
-                        {% endfor %}
-                    </optgroup>
-                    <optgroup label="{% trans "Displays" %}">
-                        {% for display in displays %}
-                        <option value="{{ display.displayGroupId }}" type="0" {% if display.displayGroupId in selectedDisplayGroupIds %}selected="" {% endif %}>{{ display.displayGroup }}</option>
-                        {% endfor %}
-                    </optgroup>
+                        data-placeholder="{% trans "Displays" %}"
                         data-search-url="{{ urlFor("schedule.displayGroup.search") }}"
                         data-trans-groups="{% trans "Groups" %}"
                         data-trans-display="{% trans "Display" %}"
@@ -108,6 +83,7 @@
             </div>
 
             <div class="progress pull-right"><span id="calendar-progress"></span></div>
+
             <h1 class="page-header"></h1>
         </div>         
     </div>
@@ -835,9 +811,9 @@
         // Init campaign select2
         $(function() {
             // Select lists
-            var dialog = 'body';
-            var $campaignSelect = $('.xibo-calendar-controls #campaignId');
+            const dialog = 'body';
 
+            let $campaignSelect = $('.xibo-calendar-controls #campaignId');
             $campaignSelect.select2({
                 dropdownParent: $(dialog),
                 ajax: {
@@ -926,26 +902,20 @@
                         }
                     }
                 }
+            })
+            .on('change', function(e) {
+                // Refresh the calendar view
+                setTimeout(calendar.view(), 1000);
             });
-        });
-    </script>
 
-{% endblock %}
-
-{% block javaScript %}
-    <script type="text/javascript">
-        $(function() {
-            // Select display
-            var dialog = 'body';
-
-            var $displaySelect = $('#DisplayList', dialog);
+            let $displaySelect = $('#DisplayList', dialog);
             $displaySelect.select2({
                 dropdownParent: $(dialog),
                 ajax: {
                     url: $displaySelect.data("searchUrl"),
                     dataType: "json",
                     data: function(params) {
-                        var query = {
+                        const query = {
                             isDisplaySpecific: -1,
                             forSchedule: 1,
                             displayGroup: params.term,

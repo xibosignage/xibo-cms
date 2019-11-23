@@ -133,6 +133,11 @@ class Schedule extends Base
     {
         // We need to provide a list of displays
         $displayGroupIds = $this->session->get('displayGroupIds');
+
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
         $displayGroups = [];
 
         // Boolean to check if the option show all was saved in session
@@ -141,21 +146,24 @@ class Schedule extends Base
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
                 if ($displayGroupId == -1) {
+                    // If we have the show all option selected, go no further.
                     $displayGroupsShowAll = true;
-                    continue;
+                    break;
                 }
-                    
 
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-                
-                if ($this->getUser()->checkViewable($displayGroup)) {
-                    $displayGroups[] = $displayGroup;
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
                 }
             }
         }
 
         $data = [
-            'optionGroups' => ['Group', 'Displays'],
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'displayGroupsShowAll' => $displayGroupsShowAll
@@ -205,6 +213,8 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
      */
     function eventData()
     {
@@ -220,7 +230,7 @@ class Schedule extends Base
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
-        if (count($displayGroupIds) <= 0 && empty($campaignId)) {
+        if (count($displayGroupIds) <= 0) {
             $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
             return;
         }

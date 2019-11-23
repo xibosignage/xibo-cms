@@ -70,22 +70,31 @@ $(document).ready(function() {
 
                 var calendarOptions = $("#CalendarContainer").data();               
 
-                if (this.options.view != 'agenda') {
+                if (this.options.view !== 'agenda') {
 
                     // Append display groups and layouts
+                    let isShowAll = $('#showAll').is(':checked');
+
+                    // Enable or disable the display list according to whether show all is selected
+                    // we do this before we serialise because serialising a disabled list gives nothing
+                    $('#DisplayList').prop('disabled', isShowAll);
+
+                    // Serialise
                     var displayGroups = $('#DisplayList').serialize();
                     var displayLayouts = $('#campaignId').serialize();
 
                     var url = calendarOptions.eventSource;
 
-                    if($('#showAll').is(':checked')) {
-                        url += '?' + 'displayGroupIds[]=-1&' + displayLayouts;
-                        $('#DisplayList').prop('disabled', true);
-                    } else {
-                        $('#DisplayList').prop('disabled', false);
-                        if(displayGroups != '') {
-                            url += '?' + displayGroups + '&' + displayLayouts;
-                        }
+                    // Append the Layout selected
+                    url += '?' + displayLayouts;
+
+                    // Should we append displays?
+                    if (isShowAll) {
+                        // Ignore the display list
+                        url += '&' + 'displayGroupIds[]=-1';
+                    } else if (displayGroups !== '') {
+                        // Append display list
+                        url += '&' + displayGroups;
                     }
 
                     events = [];
@@ -369,11 +378,6 @@ $(document).ready(function() {
 
         options.type = calendarOptions.calendarType;
         calendar = $('#Calendar').calendar(options);
-
-        // Set up our display selector control
-        $('#DisplayList, #campaignId').on('change', function(){
-            setTimeout(calendar.view(), 1000);
-        });
         
         // Set event when clicking on a tab, to refresh the view
         $('.cal-context').on('click', 'a[data-toggle="tab"]', function (e) {
