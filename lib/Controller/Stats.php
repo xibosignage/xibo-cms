@@ -840,13 +840,13 @@ class Stats extends Base
             'end' => $toDt->format('U')
         );
 
-        $SQL = '
+        $select = '
             SELECT display.display, display.displayId,
             SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration,
             :end - :start as filter ';
 
         if ($tags != '') {
-            $SQL .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
+            $select .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
               FROM tag
                 INNER JOIN lktagdisplaygroup
                   ON lktagdisplaygroup.tagId = tag.tagId
@@ -854,38 +854,37 @@ class Stats extends Base
                 GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
         }
 
-
-        $SQL .= 'FROM `displayevent`
+        $body = 'FROM `displayevent`
                 INNER JOIN `display`
                 ON display.displayId = `displayevent`.displayId ';
 
         if ($displayGroupId != 0) {
-            $SQL .= 'INNER JOIN `lkdisplaydg`
+            $body .= 'INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayID = display.displayid ';
         }
 
         if ($tags != '') {
-            $SQL .= 'INNER JOIN `lkdisplaydg`
+            $body .= 'INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayID = display.displayid
                      INNER JOIN `displaygroup`
                         ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
                          AND `displaygroup`.isDisplaySpecific = 1 ';
         }
 
-        $SQL .= 'WHERE `start` <= :end
+        $body .= 'WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
                   AND :end <= UNIX_TIMESTAMP(NOW())
                   AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayGroupId != 0) {
-            $SQL .= '
+            $body .= '
                      AND lkdisplaydg.displaygroupid = :displayGroupId ';
             $params['displayGroupId'] = $displayGroupId;
         }
 
         if ($tags != '') {
             if (trim($tags) === '--no-tag') {
-                $SQL .= ' AND `displaygroup`.displaygroupId NOT IN (
+                $body .= ' AND `displaygroup`.displaygroupId NOT IN (
                     SELECT `lktagdisplaygroup`.displaygroupId
                      FROM tag
                         INNER JOIN `lktagdisplaygroup`
@@ -895,7 +894,7 @@ class Stats extends Base
             } else {
                 $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
-                $SQL .= " AND `displaygroup`.displaygroupId IN (
+                $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
@@ -907,9 +906,9 @@ class Stats extends Base
                     $i++;
 
                     if ($i == 1)
-                        $SQL .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                     else
-                        $SQL .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
 
                     if ($operator === '=')
                         $params['tags' . $i] = $tag;
@@ -917,20 +916,20 @@ class Stats extends Base
                         $params['tags' . $i] = '%' . $tag . '%';
                 }
 
-                $SQL .= " ) ";
+                $body .= " ) ";
             }
         }
 
         if ($displayId != 0) {
-            $SQL .= ' AND display.displayId = :displayId ';
+            $body .= ' AND display.displayId = :displayId ';
             $params['displayId'] = $displayId;
         }
 
         if ($onlyLoggedIn) {
-            $SQL .= ' AND `display`.loggedIn = 1 ';
+            $body .= ' AND `display`.loggedIn = 1 ';
         }
 
-        $SQL .= '
+        $body .= '
             GROUP BY display.display
         ';
 
@@ -949,7 +948,8 @@ class Stats extends Base
             $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
         }
 
-        $sql = $SQL . $order . $limit;
+
+        $sql = $select . $body . $order . $limit;
         $maxDuration = 0;
         $rows = [];
 
@@ -979,6 +979,12 @@ class Stats extends Base
             $entry['postUnits'] = $postUnits;
 
             $rows[] = $entry;
+        }
+
+        // Paging
+        if ($limit != '' && count($rows) > 0) {
+            $results = $this->store->select($select . $body, $params);
+            $this->getState()->recordsTotal = count($results);
         }
 
         $this->getState()->template = 'grid';

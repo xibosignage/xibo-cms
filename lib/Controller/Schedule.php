@@ -133,22 +133,40 @@ class Schedule extends Base
     {
         // We need to provide a list of displays
         $displayGroupIds = $this->session->get('displayGroupIds');
-        $groups = array();
-        $displays = array();
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
-            /* @var \Xibo\Entity\DisplayGroup $display */
-            if ($display->isDisplaySpecific == 1) {
-                $displays[] = $display;
-            } else {
-                $groups[] = $display;
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
+        $displayGroups = [];
+
+        // Boolean to check if the option show all was saved in session
+        $displayGroupsShowAll = false;
+
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1) {
+                    // If we have the show all option selected, go no further.
+                    $displayGroupsShowAll = true;
+                    break;
+                }
+
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
+                }
             }
         }
 
         $data = [
-            'selectedDisplayGroupIds' => $displayGroupIds,
-            'groups' => $groups,
-            'displays' => $displays
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
+            'displayGroupsShowAll' => $displayGroupsShowAll
         ];
 
         // Render the Theme and output
@@ -195,6 +213,8 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
      */
     function eventData()
     {
@@ -210,7 +230,7 @@ class Schedule extends Base
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
-        if (count($displayGroupIds) <= 0 && empty($campaignId)) {
+        if (count($displayGroupIds) <= 0) {
             $this->getApp()->response()->body(json_encode(array('success' => 1, 'result' => [])));
             return;
         }

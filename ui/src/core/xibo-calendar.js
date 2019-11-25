@@ -52,9 +52,6 @@ $(document).ready(function() {
         });
     });
 
-    // Make the select list nicer
-    $('#DisplayList').select2();
-
     // Calendar is initialised without any event_source (that is changed when the selector is used)
     if (($('#Calendar').length > 0)) {
         // Get some options for the calendar
@@ -73,15 +70,31 @@ $(document).ready(function() {
 
                 var calendarOptions = $("#CalendarContainer").data();               
 
-                if (this.options.view != 'agenda') {
+                if (this.options.view !== 'agenda') {
 
                     // Append display groups and layouts
-                    var displayGroupsAndLayouts = $('#DisplayList, #campaignId').serialize();
-                    
+                    let isShowAll = $('#showAll').is(':checked');
+
+                    // Enable or disable the display list according to whether show all is selected
+                    // we do this before we serialise because serialising a disabled list gives nothing
+                    $('#DisplayList').prop('disabled', isShowAll);
+
+                    // Serialise
+                    var displayGroups = $('#DisplayList').serialize();
+                    var displayLayouts = $('#campaignId').serialize();
+
                     var url = calendarOptions.eventSource;
-                    
-                    if(displayGroupsAndLayouts != '') {
-                        url += '?' + displayGroupsAndLayouts;
+
+                    // Append the Layout selected
+                    url += '?' + displayLayouts;
+
+                    // Should we append displays?
+                    if (isShowAll) {
+                        // Ignore the display list
+                        url += '&' + 'displayGroupIds[]=-1';
+                    } else if (displayGroups !== '') {
+                        // Append display list
+                        url += '&' + displayGroups;
                     }
 
                     events = [];
@@ -90,7 +103,7 @@ $(document).ready(function() {
                     var params = {
                         "from": this.options.position.start.getTime(),
                         "to": this.options.position.end.getTime()
-                    }
+                    };
 
                     $('#calendar-progress').addClass('fa fa-cog fa-spin');
 
@@ -105,14 +118,26 @@ $(document).ready(function() {
                             
                             // Hook up any pop-overs (for small events)
                             $('[data-toggle="popover"]').popover({
-                                trigger: "click",
+                                trigger: "manual",
                                 html: true,
                                 placement: "bottom",
                                 content: function() {
                                     return $(this).html();
                                 }
-                            })
-                            .on('shown.bs.popover', function() {
+                            }).on("mouseenter", function() {
+                                var self = this;
+
+                                // Hide all other popover
+                                $('[data-toggle="popover"]').not(this).popover("hide");
+
+                                // Show this popover
+                                $(this).popover("show");
+
+                                // Hide popover when mouse leaves it
+                                $(".popover").off("mouseleave").on("mouseleave", function() {
+                                    $(self).popover('hide');
+                                });
+                            }).on('shown.bs.popover', function() {
                                 var source = $(this);
                                 var popover = source.attr("aria-describedby");
 
@@ -142,25 +167,62 @@ $(document).ready(function() {
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
                     var displayGroupsList = [];
                     var chooseAllDisplays = false;
-                    
-                    // Find selected display group and create a display group list used to create tabs
-                    $('#DisplayList option').each( function(){
+
+                    if($('#showAll').is(':checked')) {
+                        $('#DisplayList').prop('disabled', true);
+
+                        $.ajax({
+                            type: 'GET',
+                            url: $('#showAll').attr("data-search-url") + '?isDisplaySpecific=-1',
+                            success: function(data) {
+
+                                let displays = data.data;
+                                $.each(displays, function(index, value) {
+
+                                    displayGroupsList.push({
+                                        id: value.displayGroupId,
+                                        name: value.displayGroup,
+                                        isDisplaySpecific: value.isDisplaySpecific
+                                    });
+
+                                    if(typeof selectedDisplayGroup == 'undefined') {
+                                        selectedDisplayGroup = value.displayGroupId;
+                                    }
+                                });
+
+                            }
+                        });
+
+                        // return true;
+
+                    } else {
+
+                        $('#DisplayList').prop('disabled', false);
+
+                        // Find selected display group and create a display group list used to create tabs
+                        $('#DisplayList option').each(function() {
                             var $self = $(this);
                             
                             // If the all option is selected 
-                            if ($self.val() == -1 && $self.is(':selected')){
+                            if ($self.val() == -1 && $self.is(':selected')) {
                                 chooseAllDisplays = true;
                                 return true;
                             }
                                 
-                            if ($self.is(':selected') || chooseAllDisplays){
-                                
-                                displayGroupsList.push({id: $self.val(), name: $self.html(), isDisplaySpecific: $self.attr('type')});
-                                
-                                if (typeof selectedDisplayGroup == 'undefined')
-                                    selectedDisplayGroup = $self.val(); 
+                            if($self.is(':selected') || chooseAllDisplays) {
+
+                                displayGroupsList.push({
+                                    id: $self.val(),
+                                    name: $self.html(),
+                                    isDisplaySpecific: $self.attr('type')
+                                });
+
+                                if (typeof selectedDisplayGroup == 'undefined') {
+                                    selectedDisplayGroup = $self.val();
+                                }
                             }
-                    });
+                        });
+                    }
                     
                     // Sort display group list by name
                     displayGroupsList.sort(function(a, b){
@@ -171,7 +233,7 @@ $(document).ready(function() {
                             return 1;
                             
                         return 0; //default return value (no sorting)
-                    })
+                    });
                         
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
@@ -316,11 +378,6 @@ $(document).ready(function() {
 
         options.type = calendarOptions.calendarType;
         calendar = $('#Calendar').calendar(options);
-
-        // Set up our display selector control
-        $('#DisplayList, #campaignId').on('change', function(){
-            setTimeout(calendar.view(), 1000);
-        });
         
         // Set event when clicking on a tab, to refresh the view
         $('.cal-context').on('click', 'a[data-toggle="tab"]', function (e) {
@@ -626,7 +683,7 @@ var setupScheduleForm = function(dialog) {
 
         $(dialog).find('.modal-footer').prepend($button);
     }
-    
+
     configReminderFields($(dialog));
 
 };
