@@ -7,8 +7,6 @@ const ToolbarMediaQueueTemplate = require('../templates/toolbar-media-queue.hbs'
 const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-queue-element.hbs');
 
 const toolsList = [
-    /*
-        TODO: Region add disabled until new Region Editor ( navigator edit ) is implemented
     {
         name: toolbarTrans.tools.region.name,
         type: 'region',
@@ -17,7 +15,6 @@ const toolsList = [
         hideOn: ['playlist'],
         oneClickAdd: ['layout']
     },
-    */
     {
         name: toolbarTrans.tools.audio.name,
         type: 'audio',
@@ -344,7 +341,8 @@ Toolbar.prototype.render = function() {
         trashActive: trashBinActive,
         undoActive: undoActive,
         trans: newToolbarTrans,
-        showOptions: self.showOptions
+        showOptions: self.showOptions,
+        mainObjectType: app.mainObjectType
     });
 
     // Append toolbar html to the main div
@@ -552,6 +550,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
                 element.favourited = false;
                 otherModules.push(element);
             }
+
+            element.oneClickAdd = this.menuItems[menu].oneClickAdd;
         }
 
         // Add elements to menu content
@@ -628,10 +628,18 @@ Toolbar.prototype.selectCard = function(card) {
         const oneClickAdd = $(card).attr('data-one-click-add');
 
         if(oneClickAdd != undefined && oneClickAdd.split(',').indexOf(app.mainObjectType) != -1) {
-
             // Simulate drop item add
-            app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
+            if($('[data-type="' + dropTo + '"]').length > 0) {
+                app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
+            } else if(dropTo == 'layout') {
+                // Create temporary object simulating the layout object
+                let $tempLayoutObj = $('<div>').data({
+                    'id': app.mainObjectId,
+                    'type': 'layout'
+                });
 
+                app.dropItemAdd($tempLayoutObj, card);
+            }
         } else {
             // Select new card
             $(card).addClass('card-selected');

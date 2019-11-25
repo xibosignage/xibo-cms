@@ -50,9 +50,9 @@
                                         {{#unless hideElement}}
                                             {{!-- Load cards according to type searchItem/Widget --}}
                                             {{#if ../tool}}
-                                                {{> toolbar-card-tool trans=../../trans}}
+                                                {{> toolbar-card-tool trans=../../trans mainObjectType=../../mainObjectType}}
                                             {{else}}
-                                                {{> toolbar-card trans=../../trans}}
+                                                {{> toolbar-card trans=../../trans mainObjectType=../../mainObjectType}}
                                             {{/if}}
                                         {{/unless}}
                                     {{/each}}

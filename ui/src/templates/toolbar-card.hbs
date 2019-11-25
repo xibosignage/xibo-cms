@@ -7,7 +7,11 @@
     data-max-size="{{ maxSize }}" 
     data-max-size-message="{{ maxSizeMessage }}"
     title="{{description}}"
-    data-one-click-add="playlist"
+    
+    {{#each oneClickAdd}}
+        {{#eq this ../mainObjectType}}data-one-click-add="{{this}}"{{/eq}}
+    {{/each}}
+
     drop-to="region">
     
     <div class="btn-favourite" title="{{trans.addAsFavourite}}">

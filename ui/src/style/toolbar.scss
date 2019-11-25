@@ -374,6 +374,10 @@ ul.sidebar {
             @include border-radius(4px 0 0 4px);
         }
 
+        &[data-one-click-add] .action-area {
+            width: $toolbar-tools-card-width;
+        }
+
         &.card-selected .add-area {
             display: block;
             width: $toolbar-tools-card-width;
@@ -406,7 +410,7 @@ ul.sidebar {
                 }
             }
 
-            .drag-area {
+            &:not([data-one-click-add]) .drag-area {
                 display: block;
 
                 &:hover {
@@ -507,6 +511,10 @@ ul.sidebar {
             }
 
             &.card-selected .add-area {
+                width: $toolbar-widgets-card-width;
+            }
+
+            &[data-one-click-add] .action-area {
                 width: $toolbar-widgets-card-width;
             }
 

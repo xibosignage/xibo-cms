@@ -3,7 +3,11 @@
     data-type="tool"
     data-sub-type="{{type}}"
     title="{{description}}"
-    data-one-click-add="{{oneClickAdd}}"
+    
+    {{#each oneClickAdd}}
+        {{#eq this ../mainObjectType}}data-one-click-add="{{this}}"{{/eq}}
+    {{/each}}
+
     drop-to="{{dropTo}}">
 
     <div class="add-area action-area" title="{{trans.add}}" data-toggle="tooltip" data-placement="left">
