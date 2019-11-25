@@ -59,16 +59,7 @@ var config = {
                 }]
             },
             {
-                test: /\.(png|svg|jpg|gif)$/,
-                use: [{
-                    loader: 'file-loader',
-                    options: {
-                        name: '[name].[ext]'
-                    }
-                }]
-            },
-            {
-                test: /\.(ttf|eot|svg|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                test: /\.(png|svg|jpg|gif|ttf|eot|woff|woff2)$/,
                 use: [{
                     loader: 'file-loader',
                     options: {

@@ -58,7 +58,7 @@ window.lD = {
     mainObjectId: '',
 
     // Navigator
-    navigatorEdit: {},
+    navigator: {},
 
     // Layout
     layout: {},
@@ -261,13 +261,6 @@ $(document).ready(function() {
         }
     );
 
-    // When in edit mode, enable click on background to close navigator
-    lD.editorContainer.find('#layout-navigator-edit').click(function(event) {
-        if(event.target.id === 'layout-navigator-edit') {
-            lD.toggleNavigatorEditing(false);
-        }
-    });
-
     // Handle keyboard keys
     $('body').off('keydown').keydown(function(handler) {
         if($(handler.target).is($('body'))) {
@@ -283,7 +276,7 @@ $(document).ready(function() {
         if(e.target === window) {
 
             // Refresh navigators and viewer
-            lD.renderContainer(lD.navigatorEdit);
+            lD.renderContainer(lD.navigator);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }
     }, 250));
@@ -374,7 +367,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             if(newSelectedType === 'region') {
 
                 // If we're not in the navigator edit and the region has widgets, select the first one
-                if(!forceSelect && $.isEmptyObject(this.navigatorEdit) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
+                if(!forceSelect && $.isEmptyObject(this.navigator) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
                     let widgets = this.layout.regions[newSelectedId].widgets;
 
                     // Select first widget
@@ -414,19 +407,12 @@ lD.refreshDesigner = function() {
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.navigatorEdit);
+    this.renderContainer(this.navigator, this.selectedObject);
     this.renderContainer(this.timeline);
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
     this.renderContainer(this.manager);
-
-    // Render selected object in the following containers
-    if(this.selectedObject.type == 'region') {
-        this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
-        this.renderContainer(this.propertiesPanel, this.selectedObject);
-    } else {
-        this.renderContainer(this.propertiesPanel, this.selectedObject);
-    }
+    this.renderContainer(this.propertiesPanel, this.selectedObject);
     
     this.renderContainer(this.viewer, this.selectedObject);
 
@@ -680,31 +666,35 @@ lD.toggleNavigatorEditing = function(enable) {
 
     if(enable) {
         // Create a new navigator instance
-        this.navigatorEdit = new Navigator(
-            this.editorContainer.find('#layout-navigator-edit-content'),
+        this.navigator = new Navigator(
+            this.editorContainer.find('#layout-navigator-content'),
             {
-                edit: true,
-                editNavbar: this.editorContainer.find('#layout-navigator-edit-navbar')
+                editNavbar: this.editorContainer.find('#layout-navigator-navbar')
             }
         );
 
         // Show navigator edit div
-        this.editorContainer.find('#layout-navigator-edit').css('display', 'block');
+        this.editorContainer.find('#layout-navigator').css('display', 'block');
+
+        // Hide viewer div
+        this.editorContainer.find('#layout-viewer-container').css('display', 'none');
 
         // Render navigator
-        this.renderContainer(this.navigatorEdit);
-
+        this.renderContainer(this.navigator, this.selectedObject);
     } else {
 
         // Refresh designer
         this.reloadData(lD.layout);
 
         // Clean variable
-        this.navigatorEdit = {};
+        this.navigator = {};
 
         // Clean object HTML and hide div
-        this.editorContainer.find('#layout-navigator-edit-content').empty();
-        this.editorContainer.find('#layout-navigator-edit').css('display', 'none');
+        this.editorContainer.find('#layout-navigator-content').empty();
+        this.editorContainer.find('#layout-navigator').css('display', 'none');
+
+        // Show viewer div
+        this.editorContainer.find('#layout-viewer-container').css('display', 'block');
 
     }
 };

@@ -195,7 +195,7 @@
                 }, { // 16
                     title: "",
                     content: "{% trans "Click anywhere inside the region to edit it" %}",
-                    element: '#layout-navigator-edit div[data-type="region"]',
+                    element: '#layout-navigator div[data-type="region"]',
                     smartPlacement: true,
                     delay: 500,
                     reflex: true,
@@ -203,7 +203,7 @@
                 }, {
                     title: "",
                     content: "{% trans "Grab the region handle, and drag to resize." %}",
-                    element: '#layout-navigator-edit div[data-type="region"] .ui-resizable-se',
+                    element: '#layout-navigator div[data-type="region"] .ui-resizable-se',
                     placement: "bottom",
                     delay: 200,
                     reflex: "mouseup",
@@ -211,14 +211,14 @@
                 }, { // 18
                     title: "",
                     content: "{% trans "When you are happy with your positioning, click save to save changes." %}",
-                    element: "#layout-navigator-edit  #save-btn",
+                    element: "#layout-navigator  #save-btn",
                     placement: "left",
                     reflex: true,
                     template: no_nav_template
                 }, { 
                     title: "",
                     content: "{% trans "Click close to go back to the main editor." %}",
-                    element: "#layout-navigator-edit  #close-btn",
+                    element: "#layout-navigator  #close-btn",
                     placement: "left",
                     reflex: true,
                     template: no_nav_template
@@ -521,7 +521,7 @@
                     delay: 500,
                     template: no_nav_template
                 }, {
-                    container: '#layout-navigator-edit',
+                    container: '#layout-navigator',
                     orphan: true,
                     delay: 500,
                     placement: "auto",
@@ -531,7 +531,7 @@
                 }, {
                     title: "",
                     content: "{% trans "Click close to go back to the main editor." %}",
-                    element: "#layout-navigator-edit  #close-btn",
+                    element: "#layout-navigator  #close-btn",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template

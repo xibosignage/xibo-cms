@@ -542,7 +542,6 @@ Timeline.prototype.render = function(layout) {
         self.render(layout);
     });
 
-    // TODO: Open Playlist Editor
     this.DOMObject.find('.open-playlist-editor').click(function() {
         console.log('TODO: Open Playlist Editor');
     });
@@ -550,6 +549,7 @@ Timeline.prototype.render = function(layout) {
     // Select region to edit
     this.DOMObject.find('.edit-region').click(function() {
         const regionId = $(this).parents('.designer-region-info').data('region');
+        lD.toggleNavigatorEditing(true);
         lD.selectObject(self.DOMObject.find('#' + regionId), true);
     });
 
