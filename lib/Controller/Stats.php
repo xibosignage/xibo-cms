@@ -206,6 +206,14 @@ class Stats extends Base
      *      type="string"
      *  ),
      *  @SWG\Property(
+     *      property="start",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="end",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
      *      property="statDate",
      *      type="string"
      *  ),
@@ -376,6 +384,8 @@ class Stats extends Base
             $entry['duration'] = $this->getSanitizer()->int($row['duration']);
             $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
             $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+            $entry['start'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+            $entry['end'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
