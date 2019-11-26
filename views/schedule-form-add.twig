@@ -34,7 +34,7 @@
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Next" %}, XiboDialogApply("#scheduleAddForm")
-    {% trans "Save" %}, $("#scheduleAddForm").submit()
+    {% trans "Save" %}, beforeSubmitScheduleForm($("#scheduleAddForm"))
 {% endblock %}
 
 {% block formHtml %}
@@ -43,6 +43,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+                <li class="reminders"><a href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
@@ -55,12 +56,19 @@
                         {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
                         {% set commandEventType %}{% trans "Command" %}{% endset %}
                         {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
+                        {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
                         {% set eventTypes = [
-                        {id: 1, label: layoutEventType},
-                        {id: 2, label: commandEventType},
-                        {id: 3, label: overlayEventType}
+                            {id: 1, label: layoutEventType},
+                            {id: 2, label: commandEventType},
+                            {id: 3, label: overlayEventType},
+                            {id: 4, label: interruptEventType}
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "id", "label", helpText) }}
+
+                        <div class="interrupt-control">
+                            {% set message = "Only one Interrupt Layout will show at the same time. If the Schedule for a Player resolves to more than one, then the Interrupt shown will depend on Priority and Display Order."|trans %}
+                            {{ forms.message(message, "alert alert-info") }}
+                        </div>
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
@@ -107,6 +115,10 @@
                         {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
 
+                        {% set title %}{% trans "Share of Voice" %}{% endset %}
+                        {% set helpText %}{% trans "The percentage of time this Layout should be shown." %}{% endset %}
+                        {{ forms.number("shareOfVoice", title, 0, helpText, "interrupt-control") }}
+
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
@@ -120,11 +132,11 @@
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, "", helpText) }}
+                        {{ forms.number("displayOrder", title, "", helpText, 'displayOrder-control') }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
-                        {{ forms.number("isPriority", title, "", helpText) }}
+                        {{ forms.number("isPriority", title, "", helpText, 'priority-control') }}
 
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
@@ -192,6 +204,12 @@
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "Provide a date and time to end the Repeat for this Event. Leave empty to Repeat indefinitely." %}{% endset %}
                         {{ forms.dateTime("recurrenceRange", title, "", helpText, "repeat-control-group", "", "") }}
+                    </div>
+
+                    <div class="tab-pane" id="reminders">
+                        {% set message %}{% trans "Use the form fields below to create a set of reminders for this event. New fields can be added by clicking on the + icon at the end of the row. Use the tick box to receive a notification by email alternatively reminders will be shown in the message center." %}{% endset %}
+                        {{ forms.message(message) }}
+                        <div id="reminderFields" data-reminders="{{ reminders|json_encode }}"></div>
                     </div>
                 </div>
             </form>

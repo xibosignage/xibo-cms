@@ -137,7 +137,9 @@ class DayPart extends Base
     {
         $filter = [
             'dayPartId' => $this->getSanitizer()->getInt('dayPartId'),
-            'name' => $this->getSanitizer()->getString('name')
+            'name' => $this->getSanitizer()->getString('name'),
+            'isAlways' => $this->getSanitizer()->getInt('isAlways'),
+            'isCustom' => $this->getSanitizer()->getInt('isCustom')
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
@@ -353,10 +355,10 @@ class DayPart extends Base
      *
      * @SWG\Put(
      *  path="/daypart/{dayPartId}",
-     *  operationId="dayPartAdd",
+     *  operationId="dayPartEdit",
      *  tags={"dayPart"},
-     *  summary="Daypart Add",
-     *  description="Add a Daypart",
+     *  summary="Daypart Edit",
+     *  description="Edit a Daypart",
      *  @SWG\Parameter(
      *      name="dayPartId",
      *      in="path",

@@ -39,5 +39,8 @@ services:
     environment:
     - API_URL=http://localhost/swagger.json
 
+  quickchart:
+    image: ianw/quickchart
+
 networks:
   default:

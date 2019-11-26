@@ -82,7 +82,7 @@ class StatisticsMediaTest extends LocalWebTestCase
             ->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/xts-layout-003-background.jpg');
 
         // Checkout our Layout and add some Widgets to it.
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Add another region
         // Assign media to the layouts default region.

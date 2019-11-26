@@ -111,6 +111,72 @@ class HtmlPackage extends ModuleWidget
         return 'htmlpackage-designer-javascript';
     }
 
+    /**
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}?htmlPackage",
+     *  operationId="WidgetHtmlPackageEdit",
+     *  tags={"widget"},
+     *  summary="Edit a HtmlPackage Widget",
+     *  description="Edit HtmlPackage Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="The WidgetId to Edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="Optional Widget Name",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Select only if you will provide duration parameter as well",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="The Widget Duration",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="nominatedFile",
+     *      in="formData",
+     *      description="Enter a nominated file name that player will attempt to open after extracting the .htz archive",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="updateInterval",
+     *      in="formData",
+     *      description="Update Interval for this Widget",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @throws InvalidArgumentException
+     */
     public function edit()
     {
         // Set the properties specific to this module

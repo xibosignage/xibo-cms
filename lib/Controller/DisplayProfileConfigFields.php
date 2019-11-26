@@ -156,6 +156,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('updateEndWindow', $this->getSanitizer()->getString('updateEndWindow'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('webViewPluginState')) {
                     $displayProfile->setSetting('webViewPluginState', $this->getSanitizer()->getString('webViewPluginState'), $ownConfig, $config);
                 }
@@ -180,6 +184,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('installWithLoadedLinkLibraries', $this->getSanitizer()->getCheckbox('installWithLoadedLinkLibraries'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -197,6 +205,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
                     $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('statsEnabled')) {
@@ -303,6 +315,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'linux':
@@ -316,6 +332,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
@@ -390,6 +410,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'lg':
@@ -409,6 +433,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
@@ -453,6 +481,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('mediaInventoryTimer')) {
                     $displayProfile->setSetting('mediaInventoryTimer', $this->getSanitizer()->getInt('mediaInventoryTimer'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('timers')) {

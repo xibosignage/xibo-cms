@@ -51,31 +51,12 @@ class LayoutDraftTest extends LocalWebTestCase
     }
 
     /**
-     * Test adding a region to a Layout that has not been checked out.
-     */
-    public function testAddRegionNoCheckout()
-    {
-        // Add region to our layout with data from regionSuccessCases
-        $this->client->post('/region/' . $this->layout->layoutId, [
-            'width' => 100,
-            'height' => 100,
-            'top' => 10,
-            'left' => 10
-        ]);
-
-        $this->assertSame(500, $this->client->response->status(), $this->client->response->getBody());
-    }
-
-    /**
      * Test adding a region to a Layout that has been checked out, but use the parent
      */
     public function testAddRegionCheckoutParent()
     {
-        // Checkout the Parent, but add a Region to the Original
-        $this->checkout($this->layout);
-
         // Add region to our layout with data from regionSuccessCases
-        $response = $this->client->post('/region/' . $this->layout->layoutId, [
+        $this->client->post('/region/' . $this->layout->layoutId, [
             'width' => 100,
             'height' => 100,
             'top' => 10,
@@ -91,7 +72,7 @@ class LayoutDraftTest extends LocalWebTestCase
     public function testAddRegionCheckout()
     {
         // Checkout the Parent, but add a Region to the Original
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Add region to our layout with data from regionSuccessCases
         $this->client->post('/region/' . $layout->layoutId, [
@@ -109,9 +90,6 @@ class LayoutDraftTest extends LocalWebTestCase
      */
     public function testPublishLayoutWithError()
     {
-        // Checkout the Parent
-        $layout = $this->checkout($this->layout);
-
         // Do nothing and try to publish
         $this->client->put('/layout/publish/' . $this->layout->layoutId, [
             'publishNow' => 1

@@ -46,7 +46,7 @@ class WidgetEditTest extends LocalWebTestCase
         $this->layout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId, [
             'text' => 'Widget A',

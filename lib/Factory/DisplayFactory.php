@@ -216,7 +216,9 @@ class DisplayFactory extends BaseFactory
                   `display`.lastCommandSuccess, 
                   `display`.deviceName, 
                   `display`.timeZone,
-                  `display`.overrideConfig
+                  `display`.overrideConfig,
+                  `display`.newCmsAddress,
+                  `display`.newCmsKey
               ';
 
         if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1) {
@@ -280,8 +282,14 @@ class DisplayFactory extends BaseFactory
             if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) == -1) {
                 $body .= ' AND IFNULL(displayProfileId, 0) = 0 ';
             } else {
-                $body .= ' AND `display`.displayProfileId = :displayProfileId ';
+                $displayProfileSelected = $this->displayProfileFactory->getById($this->getSanitizer()->getInt('displayProfileId', $filterBy));
+                $displayProfileDefault = $this->displayProfileFactory->getDefaultByType($displayProfileSelected->type);
+
+                $body .= ' AND (`display`.displayProfileId = :displayProfileId OR (IFNULL(displayProfileId, :displayProfileDefaultId) = :displayProfileId AND display.client_type = :displayProfileType ) ) ';
+
                 $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+                $params['displayProfileDefaultId'] = $displayProfileDefault->displayProfileId;
+                $params['displayProfileType'] = $displayProfileDefault->type;
             }
         }
 
@@ -335,8 +343,12 @@ class DisplayFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) != '') {
-            $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
-            $params['mediaInventoryStatus'] = $this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy);
+            if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) === -1) {
+                $body .= ' AND display.mediaInventoryStatus <> 1 ';
+            } else {
+                $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
+                $params['mediaInventoryStatus'] = $this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy);
+            }
         }
 
         if ($this->getSanitizer()->getInt('loggedIn', -1, $filterBy) != -1) {
@@ -431,10 +443,54 @@ class DisplayFactory extends BaseFactory
             }
         }
 
+        // run the special query to help sort by displays already assigned to this display group, we want to run it only if we're sorting by member column.
+        if ($this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy) !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
+            $members = [];
+            foreach ($this->getStore()->select($select . $body, $params) as $row) {
+                $displayId = $this->getSanitizer()->int($row['displayId']);
+                $displayGroupId = $this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy);
+
+                if ($this->getStore()->exists('SELECT display.display, display.displayId, displaygroup.displayGroupId
+                                                    FROM display
+                                                      INNER JOIN `lkdisplaydg` 
+                                                          ON lkdisplaydg.displayId = `display`.displayId 
+                                                          AND lkdisplaydg.displayGroupId = :displayGroupId 
+                                                          AND lkdisplaydg.displayId = :displayId
+                                                      INNER JOIN `displaygroup` 
+                                                          ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                                                          AND `displaygroup`.isDisplaySpecific = 0',
+                    [
+                        'displayGroupId' => $displayGroupId,
+                        'displayId' => $displayId
+                    ]
+                )) {
+                    $members[] = $displayId;
+                }
+            }
+        }
+
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+
+        if (isset($members) && $members != [] ) {
+            $sqlOrderMembers = 'ORDER BY FIELD(display.displayId,' . implode(',', $members) . ')';
+
+            foreach ($sortOrder as $sort) {
+                if ($sort == '`member`') {
+                    $order .= $sqlOrderMembers;
+                    continue;
+                }
+
+                if ($sort == '`member` DESC') {
+                    $order .= $sqlOrderMembers . ' DESC';
+                    continue;
+                }
+            }
+        }
+
+        if (is_array($sortOrder) && ($sortOrder != ['`member`'] && $sortOrder != ['`member` DESC'] )) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

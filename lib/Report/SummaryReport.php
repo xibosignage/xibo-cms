@@ -84,6 +84,52 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        $labels = str_replace('"', "'", $results['chartData']['labels']);
+        $countData = str_replace('"', "'", $results['chartData']['countData']);
+        $durationData = str_replace('"', "'", $results['chartData']['durationData']);
+
+        return "{type:'bar',data:{labels:".$labels.", datasets:[{label:'Total duration',yAxisID:'Duration',data:".$durationData."},{ label: 'Total count',yAxisID:'Count',borderColor: 'rgb(240,93,41, 0.8)', data: ".$countData.", type:'line', fill: 'false'}]},
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    id: 'Duration',
+                                    type: 'linear',
+                                    position: 'left',
+                                    display: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Duration(s)'
+                                    },
+                                    ticks: {
+                                        beginAtZero:true
+                                    }
+                                }, {
+                                    id: 'Count',
+                                    type: 'linear',
+                                    position: 'right',
+                                    display: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: 'Count'
+                                    },
+                                    ticks: {
+                                        beginAtZero:true
+                                    }
+                                }]
+                            },
+                            maintainAspectRatio: true,
+                        }}";
+    }
+
+    /** @inheritdoc */
+    public function getReportEmailTemplate()
+    {
+        return 'summary-email-template.twig';
+    }
+
+    /** @inheritdoc */
     public function getReportForm()
     {
         return [
@@ -183,6 +229,9 @@ class SummaryReport implements ReportInterface
             $filterCriteria['reportFilter'] = 'lastyear';
             $filterCriteria['groupByFilter'] = 'bymonth';
         }
+
+        $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $this->getSanitizer()->getString('nonusers');
 
         // Return
         return [

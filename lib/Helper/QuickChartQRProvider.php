@@ -27,6 +27,7 @@ use RobThree\Auth\Providers\Qr\BaseHTTPQRCodeProvider;
 
 class QuickChartQRProvider extends BaseHTTPQRCodeProvider
 {
+    public $url;
     public $errorCorrectionLevel;
     public $margin;
     public $backgroundColor;
@@ -35,15 +36,16 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
 
     /**
      * QuickChartQRProvider constructor.
+     * @param string $url URL to a Quick Chart service
      * @param bool $verifyssl
      * @param string $errorCorrectionLevel valid values L, M, Q, H
      * @param int $margin
      * @param string $backgroundColor Hex color code - background colour
      * @param string $color Hex color code - QR colour
-     * @param string $format Valid values: png, xvg
+     * @param string $format Valid values: png, svg
      * @throws QRException
      */
-    function __construct($verifyssl = false, $errorCorrectionLevel = 'L', $margin = 4, $backgroundColor = 'ffffff', $color = '000000', $format = 'png')
+    function __construct($url, $verifyssl = false, $errorCorrectionLevel = 'L', $margin = 4, $backgroundColor = 'ffffff', $color = '000000', $format = 'png')
     {
         if (!is_bool($verifyssl)) {
             throw new QRException('VerifySSL must be bool');
@@ -51,6 +53,7 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
 
         $this->verifyssl = $verifyssl;
 
+        $this->url = $url;
         $this->errorCorrectionLevel = $errorCorrectionLevel;
         $this->margin = $margin;
         $this->backgroundColor = $backgroundColor;
@@ -80,8 +83,8 @@ class QuickChartQRProvider extends BaseHTTPQRCodeProvider
 
     public function getUrl($qrText, $size)
     {
-        return 'https://quickchart.io/qr'
-            . '?size=' . $size . 'x' . $size
+        return $this->url . '/qr'
+            . '?size=' . $size
             . '&ecLevel=' . strtoupper($this->errorCorrectionLevel)
             . '&margin=' . $this->margin
             . '&light=' . $this->backgroundColor

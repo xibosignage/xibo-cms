@@ -14,7 +14,7 @@
     {% trans "Add Notification" %}
 {% endblock %}
 
-{% block callBack %}notificationFormOpen{% endblock %}
+{% block callBack %}attachmentFormSetup{% endblock %}
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
@@ -29,8 +29,9 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#message-body" role="tab" data-toggle="tab"><span>{% trans "Message" %}</span></a></li>
                 <li><a href="#audience" role="tab" data-toggle="tab"><span>{% trans "Audience" %}</span></a></li>
+                <li><a href="#attachment" role="tab" data-toggle="tab"><span>{% trans "Attachment" %}</span></a></li>
             </ul>
-            <form id="notificationForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("notification.add") }}">
+            <form id="notificationForm" class="form-horizontal" method="post" action="{{ urlFor("notification.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Subject" %}{% endset %}
@@ -70,6 +71,9 @@
                         ] %}
                         {{ forms.dropdown("userGroupIds[]", "dropdownmulti", title, "", {group: userGroups, user: users}, "groupId", "group", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
+                        {% set title %}{% trans "Non users" %}{% endset %}
+                        {% set helpText %}{% trans "Additional emails separated by a comma." %}{% endset %}
+                        {{ forms.inputWithTags("nonusers", title, "", helpText) }}
 
                         {% set title %}{% trans "Displays" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}
@@ -84,6 +88,20 @@
                         ] %}
                         {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, "", {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
+                    </div>
+
+                    <div class="tab-pane" id="attachment">
+                        <div class="row attachment-fields attachment-add-button text-center">
+                            <div class="col-xs-12">
+                                <button id="attachmentAddButton" class="btn btn-default" type="">
+                                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                                    {% trans "Add an attachment?" %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div id="notificationAddFormAttachmentUpload" style="display: none;"></div>
+                        </div>
                     </div>
                 </div>
             </form>

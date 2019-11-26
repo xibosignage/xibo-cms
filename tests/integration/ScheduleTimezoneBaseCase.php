@@ -59,7 +59,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         $this->layout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [

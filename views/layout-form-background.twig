@@ -91,6 +91,10 @@
                 {% set title %}{% trans "Layer" %}{% endset %}
                 {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
                 {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
+
+                {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
+                {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Layout." %}{% endset %}
+                {{ forms.checkbox("autoApplyTransitions", title, layout.autoApplyTransitions, helpText) }}
             </form>
         </div>
     </div>

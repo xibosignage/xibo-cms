@@ -429,6 +429,23 @@ class ModuleFactory extends BaseFactory
         return $modules[0];
     }
 
+
+    /**
+     * Get module by name
+     * @param string $name
+     * @return ModuleWidget
+     * @throws NotFoundException
+     */
+    public function getByType($name)
+    {
+        $modules = $this->query(['enabled DESC'], ['name' => $name]);
+
+        if (count($modules) <= 0)
+            throw new NotFoundException(sprintf(__('Module type %s does not match any enabled Module'), $name));
+
+        return $modules[0];
+    }
+
     /**
      * Get Enabled
      * @return Module[]
@@ -535,22 +552,22 @@ class ModuleFactory extends BaseFactory
 
         if ($this->getSanitizer()->getInt('moduleId', $filterBy) !== null) {
             $params['moduleId'] = $this->getSanitizer()->getInt('moduleId', $filterBy);
-            $body .= ' AND ModuleID = :moduleId ';
+            $body .= ' AND `ModuleID` = :moduleId ';
         }
 
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
-            $body .= ' AND name = :name ';
+            $body .= ' AND `name` = :name ';
         }
 
         if ($this->getSanitizer()->getString('installName', $filterBy) != null) {
             $params['installName'] = $this->getSanitizer()->getString('installName', $filterBy);
-            $body .= ' AND installName = :installName ';
+            $body .= ' AND `installName` = :installName ';
         }
 
         if ($this->getSanitizer()->getString('type', $filterBy) != '') {
             $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
-            $body .= ' AND module = :type ';
+            $body .= ' AND `module` = :type ';
         }
 
         if ($this->getSanitizer()->getString('class', $filterBy) != '') {
@@ -560,30 +577,30 @@ class ModuleFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('extension', $filterBy) != '') {
             $params['extension'] = '%' . $this->getSanitizer()->getString('extension', $filterBy) . '%';
-            $body .= ' AND ValidExtensions LIKE :extension ';
+            $body .= ' AND `ValidExtensions` LIKE :extension ';
         }
 
         if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) != -1) {
-            $body .= " AND assignable = :assignable ";
+            $body .= " AND `assignable` = :assignable ";
             $params['assignable'] = $this->getSanitizer()->getInt('assignable', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
-            $body .= " AND enabled = :enabled ";
+            $body .= " AND `enabled` = :enabled ";
             $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('regionSpecific', -1, $filterBy) != -1) {
-            $body .= " AND regionSpecific = :regionSpecific ";
+            $body .= " AND `regionSpecific` = :regionSpecific ";
             $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
-            $body .= ' AND module <> \'playersoftware\' ';
+            $body .= ' AND `module` <> \'playersoftware\' ';
         }
 
         if ($this->getSanitizer()->getInt('notSavedReport', $filterBy) == 1) {
-            $body .= ' AND module <> \'savedreport\' ';
+            $body .= ' AND `module` <> \'savedreport\' ';
         }
 
         // Sorting?

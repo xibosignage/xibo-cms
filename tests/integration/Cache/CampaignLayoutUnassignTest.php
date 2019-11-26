@@ -51,7 +51,7 @@ class CampaignLayoutUnassignTest extends LocalWebTestCase
         $this->layout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->layout);
+        $layout = $this->getDraft($this->layout);
 
         // Add a simple widget
         $this->addSimpleWidget($layout);

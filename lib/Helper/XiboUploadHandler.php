@@ -290,6 +290,29 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                $resizeThreshold = $controller->getConfig()->getSetting('DEFAULT_RESIZE_THRESHOLD');
+                $resizeLimit = $controller->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT');
+
+                // Media released set to 0 or flag for large size images
+                // if image size is greater than 8000 X 8000 then we flag that image as too big
+                if ($file->width > $resizeLimit || $file->height > $resizeLimit) {
+                    $media->released = 2; // flag that image as too big
+                } elseif ($file->width > $file->height) { // 'landscape';
+
+                    if ($file->width <= $resizeThreshold) {
+                        $media->released = 1;
+                    } else {
+                        $media->released = 0;
+                    }
+                } else { // 'portrait';
+
+                    if ($file->height <= $resizeThreshold) {
+                        $media->released = 1;
+                    } else {
+                        $media->released = 0;
+                    }
+                }
+
                 // Save
                 $media->save();
 
@@ -312,7 +335,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->fileSize = $media->fileSize;
             $file->md5 = $media->md5;
             $file->enableStat = $media->enableStat;
-            $file->type = $module->getModuleType();
+            $file->mediaType = $module->getModuleType();
 
             // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->fileSize != $file->size)

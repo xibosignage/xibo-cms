@@ -400,7 +400,7 @@ function XiboInitialise(scope) {
 
     // make a vanilla layout, display and media selector for reuse
     $(scope + " .pagedSelect select.form-control").each(function() {
-        makePagedSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+        makePagedSelect($(this), $("body"));
     });
 
     // make a local select that search for text or tags
@@ -1816,7 +1816,7 @@ function makePagedSelect(element, parent) {
  * @param parent
  */
 function makeLocalSelect(element, parent) {
-
+    
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {

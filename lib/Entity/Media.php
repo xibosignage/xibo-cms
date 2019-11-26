@@ -668,12 +668,12 @@ class Media implements \JsonSerializable
             }
 
             // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($this->expires == 0 && count($widget->mediaIds) <= 0) {
+            if ($this->mediaType != 'module' && count($widget->mediaIds) <= 0) {
                 $widget->setChildObjectDepencencies($this->playlistFactory);
                 $widget->delete();
-            }
-            else
+            } else {
                 $widget->save(['saveWidgetOptions' => false]);
+            }
         }
 
         foreach ($this->displayGroups as $displayGroup) {
@@ -755,7 +755,8 @@ class Media implements \JsonSerializable
                 released = :released,
                 apiRef = :apiRef,
                 modifiedDt = :modifiedDt,
-                `enableStat` = :enableStat
+                `enableStat` = :enableStat,
+                expires = :expires
            WHERE mediaId = :mediaId
         ';
 
@@ -771,7 +772,8 @@ class Media implements \JsonSerializable
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId,
             'modifiedDt' => date('Y-m-d H:i:s'),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'expires' => $this->expires
         ];
 
         $this->getStore()->update($sql, $params);
@@ -802,6 +804,18 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId;
         } else {
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
+        }
+
+        if(isset($this->urlDownload) && $this->urlDownload === true) {
+
+            // for upload via URL, handle cases where URL do not have specified extension in url
+            // we either have a long string after lastPeriod or nothing
+
+            if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
+                $saveName = $this->mediaId . '.' . $this->extension;
+            }
+
+            $this->storedAs = $saveName;
         }
 
         $this->getLog()->debug('saveFile for "' . $this->name . '" [' . $this->mediaId . '] with storedAs = "'
@@ -858,12 +872,39 @@ class Media implements \JsonSerializable
         // Set to valid
         $this->valid = 1;
 
+        $filePath = $libraryFolder . $this->storedAs;
+        list($imgWidth, $imgHeight) = @getimagesize($filePath);
+
+        $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+        $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
+
+        // Media released set to 0 for large size images
+        // if image size is greater than 8000 X 8000 then we flag that image as too big
+        if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
+            $this->released = 2;
+        } elseif ($imgWidth > $imgHeight) { // 'landscape';
+
+            if ($imgWidth <= $resizeThreshold) {
+                $this->released = 1;
+            } else {
+                $this->released = 0;
+            }
+        } else { // 'portrait';
+
+            if ($imgHeight <= $resizeThreshold) {
+                $this->released = 1;
+            } else {
+                $this->released = 0;
+            }
+        }
+
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
+            'released' => $this->released,
             'mediaId' => $this->mediaId
         ]);
     }

@@ -40,6 +40,7 @@ $app->get('/', function () use ($app) {
 // Dashboards
 $app->get('/statusdashboard', '\Xibo\Controller\StatusDashboard:displayPage')->name('statusdashboard.view');
 $app->get('/statusdashboard/displays', '\Xibo\Controller\StatusDashboard:displays')->name('statusdashboard.displays');
+$app->get('/statusdashboard/displayGroups', '\Xibo\Controller\StatusDashboard:displayGroups')->name('statusdashboard.displayGroups');
 $app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
 $app->get('/mediamanager', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 $app->get('/mediamanager/data', '\Xibo\Controller\MediaManager:grid')->name('mediamanager.search');
@@ -80,6 +81,7 @@ $app->get('/drawer/notification/interrupt/:id', '\Xibo\Controller\Notification:i
 $app->get('/notification/form/add', '\Xibo\Controller\Notification:addForm')->name('notification.add.form');
 $app->get('/notification/form/edit/:id', '\Xibo\Controller\Notification:editForm')->name('notification.edit.form');
 $app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:deleteForm')->name('notification.delete.form');
+$app->get('/notification/export/:id', '\Xibo\Controller\Notification:exportAttachment')->name('notification.exportattachment');
 
 //
 // layouts
@@ -147,6 +149,7 @@ $app->get('/library/view', '\Xibo\Controller\Library:displayPage')->name('librar
 $app->get('/library/form/edit/:id', '\Xibo\Controller\Library:editForm')->name('library.edit.form');
 $app->get('/library/form/delete/:id', '\Xibo\Controller\Library:deleteForm')->name('library.delete.form');
 $app->get('/library/form/tidy', '\Xibo\Controller\Library:tidyForm')->name('library.tidy.form');
+$app->get('/library/form/uploadUrl', '\Xibo\Controller\Library:uploadFromUrlForm')->name('library.uploadUrl.form');
 $app->get('/library/form/usage/:id', '\Xibo\Controller\Library:usageForm')->name('library.usage.form');
 $app->get('/library/fontcss', '\Xibo\Controller\Library:fontCss')->name('library.font.css');
 $app->get('/library/fontlist', '\Xibo\Controller\Library:fontList')->name('library.font.list');
@@ -165,6 +168,8 @@ $app->get('/display/form/screenshot/:id', '\Xibo\Controller\Display:requestScree
 $app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wakeOnLanForm')->name('display.wol.form');
 $app->get('/display/form/authorise/:id', '\Xibo\Controller\Display:authoriseForm')->name('display.authorise.form');
 $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLayoutForm')->name('display.defaultlayout.form');
+$app->get('/display/form/moveCms/:id', '\Xibo\Controller\Display:moveCmsForm')->name('display.moveCms.form');
+$app->get('/display/form/addViaCode', '\Xibo\Controller\Display:addViaCodeForm')->name('display.addViaCode.form');
 
 //
 // user
@@ -291,6 +296,7 @@ $app->get('/maintenance/form/tidy', '\Xibo\Controller\Maintenance:tidyLibraryFor
 $app->get('/application/view', '\Xibo\Controller\Applications:displayPage')->name('application.view');
 $app->get('/application/data/activity', '\Xibo\Controller\Applications:viewActivity')->name('application.view.activity');
 $app->get('/application/form/add', '\Xibo\Controller\Applications:addForm')->name('application.add.form');
+$app->get('/application/form/addDooh', '\Xibo\Controller\Applications:addDoohForm')->name('application.addDooh.form');
 $app->get('/application/form/edit/:id', '\Xibo\Controller\Applications:editForm')->name('application.edit.form');
 $app->get('/application/form/delete/:id', '\Xibo\Controller\Applications:deleteForm')->name('application.delete.form');
 $app->get('/application/authorize', '\Xibo\Controller\Applications:authorizeRequest')->name('application.authorize.request');
@@ -397,6 +403,7 @@ $app->get('/report/reportschedule/form/reset/:id', '\Xibo\Controller\Report:rese
 //
 $app->get('/report/savedreport/view', '\Xibo\Controller\Report:displaySavedReportPage')->name('savedreport.view');
 $app->get('/report/savedreport/:id/report/:name/open', '\Xibo\Controller\Report:savedReportOpen')->name('savedreport.open');
+$app->get('/report/savedreport/:id/report/:name/export', '\Xibo\Controller\Report:savedReportExport')->name('savedreport.export');
 $app->get('/report/savedreport/form/delete/:id', '\Xibo\Controller\Report:deleteSavedReportForm')->name('savedreport.delete.form');
 
 //

@@ -33,6 +33,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -106,6 +107,9 @@ class Layout extends Base
     /** @var  CampaignFactory */
     private $campaignFactory;
 
+    /** @var  DisplayGroupFactory */
+    private $displayGroupFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -127,7 +131,7 @@ class Layout extends Base
      * @param DataSetFactory $dataSetFactory
      * @param CampaignFactory $campaignFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -142,6 +146,7 @@ class Layout extends Base
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
     }
 
     /**
@@ -169,7 +174,8 @@ class Layout extends Base
         $this->getState()->template = 'layout-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query()
+            'groups' => $this->userGroupFactory->query(),
+            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1])
         ]);
     }
 
@@ -275,6 +281,7 @@ class Layout extends Base
         $templateId = $this->getSanitizer()->getInt('layoutId');
         $resolutionId = $this->getSanitizer()->getInt('resolutionId');
         $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+        $autoApplyTransitions = $this->getSanitizer()->getCheckbox('autoApplyTransitions');
 
         $template = null;
 
@@ -308,6 +315,9 @@ class Layout extends Base
 
         // Set layout enableStat flag
         $layout->enableStat = $enableStat;
+
+        // Set auto apply transitions flag
+        $layout->autoApplyTransitions = $autoApplyTransitions;
 
         // Save
         $layout->save();
@@ -351,6 +361,9 @@ class Layout extends Base
         }
 
         $this->getLog()->debug('Layout Added');
+
+        // automatically checkout the new layout for edit
+        $this->checkout($layout->layoutId);
 
         // Return
         $this->getState()->hydrate([
@@ -441,8 +454,9 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException(__('Cannot edit Layout properties on a Draft'), 'layoutId');
+        }
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
@@ -546,6 +560,7 @@ class Layout extends Base
         $layout->backgroundColor = $this->getSanitizer()->getString('backgroundColor');
         $layout->backgroundImageId = $this->getSanitizer()->getInt('backgroundImageId');
         $layout->backgroundzIndex = $this->getSanitizer()->getInt('backgroundzIndex');
+        $layout->autoApplyTransitions = $this->getSanitizer()->getCheckbox('autoApplyTransitions');
 
         // Resolution
         $saveRegions = false;
@@ -995,6 +1010,7 @@ class Layout extends Base
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
+            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId')
         ]));
 
         foreach ($layouts as $layout) {
@@ -1026,6 +1042,24 @@ class Layout extends Base
 
                     // Add widget module type name
                     $widget->moduleName = $module->getModuleName();
+
+                    // apply default transitions to a dynamic parameters on widget object.
+                    if ($layout->autoApplyTransitions == 1) {
+                        $widgetTransIn = $widget->getOptionValue('transIn', $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN'));
+                        $widgetTransOut = $widget->getOptionValue('transOut', $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT'));
+                        $widgetTransInDuration = $widget->getOptionValue('transInDuration', $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION'));
+                        $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION'));
+                    } else {
+                        $widgetTransIn = $widget->getOptionValue('transIn', null);
+                        $widgetTransOut = $widget->getOptionValue('transOut', null);
+                        $widgetTransInDuration = $widget->getOptionValue('transInDuration', null);
+                        $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', null);
+                    }
+
+                    $widget->transitionIn = $widgetTransIn;
+                    $widget->transitionOut = $widgetTransOut;
+                    $widget->transitionDurationIn = $widgetTransInDuration;
+                    $widget->transitionDurationOut = $widgetTransOutDuration;
 
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
@@ -1864,7 +1898,9 @@ class Layout extends Base
 
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
-        ob_end_flush();
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         readfile($fileName);
         exit;
     }
@@ -2152,6 +2188,7 @@ class Layout extends Base
         $draft->parentId = $layout->layoutId;
         $draft->campaignId = $layout->campaignId;
         $draft->publishedStatusId = 2; // Draft
+        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
         $draft->tags = [];

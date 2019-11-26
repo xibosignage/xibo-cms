@@ -655,7 +655,7 @@ class UserGroup extends Base
      *      name="userGroupId",
      *      in="path",
      *      description="ID of the user group to which assign the user",
-     *      type="string",
+     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -739,7 +739,7 @@ class UserGroup extends Base
      *      name="userGroupId",
      *      in="path",
      *      description="ID of the user group from which to unassign the user",
-     *      type="string",
+     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
@@ -787,6 +787,7 @@ class UserGroup extends Base
     /**
      * Form to Copy Group
      * @param int $groupId
+     * @throws \Xibo\Exception\NotFoundException
      */
     function copyForm($groupId)
     {

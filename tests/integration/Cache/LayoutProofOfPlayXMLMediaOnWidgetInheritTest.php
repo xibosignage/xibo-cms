@@ -82,7 +82,7 @@ class LayoutProofOfPlayXMLMediaOnWidgetInheritTest extends LocalWebTestCase
 
         // Create a Layout with enableStat Off (by default)
         $this->layoutOff = $this->createLayout();
-        $layoutOff = $this->checkout($this->layoutOff);
+        $layoutOff = $this->getDraft($this->layoutOff);
 
         // Upload some media - enableStat is Inherit (from global media stat setting)
         $this->media = (new XiboLibrary($this->getEntityProvider()))->create(
@@ -138,7 +138,7 @@ class LayoutProofOfPlayXMLMediaOnWidgetInheritTest extends LocalWebTestCase
             $this->getResolutionId('landscape'),
             1
         );
-        $layoutOn = $this->checkout($this->layoutOn);
+        $layoutOn = $this->getDraft($this->layoutOn);
 
         // Assign the media we've created to our regions playlist- widget with Inherit (from global widget stat setting)
         $playlist2 = (new XiboPlaylist($this->getEntityProvider()))

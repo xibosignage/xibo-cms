@@ -181,8 +181,6 @@ Cypress.Commands.add('addMediaToLibrary', function(fileName) {
 
                 const parsedJSON = JSON.parse(res);
 
-                expect(typeof parsedJSON.files[0].name).to.eq('string');
-
                 // Return id
                 return parsedJSON.files[0].name;
             });
@@ -215,9 +213,6 @@ Cypress.Commands.add('importLayout', function(fileName) {
             // Perform the request
             cy.formRequest(method, url, formData).then((res) => {
                 const parsedJSON = JSON.parse(res);
-
-                expect(typeof parsedJSON.files[0].id).to.eq('number');
-
                 // Return id
                 return parsedJSON.files[0].id;
             });
@@ -229,6 +224,7 @@ Cypress.Commands.add('deleteLayout', function(id) {
 
     cy.request({
         method: 'DELETE',
+        failOnStatusCode: false,
         url: '/api/layout/' + id,
         form: true,
         headers: {
@@ -346,3 +342,82 @@ Cypress.Commands.add('createDisplaygroup', function(name) {
         return res.body.displaygroupId;
     });
 });
+
+/**
+ * Open playlist editor modal and wait for toolbar user prefs to load
+ * @param {String} playlistName
+ */
+Cypress.Commands.add('openPlaylistEditorAndLoadPrefs', function(playlistId) {
+
+    cy.server();
+    cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+
+    // Reload playlist table page
+    cy.visit('/playlist/view');
+
+    // Clear toolbar preferences
+    cy.clearToolbarPrefs();
+
+    cy.window().then((win) => {
+        win.XiboCustomFormRender(win.$('<li class="XiboCustomFormButton playlist_timeline_button_edit" href="/playlist/form/timeline/' + playlistId + '"></li>'));
+
+        // Wait for user prefs to load
+        cy.wait('@userPrefsLoad');
+    });
+});
+
+/**
+ * Add media items to library
+ */
+Cypress.Commands.add('populateLibraryWithMedia', function() {
+    // Add audio media to library
+    cy.addMediaToLibrary('../assets/audioSample.mp3');
+
+    // Add image media to library
+    cy.addMediaToLibrary('../assets/imageSample.png');
+});
+
+/**
+ * Drag one element to another one
+ * @param {string} draggableSelector 
+ * @param {string} dropableSelector 
+ */
+Cypress.Commands.add('dragToElement', function(draggableSelector, dropableSelector) {
+
+    return cy.get(dropableSelector).then(($el) => {
+        let position = {
+            x: $el.offset().left + $el.width() / 2 + window.scrollX,
+            y: $el.offset().top + $el.height() / 2 + window.scrollY
+        };
+
+        cy.get(draggableSelector).invoke('show');
+
+        cy.get(draggableSelector)
+            .trigger('mousedown', {
+                which: 1
+            })
+            .trigger('mousemove', {
+                which: 1,
+                pageX: position.x,
+                pageY: position.y
+            })
+            .trigger('mouseup');
+    });
+});
+
+/**
+ * Go to layout editor page and wait for toolbar user prefs to load
+ * @param {number} layoutId 
+ */
+Cypress.Commands.add('goToLayoutAndLoadPrefs', function(layoutId) {
+    cy.server();
+    cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+
+    cy.clearToolbarPrefs();
+
+    cy.visit('/layout/designer/' + layoutId);
+
+    // Wait for user prefs to load
+    cy.wait('@userPrefsLoad');
+});
+

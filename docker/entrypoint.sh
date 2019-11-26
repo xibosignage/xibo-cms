@@ -69,6 +69,10 @@ then
   MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 
+  # Configure Quick Chart
+  echo "Setting up Quickchart"
+  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
+
   mv /var/www/backup/import.sql /var/www/backup/import.sql.done
 fi
 
@@ -157,6 +161,10 @@ then
     cp -v /var/www/cms/ca-certs/*.crt /usr/local/share/ca-certificates
     /usr/sbin/update-ca-certificates
 
+    # Configure Quick Chart
+    echo "Setting up Quickchart"
+    mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
+
     # Update /etc/periodic/15min/cms-db-backup with current environment (for cron)
     /bin/sed -i "s/^MYSQL_BACKUP_ENABLED=.*$/MYSQL_BACKUP_ENABLED=$MYSQL_BACKUP_ENABLED/" /etc/periodic/15min/cms-db-backup
     /bin/sed -i "s/^MYSQL_USER=.*$/MYSQL_USER=$MYSQL_USER/" /etc/periodic/15min/cms-db-backup
@@ -203,7 +211,11 @@ then
     /bin/chmod g+s /usr/sbin/ssmtp
 
     mkdir -p /var/www/cms/library/temp
-    chown apache.apache -R /var/www/cms
+    chown apache.apache -R /var/www/cms/library
+    chown apache.apache -R /var/www/cms/custom
+    chown apache.apache -R /var/www/cms/web/theme/custom
+    chown apache.apache -R /var/www/cms/web/userscripts
+    chown apache.apache -R /var/www/cms/ca-certs
 
     # If we have a CMS ALIAS environment variable, then configure that in our Apache conf.
     # this must not be done in DEV mode, as it modifies the .htaccess file, which might then be committed by accident

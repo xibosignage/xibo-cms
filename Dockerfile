@@ -136,7 +136,8 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_MAX_SPARE_SERVERS=10 \
     CMS_APACHE_MAX_REQUEST_WORKERS=60 \
     CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300 \
-    CMS_APACHE_TIMEOUT=30
+    CMS_APACHE_TIMEOUT=30 \
+    CMS_QUICK_CHART_URL=http://cms-quickchart:3400
 
 # Expose port 80
 EXPOSE 80
@@ -151,7 +152,7 @@ COPY --from=composer /app /var/www/cms
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
 
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
-COPY . /var/www/cms
+COPY --chown=apache:apache . /var/www/cms
 
 # Tidy up
 RUN rm /var/www/cms/composer.* && \

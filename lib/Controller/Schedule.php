@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\ScheduleReminder;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -32,6 +33,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -56,6 +58,11 @@ class Schedule extends Base
      * @var ScheduleFactory
      */
     private $scheduleFactory;
+
+    /**
+     * @var ScheduleReminderFactory
+     */
+    private $scheduleReminderFactory;
 
     /**
      * @var DisplayGroupFactory
@@ -103,8 +110,9 @@ class Schedule extends Base
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param DayPartFactory $dayPartFactory
+     * @param ScheduleReminderFactory $scheduleReminderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -118,12 +126,18 @@ class Schedule extends Base
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dayPartFactory = $dayPartFactory;
+        $this->scheduleReminderFactory = $scheduleReminderFactory;
     }
 
     function displayPage()
     {
         // We need to provide a list of displays
         $displayGroupIds = $this->session->get('displayGroupIds');
+
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
         $displayGroups = [];
 
         // Boolean to check if the option show all was saved in session
@@ -132,21 +146,24 @@ class Schedule extends Base
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
                 if ($displayGroupId == -1) {
+                    // If we have the show all option selected, go no further.
                     $displayGroupsShowAll = true;
-                    continue;
+                    break;
                 }
-                    
 
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-                
-                if ($this->getUser()->checkViewable($displayGroup)) {
-                    $displayGroups[] = $displayGroup;
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
                 }
             }
         }
 
         $data = [
-            'optionGroups' => ['Group', 'Displays'],
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'displayGroupsShowAll' => $displayGroupsShowAll
@@ -196,6 +213,8 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
      */
     function eventData()
     {
@@ -203,6 +222,7 @@ class Schedule extends Base
         $this->setNoOutput();
 
         $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
+        $campaignId = $this->getSanitizer()->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
         $start = $this->getDate()->parse($this->getSanitizer()->getString('from', 1000) / 1000, 'U');
         $end = $this->getDate()->parse($this->getSanitizer()->getString('to', 1000) / 1000, 'U');
@@ -249,6 +269,10 @@ class Schedule extends Base
             'futureSchedulesTo' => $end->format('U'),
             'displayGroupIds' => $displayGroupIds
         ];
+
+        if ($campaignId != null) {
+            $filter['campaignId'] = $campaignId;
+        }
 
         foreach ($this->scheduleFactory->query('FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
@@ -368,7 +392,7 @@ class Schedule extends Base
      *
      * @SWG\Get(
      *  path="/schedule/{displayGroupId}/events",
-     *  operationId="scheduleCalendarData",
+     *  operationId="scheduleCalendarDataDisplayGroup",
      *  tags={"schedule"},
      *  @SWG\Parameter(
      *      name="displayGroupId",
@@ -658,9 +682,33 @@ class Schedule extends Base
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
-            'help' => $this->getHelp()->link('Schedule', 'Add')
+            'help' => $this->getHelp()->link('Schedule', 'Add'),
+            'reminders' => []
         ]);
     }
+
+    /**
+     * Model to use for supplying key/value pairs to arrays
+     * @SWG\Definition(
+     *  definition="ScheduleReminderArray",
+     *  @SWG\Property(
+     *      property="reminder_value",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="reminder_type",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="reminder_option",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="reminder_isEmailHidden",
+     *      type="integer"
+     *  )
+     * )
+     */
 
     /**
      * Add Event
@@ -775,6 +823,16 @@ class Schedule extends Base
      *      required=false,
      *      @SWG\Items(type="integer")
      *   ),
+     *   @SWG\Parameter(
+     *      name="scheduleReminders",
+     *      in="formData",
+     *      description="Array of Reminders for this event",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(
+     *          ref="#/definitions/ScheduleReminderArray"
+     *      )
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -793,6 +851,8 @@ class Schedule extends Base
     {
         $this->getLog()->debug('Add Schedule');
 
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         // Get the custom day part to use as a default day part
         $customDayPart = $this->dayPartFactory->getCustomDayPart();
 
@@ -804,6 +864,7 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $customDayPart->dayPartId);
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
 
         // Workaround for cases where we're supplied 0 as the dayPartId (legacy custom dayPart)
         if ($schedule->dayPartId === 0)
@@ -870,6 +931,58 @@ class Schedule extends Base
         $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
 
+        $this->getLog()->debug('Add Schedule Reminder');
+
+        // API Request
+        $rows = [];
+        if ($this->isApi()) {
+
+            $reminders =  $this->getSanitizer()->getStringArray('scheduleReminders');
+            foreach ($reminders as $i => $reminder) {
+
+                $rows[$i]['reminder_value'] = (int) $reminder['reminder_value'];
+                $rows[$i]['reminder_type'] = (int) $reminder['reminder_type'];
+                $rows[$i]['reminder_option'] = (int) $reminder['reminder_option'];
+                $rows[$i]['reminder_isEmailHidden'] = (int) $reminder['reminder_isEmailHidden'];
+            }
+        } else {
+
+            for ($i=0; $i < count($this->getSanitizer()->getIntArray('reminder_value')); $i++) {
+                $rows[$i]['reminder_value'] = $this->getSanitizer()->getIntArray('reminder_value')[$i];
+                $rows[$i]['reminder_type'] = $this->getSanitizer()->getIntArray('reminder_type')[$i];
+                $rows[$i]['reminder_option'] = $this->getSanitizer()->getIntArray('reminder_option')[$i];
+                $rows[$i]['reminder_isEmailHidden'] = $this->getSanitizer()->getIntArray('reminder_isEmailHidden')[$i];
+            }
+        }
+
+        // Save new reminders
+        foreach ($rows as $reminder) {
+
+            // Do not add reminder if empty value provided for number of minute/hour
+            if ($reminder['reminder_value'] == 0) {
+                continue;
+            }
+
+            $scheduleReminder = $this->scheduleReminderFactory->createEmpty();
+            $scheduleReminder->scheduleReminderId = null;
+            $scheduleReminder->eventId = $schedule->eventId;
+            $scheduleReminder->value = $reminder['reminder_value'];
+            $scheduleReminder->type = $reminder['reminder_type'];
+            $scheduleReminder->option = $reminder['reminder_option'];
+            $scheduleReminder->isEmail = $reminder['reminder_isEmailHidden'];
+
+            $this->saveReminder($schedule, $scheduleReminder);
+        }
+
+        // We can get schedule reminders in an array
+        if ($this->isApi()) {
+
+            $schedule = $this->scheduleFactory->getById($schedule->eventId);
+            $schedule->load([
+                'loadScheduleReminders' => in_array('scheduleReminders', $embed),
+            ]);
+        }
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -903,6 +1016,9 @@ class Schedule extends Base
         if ($schedule->recurrenceRange != null)
             $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);
 
+        // Get all reminders
+        $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $eventId]);
+
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
@@ -914,7 +1030,8 @@ class Schedule extends Base
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
-            'help' => $this->getHelp()->link('Schedule', 'Edit')
+            'help' => $this->getHelp()->link('Schedule', 'Edit'),
+            'reminders' => $scheduleReminders
         ]);
     }
 
@@ -1040,6 +1157,16 @@ class Schedule extends Base
      *      required=false,
      *      @SWG\Items(type="integer")
      *   ),
+     *   @SWG\Parameter(
+     *      name="scheduleReminders",
+     *      in="formData",
+     *      description="Array of Reminders for this event",
+     *      type="array",
+     *      required=false,
+     *      @SWG\Items(
+     *          ref="#/definitions/ScheduleReminderArray"
+     *      )
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1051,8 +1178,13 @@ class Schedule extends Base
      */
     public function edit($eventId)
     {
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         $schedule = $this->scheduleFactory->getById($eventId);
-        $schedule->load();
+        $schedule->load([
+            'loadScheduleReminders' => in_array('scheduleReminders', $embed),
+        ]);
+
 
         if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
@@ -1072,6 +1204,7 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
 
         // if we are editing Layout/Campaign event that was set with Always daypart and change it to Command event type
         // the daypartId will remain as always, which will then cause the event to "disappear" from calendar
@@ -1129,6 +1262,102 @@ class Schedule extends Base
         // Ready to do the add
         $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
+
+        // Get form reminders
+        $rows = [];
+        for ($i=0; $i < count($this->getSanitizer()->getIntArray('reminder_value')); $i++) {
+
+            $entry = [];
+
+            if ($this->getSanitizer()->getIntArray('reminder_scheduleReminderId')[$i] == null ) {
+                continue;
+            }
+
+            $entry['reminder_scheduleReminderId'] = $this->getSanitizer()->getIntArray('reminder_scheduleReminderId')[$i];
+            $entry['reminder_value'] = $this->getSanitizer()->getIntArray('reminder_value')[$i];
+            $entry['reminder_type'] = $this->getSanitizer()->getIntArray('reminder_type')[$i];
+            $entry['reminder_option'] = $this->getSanitizer()->getIntArray('reminder_option')[$i];
+            $entry['reminder_isEmail'] = $this->getSanitizer()->getIntArray('reminder_isEmailHidden')[$i];
+
+            $rows[$this->getSanitizer()->getIntArray('reminder_scheduleReminderId')[$i]] = $entry;
+        }
+        $formReminders = $rows;
+
+        // Compare to delete
+        // Get existing db reminders
+        $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $eventId]);
+
+        $rows = [];
+        foreach ($scheduleReminders as $reminder) {
+
+            $entry = [];
+            $entry['reminder_scheduleReminderId'] = $reminder->scheduleReminderId;
+            $entry['reminder_value'] = $reminder->value;
+            $entry['reminder_type'] = $reminder->type;
+            $entry['reminder_option'] = $reminder->option;
+            $entry['reminder_isEmail'] = $reminder->isEmail;
+
+            $rows[$reminder->scheduleReminderId] = $entry;
+        }
+        $dbReminders = $rows;
+
+        $deleteReminders = $schedule->compareMultidimensionalArrays($dbReminders, $formReminders, false);
+        foreach ($deleteReminders as $reminder) {
+            $reminder = $this->scheduleReminderFactory->getById($reminder['reminder_scheduleReminderId']);
+            $reminder->delete();
+        }
+
+        // API Request
+        $rows = [];
+        if ($this->isApi()) {
+
+            $reminders =  $this->getSanitizer()->getStringArray('scheduleReminders');
+            foreach ($reminders as $i => $reminder) {
+
+                $rows[$i]['reminder_scheduleReminderId'] = isset($reminder['reminder_scheduleReminderId']) ? (int) $reminder['reminder_scheduleReminderId'] : null;
+                $rows[$i]['reminder_value'] = (int) $reminder['reminder_value'];
+                $rows[$i]['reminder_type'] = (int) $reminder['reminder_type'];
+                $rows[$i]['reminder_option'] = (int) $reminder['reminder_option'];
+                $rows[$i]['reminder_isEmailHidden'] = (int) $reminder['reminder_isEmailHidden'];
+            }
+        } else {
+
+            for ($i=0; $i < count($this->getSanitizer()->getIntArray('reminder_value')); $i++) {
+                $rows[$i]['reminder_scheduleReminderId'] = $this->getSanitizer()->getIntArray('reminder_scheduleReminderId')[$i];
+                $rows[$i]['reminder_value'] = $this->getSanitizer()->getIntArray('reminder_value')[$i];
+                $rows[$i]['reminder_type'] = $this->getSanitizer()->getIntArray('reminder_type')[$i];
+                $rows[$i]['reminder_option'] = $this->getSanitizer()->getIntArray('reminder_option')[$i];
+                $rows[$i]['reminder_isEmailHidden'] = $this->getSanitizer()->getIntArray('reminder_isEmailHidden')[$i];
+            }
+
+        }
+
+        // Save rest of the reminders
+        foreach ($rows as $reminder) {
+
+            // Do not add reminder if empty value provided for number of minute/hour
+            if ($reminder['reminder_value'] == 0) {
+                continue;
+            }
+
+            $scheduleReminderId = isset($reminder['reminder_scheduleReminderId']) ? $reminder['reminder_scheduleReminderId'] : null;
+
+            try {
+                $scheduleReminder = $this->scheduleReminderFactory->getById($scheduleReminderId);
+                $scheduleReminder->load();
+            } catch (NotFoundException $e) {
+                $scheduleReminder = $this->scheduleReminderFactory->createEmpty();
+                $scheduleReminder->scheduleReminderId = null;
+                $scheduleReminder->eventId = $eventId;
+            }
+
+            $scheduleReminder->value = $reminder['reminder_value'];
+            $scheduleReminder->type = $reminder['reminder_type'];
+            $scheduleReminder->option = $reminder['reminder_option'];
+            $scheduleReminder->isEmail = $reminder['reminder_isEmailHidden'];
+
+            $this->saveReminder($schedule, $scheduleReminder);
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1263,5 +1492,96 @@ class Schedule extends Base
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
+    }
+
+    /*
+     * @param  \Xibo\Entity\Schedule $schedule
+     *
+     */
+    private function saveReminder($schedule, $scheduleReminder)
+    {
+        // if someone changes from custom to always
+        // we should keep the definitions, but make sure they don't get executed in the task
+        if ($schedule->isAlwaysDayPart()) {
+            $scheduleReminder->reminderDt = 0;
+            $scheduleReminder->save();
+            return;
+        }
+
+        switch ($scheduleReminder->type) {
+            case ScheduleReminder::$TYPE_MINUTE:
+                $type = ScheduleReminder::$MINUTE;
+                break;
+            case ScheduleReminder::$TYPE_HOUR:
+                $type = ScheduleReminder::$HOUR;
+                break;
+            case ScheduleReminder::$TYPE_DAY:
+                $type = ScheduleReminder::$DAY;
+                break;
+            case ScheduleReminder::$TYPE_WEEK:
+                $type = ScheduleReminder::$WEEK;
+                break;
+            case ScheduleReminder::$TYPE_MONTH:
+                $type = ScheduleReminder::$MONTH;
+                break;
+            default:
+                throw new \Xibo\Exception\NotFoundException('Unknown type');
+        }
+
+        // Remind seconds that we will subtract/add from schedule fromDt/toDt to get reminderDt
+        $remindSeconds =  $scheduleReminder->value *  $type;
+
+        // Set reminder date
+        if ($scheduleReminder->option == ScheduleReminder::$OPTION_BEFORE_START) {
+            $scheduleReminder->reminderDt = $schedule->fromDt - $remindSeconds;
+        } elseif ($scheduleReminder->option == ScheduleReminder::$OPTION_AFTER_START) {
+            $scheduleReminder->reminderDt = $schedule->fromDt + $remindSeconds;
+        } elseif ($scheduleReminder->option == ScheduleReminder::$OPTION_BEFORE_END) {
+            $scheduleReminder->reminderDt = $schedule->toDt - $remindSeconds;
+        } elseif ($scheduleReminder->option == ScheduleReminder::$OPTION_AFTER_END) {
+            $scheduleReminder->reminderDt = $schedule->toDt + $remindSeconds;
+        }
+
+        // Is recurring event?
+        $now = $this->getDate()->parse();
+        if ($schedule->recurrenceType != '') {
+
+            // find the next event from now
+            try {
+                $nextReminderDate = $schedule->getNextReminderDate($now, $scheduleReminder, $remindSeconds);
+            } catch (NotFoundException $error) {
+                $nextReminderDate = 0;
+                $this->getLog()->debug('No next occurrence of reminderDt found. ReminderDt set to 0.');
+            }
+
+            if ($nextReminderDate != 0) {
+
+                if ($nextReminderDate < $scheduleReminder->lastReminderDt) {
+
+                    // handle if someone edit in frontend after notifications were created
+                    // we cannot have a reminderDt set to below the lastReminderDt
+                    // so we make the lastReminderDt 0
+                    $scheduleReminder->lastReminderDt = 0;
+                    $scheduleReminder->reminderDt = $nextReminderDate;
+
+                } else {
+                    $scheduleReminder->reminderDt = $nextReminderDate;
+                }
+
+            } else {
+                // next event is not found
+                // we make the reminderDt and lastReminderDt as 0
+                $scheduleReminder->lastReminderDt = 0;
+                $scheduleReminder->reminderDt = 0;
+            }
+
+            // Save
+            $scheduleReminder->save();
+
+        } else { // one off event
+
+            $scheduleReminder->save();
+
+        }
     }
 }

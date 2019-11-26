@@ -50,7 +50,7 @@ class WidgetDeleteTest extends LocalWebTestCase
         $this->publishedLayout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->publishedLayout);
+        $layout = $this->getDraft($this->publishedLayout);
 
         // Create a widget
         $response = $this->getEntityProvider()->post('/playlist/widget/datasetview/' . $layout->regions[0]->regionPlaylist->playlistId);

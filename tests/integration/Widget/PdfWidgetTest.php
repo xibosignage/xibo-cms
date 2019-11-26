@@ -59,7 +59,7 @@ class PdfWidgetTest extends LocalWebTestCase
         $this->publishedLayout = $this->createLayout();
 
         // Checkout
-        $layout = $this->checkout($this->publishedLayout);
+        $layout = $this->getDraft($this->publishedLayout);
 
         // Create some media to upload
         $this->media = (new XiboLibrary($this->getEntityProvider()))->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/sampleDocument.pdf');

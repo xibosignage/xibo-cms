@@ -157,6 +157,13 @@
 
                 {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
                 {{ forms.checkbox("exactTags", title, exactTags) }}
+
+                {% set title %}{% trans "Should an email be sent?" %}{% endset %}
+                {{ forms.checkbox("sendEmail", title, sendEmail) }}
+
+                {% set title %}{% trans "Email addresses" %}{% endset %}
+                {% set helpText %}{% trans "Additional emails separated by a comma." %}{% endset %}
+                {{ forms.inputWithTags("nonusers", title, nonusers, helpText) }}
             </form>
         </div>
     </div>

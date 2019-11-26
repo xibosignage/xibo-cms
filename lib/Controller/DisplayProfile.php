@@ -24,6 +24,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -41,6 +42,11 @@ class DisplayProfile extends Base
 
     /** @var  PoolInterface */
     private $pool;
+
+    /**
+     * @var DayPartFactory
+     */
+    private $dayPartFactory;
 
     /**
      * @var DisplayProfileFactory
@@ -68,8 +74,9 @@ class DisplayProfile extends Base
      * @param DisplayProfileFactory $displayProfileFactory
      * @param CommandFactory $commandFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -77,6 +84,7 @@ class DisplayProfile extends Base
         $this->displayProfileFactory = $displayProfileFactory;
         $this->commandFactory = $commandFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -285,14 +293,26 @@ class DisplayProfile extends Base
 
         // Player Version Setting
         $versionId = $displayProfile->getSetting('versionMediaId');
-        $playerVersions = null;
+        $playerVersions = [];
+
+        // Daypart - Operating Hours
+        $dayPartId = $displayProfile->getSetting('dayPartId');
+        $dayparts = [];
 
         // Get the Player Version for this display profile type
         if ($versionId !== null) {
             try {
-                $playerVersions = $this->playerVersionFactory->getByMediaId($versionId);
+                $playerVersions[] = $this->playerVersionFactory->getByMediaId($versionId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown versionId set on Display Profile. ' . $displayProfile->displayProfileId);
+            }
+        }
+
+        if ($dayPartId !== null) {
+            try {
+                $dayparts[] = $this->dayPartFactory->getById($dayPartId);
+            } catch (NotFoundException $e) {
+                $this->getLog()->debug('Unknown dayPartId set on Display Profile. ' . $displayProfile->displayProfileId);
             }
         }
 
@@ -307,8 +327,9 @@ class DisplayProfile extends Base
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
             'commands' => array_merge($displayProfile->commands, $unassignedCommands),
-            'versions' => [$playerVersions],
-            'lockOptions' => json_decode($displayProfile->getSetting('lockOptions', '[]'), true)
+            'versions' => $playerVersions,
+            'lockOptions' => json_decode($displayProfile->getSetting('lockOptions', '[]'), true),
+            'dayParts' => $dayparts
         ]);
     }
 

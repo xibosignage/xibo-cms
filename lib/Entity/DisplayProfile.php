@@ -522,6 +522,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'collectInterval', 'default' => 300, 'type' => 'int'],
                 ['name' => 'downloadStartWindow', 'default' => '00:00', 'type' => 'string'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00', 'type' => 'string'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null, 'type' => 'string'],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -548,7 +549,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200), 'type' => 'int'],
                 ['name' => 'maxLogFileUploads', 'default' => 3, 'type' => 'int'],
                 ['name' => 'embeddedServerPort', 'default' => 9696, 'type' => 'int'],
-                ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
             ],
             'android' => [
                 ['name' => 'emailAddress', 'default' => null],
@@ -579,17 +581,20 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200)],
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'webViewPluginState', 'default' => 'DEMAND'],
                 ['name' => 'hardwareAccelerateWebViewMode', 'default' => '2'],
                 ['name' => 'timeSyncFromCms', 'default' => 0],
                 ['name' => 'webCacheEnabled', 'default' => 0],
                 ['name' => 'serverPort', 'default' => 9696],
                 ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
             ],
             'linux' => [
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -607,13 +612,15 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'screenShotSize', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200)],
                 ['name' => 'maxLogFileUploads', 'default' => 3],
                 ['name' => 'embeddedServerPort', 'default' => 9696],
-                ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
             ],
             'lg' => [
                 ['name' => 'emailAddress', 'default' => null],
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -627,13 +634,15 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'screenShotSize', 'default' => 1],
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
-                ['name' => 'lockOptions', 'default' => '{}']
+                ['name' => 'lockOptions', 'default' => '{}'],
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => null],
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => null],
                 ['name' => 'statsEnabled', 'default' => (int)$this->configService->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0), 'type' => 'checkbox'],
                 ['name' => 'aggregationLevel', 'default' => $this->configService->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'), 'type' => 'string'],
@@ -647,7 +656,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'screenShotSize', 'default' => 1],
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
-                ['name' => 'lockOptions', 'default' => '{}']
+                ['name' => 'lockOptions', 'default' => '{}'],
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
             ]
         );
 

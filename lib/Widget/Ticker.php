@@ -102,12 +102,12 @@ class Ticker extends ModuleWidget
     /**
      * Edit Ticker
      *
-     * @SWG\Post(
+     * @SWG\Put(
      *  path="/playlist/widget/{widgetId}?ticker",
      *  operationId="WidgetTickerEdit",
      *  tags={"widget"},
      *  summary="Edit a ticker Widget",
-     *  description="Edit a ticker Widget",
+     *  description="Edit a ticker Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -328,7 +328,6 @@ class Ticker extends ModuleWidget
      */
     public function edit()
     {
-        // Source is selected during add() and cannot be edited.
         // Other properties
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));

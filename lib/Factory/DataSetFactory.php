@@ -193,6 +193,7 @@ class DataSetFactory extends BaseFactory
             dataset.`authentication`,
             dataset.`username`,
             dataset.`password`,
+            dataset.`customHeaders`,
             dataset.`refreshRate`,
             dataset.`clearRate`,
             dataset.`runsAfter`,
@@ -349,6 +350,15 @@ class DataSetFactory extends BaseFactory
                 case 'none':
                 default:
                     $this->getLog()->debug('No authentication required');
+            }
+
+            if (isset($dataSet->customHeaders)) {
+                $arrayOfCustomHeaders = array_filter(explode(',', $dataSet->customHeaders));
+
+                foreach ($arrayOfCustomHeaders as $customHeader) {
+                    $header = array_filter(explode(':', $customHeader));
+                    $requestParams['headers'][$header[0]] = $header[1];
+                }
             }
 
             // Post request?

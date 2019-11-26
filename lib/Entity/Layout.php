@@ -33,6 +33,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -232,6 +233,14 @@ class Layout implements \JsonSerializable
      */
     public $enableStat;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating whether the default transitions should be applied to this Layout"
+     * )
+     */
+    public $autoApplyTransitions;
+
     // Child items
     /** @var Region[]  */
     public $regions = [];
@@ -314,6 +323,9 @@ class Layout implements \JsonSerializable
      */
     private $moduleFactory;
 
+    /** @var PlaylistFactory */
+    private $playlistFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -329,7 +341,7 @@ class Layout implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
      */
-    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory)
+    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -343,6 +355,7 @@ class Layout implements \JsonSerializable
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->moduleFactory = $moduleFactory;
+        $this->playlistFactory = $playlistFactory;
     }
 
     public function __clone()
@@ -600,9 +613,9 @@ class Layout implements \JsonSerializable
 
             if ($options['audit']) {
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout]);
+                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
                 } else {
-                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout]);
+                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
                 }
             }
 
@@ -610,10 +623,13 @@ class Layout implements \JsonSerializable
             $this->update($options);
 
             if ($options['audit']) {
+                $change = $this->getChangedProperties();
+                $change['campaignId'][] = $this->campaignId;
+
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Updated');
+                    $this->audit($this->layoutId, 'Updated', $change);
                 } else {
-                    $this->audit($this->layoutId, 'Updated Draft');
+                    $this->audit($this->layoutId, 'Updated Draft', $change);
                 }
             }
 
@@ -958,6 +974,8 @@ class Layout implements \JsonSerializable
     /**
      * Export the Layout as its XLF
      * @return string
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     public function toXlf()
@@ -1197,6 +1215,19 @@ class Layout implements \JsonSerializable
                     }
                 }
 
+                // automatically set the transitions on the layout xml, we are not saving widgets here to avoid deadlock issues.
+                if ($this->autoApplyTransitions == 1) {
+                    $widgetTransIn = $widget->getOptionValue('transIn', $this->config->getSetting('DEFAULT_TRANSITION_IN'));
+                    $widgetTransOut = $widget->getOptionValue('transOut', $this->config->getSetting('DEFAULT_TRANSITION_OUT'));
+                    $widgetTransInDuration = $widget->getOptionValue('transInDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+                    $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+
+                    $widget->setOptionValue('transIn', 'attrib', $widgetTransIn);
+                    $widget->setOptionValue('transInDuration', 'attrib', $widgetTransInDuration);
+                    $widget->setOptionValue('transOut', 'attrib', $widgetTransOut);
+                    $widget->setOptionValue('transOutDuration', 'attrib', $widgetTransOutDuration);
+                }
+
                 // Set enable stat collection flag
                 $mediaNode->setAttribute('enableStat', $enableStat);
 
@@ -1342,7 +1373,8 @@ class Layout implements \JsonSerializable
         $zip->addFromString('layout.json', json_encode([
             'layout' => $this->layout,
             'description' => $this->description,
-            'regions' => $regionMapping
+            'regions' => $regionMapping,
+            'layoutDefinitions' => $this
         ]));
 
         // Add the layout XLF
@@ -1424,6 +1456,11 @@ class Layout implements \JsonSerializable
         $dataSetIds = [];
         $dataSets = [];
 
+        // Playlists
+        $playlistMappings = [];
+        $playlistDefinitions = [];
+        $nestedPlaylistDefinitions = [];
+
         foreach ($this->getWidgets() as $widget) {
             /** @var Widget $widget */
             if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
@@ -1446,11 +1483,41 @@ class Layout implements \JsonSerializable
                     $dataSetIds[] = $dataSet->dataSetId;
                     $dataSets[] = $dataSet;
                 }
+            }   elseif ($widget->type == 'subplaylist') {
+                $playlistIds = json_decode($widget->getOptionValue('subPlaylistIds', []), true);
+
+                foreach ($playlistIds as $playlistId) {
+                    $count = 1;
+                    $playlist = $this->playlistFactory->getById($playlistId);
+                    $playlist->load();
+                    $playlist->expandWidgets(0, false);
+                    $playlistDefinitions[$playlist->playlistId] = $playlist;
+
+                    // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
+                    $playlist->generatePlaylistMapping($playlist->widgets, $playlist->playlistId,$playlistMappings, $count, $nestedPlaylistDefinitions, $dataSetIds, $dataSets, $dataSetFactory, $options['includeData']);
+                }
             }
         }
 
         // Add the mappings file to the ZIP
-        $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+        if ($dataSets != []) {
+            $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+        }
+
+        // Add the Playlist definitions to the ZIP
+        if ($playlistDefinitions != []) {
+            $zip->addFromString('playlist.json', json_encode($playlistDefinitions, JSON_PRETTY_PRINT));
+        }
+
+        // Add the nested Playlist definitions to the ZIP
+        if ($nestedPlaylistDefinitions != []) {
+            $zip->addFromString('nestedPlaylist.json', json_encode($nestedPlaylistDefinitions, JSON_PRETTY_PRINT));
+        }
+
+        // Add Playlist mappings file to the ZIP
+        if ($playlistMappings != []) {
+            $zip->addFromString('playlistMappings.json', json_encode($playlistMappings, JSON_PRETTY_PRINT));
+        }
 
         $zip->close();
     }
@@ -1459,6 +1526,8 @@ class Layout implements \JsonSerializable
      * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     public function xlfToDisk($options = [])
@@ -1476,6 +1545,30 @@ class Layout implements \JsonSerializable
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
             $this->load(['loadPlaylists' => true]);
+
+            // Layout auto Publish
+            if ($this->config->getSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') == 1 && $this->isChild()) {
+
+                // we are editing a draft layout, the published date is set on the original layout, therefore we need our parent.
+                $parent = $this->layoutFactory->loadById($this->parentId);
+
+                $layoutCurrentPublishedDate = $this->date->parse($parent->publishedDate);
+                $newPublishDateString = $this->date->getLocalDate($this->date->parse()->addMinutes(30), 'Y-m-d H:i:s');
+                $newPublishDate = $this->date->parse($newPublishDateString);
+
+                if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
+                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in this case.
+                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min from now, do not update');
+
+                }  elseif ($parent->publishedDate != null &&  $layoutCurrentPublishedDate->format('U') < $this->date->getLocalDate($this->date->parse()->subMinutes(5), 'U')) {
+                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the Regular Maintenance to build it before that happens
+                    $this->getLog()->debug('Layout should be built by Regular Maintenance');
+
+                } else {
+                    $parent->setPublishedDate($newPublishDateString);
+                    $this->getLog()->debug('Layout set to automatically Publish on ' . $newPublishDateString);
+                }
+            }
 
             // Assume error
             $this->status = 4;
@@ -1501,8 +1594,10 @@ class Layout implements \JsonSerializable
                 $options['notify'] = false;
             }
 
-            if ($this->status === 4 && $options['exceptionOnError'])
+            if ($this->status === 4 && $options['exceptionOnError']) {
+                $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
                 throw new InvalidArgumentException(__('There is an error with this Layout: %s', implode(',', $this->getStatusMessage())), 'status');
+            }
 
             $this->save([
                 'saveRegions' => true,
@@ -1678,8 +1773,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
 
         $time = $this->date->getLocalDate();
 
@@ -1697,7 +1792,8 @@ class Layout implements \JsonSerializable
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'parentId' => ($this->parentId == null) ? null : $this->parentId,
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'autoApplyTransitions' => ($this->autoApplyTransitions == null) ? 0 : $this->autoApplyTransitions
         ));
 
         // Add a Campaign
@@ -1768,7 +1864,8 @@ class Layout implements \JsonSerializable
               `userId` = :userId,
               `schemaVersion` = :schemaVersion,
               `statusMessage` = :statusMessage,
-              enableStat = :enableStat
+              enableStat = :enableStat,
+              autoApplyTransitions = :autoApplyTransitions
          WHERE layoutID = :layoutid
         ';
 
@@ -1791,7 +1888,8 @@ class Layout implements \JsonSerializable
             'userId' => $this->ownerId,
             'schemaVersion' => $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'autoApplyTransitions' => $this->autoApplyTransitions
         ));
 
         // Update the Campaign
@@ -1800,6 +1898,59 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
+        }
+    }
+
+    /**
+     * Handle the Playlist closure table for specified Layout object
+     *
+     * @param $layout
+     * @throws InvalidArgumentException
+     */
+    public function managePlaylistClosureTable($layout)
+    {
+
+        // we only need to set the closure table records for the playlists assigned directly to the regionPlaylist here
+        // all other relations between Playlists themselves are handled on import before layout is created
+        // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level.
+        foreach ($layout->getWidgets() as $widget) {
+            if ($widget->type == 'subplaylist') {
+                $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
+                $assignedPlaylists = implode(',', $assignedPlaylists);
+
+                foreach ($layout->regions as $region) {
+                    $regionPlaylist = $region->regionPlaylist;
+
+                    if ($widget->playlistId == $regionPlaylist->playlistId) {
+                        $parentId = $regionPlaylist->playlistId;
+                        $child[] = $assignedPlaylists;
+                    }
+                }
+            }
+        }
+
+        if (isset($parentId) && isset($child)) {
+            foreach ($child as $childId) {
+
+                $this->getLog()->debug('Manage closure table for parent ' . $parentId . ' and child ' . $childId);
+
+                if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [
+                    'parentId' => $parentId,
+                    'childId' => $childId
+                ])) {
+                    throw new InvalidArgumentException(__('Cannot add the same SubPlaylist twice.'), 'playlistId');
+                }
+
+                $this->getStore()->insert('
+                        INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
+                        SELECT p.parentId, c.childId, p.depth + c.depth + 1
+                          FROM lkplaylistplaylist p, lkplaylistplaylist c
+                         WHERE p.childId = :parentId AND c.parentId = :childId
+                    ', [
+                    'parentId' => $parentId,
+                    'childId' => $childId
+                ]);
+            }
         }
     }
 }

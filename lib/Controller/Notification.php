@@ -10,11 +10,14 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\DisplayNotifyService;
@@ -179,7 +182,15 @@ class Notification extends Base
                 $notification->buttons[] = array(
                     'id' => 'notification_button_delete',
                     'url' => $this->urlFor('notification.delete.form', ['id' => $notification->notificationId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor('notification.delete', ['id' => $notification->notificationId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'notification_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete?')],
+                        ['name' => 'rowtitle', 'value' => $notification->subject]
+                    ]
                 );
             }
         }
@@ -303,6 +314,37 @@ class Notification extends Base
     }
 
     /**
+     * Add attachment
+     */
+    public function addAttachment()
+    {
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+
+        $options = array(
+            'userId' => $this->getUser()->userId,
+            'controller' => $this,
+            'upload_dir' => $libraryFolder . 'temp/',
+            'download_via_php' => true,
+            'script_url' => $this->urlFor('notification.add'),
+            'upload_url' => $this->urlFor('notification.add'),
+            'image_versions' => array(),
+            'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
+        );
+
+        // Output handled by UploadHandler
+        $this->setNoOutput(true);
+
+        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        new AttachmentUploadHandler($options);
+    }
+
+    /**
      * Add Notification
      *
      * @SWG\Post(
@@ -390,6 +432,7 @@ class Notification extends Base
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
         $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
+        $notification->nonusers = $this->getSanitizer()->getString('nonusers');
 
         // Displays and Users to link
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
@@ -402,6 +445,41 @@ class Notification extends Base
         foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
             $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
         }
+
+        $notification->save();
+
+        $attachedFilename = $this->getSanitizer()->getString('attachedFilename');
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        $saveName = $notification->notificationId .'_' .$attachedFilename;
+
+        if (!empty($attachedFilename)) {
+
+            // Move the file into the library
+            // Try to move the file first
+            $from = $libraryFolder . 'temp/' . $attachedFilename;
+            $to = $libraryFolder . 'attachment/' .  $saveName;
+
+            $moved = rename($from, $to);
+
+            if (!$moved) {
+                $this->getLog()->info('Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.');
+
+                // Copy
+                $moved = copy($from, $to);
+
+                // Delete
+                if (!@unlink($from)) {
+                    $this->getLog()->error('Cannot delete file: ' . $from . ' after copying to ' . $to);
+                }
+            }
+
+            if (!$moved)
+                throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
+        }
+
+        $notification->filename = $saveName;
+        $notification->originalFileName = $attachedFilename;
 
         $notification->save();
 
@@ -507,6 +585,7 @@ class Notification extends Base
         $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
         $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
+        $notification->nonusers = $this->getSanitizer()->getString('nonusers');
 
         // Clear existing assignments
         $notification->displayGroups = [];
@@ -569,10 +648,37 @@ class Notification extends Base
 
         $notification->delete();
 
+        /*Delete the attachment*/
+        if (!empty($notification->filename)) {
+            // Library location
+            $attachmentLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/';
+            if (file_exists($attachmentLocation . $notification->filename))
+                unlink($attachmentLocation . $notification->filename);
+        }
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $notification->subject)
         ]);
+    }
+
+    public function exportAttachment($notificationId)
+    {
+        $notification = $this->notificationFactory->getById($notificationId);
+
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename;
+
+        // Return the file with PHP
+        $this->setNoOutput(true);
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+        header('Content-Length: ' . filesize($fileName));
+
+        // Disable any buffering to prevent OOM errors.
+        ob_end_flush();
+        readfile($fileName);
+        exit;
     }
 }

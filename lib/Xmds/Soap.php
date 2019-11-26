@@ -423,7 +423,7 @@ class Soap
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 $layoutId = $this->getSanitizer()->int($row['layoutId']);
-                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT)) {
+                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT)) {
                     $layouts[] = $layoutId;
                 }
             }
@@ -467,7 +467,7 @@ class Soap
                     ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                 WHERE lkdisplaydg.DisplayID = :displayId
+                 WHERE lkdisplaydg.DisplayID = :displayId AND media.released = 1
                 UNION ALL
                 SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                   FROM region
@@ -481,11 +481,11 @@ class Soap
                     ON widget.widgetId = lkwidgetmedia.widgetId
                     INNER JOIN media
                     ON media.mediaId = lkwidgetmedia.mediaId
-                 WHERE region.layoutId IN (%s)
+                 WHERE region.layoutId IN (%s) AND media.released = 1
                 UNION ALL
                 SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
                   FROM `media`
-                 WHERE `media`.mediaID IN (
+                 WHERE `media`.released = 1 AND `media`.mediaID IN (
                     SELECT backgroundImageId
                       FROM `layout`
                      WHERE layoutId IN (%s)
@@ -638,12 +638,13 @@ class Soap
                     $file->setAttribute("path", $layoutId);
                 }
 
-                $fileElements->appendChild($file);
-
                 // Get the Layout Modified Date
                 $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
+                // Append layout resources before layout so they are downloaded first. 
+                // If layouts are set to expire immediately, the new layout will use the old resources if 
+                // the layout is downloaded first.
                 foreach ($layout->regions as $region) {
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
@@ -692,18 +693,21 @@ class Soap
                             $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
 
                             // Append this item to required files
-                            $file = $requiredFilesXml->createElement("file");
-                            $file->setAttribute('type', 'resource');
-                            $file->setAttribute('id', $widget->widgetId);
-                            $file->setAttribute('layoutid', $layoutId);
-                            $file->setAttribute('regionid', $region->regionId);
-                            $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $updatedDt->format('U'));
-                            $fileElements->appendChild($file);
+                            $resourceFile = $requiredFilesXml->createElement("file");
+                            $resourceFile->setAttribute('type', 'resource');
+                            $resourceFile->setAttribute('id', $widget->widgetId);
+                            $resourceFile->setAttribute('layoutid', $layoutId);
+                            $resourceFile->setAttribute('regionid', $region->regionId);
+                            $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                            $resourceFile->setAttribute('updated', $updatedDt->format('U'));
+                            $fileElements->appendChild($resourceFile);
                         }
                     }
                 }
 
+                // Append Layout
+                $fileElements->appendChild($file);
+                
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
 
@@ -955,7 +959,7 @@ class Soap
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
 
-                    if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
+                    if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
@@ -978,6 +982,7 @@ class Soap
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
                         $layout->setAttribute("syncEvent", $syncKey);
+                        $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
@@ -1040,8 +1045,9 @@ class Soap
             }
 
             // Add the overlay nodes if we had any
-            if ($overlayNodes != null)
+            if ($overlayNodes != null) {
                 $layoutElements->appendChild($overlayNodes);
+            }
 
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
@@ -1861,6 +1867,7 @@ class Soap
     /**
      * Alert Display Up
      * @throws \phpmailerException
+     * @throws NotFoundException
      */
     protected function alertDisplayUp()
     {
@@ -1873,29 +1880,78 @@ class Soap
             // Log display up
             $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
 
+            $dayPartId = $this->display->getSetting('dayPartId', null,['displayOverride' => true]);
+
+            $operatingHours = true;
+
+            if ($dayPartId !== null) {
+                try {
+                    $dayPart = $this->dayPartFactory->getById($dayPartId);
+
+                    $startTimeArray = explode(':', $dayPart->startTime);
+                    $startTime = Date::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+
+                    $endTimeArray = explode(':', $dayPart->endTime);
+                    $endTime = Date::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+
+                    $now = Date::now();
+
+                    // exceptions
+                    foreach ($dayPart->exceptions as $exception) {
+
+                        // check if we are on exception day and if so override the startTime and endTime accordingly
+                        if ($exception['day'] == Date::now()->format('D')) {
+                            $exceptionsStartTime = explode(':', $exception['start']);
+                            $startTime = Date::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+
+                            $exceptionsEndTime = explode(':', $exception['end']);
+                            $endTime = Date::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                        }
+                    }
+
+                    // check if we are inside the operating hours for this display - we use that flag to decide if we need to create a notification and send an email.
+                    if (($now >= $startTime && $now <= $endTime)) {
+                        $operatingHours = true;
+                    } else {
+                        $operatingHours = false;
+                    }
+
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $this->display->displayId);
+                }
+            }
+
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
                 && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
 
-                $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
-                $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId, $this->getDate()->parse());
+                // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
+                if ($operatingHours) {
+                    $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
+                    $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId,
+                        $this->getDate()->parse());
 
-                // Create a notification assigned to system wide user groups
-                try {
-                    $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                    // Create a notification assigned to system wide user groups
+                    try {
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body,
+                            $this->getDate()->parse());
 
-                    // Add in any displayNotificationGroups, with permissions
-                    foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
-                        $notification->assignUserGroup($group);
+                        // Add in any displayNotificationGroups, with permissions
+                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
+                            $notification->assignUserGroup($group);
+                        }
+
+                        $notification->save();
+
+                    } catch (\Exception $e) {
+                        $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s',
+                            $this->display->display, $subject, $body);
                     }
-
-                    $notification->save();
-
-                } catch (\Exception $e) {
-                    $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s', $this->display->display, $subject, $body);
+                } else {
+                    $this->getLog()->info('Not sending recovery email for Display - ' . $this->display->display . ' we are outside of its operating hours');
                 }
             } else {
-                $this->getLog()->debug('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS'));
+                $this->getLog()->debug(sprintf('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS')));
             }
         }
     }

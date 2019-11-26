@@ -37,8 +37,10 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *
  * @SWG\Info(
  *  title="Xibo API",
- *  description="Xibo CMS API",
- *  version="2.0",
+ *  description="Xibo CMS API.
+       Using HTTP formData requests.
+       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
+ *  version="2.2",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -95,6 +97,8 @@ $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedul
  */
 $app->get('/notification', '\Xibo\Controller\Notification:grid')->name('notification.search');
 $app->post('/notification', '\Xibo\Controller\Notification:add')->name('notification.add');
+$app->map('/notification/attachment', '\Xibo\Controller\Notification:addAttachment')->via('HEAD');
+$app->post('/notification/attachment', '\Xibo\Controller\Notification:addAttachment')->name('notification.addattachment');
 $app->put('/notification/:id', '\Xibo\Controller\Notification:edit')->name('notification.edit');
 $app->delete('/notification/:id', '\Xibo\Controller\Notification:delete')->name('notification.delete');
 
@@ -218,6 +222,7 @@ $app->get('/library/usage/:id', '\Xibo\Controller\Library:usage')->name('library
 $app->get('/library/usage/layouts/:id', '\Xibo\Controller\Library:usageLayouts')->name('library.usage.layouts');
 $app->get('/library/download/:id(/:type)', '\Xibo\Controller\Library:download')->name('library.download');
 $app->post('/library', '\Xibo\Controller\Library:add')->name('library.add');
+$app->post('/library/uploadUrl', '\Xibo\Controller\Library:uploadFromUrl')->name('library.uploadFromUrl');
 $app->put('/library/:id', '\Xibo\Controller\Library:edit')->name('library.edit');
 $app->put('/library/setenablestat/:id', '\Xibo\Controller\Library:setEnableStat')->name('library.setenablestat');
 $app->delete('/library/tidy', '\Xibo\Controller\Library:tidy')->name('library.tidy');
@@ -244,6 +249,8 @@ $app->put('/display/defaultlayout/:id', '\Xibo\Controller\Display:setDefaultLayo
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
+$app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');
+$app->post('/display/addViaCode', '\Xibo\Controller\Display:addViaCode')->name('display.addViaCode');
 
 /**
  * Display Groups
@@ -394,6 +401,7 @@ $app->post('/group/acl/:id', '\Xibo\Controller\UserGroup:acl')->name('group.acl'
 //
 $app->get('/application', '\Xibo\Controller\Applications:grid')->name('application.search');
 $app->post('/application', '\Xibo\Controller\Applications:add')->name('application.add');
+$app->post('/application/dooh', '\Xibo\Controller\Applications:addDooh')->name('application.addDooh');
 
 /**
  * Modules
@@ -520,8 +528,7 @@ $app->get('/report/data/:name', '\Xibo\Controller\Report:getReportData')->name('
 /**
  * Player Versions
  * @SWG\Tag(
- *  name="version",
- *  description="Player Versions"
+ *  name="Player Software",
  * )
  */
 $app->get('/playersoftware', '\Xibo\Controller\PlayerSoftware:grid')->name('playersoftware.search');

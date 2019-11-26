@@ -1002,7 +1002,7 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
         "order": [[1, "asc"]],
         "filter": false,
         ajax: {
-            url: librarySearchUrl + '?assignable=1',
+            url: librarySearchUrl + '?assignable=1&retired=0',
             "data": function(d) {
                 $.extend(d, self.DOMObject.find('#media-search-container-' + menu).find("form").serializeObject());
             }
@@ -1011,7 +1011,6 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
             {"data": "mediaId"},
             {"data": "name"},
             {"data": "mediaType"},
-            {"data": "ownerId"},
             {
                 "sortable": false,
                 "data": dataTableCreateTags
@@ -1059,11 +1058,8 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
     });
     mediaTable.on('processing.dt', dataTableProcessing);
 
-    // Prevent filter form submit and bind the change event to reload the table
-    self.DOMObject.find('#media-search-form-' + menu).on('submit', function(e) {
-        e.preventDefault();
-        return false;
-    }).find('input, select').change(function() {
+    // Refresh the table results
+    var filterRefresh = _.debounce(function() {
         // Save filter options
         self.menuItems[menu].filters.name.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-name-' + menu).val();
         self.menuItems[menu].filters.tag.value = self.DOMObject.find('#media-search-form-' + menu + ' #input-tag-' + menu).val();
@@ -1079,7 +1075,17 @@ Toolbar.prototype.mediaContentCreate = function(menu) {
 
         // Reload table
         mediaTable.ajax.reload();
+    }, 500);
+
+    // Prevent filter form submit and bind the change event to reload the table
+    self.DOMObject.find('#media-search-form-' + menu).on('submit', function(e) {
+        e.preventDefault();
+        return false;
     });
+
+    // Bind seach action to refresh the results
+    self.DOMObject.find('#media-search-form-' + menu + ' select, input[type="text"]').change(filterRefresh);
+    self.DOMObject.find('#media-search-form-' + menu + ' input[type="text"]').on('input', filterRefresh);
 
     // Make search window to be draggable and resizable
     $searchContent

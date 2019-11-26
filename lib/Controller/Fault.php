@@ -20,7 +20,6 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Environment;
@@ -198,7 +197,9 @@ class Fault extends Base
 
         // Return the file with PHP
         // Disable any buffering to prevent OOM errors.
-        ob_end_flush();
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         readfile($tempFileName);
         exit;
     }

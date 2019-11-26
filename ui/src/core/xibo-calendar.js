@@ -70,23 +70,33 @@ $(document).ready(function() {
 
                 var calendarOptions = $("#CalendarContainer").data();               
 
-                if (this.options.view != 'agenda') {
+                if (this.options.view !== 'agenda') {
 
-                    // Append display groups
+                    // Append display groups and layouts
+                    let isShowAll = $('#showAll').is(':checked');
+
+                    // Enable or disable the display list according to whether show all is selected
+                    // we do this before we serialise because serialising a disabled list gives nothing
+                    $('#DisplayList').prop('disabled', isShowAll);
+
+                    // Serialise
                     var displayGroups = $('#DisplayList').serialize();
-                    
+                    var displayLayouts = $('#campaignId').serialize();
+
                     var url = calendarOptions.eventSource;
-                    
-                    if($('#showAll').is(':checked')) {
-                        url += '?' + 'displayGroupIds[]=-1';
-                        $('#DisplayList').prop('disabled', true);
-                    } else {
-                        $('#DisplayList').prop('disabled', false);
-                        if(displayGroups != '') {
-                            url += '?' + displayGroups;
-                        }
+
+                    // Append the Layout selected
+                    url += '?' + displayLayouts;
+
+                    // Should we append displays?
+                    if (isShowAll) {
+                        // Ignore the display list
+                        url += '&' + 'displayGroupIds[]=-1';
+                    } else if (displayGroups !== '') {
+                        // Append display list
+                        url += '&' + displayGroups;
                     }
-                        
+
                     events = [];
                     
                     // Populate the events array via AJAX
@@ -140,7 +150,7 @@ $(document).ready(function() {
 
                             $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                         })
-                        .fail(function() {
+                        .fail(function(res) {
                             $('#calendar-progress').removeClass('fa fa-cog fa-spin');
 
                             if (done != undefined)
@@ -148,7 +158,8 @@ $(document).ready(function() {
                             
                             calendar._render();
 
-                            toastr.error(translate.error);
+                            toastr.error(translations.failure);
+                            console.error(res);
                         });
                 } else {
                     
@@ -367,7 +378,7 @@ $(document).ready(function() {
 
         options.type = calendarOptions.calendarType;
         calendar = $('#Calendar').calendar(options);
-
+        
         // Set event when clicking on a tab, to refresh the view
         $('.cal-context').on('click', 'a[data-toggle="tab"]', function (e) {
             $('.cal-context').data().selectedTab = $(this).data("id");
@@ -426,16 +437,35 @@ $(document).ready(function() {
  */
 var setupScheduleForm = function(dialog) {
 
+    var $eventTypeId = $('#eventTypeId').val();
+    var $layoutSpecific = -1;
+
+    if ($eventTypeId == 4) {
+        $layoutSpecific = 1;
+    } else {
+        $layoutSpecific = -1;
+    }
+
+    $('#eventTypeId').change(function() {
+        $eventTypeId = $('#eventTypeId').val();
+        console.log($eventTypeId);
+
+        if ($eventTypeId == 4) {
+            $layoutSpecific = 1;
+        } else {
+            $layoutSpecific = -1;
+        }
+    });
+
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({
-        dropdownParent: $(dialog),
         ajax: {
             url: $campaignSelect.data("searchUrl"),
             dataType: "json",
             data: function(params) {
                 var query = {
-                    isLayoutSpecific: -1,
+                    isLayoutSpecific: $layoutSpecific,
                     retired: 0,
                     totalDuration: 0,
                     name: params.term,
@@ -487,7 +517,7 @@ var setupScheduleForm = function(dialog) {
                     }
                 });
 
-                if (campaigns.length > 0) {
+                if (campaigns.length > 0 && $eventTypeId != 4) {
                     results.push({
                         "text": $campaignSelect.data('transCampaigns'),
                         "children": campaigns
@@ -518,7 +548,6 @@ var setupScheduleForm = function(dialog) {
 
     var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
     $displaySelect.select2({
-        dropdownParent: $(dialog),
         ajax: {
             url: $displaySelect.data("searchUrl"),
             dataType: "json",
@@ -654,6 +683,79 @@ var setupScheduleForm = function(dialog) {
 
         $(dialog).find('.modal-footer').prepend($button);
     }
+
+    configReminderFields($(dialog));
+
+};
+
+var beforeSubmitScheduleForm = function(form) {
+
+    var checkboxes = form.find('[name="reminder_isEmail[]"]');
+
+    checkboxes.each(function (index) {
+        $(this).parent().find('[type="hidden"]').val($(this).is(":checked") ? "1" : "0");
+    });
+
+    form.submit();
+
+};
+
+/**
+ * Configure the query builder ( order and filter )
+ * @param {object} dialog - Dialog object
+ */
+ var configReminderFields = function(dialog) {
+
+    var reminderFields = dialog.find("#reminderFields");
+
+    if(reminderFields.length == 0)
+        return;
+
+    var reminderEventTemplate = Handlebars.compile($("#reminderEventTemplate").html());
+
+    console.log(reminderFields.data().reminders.length);
+    if(reminderFields.data().reminders.length == 0) {
+        // Add a template row
+        var context = {
+            title: 0,
+            buttonGlyph: "fa-plus"
+        };
+        reminderFields.append(reminderEventTemplate(context));
+    } else {
+
+        console.log(reminderFields.data().reminders)
+        // For each of the existing codes, create form components
+        var i = 0;
+        $.each(reminderFields.data().reminders, function(index, field) {
+            i++;
+
+            var context = {
+                scheduleReminderId: field.scheduleReminderId,
+                value: field.value,
+                type: field.type,
+                option: field.option,
+                isEmail: field.isEmail,
+                title: i,
+                buttonGlyph: ((i == 1) ? "fa-plus" : "fa-minus")
+            };
+
+            reminderFields.append(reminderEventTemplate(context));
+        });
+    }
+
+    // Nabble the resulting buttons
+    reminderFields.on("click", "button", function(e) {
+        e.preventDefault();
+
+        // find the gylph
+        if($(this).find("i").hasClass("fa-plus")) {
+            var context = {title: reminderFields.find('.form-group').length + 1, buttonGlyph: "fa-minus"};
+            reminderFields.append(reminderEventTemplate(context));
+        } else {
+            // Remove this row
+            $(this).closest(".form-group").remove();
+        }
+    });
 };
 
 /**
@@ -688,6 +790,8 @@ var processScheduleFormElements = function(el) {
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
+            let interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
+
 
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
@@ -696,6 +800,7 @@ var processScheduleFormElements = function(el) {
             $(".command-control").css('display', commandControlDisplay);
             $(".preview-button-container").css('display', previewControlDisplay);
             $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
+            $(".interrupt-control").css('display', interruptControlDisplay);
 
             // Depending on the event type selected we either want to filter in or filter out the
             // campaigns.
@@ -736,15 +841,18 @@ var processScheduleFormElements = function(el) {
             var endTimeControlDisplay = (meta.isCustom === 0) ? "none" : "block";
             var startTimeControlDisplay = (meta.isAlways === 1) ? "none" : "block";
             var repeatsControlDisplay = (meta.isAlways === 1) ? "none" : "block";
-            
+            var reminderControlDisplay = (meta.isAlways === 1) ? "none" : "block";
+
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
             var $repeats = $("li.repeats");
+            var $reminder = $("li.reminders");
 
             // Set control visibility
             $startTime.css('display', startTimeControlDisplay);
             $endTime.css('display', endTimeControlDisplay);
             $repeats.css('display', repeatsControlDisplay);
+            $reminder.css('display', reminderControlDisplay);
 
             // Dayparts only show the start control
             if (meta.isAlways === 0 && meta.isCustom === 0) {

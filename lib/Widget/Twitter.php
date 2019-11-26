@@ -172,7 +172,7 @@ class Twitter extends TwitterBase
      *  operationId="WidgetTwitterEdit",
      *  tags={"widget"},
      *  summary="Edit a Twitter Widget",
-     *  description="Edit a Twitter Widget",
+     *  description="Edit a Twitter Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

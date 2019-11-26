@@ -203,7 +203,7 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
     public function testLayoutOff($layoutEnableStat, $widgetEnableStat, $outputEnableStat)
     {
         // Checkout
-        $layoutOff = $this->checkout($this->layoutOff);
+        $layoutOff = $this->getDraft($this->layoutOff);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layoutOff->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'] , [
@@ -244,7 +244,7 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
     public function testLayoutOn($layoutEnableStat, $widgetEnableStat, $outputEnableStat)
     {
         // Checkout
-        $layoutOn = $this->checkout($this->layoutOn);
+        $layoutOn = $this->getDraft($this->layoutOn);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layoutOn->regions[0]->regionPlaylist->playlistId);
         $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'] , [

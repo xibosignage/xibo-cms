@@ -299,8 +299,9 @@ class User extends Base
                     $user->twoFactorDescription = __('Disabled');
             }
 
-            if ($this->isApi())
+            if ($this->isApi()) {
                 continue;
+            }
 
             $user->includeProperty('buttons');
             $user->homePage = __($user->homePage);
@@ -1000,6 +1001,14 @@ class User extends Base
         $code = $this->getSanitizer()->getString('code');
         $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
 
+        if ($user->isSuperAdmin()) {
+            $user->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
+        }
+
+        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
         }
@@ -1087,6 +1096,7 @@ class User extends Base
 
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
+        $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL', 'https://quickchart.io');
 
         if ($issuerSettings !== '') {
             $issuer = $issuerSettings;
@@ -1094,7 +1104,7 @@ class User extends Base
             $issuer = $appName;
         }
 
-        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider());
+        $tfa = new TwoFactorAuth($issuer, 6, 30, 'sha1', new QuickChartQRProvider($quickChartUrl));
 
         // create two factor secret and store it in user record
         if (!isset($user->twoFactorSecret)) {
@@ -1133,9 +1143,9 @@ class User extends Base
 
         if (isset($_SESSION['tfaSecret'])) {
             // validate the provided two factor code with secret for this user
-            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code);
+            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 2);
         } elseif (isset($user->twoFactorSecret)) {
-            $result = $tfa->verifyCode($user->twoFactorSecret, $code);
+            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 2);
         } else {
             $result = false;
         }
