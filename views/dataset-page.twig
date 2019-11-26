@@ -309,6 +309,16 @@
                 $authFieldPassword.removeClass("hidden");
             }
         }
+
+        function deleteMultiSelectFormOpen(dialog) {
+            {% set message = 'Delete any associated data?' %}
+
+            var $input = $('<input type=checkbox id="deleteData" name="deleteData"> {{ message|trans|e }} </input>');
+            $input.on('change', function() {
+                dialog.data().commitData = {deleteData: $(this).val()};
+            });
+            $(dialog).find('.modal-body').append($input);
+        }
     </script>
 {% endblock %}
 

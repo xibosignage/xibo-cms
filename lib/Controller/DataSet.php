@@ -225,11 +225,20 @@ class DataSet extends Base
 
             if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
                 // Delete DataSet
-                $dataSet->buttons[] = array(
+                $dataSet->buttons[] = [
                     'id' => 'dataset_button_delete',
                     'url' => $this->urlFor('dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Delete')
-                );
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor('dataSet.delete', ['id' => $dataSet->dataSetId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'dataset_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                        ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
+                    ]
+                ];
             }
 
             // Divider

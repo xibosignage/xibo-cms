@@ -1212,7 +1212,8 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory
+                $container->userFactory,
+                $container->permissionFactory
             );
         });
 
