@@ -32,6 +32,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -53,6 +54,7 @@ class Schedule implements \JsonSerializable
     public static $COMMAND_EVENT = 2;
     public static $OVERLAY_EVENT = 3;
     public static $INTERRUPT_EVENT = 4;
+    public static $CAMPAIGN_EVENT = 5;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -280,6 +282,9 @@ class Schedule implements \JsonSerializable
     /** @var  ScheduleReminderFactory */
     private $scheduleReminderFactory;
 
+    /** @var  ScheduleExclusionFactory */
+    private $scheduleExclusionFactory;
+
     /**
      * @var UserFactory
      */
@@ -296,8 +301,9 @@ class Schedule implements \JsonSerializable
      * @param DayPartFactory $dayPartFactory
      * @param UserFactory $userFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
+     * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
@@ -307,6 +313,7 @@ class Schedule implements \JsonSerializable
         $this->dayPartFactory = $dayPartFactory;
         $this->userFactory = $userFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
+        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
     }
@@ -492,9 +499,10 @@ class Schedule implements \JsonSerializable
             . ', CampaignId: ' . $this->campaignId
             . ', CommandId: ' . $this->commandId);
 
-        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT
-            || $this->eventTypeId == Schedule::$OVERLAY_EVENT
-            || $this->eventTypeId == Schedule::$INTERRUPT_EVENT
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
+            $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
+            $this->eventTypeId == Schedule::$OVERLAY_EVENT ||
+            $this->eventTypeId == Schedule::$INTERRUPT_EVENT
         ) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId))
@@ -659,6 +667,11 @@ class Schedule implements \JsonSerializable
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
 
+        // Delete schedule exclusions
+        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+        foreach ($scheduleExclusions as $exclusion) {
+            $exclusion->delete();
+        }
 
         // Delete schedule reminders
         if ($this->scheduleReminderFactory !== null) {
@@ -838,6 +851,22 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('Filtering Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT) . '. fromTimeStamp: ' . $fromTimeStamp . ', toTimeStamp: ' . $toTimeStamp);
 
             foreach ($this->scheduleEvents as $scheduleEvent) {
+
+                // Find the excluded recurring events
+                $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+
+                $exclude = false;
+                foreach ($scheduleExclusions as $k => $exclusion) {
+                    if ($scheduleEvent->fromDt == $exclusion->fromDt &&
+                        $scheduleEvent->toDt == $exclusion->toDt) {
+                        $exclude = true;
+                        continue;
+                    }
+                }
+
+                if ($exclude) {
+                    continue;
+                }
 
                 if (in_array($scheduleEvent, $events))
                     continue;

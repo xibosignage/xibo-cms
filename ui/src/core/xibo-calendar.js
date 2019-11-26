@@ -439,21 +439,77 @@ var setupScheduleForm = function(dialog) {
 
     var $eventTypeId = $('#eventTypeId').val();
     var $layoutSpecific = -1;
+    var $layoutControl = $(".layout-control");
 
-    if ($eventTypeId == 4) {
+    if ($eventTypeId == 1) {
+
+        // Load Layouts only
         $layoutSpecific = 1;
+
+        // Change Label and Helptext when Layout event type is selected
+        $layoutControl.children("label").text('Layout');
+        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+    } else if ($eventTypeId == 4) {
+
+        // Load Layouts only
+        $layoutSpecific = 1;
+
+        // Change Label and Helptext when Layout event type is selected
+        $layoutControl.children("label").text('Layout');
+        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+    } else if ($eventTypeId == 5) {
+
+        // Load Campaigns only
+        $layoutSpecific = 0;
+
+        // Change Label and Helptext when Campaign event type is selected
+        $layoutControl.children("label").text('Campaign');
+        $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+
     } else {
+
+        // Load both Layouts and Campaigns
         $layoutSpecific = -1;
+
     }
 
     $('#eventTypeId').change(function() {
         $eventTypeId = $('#eventTypeId').val();
-        console.log($eventTypeId);
 
-        if ($eventTypeId == 4) {
+        if ($eventTypeId == 1) {
+
+            // Load Layouts only
             $layoutSpecific = 1;
+
+            // Change Label and Helptext when Layout event type is selected
+            $layoutControl.children("label").text('Layout');
+            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+        } else if ($eventTypeId == 4) {
+
+            // Load Layouts only
+            $layoutSpecific = 1;
+
+            // Change Label and Helptext when Layout event type is selected
+            $layoutControl.children("label").text('Layout');
+            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+        } else if ($eventTypeId == 5) {
+
+            // Load Campaigns only
+            $layoutSpecific = 0;
+
+            // Change Label and Helptext when Campaign event type is selected
+            $layoutControl.children("label").text('Campaign');
+            $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+
         } else {
+
+            // Load both Layouts and Campaigns
             $layoutSpecific = -1;
+
         }
     });
 
@@ -651,7 +707,7 @@ var setupScheduleForm = function(dialog) {
     });
 
     // Bind to the dialog submit
-    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
+    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm").submit(function(e) {
         e.preventDefault();
 
         var form = $(this);
@@ -684,9 +740,31 @@ var setupScheduleForm = function(dialog) {
         $(dialog).find('.modal-footer').prepend($button);
     }
 
+    // Popover
+    $(dialog).find('[data-toggle="popover"]').popover();
+
+    var scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    // Add a button for deleting single recurring event
+    if (scheduleEditForm.length > 0) {
+        $button = $("<button>").addClass("btn btn-primary").attr("id", "scheduleRecurringDeleteButton").html(translations.deleteRecurring).on("click", function() {
+            deleteRecurringScheduledEvent(scheduleEditForm.data('eventId'), scheduleEditForm.data('eventStart'), scheduleEditForm.data('eventEnd'))
+        });
+
+        $(dialog).find('#recurringInfo').prepend($button);
+    }
+
     configReminderFields($(dialog));
 
 };
+
+var deleteRecurringScheduledEvent = function(id, eventStart, eventEnd) {
+    var url = scheduleRecurrenceDeleteUrl.replace(":id", id);
+    var data = {
+        eventStart: eventStart,
+        eventEnd: eventEnd,
+    };
+    XiboSwapDialog(url, data);
+}
 
 var beforeSubmitScheduleForm = function(form) {
 
@@ -695,6 +773,8 @@ var beforeSubmitScheduleForm = function(form) {
     checkboxes.each(function (index) {
         $(this).parent().find('[type="hidden"]').val($(this).is(":checked") ? "1" : "0");
     });
+
+    $('[data-toggle="popover"]').popover();
 
     form.submit();
 
