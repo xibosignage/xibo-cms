@@ -39,17 +39,10 @@
             </div>
 
             <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
-
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                {% set attributes = [
-                    { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
-                    { name: "data-trans-campaigns", value:  "Campaigns"|trans },
-                    { name: "data-trans-layouts", value:  "Layouts"|trans }
-                ] %}
-
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-                        
+
                 <select name="campaignId" id="campaignId" class="form-control"
                     data-search-url= "{{ urlFor("schedule.campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
@@ -62,29 +55,35 @@
                 </select>
             </div>
 
-            <div class="xibo-calendar-controls dropdown pull-right" style="margin-left: 5px">
-                {% if -1 in selectedDisplayGroupIds %}
-                    {% set allSelected = "selected" %}
-                {% else %}
-                    {% set allSelected = "" %}
-                {% endif %}
+            <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
                         data-width="150px"
-                        data-placeholder="{% trans "Displays" %}" multiple>
-                    <option value="-1" {{ allSelected }}>{% trans "All" %}</option>
-                    <optgroup label="{% trans "Groups" %}">
-                        {% for group in groups %}
-                        <option value="{{ group.displayGroupId }}" type="1" {% if group.displayGroupId in selectedDisplayGroupIds %}selected{% endif %}>{{ group.displayGroup }}</option>
-                        {% endfor %}
-                    </optgroup>
-                    <optgroup label="{% trans "Displays" %}">
-                        {% for display in displays %}
-                        <option value="{{ display.displayGroupId }}" type="0" {% if display.displayGroupId in selectedDisplayGroupIds %}selected="" {% endif %}>{{ display.displayGroup }}</option>
-                        {% endfor %}
-                    </optgroup>
+                        data-placeholder="{% trans "Displays" %}"
+                        data-search-url="{{ urlFor("schedule.displayGroup.search") }}"
+                        data-trans-groups="{% trans "Groups" %}"
+                        data-trans-display="{% trans "Display" %}"
+                        data-allow-clear="true"
+                        data-width="150px"
+                        data-placeholder="{% trans "Select Displays" %}" multiple>
+                    {% for option in displayGroups %}
+                        {% set itemOptionId = attribute(option, "displayGroupId") %}
+                        {% set itemOptionValue = attribute(option, "displayGroup") %}
+                        <option value="{{ itemOptionId }}" selected >{{ itemOptionValue }}</option>
+                    {% endfor %}
                 </select>
             </div>
+
+            <div class="xibo-calendar-controls pull-right">
+                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ urlFor("schedule.displayGroup.search") }}"
+                    {% if displayGroupsShowAll == -1 %}
+                        checked
+                    {% endif %}
+                >
+                <label for="showAll">Show All</label>
+            </div>
+
             <div class="progress pull-right"><span id="calendar-progress"></span></div>
+
             <h1 class="page-header"></h1>
         </div>         
     </div>
@@ -141,7 +140,9 @@
                         var eventTitle = (event.event.isAlways == 1) ? event.title : "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
                         %>
                         <div class="day-highlight dh-<%= event['class'] %>">
-                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                               data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                               class="event-item">
                                 <%= eventTitle %></a>
                         </div>
                         <% }); %>
@@ -155,7 +156,9 @@
                         <% _.each(before_time, function(event){ %>
                         <div class="day-highlight dh-<%= event['class'] %>">
                             <span class="cal-hours pull-right"><%= event.end_hour %></span>
-                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                               data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                               class="event-item">
                                 <%= event.title %></a>
                         </div>
                         <% }); %>
@@ -177,11 +180,12 @@
                     </div>
 
                     <% _.each(by_hour, function(event){ %>
-                    <div class="pull-left day-event day-highlight dh-<%= event['class'] %>" style="margin-top: <%= (event.top * 30) %>px; height: <%= (event.lines * 30) %>px"
+                    <div class="pull-left day-event <% if (event.lines < 1) { %>day-event-small<% } %> day-highlight dh-<%= event['class'] %>" style="margin-top: <%= (event.top * 30) %>px; height: <%= (event.lines * 30) %>px"
                     <% if (event.lines < 2) { %>data-toggle="popover" data-html="true" data-content="<a href='<%= event.url ? event.url : "javascript:void(0)" %>'><%= event.title %></a>" title="<%= event.start_hour %> - <%= event.end_hour %>"<% } %>
                     >
                     <span class="cal-hours"><%= event.start_hour %> - <%= event.end_hour %></span>
                     <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= event['class'] %>" class="event-item">
                         <%= event.title %></a>
                     </div>
@@ -195,6 +199,7 @@
                     <div class="day-highlight dh-<%= event['class'] %>">
                         <span class="cal-hours"><%= event.start_hour %></span>
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                           data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= event['class'] %>" class="event-item">
                             <%= event.title %></a>
                     </div>
@@ -270,6 +275,7 @@
                     <li>
                         <span class="pull-left event <%= event['class'] %>"></span>&nbsp;
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                           data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= eventClass %>" class="event-item">
                             <span class="fa <%= eventIcon %>"></span> <%= title %></a>
                     </li>
@@ -363,7 +369,9 @@
                     eventClass = "event-inverse";
                     }
                     %>
-                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= eventClass %>"
+                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                       data-event-class="<%= eventClass %>"
                        class="pull-left event <%= eventClass %>" data-toggle="tooltip"
                        title="<%= event.title %>"><span class="fa <%= eventIcon %>"></span></a>
                     <% }); %>
@@ -450,8 +458,8 @@
             %>
             <div class="cal-row-fluid">
                 <div class="cal-cell<%= event.days%> cal-offset<%= event.start_day %> day-highlight dh-<%= event['class'] %>">
-                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>"
-                       data-event-id="<%= event.id %>"
+                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
                        class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"></span> <%= title %></a>
                 </div>
@@ -488,7 +496,9 @@
             <small class="cal-events-num badge badge-important pull-left"><%= events.length %></small>
             <div class="hide events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
                 <% _.each(events, function(event) { %>
-                <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= event['class'] %>"
+                <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                   data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                   data-event-class="<%= event['class'] %>"
                    class="pull-left event <%= event['class'] %> event<%= event.id %>" data-toggle="tooltip"
                    title="<%= event.title %>"></a>
                 <% }); %>
@@ -743,7 +753,7 @@
             
             <!-- Schedule -->
             <span>
-                <a href="<%= schedule.link %>" class="XiboFormButton">
+                <a href="<%= schedule.link %>" class="XiboFormButton" data-event-start="<%= schedule.fromDt %>" data-event-end="<%= schedule.toDt %>">
                     {% endraw %}
                         {% trans "Schedule" %}
                     {% raw %}
@@ -813,6 +823,9 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+		// We are using this variable in xibo-calendar.js
+        var scheduleRecurrenceDeleteUrl = "{{ urlFor("schedule.recurrence.delete.form") }}";
+
         // Equals helper for the templates below
         Handlebars.registerHelper('eq', function(v1, v2, opts) {
             if (v1 === v2) {
@@ -825,9 +838,9 @@
         // Init campaign select2
         $(function() {
             // Select lists
-            var dialog = 'body';
-            var $campaignSelect = $('.xibo-calendar-controls #campaignId');
+            const dialog = 'body';
 
+            let $campaignSelect = $('.xibo-calendar-controls #campaignId');
             $campaignSelect.select2({
                 dropdownParent: $(dialog),
                 ajax: {
@@ -916,8 +929,102 @@
                         }
                     }
                 }
+            })
+            .on('change', function(e) {
+                // Refresh the calendar view
+                setTimeout(calendar.view(), 1000);
+            });
+
+            let $displaySelect = $('#DisplayList', dialog);
+            $displaySelect.select2({
+                dropdownParent: $(dialog),
+                ajax: {
+                    url: $displaySelect.data("searchUrl"),
+                    dataType: "json",
+                    data: function(params) {
+                        const query = {
+                            isDisplaySpecific: -1,
+                            forSchedule: 1,
+                            displayGroup: params.term,
+                            start: 0,
+                            length: 10,
+                            columns: [
+                                {
+                                    "data": "isDisplaySpecific"
+                                },
+                                {
+                                    "data": "displayGroup"
+                                }
+                            ],
+                            order: [
+                                {
+                                    "column": 0,
+                                    "dir": "asc"
+                                },
+                                {
+                                    "column": 1,
+                                    "dir": "asc"
+                                }
+                            ]
+                        };
+                        // Set the start parameter based on the page number
+                        if (params.page != null) {
+                            query.start = (params.page - 1) * 10;
+                        }
+                        return query;
+                    },
+                    processResults: function(data, params) {
+                        var groups = [];
+                        var displays = [];
+                        $.each(data.data, function(index, element) {
+                            if (element.isDisplaySpecific === 1) {
+                                displays.push({
+                                    "id": element.displayGroupId,
+                                    "text": element.displayGroup
+                                });
+                            } else {
+                                groups.push({
+                                    "id": element.displayGroupId,
+                                    "text": element.displayGroup
+                                });
+                            }
+                        });
+                        var page = params.page || 1;
+                        page = (page > 1) ? page - 1 : page;
+                        return {
+                            results: [
+                                {
+                                    "text": $displaySelect.data('transGroups'),
+                                    "children": groups
+                                },{
+                                    "text": $displaySelect.data('transDisplay'),
+                                    "children": displays
+                                }
+                            ],
+                            pagination: {
+                                more: (page * 10 < data.recordsTotal)
+                            }
+                        }
+                    }
+                }
+            }).on('select2:unselecting', function() {
+                // Prevent the ajax request when we deselect an option ( change will still be called )
+                var opts = $(this).data('select2').options;
+                opts.set('disabled', true);
+
+                setTimeout(function() {
+                    opts.set('disabled', false);
+                }, 100);
+            })
+            .on('change', function(e) {
+                // Refresh the calendar view
+                setTimeout(calendar.view(), 1000);
+            });
+
+            // Set up our show all selector control
+            $('#showAll', dialog).on('change', function() {
+                setTimeout(calendar.view(), 1000);
             });
         });
     </script>
-
 {% endblock %}

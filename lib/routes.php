@@ -87,6 +87,7 @@ $app->get('/schedule/:id/events', '\Xibo\Controller\Schedule:eventList')->name('
 $app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
 $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
+$app->delete('/schedulerecurrence/:id', '\Xibo\Controller\Schedule:deleteRecurrence')->name('schedule.recurrence.delete');
 
 /**
  * Notification

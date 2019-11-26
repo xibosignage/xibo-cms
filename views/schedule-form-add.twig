@@ -54,15 +54,17 @@
 
                         {% set title %}{% trans "Event Type" %}{% endset %}
                         {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
+                        {% set layoutEventType %}{% trans "Layout" %}{% endset %}
+                        {% set campaignEventType %}{% trans "Campaign" %}{% endset %}
                         {% set commandEventType %}{% trans "Command" %}{% endset %}
                         {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
                         {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
                         {% set eventTypes = [
-                            {id: 1, label: layoutEventType},
-                            {id: 2, label: commandEventType},
-                            {id: 3, label: overlayEventType},
-                            {id: 4, label: interruptEventType}
+                        {id: 1, label: layoutEventType},
+                        {id: 5, label: campaignEventType},
+                        {id: 2, label: commandEventType},
+                        {id: 3, label: overlayEventType},
+                        {id: 4, label: interruptEventType}
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "id", "label", helpText) }}
 
@@ -108,12 +110,10 @@
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
                             { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
-                            { name: "data-trans-campaigns", value:  "Campaigns"|trans },
-                            { name: "data-trans-layouts", value:  "Layouts"|trans }
                         ] %}
 
-                        {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                        {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        {% set title %}{% trans "Layout" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Share of Voice" %}{% endset %}

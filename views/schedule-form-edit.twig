@@ -33,7 +33,7 @@
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
+            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" data-event-id="{{ event.eventId }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
                   data-daypart-message="{{ dayPartMessage }}"
                   data-not-daypart-message="{{ notDayPartMessage }}"
                   data-add-url="{{ urlFor("schedule.add") }}"
@@ -44,12 +44,13 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Event Type" %}{% endset %}
                         {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
-                        {% set commandEventType %}{% trans "Command" %}{% endset %}
+                        {% set layoutEventType %}{% trans "Layout" %}{% endset %}
+                        {% set campaignEventType %}{% trans "Campaign" %}{% endset %}                        {% set commandEventType %}{% trans "Command" %}{% endset %}
                         {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
                         {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
                         {% set eventTypes = [
                             {id: 1, label: layoutEventType},
+                            {id: 5, label: campaignEventType},
                             {id: 2, label: commandEventType},
                             {id: 3, label: overlayEventType},
                             {id: 4, label: interruptEventType}
@@ -98,12 +99,10 @@
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
                             { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
-                            { name: "data-trans-campaigns", value:  "Campaigns"|trans },
-                            { name: "data-trans-layouts", value:  "Layouts"|trans }
                         ] %}
 
-                        {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                        {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        {% set title %}{% trans "Layout" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Share of Voice" %}{% endset %}
@@ -137,6 +136,19 @@
                             {% set title %}{% trans "Synchronise this event?" %}{% endset %}
                             {% set helpText %}{% trans "When selected, all selected players will attempt to synchronise the output (Supported on Android player only)" %}{% endset %}
                             {{ forms.checkbox("syncEvent", title, event.syncEvent, helpText, "sync-schedule-control") }}
+                        {% endif %}
+
+                        {% if recurringEvent %}
+                            <div class="well text-info text-center form-error">
+                                <p>This is an instance of a scheduled recurring event: <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom"
+                                                                                             data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
+                                <p>
+                                    Starting from <span class="text-warning"><b>{{ eventStart|date(jsDateFormat) }} </b></span>to<span class="text-warning"><b> {{ eventEnd|date(jsDateFormat) }}</b></span>
+                                </p>
+                                <div id="recurringInfo"></div>
+
+
+                            </div>
                         {% endif %}
 
                     </div>
