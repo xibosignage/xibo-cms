@@ -41,6 +41,3 @@ services:
 
   quickchart:
     image: ianw/quickchart
-
-networks:
-  default:
