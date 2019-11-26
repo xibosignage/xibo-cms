@@ -53,7 +53,7 @@ class InstallSavedReportsAndSpacerModulesMigration extends AbstractMigration
                 'name' => 'Spacer',
                 'enabled' => 1,
                 'regionSpecific' => 1,
-                'description' => 'A module for making region empty for the duration',
+                'description' => 'Make a Region empty for a specified duration',
                 'schemaVersion' => 1,
                 'previewEnabled' => 0,
                 'assignable' => 1,

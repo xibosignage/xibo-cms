@@ -132,7 +132,18 @@ function XiboInitialise(scope) {
     // Search for any Buttons / Links on the page that are used to load forms
     $(scope + " .XiboFormButton").click(function() {
 
-        XiboFormRender($(this));
+        var eventStart = $(this).data("eventStart");
+        var eventEnd = $(this).data("eventEnd");
+        if (eventStart !== undefined && eventEnd !== undefined ) {
+            var data = {
+                eventStart: eventStart,
+                eventEnd: eventEnd,
+            };
+            XiboFormRender($(this), data);
+
+        } else {
+            XiboFormRender($(this));
+        }
 
         return false;
     });
@@ -1593,9 +1604,9 @@ function XiboDialogApply(formId) {
     form.submit();
 }
 
-function XiboSwapDialog(formUrl) {
+function XiboSwapDialog(formUrl, data) {
     bootbox.hideAll();
-    XiboFormRender(formUrl);
+    XiboFormRender(formUrl, data);
 }
 
 function XiboRefreshAllGrids() {
