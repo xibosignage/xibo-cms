@@ -817,28 +817,13 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     #properties-panel-container {
         background: $designer-module-bg-color;
-        height: calc(45vh + 49px);
+        height: calc(45vh + 46px);
         position: relative;
-
-
+        border: 2px solid $xibo-color-dark-blue;
+        @include border-radius(4px);
         /* Hide playlist editor only messages */
         .playlist-editor-message {
             display: none;
-        }
-
-        &.properties-layout {
-            @include border-radius(4px);
-            border: 2px solid $layout-main-bg-color;
-        }
-
-        &.properties-region {
-            @include border-radius(4px);
-            border: 2px solid $region-main-bg-color;
-        }
-
-        &.properties-widget {
-            @include border-radius(4px);
-            border: 2px solid $widget-main-bg-color;
         }
 
         .form-title {
@@ -846,46 +831,81 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             font-weight: bold;
             font-size: 1.2em;
             color: $xibo-color-white;
-        }
+            background: $xibo-color-dark-blue;
+            border-width: 0 0 4px 0;
+            border-style: solid;
 
-        .form-title-layout {
-            color: $layout-main-fg-color;
-            background: $layout-main-bg-color;
-        }
+            &.form-title-layout {
+                border-color: $layout-main-bg-color;
+            }
 
-        .form-title-region {
-            color: $region-main-fg-color;
-            background: $region-main-bg-color;
-        }
+            &.form-title-region {
+                border-color: $region-main-bg-color;
+            }
 
-        .form-title-widget {
-            color: $widget-main-fg-color;
-            background: $widget-main-bg-color;
+            &.form-title-widget {
+                border-color: $widget-main-bg-color;
+            }
         }
 
         .form-container {
             overflow-x: hidden;
             overflow-y: auto;
-            height: calc(45vh - 22px);
-
-            /*
-                .row > .nav + div form {
-                height: calc(46vh - 72px);
-            }
-            */
+            height: calc(45vh - 28px);
 
             .row > div {
-                padding: 5px;
+                padding: 6px;
                 margin: 0;
             }
 
             .row > div > form {
-                margin-right: -5px;
-                padding-right: 5px;
-                
                 .row > div  {
                     padding: 4px 8px;
                 }
+
+                .form-group {
+                    margin-right: -5px;
+                    margin-left: -5px;
+
+                    .col-sm-2 {
+                        width: 22%;
+                        padding-left: 5px;
+                        padding-right: 5px;
+                    }
+
+                    .col-sm-10 {
+                        width: 78%;
+                    }
+                    .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+                        padding-left: 4px;
+                        padding-right: 4px;
+                    }
+                }
+
+                /* Layout background form special case */
+                #layoutEditFormBackgroundUpload {
+                    .upload-table-container {
+                        overflow-x: auto;
+
+                        table td {
+                            max-width: 100px;
+
+                            canvas {
+                                max-width: 60px;
+                                max-height: 60px;
+                            }
+
+                            input[type="text"] {
+                                max-width: 100px;
+                            }
+
+                            .progress {
+                                min-width: 80px;
+                            }
+                        }
+                    }
+                }
+
                 /* width */
                 &::-webkit-scrollbar {
                     width: 10px;

@@ -40,7 +40,7 @@ $context-menu-btn-move-color: $xibo-color-white;
 $context-menu-btn-move-hover-color: $xibo-color-yellow;
 
 $context-menu-bin-btn-color: $xibo-color-red;
-$context-menu-bin-btn-hover-color: lighten($xibo-color-red, 20%);;
+$context-menu-bin-btn-hover-color: lighten($xibo-color-red, 20%);
 
 $context-menu-shadow: darken($xibo-color-primary, 20%);
 
@@ -77,7 +77,7 @@ $loading-overlay-z-index: 2000;
 /* Tab System */
 .form-container .nav>li>a {
     color: $properties-panel-nav-fg-color;
-    background-color: $properties-panel-nav-bg-color;
+    background-color: lighten($properties-panel-nav-fg-color, 30%);
     border-radius: 0;
     padding: 5px 7px;
 }
