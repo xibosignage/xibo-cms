@@ -31,6 +31,7 @@ class AddDoohUserTypeMigration extends AbstractMigration
 
         if (!$this->fetchRow('SELECT * FROM usertype WHERE `userType` = \'DOOH\'')) {
             $userTypeTable->insert([
+                'userTypeId' => 4,
                 'userType' => 'DOOH'
             ])->save();
         }
