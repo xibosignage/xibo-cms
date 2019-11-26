@@ -548,7 +548,8 @@ ul.sidebar {
         }
 
         &:hover .toolbar-pane-content-container {
-            margin-top: -10px;
+            margin-top: -6px;
+            scrollbar-width: thin; /* For firefox */
 
             &::-webkit-scrollbar {
                 display: block;
@@ -562,12 +563,13 @@ ul.sidebar {
             overflow-y: hidden;
             transform: rotateX(180deg);
             background: $xibo-color-white;
+            scrollbar-width: none; /* For firefox */
 
             /* SCROLLBAR */
             /* width */
             &::-webkit-scrollbar {
                 display: none;
-                height: 10px;
+                height: 6px;
             }
 
             /* Track */
@@ -590,13 +592,15 @@ ul.sidebar {
 
         .toolbar-pane-content {
             max-height: $toolbar-height;
-            width: max-content;
+            width: auto;
+            white-space: nowrap;
             transform: rotateX(180deg);
             padding: 0 2px;
         }
 
         .toolbar-card {
             display: inline-block;
+            white-space: normal;
         }
     }
 }
