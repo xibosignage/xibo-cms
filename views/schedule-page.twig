@@ -117,6 +117,7 @@
                     <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
                     <li class="event-interrupt"><span class="fa fa-exclamation"></span> {% trans "Interrupt" %}</li>
+                    <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
                 </ul>
             </div>
         </div>
@@ -256,6 +257,10 @@
                         eventIcon = "fa-exclamation";
                     }
 
+                    if (event.event.isGeoAware === 1) {
+                        eventIcon = "fa-map-marker";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -348,6 +353,10 @@
                         eventIcon = "fa-exclamation";
                     }
 
+                    if (event.event.isGeoAware === 1) {
+                        eventIcon = "fa-map-marker";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -427,6 +436,10 @@
 
             if (event.event.eventTypeId == 4) {
                 eventIcon = "fa-exclamation";
+            }
+
+            if (event.event.isGeoAware === 1) {
+                eventIcon = "fa-map-marker";
             }
 
             if (!event.editable) {

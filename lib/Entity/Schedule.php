@@ -248,6 +248,18 @@ class Schedule implements \JsonSerializable
     public $shareOfVoice;
 
     /**
+     * @SWG\Property(description="Flag (0-1), whether this event is using Geo Location")
+     * @var int
+     */
+    public $isGeoAware;
+
+    /**
+     * @SWG\Property(description="Geo JSON representing the area of this event")
+     * @var string
+     */
+    public $geoLocation;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -697,8 +709,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`, `isGeoAware`, `geoLocation`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice, :isGeoAware, :geoLocation)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -716,7 +728,9 @@ class Schedule implements \JsonSerializable
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
-            'shareOfVoice' => $this->shareOfVoice
+            'shareOfVoice' => $this->shareOfVoice,
+            'isGeoAware' => $this->isGeoAware,
+            'geoLocation' => $this->geoLocation
         ]);
     }
 
@@ -743,7 +757,9 @@ class Schedule implements \JsonSerializable
             `dayPartId` = :dayPartId,
             `syncTimezone` = :syncTimezone,
             `syncEvent` = :syncEvent,
-            `shareOfVoice` = :shareOfVoice
+            `shareOfVoice` = :shareOfVoice,
+            `isGeoAware` = :isGeoAware,
+            `geoLocation` = :geoLocation
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -763,6 +779,8 @@ class Schedule implements \JsonSerializable
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
             'shareOfVoice' => $this->shareOfVoice,
+            'isGeoAware' => $this->isGeoAware,
+            'geoLocation' => $this->geoLocation,
             'eventId' => $this->eventId
         ]);
     }

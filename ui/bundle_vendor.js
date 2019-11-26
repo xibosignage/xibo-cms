@@ -106,3 +106,10 @@ require('bootstrap-tour/build/js/bootstrap-tour.min.js');
 //--- Add Local JS files ---
 // jquery-message-queuing
 require('./src/vendor/jquery-message-queuing/jquery.ba-jqmq.min.js');
+
+//leaflet
+require('leaflet');
+require('leaflet-draw');
+require('leaflet-search');
+window.L = require('leaflet');
+
