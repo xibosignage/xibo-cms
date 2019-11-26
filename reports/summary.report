@@ -5,5 +5,7 @@
   "type": "Chart",
   "output_type": "chart",
   "color":"red",
-  "fa_icon": "fa-bar-chart"
+  "fa_icon": "fa-bar-chart",
+  "sort_order": 2,
+  "hidden": 0
 }

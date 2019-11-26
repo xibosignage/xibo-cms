@@ -127,7 +127,7 @@ class Soap5 extends Soap4
                         || strtolower($arrayItem['name']) == 'updateendwindow'
                     ) {
                         // Split by :
-                        $timeParts = explode(':', $arrayItem['value']);
+                        $timeParts = explode(':', $value);
                         $value = $timeParts[0] . ':' . $timeParts[1];
                     }
 
@@ -181,6 +181,25 @@ class Soap5 extends Soap4
                 }
 
                 $displayElement->setAttribute('version_instructions', $version);
+
+                // cms move
+                $displayMoveAddress = ($clientType == 'windows') ? 'NewCmsAddress' : 'newCmsAddress';
+                $node = $return->createElement($displayMoveAddress, $display->newCmsAddress);
+                
+                if ($clientType == 'windows') {
+                    $node->setAttribute('type', 'string');
+                }
+
+                $displayElement->appendChild($node);
+
+                $displayMoveKey = ($clientType == 'windows') ? 'NewCmsKey' : 'newCmsKey';
+                $node = $return->createElement($displayMoveKey, $display->newCmsKey);
+
+                if ($clientType == 'windows') {
+                    $node->setAttribute('type', 'string');
+                }
+
+                $displayElement->appendChild($node);
 
                 // Add some special settings
                 $nodeName = ($clientType == 'windows') ? 'DisplayName' : 'displayName';

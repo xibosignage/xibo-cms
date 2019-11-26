@@ -201,6 +201,7 @@ class DisplayProfile implements \JsonSerializable
                 // We found the setting - is the value different to the default?
                 if ($value !== $default) {
                     $config[$i]['value'] = $value;
+                    $config[$i]['name'] = lcfirst($setting);
                 } else {
                     // the value is the same as the default - unset it
                     $this->getLog()->debug('Setting [' . $setting . '] identical to the default, unsetting.');
@@ -216,7 +217,7 @@ class DisplayProfile implements \JsonSerializable
             $this->getLog()->debug('Setting [' . $setting . '] not yet in the profile config, and different to the default. ' . var_export($value, true) . ' --- ' . var_export($default, true));
             // The config option isn't in our array yet, so add it
             $config[] = [
-                'name' => $setting,
+                'name' => lcfirst($setting),
                 'value' => $value
             ];
         }
@@ -419,11 +420,16 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Delete
+     * @throws InvalidArgumentException
      */
     public function delete()
     {
         $this->commands = [];
         $this->manageAssignments();
+
+        if ($this->getStore()->exists('SELECT displayId FROM display WHERE displayProfileId = :displayProfileId', ['displayProfileId' => $this->displayProfileId]) ) {
+            throw new InvalidArgumentException(__('This Display Profile is currently assigned to one or more Displays'), 'displayProfileId');
+        }
 
         $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
     }

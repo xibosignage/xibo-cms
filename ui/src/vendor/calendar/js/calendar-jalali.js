@@ -953,8 +953,8 @@ if(!String.prototype.formatNum) {
 					layoutId: event.layoutId,
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
-					eventFromDt: moment(event.fromDt, "X").tz(timezone).format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
+					eventFromDt: moment(event.fromDt, "X").tz ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
@@ -1049,7 +1049,7 @@ if(!String.prototype.formatNum) {
 	    }
 	    
 	    // Schedule
-		t.schedule = {link: targetEvent.link};
+        t.schedule = {link: targetEvent.link, fromDt: targetEvent.fromDt * 1000, toDt: targetEvent.toDt * 1000};
 		
 	    // Display groups
 		t.displayGroups = [];
@@ -1386,7 +1386,6 @@ if(!String.prototype.formatNum) {
 	Calendar.prototype._update_modal = function() {
 		var self = this;
 
-
 		$('a[data-event-id]', this.context).unbind('click');
 
 		if (!$('a[data-event-id]', this.context).attr("data-event-class") == "XiboFormButton")
@@ -1396,7 +1395,17 @@ if(!String.prototype.formatNum) {
 			event.preventDefault();
 			event.stopPropagation();
 
-			XiboFormRender($(this));
+            var eventStart = $(this).data("eventStart");
+            var eventEnd = $(this).data("eventEnd");
+            if (eventStart !== undefined && eventEnd !== undefined ) {
+                var data = {
+                    eventStart: eventStart,
+                    eventEnd: eventEnd,
+                };
+                XiboFormRender($(this), data);
+            } else {
+                XiboFormRender($(this));
+            }
 		});
 	};
 
@@ -1516,9 +1525,9 @@ if(!String.prototype.formatNum) {
                 return true;
             }
             // Convert to a local date, without the timezone
-            var event_start = moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
+            var event_start = moment().tz ? moment(moment(this.start / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(this.start / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             var event_end = this.end || this.start;
-            event_end = moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss"));
+            event_end = moment().tz ? moment(moment(event_end / 1000, "X").tz(timezone).format("YYYY-MM-DD HH:mm:ss")) : moment(moment(event_end / 1000, "X").format("YYYY-MM-DD HH:mm:ss"));
             //console.log("ES: " + event_start.format() + "(" + parseInt(this.start) + "), EE: " + event_end.format() + " (" + parseInt(this.end) + ")");
             if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
 

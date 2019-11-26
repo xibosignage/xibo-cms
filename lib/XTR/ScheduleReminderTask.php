@@ -28,6 +28,7 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 
 /**
@@ -56,6 +57,9 @@ class ScheduleReminderTask implements TaskInterface
     /** @var NotificationFactory */
     private $notificationFactory;
 
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
@@ -65,6 +69,8 @@ class ScheduleReminderTask implements TaskInterface
         $this->campaignFactory = $container->get('campaignFactory');
         $this->scheduleReminderFactory = $container->get('scheduleReminderFactory');
         $this->notificationFactory = $container->get('notificationFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
+
         return $this;
     }
 
@@ -220,6 +226,11 @@ class ScheduleReminderTask implements TaskInterface
         $notification->isEmail = $reminder->isEmail;
         $notification->isInterrupt = 0;
         $notification->userId = $schedule->userId; // event owner
+
+        // Get user group to create user notification
+        $notificationUser = $this->userFactory->getById($schedule->userId);
+        $notification->assignUserGroup($this->userGroupFactory->getById($notificationUser->groupId));
+
         $notification->save();
     }
 }

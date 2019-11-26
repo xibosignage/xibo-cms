@@ -159,6 +159,11 @@ class Campaign implements \JsonSerializable
         return $this;
     }
 
+    public function __clone()
+    {
+        $this->campaignId = null;
+    }
+
     /**
      * @return string
      */
@@ -462,8 +467,10 @@ class Campaign implements \JsonSerializable
     /**
      * Unassign Layout
      * @param Layout $layout
+     * @param bool $unassignCompletely
+     * @throws NotFoundException
      */
-    public function unassignLayout($layout)
+    public function unassignLayout($layout, $unassignCompletely = false)
     {
         $this->load();
 
@@ -471,29 +478,42 @@ class Campaign implements \JsonSerializable
         $this->getLog()->debug('Unassigning Layout, count before assign = ' . $countBefore);
 
         $found = false;
-        $existingKey = null;
+        $existingKeys = [];
+
         foreach ($this->layouts as $key => $existing) {
+
             /** @var Layout $existing */
             $this->getLog()->debug('Comparing existing [' . $existing->layoutId . ', ' . $existing->displayOrder . '] with unassign [' . $layout->layoutId . ', ' . $layout->displayOrder . '].');
 
-            if ($layout->displayOrder == null) {
-                if ($existing->getId() == $layout->getId()) {
-                    $found = true;
-                    $existingKey = $key;
-                    break;
+            if (!$unassignCompletely) {
+                if ($layout->displayOrder == null) {
+                    if ($existing->getId() == $layout->getId()) {
+                        $found = true;
+                        $existingKeys[] = $key;
+                        break;
+                    }
+                } else {
+                    if ($existing->getId() == $layout->getId() && $existing->displayOrder == $layout->displayOrder) {
+                        $found = true;
+                        $existingKeys[] = $key;
+                        break;
+                    }
                 }
             } else {
-                if ($existing->getId() == $layout->getId() && $existing->displayOrder == $layout->displayOrder) {
+                // we came here from Layout delete, make sure to unassign all occurrences of that Layout from the campaign
+                // https://github.com/xibosignage/xibo/issues/1960
+                if ($existing->getId() == $layout->getId()) {
                     $found = true;
-                    $existingKey = $key;
-                    break;
+                    $existingKeys[] = $key;
                 }
             }
         }
 
         if ($found) {
-            $this->getLog()->debug('Removing item at key ' . $existingKey);
-            unset($this->layouts[$existingKey]);
+            foreach ($existingKeys as $existingKey) {
+                $this->getLog()->debug('Removing item at key ' . $existingKey);
+                unset($this->layouts[$existingKey]);
+            }
         }
 
         $countAfter = count($this->layouts);

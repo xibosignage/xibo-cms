@@ -167,12 +167,12 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * * @SWG\Post(
+     * * @SWG\Put(
      *  path="/playlist/widget/{widgetId}?dataSetView",
      *  operationId="widgetDataSetViewEdit",
      *  tags={"widget"},
      *  summary="Edit a dataSetView Widget",
-     *  description="Edit a new dataSetView Widget to the specified playlist",
+     *  description="Edit an existing dataSetView Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -197,14 +197,14 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="dataSetId",
      *      in="formData",
-     *      description="Create dataSetView Widget using provided dataSetId of an existing dataSet",
+     *      description="For Step 1. Create dataSetView Widget using provided dataSetId of an existing dataSet",
      *      type="integer",
      *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId",
      *      in="formData",
-     *      description=" EDIT only - Array of dataSetColumn IDs to assign",
+     *      description="Array of dataSetColumn IDs to assign",
      *      type="array",
      *      required=false,
      *      @SWG\Items(type="integer")
@@ -219,7 +219,7 @@ class DataSetView extends ModuleWidget
      *  @SWG\Parameter(
      *      name="useDuration",
      *      in="formData",
-     *      description="Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+     *      description="Select 1 only if you will provide duration parameter as well",
      *      type="integer",
      *      required=false
      *  ),

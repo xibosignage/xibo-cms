@@ -66,6 +66,7 @@ $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('sche
 $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('schedule.add.form');
 $app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
+$app->get('/schedulerecurrence/form/delete/:id', '\Xibo\Controller\Schedule:deleteRecurrenceForm')->name('schedule.recurrence.delete.form');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 $app->get('/schedulenow/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedulenow.now.form');
 // Special routes for searching inside the schedule page
@@ -81,6 +82,7 @@ $app->get('/drawer/notification/interrupt/:id', '\Xibo\Controller\Notification:i
 $app->get('/notification/form/add', '\Xibo\Controller\Notification:addForm')->name('notification.add.form');
 $app->get('/notification/form/edit/:id', '\Xibo\Controller\Notification:editForm')->name('notification.edit.form');
 $app->get('/notification/form/delete/:id', '\Xibo\Controller\Notification:deleteForm')->name('notification.delete.form');
+$app->get('/notification/export/:id', '\Xibo\Controller\Notification:exportAttachment')->name('notification.exportattachment');
 
 //
 // layouts
@@ -168,6 +170,7 @@ $app->get('/display/form/wol/:id', '\Xibo\Controller\Display:wakeOnLanForm')->na
 $app->get('/display/form/authorise/:id', '\Xibo\Controller\Display:authoriseForm')->name('display.authorise.form');
 $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLayoutForm')->name('display.defaultlayout.form');
 $app->get('/display/form/moveCms/:id', '\Xibo\Controller\Display:moveCmsForm')->name('display.moveCms.form');
+$app->get('/display/form/addViaCode', '\Xibo\Controller\Display:addViaCodeForm')->name('display.addViaCode.form');
 
 //
 // user
@@ -401,6 +404,7 @@ $app->get('/report/reportschedule/form/reset/:id', '\Xibo\Controller\Report:rese
 //
 $app->get('/report/savedreport/view', '\Xibo\Controller\Report:displaySavedReportPage')->name('savedreport.view');
 $app->get('/report/savedreport/:id/report/:name/open', '\Xibo\Controller\Report:savedReportOpen')->name('savedreport.open');
+$app->get('/report/savedreport/:id/report/:name/export', '\Xibo\Controller\Report:savedReportExport')->name('savedreport.export');
 $app->get('/report/savedreport/form/delete/:id', '\Xibo\Controller\Report:deleteSavedReportForm')->name('savedreport.delete.form');
 
 //

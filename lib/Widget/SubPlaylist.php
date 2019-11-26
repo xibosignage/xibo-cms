@@ -121,7 +121,7 @@ class SubPlaylist extends ModuleWidget
      *  operationId="WidgetSubPlaylistEdit",
      *  tags={"widget"},
      *  summary="Edit a Sub-Playlist Widget",
-     *  description="Edit a new Sub-Playlist Widget",
+     *  description="Edit a new Sub-Playlist Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -131,11 +131,58 @@ class SubPlaylist extends ModuleWidget
      *   ),
      *  @SWG\Parameter(
      *      name="subPlaylistId",
+     *      type="array",
      *      in="formData",
-     *      description="The sub-playlist to embed",
-     *      type="integer",
+     *      description="The Playlist Ids to assign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="arrangement",
+     *      in="formData",
+     *      description="Arrangement type - even, roundrobin, none",
+     *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="remainder",
+     *      in="formData",
+     *      description="Reminder - drop, repeat, none",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="subPlaylistIdSpots",
+     *      type="array",
+     *      in="formData",
+     *      description="An array with number of spots for each Playlist",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="subPlaylistIdSpotLength",
+     *      type="array",
+     *      in="formData",
+     *      description="An array with spot length for each Playlist",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="subPlaylistIdSpotFill",
+     *      type="array",
+     *      in="formData",
+     *      description="An array of spot fill type for each Playlist - fill, repeat, pad",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="string"
+     *      )
+     *  ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -156,8 +203,8 @@ class SubPlaylist extends ModuleWidget
 
         // Get the list of playlists
         $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
-        $spots = $this->getSanitizer()->getStringArray('subPlaylistIdSpots');
-        $spotLength = $this->getSanitizer()->getStringArray('subPlaylistIdSpotLength');
+        $spots = $this->getSanitizer()->getIntArray('subPlaylistIdSpots');
+        $spotLength = $this->getSanitizer()->getIntArray('subPlaylistIdSpotLength');
         $spotFill = $this->getSanitizer()->getStringArray('subPlaylistIdSpotFill');
 
         // Make up a companion setting which maps the playlistIds to the options

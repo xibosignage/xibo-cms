@@ -11,6 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ urlFor("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -108,7 +109,7 @@
                                         { optionid: "windows", option: windows},
                                         { optionid: "lg", option: webos},
                                         { optionid: "sssp", option: sssp},
-                                        { optionId: "linux", option: linux},
+                                        { optionid: "linux", option: linux},
                                     ] %}
                                     {{ inline.dropdown("clientType", "single", title, "", options, "optionid", "option") }}
 
@@ -455,7 +456,7 @@
 
             let $message = $(
                 '<div class="col-sm-12 alert alert-info">' +
-                    "<p>{% trans 'Please note that once the new CMS Address and Key are authenticated in this form, Display will attempt to register with the new CMS Instance, if successful, Display will stop communicating with this CMS Instance.' %}</p>" +
+                    "<p>{% trans 'Please note: Once the CMS Address and Key are authenticated in this form the Display will attempt to register with the CMS Instance details entered. Once transferred the Display will stop communicating with this CMS Instance.' %}</p>" +
                 '</div>'
             );
 

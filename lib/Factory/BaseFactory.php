@@ -290,24 +290,24 @@ class BaseFactory
                 if (substr($searchName, 0, 1) == '-') {
                     if ($i == 1) {
                         $body .= " AND ( $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = ltrim(($searchName), '-');
+                        $params['search' . $i] = preg_quote(ltrim(($searchName), '-'));
                     } elseif ( (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) || strpos($searchNames[$i-1], '-') !== false ) {
                         $body .= " AND $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = ltrim(($searchName), '-');
+                        $params['search' . $i] = preg_quote(ltrim(($searchName), '-'));
                     } else {
                         $body .= " OR $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = ltrim(($searchName), '-');
+                        $params['search' . $i] = preg_quote(ltrim(($searchName), '-'));
                     }
                 } else {
                     if ($i === 1) {
                         $body .= " AND ( $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $searchName;
+                        $params['search' . $i] = preg_quote($searchName);
                     } elseif (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) {
                         $body .= " AND $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $searchName;
+                        $params['search' . $i] = preg_quote($searchName);
                     } else {
                         $body .= " OR  $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $searchName;
+                        $params['search' . $i] = preg_quote($searchName);
                     }
                 }
             }

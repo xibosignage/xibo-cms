@@ -431,6 +431,39 @@ class Module extends Base
 
     /**
      * Add Widget
+     *
+     * * @SWG\Post(
+     *  path="/playlist/widget/{type}/{playlistId}",
+     *  operationId="addWidget",
+     *  tags={"widget"},
+     *  summary="Add a Widget to a Playlist",
+     *  description="Add a new Widget to a Playlist",
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="path",
+     *      description="The type of the Widget e.g. Image",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     *
      * @param string $type
      * @param int $playlistId
      * @throws XiboException
@@ -531,30 +564,6 @@ class Module extends Base
 
     /**
      * Edit a Widget
-     * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}",
-     *  operationId="WidgetEdit",
-     *  tags={"widget"},
-     *  summary="Edit a Widget",
-     *  description="Edit a Widget, please refer to individual widget Add documentation for module specific parameters",
-     *  @SWG\Parameter(
-     *      name="widgetId",
-     *      in="path",
-     *      description="The widget ID to edit",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Response(
-     *      response=201,
-     *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Widget"),
-     *      @SWG\Header(
-     *          header="Location",
-     *          description="Location of the edited widget",
-     *          type="string"
-     *      )
-     * )
-     *)
      *
      * @param int $widgetId
      * @throws XiboException
@@ -707,9 +716,6 @@ class Module extends Base
             'transitions' => [
                 'in' => $this->transitionFactory->getEnabledByType('in'),
                 'out' => $this->transitionFactory->getEnabledByType('out'),
-                'defaultTransitionDuration' => $this->getConfig()->getSetting('DEFAULT_TRANSITION_DURATION'),
-                'defaultTransitionIn' => $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN'),
-                'defaultTransitionOut' => $this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT'),
                 'compassPoints' => array(
                     array('id' => 'N', 'name' => __('North')),
                     array('id' => 'NE', 'name' => __('North East')),
@@ -1234,14 +1240,14 @@ class Module extends Base
      *  @SWG\Parameter(
      *      name="fromDt",
      *      in="formData",
-     *      description="The From Date",
+     *      description="The From Date in Y-m-d H::i:s format",
      *      type="string",
      *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="toDt",
      *      in="formData",
-     *      description="The To Date",
+     *      description="The To Date in Y-m-d H::i:s format",
      *      type="string",
      *      required=false
      *  ),
@@ -1312,6 +1318,13 @@ class Module extends Base
             'notifyDisplays' => false,
             'audit' => true
         ]);
+
+        if ($this->isApi()) {
+            $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
+            $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
+            $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
+            $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+        }
 
         // Successful
         $this->getState()->hydrate([

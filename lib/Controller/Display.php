@@ -21,11 +21,12 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
+use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Stash\Interfaces\PoolInterface;
-use Respect\Validation\Validator as v;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -47,6 +48,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
@@ -539,6 +541,10 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi()) {
+                $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
+                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+                $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
+                $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
             }
 
@@ -763,13 +769,13 @@ class Display extends Base
                 $display->buttons[] = [
                     'id' => 'display_button_move_cms',
                     'url' => $this->urlFor('display.moveCms.form', ['id' => $display->displayId]),
-                    'text' => __('Move CMS'),
+                    'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor('display.moveCms', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
-                        ['name' => 'text', 'value' => __('Move CMS')],
+                        ['name' => 'text', 'value' => __('Transfer to another CMS')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
@@ -1146,6 +1152,11 @@ class Display extends Base
         $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
 
+        if ($this->isApi()) {
+            $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
+            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Edited %s'), $display->display),
@@ -1335,10 +1346,11 @@ class Display extends Base
         header("Expires: 0");
 
         // Disable any buffering to prevent OOM errors.
-        @ob_end_clean();
-        @ob_end_flush();
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
 
-        echo $img->response();
+        echo $img->encode();
     }
 
     /**
@@ -1824,6 +1836,51 @@ class Display extends Base
 
         } else {
             throw new InvalidArgumentException(__('Invalid Two Factor Authentication Code'), 'twoFactorCode');
+        }
+    }
+
+    public function addViaCodeForm()
+    {
+        $this->getState()->template = 'display-form-addViaCode';
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function addViaCode()
+    {
+        $user_code = $this->getSanitizer()->getString('user_code');
+        $cmsAddress = (new HttpsDetect())->getUrl();
+        $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
+
+        if ($user_code == '') {
+            throw new InvalidArgumentException('Code cannot be empty', 'code');
+        }
+
+        $guzzle = new Client();
+
+        try {
+            // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
+            // The Player will then call the service with the same code to retrieve the CMS details.
+            // On success, the details will be removed from the Authentication Service.
+            $request = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
+                $this->getConfig()->getGuzzleProxy([
+                    'form_params' => [
+                        'user_code' => $user_code,
+                        'cmsAddress' => $cmsAddress,
+                        'cmsKey' => $cmsKey,
+                    ]
+                ]));
+
+            $data = json_decode($request->getBody(), true);
+
+            $this->getState()->hydrate([
+                'message' => $data['message']
+            ]);
+        } catch (\Exception $e) {
+            $this->getLog()->debug($e->getMessage());
+            throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
         }
     }
 }

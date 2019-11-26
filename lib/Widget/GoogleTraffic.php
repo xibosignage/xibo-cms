@@ -139,7 +139,7 @@ class GoogleTraffic extends ModuleWidget
      *  operationId="widgetGoogleTrafficEdit",
      *  tags={"widget"},
      *  summary="Edit a Google Traffic Widget",
-     *  description="Edit a Google traffic Widget",
+     *  description="Edit a Google traffic Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

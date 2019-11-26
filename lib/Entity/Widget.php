@@ -123,6 +123,30 @@ class Widget implements \JsonSerializable
     public $toDt;
 
     /**
+     * @SWG\Property(description="Transition Type In")
+     * @var int
+     */
+    public $transitionIn;
+
+    /**
+     * @SWG\Property(description="Transition Type out")
+     * @var int
+     */
+    public $transitionOut;
+
+    /**
+     * @SWG\Property(description="Transition duration in")
+     * @var int
+     */
+    public $transitionDurationIn;
+
+    /**
+     * @SWG\Property(description="Transition duration out")
+     * @var int
+     */
+    public $transitionDurationOut;
+
+    /**
      * @SWG\Property(description="An array of Widget Options")
      * @var WidgetOption[]
      */

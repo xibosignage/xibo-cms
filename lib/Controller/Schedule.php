@@ -21,9 +21,9 @@
  */
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\ScheduleExclusion;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -33,6 +33,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Helper\Session;
@@ -64,6 +65,11 @@ class Schedule extends Base
      * @var ScheduleReminderFactory
      */
     private $scheduleReminderFactory;
+
+    /**
+     * @var ScheduleExclusionFactory
+     */
+    private $scheduleExclusionFactory;
 
     /**
      * @var DisplayGroupFactory
@@ -112,8 +118,9 @@ class Schedule extends Base
      * @param MediaFactory $mediaFactory
      * @param DayPartFactory $dayPartFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
+     * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -128,28 +135,47 @@ class Schedule extends Base
         $this->mediaFactory = $mediaFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
+        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
     }
 
     function displayPage()
     {
         // We need to provide a list of displays
         $displayGroupIds = $this->session->get('displayGroupIds');
-        $groups = array();
-        $displays = array();
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
-            /* @var \Xibo\Entity\DisplayGroup $display */
-            if ($display->isDisplaySpecific == 1) {
-                $displays[] = $display;
-            } else {
-                $groups[] = $display;
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
+        $displayGroups = [];
+
+        // Boolean to check if the option show all was saved in session
+        $displayGroupsShowAll = false;
+
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1) {
+                    // If we have the show all option selected, go no further.
+                    $displayGroupsShowAll = true;
+                    break;
+                }
+
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
+                }
             }
         }
 
         $data = [
-            'selectedDisplayGroupIds' => $displayGroupIds,
-            'groups' => $groups,
-            'displays' => $displays
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
+            'displayGroupsShowAll' => $displayGroupsShowAll
         ];
 
         // Render the Theme and output
@@ -196,6 +222,8 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
      */
     function eventData()
     {
@@ -359,7 +387,8 @@ class Schedule extends Base
                     'sameDay' => ($fromDt->day == $toDt->day && $fromDt->month == $toDt->month && $fromDt->year == $toDt->year),
                     'editable' => $editable,
                     'event' => $row,
-                    'scheduleEvent' => $scheduleEvent
+                    'scheduleEvent' => $scheduleEvent,
+                    'recurringEvent' => ($row->recurrenceType != '') ? true : false
                 );
             }
         }
@@ -373,7 +402,7 @@ class Schedule extends Base
      *
      * @SWG\Get(
      *  path="/schedule/{displayGroupId}/events",
-     *  operationId="scheduleCalendarData",
+     *  operationId="scheduleCalendarDataDisplayGroup",
      *  tags={"schedule"},
      *  @SWG\Parameter(
      *      name="displayGroupId",
@@ -908,57 +937,6 @@ class Schedule extends Base
             $this->getLog()->debug('Processed times are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
         }
 
-        // interrupt layout
-        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
-
-            $campaign = $this->campaignFactory->getById($schedule->campaignId);
-
-            if ($campaign->isLayoutSpecific == 0) {
-                throw new InvalidArgumentException(__('Cannot select a Campaign for this event type.'), 'campaignId');
-            }
-
-            foreach ($this->layoutFactory->getByCampaignId($schedule->campaignId) as $layout) {
-                $layoutDuration = $layout->duration;
-                $shareInSeconds = ($schedule->shareOfVoice * 3600) / 100;
-
-                if ($layoutDuration > $shareInSeconds) {
-                    throw new InvalidArgumentException(__('Layout duration is longer than share of voice in the hour period'), 'shareOfVoice');
-                }
-            }
-
-            foreach($schedule->displayGroups as $displayGroup) {
-                $events = $this->scheduleFactory->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroup->displayGroupId], 'fromDt' => $schedule->fromDt, 'toDt' => $schedule->toDt]);
-
-                foreach ($events as $event) {
-                    /** @var $event \Xibo\Entity\Schedule */
-                    if ($event->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
-                        $this->getLog()->debug('we have another interrupt Layout scheduled to Display Group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
-                        $existingEventFromDt = $event->fromDt;
-                        $existingEventToDt =  $event->toDt;
-
-                        // check if we are adding event with always Daypart, if so, set the from and to dates (without this condition from and to would be null for always Daypart)
-                        if ($schedule->isAlwaysDayPart()) {
-                            $schedule->fromDt = \Xibo\Entity\Schedule::$DATE_MIN;
-                            $schedule->toDt = \Xibo\Entity\Schedule::$DATE_MAX;
-                        }
-
-                        // without recurrence
-                        if ($schedule->fromDt >= $existingEventFromDt && $schedule->fromDt <= $existingEventToDt) {
-                            throw new InvalidArgumentException(__('The event has start date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
-                        }
-
-                        if ($schedule->toDt >= $existingEventFromDt && $schedule->toDt <= $existingEventToDt) {
-                            throw new InvalidArgumentException(__('The event has end date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
-                        }
-
-                        if ($schedule->fromDt <= $existingEventFromDt && $schedule->toDt >= $existingEventToDt) {
-                            throw new InvalidArgumentException(__('The event date overlaps another active interrupt layout event ID ' . $event->eventId), 'fromDt');
-                        }
-                    }
-                }
-            }
-        }
-
         // Ready to do the add
         $schedule->setDisplayFactory($this->displayFactory);
         $schedule->save();
@@ -1030,6 +1008,10 @@ class Schedule extends Base
      */
     function editForm($eventId)
     {
+        // Recurring event start/end
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000) / 1000;
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000) / 1000;
+
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
@@ -1063,7 +1045,82 @@ class Schedule extends Base
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
             'help' => $this->getHelp()->link('Schedule', 'Edit'),
-            'reminders' => $scheduleReminders
+            'reminders' => $scheduleReminders,
+            'recurringEvent' => ($schedule->recurrenceType != '') ? true : false,
+            'eventStart' => $eventStart,
+            'eventEnd' => $eventEnd,
+        ]);
+    }
+
+    /**
+     * Shows the Delete a Recurring Event form
+     * @param int $eventId
+     */
+    function deleteRecurrenceForm($eventId)
+    {
+        // Recurring event start/end
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
+
+        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule->load();
+
+        if (!$this->isEventEditable($schedule->displayGroups)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'schedule-recurrence-form-delete';
+        $this->getState()->setData([
+            'event' => $schedule,
+            'help' => $this->getHelp()->link('Schedule', 'Delete'),
+            'eventStart' => $eventStart,
+            'eventEnd' => $eventEnd,
+        ]);
+    }
+
+    /**
+     * Deletes a recurring Event from all displays
+     * @param int $eventId
+     *
+     * @SWG\Delete(
+     *  path="/schedulerecurrence/{eventId}",
+     *  operationId="schedulerecurrenceDelete",
+     *  tags={"schedule"},
+     *  summary="Delete a Recurring Event",
+     *  description="Delete a Recurring Event of a Scheduled Event",
+     *  @SWG\Parameter(
+     *      name="eventId",
+     *      in="path",
+     *      description="The Scheduled Event ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function deleteRecurrence($eventId)
+    {
+        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule->load();
+
+        if (!$this->isEventEditable($schedule->displayGroups))
+            throw new AccessDeniedException();
+
+        // Recurring event start/end
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
+        $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
+
+        $this->getLog()->debug('Create a schedule exclusion record');
+        $scheduleExclusion->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => __('Deleted Event')
         ]);
     }
 
@@ -1218,8 +1275,9 @@ class Schedule extends Base
         ]);
 
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
+        }
 
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
@@ -1236,6 +1294,13 @@ class Schedule extends Base
         $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
+
+        // if we are editing Layout/Campaign event that was set with Always daypart and change it to Command event type
+        // the daypartId will remain as always, which will then cause the event to "disappear" from calendar
+        // https://github.com/xibosignage/xibo/issues/1982
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
+            $schedule->dayPartId = $this->dayPartFactory->getCustomDayPart()->dayPartId;
+        }
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1281,57 +1346,6 @@ class Schedule extends Base
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
-        }
-
-        // interrupt layout
-        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
-
-            $campaign = $this->campaignFactory->getById($schedule->campaignId);
-
-            if ($campaign->isLayoutSpecific == 0) {
-                throw new InvalidArgumentException(__('Cannot select a Campaign for this event type.'), 'campaignId');
-            }
-
-            foreach ($this->layoutFactory->getByCampaignId($schedule->campaignId) as $layout) {
-                $layoutDuration = $layout->duration;
-                $shareInSeconds = ($schedule->shareOfVoice * 3600) / 100;
-
-                if ($layoutDuration > $shareInSeconds) {
-                    throw new InvalidArgumentException(__('Layout duration is longer than share of voice in the hour period'), 'shareOfVoice');
-                }
-            }
-
-            foreach($schedule->displayGroups as $displayGroup) {
-                $events = $this->scheduleFactory->query(null, ['disableUserCheck' => 1, 'displayGroupIds' => [$displayGroup->displayGroupId], 'fromDt' => $schedule->fromDt, 'toDt' => $schedule->toDt]);
-
-                foreach ($events as $event) {
-                    /** @var $event \Xibo\Entity\Schedule */
-                    if ($event->eventTypeId == \Xibo\Entity\Schedule::$INTERRUPT_EVENT && $event->eventId != $schedule->eventId) {
-                        $this->getLog()->debug('we have another interrupt Layout scheduled to Display Group id ' . $displayGroup->displayGroupId . ' event id ' . $event->eventId);
-                        $existingEventFromDt = $event->fromDt;
-                        $existingEventToDt =  $event->toDt;
-
-                        // check if we are adding event with always Daypart, if so, set the from and to dates (without this condition from and to would be null for always Daypart)
-                        if ($schedule->isAlwaysDayPart()) {
-                            $schedule->fromDt = \Xibo\Entity\Schedule::$DATE_MIN;
-                            $schedule->toDt = \Xibo\Entity\Schedule::$DATE_MAX;
-                        }
-
-                        // without recurrence
-                        if ($schedule->fromDt >= $existingEventFromDt && $schedule->fromDt <= $existingEventToDt) {
-                            throw new InvalidArgumentException(__('The event has start date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
-                        }
-
-                        if ($schedule->toDt >= $existingEventFromDt && $schedule->toDt <= $existingEventToDt) {
-                            throw new InvalidArgumentException(__('The event has end date during another active interrupt layout event ID ' . $event->eventId), 'fromDt');
-                        }
-
-                        if ($schedule->fromDt <= $existingEventFromDt && $schedule->toDt >= $existingEventToDt) {
-                            throw new InvalidArgumentException(__('The event date overlaps another active interrupt layout event ID ' . $event->eventId), 'fromDt');
-                        }
-                    }
-                }
-            }
         }
 
         // Ready to do the add
@@ -1432,6 +1446,15 @@ class Schedule extends Base
             $scheduleReminder->isEmail = $reminder['reminder_isEmailHidden'];
 
             $this->saveReminder($schedule, $scheduleReminder);
+        }
+
+        // If this is a recurring event delete all schedule exclusions
+        if ($schedule->recurrenceType != '') {
+            // Delete schedule exclusions
+            $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]);
+            foreach ($scheduleExclusions as $exclusion) {
+                $exclusion->delete();
+            }
         }
 
         // Return

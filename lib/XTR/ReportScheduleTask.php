@@ -26,6 +26,7 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Slim\View;
@@ -52,6 +53,9 @@ class ReportScheduleTask implements TaskInterface
     /** @var SavedReportFactory */
     private $savedReportFactory;
 
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /** @var UserFactory */
     private $userFactory;
 
@@ -72,6 +76,7 @@ class ReportScheduleTask implements TaskInterface
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->reportService = $container->get('reportService');
         $this->notificationFactory = $container->get('notificationFactory');
@@ -199,61 +204,70 @@ class ReportScheduleTask implements TaskInterface
         // Get report email template
         $emailTemplate = $this->reportService->getReportEmailTemplate($reportSchedule->reportName);
 
-        // Save PDF attachment
-        ob_start();
-        $this->view->display($emailTemplate,
-            [
-                'header' => $report->description,
-                'logo' => $this->config->uri('img/xibologo.png', true),
-                'title' => $savedReport->saveAs,
-                'periodStart' => $savedReportData['chartData']['periodStart'],
-                'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                'generatedOn' => $this->date->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
-                'tableData' => isset($tableData) ? $tableData : null,
-                'src' => isset($src) ? $src : null,
-                'placeholder' => isset($placeholder) ? $placeholder : null
-            ]);
-        $body = ob_get_contents();
-        ob_end_clean();
+        if(!empty($emailTemplate)) {
 
-        try {
-            $mpdf = new \Mpdf\Mpdf([
-                'orientation' => 'L',
-                'mode' => 'c',
-                'margin_left' => 20,
-                'margin_right' => 20,
-                'margin_top' => 20,
-                'margin_bottom' => 20,
-                'margin_header' => 5,
-                'margin_footer' => 15
-            ]);
-            $mpdf->setFooter('Page {PAGENO}') ;
-            $mpdf->SetDisplayMode('fullpage');
-            $stylesheet =  file_get_contents($this->config->uri('css/email-report.css', true));
-            $mpdf->WriteHTML($stylesheet, 1);
-            $mpdf->WriteHTML($body);
-            $mpdf->Output($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/filename-'.$media->mediaId.'.pdf', \Mpdf\Output\Destination::FILE);
+            // Save PDF attachment
+            ob_start();
+            $this->view->display($emailTemplate,
+                [
+                    'header' => $report->description,
+                    'logo' => $this->config->uri('img/xibologo.png', true),
+                    'title' => $savedReport->saveAs,
+                    'periodStart' => $savedReportData['chartData']['periodStart'],
+                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'generatedOn' => $this->date->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'tableData' => isset($tableData) ? $tableData : null,
+                    'src' => isset($src) ? $src : null,
+                    'placeholder' => isset($placeholder) ? $placeholder : null
+                ]);
+            $body = ob_get_contents();
+            ob_end_clean();
 
-            // Create email notification with attachment
-            $filters = json_decode($reportSchedule->filterCriteria, true);
-            $sendEmail = isset($filters['sendEmail']) ? $filters['sendEmail'] : null;
-            $nonusers = isset($filters['nonusers']) ? $filters['nonusers'] : null;
-            if ($sendEmail) {
-                $notification = $this->notificationFactory->createEmpty();
-                $notification->subject = $report->description;
-                $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
-                $notification->createdDt = $this->date->getLocalDate(null, 'U');
-                $notification->releaseDt = time() + 15 * 60 ; // 15 minutes after the notification is created so that the notification task can pick this
-                $notification->isEmail = 1;
-                $notification->isInterrupt = 0;
-                $notification->userId = $savedReport->userId; // event owner
-                $notification->filename = 'filename-'.$media->mediaId.'.pdf';
-                $notification->nonusers = $nonusers;
-                $notification->save();
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'orientation' => 'L',
+                    'mode' => 'c',
+                    'margin_left' => 20,
+                    'margin_right' => 20,
+                    'margin_top' => 20,
+                    'margin_bottom' => 20,
+                    'margin_header' => 5,
+                    'margin_footer' => 15
+                ]);
+                $mpdf->setFooter('Page {PAGENO}') ;
+                $mpdf->SetDisplayMode('fullpage');
+                $stylesheet =  file_get_contents($this->config->uri('css/email-report.css', true));
+                $mpdf->WriteHTML($stylesheet, 1);
+                $mpdf->WriteHTML($body);
+                $mpdf->Output($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/filename-'.$media->mediaId.'.pdf', \Mpdf\Output\Destination::FILE);
+
+                // Create email notification with attachment
+                $filters = json_decode($reportSchedule->filterCriteria, true);
+                $sendEmail = isset($filters['sendEmail']) ? $filters['sendEmail'] : null;
+                $nonusers = isset($filters['nonusers']) ? $filters['nonusers'] : null;
+                if ($sendEmail) {
+                    $notification = $this->notificationFactory->createEmpty();
+                    $notification->subject = $report->description;
+                    $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
+                    $notification->createdDt = $this->date->getLocalDate(null, 'U');
+                    $notification->releaseDt = time() + 15 * 60 ; // 15 minutes after the notification is created so that the notification task can pick this
+                    $notification->isEmail = 1;
+                    $notification->isInterrupt = 0;
+                    $notification->userId = $savedReport->userId; // event owner
+                    $notification->filename = 'filename-'.$media->mediaId.'.pdf';
+                    $notification->originalFileName = 'saved_report.pdf';
+                    $notification->nonusers = $nonusers;
+
+                    // Get user group to create user notification
+                    $notificationUser = $this->userFactory->getById($savedReport->userId);
+                    $notification->assignUserGroup($this->userGroupFactory->getById($notificationUser->groupId));
+
+                    $notification->save();
+                }
+            } catch (\Exception $error) {
+                $this->log->error('Report PDF could not be created and notification is not saved.');
+                $this->runMessage .= ' - Report PDF could not be created and notification is not saved.' . PHP_EOL . PHP_EOL;
             }
-        } catch (\Exception $error) {
-            $this->log->error('Report PDF could not be created and notification is not saved.');
-            $this->runMessage .= ' - Report PDF could not be created and notification is not saved.' . PHP_EOL . PHP_EOL;
         }
 
     }

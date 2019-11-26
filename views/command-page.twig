@@ -35,6 +35,7 @@
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Code" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -96,6 +97,10 @@
                 { "data": "command", "render": dataTableSpacingPreformatted },
                 { "data": "code" },
                 { "data": "description" },
+                {
+                    "data": "groupsWithPermissions",
+                    "render": dataTableCreatePermissions
+                },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn
