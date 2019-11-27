@@ -367,7 +367,9 @@ class DataSetFactory extends BaseFactory
             if ($dataSet->method === 'POST') {
                 parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['form_params']);
             } else {
-                parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['query']);
+                parse_str(parse_url($resolvedUri, PHP_URL_QUERY), $queryParamsArray);
+                parse_str($this->replaceParams($dataSet->postData, $options), $dataSetPostData);
+                $requestParams['query'] = array_merge($queryParamsArray, $dataSetPostData);
             }
 
             $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
@@ -443,7 +445,7 @@ class DataSetFactory extends BaseFactory
                     $result->entries[] = json_decode($request->getBody());
                     $result->number = $result->number + 1;
                 } else {
-                    $csv = file_get_contents($resolvedUri);
+                    $csv = $request->getBody();
                     $array = array_map("str_getcsv", explode("\n", $csv));
 
                     if ($dataSet->ignoreFirstRow == 1) {
