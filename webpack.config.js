@@ -3,7 +3,7 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-module.exports = {
+var config = {
     entry: {
         vendor: './ui/bundle_vendor.js',
         style: './ui/bundle_style.js',
@@ -11,37 +11,6 @@ module.exports = {
         layoutDesigner: './ui/src/designer/main.js',
         playlistEditor: './ui/src/playlist-editor/main.js'
     },
-    devtool: 'source-map',
-    plugins: [
-        new UglifyJSPlugin({
-            sourceMap: true
-        }),
-        new CleanWebpackPlugin(['web/dist']),
-        new CopyWebpackPlugin([
-            // Copy directory contents to {output}/
-            {
-                from: 'ui/src/core',
-                to: 'core'
-            },
-            {
-                from: 'ui/src/preview',
-                to: 'preview'
-            },
-            {
-                from: 'ui/src/assets',
-                to: 'assets'
-            },
-            {
-                from: 'ui/src/vendor',
-                to: 'vendor'
-            }
-        ], {
-                // By default, we only copy modified files during
-                // a watch or webpack-dev-server build. Setting this
-                // to `true` copies all files.
-                copyUnmodified: true
-            })
-    ],
     output: {
         path: path.resolve(__dirname, 'web/dist'),
         filename: '[name].bundle.min.js'
@@ -55,7 +24,7 @@ module.exports = {
                 ]
             },
             {
-                test: /\.(css|scss)$/,
+                test: /\.(css)$/,
                 use: [
                     'style-loader',
                     'css-loader'
@@ -70,16 +39,27 @@ module.exports = {
                 ]
             },
             {
-                test: /\.(png|svg|jpg|gif)$/,
+                test: /\.(scss)$/,
                 use: [{
-                    loader: 'file-loader',
+                    loader: 'style-loader', // inject CSS to page
+                }, {
+                    loader: 'css-loader', // translates CSS into CommonJS modules
+                }, {
+                    loader: 'postcss-loader', // Run post css actions
                     options: {
-                        name: '[name].[ext]'
+                        plugins: function() { // post css plugins, can be exported to postcss.config.js
+                            return [
+                                require('precss'),
+                                require('autoprefixer')
+                            ];
+                        }
                     }
+                }, {
+                    loader: 'sass-loader' // compiles Sass to CSS
                 }]
             },
             {
-                test: /\.(ttf|eot|woff|woff2)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
+                test: /\.(png|svg|jpg|gif|ttf|eot|woff|woff2)$/,
                 use: [{
                     loader: 'file-loader',
                     options: {
@@ -122,5 +102,48 @@ module.exports = {
                 }
             }
         ]
+    },
+    plugins: [
+        new UglifyJSPlugin({
+            sourceMap: true
+        }),
+        new CleanWebpackPlugin(['web/dist']),
+        new CopyWebpackPlugin([
+            // Copy directory contents to {output}/
+            {
+                from: 'ui/src/core',
+                to: 'core'
+            },
+            {
+                from: 'ui/src/preview',
+                to: 'preview'
+            },
+            {
+                from: 'ui/src/assets',
+                to: 'assets'
+            },
+            {
+                from: 'ui/src/vendor',
+                to: 'vendor'
+            }
+        ], {
+                // By default, we only copy modified files during
+                // a watch or webpack-dev-server build. Setting this
+                // to `true` copies all files.
+                copyUnmodified: true
+            })
+    ]
+};
+
+module.exports = (env, argv) => {
+
+    if(argv.mode === 'development') {
+        config.devtool = 'source-map';
     }
+
+    if(argv.mode === 'production') {
+        config.devtool = '';
+    }
+
+    return config;
 };

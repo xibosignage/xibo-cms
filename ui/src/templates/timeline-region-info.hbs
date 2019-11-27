@@ -1,0 +1,37 @@
+<div id="region_info_{{ id }}" data-region="{{ id }}" class="designer-region-info {{selectedFlag}}">
+    <div class="region-preview">
+        {{!-- Preview --}}
+        <div class="region-preview-background"
+            style="
+                width: {{timelinePreviewContainer.width}}px;
+                height: {{timelinePreviewContainer.height}}px;
+                top: {{timelinePreviewContainer.top}}px;
+                left: {{timelinePreviewContainer.left}}px;">
+
+            <div class="region-preview-element"
+                style="
+                    width: {{timelinePreview.width}}px;
+                    height: {{timelinePreview.height}}px;
+                    top: {{timelinePreview.top}}px;
+                    left: {{timelinePreview.left}}px;">
+            </div>
+        </div>
+    </div>
+
+    <div class="region-controls">
+        {{!-- Controls --}}
+        <div class="region-label">
+            {{ name }}
+        </div>
+        <div class="region-actions">
+            {{!-- TODO: Hidden playlist editor until feature is implemented --}}
+            <a class="open-playlist-editor hidden">
+                <i class="fa fa-list"></i>
+            </a>
+
+            <a class="edit-region">
+                <i class="fa fa-edit"></i>
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,35 +1,35 @@
 // Import
-@import "mixins.less";
-@import "common.less";
-@import "toolbar.less";
+@import "mixins";
+@import "common";
+@import "toolbar";
 
 // Variables
-@playlist-editor-main-background-color: #fff;
-@playlist-editor-main-fb-color: #333;
-@playlist-editor-min-content-height: 40vh;
-@playlist-editor-max-content-height: 65vh;
+$playlist-editor-main-background-color: $xibo-color-white;
+$playlist-editor-main-fb-color: $xibo-color-black;
+$playlist-editor-min-content-height: 40vh;
+$playlist-editor-max-content-height: 65vh;
 
-@playlist-editor-widget-bg-color:#b3ddff;
-@playlist-editor-widget-fg-color:#333;
-@playlist-editor-widget-fg-color2: #555;
-@playlist-editor-widget-selected-color: #58b4fe;
-@playlist-editor-widget-hover-bg-color:#e7f4fe;
-@playlist-editor-widget-border-color: #868686;
+$playlist-editor-widget-bg-color: $xibo-color-green;
+$playlist-editor-widget-fg-color:$xibo-color-black;
+$playlist-editor-widget-fg-color2: $xibo-color-gray;
+$playlist-editor-widget-selected-color: $xibo-color-secondary;
+$playlist-editor-widget-hover-bg-color:$xibo-color-light-blue;
+$playlist-editor-widget-border-color: $xibo-color-gray;
 
-@playlist-editor-z-index-background: 1011;
-@playlist-editor-z-index-overlay: 1012;
-@playlist-editor-z-index-select: 1013;
+$playlist-editor-z-index-background: 1011;
+$playlist-editor-z-index-overlay: 1012;
+$playlist-editor-z-index-select: 1013;
 
-@playlist-editor-timeline-fg-color: #3a3eb6;
+$playlist-editor-timeline-fg-color: $xibo-color-primary;
 
-@playlist-editor-unsuccess-message-bg-color: #b3360e;
+$playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
 
 // CSS
 .editor-modal {
     display: block;
-    z-index: @playlist-editor-z-index-background;
+    z-index: $playlist-editor-z-index-background;
     overflow: auto;
-    .set-transparent-color(background; #000; 60%);
+    @include set-transparent-color(background, $xibo-color-black, 0.6);
 }
 
 .editor-modal-dialog {
@@ -38,8 +38,8 @@
 }
 
 .editor-modal-content {
-    background: @playlist-editor-main-background-color;
-    margin-bottom: 160px;
+    background: $playlist-editor-main-background-color;
+    margin-bottom: 60px;
 }
 
 .editor-modal-body {
@@ -49,25 +49,25 @@
 .editor-modal-title {
     line-height: 1;
     font-weight: bold;
-    color: @playlist-editor-main-fb-color;
+    color: $playlist-editor-main-fb-color;
 }
 
 .editor-modal-header .close:not(.help) i {
     padding-left: 8px;
-    color: red;
+    color: $xibo-color-red;
 }
 
 #playlist-editor #playlist-timeline {
-    background: #f3f3f3;
-    .border-radius(4px);
-    border: 2px solid @playlist-editor-timeline-fg-color;
+    background: $xibo-color-white;
+    @include border-radius(4px);
+    border: 2px solid $playlist-editor-timeline-fg-color;
     margin-bottom: 10px;
 }
 
 
 #playlist-editor #playlist-timeline #timeline-container{
     padding: 5px;
-    height: @playlist-editor-max-content-height;
+    height: $playlist-editor-max-content-height;
     overflow: auto;
 
     @media (max-width: 992px) {
@@ -76,10 +76,10 @@
 }
 
 #playlist-editor #playlist-properties-panel  {
-    background: #f3f3f3;
+    background: $xibo-color-white;
     padding: 0;
-    .border-radius(4px);
-    border: 2px solid @playlist-editor-widget-selected-color;
+    @include border-radius(4px);
+    border: 2px solid $playlist-editor-widget-selected-color;
 }
 
 #playlist-editor #playlist-properties-panel .form-container form {
@@ -104,16 +104,16 @@
 }
 
 .playlist-widget-preview {
-    z-index: @playlist-editor-z-index-background;
+    z-index: $playlist-editor-z-index-background;
 
     &.tooltip.right .tooltip-arrow {
-        border-right-color: @properties-panel-nav-active-fg-color;
+        border-right-color: $properties-panel-nav-active-fg-color;
     }
 
     .tooltip-inner-image {
         min-height: 50px;
         padding: 4px;
-        background-color: @properties-panel-nav-active-fg-color;
+        background-color: $properties-panel-nav-active-fg-color;
         border-radius: 4px;
         
         img {
@@ -124,13 +124,13 @@
 }
 
 #playlist-editor-container.ui-droppable-active {
-    .z-index-set(@playlist-editor-z-index-select);
-    .background-stripes(45deg; darken(@playlist-editor-main-background-color, 10%); darken(@playlist-editor-main-background-color, 20%); 10px; 4px);
+    @include z-index-set($playlist-editor-z-index-select);
+    @include background-stripes(45deg, darken($playlist-editor-main-background-color, 10%), darken($playlist-editor-main-background-color, 20%), 10px, 4px);
 }
 
 #playlist-editor-container.ui-droppable-active.ui-droppable-hover,
 #playlist-editor-container.ui-droppable-active:hover {
-    .background-stripes(45deg; darken(@playlist-editor-main-background-color, 30%); darken(@playlist-editor-main-background-color, 40%); 10px; 4px);
+    @include background-stripes(45deg, darken($playlist-editor-main-background-color, 30%), darken($playlist-editor-main-background-color, 40%), 10px, 4px);
 }
 
 #playlist-editor-container.ui-droppable-active * {
@@ -148,10 +148,10 @@
 
 #playlist-editor #dropzone-container .dropzone  {
     font-size: 30px;
-    border: 2px dashed #0087F7;
-    .border-radius(4px);
+    border: 2px dashed $xibo-color-secondary;
+    @include border-radius(4px);
     min-height: 590px;
-    background: white;
+    background: $xibo-color-white;
     padding: 270px 0;
 }
 
@@ -160,30 +160,30 @@
 }
 
 .custom-overlay{
-    z-index: @playlist-editor-z-index-overlay;
+    z-index: $playlist-editor-z-index-overlay;
 }
 
 .form-title {
     text-align: center;
     font-weight: bold;
     font-size: 1.5em;
-    color: white;
-    background-color: @playlist-editor-timeline-fg-color;
+    color: $xibo-color-white;
+    background-color: $playlist-editor-timeline-fg-color;
     height: 30px;
 }
 
 .form-title.unsuccessMessage {
     margin: 20px 0;
-    background-color: @playlist-editor-unsuccess-message-bg-color;
+    background-color: $playlist-editor-unsuccess-message-bg-color;
 }
 
 .form-title-widget {
-    color: #222;
-    background: @playlist-editor-widget-selected-color;
+    color: $xibo-color-black;
+    background: $playlist-editor-widget-selected-color;
 }
 
 .form-title-playlist {
-    background: #8f2ac3;
+    background: $xibo-color-purple;
 }
 
 .editor-toolbar nav {
@@ -192,13 +192,13 @@
 
 /* Playlist Widget */
 .playlist-widget {
-    background: @playlist-editor-widget-bg-color;
-    color: @playlist-editor-widget-fg-color;
+    background: $playlist-editor-widget-bg-color;
+    color: $playlist-editor-widget-fg-color;
     font-weight: bold;
     height: 42px;
     width: 100%;
-    .border-radius(4px);
-    border: 1px solid @playlist-editor-widget-border-color;
+    @include border-radius(4px);
+    border: 1px solid $playlist-editor-widget-border-color;
     margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -207,29 +207,29 @@
 }
 
 .playlist-widget:not(.editable) {
-    .box-shadow(inset 0 0 4px 2px grey);
+    @include box-shadow(inset 0 0 4px 2px $xibo-color-gray);
 }
 
 .playlist-widget.selectable {
-    .user-select-none();
+    @include user-select-none();
 }
 
 .playlist-widget.selected {
-    background: @playlist-editor-widget-selected-color !important;
+    background: $playlist-editor-widget-selected-color !important;
 }
 
 .playlist-widget.selectable:hover {
-    background: @playlist-editor-widget-hover-bg-color !important;
+    background: $playlist-editor-widget-hover-bg-color !important;
 }
 
 .playlist-widget.ui-droppable-active {
-    .z-index-set(@playlist-editor-z-index-select);
-    .background-stripes(45deg; darken(@playlist-editor-widget-hover-bg-color, 30%); darken(@playlist-editor-widget-hover-bg-color, 40%); 10px; 4px);
+    @include z-index-set($playlist-editor-z-index-select);
+    @include background-stripes(45deg, darken($playlist-editor-widget-hover-bg-color, 30%), darken($playlist-editor-widget-hover-bg-color, 40%), 10px, 4px);
 }
 
 .playlist-widget.ui-droppable-active.ui-droppable-hover,
 .playlist-widget.ui-droppable-active:hover {
-    .background-stripes(45deg; darken(@playlist-editor-widget-hover-bg-color, 50%); darken(@playlist-editor-widget-hover-bg-color, 60%); 10px; 4px);
+    @include background-stripes(45deg, darken($playlist-editor-widget-hover-bg-color, 50%), darken($playlist-editor-widget-hover-bg-color, 60%), 10px, 4px);
 }
 
 .playlist-widget.ui-droppable-active * {
@@ -240,11 +240,11 @@
     float: right;
     cursor: pointer;
     padding: 2px;
-    color: @playlist-editor-widget-fg-color;
+    color: $playlist-editor-widget-fg-color;
 }
 
 .playlist-widget .widgetLabel {
-    color: @playlist-editor-main-background-color;
+    color: $playlist-editor-main-background-color;
     width: 25px;
     height: 100%;
     text-align: center;
@@ -253,7 +253,7 @@
 
 .playlist-widget .widgetName {
     font-style: italic;
-    color: @playlist-editor-widget-fg-color;
+    color: $playlist-editor-widget-fg-color;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -266,19 +266,19 @@
 }
 
 .playlist-widget i.editProperty:hover {
-    color: lighten(@playlist-editor-widget-fg-color, 20%);
+    color: lighten($playlist-editor-widget-fg-color, 20%);
 }
 
 .playlist-widget.invalid-widget {
-    .box-shadow(inset 0px 0px 10px 3px red);
+    @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
 }
 
 .ui-droppable-active {
-    .box-shadow(inset 0 0 20px #fff);
+    @include box-shadow(inset 0 0 20px $xibo-color-white);
 }
 
 .ui-droppable-hover {
-    .box-shadow(inset 0 0 10px #313131);
+    @include box-shadow(inset 0 0 10px $xibo-color-black);
 }
 
 // Bootbox custom dialogs

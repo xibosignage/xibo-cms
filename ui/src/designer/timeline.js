@@ -3,6 +3,59 @@
 // Load templates
 const timelineTemplate = require('../templates/timeline.hbs');
 
+const regionPreviewContainerDimensions = {
+    width: 60,
+    height: 48
+};
+
+const timeLineLabelMap = [
+     {
+        maxTime: 20,
+        step: 1,
+        delta: 1
+    },
+    {
+        maxTime: 30,
+        step: 1,
+        delta: 2
+    },
+    {
+        maxTime: 60,
+        step: 1,
+        delta: 5
+    },
+    {
+        maxTime: 120,
+        step: 2,
+        delta: 10
+    },
+    {
+        maxTime: 240,
+        step: 5,
+        delta: 20
+    },
+    {
+        maxTime: 600,
+        step: 10,
+        delta: 20
+    },
+    {
+        maxTime: 1200,
+        step: 10,
+        delta: 60
+    },
+    {
+        maxTime: 3600,
+        step: 60,
+        delta: 300
+    },
+    {
+        maxTime: 10000,
+        step: 300,
+        delta: 3600
+    }
+];
+
 /**
  * Timeline contructor
  * @param {object} container - the container to render the timeline to
@@ -20,6 +73,7 @@ let Timeline = function(container) {
         minTime: 0,
         maxTime: lD.layout.duration,
         deltaTime: lD.layout.duration,
+        deltaTimeFormatted: lD.common.timeFormat(lD.layout.duration),
         zoomInDisable: '',
         zoomOutDisable: '',
         scrollPosition: 0, // scroll position
@@ -28,6 +82,8 @@ let Timeline = function(container) {
         widgetMinimumVisibleRatio: 10, // Minimum % value so that the region details are shown
         widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
+
+    this.timeruler = {};
 };
 
 /**
@@ -44,8 +100,10 @@ Timeline.prototype.changeZoom = function(zoom) {
     }
 
     let zoomVariation = 10;
-    
-    if(this.properties.zoom >= 5000) {
+
+    if(this.properties.zoom >= 10000) {
+        zoomVariation = this.properties.zoom * 0.1;
+    } else if(this.properties.zoom >= 5000) {
         zoomVariation = 1000;
     } else if(this.properties.zoom >= 1000) {
         zoomVariation = 200;
@@ -78,20 +136,10 @@ Timeline.prototype.changeZoom = function(zoom) {
  * Calculate time values/labels based on zoom and position of the scroll view
  */
 Timeline.prototype.calculateTimeValues = function() {
-
     this.properties.deltaTime = Math.round(10 * (lD.layout.duration / (this.properties.zoom / 100))) / 10;
+    this.properties.deltaTimeFormatted = lD.common.timeFormat(this.properties.deltaTime);
     this.properties.minTime = Math.round(10 * (this.properties.scrollPosition * lD.layout.duration)) / 10;
     this.properties.maxTime = this.properties.minTime + this.properties.deltaTime;
-};
-
-/**
- * Update timeline labels after rendering
- */
-Timeline.prototype.updateLabels = function() {
-
-    this.DOMObject.find('#minTime').html(this.properties.minTime + 's');
-    this.DOMObject.find('#maxTime').html(this.properties.maxTime + 's');
-    this.DOMObject.find('#zoom').html(this.properties.deltaTime + 's');
 };
 
 /**
@@ -147,6 +195,109 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
             }
         }
     }
+};
+
+/**
+ * Calculate a mini preview for each region
+ * @param {object} regions - Layout regions
+ */
+Timeline.prototype.calculateRegionPreview = function(regions) {
+
+    // Calculate scale
+    const layoutRatio = lD.layout.width / lD.layout.height;
+    const containerRatio = regionPreviewContainerDimensions.width / regionPreviewContainerDimensions.height;
+    const previewScale = (layoutRatio > containerRatio) ? (regionPreviewContainerDimensions.width / lD.layout.width) : (regionPreviewContainerDimensions.height / lD.layout.height);
+
+    // Scale timeline mini preview container
+    const timelinePreviewContainer = {
+        width: lD.layout.width * previewScale,
+        height: lD.layout.height * previewScale,
+        top: regionPreviewContainerDimensions.height / 2 - (lD.layout.height * previewScale) / 2,
+        left: regionPreviewContainerDimensions.width / 2 - (lD.layout.width * previewScale) / 2
+    };
+
+    // Scale regions
+    for(var index in regions) {
+        if(regions.hasOwnProperty(index)) {
+            let region = regions[index];
+
+            region.timelinePreview = {
+                width: parseFloat(region.dimensions.width) * previewScale,
+                height: parseFloat(region.dimensions.height) * previewScale,
+                top: parseFloat(region.dimensions.top) * previewScale,
+                left: parseFloat(region.dimensions.left) * previewScale
+            };
+
+            region.timelinePreviewContainer = timelinePreviewContainer;
+        }
+    }
+};
+
+/**
+ * Calculate a mini preview for each region
+ */
+Timeline.prototype.calculateTimeruler = function() {
+    let steps = [];
+    let totalElements = 0;
+    let labelStep = 3600; // Max default values
+    let labelDelta = 18000; // Max default values
+    let selectiveRender = false;
+    let selectiveRenderStart = 0;
+    let selectiveRenderEnd = 0;
+    let selectiveRenderOffset = 10; // 10 elements of offset
+
+    // Calculate step and delta times
+    for(let index = 0;index < timeLineLabelMap.length; index++) {
+        const element = timeLineLabelMap[index];
+
+        if(this.properties.deltaTime <= element.maxTime) {
+            labelStep = element.step;
+            labelDelta = element.delta;
+            break;
+        }
+    }
+
+    let selectiveTemp1 = [];
+    let selectiveTemp2 = [];
+    
+    // If the number of elements is too high, use selective rendering
+    if((lD.layout.duration / labelStep) > 100) {
+        selectiveRender = true;
+    }
+
+    for(let idx = 0;idx < lD.layout.duration;idx = idx + labelStep) {
+
+        let addFlag = true;
+
+        totalElements++;
+
+        if(selectiveRender) {
+            if(idx < (this.properties.minTime - selectiveRenderOffset * labelDelta)) {
+                selectiveRenderStart++;
+                addFlag = false;
+                selectiveTemp1.push(idx);
+            } else if(idx > (this.properties.maxTime + selectiveRenderOffset * labelDelta)) {
+                selectiveRenderEnd++;
+                addFlag = false;
+                selectiveTemp2.push(idx);
+            }
+        }
+
+        if(addFlag){
+            steps.push({
+                labelled: (idx % labelDelta == 0),
+                label: lD.common.timeFormat(idx)
+            });
+        }
+    }
+
+    // Save timeruler object
+    this.timeruler = {
+        startMargin: (100 / totalElements) * selectiveRenderStart,
+        endMargin: (100 / totalElements) * selectiveRenderEnd,
+        gap: 100 / totalElements,
+        steps: steps
+    };
 };
 
 /**
@@ -334,6 +485,12 @@ Timeline.prototype.render = function(layout) {
     // Check regions to see if they can be rendered with details or not
     this.checkRegionsVisibility(layout.regions);
 
+    // Calculate region preview
+    this.calculateRegionPreview(layout.regions);
+
+    // Calculate time ruler
+    this.calculateTimeruler();
+
     // Check widget repetition and create ghosts
     this.createGhostWidgetsDynamically(layout.regions);
 
@@ -341,7 +498,8 @@ Timeline.prototype.render = function(layout) {
     const html = timelineTemplate({
         layout: layout, 
         properties: this.properties,
-        trans: timelineTrans
+        trans: timelineTrans,
+        timeruler: this.timeruler
     });
 
     // Append layout html to the main div
@@ -357,9 +515,6 @@ Timeline.prototype.render = function(layout) {
     regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
     regionsContainer.scrollTop(this.properties.scrollVerticalPosition);
 
-    // Update timeline labels
-    this.updateLabels();
-
     // Enable hover and select for each layout/region
     this.DOMObject.find('.selectable:not(.ui-draggable-dragging)').click(function(e) {
         e.stopPropagation();
@@ -368,19 +523,34 @@ Timeline.prototype.render = function(layout) {
 
     // Button actions
     const self = this;
-    this.DOMObject.find('#zoomIn').click(function() {
+    this.DOMObject.find('#findSelectedBtn').click(function() {
+        console.log('TODO: Find selected widget');
+    });
+
+    this.DOMObject.find('#zoomInBtn').click(function() {
         self.changeZoom(1);
         self.render(layout);
     });
 
-    this.DOMObject.find('#zoomOut').click(function() {
+    this.DOMObject.find('#zoomOutBtn').click(function() {
         self.changeZoom(-1);
         self.render(layout);
     });
 
-    this.DOMObject.find('#zoom').click(function() {
+    this.DOMObject.find('#zoomReset').click(function() {
         self.changeZoom(0);
         self.render(layout);
+    });
+
+    this.DOMObject.find('.open-playlist-editor').click(function() {
+        console.log('TODO: Open Playlist Editor');
+    });
+
+    // Select region to edit
+    this.DOMObject.find('.edit-region').click(function() {
+        const regionId = $(this).parents('.designer-region-info').data('region');
+        lD.toggleNavigatorEditing(true);
+        lD.selectObject(self.DOMObject.find('#' + regionId), true);
     });
 
     this.DOMObject.find('.designer-region').droppable({
@@ -428,7 +598,7 @@ Timeline.prototype.render = function(layout) {
                 self.beingSorted = true;
 
                 // Hide the trash container
-                lD.toolbar.DOMObject.find('#trashContainer').removeClass('active');
+                lD.topbar.DOMObject.find('#trashContainer').removeClass('active');
 
                 // Get element width and timeline zoom/scale
                 let zoom = self.DOMObject.find('#regions').data('zoom') / 100;
@@ -520,79 +690,6 @@ Timeline.prototype.render = function(layout) {
 
     // Initialize tooltips
     app.common.reloadTooltips(this.DOMObject);
-
-    // Update layout status
-    this.updateLayoutStatus();
-};
-
-/**
- * Update layout status in the info fields
- */
-Timeline.prototype.updateLayoutStatus = function() {
-
-    const statusContainer = this.DOMObject.find('#layout-info-status');
-
-    // Use status loader icon
-    statusContainer.find('i').removeClass().addClass('fa fa-spinner fa-spin');
-    statusContainer.removeClass().addClass('label label-default');
-
-    // Prevent the update if there's no layout status yet
-    if(lD.layout.status == undefined) {
-        return;
-    }
-
-    let title = '';
-    let content = '';
-
-    const labelCodes = {
-        '1': 'success',
-        '2': 'warning',
-        '3': 'info',
-        '': 'danger'
-    };
-
-    const iconCodes = {
-        '1': 'check',
-        '2': 'question',
-        '3': 'cogs',
-        '': 'times'
-    };
-
-    // Create title and description
-    if(lD.layout.status.messages.length > 0) {
-        title = lD.layout.status.description;
-        for (let index = 0; index < lD.layout.status.messages.length; index++) {
-            content += '<div class="status-message">' + lD.layout.status.messages[index] + '</div>';
-        }
-    } else {
-        title = '';
-        content = '<div class="status-title text-center">' + lD.layout.status.description + '</div>';
-    }
-
-    // Update label
-    let labelType = (labelCodes[lD.layout.status.code] != undefined) ? labelCodes[lD.layout.status.code] : labelCodes[''];
-    statusContainer.removeClass().addClass('label label-' + labelType)
-        .attr('data-status-code', lD.layout.status.code);
-    
-        // Create or update popover
-    if(statusContainer.data('bs.popover') == undefined) {
-        // Create popover
-        statusContainer.popover(
-                {
-                    delay: tooltipDelay,
-                    title: title,
-                    content: content
-                }
-            );
-    } else {
-        // Update popover
-        statusContainer.data('bs.popover').options.title = title;
-        statusContainer.data('bs.popover').options.content = content;
-    }
-    
-    // Change Icon
-    let iconType = (iconCodes[lD.layout.status.code] != undefined) ? iconCodes[lD.layout.status.code] : iconCodes[''];
-    statusContainer.find('i').removeClass().addClass('fa fa-' + iconType);
 };
 
 module.exports = Timeline;

@@ -304,8 +304,8 @@ Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages)
         messages: statusMessages
     };
 
-    // Update timeline
-    lD.timeline.updateLayoutStatus();
+    // Update layout status
+    lD.topbar.updateLayoutStatus();
 };
 
 

@@ -37,5 +37,29 @@ module.exports = {
             container.find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
             container.find('[data-toggle="tooltip"]:not(.tooltip-always-on)').tooltip('destroy');
         }
+    },
+
+    /**
+     * Format time
+     * @param {String} timeInSeconds
+     */
+    timeFormat: function(timeInSeconds) {
+        var h = Math.floor(timeInSeconds / 3600);
+        var m = Math.floor(timeInSeconds % 3600 / 60);
+        var s = Math.floor(timeInSeconds % 3600 % 60);
+
+        var zeroBefore = function(time) {
+
+            if(time < 10) {
+                time = '0' + time;
+            }
+            return time;
+        };
+
+        var hDisplay = h > 0 ? zeroBefore(h)+ ':' : '';
+        var mDisplay = (m > 0 || hDisplay != '') ? zeroBefore(m) + ':' : '';
+        var sDisplay = mDisplay != '' ? zeroBefore(s) : s;
+
+        return hDisplay + mDisplay + sDisplay;
     }
 };

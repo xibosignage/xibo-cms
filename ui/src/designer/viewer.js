@@ -132,7 +132,9 @@ Viewer.prototype.renderLayout = function(layout, container) {
     container.html(html);
 
     // Render navbar
-    this.renderNavbar(layout);
+    this.renderNavbar(layout, {
+        requestPath: requestPath
+    });
 
     // Render background image or color to the preview
     if(layout.backgroundImage === null) {
@@ -154,22 +156,6 @@ Viewer.prototype.renderLayout = function(layout, container) {
             this.renderRegion(region, this.DOMObject.find('#' + region.id), true, 1);
         }
     }
-
-    // Handle play button ( play or pause )
-    container.find('#play-btn').click(function() {
-        if(this.previewPlaying) {
-            lD.renderContainer(lD.viewer, lD.layout);
-        } else {
-            this.playPreview(requestPath, this.containerElementDimensions);
-            container.find('#play-btn').removeClass('fa-play-circle').addClass('fa-stop-circle').attr('title', layoutDesignerTrans.stopPreviewLayout);
-            this.previewPlaying = true;
-        }
-    }.bind(this));
-
-    // Handle fullscreen button
-    container.find('#fs-btn').click(function() {
-        this.toggleFullscreen();
-    }.bind(this));
 
     // Initialize tooltips
     app.common.reloadTooltips(container);
@@ -292,16 +278,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 // Show inline editor controls
                 this.showInlineEditor();
             }
-
-            // Handle fullscreen button
-            container.find('#fs-btn').click(function() {
-                this.toggleFullscreen();
-            }.bind(this));
-
-            // Handle back button
-            container.find('#back-btn').click(function() {
-                lD.selectObject();
-            }.bind(this));
         }
 
         // Initialize tooltips
@@ -359,8 +335,34 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 lD.selectObject($('#' + element.getNextWidget().id));
             }.bind(this));
         }
-    } else {
-        // Render layout or region toolbar
+    } else if(element.type == 'layout') {
+        // Render layout  toolbar
+        this.navbarContainer.html(viewerNavbarTemplate(
+            {
+                type: element.type,
+                name: element.name,
+                trans: viewerTrans,
+                renderLayout: true
+            }
+        ));
+
+        // Handle play button ( play or pause )
+        this.navbarContainer.find('#play-btn').click(function() {
+            if(this.previewPlaying) {
+                app.renderContainer(app.viewer, app.layout);
+            } else {
+                this.playPreview(data.requestPath, this.containerElementDimensions);
+                this.navbarContainer.find('#play-btn i').removeClass('fa-play-circle').addClass('fa-stop-circle').attr('title', layoutDesignerTrans.stopPreviewLayout);
+                this.previewPlaying = true;
+            }
+        }.bind(this));
+
+        // Handle navigator toggle button
+        this.navbarContainer.find('#navigator-edit-btn').click(function() {
+            app.toggleNavigatorEditing(true);
+        }.bind(this));
+    } else if(element.type == 'region') {
+        // Render region toolbar
         this.navbarContainer.html(viewerNavbarTemplate(
             {
                 type: element.type,
@@ -369,6 +371,16 @@ Viewer.prototype.renderNavbar = function(element, data) {
             }
         ));
     }
+
+    // Handle fullscreen button
+    this.navbarContainer.find('#fs-btn').click(function() {
+        this.toggleFullscreen();
+    }.bind(this));
+
+    // Handle back button
+    this.navbarContainer.find('#back-btn').click(function() {
+        lD.selectObject();
+    }.bind(this));
 
     // Initialize tooltips
     app.common.reloadTooltips(this.navbarContainer);

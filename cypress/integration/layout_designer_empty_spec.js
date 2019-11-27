@@ -87,7 +87,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-navigator #edit-btn').click();
 
             // Click on add region button
-            cy.get('#layout-navigator-edit #add-btn').click();
+            cy.get('#layout-navigator #add-btn').click();
 
             // Check if there are 2 regions in the timeline ( there was 1 by default )
             cy.get('#layout-timeline [data-type="region"]').should('have.length', 2);
@@ -102,10 +102,10 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-navigator #edit-btn').click();
 
             // Select a region
-            cy.get('#layout-navigator-edit [data-type="region"]:first-child').click();
+            cy.get('#layout-navigator [data-type="region"]:first-child').click();
 
             // Click on delete region button
-            cy.get('#layout-navigator-edit #delete-btn').click();
+            cy.get('#layout-navigator #delete-btn').click();
 
             // Confirm modal
             cy.get('[data-test="deleteRegionModal"]').should('be.visible').find('button[data-bb-handler="confirm"]').click();
@@ -125,12 +125,12 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-navigator #edit-btn').click();
 
             // Select a region from the navigator
-            cy.get('#layout-navigator-edit-content [data-type="region"]:first-child').click().then(($el) => {
+            cy.get('#layout-navigator-content [data-type="region"]:first-child').click().then(($el) => {
 
                 const regionId = $el.attr('id');
 
                 // Click trash container
-                cy.get('#layout-navigator-edit-navbar button#delete-btn').click();
+                cy.get('#layout-navigator-navbar button#delete-btn').click();
 
                 // Confirm delete on modal
                 cy.get('[data-test="deleteRegionModal"] button[data-bb-handler="confirm"]').click();
@@ -142,7 +142,7 @@ describe('Layout Designer (Empty)', function() {
                 cy.wait('@reloadLayout');
 
                 // Close navigator edit
-                cy.get('#layout-navigator-edit #close-btn').click();
+                cy.get('#layout-navigator #close-btn').click();
 
                 // Check that region is not on timeline
                 cy.get('#layout-timeline [data-type="region"]#' + regionId).should('not.exist');

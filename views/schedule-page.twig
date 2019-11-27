@@ -43,7 +43,7 @@
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
-                <select name="campaignId" id="campaignId" class="form-control"
+                <select name="campaignId" id="campaignId" class="hidden form-control"
                     data-search-url= "{{ urlFor("schedule.campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"

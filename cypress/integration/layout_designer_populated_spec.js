@@ -59,13 +59,13 @@ describe('Layout Designer (Populated)', function() {
         cy.get('#layout-navigator #edit-btn').click();
 
         // Select the first region on navigator
-        cy.get('#layout-navigator-edit [data-type="region"]:first-child').click();
+        cy.get('#layout-navigator [data-type="region"]:first-child').click();
 
         // Type the new name in the input
         cy.get('#layout-navigator-properties-panel input[name="name"]').clear().type('newName');
 
         // Save form
-        cy.get('#layout-navigator-edit-navbar button#save-btn').click();
+        cy.get('#layout-navigator-navbar button#save-btn').click();
 
         // Should show a notification for the name change
         cy.get('.toast-success').contains('newName');
@@ -73,7 +73,7 @@ describe('Layout Designer (Populated)', function() {
         // Check if the values are the same entered after reload
         cy.wait('@reloadRegion').then(() => {
             // Select the first region on navigator
-            cy.get('#layout-navigator-edit [data-type="region"]:first-child').click();
+            cy.get('#layout-navigator [data-type="region"]:first-child').click();
 
             cy.get('#layout-navigator-properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
         });
@@ -262,10 +262,10 @@ describe('Layout Designer (Populated)', function() {
             cy.get('#layout-navigator #edit-btn').click();
 
             // Select region
-            cy.get('#layout-navigator-edit-content #' + regionId).click();
+            cy.get('#layout-navigator-content #' + regionId).click();
 
             // Move region 50px for each dimension
-            cy.get('#layout-navigator-edit-content #' + regionId).then(($movedRegion) => {
+            cy.get('#layout-navigator-content #' + regionId).then(($movedRegion) => {
 
                 const regionOriginalPosition = {
                     top: Math.round($movedRegion.position().top),
@@ -275,7 +275,7 @@ describe('Layout Designer (Populated)', function() {
                 const offsetToAdd = 50;
 
                 // Move the region
-                cy.get('#layout-navigator-edit-content #' + regionId)
+                cy.get('#layout-navigator-content #' + regionId)
                     .trigger('mousedown', {
                         which: 1
                     })
@@ -288,10 +288,10 @@ describe('Layout Designer (Populated)', function() {
 
                 // Close the navigator edit
                 cy.wait('@reloadRegion');
-                cy.get('#layout-navigator-edit #save-btn').click();
+                cy.get('#layout-navigator #save-btn').click();
 
                 // Close navigator
-                cy.get('#layout-navigator-edit #close-btn').click();
+                cy.get('#layout-navigator #close-btn').click();
 
                 // Wait for the layout to reload
                 cy.wait('@reloadLayout');
@@ -300,7 +300,7 @@ describe('Layout Designer (Populated)', function() {
                 cy.get('#layout-navigator #edit-btn').click();
 
                 // Check if the region´s position are not the original
-                cy.get('#layout-navigator-edit-content #' + regionId).then(($changedRegion) => {
+                cy.get('#layout-navigator-content #' + regionId).then(($changedRegion) => {
                     expect(Math.round($changedRegion.position().top)).to.not.eq(regionOriginalPosition.top);
                     expect(Math.round($changedRegion.position().left)).to.not.eq(regionOriginalPosition.left);
                 });
