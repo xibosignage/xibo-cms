@@ -23,13 +23,13 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
-    "@babel/plugin-transform-parameters": "^7.4.4",
-    "@fortawesome/fontawesome-free": "^5.11.2",
     "cypress": "^3.4.1"
   },
   "dependencies": {
     "@babel/core": "^7.6.2",
     "@babel/preset-env": "^7.6.2",
+    "@babel/plugin-transform-parameters": "^7.4.4",
+    "@fortawesome/fontawesome-free": "^5.11.2",
     "ajax-bootstrap-select": "^1.4.5",
     "ajv": "^6.10.2",
     "autoprefixer": "^9.6.4",
