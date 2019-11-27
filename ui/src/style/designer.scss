@@ -882,6 +882,32 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                     }
                 }
 
+                #orderClause {
+                    .form-group {
+                        padding: 0;
+                        margin-left: 4px;
+                        margin-right: 0;
+                        display: inline-block;
+                    }
+                }
+
+                #filterClause {
+                    .form-group {
+                        padding: 0;
+                        margin: 0;
+                        display: inline-block;
+                    }
+
+                    select, button, input {
+                        padding: 5px;
+                        max-width: 90px;
+                    }
+
+                    select {
+                        max-width: 120px;
+                    }
+                }
+
                 /* Layout background form special case */
                 #layoutEditFormBackgroundUpload {
                     .upload-table-container {
