@@ -44,10 +44,11 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
                 <li class="reminders"><a href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
+                <li class="geoSchedule"><a href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
+            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}" data-default-long = "{{ defaultLong }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
@@ -210,6 +211,16 @@
                         {% set message %}{% trans "Use the form fields below to create a set of reminders for this event. New fields can be added by clicking on the + icon at the end of the row. Use the tick box to receive a notification by email alternatively reminders will be shown in the message center." %}{% endset %}
                         {{ forms.message(message) }}
                         <div id="reminderFields" data-reminders="{{ reminders|json_encode }}"></div>
+                    </div>
+
+                    <div class="tab-pane" id="geoSchedule">
+                        {% set title %}{% trans "Geo Schedule?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area on the map below" %}{% endset %}
+                        {{ forms.checkbox("isGeoAware", title, 0, helpText, "") }}
+
+                        <div id="geoScheduleMap" style="height: 500px; width: 100%" class="hidden"></div>
+
+                        {{ forms.hidden("geoLocation", "") }}
                     </div>
                 </div>
             </form>
