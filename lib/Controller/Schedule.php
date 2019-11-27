@@ -686,6 +686,10 @@ class Schedule extends Base
             }
         }
 
+        // get the default longitude and latitude from CMS options
+        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
+
         $this->getState()->template = 'schedule-form-add';
         $this->getState()->setData([
             'commands' => $this->commandFactory->query(),
@@ -693,7 +697,9 @@ class Schedule extends Base
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add'),
-            'reminders' => []
+            'reminders' => [],
+            'defaultLat' => $defaultLat,
+            'defaultLong' => $defaultLong
         ]);
     }
 
@@ -843,6 +849,20 @@ class Schedule extends Base
      *          ref="#/definitions/ScheduleReminderArray"
      *      )
      *   ),
+     *   @SWG\Parameter(
+     *      name="isGeoAware",
+     *      in="formData",
+     *      description="Flag (0-1), whether this event is using Geo Location",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocation",
+     *      in="formData",
+     *      description="Array of comma separated strings each with comma separated pair of coordinates",
+     *      type="array",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -875,10 +895,26 @@ class Schedule extends Base
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $customDayPart->dayPartId);
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
+        $schedule->isGeoAware = $this->getSanitizer()->getCheckbox('isGeoAware');
+
+        if ($this->isApi()) {
+            if ($schedule->isGeoAware === 1) {
+                // get string array from API
+                $coordinates = $this->getSanitizer()->getStringArray('geoLocation');
+
+                // generate geo json and assign to Schedule
+                $schedule->geoLocation = $this->createGeoJson($coordinates);
+            }
+        } else {
+
+            // if we are not using API, then valid GeoJSON is created in the front end.
+            $schedule->geoLocation = $this->getSanitizer()->getString('geoLocation');
+        }
 
         // Workaround for cases where we're supplied 0 as the dayPartId (legacy custom dayPart)
-        if ($schedule->dayPartId === 0)
+        if ($schedule->dayPartId === 0) {
             $schedule->dayPartId = $customDayPart->dayPartId;
+        }
 
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->syncEvent = $this->getSanitizer()->getCheckbox('syncEvent', 0);
@@ -1033,6 +1069,10 @@ class Schedule extends Base
         // Get all reminders
         $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $eventId]);
 
+        // get the default longitude and latitude from CMS options
+        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
+
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
@@ -1046,6 +1086,8 @@ class Schedule extends Base
             }, $schedule->displayGroups),
             'help' => $this->getHelp()->link('Schedule', 'Edit'),
             'reminders' => $scheduleReminders,
+            'defaultLat' => $defaultLat,
+            'defaultLong' => $defaultLong,
             'recurringEvent' => ($schedule->recurrenceType != '') ? true : false,
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
@@ -1256,6 +1298,20 @@ class Schedule extends Base
      *          ref="#/definitions/ScheduleReminderArray"
      *      )
      *   ),
+     *   @SWG\Parameter(
+     *      name="isGeoAware",
+     *      in="formData",
+     *      description="Flag (0-1), whether this event is using Geo Location",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocation",
+     *      in="formData",
+     *      description="Array of comma separated strings each with comma separated pair of coordinates",
+     *      type="array",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1294,6 +1350,21 @@ class Schedule extends Base
         $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
+        $schedule->isGeoAware = $this->getSanitizer()->getCheckbox('isGeoAware');
+
+        if ($this->isApi()) {
+            if ($schedule->isGeoAware === 1) {
+                // get string array from API
+                $coordinates = $this->getSanitizer()->getStringArray('geoLocation');
+
+                // generate geo json and assign to Schedule
+                $schedule->geoLocation = $this->createGeoJson($coordinates);
+            }
+        } else {
+
+            // if we are not using API, then valid GeoJSON is created in the front end.
+            $schedule->geoLocation = $this->getSanitizer()->getString('geoLocation');
+        }
 
         // if we are editing Layout/Campaign event that was set with Always daypart and change it to Command event type
         // the daypartId will remain as always, which will then cause the event to "disappear" from calendar
@@ -1681,5 +1752,47 @@ class Schedule extends Base
             $scheduleReminder->save();
 
         }
+    }
+
+    private function createGeoJson($coordinates)
+    {
+        $properties = new \StdClass();
+        $convertedCoordinates = [];
+
+
+        // coordinates come as array of strings, we need convert that to array of arrays with float values for the Geo JSON
+        foreach ($coordinates as $coordinate) {
+
+            // each $coordinate is a comma separated string with 2 coordinates
+            // make it into an array
+            $explodedCords = explode(',', $coordinate);
+
+            // prepare a new array, we will add float values to it, need to be cleared for each set of coordinates
+            $floatCords = [];
+
+            // iterate through the exploded array, change the type to float store in a new array
+            foreach ($explodedCords as $explodedCord) {
+                $explodedCord = (float)$explodedCord;
+                $floatCords[] = $explodedCord;
+            }
+
+            // each set of coordinates will be added to this new array, which we will use in the geo json
+            $convertedCoordinates[] = $floatCords;
+        }
+
+        $geometry = [
+            'type' => 'Polygon',
+            'coordinates' => [
+                $convertedCoordinates
+            ]
+        ];
+
+        $geoJson = [
+            'type'      => 'Feature',
+            'properties' => $properties,
+            'geometry'  => $geometry
+        ];
+
+        return json_encode($geoJson);
     }
 }

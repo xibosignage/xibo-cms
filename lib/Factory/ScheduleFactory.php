@@ -215,6 +215,8 @@ class ScheduleFactory extends BaseFactory
                 schedule.syncTimezone,
                 schedule.syncEvent,
                 schedule.shareOfVoice,
+                schedule.isGeoAware,
+                schedule.geoLocation,
                 `campaign`.campaign,
                 `command`.command,
                 `lkscheduledisplaygroup`.displayGroupId,
@@ -310,6 +312,8 @@ class ScheduleFactory extends BaseFactory
             `schedule`.syncTimezone,
             `schedule`.syncEvent,
             `schedule`.shareOfVoice,
+            `schedule`.isGeoAware,
+            `schedule`.geoLocation,
             `daypart`.isAlways,
             `daypart`.isCustom
           FROM `schedule`
@@ -415,7 +419,7 @@ class ScheduleFactory extends BaseFactory
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom', 'syncEvent', 'recurrenceMonthlyRepeatsOn']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom', 'syncEvent', 'recurrenceMonthlyRepeatsOn', 'isGeoAware']]);
         }
 
         return $entries;

@@ -22,6 +22,7 @@
 // Global calendar object
 var calendar;
 var events = [];
+let mymap;
 
 $(document).ready(function() {
 
@@ -510,6 +511,33 @@ var setupScheduleForm = function(dialog) {
             // Load both Layouts and Campaigns
             $layoutSpecific = -1;
 
+        }
+    });
+
+    // geo schedule
+    let $isGeoAware = $('#isGeoAware').is(':checked');
+
+    if ($isGeoAware ) {
+
+        // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
+        $('.nav-tabs a').on('shown.bs.tab', function(event){
+            if ($(event.target).text() === 'Geo Location') {
+
+                $('#geoScheduleMap').removeClass('hidden');
+                generateGeoMap();
+            }
+        });
+    }
+
+    // hide/show and generate map according to the Geo Schedule checkbox value
+    $('#isGeoAware').change(function() {
+        $isGeoAware = $('#isGeoAware').is(':checked');
+
+        if ($isGeoAware) {
+            $('#geoScheduleMap').removeClass('hidden');
+            generateGeoMap();
+        } else {
+            $('#geoScheduleMap').addClass('hidden');
         }
     });
 
@@ -1105,4 +1133,108 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
         
     }
     
+};
+
+let generateGeoMap = function () {
+
+    if (mymap !== undefined && mymap !== null) {
+        mymap.remove();
+    }
+
+    let defaultLat = $('#scheduleAddForm , #scheduleEditForm').data().defaultLat;
+    let defaultLong = $('#scheduleAddForm , #scheduleEditForm').data().defaultLong;
+
+    // base map
+    mymap = L.map('geoScheduleMap').setView([defaultLat, defaultLong], 13);
+
+    // base tile layer, provided by Open Street Map
+    L.tileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: ['a','b','c']
+    }).addTo( mymap );
+
+    // Add a layer for drawn items
+    let drawnItems = new L.FeatureGroup();
+    mymap.addLayer(drawnItems);
+
+    // Add draw control (toolbar)
+    let drawControl = new L.Control.Draw({
+        position: 'topright',
+        draw: {
+            polyline: false,
+            circle: false,
+            marker: false,
+            circlemarker: false
+        },
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+
+    mymap.addControl(drawControl);
+
+    // add search Control - allows searching by country/city and automatically moves map to that location
+    let searchControl = new L.Control.Search({
+        url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        jsonpParam: 'json_callback',
+        propertyName: 'display_name',
+        propertyLoc: ['lat','lon'],
+        marker: L.circleMarker([0,0],{radius:30}),
+        autoCollapse: true,
+        autoType: false,
+        minLength: 2,
+        hideMarkerOnCollapse: true
+    });
+
+    mymap.addControl(searchControl);
+
+    let json = '';
+    let layer = null;
+    let layers = null;
+
+    // when user draws a new polygon it will be added as a layer to the map and as GeoJson to hidden field
+    mymap.on('draw:created', function(e) {
+        layer = e.layer;
+
+        drawnItems.addLayer(layer);
+        json = layer.toGeoJSON();
+
+        $('#geoLocation').val(JSON.stringify(json));
+    });
+
+    // update the hidden field geoJson with new coordinates
+    mymap.on('draw:edited', function (e) {
+        layers = e.layers;
+
+        layers.eachLayer(function(layer) {
+
+            json = layer.toGeoJSON();
+
+            $('#geoLocation').val(JSON.stringify(json));
+        });
+    });
+
+    // remove the layer and clear the hidden field
+    mymap.on('draw:deleted', function (e) {
+        layers = e.layers;
+
+        layers.eachLayer(function(layer) {
+            $('#geoLocation').val('');
+            drawnItems.removeLayer(layer);
+        });
+    });
+
+    // if we are editing an event with existing Geo JSON, make sure we load it and add the layer to the map
+    if ($('#geoLocation').val() != null && $('#geoLocation').val() !== '') {
+
+        let geoJSON = JSON.parse($('#geoLocation').val());
+
+        L.geoJSON(geoJSON, {
+            onEachFeature: onEachFeature
+        });
+
+        function onEachFeature(feature, layer) {
+            drawnItems.addLayer(layer);
+        }
+    }
 };
