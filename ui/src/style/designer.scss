@@ -626,6 +626,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         .btn {
             background: $viewer-navbar-btn-bg-colour;
             color: $viewer-navbar-btn-fg-colour;
+            font-size: 16px;
+            padding: 4px 8px;
+            line-height: 1.3;
         }
 
         .paging {
@@ -638,8 +641,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             }
 
             .label {
-                padding: 4px;
+                padding: 4px 2px;
                 display: inline-block;
+                font-size: 14px;
             }
         }
 
@@ -693,12 +697,18 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         }
 
         .info {
-            font-size: 18px;
-            padding: 0px 4px;
+            display: inline-block;
+
+            .label-name {
+                padding: 4px;
+                font-size: 14px;
+            }
 
             .label-time {
                 background-color: $xibo-color-white;
                 color: $xibo-color-blue;
+                font-size: 14px;
+                padding: 4px;
             }
         }
 
@@ -882,6 +892,32 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                     }
                 }
 
+                #orderClause {
+                    .form-group {
+                        padding: 0;
+                        margin-left: 4px;
+                        margin-right: 0;
+                        display: inline-block;
+                    }
+                }
+
+                #filterClause {
+                    .form-group {
+                        padding: 0;
+                        margin: 0;
+                        display: inline-block;
+                    }
+
+                    select, button, input {
+                        padding: 5px;
+                        max-width: 90px;
+                    }
+
+                    select {
+                        max-width: 120px;
+                    }
+                }
+
                 /* Layout background form special case */
                 #layoutEditFormBackgroundUpload {
                     .upload-table-container {
@@ -1000,6 +1036,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             .btn {
                 background: $navigator-navbar-btn-bg-colour;
                 color: $navigator-navbar-btn-fg-colour;
+                font-size: 16px;
+                padding: 4px 8px;
+                line-height: 1.3;
             }
 
             .hide-on-fs {
