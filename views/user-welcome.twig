@@ -18,54 +18,6 @@
         background-color: #b2bfdc;
     }
 
-    /* Print Style Sheet - for POP reports */
-    @media print {
-
-        @page {
-            margin: 0;
-            size: landscape;
-        }
-
-        body  {
-            margin: 1.6cm;
-            font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-            font-size: 14px;
-        }
-
-        .nav-pills, .proof-of-play-report-div, #applyBtn, #applyWarning, .fa-info-circle , .dt-buttons, .pagination,
-        .select2-selection__clear, button.select-all, button.dropdown-toggle
-        {
-            display: none;
-        }
-
-        .widget .widget-title {
-            font-size: 20px;
-            color: #767676;
-            background-color: #f6f6f6;
-            text-align: center;
-            line-height: 60px;
-        }
-
-        .well {
-            border: 2px solid #e3e3e3;
-        }
-
-        /* Reports of summary, distribution */
-        #reportChart {
-            max-width: 25cm;
-            max-height: 7cm;
-        }
-
-        /* Custom reports*/
-        #campaignChart, #sensor1Chart, #sensor2Chart, #sensor3Chart {
-            max-width: 25cm;
-            max-height: 6.5cm;
-        }
-        .sensor_3 {
-            page-break-before: always;
-        }
-    }
-
 </style>
 
 <script type="text/javascript">
