@@ -58,11 +58,12 @@
     }
 
     /* Custom reports*/
-    #customChartReport {
+    .custom-chart {
         max-width: 25cm;
         max-height: 6.5cm;
     }
-    .sensor_3 {
+
+    .page-break-before {
         page-break-before: always;
     }
 }
