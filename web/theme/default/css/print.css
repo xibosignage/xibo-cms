@@ -34,7 +34,8 @@
     }
 
     .nav-pills, .proof-of-play-report-div, #applyBtn, #applyWarning, .fa-info-circle , .dt-buttons, .pagination,
-    .select2-selection__clear, button.select-all, button.dropdown-toggle
+    .select2-selection__clear, button.select-all, button.dropdown-toggle,
+    .navbar-collapse, #sidebar-wrapper, #content-wrapper > div > div.row.header
     {
         display: none;
     }
@@ -63,7 +64,7 @@
         max-height: 6.5cm;
     }
 
-    .page-break-before {
-        page-break-before: always;
+    .page-break-avoid {
+        page-break-inside : avoid
     }
 }
