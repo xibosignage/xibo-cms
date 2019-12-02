@@ -872,31 +872,8 @@ class Media implements \JsonSerializable
         // Set to valid
         $this->valid = 1;
 
-        $filePath = $libraryFolder . $this->storedAs;
-        list($imgWidth, $imgHeight) = @getimagesize($filePath);
-
-        $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
-        $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
-
-        // Media released set to 0 for large size images
-        // if image size is greater than 8000 X 8000 then we flag that image as too big
-        if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
-            $this->released = 2;
-        } elseif ($imgWidth > $imgHeight) { // 'landscape';
-
-            if ($imgWidth <= $resizeThreshold) {
-                $this->released = 1;
-            } else {
-                $this->released = 0;
-            }
-        } else { // 'portrait';
-
-            if ($imgHeight <= $resizeThreshold) {
-                $this->released = 1;
-            } else {
-                $this->released = 0;
-            }
-        }
+        // Resize image dimensions if threshold exceeds
+        $this->assessDimensions();
 
         // Update the MD5 and storedAs to suit
         $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
@@ -907,6 +884,65 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'mediaId' => $this->mediaId
         ]);
+    }
+
+    private function assessDimensions()
+    {
+
+        if ($this->mediaType === 'image' || ($this->mediaType === 'module' && $this->moduleSystemFile === 0)) {
+
+            $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
+            $filePath = $libraryFolder . $this->storedAs;
+            list($imgWidth, $imgHeight) = @getimagesize($filePath);
+
+            $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+            $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
+
+            // Media released set to 0 for large size images
+            // if image size is greater than 8000 X 8000 then we flag that image as too big
+            if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
+                $this->released = 2;
+                $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
+
+            } elseif ($imgWidth > $imgHeight) { // 'landscape';
+
+                if ($imgWidth <= $resizeThreshold) {
+                    $this->released = 1;
+                } else {
+                    $this->released = 0;
+                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+
+                }
+            } else { // 'portrait';
+
+                if ($imgHeight <= $resizeThreshold) {
+                    $this->released = 1;
+                } else {
+                    $this->released = 0;
+                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+
+                }
+            }
+        }
+    }
+
+    /**
+     * Release an image from image processing
+     * @param $md5
+     * @param $fileSize
+     */
+    public function release($md5, $fileSize)
+    {
+        // Update the MD5 and fileSize
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, released = :released, modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
+            'fileSize' => $fileSize,
+            'md5' => $md5,
+            'released' => 1,
+            'mediaId' => $this->mediaId,
+            'modifiedDt' => date('Y-m-d H:i:s')
+        ]);
+        $this->getLog()->debug('Updating image md5 and fileSize. MediaId '. $this->mediaId);
+
     }
 
     /**
