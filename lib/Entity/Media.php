@@ -934,7 +934,7 @@ class Media implements \JsonSerializable
     public function release($md5, $fileSize)
     {
         // Update the MD5 and fileSize
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, released = :released , modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, released = :released, modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
             'fileSize' => $fileSize,
             'md5' => $md5,
             'released' => 1,

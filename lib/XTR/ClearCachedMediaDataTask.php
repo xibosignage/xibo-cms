@@ -63,31 +63,17 @@ class ClearCachedMediaDataTask implements TaskInterface
     private function runClearCache()
     {
 
-        $cutOffDate = $this->date->parse('2019-11-26');
-        $images = $this->mediaFactory->query(null, ['createdDt' => $cutOffDate]);
+        $cutOffDate = $this->date->parse('2019-11-26', 'Y-m-d')->startOfDay()->format('Y-m-d H:i:s');
 
-        $count = 0;
+        // Update the MD5 and fileSize to null
+        $this->store->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, modifiedDt = :modifiedDt
+        WHERE (`media`.type = \'image\' OR (`media`.type = \'module\' AND `media`.moduleSystemFile = 0)) AND createdDt >= :createdDt ', [
+            'fileSize' => null,
+            'md5' => null,
+            'createdDt' => $cutOffDate,
+            'modifiedDt' => date('Y-m-d H:i:s')
 
-        // Get list of Images
-        foreach ($images as $media) {
-
-            // updates all md5/filesizes to empty for any image/module file created since 2.2.0 release date
-            if ($media->mediaType === 'image' || ($media->mediaType === 'module' && $media->moduleSystemFile === 0)) {
-
-                $count++;
-
-                // Update the MD5 and fileSize
-                $this->store->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
-                    'fileSize' => null,
-                    'md5' => null,
-                    'mediaId' => $media->mediaId,
-                    'modifiedDt' => date('Y-m-d H:i:s')
-                ]);
-                $this->log->debug('Updating image md5 and fileSize to null for MediaId ', $media->mediaId);
-            }
-        }
-
-        $this->appendRunMessage('Clear Cached Media - Count ' . $count);
+        ]);
 
         // Disable the task
         $this->appendRunMessage('# Disabling task.');
