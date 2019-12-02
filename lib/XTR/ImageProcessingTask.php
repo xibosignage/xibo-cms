@@ -71,6 +71,7 @@ class ImageProcessingTask implements TaskInterface
 
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+        $count = 0;
 
         // Get list of Images
         foreach ($images as $media) {
@@ -85,16 +86,23 @@ class ImageProcessingTask implements TaskInterface
                 $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
             }
 
+            // Clears file status cache
+            clearstatcache(true, $filePath);
+
             // Release image and save
-            // Work out the MD5
-            $media->md5 = md5_file($libraryLocation . $media->storedAs);
+            // Work out the MD5 and Filesize
+            $media->md5 = md5_file($filePath);
+            $media->fileSize =  filesize($filePath);
             $media->released = 1;
 
-            try {
-                $media->save();
-            } catch (\Exception $error) {
-                $this->log->error($error);
-            }
+            $count++;
+
+            $media->release($media->md5, $media->fileSize);
+            $this->store->commitIfNecessary();
+
         }
+
+        $this->appendRunMessage('Released and modified image count. ' . $count);
+
     }
 }
