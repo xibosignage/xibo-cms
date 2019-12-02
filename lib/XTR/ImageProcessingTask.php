@@ -89,15 +89,10 @@ class ImageProcessingTask implements TaskInterface
             // Clears file status cache
             clearstatcache(true, $filePath);
 
-            // Release image and save
-            // Work out the MD5 and Filesize
-            $media->md5 = md5_file($filePath);
-            $media->fileSize =  filesize($filePath);
-            $media->released = 1;
-
             $count++;
 
-            $media->release($media->md5, $media->fileSize);
+            // Release image and save
+            $media->release(md5_file($filePath), filesize($filePath));
             $this->store->commitIfNecessary();
 
         }

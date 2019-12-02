@@ -873,7 +873,7 @@ class Media implements \JsonSerializable
         $this->valid = 1;
 
         // Resize image dimensions if threshold exceeds
-        Media::assessDimensions();
+        $this->assessDimensions();
 
         // Update the MD5 and storedAs to suit
         $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
@@ -935,9 +935,9 @@ class Media implements \JsonSerializable
     {
         // Update the MD5 and fileSize
         $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, released = :released , modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
-            'fileSize' => $this->fileSize,
-            'md5' => $this->md5,
-            'released' => $this->released,
+            'fileSize' => $fileSize,
+            'md5' => $md5,
+            'released' => 1,
             'mediaId' => $this->mediaId,
             'modifiedDt' => date('Y-m-d H:i:s')
         ]);

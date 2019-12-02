@@ -1,0 +1,5 @@
+{
+  "name": "Clear Cached Media Data",
+  "class": "\\Xibo\\XTR\\ClearCachedMediaDataTask",
+  "options": []
+}
