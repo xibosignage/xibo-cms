@@ -902,7 +902,7 @@ class Media implements \JsonSerializable
             // if image size is greater than 8000 X 8000 then we flag that image as too big
             if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
                 $this->released = 2;
-                $this->getLog()->debug('Image size is too big. MediaId ', $this->mediaId);
+                $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
 
             } elseif ($imgWidth > $imgHeight) { // 'landscape';
 
@@ -910,7 +910,7 @@ class Media implements \JsonSerializable
                     $this->released = 1;
                 } else {
                     $this->released = 0;
-                    $this->getLog()->debug('Image exceeded threshold, released set to 0 for MediaId ', $this->mediaId);
+                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
 
                 }
             } else { // 'portrait';
@@ -919,7 +919,7 @@ class Media implements \JsonSerializable
                     $this->released = 1;
                 } else {
                     $this->released = 0;
-                    $this->getLog()->debug('Image exceeded threshold, released set to 0 for MediaId ', $this->mediaId);
+                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
 
                 }
             }
@@ -941,7 +941,7 @@ class Media implements \JsonSerializable
             'mediaId' => $this->mediaId,
             'modifiedDt' => date('Y-m-d H:i:s')
         ]);
-        $this->getLog()->debug('Updating image md5 and fileSize.', $this->mediaId);
+        $this->getLog()->debug('Updating image md5 and fileSize. MediaId '. $this->mediaId);
 
     }
 
