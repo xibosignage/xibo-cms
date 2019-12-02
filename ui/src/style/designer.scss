@@ -592,11 +592,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             display: none;
             cursor: pointer;
             padding: 2px 3px;
-            color: $xibo-color-gray;
-
-            &:hover {
-                color: $xibo-color-white;
-            }
         }
         
         &:hover {

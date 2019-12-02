@@ -76,19 +76,21 @@ window.pE = {
 
 // Load Playlist and build app structure
 pE.loadEditor = function() {
+    // If the editor is being loaded from within the layout designer, change the region specific flag
+    pE.regionSpecific = (typeof lD != 'undefined') ? '&regionSpecific=1' : '';
 
     pE.common.showLoadingScreen();
 
     // Save and change toastr positioning
     pE.toastrPosition = toastr.options.positionClass;
-    toastr.options.positionClass = 'toast-top-right';
+    toastr.options.positionClass = 'toast-top-center';
 
     // Get DOM main object
     pE.editorContainer = $('#playlist-editor');
 
     // Get playlist id
     const playlistId = pE.editorContainer.attr("playlist-id");
-
+    
     // Update main object id
     pE.mainObjectId = playlistId;
 
@@ -96,7 +98,7 @@ pE.loadEditor = function() {
     pE.editorContainer.html(loadingTemplate());
 
     // Load playlist through an ajax request
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
@@ -109,6 +111,7 @@ pE.loadEditor = function() {
 
                 // Initialize properties panel
                 pE.propertiesPanel = new PropertiesPanel(
+                    pE,
                     pE.editorContainer.find('#playlist-properties-panel')
                 );
 
@@ -122,6 +125,7 @@ pE.loadEditor = function() {
 
                 // Initialize manager
                 pE.manager = new Manager(
+                    pE,
                     $('#playlist-editor').find('#layout-manager'),
                     false //(serverMode == 'Test') Turn of manager visibility for now
                 );
@@ -131,12 +135,14 @@ pE.loadEditor = function() {
 
                 // Initialize bottom toolbar
                 pE.toolbar = new Toolbar(
+                    pE,
                     $('#playlist-editor').find('#playlist-editor-toolbar'),
                     {
                         deleteSelectedObjectAction: pE.deleteSelectedObject
                     },
                     true
                 );
+                pE.toolbar.parent = pE;
 
                 // Default selected 
                 pE.selectObject();
@@ -507,7 +513,7 @@ pE.reloadData = function() {
 
     pE.common.showLoadingScreen();
 
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
         .done(function(res) {
             pE.common.hideLoadingScreen();
 
@@ -560,7 +566,7 @@ pE.saveOrder = function() {
 
     pE.common.showLoadingScreen('saveOrder');
 
-    this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
+    this.playlist.saveOrder(this.editorContainer.find('#timeline-container').find('.playlist-widget')).then((res) => { // Success
 
         pE.common.hideLoadingScreen('saveOrder');
 

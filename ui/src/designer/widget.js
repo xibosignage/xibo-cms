@@ -243,7 +243,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
     const self = this;
 
-    const app = getXiboApp();
+    const app = this.designerObject;
 
     // Load form the API
     const linkToAPI = urlsForApi.widget['get' + property];
@@ -431,7 +431,7 @@ Widget.prototype.editPermissions = function() {
  */
 Widget.prototype.getNextWidget = function(reverse = false) {
     // Get main app
-    const app = getXiboApp();
+    const app = this.designerObject;
     
     // Get region widgets
     let region = app.getElementByTypeAndId('region', this.regionId);

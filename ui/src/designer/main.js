@@ -125,23 +125,27 @@ $(document).ready(function() {
 
                 // Initialize timeline
                 lD.timeline = new Timeline(
+                    lD,
                     lD.editorContainer.find('#layout-timeline')
                 );
 
                 // Initialize manager
                 lD.manager = new Manager(
+                    lD,
                     lD.editorContainer.find('#layout-manager'),
                     false // (serverMode == 'Test') Turn of manager visibility for now
                 );
 
                 // Initialize viewer
                 lD.viewer = new Viewer(
+                    lD,
                     lD.editorContainer.find('#layout-viewer'),
                     lD.editorContainer.find('#layout-viewer-navbar')
                 );
 
                 // Initialize bottom toolbar ( with custom buttons )
                 lD.toolbar = new Toolbar(
+                    lD,
                     lD.editorContainer.find('#layout-editor-toolbar'),
                     // Custom actions
                     {
@@ -152,6 +156,7 @@ $(document).ready(function() {
 
                 // Initialize top topbar
                 lD.topbar = new Topbar(
+                    lD,
                     lD.editorContainer.find('#layout-editor-topbar'),
                     // Custom dropdown options
                     [
@@ -215,6 +220,7 @@ $(document).ready(function() {
 
                 // Initialize properties panel
                 lD.propertiesPanel = new PropertiesPanel(
+                    lD,
                     lD.editorContainer.find('#properties-panel')
                 );
 
@@ -667,6 +673,7 @@ lD.toggleNavigatorEditing = function(enable) {
     if(enable) {
         // Create a new navigator instance
         this.navigator = new Navigator(
+            lD,
             this.editorContainer.find('#layout-navigator-content'),
             {
                 editNavbar: this.editorContainer.find('#layout-navigator-navbar')
@@ -1511,6 +1518,66 @@ lD.checkLayoutStatus = function() {
         } else {
             // Update layout status
             lD.layout.updateStatus(res.extra.status, res.html, res.extra.statusMessage);
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+};
+
+/**
+ * Call layout status
+ */
+lD.openPlaylistEditor = function(playlistId) {
+
+    let requestPath = playlistEditorUrl;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', playlistId);
+
+    $.ajax({
+        url: requestPath,
+        type: 'GET'
+    }).done(function(res) {
+
+        if(!res.success) {
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        } else {
+            // Create or load container
+            let $editor = ($('#editor-container').length > 0) ? $('#editor-container') : $('<div/>').attr('id', 'editor-container').appendTo(lD.editorContainer.parent());
+            
+            // Populate container
+            $editor.html(res.html);
+
+            // Hide layout designer toolbar
+            lD.toolbar.DOMObject.hide();
+
+            // On close, remove container and refresh designer
+            $editor.find('.editor-modal-close').attr('onclick', '').on('click', function() {
+
+                // Close playlist editor
+                pE.close();
+                
+                // Show layout designer toolbar
+                lD.toolbar.DOMObject.show();
+
+                // Set the first run flag of the toolbar as true to reload the changed from the playlistEditor toolbar
+                lD.toolbar.firstRun = true;
+
+                // Reload data
+                lD.reloadData(lD.layout);
+            });
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console

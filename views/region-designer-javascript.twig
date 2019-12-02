@@ -15,7 +15,7 @@
 
         // Handle set region as fullscreen button
         // Get layout object
-        const layout = getXiboApp().layout;
+        const layout = lD.layout;
         const form = $(this).find('form');
         let buttonText = form.find('#setFullScreenButton').html();
 
@@ -52,7 +52,7 @@
     }
 
     function formChangesRegion() {
-        const app = getXiboApp();
+        const app = lD;
         const layout = app.layout;
         const regionId = app.selectedObject.id;
         const form = $(app.propertiesPanel.DOMObject).find('form');
@@ -68,7 +68,7 @@
     }
 
     function formChangesRegionZIndex() {
-        const app = getXiboApp();
+        const app = lD;
         const form = $(app.propertiesPanel.DOMObject).find('form');
         const newZIndex = parseInt(form.find('#zIndex').val());
 
@@ -77,7 +77,7 @@
     }
 
     function regionChangesForm() {
-        const app = getXiboApp();
+        const app = lD;
         const form = $(app.propertiesPanel.DOMObject).find('form')
         
         // If form not loaded, prevent changes
